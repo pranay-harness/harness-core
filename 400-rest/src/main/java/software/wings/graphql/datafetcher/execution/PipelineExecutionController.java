@@ -151,6 +151,11 @@ public class PipelineExecutionController {
                                           .filter(Objects::nonNull)
                                           .collect(Collectors.toList()));
     }
+    String failureDetails = null;
+    if (workflowExecution.getStatus() == ExecutionStatus.FAILED) {
+      failureDetails =
+          workflowExecutionService.fetchFailureDetails(workflowExecution.getAppId(), workflowExecution.getUuid());
+    }
 
     builder.id(workflowExecution.getUuid())
         .pipelineId(workflowExecution.getWorkflowId())
@@ -162,6 +167,7 @@ public class PipelineExecutionController {
         .cause(cause)
         .notes(workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getNotes())
         .tags(tags)
+        .failureDetails(failureDetails)
         .build();
   }
 

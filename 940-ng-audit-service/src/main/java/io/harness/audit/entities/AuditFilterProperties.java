@@ -5,10 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
+import io.harness.audit.beans.ResourceDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.filter.entity.FilterProperties;
-import io.harness.ng.core.Resource;
-import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
@@ -29,12 +30,12 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AuditFilterProperties extends FilterProperties {
-  List<ResourceScope> scopes;
-  List<Resource> resources;
+  List<ResourceScopeDTO> scopes;
+  List<ResourceDTO> resources;
 
   List<ModuleType> modules;
   List<Action> actions;
-  List<String> environmentIdentifiers;
+  List<Environment> environments;
   List<Principal> principals;
 
   Long startTime;

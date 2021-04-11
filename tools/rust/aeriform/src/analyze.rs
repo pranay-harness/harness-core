@@ -8,8 +8,9 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
-use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM, UNKNOWN_LOCATION};
-use crate::java_module::{modules, JavaModule};
+use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION};
+use crate::java_module::{JavaModule, JavaModuleTraits, modules};
+use crate::team::UNKNOWN_TEAM;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
 enum Kind {
@@ -91,8 +92,11 @@ pub struct Analyze {
     #[clap(long)]
     auto_actionable_command: bool,
 
-    #[clap(short, long)]
+    #[clap(long)]
     issue_points_per_class_limit: Option<f64>,
+
+    #[clap(short, long)]
+    indirect: bool,
 }
 
 #[derive(Debug)]
@@ -180,15 +184,15 @@ pub fn analyze(opts: Analyze) {
 
     let mut results: Vec<Report> = Vec::new();
     modules.iter().for_each(|tuple| {
-        results.extend(check_for_classes_in_more_than_one_module(tuple.1, &class_modules));
+        results.extend(check_for_classes_in_more_than_one_module(tuple.1, &class_modules, &modules));
         results.extend(check_for_reversed_dependency(tuple.1, &modules));
     });
 
     class_modules.iter().for_each(|tuple| {
-        results.extend(check_for_package(tuple.0, tuple.1));
-        results.extend(check_for_team(tuple.0, tuple.1));
-        results.extend(check_already_in_target(tuple.0, tuple.1));
-        results.extend(check_for_extra_break(tuple.0, tuple.1));
+        results.extend(check_for_package(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
+        results.extend(check_for_team(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
+        results.extend(check_already_in_target(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
+        results.extend(check_for_extra_break(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
         results.extend(check_for_promotion(
             tuple.0,
             tuple.1,
@@ -204,11 +208,12 @@ pub fn analyze(opts: Analyze) {
             &classes,
             &class_modules,
         ));
-        results.extend(check_for_deprecated_module(tuple.0, tuple.1));
+        results.extend(check_for_deprecated_module(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
         results.extend(check_for_deprecation(
             tuple.0,
             class_dependees.get_vec(&tuple.0.name),
             tuple.1,
+            &modules,
             &classes,
             &class_modules,
         ));
@@ -228,18 +233,22 @@ pub fn analyze(opts: Analyze) {
     println!("Detecting indirectly involved classes...");
 
     let indirect_classes: &mut HashSet<&String> = &mut HashSet::new();
-    loop {
-        let original: HashSet<&String> = indirect_classes.iter().map(|&s| s).collect();
+    if opts.indirect {
+        loop {
+            let original: HashSet<&String> = indirect_classes.iter().map(|&s| s).collect();
 
-        results
-            .iter()
-            .filter(|&report| filter_report(&opts, report, &class_locations) || original.contains(&report.for_class))
-            .for_each(|report| {
-                indirect_classes.extend(&report.indirect_classes);
-            });
+            results
+                .iter()
+                .filter(|&report| {
+                    filter_report(&opts, report, &class_locations) || original.contains(&report.for_class)
+                })
+                .for_each(|report| {
+                    indirect_classes.extend(&report.indirect_classes);
+                });
 
-        if original.len() == indirect_classes.len() {
-            break;
+            if original.len() == indirect_classes.len() {
+                break;
+            }
         }
     }
 
@@ -334,7 +343,11 @@ fn filter_by_class(opts: &Analyze, report: &Report, class_locations: &HashMap<St
 }
 
 fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
-    opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap())
+    report.for_modules.iter().any(|module| {
+        !module.eq("//990-commons-test:abstract-module")
+            && !module.eq("//990-commons-test:module")
+            && !module.eq("//990-commons-test:tests")
+    }) && (opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap()))
 }
 
 fn filter_by_kind(opts: &Analyze, report: &Report) -> bool {
@@ -360,7 +373,7 @@ fn is_with_root(opts: &Analyze, module_name: &String) -> bool {
     module_name.starts_with(root) && module_name.chars().nth(root.len()).unwrap() == ':'
 }
 
-fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
+fn check_for_extra_break(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
     class
@@ -380,7 +393,7 @@ fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> 
                 message: format!("{} has no dependency on {}", class.name, break_dependency),
                 action: Default::default(),
                 for_class: class.name.clone(),
-                for_team: class.team(),
+                for_team: class.team(module, target_module_team),
                 indirect_classes: Default::default(),
                 for_modules: modules,
             })
@@ -392,6 +405,7 @@ fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> 
 fn check_for_classes_in_more_than_one_module(
     module: &JavaModule,
     classes: &HashMap<&JavaClass, &JavaModule>,
+    modules: &HashMap<String, JavaModule>,
 ) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
@@ -408,7 +422,7 @@ fn check_for_classes_in_more_than_one_module(
                     message: format!("{} appears in {} and {}", class.name, module.name, tracked_module.name),
                     action: Default::default(),
                     for_class: class.name.clone(),
-                    for_team: class.team(),
+                    for_team: class.team(module, &class.target_module_team(modules)),
                     indirect_classes: Default::default(),
                     for_modules: [module.name.clone(), tracked_module.name.clone()]
                         .iter()
@@ -439,7 +453,7 @@ fn check_for_reversed_dependency(module: &JavaModule, modules: &HashMap<String, 
                 ),
                 action: Default::default(),
                 for_class: Default::default(),
-                for_team: Default::default(),
+                for_team: module.team(),
                 indirect_classes: Default::default(),
                 for_modules: [module.name.clone(), dependent.name.clone()].iter().cloned().collect(),
             });
@@ -449,7 +463,7 @@ fn check_for_reversed_dependency(module: &JavaModule, modules: &HashMap<String, 
     results
 }
 
-fn check_already_in_target(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
+fn check_already_in_target(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
     let target_module = class.target_module.as_ref();
@@ -466,7 +480,7 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule) -> Vec<Report
                 ),
                 action: Default::default(),
                 for_class: class.name.clone(),
-                for_team: class.team(),
+                for_team: class.team(module, target_module_team),
                 indirect_classes: Default::default(),
                 for_modules: [module.name.clone()].iter().cloned().collect(),
             })
@@ -521,6 +535,7 @@ fn check_for_promotion(
         let dependent_target_module = if dependent_class.target_module.is_some() {
             let dependent_target_module = modules.get(dependent_class.target_module.as_ref().unwrap());
             if dependent_target_module.is_none() {
+                issue = true;
                 results.push(target_module_needed(dependent_class));
                 return ();
             }
@@ -553,7 +568,7 @@ fn check_for_promotion(
                     ),
                     action: Default::default(),
                     for_class: class.name.clone(),
-                    for_team: class.team(),
+                    for_team: class.team(module, &target_module.team),
                     indirect_classes: Default::default(),
                     for_modules: mdls,
                 }
@@ -567,7 +582,7 @@ fn check_for_promotion(
                     ),
                     action: Default::default(),
                     for_class: class.name.clone(),
-                    for_team: class.team(),
+                    for_team: class.team(module, &target_module.team),
                     indirect_classes: [dependent_class.name.clone()].iter().cloned().collect(),
                     for_modules: mdls,
                 }
@@ -596,7 +611,7 @@ fn check_for_promotion(
                 action: Default::default(),
                 message: msg,
                 for_class: class.name.clone(),
-                for_team: class.team(),
+                for_team: class.simple_team(),
                 indirect_classes: Default::default(),
                 for_modules: mdls,
             },
@@ -611,7 +626,7 @@ fn check_for_promotion(
                     target_module.directory
                 ),
                 for_class: class.name.clone(),
-                for_team: class.team(),
+                for_team: class.team(module, &target_module.team),
                 indirect_classes: Default::default(),
                 for_modules: mdls,
             },
@@ -632,7 +647,7 @@ fn check_for_promotion(
             ),
             action: Default::default(),
             for_class: class.name.clone(),
-            for_team: class.team(),
+            for_team: class.team(module, &target_module.team),
             indirect_classes: all_classes,
             for_modules: [module.name.clone(), target_module.name.clone()]
                 .iter()
@@ -690,6 +705,7 @@ fn check_for_demotion(
             let dependee_target_module = if dependee_class.target_module.is_some() {
                 let dependee_target_module = modules.get(dependee_class.target_module.as_ref().unwrap());
                 if dependee_target_module.is_none() {
+                    issue = true;
                     results.push(target_module_needed(dependee_class));
                     return ();
                 }
@@ -722,7 +738,7 @@ fn check_for_demotion(
                         ),
                         action: Default::default(),
                         for_class: dependee_class.name.clone(),
-                        for_team: class.team(),
+                        for_team: dependee_class.team(module, &dependee_class.target_module_team(modules)),
                         indirect_classes: indirect_classes,
                         for_modules: mdls,
                     }
@@ -735,7 +751,7 @@ fn check_for_demotion(
                             class.name, dependee_class.name, dependee_target_module.name, target_module.name
                         ),
                         action: Default::default(),
-                        for_team: class.team(),
+                        for_team: class.team(module, &target_module.team),
                         for_class: class.name.clone(),
                         indirect_classes: indirect_classes,
                         for_modules: mdls,
@@ -767,7 +783,7 @@ fn check_for_demotion(
                 action: Default::default(),
                 message: msg,
                 for_class: class.name.clone(),
-                for_team: class.team(),
+                for_team: class.simple_team(),
                 indirect_classes: Default::default(),
                 for_modules: mdls,
             },
@@ -782,7 +798,7 @@ fn check_for_demotion(
                     target_module.directory
                 ),
                 for_class: class.name.clone(),
-                for_team: class.team(),
+                for_team: class.team(module, &target_module.team),
                 indirect_classes: Default::default(),
                 for_modules: mdls,
             },
@@ -803,7 +819,7 @@ fn check_for_demotion(
             ),
             action: Default::default(),
             for_class: class.name.clone(),
-            for_team: class.team(),
+            for_team: class.team(module, &target_module.team),
             indirect_classes: all_classes,
             for_modules: [module.name.clone(), target_module.name.clone()]
                 .iter()
@@ -825,13 +841,13 @@ fn target_module_needed(class: &JavaClass) -> Report {
         ),
         action: Default::default(),
         for_class: class.name.clone(),
-        for_team: class.team(),
+        for_team: class.simple_team(),
         indirect_classes: Default::default(),
         for_modules: Default::default(),
     }
 }
 
-fn check_for_package(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
+fn check_for_package(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
     if class.package.is_some()
@@ -849,7 +865,7 @@ fn check_for_package(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
             ),
             action: Default::default(),
             for_class: class.name.clone(),
-            for_team: class.team(),
+            for_team: class.team(module, target_module_team),
             indirect_classes: Default::default(),
             for_modules: [module.name.clone()].iter().cloned().collect(),
         });
@@ -858,10 +874,14 @@ fn check_for_package(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
     results
 }
 
-fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
+fn check_for_team(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
     if class.deprecated {
+        return results;
+    }
+
+    if class.is_generated() {
         return results;
     }
 
@@ -869,14 +889,18 @@ fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
         return results;
     }
 
-    if class.team.is_none() {
+    if class.name.eq("io.harness.annotations.dev.HarnessTeam") {
+        return results;
+    }
+
+    if class.team(module, target_module_team) .eq(UNKNOWN_TEAM) {
         results.push(Report {
             kind: Kind::ToDo,
             explanation: Explanation::TeamIsMissing,
             message: format!("{} is missing team", class.name),
             action: Default::default(),
             for_class: class.name.clone(),
-            for_team: class.team(),
+            for_team: UNKNOWN_TEAM.to_string(),
             indirect_classes: Default::default(),
             for_modules: [module.name.clone()].iter().cloned().collect(),
         });
@@ -885,7 +909,7 @@ fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
     results
 }
 
-fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
+fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
     if class.deprecated {
@@ -902,7 +926,7 @@ fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Re
             ),
             action: Default::default(),
             for_class: class.name.clone(),
-            for_team: class.team(),
+            for_team: class.team(module, target_module_team),
             indirect_classes: Default::default(),
             for_modules: [module.name.clone()].iter().cloned().collect(),
         });
@@ -915,6 +939,7 @@ fn check_for_deprecation(
     class: &JavaClass,
     dependees: Option<&Vec<&String>>,
     module: &JavaModule,
+    modules: &HashMap<String, JavaModule>,
     classes: &HashMap<String, &JavaClass>,
     class_modules: &HashMap<&JavaClass, &JavaModule>,
 ) -> Vec<Report> {
@@ -933,7 +958,7 @@ fn check_for_deprecation(
         // TODO: add action for this
         action: Default::default(),
         for_class: class.name.clone(),
-        for_team: class.team(),
+        for_team: class.team(module, &class.target_module_team(modules)),
         indirect_classes: Default::default(),
         for_modules: [module.name.clone()].iter().cloned().collect(),
     });
@@ -951,7 +976,7 @@ fn check_for_deprecation(
                 ),
                 action: Default::default(),
                 for_class: dependent_class.name.clone(),
-                for_team: dependent_class.team(),
+                for_team: dependent_class.team(dependent_module, &dependent_class.target_module_team(modules)),
                 indirect_classes: [class.name.clone()].iter().cloned().collect(),
                 for_modules: [dependent_module.name.clone()].iter().cloned().collect(),
             });

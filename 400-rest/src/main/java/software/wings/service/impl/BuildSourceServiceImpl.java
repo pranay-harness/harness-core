@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -18,9 +19,12 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
@@ -44,12 +48,10 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
-import software.wings.helpers.ext.gcb.GcbService;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.ArtifactStreamHelper;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -86,6 +88,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  */
 @ValidateOnExecution
 @Singleton
+@OwnedBy(CDC)
 @Slf4j
 public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
@@ -95,16 +98,13 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private SecretManager secretManager;
-  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private AppService appService;
   @Inject private GcsService gcsService;
   @Inject private CustomBuildSourceService customBuildSourceService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
-  @Inject private GcbService gcbService;
   @Inject private DelegateServiceImpl delegateService;
 
   @Override
@@ -130,7 +130,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return getBuildService(settingAttribute, appId, GCS.name()).getProjectId(gcpConfig);
     }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -433,7 +433,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SyncTaskContextBuilder syncTaskContextBuilder =
         SyncTaskContext.builder()
             .accountId(settingAttribute.getAccountId())
-            .appId(appId)
+            .appId(isBlank(appId) || appId.equals(GLOBAL_APP_ID) ? SCOPE_WILDCARD : appId)
             .timeout(settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())
                         || settingAttribute.getValue().getType().equals(SettingVariableTypes.BAMBOO.name())
                     ? 120 * 1000
@@ -631,7 +631,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return getBuildService(settingAttribute).getProjectId(gcpConfig);
     }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -757,7 +757,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {
     if (settingsService.isSettingValueGcp(settingAttribute)) {
-      return ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+      return ((GcpConfig) settingAttribute.getValue()).isUseDelegateSelectors();
     }
     return settingsService.hasDelegateSelectorProperty(settingAttribute);
   }

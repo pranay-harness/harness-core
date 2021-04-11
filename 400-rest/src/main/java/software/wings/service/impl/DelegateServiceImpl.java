@@ -74,6 +74,7 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FeatureName;
@@ -188,7 +189,6 @@ import io.harness.service.intfc.DelegateTaskResultsProvider;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.stream.BoundedInputStream;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -882,7 +882,7 @@ public class DelegateServiceImpl implements DelegateService {
           List<Delegate> groupDelegates = entry.getValue();
 
           String delegateType = groupDelegates.get(0).getDelegateType();
-          String groupName = groupDelegates.get(0).getDelegateName();
+          String groupName = obtainDelegateGroupName(accountId, entry.getKey(), groupDelegates.get(0));
 
           String groupHostName = "";
           if (KUBERNETES.equals(delegateType)) {
@@ -905,6 +905,11 @@ public class DelegateServiceImpl implements DelegateService {
               .build();
         })
         .collect(toList());
+  }
+
+  private String obtainDelegateGroupName(String accountId, String delegateGroupId, Delegate delegate) {
+    DelegateGroup delegateGroup = getDelegateGroup(accountId, delegateGroupId);
+    return delegateGroup != null ? delegateGroup.getName() : delegate.getDelegateName();
   }
 
   private List<Delegate> getDelegatesWithoutScalingGroup(String accountId) {
@@ -3777,8 +3782,8 @@ public class DelegateServiceImpl implements DelegateService {
       delegateSelectionLogsService.logTaskAssigned(batch, task.getAccountId(), delegateId);
       delegateSelectionLogsService.save(batch);
 
-      delegateTaskStatusObserverSubject.fireInform(
-          DelegateTaskStatusObxxxxxxxx:onTaskAssigned, delegateTask.getAccountId(), taskId, delegateId);
+      delegateTaskStatusObserverSubject.fireInform(DelegateTaskStatusObxxxxxxxx:onTaskAssigned,
+          delegateTask.getAccountId(), taskId, delegateId, task.getData().getTimeout());
 
       return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
     }

@@ -1,5 +1,10 @@
 package io.harness.common;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public enum NGTaskType {
   DOCKER_ARTIFACT_TASK_NG,
   GCR_ARTIFACT_TASK_NG,
@@ -9,4 +14,5 @@ public enum NGTaskType {
   K8S_COMMAND_TASK,
   JIRA_TASK_NG,
   HTTP_TASK_NG,
+  GCP_TASK
 }

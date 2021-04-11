@@ -3,6 +3,8 @@ load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+Deprecated = True
+
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
@@ -15,14 +17,9 @@ shared_dependencies = [
     "//470-alert:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
-    "//860-orchestration-steps:module",
-    "//860-orchestration-visualization:module",
     "//870-cg-yaml-beans:module",
-    "//870-orchestration:module",
-    "//876-orchestration-beans:module",
+    "//870-cg-orchestration:module",
     "//874-orchestration-delay:module",
-    "//878-pipeline-service-utilities:module",
-    "//882-pms-sdk-core:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
     "//920-delegate-agent-beans:module",
@@ -37,7 +34,6 @@ shared_dependencies = [
     "//950-common-entities:module",
     "//950-delegate-tasks-beans:module",
     "//950-events-api:module",
-    "//950-events-api/src/main/proto:950_events_api_java_proto",
     "//950-events-api/src/main/proto:950_events_api_proto",
     "//950-events-framework:module",
     "//950-ng-core:module",
@@ -226,7 +222,6 @@ shared_dependencies = [
     "@maven//:com_microsoft_azure_azure_client_runtime",
     "@maven//:com_microsoft_azure_azure_keyvault",
     "@maven//:com_microsoft_azure_azure_keyvault_core",
-    "@maven//:com_microsoft_azure_azure_keyvault_cryptography",
     "@maven//:com_microsoft_azure_azure_keyvault_webkey",
     "@maven//:com_microsoft_azure_azure_mgmt_appservice",
     "@maven//:com_microsoft_azure_azure_mgmt_batch",
@@ -268,7 +263,6 @@ shared_dependencies = [
     "@maven//:com_squareup_okhttp3_logging_interceptor",
     "@maven//:com_squareup_okhttp3_okhttp",
     "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
-    "@maven//:com_squareup_okio_okio",
     "@maven//:com_squareup_retrofit2_adapter_rxjava",
     "@maven//:com_squareup_retrofit2_converter_gson",
     "@maven//:com_squareup_retrofit2_converter_jackson",

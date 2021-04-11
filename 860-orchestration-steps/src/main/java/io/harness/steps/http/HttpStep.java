@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
@@ -14,14 +13,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -31,7 +29,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.ResponseData;
+import io.harness.supplier.ThrowingSupplier;
 
 import software.wings.beans.TaskType;
 
@@ -45,37 +43,39 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class HttpStep implements TaskExecutable<HttpStepParameters> {
+public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).build();
 
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public Class<HttpStepParameters> getStepParametersClass() {
-    return HttpStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 
   @Override
-  public TaskRequest obtainTask(Ambiance ambiance, HttpStepParameters stepParameters, StepInputPackage inputPackage) {
+  public TaskRequest obtainTask(
+      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
     int socketTimeoutMillis = (int) NGTimeConversionHelper.convertTimeStringToMilliseconds("10m");
     if (stepParameters.getTimeout() != null && stepParameters.getTimeout().getValue() != null) {
       socketTimeoutMillis =
           (int) NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue());
     }
+    HttpStepParameters httpStepParameters = (HttpStepParameters) stepParameters.getSpec();
     HttpTaskParametersNgBuilder httpTaskParametersNgBuilder = HttpTaskParametersNg.builder()
-                                                                  .url(stepParameters.getUrl().getValue())
-                                                                  .method(stepParameters.getMethod().getValue())
+                                                                  .url(httpStepParameters.getUrl().getValue())
+                                                                  .method(httpStepParameters.getMethod().getValue())
                                                                   .socketTimeoutMillis(socketTimeoutMillis);
 
-    if (EmptyPredicate.isNotEmpty(stepParameters.getHeaders())) {
+    if (EmptyPredicate.isNotEmpty(httpStepParameters.getHeaders())) {
       List<HttpHeaderConfig> headers = new ArrayList<>();
-      stepParameters.getHeaders().keySet().forEach(
-          key -> headers.add(HttpHeaderConfig.builder().key(key).value(stepParameters.getHeaders().get(key)).build()));
+      httpStepParameters.getHeaders().keySet().forEach(key
+          -> headers.add(HttpHeaderConfig.builder().key(key).value(httpStepParameters.getHeaders().get(key)).build()));
       httpTaskParametersNgBuilder.requestHeader(headers);
     }
 
-    if (stepParameters.getRequestBody() != null) {
-      httpTaskParametersNgBuilder.body(stepParameters.getRequestBody().getValue());
+    if (httpStepParameters.getRequestBody() != null) {
+      httpTaskParametersNgBuilder.body(httpStepParameters.getRequestBody().getValue());
     }
 
     final TaskData taskData =
@@ -86,66 +86,42 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
             .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
             .build();
     return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
-        TaskSelectorYaml.toTaskSelector(stepParameters.delegateSelectors.getValue()));
+        TaskSelectorYaml.toTaskSelector(httpStepParameters.delegateSelectors.getValue()));
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, HttpStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
+      ThrowingSupplier<HttpStepResponse> responseSupplier) throws Exception {
     StepResponseBuilder responseBuilder = StepResponse.builder();
-    ResponseData notifyResponseData = responseDataMap.values().iterator().next();
-    if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) notifyResponseData;
+    HttpStepResponse httpStepResponse = responseSupplier.get();
+
+    HttpStepParameters httpStepParameters = (HttpStepParameters) stepParameters.getSpec();
+    Map<String, Object> outputVariables = httpStepParameters.getOutputVariables();
+    Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
+
+    boolean assertionSuccessful = validateAssertions(httpStepResponse, httpStepParameters);
+
+    HttpOutcome executionData = HttpOutcome.builder()
+                                    .httpUrl(httpStepParameters.getUrl().getValue())
+                                    .httpMethod(httpStepParameters.getMethod().getValue())
+                                    .httpResponseCode(httpStepResponse.getHttpResponseCode())
+                                    .httpResponseBody(httpStepResponse.getHttpResponseBody())
+                                    .status(httpStepResponse.getCommandExecutionStatus())
+                                    .errorMsg(httpStepResponse.getErrorMessage())
+                                    .outputVariables(outputVariablesEvaluated)
+                                    .build();
+
+    // Just Place holder for now till we have assertions
+    if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
       responseBuilder.status(Status.FAILED);
-      responseBuilder.failureInfo(FailureInfo.newBuilder()
-                                      .setErrorMessage(errorNotifyResponseData.getErrorMessage())
-                                      .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
-                                          errorNotifyResponseData.getFailureTypes()))
-                                      .build());
-      if (stepParameters.getRollbackInfo() != null) {
-        responseBuilder.stepOutcome(
-            StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                .build());
+      if (!assertionSuccessful) {
+        responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
       }
     } else {
-      HttpStepResponse httpStepResponse = (HttpStepResponse) notifyResponseData;
-
-      Map<String, Object> outputVariables = stepParameters.getOutputVariables();
-      Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
-
-      boolean assertionSuccessful = validateAssertions(httpStepResponse, stepParameters);
-
-      HttpOutcome executionData = HttpOutcome.builder()
-                                      .httpUrl(stepParameters.getUrl().getValue())
-                                      .httpMethod(stepParameters.getMethod().getValue())
-                                      .httpResponseCode(httpStepResponse.getHttpResponseCode())
-                                      .httpResponseBody(httpStepResponse.getHttpResponseBody())
-                                      .status(httpStepResponse.getCommandExecutionStatus())
-                                      .errorMsg(httpStepResponse.getErrorMessage())
-                                      .outputVariables(outputVariablesEvaluated)
-                                      .build();
-
-      // Just Place holder for now till we have assertions
-      if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
-        responseBuilder.status(Status.FAILED);
-        if (stepParameters.getRollbackInfo() != null) {
-          responseBuilder.stepOutcome(
-              StepOutcome.builder()
-                  .name("RollbackOutcome")
-                  .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                  .build());
-        }
-        if (!assertionSuccessful) {
-          responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
-        }
-      } else {
-        responseBuilder.status(Status.SUCCEEDED);
-      }
-      responseBuilder.stepOutcome(
-          StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
+      responseBuilder.status(Status.SUCCEEDED);
     }
+    responseBuilder.stepOutcome(
+        StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
     return responseBuilder.build();
   }
 

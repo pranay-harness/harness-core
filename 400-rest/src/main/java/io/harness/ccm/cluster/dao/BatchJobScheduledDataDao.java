@@ -1,5 +1,10 @@
 package io.harness.ccm.cluster.dao;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
 import io.harness.persistence.HPersistence;
@@ -9,6 +14,8 @@ import com.google.inject.Singleton;
 import org.mongodb.morphia.query.Sort;
 
 @Singleton
+@OwnedBy(CE)
+@TargetModule(HarnessModule._490_CE_COMMONS)
 public class BatchJobScheduledDataDao {
   private final HPersistence hPersistence;
 

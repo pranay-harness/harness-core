@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -63,15 +64,18 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.RepairActionCode;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -137,6 +141,8 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineServiceTest extends WingsBaseTest {
   private static final String PIPELINE = Loader.load("pipeline/dry_run.json");
   private static final String PIPELINE_NAME = "pipeline1";
@@ -980,7 +986,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                                                       .addFilter("workflowId", EQ, pipeline.getUuid())
                                                                       .addFilter("appId", EQ, pipeline.getAppId())
                                                                       .build();
-    when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false))
+    when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false, false))
         .thenReturn(aPageResponse().build());
 
     PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2, false, null);
@@ -994,7 +1000,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipelines.get(1).getValidationMessage()).isNotEmpty();
     assertThat(pipelines.get(1).isHasSshInfraMapping()).isEqualTo(false);
     verify(workflowExecutionService, times(2))
-        .listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false));
+        .listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false), eq(false));
   }
 
   private PipelineStage prepareTemplatedStage(Map<String, Object> properties) {
@@ -1064,7 +1070,8 @@ public class PipelineServiceTest extends WingsBaseTest {
         aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(variables).build()).build();
     when(workflowService.readWorkflowWithoutServices(eq(APP_ID), eq(WORKFLOW_ID))).thenReturn(workflow);
 
-    when(workflowExecutionService.listExecutions(Mockito.any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean()))
+    when(workflowExecutionService.listExecutions(
+             Mockito.any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(new ArrayList()).build());
 
     PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2, false, null);
@@ -1124,7 +1131,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                                                                       .addFilter("workflowId", EQ, pipeline.getUuid())
                                                                       .addFilter("appId", EQ, pipeline.getAppId())
                                                                       .build();
-    when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false))
+    when(workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false, false))
         .thenReturn(aPageResponse().build());
 
     PageResponse pageResponse = pipelineService.listPipelines(aPageRequest().build(), true, 2, false, null);
@@ -1135,7 +1142,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipelines.get(0).isHasSshInfraMapping()).isEqualTo(true);
 
     verify(workflowExecutionService, times(1))
-        .listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false));
+        .listExecutions(any(PageRequest.class), eq(false), eq(false), eq(false), eq(false), eq(false));
   }
 
   @Test

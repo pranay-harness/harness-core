@@ -1,5 +1,9 @@
 package io.harness.ng.core;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -8,6 +12,7 @@ import lombok.experimental.UtilityClass;
 import okhttp3.Interceptor;
 import org.slf4j.MDC;
 
+@OwnedBy(PL)
 @UtilityClass
 public class CorrelationContext {
   private static final String correlationIdKey = "X-requestId";
@@ -31,10 +36,11 @@ public class CorrelationContext {
   @NotNull
   public static Interceptor getCorrelationIdInterceptor() {
     return chain -> {
-      if (getCorrelationId() == null) {
-        setCorrelationId(generateRandomUuid().toString());
+      String correlationId = getCorrelationId();
+      if (correlationId == null) {
+        correlationId = generateRandomUuid().toString();
       }
-      return chain.proceed(chain.request().newBuilder().header(getCorrelationIdKey(), getCorrelationId()).build());
+      return chain.proceed(chain.request().newBuilder().header(getCorrelationIdKey(), correlationId).build());
     };
   }
 

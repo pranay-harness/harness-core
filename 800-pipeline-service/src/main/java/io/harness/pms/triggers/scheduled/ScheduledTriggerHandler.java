@@ -7,13 +7,22 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.execution.PlanExecution;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
+import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
+import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
+import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.contracts.triggers.Type;
+import io.harness.pms.triggers.TriggerExecutionHelper;
+import io.harness.repositories.spring.TriggerEventHistoryRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,6 +36,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class ScheduledTriggerHandler implements Handler<NGTriggerEntity> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MongoTemplate mongoTemplate;
+  @Inject private TriggerExecutionHelper ngTriggerExecutionHelper;
+  @Inject private TriggerEventHistoryRepository triggerEventHistoryRepository;
+  @Inject private NGTriggerElementMapper ngTriggerElementMapper;
 
   public void registerIterators() {
     persistenceIteratorFactory.createLoopIteratorWithDedicatedThreadPool(
@@ -42,12 +54,16 @@ public class ScheduledTriggerHandler implements Handler<NGTriggerEntity> {
             .targetInterval(ofMinutes(5))
             .acceptableExecutionTime(ofMinutes(1))
             .acceptableNoAlertDelay(ofSeconds(30))
+            .maximumDelayForCheck(ofSeconds(30))
             .handler(this)
             .filterExpander(query
-                -> query.addCriteria(new Criteria()
-                                         .and(NGTriggerEntityKeys.enabled)
-                                         .is(true)
-                                         .andOperator(Criteria.where("metadata.cron").exists(true))))
+                -> query.addCriteria(
+                    new Criteria()
+                        .and(NGTriggerEntityKeys.enabled)
+                        .is(true)
+                        .and(NGTriggerEntityKeys.deleted)
+                        .is(false)
+                        .andOperator(Criteria.where(NGTriggerEntityKeys.type).is(NGTriggerType.SCHEDULED))))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));
@@ -56,12 +72,33 @@ public class ScheduledTriggerHandler implements Handler<NGTriggerEntity> {
   @Override
   public void handle(NGTriggerEntity entity) {
     try {
-      log.info("CDNG-4840 Handling entity: " + entity);
-      // PlanExecution response = ngTriggerWebhookExecutionHelper.handleTriggerEntity(entity);
-      // TargetExecutionSummary targetExecutionSummary =
-      //     WebhookEventResponseHelper.prepareTargetExecutionSummary(response, triggerDetails, runtimeInputYaml);
+      PlanExecution response = ngTriggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(
+          TriggerDetails.builder()
+              .ngTriggerEntity(entity)
+              .ngTriggerConfig(ngTriggerElementMapper.toTriggerConfig(entity.getYaml()))
+              .build(),
+          TriggerPayload.newBuilder().setType(Type.SCHEDULED).build());
+      triggerEventHistoryRepository.save(toHistoryRecord(
+          entity, "TARGET_EXECUTION_REQUESTED", "Pipeline execution was requested successfully", false));
+      log.info("Execution started for cron trigger: " + entity + " with response " + response);
     } catch (Exception e) {
+      triggerEventHistoryRepository.save(toHistoryRecord(entity, "EXCEPTION_WHILE_PROCESSING", e.getMessage(), true));
       log.error("Exception while triggering cron. Please check", e);
     }
+  }
+
+  private TriggerEventHistory toHistoryRecord(
+      NGTriggerEntity entity, String finalStatus, String message, boolean exceptionOccurred) {
+    return TriggerEventHistory.builder()
+        .accountId(entity.getAccountId())
+        .orgIdentifier(entity.getOrgIdentifier())
+        .projectIdentifier(entity.getProjectIdentifier())
+        .targetIdentifier(entity.getTargetIdentifier())
+        .eventCreatedAt(System.currentTimeMillis())
+        .finalStatus(finalStatus)
+        .message(message)
+        .exceptionOccurred(exceptionOccurred)
+        .triggerIdentifier(entity.getIdentifier())
+        .build();
   }
 }

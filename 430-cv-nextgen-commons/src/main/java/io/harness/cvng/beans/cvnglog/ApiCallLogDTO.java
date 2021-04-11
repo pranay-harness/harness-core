@@ -1,10 +1,11 @@
 package io.harness.cvng.beans.cvnglog;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
@@ -16,6 +17,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @JsonTypeName("API_CALL_LOG")
 @NoArgsConstructor
+@OwnedBy(HarnessTeam.CV)
 public class ApiCallLogDTO extends CVNGLogDTO {
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;
   public static final String PAYLOAD = "Payload";
@@ -24,8 +26,8 @@ public class ApiCallLogDTO extends CVNGLogDTO {
 
   private List<ApiCallLogDTOField> requests;
   private List<ApiCallLogDTOField> responses;
-  private Instant requestTime;
-  private Instant responseTime;
+  private long requestTime;
+  private long responseTime;
 
   @Override
   public CVNGLogType getType() {

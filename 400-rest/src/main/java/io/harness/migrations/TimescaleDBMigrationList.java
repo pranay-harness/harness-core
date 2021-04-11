@@ -1,6 +1,8 @@
 package io.harness.migrations;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.timescaledb.AddAccountIdStatusIndexToDeployment;
 import io.harness.migrations.timescaledb.AddAlertTypeColumnToBudgetAlerts;
@@ -15,6 +17,7 @@ import io.harness.migrations.timescaledb.AddIndexToInstanceV2Migration;
 import io.harness.migrations.timescaledb.AddIndicesForCostEvents;
 import io.harness.migrations.timescaledb.AddInstancesDeployedToDeployment;
 import io.harness.migrations.timescaledb.AddMaxUtilColumns;
+import io.harness.migrations.timescaledb.AddNewentityToAnomalies;
 import io.harness.migrations.timescaledb.AddNonComputeCostColumnToBillingData;
 import io.harness.migrations.timescaledb.AddPercentagesToCostEvents;
 import io.harness.migrations.timescaledb.AddRequestColumnToBillingData;
@@ -46,6 +49,7 @@ import io.harness.migrations.timescaledb.InitVerificationSchemaMigration;
 import io.harness.migrations.timescaledb.RenameInstanceMigration;
 import io.harness.migrations.timescaledb.UniqueIndexCEUtilizationDataTables;
 import io.harness.migrations.timescaledb.UpdateServiceGuardSchema;
+import io.harness.migrations.timescaledb.data.AddActualInstanceIdToK8sUtilizationData;
 import io.harness.migrations.timescaledb.data.CreateAnomaliesDataV2;
 import io.harness.migrations.timescaledb.data.CreatePodCountTable;
 
@@ -54,6 +58,7 @@ import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(HarnessTeam.PL)
 @UtilityClass
 @TargetModule(HarnessModule._390_DB_MIGRATION)
 public class TimescaleDBMigrationList {
@@ -105,6 +110,8 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(44, CreateDeploymentParentTable.class))
         .add(Pair.of(45, CreateDeploymentStageTable.class))
         .add(Pair.of(46, AddAlertTypeColumnToBudgetAlerts.class))
+        .add(Pair.of(47, AddActualInstanceIdToK8sUtilizationData.class))
+        .add(Pair.of(48, AddNewentityToAnomalies.class))
         .build();
   }
 }

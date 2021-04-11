@@ -1,12 +1,14 @@
 package io.harness.cvng.activity.source.services.api;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.ng.beans.PageResponse;
 
 import javax.validation.constraints.NotNull;
-
+@OwnedBy(HarnessTeam.CV)
 public interface ActivitySourceService extends DeleteEntityByHandler<ActivitySource> {
   String saveActivitySource(
       String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO);
@@ -24,4 +26,6 @@ public interface ActivitySourceService extends DeleteEntityByHandler<ActivitySou
       String accountId, String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter);
 
   boolean deleteActivitySource(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
+
+  void createDefaultCDNGActivitySource(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

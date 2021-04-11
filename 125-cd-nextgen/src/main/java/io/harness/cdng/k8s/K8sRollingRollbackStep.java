@@ -1,9 +1,11 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -23,12 +25,12 @@ import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.tasks.ResponseData;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
-import java.util.Map;
 
-public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollbackStepParameters> {
+@OwnedBy(CDP)
+public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollbackStepParameters, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType()).build();
   public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
@@ -76,16 +78,9 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    ResponseData responseData = responseDataMap.values().iterator().next();
-    if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
-          .build();
-    }
-
-    K8sDeployResponse executionResponse = (K8sDeployResponse) responseData;
+  public StepResponse handleTaskResult(Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters,
+      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+    K8sDeployResponse executionResponse = responseSupplier.get();
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
 

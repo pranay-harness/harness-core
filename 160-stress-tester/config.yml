@@ -1,4 +1,4 @@
-setupLocation: /Users/matt/test.txt
+setupLocation: ~/stress-tester/test.txt
 serviceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 target: localhost:9880

@@ -143,6 +143,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
   private Pod getPendingPod(String runningState) {
     PodStatus podStatus = new PodStatus();
     podStatus.setPhase(runningState);
+    podStatus.setPodIP("123.12.11.11");
     podStatus.setContainerStatuses(Arrays.asList(getPendingContainerStatus()));
     return new PodBuilder().withStatus(podStatus).build();
   }
@@ -192,7 +193,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     verify(mockSecretSpecBuilder).getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
     verify(mockKubernetesClient).secrets();
     verify(mockKubeSecret).inNamespace(namespace);
-    verify(mockSecretNonNamespacedOp).create(mockSecret);
+    verify(mockSecretNonNamespacedOp).createOrReplace(mockSecret);
   }
 
   @Test
@@ -203,7 +204,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     Pod mockCreatedPod = new PodBuilder().build();
     when(mockKubernetesClient.pods()).thenReturn(mockKubePod);
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
-    when(mockPodNonNamespacedOp.create(mockPod)).thenReturn(mockCreatedPod);
+    when(mockPodNonNamespacedOp.createOrReplace(mockPod)).thenReturn(mockCreatedPod);
 
     assertEquals(mockCreatedPod, cik8CtlHandler.createPod(mockKubernetesClient, mockPod, namespace));
   }
@@ -377,7 +378,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     when(client.pods()).thenReturn(mockKubePod);
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
-    when(mockPodNamed.get()).thenReturn(null);
+    when(mockPodNamed.get()).thenThrow(new PodNotFoundException("not found"));
 
     cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace);
   }
@@ -387,7 +388,9 @@ public class CIK8CtlHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void waitUntilPodIsReadyWithSuccess() throws TimeoutException, InterruptedException {
     KubernetesClient client = mock(KubernetesClient.class);
-    Pod pod = new PodBuilder().withStatus(new PodStatusBuilder().withPhase(POD_RUNNING_PHASE).build()).build();
+    Pod pod = new PodBuilder()
+                  .withStatus(new PodStatusBuilder().withPodIP("123.12.11.11").withPhase(POD_RUNNING_PHASE).build())
+                  .build();
 
     when(client.pods()).thenReturn(mockKubePod);
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
@@ -403,7 +406,9 @@ public class CIK8CtlHandlerTest extends CategoryTest {
   public void waitUntilPodIsReadyWithSuccessAfterOneRetry() throws InterruptedException {
     KubernetesClient client = mock(KubernetesClient.class);
     Pod pod1 = getPendingPod(POD_PENDING_PHASE);
-    Pod pod2 = new PodBuilder().withStatus(new PodStatusBuilder().withPhase(POD_RUNNING_PHASE).build()).build();
+    Pod pod2 = new PodBuilder()
+                   .withStatus(new PodStatusBuilder().withPodIP("123.12.11.11").withPhase(POD_RUNNING_PHASE).build())
+                   .build();
 
     when(client.pods()).thenReturn(mockKubePod);
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);

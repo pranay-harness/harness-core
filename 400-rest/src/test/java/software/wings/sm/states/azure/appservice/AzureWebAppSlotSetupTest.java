@@ -56,6 +56,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
@@ -78,6 +79,7 @@ import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -191,6 +193,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
 
     mockArtifactoryData(artifact, context);
+    mockUserDataSpecification();
 
     state.setAppService("${webapp}");
     state.setDeploymentSlot("${slot}");
@@ -237,14 +240,25 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().build();
     artifactStreamAttributes.setArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name());
     artifactStreamAttributes.setServerSetting(serverSetting);
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put("buildNo", "artifact-builder-number");
+    metadata.put("url", "artifact-job-name/random-guid/artifact-name");
+    artifactStreamAttributes.setMetadata(metadata);
+    artifactStreamAttributes.setJobName("artifact-job-name");
 
     ArtifactStreamMapper artifactStreamMapper =
         ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
-    doReturn(artifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(artifact);
+    doReturn(artifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(context, artifact);
 
     doReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
         .when(azureVMSSStateHelper)
         .getEncryptedDataDetails(context, artifactoryConfig);
+  }
+
+  public void mockUserDataSpecification() {
+    UserDataSpecification userDataSpecification =
+        UserDataSpecification.builder().data("startup command").serviceId("service-id").build();
+    doReturn(Optional.ofNullable(userDataSpecification)).when(azureVMSSStateHelper).getUserDataSpecification(any());
   }
 
   private String getAppSettingsJSON() {
@@ -274,7 +288,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
 
   private ArtifactStreamMapper mockGetArtifactStreamMapper() {
     ArtifactStreamMapper mockArtifactStreamMapper = mock(ArtifactStreamMapper.class);
-    doReturn(mockArtifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(any());
+    doReturn(mockArtifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(any(), any());
     return mockArtifactStreamMapper;
   }
 

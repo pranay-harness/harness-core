@@ -1,7 +1,11 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -29,6 +33,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @JsonTypeName("RunTests")
 @TypeAlias("runTestsStepInfo")
+@OwnedBy(CI)
 public class RunTestsStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   // Keeping the timeout to a day as its a test step and might take lot of time
@@ -37,7 +42,8 @@ public class RunTestsStepInfo implements CIStepInfo {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN_TESTS).build();
 
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN_TESTS.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.RUN_TESTS.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
@@ -58,16 +64,19 @@ public class RunTestsStepInfo implements CIStepInfo {
   private ParameterField<Map<String, String>> envVariables;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> preCommand;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> postCommand;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "args", "language", "buildTool", "image", "connector",
       "resources", "reports", "testAnnotations", "packages", "runOnlySelectedTests", "preCommand", "postCommand",
-      "outputVariables", "envVariables"})
+      "outputVariables", "envVariables", "privileged", "runAsUser"})
   public RunTestsStepInfo(String identifier, String name, Integer retry, String args, String language, String buildTool,
       String image, String connector, ContainerResource resources, UnitTestReport reports, String testAnnotations,
       String packages, boolean runOnlySelectedTests, io.harness.pms.yaml.ParameterField<String> preCommand,
       io.harness.pms.yaml.ParameterField<String> postCommand, ParameterField<List<String>> outputVariables,
-      ParameterField<Map<String, String>> envVariables) {
+      ParameterField<Map<String, String>> envVariables, ParameterField<Boolean> privileged,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -85,6 +94,8 @@ public class RunTestsStepInfo implements CIStepInfo {
     this.postCommand = postCommand;
     this.outputVariables = outputVariables;
     this.envVariables = envVariables;
+    this.privileged = privileged;
+    this.runAsUser = runAsUser;
   }
 
   @Override
@@ -95,11 +106,6 @@ public class RunTestsStepInfo implements CIStepInfo {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

@@ -1,9 +1,11 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -20,13 +22,13 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.tasks.ResponseData;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
-import java.util.Map;
 import java.util.Optional;
 
-public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
+@OwnedBy(CDP)
+public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getYamlType()).build();
 
@@ -67,16 +69,9 @@ public class K8sScaleStep implements TaskExecutable<K8sScaleStepParameter> {
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sScaleStepParameter stepParameters, Map<String, ResponseData> responseDataMap) {
-    ResponseData responseData = responseDataMap.values().iterator().next();
-    if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
-          .build();
-    }
-
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
+  public StepResponse handleTaskResult(Ambiance ambiance, K8sScaleStepParameter stepParameters,
+      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+    K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
     // do we need to include the newPods with instance details + summaries
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());

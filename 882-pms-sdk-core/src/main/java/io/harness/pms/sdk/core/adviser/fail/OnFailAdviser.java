@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.adviser.fail;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class OnFailAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_FAIL.name()).build();
@@ -52,7 +52,7 @@ public class OnFailAdviser implements Adviser {
   }
 
   @NotNull
-  private io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
+  private OnFailAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
     return (OnFailAdviserParameters) Preconditions.checkNotNull(
         kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
   }

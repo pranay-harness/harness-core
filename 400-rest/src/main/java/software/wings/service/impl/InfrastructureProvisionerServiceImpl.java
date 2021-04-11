@@ -16,12 +16,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.atteo.evo.inflector.English.plural;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.EncryptedData;
-import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -49,8 +50,6 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.security.encryption.EncryptionConfig;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -135,10 +134,11 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
+@OwnedBy(CDP)
 @Singleton
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @ValidateOnExecution
 @Slf4j
-@OwnedBy(CDP)
 public class InfrastructureProvisionerServiceImpl implements InfrastructureProvisionerService {
   @Inject private ManagerExpressionEvaluator evaluator;
 
@@ -632,7 +632,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       }
       Object evaluated = null;
       try {
-        evaluated = evaluator.evaluate(property.getValue(), contextMap);
+        evaluated = evaluator.substitute(property.getValue(), contextMap);
       } catch (Exception ignore) {
         // ignore this exception, it is based on user input
       }
@@ -968,7 +968,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @Override
-  public Map<String, EncryptedDataDetail> extractEncryptedTextVariables(List<NameValuePair> variables, String appId) {
+  public Map<String, EncryptedDataDetail> extractEncryptedTextVariables(
+      List<NameValuePair> variables, String appId, String workflowExecutionId) {
     if (isEmpty(variables)) {
       return Collections.emptyMap();
     }
@@ -977,22 +978,13 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         .filter(entry -> entry.getValue() != null)
         .filter(entry -> "ENCRYPTED_TEXT".equals(entry.getValueType()))
         .collect(toMap(NameValuePair::getName, entry -> {
-          final EncryptedData encryptedData = wingsPersistence.createQuery(EncryptedData.class)
-                                                  .filter(EncryptedDataKeys.accountId, accountId)
-                                                  .filter(EncryptedDataKeys.uuid, entry.getValue())
-                                                  .get();
+          Optional<EncryptedDataDetail> encryptedDataDetailOptional =
+              secretManager.encryptedDataDetails(accountId, null, entry.getValue(), workflowExecutionId);
 
-          if (encryptedData == null) {
-            throw new InvalidRequestException(format("The encrypted variable %s was not found", entry.getName()));
-          }
-
-          EncryptionConfig encryptionConfig =
-              secretManager.getSecretManager(accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-
-          return EncryptedDataDetail.builder()
-              .encryptedData(SecretManager.buildRecordData(encryptedData))
-              .encryptionConfig(encryptionConfig)
-              .build();
+          return encryptedDataDetailOptional.orElseThrow(
+              ()
+                  -> new InvalidRequestException(
+                      format("The encrypted variable %s was not found", entry.getName()), USER));
         }));
   }
 

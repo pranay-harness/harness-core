@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
@@ -12,6 +13,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HeaderConfig;
 import io.harness.beans.PRWebhookEvent;
 import io.harness.beans.PRWebhookEvent.PRWebhookEventBuilder;
@@ -20,7 +22,6 @@ import io.harness.beans.WebhookBaseAttributes.WebhookBaseAttributesBuilder;
 import io.harness.beans.WebhookEvent.Type;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.entity.metadata.AuthToken;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
@@ -38,6 +39,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PIPELINE)
 public class WebhookTriggerFilterUtilTest extends CategoryTest {
   private String payload = "    {\n"
       + "\t\t\"object_kind\": \"merge_request\",\n"
@@ -144,7 +146,6 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
                                             .value("customertriggerspec")
                                             .build(),
             WebhookCondition.builder().key("X-GITHUB-EVENT").operator("in").value("push, pull_request").build()))
-        .authToken(AuthToken.builder().build())
         .build();
   }
 

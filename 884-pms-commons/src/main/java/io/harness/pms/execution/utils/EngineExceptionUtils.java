@@ -1,12 +1,16 @@
 package io.harness.pms.execution.utils;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.failure.FailureType;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class EngineExceptionUtils {
   public static EnumSet<FailureType> getOrchestrationFailureTypes(Throwable throwable) {
     EnumSet<io.harness.exception.FailureType> hFailureTypes = ExceptionUtils.getFailureTypes(throwable);
@@ -15,6 +19,9 @@ public class EngineExceptionUtils {
 
   public static EnumSet<FailureType> transformToOrchestrationFailureTypes(
       Collection<io.harness.exception.FailureType> hFailureTypes) {
+    if (hFailureTypes == null) {
+      hFailureTypes = Collections.emptyList();
+    }
     EnumSet<FailureType> orchestrationFailureTypes = EnumSet.noneOf(FailureType.class);
     if (hFailureTypes.isEmpty()) {
       return orchestrationFailureTypes;

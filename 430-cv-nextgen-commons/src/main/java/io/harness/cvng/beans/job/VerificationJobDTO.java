@@ -2,6 +2,8 @@ package io.harness.cvng.beans.job;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataSourceType;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -16,7 +18,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @SuperBuilder
+@OwnedBy(HarnessTeam.CV)
 public abstract class VerificationJobDTO {
+  public static final String RUNTIME_PARAMS_STRING = "<+input>";
   private String identifier;
   private String jobName;
   private String serviceIdentifier;
@@ -36,6 +40,6 @@ public abstract class VerificationJobDTO {
   public abstract VerificationJobType getType();
 
   public static boolean isRuntimeParam(String value) {
-    return isNotEmpty(value) && value.equals("<+input>");
+    return isNotEmpty(value) && value.equals(RUNTIME_PARAMS_STRING);
   }
 }

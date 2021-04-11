@@ -1,9 +1,11 @@
 package software.wings.graphql.datafetcher.ce.activePods;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.graphql.datafetcher.budget.BudgetAlertsTableSchema;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingSortCriteria;
@@ -18,9 +20,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class CeActivePodCountQueryMetadata {
-  private static final BudgetAlertsTableSchema schema = new BudgetAlertsTableSchema();
+  private static final CeActivePodCountTableSchema schema = new CeActivePodCountTableSchema();
   enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE }
 
   public enum CeActivePodCountMetaDataFields {

@@ -1,5 +1,6 @@
 package io.harness.functional.nas;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
@@ -12,6 +13,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -59,6 +61,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 @Slf4j
 public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
   private static final String WRAP_UP_CONSTANT = "Wrap Up";
@@ -184,7 +187,7 @@ public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
 
   private void printErrorMessageFromNode(String appId, WorkflowExecution workflowExecution) {
     WorkflowExecution workflowExecutionWithDetails =
-        workflowExecutionService.getExecutionDetails(appId, workflowExecution.getUuid(), true);
+        workflowExecutionService.getExecutionDetails(appId, workflowExecution.getUuid(), true, false);
     GraphNode phase1 = workflowExecutionWithDetails.getExecutionNode().getNext();
     if (phase1 != null && phase1.getGroup() != null) {
       GraphNode prepareSteps = phase1.getGroup().getElements().get(0);

@@ -1,23 +1,32 @@
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.user.remote.UserSearchFilter;
 
 import software.wings.beans.User;
+import software.wings.security.authentication.TwoFactorAuthenticationManager;
+import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -25,6 +34,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -32,17 +42,20 @@ import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
-@Api(value = "/ng/users", hidden = true)
-@Path("/ng/users")
+@Api(value = "/ng/user", hidden = true)
+@Path("/ng/user")
 @Produces("application/json")
 @Consumes("application/json")
 @NextGenManagerAuth
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._820_PLATFORM_SERVICE)
 public class UserResourceNG {
   private final UserService userService;
+  private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
 
   @GET
@@ -65,31 +78,39 @@ public class UserResourceNG {
     return new RestResponse<>(pageResponse);
   }
 
+  @GET
+  @Path("/{userId}")
+  public RestResponse<Optional<UserInfo>> getUser(@PathParam("userId") String userId) {
+    User user = userService.get(userId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
+  @GET
+  @Path("email/{emailId}")
+  public RestResponse<Optional<UserInfo>> getUserByEmailId(@PathParam("emailId") String emailId) {
+    User user = userService.getUserByEmail(emailId);
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+  }
+
   @POST
   @Path("/batch")
-  public RestResponse<List<UserInfo>> listUsersByIds(List<String> userIds) {
-    return new RestResponse<>(convertUserToNgUser(userService.getUsers(userIds)));
-  }
-
-  @GET
-  @Path("/usernames")
-  public RestResponse<List<String>> getUsernameFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailList") List<String> emailList) {
-    List<String> usernames = new ArrayList<>();
-    for (String email : emailList) {
-      Optional<User> user = Optional.ofNullable(userService.getUserByEmail(email, accountId));
-      if (user.isPresent()) {
-        usernames.add(user.get().getName());
-      } else {
-        usernames.add(null);
-      }
+  public RestResponse<List<UserInfo>> listUsers(
+      @QueryParam("accountId") String accountId, UserSearchFilter userSearchFilter) {
+    Set<User> userSet = new HashSet<>();
+    if (!isEmpty(userSearchFilter.getUserIds())) {
+      userSet.addAll(userService.getUsers(userSearchFilter.getUserIds(), accountId));
     }
-    return new RestResponse<>(usernames);
+    if (!isEmpty(userSearchFilter.getEmailIds())) {
+      userSet.addAll(userService.getUsersByEmail(userSearchFilter.getEmailIds(), accountId));
+    }
+    return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet)));
   }
 
-  @GET
-  public RestResponse<Optional<UserInfo>> getUserFromEmail(@QueryParam("emailId") String emailId) {
-    User user = userService.getUserByEmail(emailId);
+  @PUT
+  @Path("/user")
+  public RestResponse<Optional<UserInfo>> updateUser(@Body UserInfo userInfo) {
+    User user = convertNgUserToUserWithNameUpdated(userInfo);
+    user = userService.update(user);
     return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
   }
 
@@ -131,6 +152,31 @@ public class UserResourceNG {
     return new RestResponse<>(userService.safeDeleteUser(userId, accountId));
   }
 
+  @GET
+  @Path("/two-factor-auth/{auth-mechanism}")
+  public RestResponse<Optional<TwoFactorAuthenticationSettings>> getTwoFactorAuthSettings(
+      @PathParam("auth-mechanism") TwoFactorAuthenticationMechanism authMechanism,
+      @QueryParam("emailId") String emailId) {
+    return new RestResponse<>(Optional.ofNullable(twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(
+        userService.getUserByEmail(emailId), authMechanism)));
+  }
+
+  @PUT
+  @Path("/enable-two-factor-auth")
+  public RestResponse<Optional<UserInfo>> enableTwoFactorAuth(
+      @QueryParam("emailId") String emailId, @Body TwoFactorAuthenticationSettings settings) {
+    return new RestResponse<>(
+        Optional.ofNullable(convertUserToNgUser(twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(
+            userService.getUserByEmail(emailId), settings))));
+  }
+
+  @PUT
+  @Path("/disable-two-factor-auth")
+  public RestResponse<Optional<UserInfo>> disableTwoFactorAuth(@QueryParam("emailId") String emailId) {
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(
+        twoFactorAuthenticationManager.disableTwoFactorAuthentication(userService.getUserByEmail(emailId)))));
+  }
+
   private List<UserInfo> convertUserToNgUser(List<User> userList) {
     return userList.stream()
         .map(user
@@ -138,7 +184,7 @@ public class UserResourceNG {
                    .email(user.getEmail())
                    .name(user.getName())
                    .uuid(user.getUuid())
-                   .accountIds(user.getAccountIds())
+                   .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
                    .build())
         .collect(Collectors.toList());
   }
@@ -156,7 +202,16 @@ public class UserResourceNG {
                 .map(x
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
-        .accountIds(user.getAccountIds())
+        .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .build();
+  }
+
+  private User convertNgUserToUserWithNameUpdated(UserInfo userInfo) {
+    if (userInfo == null) {
+      return null;
+    }
+    User user = userService.getUserByEmail(userInfo.getEmail());
+    user.setName(userInfo.getName());
+    return user;
   }
 }

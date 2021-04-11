@@ -2,28 +2,25 @@ package io.harness.cdng.visitor.helpers.artifact;
 
 import static io.harness.yaml.core.LevelNodeQualifierName.PATH_CONNECTOR;
 
-import io.harness.IdentifierRefProtoUtils;
-import io.harness.beans.IdentifierRef;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
-import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.filters.FilterCreatorHelper;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 import io.harness.walktree.visitor.validation.ConfigValidator;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 
 import com.google.inject.Inject;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.CDC)
 public class DockerHubArtifactConfigVisitorHelper implements ConfigValidator, EntityReferenceExtractor {
   @Inject private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
   @Override
@@ -41,30 +38,8 @@ public class DockerHubArtifactConfigVisitorHelper implements ConfigValidator, En
     }
     String fullQualifiedDomainName =
         VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
-    Map<String, String> metadata =
-        new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
-    if (!dockerHubArtifactConfig.getConnectorRef().isExpression()) {
-      String connectorRefString = dockerHubArtifactConfig.getConnectorRef().getValue();
-      IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-          connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
-      EntityDetailProtoDTO entityDetail =
-          EntityDetailProtoDTO.newBuilder()
-              .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
-              .setType(EntityTypeProtoEnum.CONNECTORS)
-              .build();
-      result.add(entityDetail);
-    } else {
-      metadata.put(PreFlightCheckMetadata.EXPRESSION, dockerHubArtifactConfig.getConnectorRef().getExpressionValue());
-      IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
-          orgIdentifier, projectIdentifier, dockerHubArtifactConfig.getConnectorRef().getExpressionValue(), metadata);
-      EntityDetailProtoDTO entityDetail =
-          EntityDetailProtoDTO.newBuilder()
-              .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
-              .setType(EntityTypeProtoEnum.CONNECTORS)
-              .build();
-      result.add(entityDetail);
-    }
-
+    result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier, projectIdentifier,
+        fullQualifiedDomainName, dockerHubArtifactConfig.getConnectorRef()));
     return result;
   }
 

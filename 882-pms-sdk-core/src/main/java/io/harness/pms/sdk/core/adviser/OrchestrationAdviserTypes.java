@@ -24,8 +24,5 @@ public enum OrchestrationAdviserTypes {
   RESUME,
   MANUAL_INTERVENTION,
 
-  MARK_SUCCESS,
-
-  // Rollback Custom
-  ROLLBACK_CUSTOM
+  MARK_SUCCESS
 }

@@ -3,12 +3,26 @@ package io.harness.ng.core.remote;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_ORGANIZATION_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.ACCOUNT;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
@@ -25,8 +39,10 @@ import io.harness.ng.core.dto.ProjectAggregateDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.UserGroupAggregateDTO;
+import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project.ProjectKeys;
+import io.harness.ng.core.services.OrganizationService;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.collect.ImmutableList;
@@ -35,7 +51,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -48,6 +67,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.springframework.data.mongodb.core.query.Criteria;
 import retrofit2.http.Body;
 
 @OwnedBy(PL)
@@ -66,14 +86,18 @@ public class NGAggregateResource {
   private final AggregateOrganizationService aggregateOrganizationService;
   private final AggregateProjectService aggregateProjectService;
   private final AggregateUserGroupService aggregateUserGroupService;
+  private final OrganizationService organizationService;
+  private final AccessControlClient accessControlClient;
 
   @GET
   @Path("projects/{identifier}")
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   @ApiOperation(value = "Gets a ProjectAggregateDTO by identifier", nickname = "getProjectAggregateDTO")
   public ResponseDTO<ProjectAggregateDTO> get(
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER) String orgIdentifier) {
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
+          DEFAULT_ORG_IDENTIFIER) @OrgIdentifier @io.harness.ng.core.OrgIdentifier String orgIdentifier) {
     return ResponseDTO.newResponse(
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, identifier));
   }
@@ -92,16 +116,17 @@ public class NGAggregateResource {
           SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
-    ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, orgIdentifier, hasModule, moduleType);
+    Set<String> permittedOrgIds = getPermittedOrganizations(accountIdentifier, orgIdentifier);
+    ProjectFilterDTO projectFilterDTO = getProjectFilterDTO(searchTerm, permittedOrgIds, hasModule, moduleType);
     return ResponseDTO.newResponse(getNGPageResponse(aggregateProjectService.listProjectAggregateDTO(
         accountIdentifier, getPageRequest(pageRequest), projectFilterDTO)));
   }
 
   private ProjectFilterDTO getProjectFilterDTO(
-      String searchTerm, String orgIdentifier, boolean hasModule, ModuleType moduleType) {
+      String searchTerm, Set<String> orgIdentifiers, boolean hasModule, ModuleType moduleType) {
     return ProjectFilterDTO.builder()
         .searchTerm(searchTerm)
-        .orgIdentifier(orgIdentifier)
+        .orgIdentifiers(orgIdentifiers)
         .hasModule(hasModule)
         .moduleType(moduleType)
         .build();
@@ -109,19 +134,21 @@ public class NGAggregateResource {
 
   @GET
   @Path("organizations/{identifier}")
+  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Gets an OrganizationAggregateDTO by identifier", nickname = "getOrganizationAggregateDTO")
   public ResponseDTO<OrganizationAggregateDTO> get(
-      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(
         aggregateOrganizationService.getOrganizationAggregateDTO(accountIdentifier, identifier));
   }
 
   @GET
   @Path("organizations")
+  @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Get OrganizationAggregateDTO list", nickname = "getOrganizationAggregateDTOList")
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @ResourceIdentifier String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -136,24 +163,75 @@ public class NGAggregateResource {
         accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)));
   }
 
-  @POST
+  @GET
   @Path("acl/usergroups")
-  @ApiOperation(value = "Get Aggregated User Group list", nickname = "getUserGroupAggregateDTOList")
+  @ApiOperation(value = "Get Aggregated User Group list", nickname = "getUserGroupAggregateList")
   public ResponseDTO<PageResponse<UserGroupAggregateDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @BeanParam PageRequest pageRequest,
-      @Body AggregateACLRequest aggregateACLRequest) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
-    if (aggregateACLRequest == null) {
-      aggregateACLRequest =
-          AggregateACLRequest.builder().resourceGroupFilter(new HashSet<>()).roleFilter(new HashSet<>()).build();
-    }
     return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
-        pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, aggregateACLRequest));
+        pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm));
+  }
+
+  @POST
+  @Path("acl/usergroups/filter")
+  @ApiOperation(value = "Get Aggregated User Group list with filter", nickname = "getUserGroupAggregateListsWithFilter")
+  public ResponseDTO<List<UserGroupAggregateDTO>> list(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Body AggregateACLRequest aggregateACLRequest) {
+    return ResponseDTO.newResponse(aggregateUserGroupService.listAggregateUserGroups(
+        accountIdentifier, orgIdentifier, projectIdentifier, aggregateACLRequest));
+  }
+
+  @GET
+  @Path("acl/usergroups/{identifier}")
+  @ApiOperation(value = "Get Aggregated User Group", nickname = "getUserGroupAggregate")
+  public ResponseDTO<UserGroupAggregateDTO> list(
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    return ResponseDTO.newResponse(aggregateUserGroupService.getAggregatedUserGroup(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier));
+  }
+
+  private Set<String> getPermittedOrganizations(@NotNull String accountIdentifier, String orgIdentifier) {
+    Set<String> orgIdentifiers;
+    if (isEmpty(orgIdentifier)) {
+      Criteria orgCriteria = Criteria.where(OrganizationKeys.accountIdentifier)
+                                 .is(accountIdentifier)
+                                 .and(OrganizationKeys.deleted)
+                                 .ne(Boolean.TRUE);
+      List<Organization> organizations = organizationService.list(orgCriteria);
+      orgIdentifiers = organizations.stream().map(Organization::getIdentifier).collect(Collectors.toSet());
+    } else {
+      orgIdentifiers = Collections.singleton(orgIdentifier);
+    }
+
+    ResourceScope resourceScope = ResourceScope.builder().accountIdentifier(accountIdentifier).build();
+    List<PermissionCheckDTO> permissionChecks = orgIdentifiers.stream()
+                                                    .map(oi
+                                                        -> PermissionCheckDTO.builder()
+                                                               .permission(VIEW_PROJECT_PERMISSION)
+                                                               .resourceIdentifier(oi)
+                                                               .resourceScope(resourceScope)
+                                                               .resourceType(ORGANIZATION)
+                                                               .build())
+                                                    .collect(Collectors.toList());
+    AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
+    return accessCheckResponse.getAccessControlList()
+        .stream()
+        .filter(AccessControlDTO::isPermitted)
+        .map(AccessControlDTO::getResourceIdentifier)
+        .collect(Collectors.toSet());
   }
 }

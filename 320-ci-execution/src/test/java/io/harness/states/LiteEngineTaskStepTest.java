@@ -9,6 +9,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
@@ -31,7 +33,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
-import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
@@ -39,12 +40,14 @@ import io.harness.yaml.core.StepElement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CI)
 public class LiteEngineTaskStepTest extends CIExecutionTestBase {
   @Mock private BuildSetupUtils buildSetupUtils;
   @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
@@ -103,42 +106,44 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     //    assertThat(taskType.getType()).isEqualTo("CI_BUILD");
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldHandleSuccessfulTaskResult() {
     PodStatus podStatus = PodStatus.builder().build();
     CiK8sTaskResponse taskResponse = CiK8sTaskResponse.builder().podName("test").podStatus(podStatus).build();
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    responseDataMap.put("waitId",
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .k8sTaskResponse(taskResponse)
-            .build());
+    K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
+                                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                     .k8sTaskResponse(taskResponse)
+                                                     .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
-    StepResponse stepResponse = liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, responseDataMap);
+    StepResponse stepResponse =
+        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldHandleFailedTaskResult() {
     PodStatus podStatus = PodStatus.builder().build();
     CiK8sTaskResponse taskResponse = CiK8sTaskResponse.builder().podName("test").podStatus(podStatus).build();
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    responseDataMap.put("waitId",
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .k8sTaskResponse(taskResponse)
-            .build());
+
+    K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
+                                                     .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                                     .k8sTaskResponse(taskResponse)
+                                                     .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
-    StepResponse stepResponse = liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, responseDataMap);
+    StepResponse stepResponse =
+        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
@@ -159,18 +164,18 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     ContainerDefinitionInfo serviceContainer =
         ContainerDefinitionInfo.builder().stepIdentifier(stepId).stepName(stepName).name(containerName).build();
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    responseDataMap.put("waitId",
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .k8sTaskResponse(taskResponse)
-            .build());
+    K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
+                                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                     .k8sTaskResponse(taskResponse)
+                                                     .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
-    StepResponse stepResponse = liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, responseDataMap);
+    StepResponse stepResponse =
+        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
@@ -189,15 +194,14 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
             .containerImageDetails(
                 ContainerImageDetails.builder().imageDetails(ImageDetails.builder().name("redis").build()).build())
             .build();
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    responseDataMap.put("waitId",
-        K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .k8sTaskResponse(taskResponse)
-            .build());
+    K8sTaskExecutionResponse executionResponse = K8sTaskExecutionResponse.builder()
+                                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                                                     .k8sTaskResponse(taskResponse)
+                                                     .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
-    StepResponse stepResponse = liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, responseDataMap);
+    StepResponse stepResponse =
+        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 }

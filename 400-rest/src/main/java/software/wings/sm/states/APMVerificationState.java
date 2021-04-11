@@ -12,13 +12,17 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
@@ -67,6 +71,8 @@ import org.slf4j.Logger;
 
 @Slf4j
 @FieldNameConstants(innerTypeName = "APMVerificationStateKeys")
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class APMVerificationState extends AbstractMetricAnalysisState {
   public APMVerificationState(String name) {
     super(name, StateType.APM_VERIFICATION);

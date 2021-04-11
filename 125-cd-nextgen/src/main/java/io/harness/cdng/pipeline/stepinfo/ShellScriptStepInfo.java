@@ -1,15 +1,16 @@
 package io.harness.cdng.pipeline.stepinfo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.common.script.ExecutionTarget;
 import io.harness.steps.common.script.ShellScriptBaseStepInfo;
@@ -38,28 +39,20 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.SHELL_SCRIPT)
 @SimpleVisitorHelper(helperClass = ShellScriptStepInfoVisitorHelper.class)
 @TypeAlias("shellScriptStepInfo")
+@OwnedBy(HarnessTeam.CDC)
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
   public ShellScriptStepInfo(ShellType shell, ShellScriptSourceWrapper source, ExecutionTarget executionTarget,
-      ParameterField<Boolean> onDelegate, String name, String identifier, List<NGVariable> outputVariables,
-      List<NGVariable> environmentVariables, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+      ParameterField<Boolean> onDelegate, List<NGVariable> outputVariables, List<NGVariable> environmentVariables,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(shell, source, executionTarget, onDelegate);
-    this.name = name;
-    this.identifier = identifier;
     this.outputVariables = outputVariables;
     this.environmentVariables = environmentVariables;
     this.delegateSelectors = delegateSelectors;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override
@@ -80,20 +73,14 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public SpecParameters getSpecParameters() {
     return ShellScriptStepParameters.infoBuilder()
         .executionTarget(getExecutionTarget())
         .onDelegate(getOnDelegate())
         .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
         .environmentVariables(NGVariablesUtils.getMapOfVariables(environmentVariables, 0L))
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .shellType(getShell())
         .source(getSource())
-        .timeout(baseStepParameterInfo.getTimeout())
-        .name(baseStepParameterInfo.getName())
-        .identifier(baseStepParameterInfo.getIdentifier())
-        .description(baseStepParameterInfo.getDescription())
-        .skipCondition(baseStepParameterInfo.getSkipCondition())
         .delegateSelectors(ParameterField.createValueField(
             CollectionUtils.emptyIfNull(delegateSelectors != null ? delegateSelectors.getValue() : null)))
         .build();

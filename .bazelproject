@@ -2,6 +2,7 @@ import .bazelproject-config
 
 directories:
   .aeriform
+  110-change-data-capture
   120-ng-manager
   125-cd-nextgen
   130-resource-group
@@ -23,7 +24,7 @@ directories:
   340-ce-nextgen
   350-event-server
   360-cg-manager
-  370-users-syncbridge
+  375-ce-graphql
   380-cg-graphql
   390-db-migration
   400-rest
@@ -31,12 +32,14 @@ directories:
   420-delegate-service
   430-cv-nextgen-commons
   440-connector-nextgen
+  445-cg-connectors
   450-ce-views
   460-capability
   470-alert
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
+  815-cg-triggers
   820-platform-service
   830-notification-service
   835-notification-senders
@@ -57,22 +60,17 @@ directories:
   888-pms-client
   890-pms-contracts
   890-sm-core
-  900-access-control-service
-  902-aggregator-module
-  903-decision-module
-  905-access-control-core
-  908-access-control-admin-client
-  908-access-control-sdk
-  909-access-control-commons
   910-delegate-service-driver
   910-delegate-task-grpc-service
-  915-pms-delegate-service-driver
   920-delegate-agent-beans
   920-delegate-service-beans
+  920-ng-signup
+  925-access-control-service
   930-delegate-tasks
   930-ng-core-clients
   955-alert-beans
   955-delegate-beans
+  935-access-control-decision
   940-feature-flag
   940-ng-audit-service
   940-notification-client
@@ -80,6 +78,13 @@ directories:
   940-secret-manager-client
   945-ng-audit-client
   949-git-sync-sdk
+  946-access-control-aggregator
+  947-access-control-core
+  947-access-control-decision-commons
+  948-access-control-admin-client
+  948-access-control-sdk
+  949-access-control-commons
+  950-cg-ng-shared-orchestration-beans
   950-command-library-common
   950-log-client
   950-common-entities
@@ -87,9 +92,9 @@ directories:
   950-events-api
   950-events-framework
   950-ng-audit-commons
+  950-ng-authentication-service
   950-ng-core
   950-ng-project-n-orgs
-  950-ng-signup
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
@@ -125,6 +130,7 @@ import_run_configurations:
   run-configurations/BatchProcessinngApp.xml
   run-configurations/CENextGenApp.xml
   run-configurations/CIManagerApplication.xml
+  run-configurations/ChangeDataCaptureApp.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGenApp.xml

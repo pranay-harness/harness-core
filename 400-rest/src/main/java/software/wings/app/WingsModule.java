@@ -1,15 +1,13 @@
 package software.wings.app;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.CgOrchestrationModule;
-import io.harness.OrchestrationModule;
-import io.harness.OrchestrationModuleConfig;
-import io.harness.OrchestrationStepsModule;
-import io.harness.OrchestrationVisualizationModule;
 import io.harness.SecretManagementCoreModule;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
@@ -50,8 +48,11 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
+import io.harness.cf.CFApi;
 import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.cf.client.api.CfClient;
+import io.harness.cf.openapi.ApiClient;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
@@ -87,8 +88,6 @@ import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.encryptors.managerproxy.ManagerCustomEncryptor;
 import io.harness.encryptors.managerproxy.ManagerKmsEncryptor;
 import io.harness.encryptors.managerproxy.ManagerVaultEncryptor;
-import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
-import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
@@ -103,6 +102,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
+import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ServersModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
@@ -113,6 +113,7 @@ import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
@@ -132,7 +133,6 @@ import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
 import io.harness.mongo.MongoConfig;
-import io.harness.ng.core.invites.client.NgInviteClientModule;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
@@ -140,10 +140,7 @@ import io.harness.notifications.AlertVisibilityCheckerImpl;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.queue.QueueController;
-import io.harness.redesign.services.CustomExecutionService;
-import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
@@ -296,7 +293,6 @@ import software.wings.scim.ScimUserServiceImpl;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
 import software.wings.security.saml.SamlUserGroupSync;
-import software.wings.service.DelegateTaskExecutor;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
@@ -750,7 +746,8 @@ import org.jetbrains.annotations.NotNull;
  * Guice Module for initializing all beans.
  */
 @Slf4j
-@TargetModule(HarnessModule._360_CG_MANGER)
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
@@ -848,11 +845,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
-    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                                .serviceName("CD")
-                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                                .build()));
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
@@ -874,25 +867,25 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
           bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
+              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
-                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, redisConfig,
-                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
-                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE));
+                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP, redisConfig,
-                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE));
+              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+              .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
+                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
         }
       }
     });
@@ -901,8 +894,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(MainConfiguration.class).toInstance(configuration);
     // RetryOnException Binding start
     bind(MethodExecutionHelper.class); // untargetted binding for eager loading
-    RetryOnExceptionInterceptor retryOnExceptionInterceptor = new RetryOnExceptionInterceptor();
-    requestInjection(retryOnExceptionInterceptor);
+    ProviderMethodInterceptor retryOnExceptionInterceptor =
+        new ProviderMethodInterceptor(getProvider(RetryOnExceptionInterceptor.class));
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
     // Retry On Exception Binding ends
     bind(SchedulerConfig.class)
@@ -1298,8 +1291,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
 
-    ApiBlocker apiBlocker = new ApiBlocker();
-    requestInjection(apiBlocker);
+    ProviderMethodInterceptor apiBlocker = new ProviderMethodInterceptor(getProvider(ApiBlocker.class));
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RestrictedApi.class), apiBlocker);
 
     switch (configuration.getExecutionLogsStorageMode()) {
@@ -1328,18 +1320,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
       log.info("Could not create the connector resource client module", ex);
     }
 
-    // User-Sync Dependencies
+    // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
-    install(OrchestrationStepsModule.getInstance());
-    install(OrchestrationVisualizationModule.getInstance());
-    bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
-    MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
-        MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskCategory.DELEGATE_TASK_V1).to(DelegateTaskExecutor.class);
 
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
@@ -1596,6 +1582,21 @@ public class WingsModule extends AbstractModule implements ServersModule {
     String apiKey = cfClientConfig.getApiKey();
 
     return new CfClient(apiKey);
+  }
+
+  @Provides
+  @Singleton
+  CFApi providesCfAPI() {
+    CfMigrationConfig migrationConfig = configuration.getCfMigrationConfig();
+    ApiClient apiClient = new ApiClient();
+    apiClient.setBasePath(migrationConfig.getAdminUrl());
+    return new CFApi(apiClient);
+  }
+
+  @Provides
+  @Singleton
+  CfMigrationConfig providesCfMigrationConfig() {
+    return configuration.getCfMigrationConfig();
   }
 
   @Provides

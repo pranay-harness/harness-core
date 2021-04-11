@@ -1,6 +1,11 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
+import static io.harness.beans.ExecutionInterruptType.PAUSE_ALL;
+import static io.harness.beans.ExecutionInterruptType.PAUSE_FOR_INPUTS;
+import static io.harness.beans.ExecutionInterruptType.RESUME_ALL;
+import static io.harness.beans.ExecutionInterruptType.RETRY;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.ERROR;
@@ -28,11 +33,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.STATE_NOT_FOR_TYPE;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_FOR_INPUTS;
-import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RETRY;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
@@ -58,7 +58,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageResponse;
@@ -74,7 +77,6 @@ import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.observer.Subject;
@@ -84,7 +86,7 @@ import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspectionListener;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.api.ContinuePipelineResponseData;
@@ -167,6 +169,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class StateMachineExecutor implements StateInspectionListener {
   public static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
   private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
@@ -743,7 +746,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           } else if (StateType.APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
             expiryTs = evaluateExpiryTs(currentState, context);
           }
-          NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
+          OldNotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
               stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
           waitNotifyEngine.waitForAllOn(
               ORCHESTRATION, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
@@ -939,7 +942,7 @@ public class StateMachineExecutor implements StateInspectionListener {
             stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
         // update expiry and status to paused/waiting
         updateStateExecutionInstanceForRuntimeInputs(stateExecutionInstance, status, executionEventAdvice);
-        NotifyCallback callback = new PipelineContinueWithInputsCallback(stateExecutionInstance.getAppId(),
+        OldNotifyCallback callback = new PipelineContinueWithInputsCallback(stateExecutionInstance.getAppId(),
             stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid(),
             stateExecutionInstance.getPipelineStageElementId());
         waitNotifyEngine.waitForAllOn(ORCHESTRATION, callback,
@@ -1085,7 +1088,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private Map<String, String> getManualInterventionPlaceholderValues(ExecutionContextImpl context) {
     notNullCheck("context.getApp()", context.getApp());
     WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, false);
     String artifactsMessage =
         workflowNotificationHelper.getArtifactsDetails(context, workflowExecution, WORKFLOW, null).getMessage();
 
@@ -1186,7 +1189,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("context.getApp()", context.getApp());
 
     WorkflowExecution pipelineExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, false);
 
     WorkflowNotificationDetails pipelineDetails = workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(
         context.getApp(), pipelineExecution, context);
@@ -1216,7 +1219,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("context.getApp()", context.getApp());
 
     WorkflowExecution pipelineExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, false);
 
     WorkflowNotificationDetails pipelineDetails = workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(
         context.getApp(), pipelineExecution, context);
@@ -1246,7 +1249,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     notNullCheck("context.getApp()", context.getApp());
 
     WorkflowExecution pipelineExecution = workflowExecutionService.getExecutionDetails(
-        context.getApp().getUuid(), context.getWorkflowExecutionId(), false);
+        context.getApp().getUuid(), context.getWorkflowExecutionId(), false, false);
 
     WorkflowNotificationDetails pipelineDetails = workflowNotificationHelper.calculatePipelineDetailsPipelineExecution(
         context.getApp(), pipelineExecution, context);

@@ -65,7 +65,7 @@ import software.wings.beans.VMSSAuthType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -87,7 +87,8 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
-import software.wings.sm.states.azure.artifact.DockerArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.container.DockerArtifactStreamMapper;
+import software.wings.utils.ArtifactType;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -1144,11 +1145,24 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   @Owner(developers = OwnerRule.TMACARI)
   @Category(UnitTests.class)
   public void testGetConnectorMapper() {
+    String appId = "appUUID";
+    DeploymentExecutionContext executionContext = mock(DeploymentExecutionContext.class);
+    Application application = new Application();
+    application.setUuid(appId);
+    Service service = Service.builder().uuid("serviceUUID").artifactType(ArtifactType.DOCKER).build();
     Artifact artifact = anArtifact().withArtifactStreamId("artifactStreamId").build();
+    doReturn(service).when(azureVMSSStateHelper).getServiceByAppId(executionContext, appId);
+    doReturn(appId).when(executionContext).getAppId();
 
-    doReturn(new DockerArtifactStream()).when(azureVMSSStateHelper).getArtifactStream("artifactStreamId");
+    ArtifactStream artifactStream = mock(ArtifactStream.class);
+    doReturn(artifactStream).when(azureVMSSStateHelper).getArtifactStream("artifactStreamId");
 
-    ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(artifact);
+    ArtifactStreamAttributes artifactStreamAttributes = mock(ArtifactStreamAttributes.class);
+    doReturn(ArtifactType.DOCKER).when(artifactStreamAttributes).getArtifactType();
+    doReturn(ArtifactStreamType.DOCKER.name()).when(artifactStreamAttributes).getArtifactStreamType();
+    doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes(any());
+
+    ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(executionContext, artifact);
     assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);
   }
 }

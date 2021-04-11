@@ -3,6 +3,8 @@ package io.harness.delegate.task.git;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus.SUCCESS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.DX)
 public class GitCommandTaskHandler {
   @Inject private SecretDecryptionService decryptionService;
   @Inject private NGGitService gitService;
@@ -33,10 +36,19 @@ public class GitCommandTaskHandler {
       List<EncryptedDataDetail> encryptionDetailList, SshSessionConfig sshSessionConfig) {
     GitCommandExecutionResponse delegateResponseData =
         (GitCommandExecutionResponse) handleValidateTask(gitConnector, accountIdentifier, sshSessionConfig);
-    return ConnectorValidationResult.builder()
-        .status(delegateResponseData.getGitCommandStatus() == SUCCESS ? ConnectivityStatus.SUCCESS
-                                                                      : ConnectivityStatus.FAILURE)
-        .build();
+    if (delegateResponseData.getGitCommandStatus() == SUCCESS) {
+      return ConnectorValidationResult.builder()
+          .status(ConnectivityStatus.SUCCESS)
+          .testedAt(delegateResponseData.getConnectorValidationResult().getTestedAt())
+          .build();
+    } else {
+      return ConnectorValidationResult.builder()
+          .status(ConnectivityStatus.FAILURE)
+          .testedAt(delegateResponseData.getConnectorValidationResult().getTestedAt())
+          .errorSummary(delegateResponseData.getConnectorValidationResult().getErrorSummary())
+          .errors(delegateResponseData.getConnectorValidationResult().getErrors())
+          .build();
+    }
   }
 
   public DelegateResponseData handleValidateTask(

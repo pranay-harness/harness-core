@@ -1,6 +1,6 @@
 package io.harness.engine.executions.plan;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -8,6 +8,8 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdateFactory;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
@@ -25,6 +27,7 @@ import io.harness.repositories.PlanExecutionRepository;
 import com.google.inject.Inject;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.Consumer;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -33,12 +36,13 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private StepStatusUpdateFactory stepStatusUpdateFactory;
 
   @Override
   public PlanExecution save(PlanExecution planExecution) {
@@ -109,7 +113,15 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
 
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    log.info("State Status Update Callback Fired : {}", stepStatusUpdateInfo);
+    StepStatusUpdate stepStatusUpdate = stepStatusUpdateFactory.obtainStepStatusUpdate(stepStatusUpdateInfo);
+    if (stepStatusUpdate != null) {
+      stepStatusUpdate.onStepStatusUpdate(stepStatusUpdateInfo);
+    }
+  }
+
+  public List<PlanExecution> findAllByPlanExecutionIdIn(List<String> planExecutionIds) {
+    Query query = query(where(PlanExecutionKeys.uuid).in(planExecutionIds));
+    return mongoTemplate.find(query, PlanExecution.class);
   }
 
   private void emitEvent(PlanExecution planExecution) {

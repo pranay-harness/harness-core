@@ -1,14 +1,18 @@
 package io.harness.gitsync.persistance;
 
-import io.harness.EntityType;
-import io.harness.ng.core.EntityDetail;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
-public interface GitSyncableEntity {
-  String getBranch();
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.NGAccess;
+import io.harness.persistence.PersistentEntity;
 
-  void setBranch(String branch);
+@OwnedBy(DX)
+public interface GitSyncableEntity extends NGAccess, PersistentEntity {
+  /**
+   * Add object Id to the entity class and lombok annotation should automatically generate getter.
+   * Also it is important that the field name is <b>objectId</b>.
+   */
+  String getObjectIdOfYaml();
 
-  EntityType getEntityType();
-
-  EntityDetail getEntityDetail();
+  void setObjectIdOfYaml(String objectId);
 }

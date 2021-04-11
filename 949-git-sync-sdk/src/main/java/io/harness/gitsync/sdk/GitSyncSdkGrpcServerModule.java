@@ -1,8 +1,10 @@
 package io.harness.gitsync.sdk;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.GitSyncSdkConfiguration.DeployMode.REMOTE;
 import static io.harness.gitsync.sdk.GitSyncGrpcConstants.GitSyncSdkInternalService;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.gittoharness.GitToHarnessGrpcService;
 import io.harness.grpc.server.GrpcInProcessServer;
@@ -23,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+@OwnedBy(DX)
 public class GitSyncSdkGrpcServerModule extends AbstractModule {
   private static GitSyncSdkGrpcServerModule instance;
 
@@ -35,14 +38,15 @@ public class GitSyncSdkGrpcServerModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
+    Multibinder<Service> serviceBinder =
+        Multibinder.newSetBinder(binder(), Service.class, Names.named("git-sync-sdk-services"));
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("gitsync-sdk-grpc-service")));
   }
 
   @Provides
   @Singleton
   @Named("gitsync-sdk-service-manager")
-  public ServiceManager serviceManager(Set<Service> services) {
+  public ServiceManager serviceManager(@Named("git-sync-sdk-services") Set<Service> services) {
     return new ServiceManager(services);
   }
 

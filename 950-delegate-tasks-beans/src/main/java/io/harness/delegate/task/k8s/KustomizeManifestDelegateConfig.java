@@ -10,6 +10,7 @@ import lombok.Value;
 public class KustomizeManifestDelegateConfig implements ManifestDelegateConfig {
   StoreDelegateConfig storeDelegateConfig;
   String pluginPath;
+  String kustomizeDirPath;
 
   @Override
   public ManifestType getManifestType() {

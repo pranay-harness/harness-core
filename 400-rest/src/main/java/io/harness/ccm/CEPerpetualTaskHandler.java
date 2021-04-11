@@ -1,10 +1,12 @@
 package io.harness.ccm;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.beans.FeatureName.SIDE_NAVIGATION;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.ClusterRecordObserver;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class CEPerpetualTaskHandler implements AccountCrudObserver, ClusterRecordObserver {
   private CCMSettingService ccmSettingService;
   private CEPerpetualTaskManager cePerpetualTaskManager;

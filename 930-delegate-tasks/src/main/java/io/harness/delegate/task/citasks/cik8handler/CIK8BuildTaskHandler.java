@@ -108,6 +108,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
           }
         }
 
+        log.info("Setting up pod spec");
         Pod pod = podSpecBuilder.createSpec(podParams).build();
         log.info("Creating pod with spec: {}", pod);
         kubeCtlHandler.createPod(kubernetesClient, pod, namespace);
@@ -205,6 +206,9 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
     Map<String, String> secretData = new HashMap<>();
     for (CIK8ContainerParams containerParams : containerParamsList) {
+      log.info(
+          "Creating env variables for container {} present on pod: {}", containerParams.getName(), podParams.getName());
+
       if (containerParams.getContainerSecrets() == null) {
         continue;
       }
@@ -215,12 +219,16 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
           containerParams.getContainerSecrets().getConnectorDetailsMap();
 
       if (isNotEmpty(secretVariableDetails)) {
+        log.info("Creating custom secret env variables for container {} present on pod: {}", containerParams.getName(),
+            podParams.getName());
         Map<String, String> customVarSecretData =
             getAndUpdateCustomVariableSecretData(secretVariableDetails, containerParams, secretName);
         secretData.putAll(customVarSecretData);
       }
 
       if (isNotEmpty(connectorDetailsMap)) {
+        log.info("Creating connector env variables for container {} present on pod: {}", containerParams.getName(),
+            podParams.getName());
         switch (containerParams.getContainerType()) {
           case LITE_ENGINE:
           case PLUGIN:
@@ -234,19 +242,23 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       }
 
       if (containerParams.getContainerType() == LITE_ENGINE) {
+        log.info("Creating proxy env variables for container {} present on pod: {}", containerParams.getName(),
+            podParams.getName());
         Map<String, String> proxyConfigurationSecretData =
             getAndUpdateProxyConfigurationSecretData(containerParams, secretName);
         secretData.putAll(proxyConfigurationSecretData);
       }
     }
 
+    log.info("Creating git secret env variables for pod: {}", podParams.getName());
     Map<String, String> gitSecretData = getAndUpdateGitSecretData(gitConnectorDetails, containerParamsList, secretName);
     secretData.putAll(gitSecretData);
+    log.info("Determined environment secrets to create for stage for pod {}", podParams.getName());
 
     if (isNotEmpty(secretData)) {
-      log.info("Creating k8 secret for pod name: {}", podParams.getName());
+      log.info("Creating environment secrets for pod name: {}", podParams.getName());
       kubeCtlHandler.createSecret(kubernetesClient, secretName, namespace, secretData);
-      log.info("k8 secret creation is complete for pod name: {}", podParams.getName());
+      log.info("Environment k8 secret creation is complete for pod name: {}", podParams.getName());
     }
   }
 

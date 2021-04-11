@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.eventsframework.schemas.entity;
+
+option java_multiple_files = true;
+option go_package = "970_ng_commons";
+import "google/protobuf/wrappers.proto";
+
+message EntityScopeInfo {
+  string account_id = 1;
+  google.protobuf.StringValue org_id = 2;
+  google.protobuf.StringValue project_id = 3;
+}

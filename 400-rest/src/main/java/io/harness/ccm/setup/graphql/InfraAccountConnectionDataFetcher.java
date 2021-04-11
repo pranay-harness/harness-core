@@ -1,5 +1,10 @@
 package io.harness.ccm.setup.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.setup.util.InfraSetUpUtils;
 
@@ -13,6 +18,8 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class InfraAccountConnectionDataFetcher
     extends AbstractObjectDataFetcher<QLInfraAccountConnectionData, QLInfraType> {
   @Inject private MainConfiguration mainConfiguration;

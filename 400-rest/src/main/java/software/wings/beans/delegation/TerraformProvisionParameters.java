@@ -12,6 +12,8 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.provision.TfVarSource;
@@ -36,15 +38,6 @@ import lombok.Value;
 public class TerraformProvisionParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final long TIMEOUT_IN_MINUTES = 100;
   public static final String TERRAFORM = "terraform";
-
-  public enum TerraformCommand { APPLY, DESTROY }
-
-  public enum TerraformCommandUnit {
-    Apply,
-    Adjust,
-    Destroy,
-    Rollback;
-  }
 
   private String accountId;
   private final String activityId;
@@ -85,6 +78,8 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final String planName;
 
   private final TfVarSource tfVarSource;
+
+  private final boolean useTfClient; // FF: USE_TF_CLIENT
   /**
    * Boolean to indicate if we should skip updating terraform state using refresh command before applying an approved
    * terraform plan

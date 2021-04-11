@@ -118,8 +118,8 @@ public class TriggerServiceHelper {
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
 
-  public void deletePipelineCompletionTriggers(String appId, String pipelineId) {
-    getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList()).forEach(trigger -> delete(trigger.getUuid()));
+  public List<Trigger> getPipelineCompletionTriggers(String appId, String pipelineId) {
+    return getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList());
   }
 
   public List<Trigger> getTriggersByApp(String appId) {

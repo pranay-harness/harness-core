@@ -1,6 +1,7 @@
 package io.harness.ng.core.impl;
 
 import static io.harness.ModuleType.CD;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
@@ -8,10 +9,12 @@ import static io.harness.utils.PageTestUtils.getPage;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static java.util.Collections.emptyList;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -20,22 +23,27 @@ import static org.mockito.Mockito.when;
 import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.beans.ProjectsPerOrganizationCount;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
-import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.rule.Owner;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,26 +51,32 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 public class ProjectServiceImplTest extends CategoryTest {
   private ProjectRepository projectRepository;
   private OrganizationService organizationService;
   private ProjectServiceImpl projectService;
   private TransactionTemplate transactionTemplate;
   private OutboxService outboxService;
-  private NgUserService ngUserService;
 
   @Before
   public void setup() {
     projectRepository = mock(ProjectRepository.class);
     organizationService = mock(OrganizationService.class);
-    ngUserService = mock(NgUserService.class);
     transactionTemplate = mock(TransactionTemplate.class);
     outboxService = mock(OutboxService.class);
-    projectService = spy(new ProjectServiceImpl(
-        projectRepository, organizationService, transactionTemplate, ngUserService, outboxService));
+    projectService =
+        spy(new ProjectServiceImpl(projectRepository, organizationService, transactionTemplate, outboxService));
   }
 
   private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
@@ -87,7 +101,6 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     when(projectRepository.save(project)).thenReturn(project);
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
-    when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
 
     projectService.create(accountIdentifier, orgIdentifier, projectDTO);
     try {
@@ -188,8 +201,9 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     when(projectRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
 
+    Set<String> orgIdentifiers = Collections.singleton(orgIdentifier);
     Page<Project> projectPage = projectService.list(accountIdentifier, unpaged(),
-        ProjectFilterDTO.builder().orgIdentifier(orgIdentifier).searchTerm(searchTerm).moduleType(CD).build());
+        ProjectFilterDTO.builder().orgIdentifiers(orgIdentifiers).searchTerm(searchTerm).moduleType(CD).build());
 
     verify(projectRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
 
@@ -198,10 +212,37 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     assertEquals(5, criteriaObject.size());
     assertEquals(accountIdentifier, criteriaObject.get(ProjectKeys.accountIdentifier));
-    assertEquals(orgIdentifier, criteriaObject.get(ProjectKeys.orgIdentifier));
+    assertTrue(criteriaObject.containsKey(ProjectKeys.orgIdentifier));
     assertTrue(criteriaObject.containsKey(ProjectKeys.deleted));
     assertTrue(criteriaObject.containsKey(ProjectKeys.modules));
 
     assertEquals(0, projectPage.getTotalElements());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testProjectsCount() throws NoSuchFieldException, IllegalAccessException {
+    String accountIdentifier = randomAlphabetic(10);
+    ArgumentCaptor<Aggregation> aggregationArgumentCaptor = ArgumentCaptor.forClass(Aggregation.class);
+    List<ProjectsPerOrganizationCount> projectsCount = new ArrayList<>();
+    AggregationResults<ProjectsPerOrganizationCount> aggregationResults = mock(AggregationResults.class);
+    when(projectRepository.aggregate(any(), eq(ProjectsPerOrganizationCount.class))).thenReturn(aggregationResults);
+    when(aggregationResults.getMappedResults()).thenReturn(projectsCount);
+    projectService.getProjectsCountPerOrganization(accountIdentifier, null);
+
+    verify(projectRepository, times(1))
+        .aggregate(aggregationArgumentCaptor.capture(), eq(ProjectsPerOrganizationCount.class));
+    Aggregation aggregation = aggregationArgumentCaptor.getValue();
+    assertNotNull(aggregation);
+
+    Field f = aggregation.getClass().getDeclaredField("operations");
+    f.setAccessible(true);
+    List<AggregationOperation> operations = (List<AggregationOperation>) f.get(aggregation);
+    assertEquals(4, operations.size());
+    assertEquals(MatchOperation.class, operations.get(0).getClass());
+    assertEquals(SortOperation.class, operations.get(1).getClass());
+    assertEquals(GroupOperation.class, operations.get(2).getClass());
+    assertEquals(ProjectionOperation.class, operations.get(3).getClass());
   }
 }

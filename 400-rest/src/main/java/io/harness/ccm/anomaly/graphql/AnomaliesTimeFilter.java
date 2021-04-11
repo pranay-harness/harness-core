@@ -1,5 +1,10 @@
 package io.harness.ccm.anomaly.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
@@ -21,6 +26,8 @@ import org.apache.commons.lang3.time.DateUtils;
 @Data
 @Builder
 @Slf4j
+@OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class AnomaliesTimeFilter implements AnomaliesFilter {
   private QLTimeOperator operator;
   private AnomaliesDataTableSchema.fields variable;

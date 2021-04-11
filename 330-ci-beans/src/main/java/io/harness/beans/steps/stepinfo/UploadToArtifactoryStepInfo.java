@@ -1,7 +1,10 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -28,6 +31,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("ArtifactoryUpload")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("uploadToArtifactoryStepInfo")
+@OwnedBy(CI)
 public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
 
@@ -42,8 +46,8 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   // plugin settings
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
@@ -51,32 +55,23 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
 
   @Builder
   @ConstructorProperties(
-      {"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "target", "sourcePath"})
+      {"identifier", "name", "retry", "connectorRef", "resources", "target", "sourcePath", "privileged", "runAsUser"})
   UploadToArtifactoryStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> target,
-      ParameterField<String> sourcePath) {
+      ContainerResource resources, ParameterField<String> target, ParameterField<String> sourcePath,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.containerImage =
-        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/artifactory"));
-    if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/artifactory");
-    }
     this.resources = resources;
     this.target = target;
     this.sourcePath = sourcePath;
+    this.runAsUser = runAsUser;
   }
 
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

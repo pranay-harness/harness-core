@@ -54,8 +54,10 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
+import io.harness.beans.shared.tasks.Cd2SetupFields;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
@@ -77,8 +79,6 @@ import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCache;
-import io.harness.tasks.Cd1SetupFields;
-import io.harness.tasks.Cd2SetupFields;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -265,7 +265,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testAssignByDelegateScopesWithWildcard() {
+  public void testAssignByDelegateIncludeScopesWithWildcard() {
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
             .accountId(ACCOUNT_ID)
@@ -288,6 +288,42 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     delegate = delegateBuilder
                    .includeScopes(ImmutableList.of(
+                       DelegateScope.builder().environments(ImmutableList.of("ENVIRONMENT_ID")).build()))
+                   .build();
+    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+
+    delegateTaskBuilder.setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, SCOPE_WILDCARD);
+
+    batch = BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build())).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testAssignByDelegateExcludeScopesWithWildcard() {
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder()
+            .accountId(ACCOUNT_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+
+    DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
+
+    Delegate delegate = delegateBuilder
+                            .excludeScopes(ImmutableList.of(
+                                DelegateScope.builder().applications(ImmutableList.of("APPLICATION_ID")).build()))
+                            .build();
+    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(true);
+
+    BatchDelegateSelectionLog batch =
+        BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build())).isEqualTo(true);
+
+    delegate = delegateBuilder
+                   .excludeScopes(ImmutableList.of(
                        DelegateScope.builder().environments(ImmutableList.of("ENVIRONMENT_ID")).build()))
                    .build();
     when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);

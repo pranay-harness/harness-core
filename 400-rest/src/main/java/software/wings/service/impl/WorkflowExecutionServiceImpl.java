@@ -2,6 +2,10 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ApiKeyInfo.getEmbeddedUserFromApiKey;
+import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
+import static io.harness.beans.ExecutionInterruptType.PAUSE;
+import static io.harness.beans.ExecutionInterruptType.PAUSE_ALL;
+import static io.harness.beans.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
@@ -18,6 +22,7 @@ import static io.harness.beans.ExecutionStatus.activeStatuses;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static io.harness.beans.FeatureName.NEW_DEPLOYMENT_FREEZE;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -36,10 +41,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -94,6 +95,7 @@ import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -104,6 +106,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
+import io.harness.beans.shared.ResourceConstraint;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
@@ -115,7 +118,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.limits.InstanceUsageExceededLimitException;
 import io.harness.limits.checker.LimitApproachingException;
 import io.harness.limits.checker.UsageLimitExceededException;
@@ -128,7 +130,6 @@ import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import io.harness.state.inspection.StateInspectionService;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -219,6 +220,7 @@ import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.beans.execution.WorkflowExecutionInfo.WorkflowExecutionInfoBuilder;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidBaselineConfigurationException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -357,7 +359,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BarrierService barrierService;
@@ -438,14 +440,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public PageResponse<WorkflowExecution> listExecutions(
       PageRequest<WorkflowExecution> pageRequest, boolean includeGraph) {
-    return listExecutions(pageRequest, includeGraph, false, true, true);
+    return listExecutions(pageRequest, includeGraph, false, true, true, false);
   }
 
   @Override
   public List<WorkflowExecution> listExecutionsUsingQuery(
       Query<WorkflowExecution> query, FindOptions findOptions, boolean includeGraph) {
     List<WorkflowExecution> res = query.asList(findOptions);
-    return processExecutions(res, includeGraph, false, true, true);
+    return processExecutions(res, includeGraph, false, true, true, false);
   }
 
   /**
@@ -453,14 +455,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   @Override
   public PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest,
-      boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
+      boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus,
+      boolean withFailureDetails) {
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     return (PageResponse<WorkflowExecution>) processExecutions(
-        res, includeGraph, runningOnly, withBreakdownAndSummary, includeStatus);
+        res, includeGraph, runningOnly, withBreakdownAndSummary, includeStatus, withFailureDetails);
   }
 
   private List<WorkflowExecution> processExecutions(List<WorkflowExecution> res, boolean includeGraph,
-      boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus) {
+      boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus, boolean withFailureDetails) {
     if (isEmpty(res)) {
       return res;
     }
@@ -509,6 +512,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           log.error("Failed to populate node hierarchy for the workflow execution {}", res.toString(), e);
         }
       }
+    }
+    if (withFailureDetails) {
+      res.forEach(this::populateFailureDetails);
     }
     return res;
   }
@@ -826,6 +832,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void setWaitingForInputFlag(
       StateExecutionInstance stateExecutionInstance, PipelineStageExecution stageExecution) {
     stageExecution.setWaitingForInputs(stateExecutionInstance.isWaitingForInputs());
+    stageExecution.setNeedsInputButNotReceivedYet(
+        stateExecutionInstance.isWaitingForInputs() && !stateExecutionInstance.isContinued());
     if (stateExecutionInstance.getStatus() != PAUSED) {
       stageExecution.setWaitingForInputs(false);
     }
@@ -938,13 +946,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId, boolean upToDate) {
+  public WorkflowExecution getExecutionDetails(
+      String appId, String workflowExecutionId, boolean upToDate, boolean withFailureDetails) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (workflowExecution.getWorkflowType() == PIPELINE) {
       populateNodeHierarchy(workflowExecution, false, true, upToDate);
     } else {
       populateNodeHierarchy(workflowExecution, true, false, upToDate);
+    }
+
+    if (withFailureDetails) {
+      populateFailureDetails(workflowExecution);
     }
     return workflowExecution;
   }
@@ -1184,6 +1197,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
       }
     }
+
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
+      if (trigger != null && user != null
+          && trigger.getCondition().getConditionType() == TriggerConditionType.WEBHOOK) {
+        deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
+        if (isNotEmpty(pipeline.getEnvIds())) {
+          pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
+        }
+      }
+    }
+
     checkPreDeploymentConditions(accountId, appId);
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
@@ -1329,6 +1353,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (trigger == null && user != null && isEmpty(pipelineExecutionId)) {
       deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
       authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
+    }
+
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
+      if (trigger != null && user != null && trigger.getCondition().getConditionType() == TriggerConditionType.WEBHOOK
+          && isEmpty(pipelineExecutionId)) {
+        deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
+        authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
+      }
     }
 
     // Doing this check here so that workflow is already fetched from databae.
@@ -4584,7 +4616,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (isNotEmpty(infraMappingList)) {
-      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, infraMappingList);
+      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, new HashSet<>(infraMappingList));
     }
 
     addressInefficientQueries(workflowExecutionQuery);
@@ -4849,7 +4881,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!isEmpty(serviceId)) {
       pageRequest.addFilter(WorkflowExecutionKeys.serviceIds, EQ, serviceId);
     }
-    final PageResponse<WorkflowExecution> workflowExecutions = listExecutions(pageRequest, false, true, false, false);
+    final PageResponse<WorkflowExecution> workflowExecutions =
+        listExecutions(pageRequest, false, true, false, false, false);
     if (workflowExecutions != null) {
       return workflowExecutions.getResponse();
     }
@@ -5317,5 +5350,28 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new InvalidRequestException("Workflow execution does not exist.");
     }
     return workflowExecution;
+  }
+
+  @Override
+  public String fetchFailureDetails(String appId, String workflowExecutionId) {
+    return workflowExecutionServiceHelper.fetchFailureDetails(appId, workflowExecutionId);
+  }
+
+  @Override
+  public void populateFailureDetails(WorkflowExecution workflowExecution) {
+    if (workflowExecution.getWorkflowType() == ORCHESTRATION && workflowExecution.getStatus() == FAILED) {
+      workflowExecution.setFailureDetails(
+          fetchFailureDetails(workflowExecution.getAppId(), workflowExecution.getUuid()));
+    } else if (workflowExecution.getWorkflowType() == PIPELINE) {
+      PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
+      if (pipelineExecution != null && isNotEmpty(pipelineExecution.getPipelineStageExecutions())) {
+        pipelineExecution.getPipelineStageExecutions()
+            .stream()
+            .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
+            .filter(execution -> execution.getStatus() == FAILED)
+            .forEach(execution
+                -> execution.setFailureDetails(fetchFailureDetails(execution.getAppId(), execution.getUuid())));
+      }
+    }
   }
 }

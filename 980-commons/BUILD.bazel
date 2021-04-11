@@ -3,12 +3,22 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
+
+harness_grpc_library(
+    name = "980_commons_java_proto",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//980-commons/src/main/proto:980_commons_proto",
+    ],
+)
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resource_jars = [
         "//990-commons-test:abstract-module",
+        ":980_commons_java_proto",
     ],
     resources = [
         "//980-commons/src/main/resources:resource",
@@ -16,6 +26,7 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":980_commons_java_proto",
         "//:lombok",
         "@maven//:ch_qos_logback_contrib_logback_jackson",
         "@maven//:ch_qos_logback_contrib_logback_json_classic",
@@ -49,6 +60,7 @@ java_library(
         "@maven//:com_hubspot_jackson_jackson_datatype_protobuf",
         "@maven//:com_jayway_jsonpath_json_path",
         "@maven//:com_nimbusds_nimbus_jose_jwt",
+        "@maven//:com_squareup_okhttp3_logging_interceptor",
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_retrofit2_converter_jackson",
         "@maven//:com_squareup_retrofit2_retrofit",
@@ -96,6 +108,7 @@ java_library(
         "@maven//:org_projectlombok_lombok",
         "@maven//:org_reflections_reflections",
         "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_data_spring_data_commons",
         "@maven//:org_zeroturnaround_zt_exec",
     ],
 )

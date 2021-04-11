@@ -12,8 +12,8 @@ java_library(
     deps = [
         "//:lombok",
         "//950-events-api:module",
-        "//950-events-api/src/main/proto:950_events_api_java_proto",
         "//950-events-api/src/main/proto:950_events_api_proto",
+        "//960-continuous-features:module",
         "//960-persistence:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_google_code_findbugs_annotations",

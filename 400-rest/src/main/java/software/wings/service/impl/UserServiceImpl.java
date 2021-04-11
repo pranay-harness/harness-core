@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -46,6 +47,7 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -65,15 +67,15 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
+import io.harness.invites.remote.InviteAcceptResponse;
+import io.harness.invites.remote.NgInviteClient;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.common.beans.Generation;
-import io.harness.ng.core.invites.InviteAcceptResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
-import io.harness.ng.core.invites.client.NgInviteClient;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.UuidAware;
 import io.harness.remote.client.NGRestUtils;
@@ -233,6 +235,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(_970_RBAC_CORE)
 public class UserServiceImpl implements UserService {
   static final String ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
   static final String USER_PASSWORD_CHANGED_EMAIL_TEMPLATE_NAME = "password_changed";
@@ -661,6 +664,14 @@ public class UserServiceImpl implements UserService {
     }
 
     return user;
+  }
+
+  @Override
+  public List<User> getUsersByEmail(List<String> emailIds, String accountId) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field(UserKeys.email).in(emailIds);
+    query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
   }
 
   @Override
@@ -2320,8 +2331,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public List<User> getUsers(List<String> userIds) {
-    return wingsPersistence.createQuery(User.class).field("uuid").in(userIds).asList();
+  public List<User> getUsers(List<String> userIds, String accountId) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
+    query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
   }
 
   private void loadSupportAccounts(User user) {
@@ -2611,7 +2625,8 @@ public class UserServiceImpl implements UserService {
   }
 
   private void addUserPrincipal(Map<String, String> claims, User user) {
-    UserPrincipal userPrincipal = new UserPrincipal(user.getUuid(), user.getEmail(), user.getDefaultAccountId());
+    UserPrincipal userPrincipal =
+        new UserPrincipal(user.getUuid(), user.getEmail(), user.getName(), user.getDefaultAccountId());
     Map<String, String> userClaims = userPrincipal.getJWTClaims();
     if (userClaims != null) {
       claims.putAll(userClaims);
@@ -2822,7 +2837,7 @@ public class UserServiceImpl implements UserService {
     String jwtPasswordSecret = getJwtSecret();
 
     try {
-      String token = signupService.createSignupTokeFromSecret(jwtPasswordSecret, email, 1);
+      String token = signupService.createSignupTokenFromSecret(jwtPasswordSecret, email, 1);
       sendPasswordExpirationWarningMail(user, token, passExpirationDays);
     } catch (JWTCreationException | UnsupportedEncodingException exception) {
       throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);
@@ -2833,7 +2848,7 @@ public class UserServiceImpl implements UserService {
   public String createSignupSecretToken(String email, Integer passExpirationDays) {
     String jwtPasswordSecret = getJwtSecret();
     try {
-      return signupService.createSignupTokeFromSecret(jwtPasswordSecret, email, passExpirationDays);
+      return signupService.createSignupTokenFromSecret(jwtPasswordSecret, email, passExpirationDays);
     } catch (JWTCreationException | UnsupportedEncodingException exception) {
       throw new SignupException("Signup secret token can't be generated");
     }
@@ -2875,7 +2890,7 @@ public class UserServiceImpl implements UserService {
     String jwtPasswordSecret = getJwtSecret();
 
     try {
-      String token = signupService.createSignupTokeFromSecret(jwtPasswordSecret, email, 1);
+      String token = signupService.createSignupTokenFromSecret(jwtPasswordSecret, email, 1);
       sendPasswordExpirationMail(user, token);
     } catch (JWTCreationException | UnsupportedEncodingException exception) {
       throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);

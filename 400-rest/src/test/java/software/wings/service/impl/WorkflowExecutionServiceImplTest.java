@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -37,6 +39,7 @@ import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDat
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -69,6 +72,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
@@ -93,12 +97,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.beans.shared.ResourceConstraint;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
@@ -109,13 +118,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.shell.AccessType;
 import io.harness.state.inspection.StateInspection;
 import io.harness.state.inspection.StateInspectionService;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.threading.Poller;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
@@ -159,6 +166,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.User;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -178,6 +186,7 @@ import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.infra.InfrastructureDefinition;
@@ -186,6 +195,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.resources.stats.model.TimeRange;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
@@ -245,8 +255,10 @@ import org.mockito.Mock;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Listeners({OrchestrationNotifyEventListener.class, ExecutionEventListener.class})
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
@@ -424,7 +436,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -602,7 +614,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Pipeline executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrProperty("displayName")
@@ -685,7 +697,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String appId = app.getUuid();
 
     final WorkflowExecution triggerWorkflow = triggerWorkflow(appId, env, "workflow1");
-    WorkflowExecution execution = workflowExecutionService.getExecutionDetails(appId, triggerWorkflow.getUuid(), true);
+    WorkflowExecution execution =
+        workflowExecutionService.getExecutionDetails(appId, triggerWorkflow.getUuid(), true, false);
     GraphNode node0 = execution.getExecutionNode();
     final GraphNode executionDetailsForNode =
         workflowExecutionService.getExecutionDetailsForNode(appId, execution.getUuid(), node0.getId());
@@ -749,7 +762,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrProperty("releaseNo")
@@ -965,7 +978,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(executionId).isNotNull();
 
     pollFor(ofSeconds(3), ofMillis(100), () -> {
-      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      final WorkflowExecution pull =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       return pull.getStatus() == ExecutionStatus.RUNNING;
     });
 
@@ -979,11 +993,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
     pollFor(ofSeconds(15), ofMillis(100), () -> {
-      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      final WorkflowExecution pull =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       return pull.getStatus() == ExecutionStatus.PAUSED && pull.getExecutionNode().getGroup() != null;
     });
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
 
     List<GraphNode> wait1List = execution.getExecutionNode()
                                     .getGroup()
@@ -1019,7 +1034,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     callback.await(ofSeconds(15));
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -1155,7 +1170,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(executionId).isNotNull();
 
     pollFor(ofSeconds(5), ofMillis(100), () -> {
-      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      final WorkflowExecution pull =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       return pull.getStatus() == ExecutionStatus.RUNNING;
     });
 
@@ -1169,11 +1185,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
     pollFor(ofSeconds(15), ofMillis(100), () -> {
-      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      final WorkflowExecution pull =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       return pull.getStatus() == ExecutionStatus.ABORTED;
     });
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
 
     assertThat(execution)
         .isNotNull()
@@ -1260,7 +1277,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     List<GraphNode> installNodes = getNodes(executionId);
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -1311,7 +1328,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await(ofSeconds(15));
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -1356,7 +1373,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   private List<GraphNode> getNodes(String executionId) {
     Poller.pollFor(ofSeconds(10), ofMillis(100), () -> {
-      WorkflowExecution execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      WorkflowExecution execution =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       if (execution.getExecutionNode() == null) {
         return false;
       }
@@ -1371,7 +1389,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
           n -> n.getStatus() != null && n.getStatus().equals(WAITING.name()));
     });
 
-    return installNodes(workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true));
+    return installNodes(workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false));
   }
 
   /**
@@ -1422,7 +1440,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     List<GraphNode> installNodes = getNodes(executionId);
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -1471,7 +1489,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await(ofSeconds(15));
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -1624,7 +1642,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
@@ -1679,7 +1697,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
@@ -2917,5 +2935,63 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.populateRollbackArtifacts(workflowExecution, infraMappingList, stdParams);
     assertThat(stdParams.getRollbackArtifactIds()).isNotNull().isEmpty();
     assertThat(workflowExecution.getRollbackArtifacts()).isNotNull().isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnCorrectRollbackArtifactForDuplicateInfraMappingIds() {
+    List<String> infraMappingList = Collections.singletonList(INFRA_MAPPING_ID);
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .status(SUCCESS)
+            .workflowId(WORKFLOW_ID)
+            .uuid(WORKFLOW_EXECUTION_ID)
+            .infraMappingIds(infraMappingList)
+            .artifacts(Collections.singletonList(anArtifact().withUuid(ARTIFACT_ID).build()))
+            .build();
+    wingsPersistence.save(workflowExecution);
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    workflowExecutionService.populateRollbackArtifacts(
+        workflowExecution, asList(INFRA_MAPPING_ID, INFRA_MAPPING_ID), stdParams);
+    assertThat(stdParams.getRollbackArtifactIds()).containsExactly(ARTIFACT_ID);
+    assertThat(workflowExecution.getRollbackArtifacts()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testWorkflowAuthorizationWithWebhookTriggerAuthorizationFfOn() throws InterruptedException {
+    String appId = app.getUuid();
+    when(featureFlagService.isEnabled(eq(WEBHOOK_TRIGGER_AUTHORIZATION), anyString())).thenReturn(true);
+    User user = anUser().build();
+    UserThreadLocal.set(user);
+
+    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(singletonList(
+        Artifact.Builder.anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
+
+    WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
+    WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(appId, env.getUuid(),
+        workflow.getUuid(), null, executionArgs, callback,
+        Trigger.builder().uuid(TRIGGER_ID).condition(new WebHookTriggerCondition()).build());
+    callback.await(ofSeconds(15));
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    log.debug("Workflow executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
+    assertThat(execution)
+        .isNotNull()
+        .hasFieldOrProperty("releaseNo")
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+
+    verify(deploymentAuthHandler).authorizeWorkflowExecution(anyString(), anyString());
+    verify(authService).checkIfUserAllowedToDeployWorkflowToEnv(anyString(), anyString());
   }
 }

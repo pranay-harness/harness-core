@@ -2,6 +2,8 @@ package io.harness.batch.processing.writer;
 
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.K8S_POD;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
@@ -17,9 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @Singleton
 public class PodUtilizationMetricsWriter extends EventWriter implements ItemWriter<PublishedMessage> {
+  private static final String INSTANCE_ID_PATTERN = "%s/%s";
+
   @Autowired private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
 
   @Override
@@ -47,6 +52,8 @@ public class PodUtilizationMetricsWriter extends EventWriter implements ItemWrit
                 K8sGranularUtilizationData.builder()
                     .accountId(accountId)
                     .instanceId(podUtilizationMetric.getName())
+                    .actualInstanceId(String.format(
+                        INSTANCE_ID_PATTERN, podUtilizationMetric.getNamespace(), podUtilizationMetric.getName()))
                     .instanceType(K8S_POD)
                     .clusterId(podUtilizationMetric.getClusterId())
                     .settingId(podUtilizationMetric.getCloudProviderId())

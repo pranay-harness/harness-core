@@ -12,6 +12,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -30,17 +32,16 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.steps.StepOutcomeGroup;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Mock ExecutionSweepingOutputService executionSweepingOutputService;
   @InjectMocks private K8sCanaryStep k8sCanaryStep;
@@ -83,7 +84,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
 
     K8sCanaryDeployRequest request = executeTask(stepParameters, K8sCanaryDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeout(stepParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
@@ -154,22 +155,23 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
         .hasMessageContaining("Instance selection percentage value cannot be less than 1");
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testOutcomesInResponse() {
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
 
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
+    K8sDeployResponse k8sDeployResponse =
         K8sDeployResponse.builder()
             .k8sNGTaskResponse(
                 K8sCanaryDeployResponse.builder().canaryWorkload("canaryWorkload").releaseNumber(1).build())
             .commandUnitsProgress(UnitProgressData.builder().build())
             .commandExecutionStatus(SUCCESS)
-            .build());
+            .build();
     when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
 
-    StepResponse response = k8sCanaryStep.finalizeExecution(ambiance, stepParameters, null, responseDataMap);
+    StepResponse response = k8sCanaryStep.finalizeExecution(ambiance, stepParameters, null, () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(response.getStepOutcomes()).hasSize(1);
 

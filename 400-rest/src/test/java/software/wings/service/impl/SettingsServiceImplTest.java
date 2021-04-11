@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.FeatureName.SETTING_API_BATCH_RBAC;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ARVIND;
@@ -26,6 +26,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretState;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
@@ -89,6 +92,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._445_CG_CONNECTORS)
 public class SettingsServiceImplTest extends WingsBaseTest {
   private static final String PASSWORD = "PASSWORD";
   private static final String S3_REGION = "us-east-1";
@@ -363,7 +368,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                          .build();
 
     Map<String, SecretState> secretIdsStateMap = mock(Map.class);
-    when(featureFlagService.isEnabled(eq(SETTING_API_BATCH_RBAC), eq(ACCOUNT_ID))).thenReturn(true);
     when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(false);
     settingsService.isFilteredSettingAttribute(
         null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
@@ -407,7 +411,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                          .build();
 
     Map<String, SecretState> secretIdsStateMap = mock(Map.class);
-    when(featureFlagService.isEnabled(eq(SETTING_API_BATCH_RBAC), eq(ACCOUNT_ID))).thenReturn(false);
     when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(false);
     settingsService.isFilteredSettingAttribute(
         null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
@@ -506,8 +509,12 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetDelegateSelectors() {
-    SettingAttribute settingAttribute =
-        aSettingAttribute().withValue(GcpConfig.builder().useDelegate(true).delegateSelector("gcp").build()).build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withValue(GcpConfig.builder()
+                                                           .useDelegateSelectors(true)
+                                                           .delegateSelectors(Collections.singletonList("gcp"))
+                                                           .build())
+                                            .build();
     assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEqualTo(Collections.singletonList("gcp"));
 
     settingAttribute = aSettingAttribute()

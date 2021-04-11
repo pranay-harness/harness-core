@@ -6,8 +6,13 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.SCMGrpcClientModule;
 import io.harness.ScmConnectionConfig;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -51,6 +56,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(HarnessTeam.DX)
 @Slf4j
 public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   protected Injector injector;
@@ -78,6 +84,12 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+            .toInstance(mock(NoOpProducer.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+            .toInstance(mock(NoOpProducer.class));
       }
     });
 

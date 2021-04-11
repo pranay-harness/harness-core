@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -7,6 +8,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.exception.DuplicateFieldException;
@@ -24,8 +26,8 @@ import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
-import io.harness.repositories.ng.core.spring.NGTriggerRepository;
-import io.harness.repositories.ng.core.spring.TriggerWebhookEventRepository;
+import io.harness.repositories.spring.NGTriggerRepository;
+import io.harness.repositories.spring.TriggerWebhookEventRepository;
 
 import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
@@ -38,6 +40,7 @@ import com.mongodb.client.result.UpdateResult;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +52,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class NGTriggerServiceImpl implements NGTriggerService {
   private final NGTriggerRepository ngTriggerRepository;
   private final TriggerWebhookEventRepository webhookEventQueueRepository;
@@ -117,6 +121,64 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public boolean deleteAllForPipeline(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
+    String pipelineRef = new StringBuilder(128)
+                             .append(accountId)
+                             .append('/')
+                             .append(orgIdentifier)
+                             .append('/')
+                             .append(projectIdentifier)
+                             .append('/')
+                             .append(pipelineIdentifier)
+                             .toString();
+
+    final AtomicBoolean exceptionOccured = new AtomicBoolean(false);
+
+    try {
+      Optional<List<NGTriggerEntity>> nonDeletedTriggerForPipeline =
+          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndTargetIdentifierAndDeletedNot(
+              accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, true);
+
+      if (nonDeletedTriggerForPipeline.isPresent()) {
+        log.info("Deleting triggers for pipeline-deletion-event. PipelineRef: " + pipelineRef);
+        List<NGTriggerEntity> ngTriggerEntities = nonDeletedTriggerForPipeline.get();
+        String triggerRef = new StringBuilder(128)
+                                .append(accountId)
+                                .append('/')
+                                .append(orgIdentifier)
+                                .append('/')
+                                .append(projectIdentifier)
+                                .append('/')
+                                .append(pipelineIdentifier)
+                                .append('/')
+                                .append("{trigger}")
+                                .toString();
+
+        ngTriggerEntities.forEach(ngTriggerEntity -> {
+          try {
+            log.info("Deleting triggers for pipeline-deletion-event. TriggerRef: "
+                + triggerRef.replace("{trigger}", ngTriggerEntity.getIdentifier()));
+            delete(
+                accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, ngTriggerEntity.getIdentifier(), null);
+          } catch (Exception e) {
+            log.error("Error while deleting trigger while processing pipeline-delete-event. TriggerRef: "
+                + triggerRef.replace("{trigger}", ngTriggerEntity.getIdentifier()));
+            exceptionOccured.set(true);
+          }
+        });
+      } else {
+        log.info("No non-deleted Trigger found while processing pipeline-deletion-event. PipelineRef: " + pipelineRef);
+      }
+    } catch (Exception e) {
+      log.error("Error while deleting triggers while processing pipeline-delete-event. PipelineRef: " + pipelineRef);
+      exceptionOccured.set(true);
+    }
+
+    return !exceptionOccured.get();
+  }
+
+  @Override
   public TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord) {
     try {
       return webhookEventQueueRepository.save(webhookEventQueueRecord);
@@ -143,9 +205,9 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   @Override
   public List<NGTriggerEntity> findTriggersForCustomWehbook(
-      TriggerWebhookEvent triggerWebhookEvent, String decryptedAuthToken, boolean isDeleted, boolean enabled) {
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled) {
     Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaForCustomWebhookTriggerGetList(
-                                                  triggerWebhookEvent, decryptedAuthToken, EMPTY, isDeleted, enabled),
+                                                  triggerWebhookEvent, EMPTY, isDeleted, enabled),
         Pageable.unpaged());
 
     return triggersPage.get().collect(Collectors.toList());
@@ -159,13 +221,14 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     // Now kept for backward compatibility, but will be changed soon to validate for non-empty project and
     // orgIdentifier.
     if (isNotEmpty(projectIdentifier) && isNotEmpty(orgIdentifier)) {
-      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabled(
-          accountId, orgIdentifier, projectIdentifier, true);
-    } else if (isNotEmpty(orgIdentifier)) {
       enabledTriggerForProject =
-          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndEnabled(accountId, orgIdentifier, true);
+          ngTriggerRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndEnabledAndDeletedNot(
+              accountId, orgIdentifier, projectIdentifier, true, true);
+    } else if (isNotEmpty(orgIdentifier)) {
+      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndOrgIdentifierAndEnabledAndDeletedNot(
+          accountId, orgIdentifier, true, true);
     } else {
-      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndEnabled(accountId, true);
+      enabledTriggerForProject = ngTriggerRepository.findByAccountIdAndEnabledAndDeletedNot(accountId, true, true);
     }
 
     if (enabledTriggerForProject.isPresent()) {

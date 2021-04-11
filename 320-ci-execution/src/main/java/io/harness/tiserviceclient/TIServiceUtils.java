@@ -1,5 +1,7 @@
 package io.harness.tiserviceclient;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.exception.GeneralException;
 
@@ -17,6 +19,7 @@ import retrofit2.Response;
 @Setter
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class TIServiceUtils {
   private final TIServiceClient tiServiceClient;
   private final TIServiceConfig tiServiceConfig;

@@ -9,6 +9,8 @@ import (
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"io"
+	"path/filepath"
+	"strings"
 
 	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
@@ -27,7 +29,6 @@ var (
 
 const (
 	cgSchemaPath = "callgraph.avsc"
-	cgFile = "callgraph.json"
 )
 
 // handler is used to implement EngineServer
@@ -169,6 +170,7 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 }
 
 func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) (*pb.UploadCgResponse, error) {
+	var parser ti.Parser
 	step := req.GetStepId()
 	res := &pb.UploadCgResponse{}
 	if step == "" {
@@ -191,13 +193,17 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if cgDir == "" {
 		return res, fmt.Errorf("cgDir not present in request")
 	}
-	cgPath := cgDir + cgFile
-	fs := fs.NewOSFileSystem(h.log)
-	parser := ti.NewCallGraphParser(h.log, fs)
-	cg, err := parser.Parse(cgPath)
+	files, err := h.getCgFiles(cgDir)
 	if err != nil {
-		return res, errors.Wrap(err, "failed to parse callgraph directory")
+		return res, errors.Wrap(err, "failed to fetch files inside the directory")
 	}
+	fs := fs.NewOSFileSystem(h.log)
+	parser = ti.NewCallGraphParser(h.log, fs)
+	cg, err := parser.Parse(files)
+	if err != nil {
+		return res, errors.Wrap(err, "failed to parse callgraph")
+	}
+	h.log.Infow(fmt.Sprintf("size of nodes parsed is: %d, size of relns parsed is: %d", len(cg.Nodes), len(cg.Relations)))
 	cgMap := cg.ToStringMap()
 	cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 	if err != nil {
@@ -236,4 +242,12 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}
 	return res, nil
+}
+
+// getCgFiles return list of cg files in given directory
+func (h *tiProxyHandler) getCgFiles(dir string) ([]string, error) {
+	if !strings.HasSuffix(dir, "/") {
+		dir = dir + "/"
+	}
+	return filepath.Glob(dir + "*.json")
 }

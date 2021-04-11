@@ -1,12 +1,16 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_HOURLY_PRE_AGGREGATION;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -83,7 +87,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BillingDataQueryBuilder {
   private BillingDataTableSchema schema = new BillingDataTableSchema();
   private CeActivePodCountTableSchema podTableSchema = new CeActivePodCountTableSchema();
@@ -100,6 +105,7 @@ public class BillingDataQueryBuilder {
   @Inject K8sLabelHelper k8sLabelHelper;
   @Inject EnvironmentServiceImpl environmentService;
   @Inject FeatureFlagService featureFlagService;
+  @Inject CEMetadataRecordDao ceMetadataRecordDao;
 
   protected BillingDataQueryMetadata formQuery(String accountId, List<QLBillingDataFilter> filters,
       List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
@@ -1480,12 +1486,13 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
-    if (ImmutableSet
-            .of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg", "R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q",
-                "DVExhMPMScy6RpRNKwyvZQ")
-            .contains(accountId)) {
+    CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
+    if ((null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
+            && ceMetadataRecord.getAwsDataPresent())
+        || ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg").contains(accountId)) {
       return false;
     }
+
     List<QLBillingDataFilter> validFilters =
         filters.stream().filter(filter -> filter.getStartTime() != null).collect(Collectors.toList());
     if (!validFilters.isEmpty()) {

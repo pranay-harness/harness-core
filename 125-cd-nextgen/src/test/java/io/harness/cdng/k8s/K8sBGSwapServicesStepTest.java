@@ -20,6 +20,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
@@ -45,11 +47,9 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,6 +58,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sBGSwapServicesStepTest extends CategoryTest {
   @Mock private K8sStepHelper k8sStepHelper;
   @Mock private OutcomeService outcomeService;
@@ -171,50 +172,51 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     assertThat(taskRequest.getSkipTaskRequest().getMessage()).isEqualTo(SKIP_BG_SWAP_SERVICES_STEP_EXECUTION);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testHandleTaskResult() {
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .commandExecutionStatus(SUCCESS)
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .commandExecutionStatus(SUCCESS)
+                                         .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sBGSwapServicesOutcome.class);
     assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleTaskResultInRollback() {
     Ambiance ambiance = getAmbianceForRollback();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .commandExecutionStatus(SUCCESS)
-            .build());
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .commandExecutionStatus(SUCCESS)
+                                         .build();
+
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testHandleTaskResultFailed() {
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(FAILURE)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(FAILURE)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(FAILED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }

@@ -1,7 +1,9 @@
 package io.harness.notification.service;
 
 import static io.harness.NotificationRequest.PagerDuty;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.notification.constant.NotificationClientConstants.HARNESS_NAME;
@@ -11,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.delegate.beans.PagerDutyTaskParams;
@@ -51,6 +54,7 @@ import org.json.JSONObject;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class PagerDutyServiceImpl implements ChannelService {
   private final NotificationSettingsService notificationSettingsService;
   private final NotificationTemplateService notificationTemplateService;
@@ -95,7 +99,7 @@ public class PagerDutyServiceImpl implements ChannelService {
     }
     NotificationProcessingResponse processingResponse = send(Collections.singletonList(pagerdutyKey), TEST_PD_TEMPLATE,
         Collections.emptyMap(), pagerDutySettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
-    if (NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)) {
+    if (NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)) {
       throw new NotificationException("Invalid pagerduty key encountered while processing Test Connection request "
               + notificationSettingDTO.getNotificationId(),
           DEFAULT_ERROR_CODE, USER);
@@ -159,7 +163,7 @@ public class PagerDutyServiceImpl implements ChannelService {
     } else {
       processingResponse = pagerDutySender.send(pagerDutyKeys, payload, links, notificationId);
     }
-    log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+    log.info(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
             ? "Failed to send notification for request {}"
             : "Notification request {} sent",
         notificationId);
@@ -183,9 +187,16 @@ public class PagerDutyServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     PagerDuty pagerDutyDetails = notificationRequest.getPagerDuty();
     List<String> recipients = new ArrayList<>(pagerDutyDetails.getPagerDutyIntegrationKeysList());
-    List<String> pagerDutyKeys = notificationSettingsService.getNotificationSettingsForGroups(
-        pagerDutyDetails.getUserGroupIdsList(), NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
-    recipients.addAll(pagerDutyKeys);
+    if (isNotEmpty(pagerDutyDetails.getUserGroupIdsList())) {
+      List<String> pagerDutyKeys =
+          notificationSettingsService.getNotificationSettingsForGroups(pagerDutyDetails.getUserGroupIdsList(),
+              NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
+      recipients.addAll(pagerDutyKeys);
+    } else {
+      List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
+          pagerDutyDetails.getUserGroupList(), NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
+      recipients.addAll(resolvedRecipients);
+    }
     return recipients;
   }
 

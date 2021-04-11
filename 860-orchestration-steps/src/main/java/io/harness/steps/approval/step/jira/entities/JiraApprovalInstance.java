@@ -6,7 +6,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.iterator.PersistentRegularIterable;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
@@ -31,28 +30,22 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "approvalInstances", noClassnameStored = true)
 @Persistent
 @TypeAlias("jiraApprovalInstances")
-public class JiraApprovalInstance extends ApprovalInstance implements PersistentRegularIterable {
+public class JiraApprovalInstance extends ApprovalInstance {
   @NotEmpty String connectorRef;
-  @NotEmpty String projectKey;
-  @NotEmpty String issueId;
+  @NotEmpty String issueKey;
   @NotNull CriteriaSpecWrapperDTO approvalCriteria;
   @NotNull CriteriaSpecWrapperDTO rejectionCriteria;
-  long nextIteration;
 
   public static JiraApprovalInstance fromStepParameters(Ambiance ambiance, JiraApprovalStepParameters stepParameters) {
     if (stepParameters == null) {
       return null;
     }
 
-    String issueId = (String) stepParameters.getIssueId().fetchFinalValue();
-    String projectKey = (String) stepParameters.getProjectKey().fetchFinalValue();
-    String connectorRef = (String) stepParameters.getConnectorRef().fetchFinalValue();
+    String issueKey = stepParameters.getIssueKey().getValue();
+    String connectorRef = stepParameters.getConnectorRef().getValue();
 
-    if (isBlank(issueId)) {
-      throw new InvalidRequestException("Issue Id can't be empty");
-    }
-    if (isBlank(projectKey)) {
-      throw new InvalidRequestException("projectKey can't be empty");
+    if (isBlank(issueKey)) {
+      throw new InvalidRequestException("issueKey can't be empty");
     }
     if (isBlank(connectorRef)) {
       throw new InvalidRequestException("connectorRef can't be empty");
@@ -60,9 +53,8 @@ public class JiraApprovalInstance extends ApprovalInstance implements Persistent
 
     JiraApprovalInstance instance =
         JiraApprovalInstance.builder()
-            .projectKey(projectKey)
             .connectorRef(connectorRef)
-            .issueId(issueId)
+            .issueKey(issueKey)
             .approvalCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(stepParameters.getApprovalCriteria()))
             .rejectionCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(stepParameters.getRejectionCriteria()))
             .build();
@@ -72,20 +64,5 @@ public class JiraApprovalInstance extends ApprovalInstance implements Persistent
 
   public JiraApprovalOutcome toJiraApprovalOutcome() {
     return JiraApprovalOutcome.builder().build();
-  }
-
-  @Override
-  public void updateNextIteration(String fieldName, long nextIteration) {
-    this.nextIteration = nextIteration;
-  }
-
-  @Override
-  public Long obtainNextIteration(String fieldName) {
-    return nextIteration;
-  }
-
-  @Override
-  public String getUuid() {
-    return getId();
   }
 }

@@ -12,7 +12,6 @@ import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
@@ -33,6 +32,7 @@ import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -42,7 +42,6 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -53,7 +52,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.shell.ScriptType;
 import io.harness.shell.ShellExecutionData;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.ResponseData;
+import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.beans.TaskType;
@@ -71,7 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters> {
+public class ShellScriptStep implements TaskExecutable<StepElementParameters, ShellScriptTaskResponseNG> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType()).build();
 
@@ -82,13 +81,13 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   @Inject private K8sStepHelper k8sStepHelper;
 
   @Override
-  public Class<ShellScriptStepParameters> getStepParametersClass() {
-    return ShellScriptStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 
   @Override
   public TaskRequest obtainTask(
-      Ambiance ambiance, ShellScriptStepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
@@ -96,11 +95,13 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
       throw new InvalidRequestException("Infrastructure not available");
     }
 
-    ScriptType scriptType = stepParameters.getShell().getScriptType();
+    ShellScriptStepParameters shellScriptStepParameters = (ShellScriptStepParameters) stepParameters.getSpec();
+
+    ScriptType scriptType = shellScriptStepParameters.getShell().getScriptType();
     ShellScriptTaskParametersNGBuilder taskParametersNGBuilder = ShellScriptTaskParametersNG.builder();
 
-    if (!stepParameters.onDelegate.getValue()) {
-      ExecutionTarget executionTarget = stepParameters.getExecutionTarget();
+    if (!shellScriptStepParameters.onDelegate.getValue()) {
+      ExecutionTarget executionTarget = shellScriptStepParameters.getExecutionTarget();
       if (executionTarget == null) {
         throw new InvalidRequestException("Execution Target can't be empty with on delegate set to false");
       }
@@ -127,9 +128,10 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
           .host(executionTarget.getHost().getValue());
     }
 
-    String workingDirectory = getWorkingDirectory(stepParameters, scriptType);
-    Map<String, String> environmentVariables = getEnvironmentVariables(stepParameters.getEnvironmentVariables());
-    List<String> outputVars = getOutputVars(stepParameters.getOutputVariables());
+    String workingDirectory = getWorkingDirectory(shellScriptStepParameters, scriptType);
+    Map<String, String> environmentVariables =
+        getEnvironmentVariables(shellScriptStepParameters.getEnvironmentVariables());
+    List<String> outputVars = getOutputVars(shellScriptStepParameters.getOutputVariables());
 
     // TODO: handle tags later, use task selectors
     // List<String> tags = stepParameters.getTags();
@@ -144,12 +146,12 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
 
     ShellScriptTaskParametersNG taskParameters =
         taskParametersNGBuilder.accountId(AmbianceHelper.getAccountId(ambiance))
-            .executeOnDelegate(stepParameters.onDelegate.getValue())
+            .executeOnDelegate(shellScriptStepParameters.onDelegate.getValue())
             .environmentVariables(environmentVariables)
             .executionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructureOutcome, ambiance))
             .outputVars(outputVars)
-            .script(getShellScript(stepParameters))
+            .script(getShellScript(shellScriptStepParameters))
             .scriptType(scriptType)
             .workingDirectory(workingDirectory)
             .build();
@@ -164,7 +166,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
     String taskName = TaskType.SHELL_SCRIPT_TASK_NG.getDisplayName();
     return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
         singletonList(ShellScriptTaskNG.COMMAND_UNIT), taskName,
-        TaskSelectorYaml.toTaskSelector(stepParameters.delegateSelectors.getValue()));
+        TaskSelectorYaml.toTaskSelector(shellScriptStepParameters.delegateSelectors.getValue()));
   }
 
   private String getShellScript(ShellScriptStepParameters stepParameters) {
@@ -225,77 +227,54 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, ShellScriptStepParameters stepParameters, Map<String, ResponseData> response) {
+  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
+      ThrowingSupplier<ShellScriptTaskResponseNG> responseSupplier) throws Exception {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
-    ResponseData responseData = response.values().iterator().next();
-    if (responseData instanceof ShellScriptTaskResponseNG) {
-      ShellScriptTaskResponseNG taskResponse = (ShellScriptTaskResponseNG) responseData;
-      List<UnitProgress> unitProgresses = taskResponse.getUnitProgressData() == null
-          ? emptyList()
-          : taskResponse.getUnitProgressData().getUnitProgresses();
-      stepResponseBuilder.unitProgressList(unitProgresses);
+    ShellScriptTaskResponseNG taskResponse = responseSupplier.get();
+    ShellScriptStepParameters shellScriptStepParameters = (ShellScriptStepParameters) stepParameters.getSpec();
+    List<UnitProgress> unitProgresses = taskResponse.getUnitProgressData() == null
+        ? emptyList()
+        : taskResponse.getUnitProgressData().getUnitProgresses();
+    stepResponseBuilder.unitProgressList(unitProgresses);
 
-      switch (taskResponse.getExecuteCommandResponse().getStatus()) {
-        case SUCCESS:
-          stepResponseBuilder.status(Status.SUCCEEDED);
-          break;
-        case FAILURE:
-          stepResponseBuilder.status(Status.FAILED);
-          if (stepParameters.getRollbackInfo() != null) {
-            stepResponseBuilder.stepOutcome(
-                StepResponse.StepOutcome.builder()
-                    .name("RollbackOutcome")
-                    .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                    .build());
-          }
-          break;
-        case RUNNING:
-          stepResponseBuilder.status(Status.RUNNING);
-          break;
-        case QUEUED:
-          stepResponseBuilder.status(Status.QUEUED);
-          break;
-        default:
-          throw new ShellScriptException(
-              "Unhandled type CommandExecutionStatus: " + taskResponse.getExecuteCommandResponse().getStatus().name(),
-              ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
-      }
+    switch (taskResponse.getExecuteCommandResponse().getStatus()) {
+      case SUCCESS:
+        stepResponseBuilder.status(Status.SUCCEEDED);
+        break;
+      case FAILURE:
+        stepResponseBuilder.status(Status.FAILED);
+        break;
+      case RUNNING:
+        stepResponseBuilder.status(Status.RUNNING);
+        break;
+      case QUEUED:
+        stepResponseBuilder.status(Status.QUEUED);
+        break;
+      default:
+        throw new ShellScriptException(
+            "Unhandled type CommandExecutionStatus: " + taskResponse.getExecuteCommandResponse().getStatus().name(),
+            ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
+    }
 
-      FailureInfo.Builder failureInfoBuilder = FailureInfo.newBuilder();
-      if (taskResponse.getErrorMessage() != null) {
-        failureInfoBuilder.setErrorMessage(taskResponse.getErrorMessage());
-      }
-      stepResponseBuilder.failureInfo(failureInfoBuilder.build());
+    FailureInfo.Builder failureInfoBuilder = FailureInfo.newBuilder();
+    if (taskResponse.getErrorMessage() != null) {
+      failureInfoBuilder.setErrorMessage(taskResponse.getErrorMessage());
+    }
+    stepResponseBuilder.failureInfo(failureInfoBuilder.build());
 
-      if (taskResponse.getExecuteCommandResponse().getStatus() == CommandExecutionStatus.SUCCESS) {
-        Map<String, String> sweepingOutputEnvVariables =
-            ((ShellExecutionData) taskResponse.getExecuteCommandResponse().getCommandExecutionData())
-                .getSweepingOutputEnvVariables();
+    if (taskResponse.getExecuteCommandResponse().getStatus() == CommandExecutionStatus.SUCCESS) {
+      Map<String, String> sweepingOutputEnvVariables =
+          ((ShellExecutionData) taskResponse.getExecuteCommandResponse().getCommandExecutionData())
+              .getSweepingOutputEnvVariables();
 
-        if (stepParameters.getOutputVariables() != null) {
-          ShellScriptOutcome shellScriptOutcome = prepareShellScriptOutcome(stepParameters, sweepingOutputEnvVariables);
-          stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                              .name(OutcomeExpressionConstants.OUTPUT)
-                                              .outcome(shellScriptOutcome)
-                                              .build());
-        }
+      if (shellScriptStepParameters.getOutputVariables() != null) {
+        ShellScriptOutcome shellScriptOutcome =
+            prepareShellScriptOutcome(shellScriptStepParameters, sweepingOutputEnvVariables);
+        stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
+                                            .name(OutcomeExpressionConstants.OUTPUT)
+                                            .outcome(shellScriptOutcome)
+                                            .build());
       }
-    } else if (responseData instanceof ErrorNotifyResponseData) {
-      stepResponseBuilder.status(Status.FAILED);
-      stepResponseBuilder.failureInfo(
-          FailureInfo.newBuilder().setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage()).build());
-      if (stepParameters.getRollbackInfo() != null) {
-        stepResponseBuilder.stepOutcome(
-            StepResponse.StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(stepParameters.getRollbackInfo()).build())
-                .build());
-      }
-      return stepResponseBuilder.build();
-    } else {
-      log.error(
-          "Unhandled DelegateResponseData class " + responseData.getClass().getCanonicalName(), new Exception(""));
     }
     return stepResponseBuilder.build();
   }

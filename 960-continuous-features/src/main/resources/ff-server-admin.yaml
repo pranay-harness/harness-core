@@ -1,0 +1,607 @@
+openapi: 3.0.0
+info:
+  title: Harness feature flag service
+  version: 1.0.0
+  contact:
+    name: Feature Flag - developers
+    url: 'https://www.harness.io'
+    email: ff@harness.io
+servers:
+  - url: /api/1.0
+    description: no host specified
+  - url: 'http://localhost:3000/api/1.0'
+    description: Server description.
+paths:
+  /admin/features:
+    post:
+      summary: Create a feature
+      description: Create a feature flag.
+      operationId: CreateFeatureFlag
+      parameters:
+        - $ref: '#/components/parameters/accountQueryParam'
+        - $ref: '#/components/parameters/orgQueryParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project:
+                  type: string
+                prerequisites:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Prerequisite'
+                name:
+                  type: string
+                description:
+                  type: string
+                identifier:
+                  type: string
+                owner:
+                  type: string
+                kind:
+                  type: string
+                  enum:
+                    - boolean
+                    - int
+                    - string
+                    - json
+                archived:
+                  type: boolean
+                variations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Variation'
+                  minItems: 2
+                tags:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Tag'
+                defaultOnVariation:
+                  type: string
+                defaultOffVariation:
+                  type: string
+                permanent:
+                  type: boolean
+              required:
+                - name
+                - project
+                - identifier
+                - kind
+                - variations
+                - defaultOnVariation
+                - defaultOffVariation
+                - permanent
+                - archived
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Created
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      summary: Retrieve all feature activations.
+      description: Used to retrieve all feature activations for certain account id.
+      operationId: GetAllFeatures
+      parameters:
+        - $ref: '#/components/parameters/accountQueryParam'
+        - $ref: '#/components/parameters/orgQueryParam'
+        - $ref: '#/components/parameters/projectQueryParam'
+        - $ref: '#/components/parameters/environmentOptionalQueryParam'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/pageSize'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/FeaturesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  '/admin/features/{identifier}':
+    get:
+      summary: Retrieve a feature
+      description: Retrieve certain feature flag with certain identifier and account id.
+      operationId: GetFeatureFlag
+      parameters:
+        - $ref: '#/components/parameters/identifier'
+        - $ref: '#/components/parameters/accountQueryParam'
+        - $ref: '#/components/parameters/orgQueryParam'
+        - $ref: '#/components/parameters/projectQueryParam'
+        - $ref: '#/components/parameters/environmentOptionalQueryParam'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/FeatureResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Modify a feature using instructions
+      description: Modify feature flag with certain identifier and account id.
+      operationId: PatchFeature
+      parameters:
+        - $ref: '#/components/parameters/identifier'
+        - $ref: '#/components/parameters/accountQueryParam'
+        - $ref: '#/components/parameters/orgQueryParam'
+        - $ref: '#/components/parameters/projectQueryParam'
+        - $ref: '#/components/parameters/environmentQueryParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                comment:
+                  type: string
+                  example: This is a comment string
+                executionTime:
+                  type: integer
+                  description: >-
+                    Time of execution in unix epoch milliseconds when the
+                    scheduled changes will be applied
+                instructions:
+                  type: array
+                  items:
+                    properties:
+                      kind:
+                        type: string
+                        example: enableFeatureFlag
+                        description: >-
+                          The name of the modification you would like to perform
+                          on a resource.
+                      parameters:
+                        type: object
+                        example:
+                          ruleId: TestRule
+                          variationID: TestVariation
+                    required:
+                      - kind
+                      - parameters"
+              required:
+                - instructions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/FeatureResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete a feature
+      description: Delete feature with certain identifier and account id.
+      operationId: DeleteFeatureFlag
+      parameters:
+        - $ref: '#/components/parameters/identifier'
+        - $ref: '#/components/parameters/accountQueryParam'
+        - $ref: '#/components/parameters/orgQueryParam'
+        - $ref: '#/components/parameters/projectQueryParam'
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    accountQueryParam:
+      name: account
+      in: query
+      required: true
+      description: Account
+      schema:
+        type: string
+      examples:
+        default:
+          value: default
+    orgQueryParam:
+      name: org
+      in: query
+      required: true
+      description: Organization Identifier
+      schema:
+        type: string
+      examples:
+        default:
+          value: default_org
+    projectQueryParam:
+      name: project
+      in: query
+      required: true
+      description: Project
+      schema:
+        type: string
+    environmentOptionalQueryParam:
+      name: environment
+      in: query
+      required: false
+      description: Environment
+      schema:
+        type: string
+    pageNumber:
+      name: pageNumber
+      in: query
+      required: false
+      description: PageNumber
+      schema:
+        type: integer
+    pageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: PageSize
+      schema:
+        type: integer
+    identifier:
+      name: identifier
+      in: path
+      required: true
+      description: Unique identifier for the object in the API.
+      schema:
+        type: string
+    environmentQueryParam:
+      name: environment
+      in: query
+      required: true
+      description: Environment
+      schema:
+        type: string
+  schemas:
+    Prerequisite:
+      type: object
+      properties:
+        feature:
+          type: string
+        variations:
+          type: array
+          items:
+            type: string
+      required:
+        - feature
+        - variations
+    Variation:
+      type: object
+      properties:
+        identifier:
+          type: string
+        value:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - identifier
+        - value
+    TargetMap:
+      type: object
+      properties:
+        identifier:
+          type: string
+        name:
+          type: string
+      required:
+        - idenfifier
+        - name
+    VariationMap:
+      type: object
+      properties:
+        variation:
+          type: string
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/TargetMap'
+        targetSegments:
+          type: array
+          items:
+            type: string
+      required:
+        - variation
+    Clause:
+      type: object
+      properties:
+        id:
+          type: string
+        attribute:
+          type: string
+        op:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+        negate:
+          type: boolean
+      required:
+        - id
+        - attribute
+        - op
+        - negate
+        - values
+    WeightedVariation:
+      type: object
+      properties:
+        variation:
+          type: string
+        weight:
+          type: integer
+      required:
+        - variation
+        - weight
+    Distribution:
+      type: object
+      properties:
+        bucketBy:
+          type: string
+        variations:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeightedVariation'
+      required:
+        - bucketBy
+        - variations
+    Serve:
+      type: object
+      properties:
+        distribution:
+          $ref: '#/components/schemas/Distribution'
+        variation:
+          type: string
+    ServingRule:
+      type: object
+      properties:
+        ruleId:
+          type: string
+        priority:
+          type: integer
+        clauses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Clause'
+        serve:
+          $ref: '#/components/schemas/Serve'
+      required:
+        - priority
+        - clauses
+        - serve
+        - ruleId
+    FeatureState:
+      type: string
+      enum:
+        - 'on'
+        - 'off'
+    Tag:
+      type: object
+      description: A name and value pair.
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+      required:
+        - name
+    Feature:
+      type: object
+      properties:
+        project:
+          type: string
+        identifier:
+          type: string
+        prerequisites:
+          type: array
+          items:
+            $ref: '#/components/schemas/Prerequisite'
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          type: array
+          items:
+            type: string
+        kind:
+          type: string
+          enum:
+            - boolean
+            - int
+            - string
+            - json
+        archived:
+          type: boolean
+        variations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variation'
+          minItems: 2
+        defaultOnVariation:
+          type: string
+        defaultOffVariation:
+          type: string
+        permanent:
+          type: boolean
+        envProperties:
+          type: object
+          properties:
+            environment:
+              type: string
+            variationMap:
+              type: array
+              items:
+                $ref: '#/components/schemas/VariationMap'
+            rules:
+              type: array
+              items:
+                $ref: '#/components/schemas/ServingRule'
+            state:
+              $ref: '#/components/schemas/FeatureState'
+            defaultServe:
+              $ref: '#/components/schemas/Serve'
+            offVariation:
+              type: string
+            modifiedAt:
+              type: integer
+              format: int64
+            version:
+              type: integer
+              format: int64
+          required:
+            - createdAt
+            - modifiedAt
+            - state
+            - defaultServe
+            - environment
+            - offVariation
+        createdAt:
+          type: integer
+          format: int64
+        modifiedAt:
+          type: integer
+          format: int64
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        evaluation:
+          type: string
+      required:
+        - project
+        - identifier
+        - createdAt
+        - modifiedAt
+        - permanent
+        - archived
+        - kind
+        - name
+        - variations
+        - defaultOnVariation
+        - defaultOffVariation
+        - permanent
+    FeatureObj:
+      type: array
+      items:
+        $ref: '#/components/schemas/Feature'
+    Features:
+      type: object
+      properties:
+        version:
+          type: integer
+        pageCount:
+          type: integer
+        itemCount:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 1
+        pageIndex:
+          type: integer
+          example: 0
+        features:
+          $ref: '#/components/schemas/FeatureObj'
+      required:
+        - pageCount
+        - itemCount
+        - pageSize
+        - pageIndex
+        - features
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+  responses:
+    FeaturesResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Features'
+    Unauthenticated:
+      description: Unauthenticated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: The specified resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    FeatureResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Feature'

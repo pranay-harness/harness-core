@@ -1,7 +1,10 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -28,6 +31,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("GCSUpload")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("uploadToGCSStepInfo")
+@OwnedBy(CI)
 public class UploadToGCSStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
   public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
@@ -43,8 +47,8 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   // plugin settings
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> bucket;
@@ -53,32 +57,24 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
 
   @Builder
   @ConstructorProperties(
-      {"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "bucket", "sourcePath", "target"})
+      {"identifier", "name", "retry", "connectorRef", "resources", "bucket", "sourcePath", "target", "runAsUser"})
   public UploadToGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> bucket,
-      ParameterField<String> sourcePath, ParameterField<String> target) {
+      ContainerResource resources, ParameterField<String> bucket, ParameterField<String> sourcePath,
+      ParameterField<String> target, ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.containerImage = Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/gcs"));
-    if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/gcs");
-    }
     this.resources = resources;
     this.bucket = bucket;
     this.sourcePath = sourcePath;
     this.target = target;
+    this.runAsUser = runAsUser;
   }
 
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

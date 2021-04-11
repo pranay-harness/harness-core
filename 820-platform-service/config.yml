@@ -88,10 +88,9 @@ notificationServiceConfig:
   seedDataConfiguration:
     shouldOverrideAllPredefinedTemplates: true
 
-  grpcClient:
+  delegateServiceGrpcConfig:
     target: localhost:9880
     authority: localhost
-
 
 auditServiceConfig:
   mongo:
@@ -102,5 +101,6 @@ auditServiceConfig:
     connectionsPerHost: 300
     indexManagerMode: AUTO
     aliasDBName: ng-audits
+    transactionsEnabled: false
 
   enableAuditService: true

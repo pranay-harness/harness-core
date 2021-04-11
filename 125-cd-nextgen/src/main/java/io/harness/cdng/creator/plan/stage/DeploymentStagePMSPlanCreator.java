@@ -1,36 +1,44 @@
 package io.harness.cdng.creator.plan.stage;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
+import io.harness.advisers.nextstep.NextStepAdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
+import io.harness.plancreator.steps.common.StageElementParameters.StageElementParametersBuilder;
+import io.harness.plancreator.steps.common.StepParametersUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
@@ -52,6 +60,9 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
 
+    // Validate Stage Failure strategy.
+    validateFailureStrategy(field);
+
     // Adding service child
     YamlField serviceField =
         ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.SERVICE_CONFIG);
@@ -69,11 +80,12 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     if (infraField == null) {
       throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
     }
-    PipelineInfrastructure actualInfraConfig = InfrastructurePmsPlanCreator.getActualInfraConfig(
-        ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
 
-    PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
-        ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
+    PipelineInfrastructure pipelineInfrastructure = ((DeploymentStageConfig) field.getStageType()).getInfrastructure();
+    PipelineInfrastructure actualInfraConfig =
+        InfrastructurePmsPlanCreator.getActualInfraConfig(pipelineInfrastructure, infraField);
+
+    PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(pipelineInfrastructure, infraField);
     planCreationResponseMap.put(
         infraStepNode.getUuid(), PlanCreationResponse.builder().node(infraStepNode.getUuid(), infraStepNode).build());
     String infraSectionNodeChildId = infraStepNode.getUuid();
@@ -86,11 +98,17 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
 
     YamlNode infraNode = infraField.getNode();
 
-    PlanNode infraSectionPlanNode =
-        InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode, infraSectionNodeChildId,
-            ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), kryoSerializer, infraField);
+    YamlField rcYamlField = constructResourceConstraintYamlField(infraNode);
+
+    PlanNode infraSectionPlanNode = InfrastructurePmsPlanCreator.getInfraSectionPlanNode(
+        infraNode, infraSectionNodeChildId, pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
     planCreationResponseMap.put(
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
+
+    // Add dependency for resource constraint
+    if (pipelineInfrastructure.isAllowSimultaneousDeployments()) {
+      dependenciesNodeMap.put(rcYamlField.getNode().getUuid(), rcYamlField);
+    }
 
     // Add dependency for execution
     YamlField executionField =
@@ -98,23 +116,42 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     if (executionField == null) {
       throw new InvalidRequestException("Execution section cannot be absent in a pipeline");
     }
-    dependenciesNodeMap.put(executionField.getNode().getUuid(), executionField);
+    PlanCreationResponse planForExecution = CDExecutionPMSPlanCreator.createPlanForExecution(executionField);
+    planCreationResponseMap.put(executionField.getNode().getUuid(), planForExecution);
 
     planCreationResponseMap.put(
-        executionField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
+        rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
     return planCreationResponseMap;
+  }
+
+  private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
+    JsonNode resourceConstraintJsonNode =
+        ResourceConstraintUtility.getResourceConstraintJsonNode(obtainResourceUnitFromInfrastructure(infraNode));
+    return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
+  }
+
+  private String obtainResourceUnitFromInfrastructure(YamlNode infraNode) {
+    JsonNode infrastructureKey = infraNode.getCurrJsonNode().get("infrastructureKey");
+    String resourceUnit;
+    if (infrastructureKey == null) {
+      resourceUnit = generateUuid();
+    } else {
+      resourceUnit = infrastructureKey.asText();
+    }
+    return resourceUnit;
   }
 
   @Override
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, StageElementConfig config, List<String> childrenNodeIds) {
-    StepParameters stepParameters = DeploymentStageStepParameters.getStepParameters(config, childrenNodeIds.get(0));
+    StageElementParametersBuilder stageParameters = StepParametersUtils.getStageParameters(config);
+    stageParameters.spec(DeploymentStageStepParameters.getStepParameters(childrenNodeIds.get(0)));
     return PlanNode.builder()
         .uuid(config.getUuid())
         .name(config.getName())
         .identifier(config.getIdentifier())
         .group(StepOutcomeGroup.STAGE.name())
-        .stepParameters(stepParameters)
+        .stepParameters(stageParameters.build())
         .stepType(DeploymentStageStep.STEP_TYPE)
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
         .whenCondition(RunInfoUtils.getRunCondition(config.getWhen(), true))
@@ -151,5 +188,20 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("Deployment"));
+  }
+
+  private void validateFailureStrategy(StageElementConfig stageElementConfig) {
+    // Failure strategy should be present.
+    List<FailureStrategyConfig> stageFailureStrategies = stageElementConfig.getFailureStrategies();
+    if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
+      throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
+    }
+
+    // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no
+    // error type is involved
+    if (!GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies)) {
+      throw new InvalidRequestException(
+          "There should be a Failure strategy that contains one error type as AnyOther, with no other error type along with it in that Failure Strategy.");
+    }
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -7,6 +8,9 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -69,6 +73,8 @@ import org.mongodb.morphia.query.Sort;
 
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingService {
   private final HPersistence persistence;
   private final WingsPersistence wingsPersistence;

@@ -1,12 +1,17 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SampleBean;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration.DeployMode;
 import io.harness.gitsync.GitSyncSdkInitHelper;
+import io.harness.gitsync.SampleBeanEntityGitPersistenceHelperServiceImpl;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 import io.harness.maintenance.MaintenanceController;
 
@@ -22,6 +27,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -32,6 +38,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
 
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncTestApplication extends Application<GitSyncTestConfiguration> {
   private static final String APPLICATION_NAME = "Git Sync Sample Application";
 
@@ -64,14 +71,30 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
     List<Module> modules = new ArrayList<>();
     modules.add(new GitSyncTestModule(config));
     final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
-    final GitSyncSdkConfiguration gitSyncSdkConfiguration = GitSyncSdkConfiguration.builder()
-                                                                .gitSyncSortOrder(sortOrder)
-                                                                .grpcClientConfig(config.getGrpcClientConfig())
-                                                                .grpcServerConfig(config.getGrpcServerConfig())
-                                                                .deployMode(DeployMode.REMOTE)
-                                                                .microservice(Microservice.PMS)
-                                                                .eventsRedisConfig(config.getRedisConfig())
-                                                                .build();
+    Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
+    gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .yamlClass(SampleBean.class)
+                                          .entityClass(SampleBean.class)
+                                          .entityHelperClass(SampleBeanEntityGitPersistenceHelperServiceImpl.class)
+                                          .build());
+    gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .yamlClass(SampleBean.class)
+                                          .entityClass(SampleBean.class)
+                                          .entityHelperClass(SampleBeanEntityGitPersistenceHelperServiceImpl.class)
+                                          .build());
+    final GitSyncSdkConfiguration gitSyncSdkConfiguration =
+        GitSyncSdkConfiguration.builder()
+            .gitSyncSortOrder(sortOrder)
+            .grpcClientConfig(config.getGrpcClientConfig())
+            .grpcServerConfig(config.getGrpcServerConfig())
+            .deployMode(DeployMode.REMOTE)
+            .microservice(Microservice.PMS)
+            .scmConnectionConfig(config.getScmConnectionConfig())
+            .eventsRedisConfig(config.getRedisConfig())
+            .serviceHeader(AuthorizationServiceHeader.PIPELINE_SERVICE)
+            .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
+            .build();
+
     modules.add(new AbstractGitSyncSdkModule() {
       @Override
       public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
@@ -79,7 +102,7 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
       }
     });
     Injector injector = Guice.createInjector(modules);
-    GitSyncSdkInitHelper.initGitSyncSdk(injector, gitSyncSdkConfiguration);
+    GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, gitSyncSdkConfiguration);
     registerJerseyProviders(environment, injector);
     registerResources(environment, injector);
     MaintenanceController.forceMaintenance(false);

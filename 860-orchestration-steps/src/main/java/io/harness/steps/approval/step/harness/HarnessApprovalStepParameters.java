@@ -11,11 +11,13 @@ import io.harness.steps.approval.step.harness.beans.Approvers;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
@@ -23,8 +25,12 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("harnessApprovalStepParameters")
 public class HarnessApprovalStepParameters extends ApprovalStepParameters {
+  @NotNull ParameterField<String> approvalMessage;
+  @NotNull ParameterField<Boolean> includePipelineExecutionHistory;
+
   @NotNull Approvers approvers;
   List<ApproverInputInfo> approverInputs;
 
@@ -32,7 +38,9 @@ public class HarnessApprovalStepParameters extends ApprovalStepParameters {
   public HarnessApprovalStepParameters(String name, String identifier, ParameterField<String> timeout,
       ParameterField<String> approvalMessage, ParameterField<Boolean> includePipelineExecutionHistory,
       Approvers approvers, List<ApproverInputInfo> approverInputs) {
-    super(name, identifier, timeout, ApprovalType.HARNESS_APPROVAL, approvalMessage, includePipelineExecutionHistory);
+    super(name, identifier, timeout, ApprovalType.HARNESS_APPROVAL);
+    this.approvalMessage = approvalMessage;
+    this.includePipelineExecutionHistory = includePipelineExecutionHistory;
     this.approvers = approvers;
     this.approverInputs = approverInputs;
   }

@@ -1,9 +1,14 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.Rollback;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.k8s.beans.K8sRollingRollbackHandlerConfig;
@@ -25,6 +30,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(CDP)
 @NoArgsConstructor
 @Slf4j
 public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
@@ -45,8 +51,16 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
 
     K8sRollingRollbackDeployRequest k8sRollingRollbackDeployRequest =
         (K8sRollingRollbackDeployRequest) k8sDeployRequest;
-    boolean success = init(k8sRollingRollbackDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
+    LogCallback initLogCallback =
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress);
+    boolean success;
+    try {
+      success = init(k8sRollingRollbackDeployRequest, k8sDelegateTaskParams, initLogCallback);
+    } catch (Exception e) {
+      initLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      throw e;
+    }
+
     if (!success) {
       return getGenericFailureResponse(null);
     }
@@ -58,11 +72,18 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
       return getGenericFailureResponse(null);
     }
 
-    rollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams,
-        k8sRollingRollbackDeployRequest.getTimeoutIntervalInMin(),
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress));
-    rollbackBaseHandler.postProcess(rollbackHandlerConfig, k8sRollingRollbackDeployRequest.getReleaseName());
-    return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    LogCallback waitForSteadyStateLogCallback =
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress);
+    try {
+      rollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams,
+          k8sRollingRollbackDeployRequest.getTimeoutIntervalInMin(), waitForSteadyStateLogCallback);
+      rollbackBaseHandler.postProcess(rollbackHandlerConfig, k8sRollingRollbackDeployRequest.getReleaseName());
+      waitForSteadyStateLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    } catch (Exception e) {
+      waitForSteadyStateLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      throw e;
+    }
   }
 
   private boolean init(K8sRollingRollbackDeployRequest rollbackRequest, K8sDelegateTaskParams k8sDelegateTaskParams,

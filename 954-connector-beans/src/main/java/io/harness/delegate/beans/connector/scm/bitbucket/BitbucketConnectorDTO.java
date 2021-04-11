@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.connector.scm.bitbucket;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -29,20 +31,22 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("BitbucketConnector")
+@OwnedBy(HarnessTeam.DX)
 public class BitbucketConnectorDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
-  @NotNull @JsonProperty("type") GitConnectionType connectionType;
-  @NotNull @NotBlank String url;
-  @Valid @NotNull BitbucketAuthenticationDTO authentication;
-  @Valid BitbucketApiAccessDTO apiAccess;
-  Set<String> delegateSelectors;
+  @NotNull @JsonProperty("type") private GitConnectionType connectionType;
+  @NotNull @NotBlank private String url;
+  @Valid @NotNull private BitbucketAuthenticationDTO authentication;
+  @Valid private BitbucketApiAccessDTO apiAccess;
+  private Set<String> delegateSelectors;
 
   @Builder
   public BitbucketConnectorDTO(GitConnectionType connectionType, String url, BitbucketAuthenticationDTO authentication,
-      BitbucketApiAccessDTO apiAccess) {
+      BitbucketApiAccessDTO apiAccess, Set<String> delegateSelectors) {
     this.connectionType = connectionType;
     this.url = url;
     this.authentication = authentication;
     this.apiAccess = apiAccess;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override

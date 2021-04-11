@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -43,6 +44,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -55,6 +59,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
@@ -94,6 +99,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -110,6 +116,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
@@ -121,6 +128,8 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock WingsPersistence mockWingsPersistence;
   @Mock ExecutionContext executionContext;
@@ -139,6 +148,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock GitConfigHelperService gitConfigHelperService;
   @Mock DelegateService delegateService;
   @Mock WorkflowExecutionService workflowExecutionService;
+  @Mock SecretManager secretManager;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
   @Inject private HPersistence persistence;
@@ -423,13 +433,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(workflowVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(workflowVariable, contextMap)).thenReturn(null);
+    when(evaluator.substitute(workflowVariable, contextMap)).thenReturn(null);
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
         .getPropertyNameEvaluatedMap(
             properties, contextMap, true, TerraformInfrastructureProvisioner.INFRASTRUCTURE_PROVISIONER_TYPE_KEY);
 
-    verify(evaluator, times(1)).evaluate(workflowVariable, contextMap);
+    verify(evaluator, times(1)).substitute(workflowVariable, contextMap);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -442,7 +452,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(provisionerVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn(null);
+    when(evaluator.substitute(provisionerVariable, contextMap)).thenReturn(null);
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
         .getPropertyNameEvaluatedMap(properties, contextMap, true, TerraformInfrastructureProvisioner.VARIABLE_KEY);
@@ -810,7 +820,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(provisionerVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn("VAL");
+    when(evaluator.substitute(provisionerVariable, contextMap)).thenReturn("VAL");
 
     Map<String, Object> resolveExpressions = infrastructureProvisionerService.resolveExpressions(
         infrastructureDefinition, contextMap, ShellScriptInfrastructureProvisioner.builder().build());
@@ -936,5 +946,26 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> infrastructureProvisionerServiceImpl.validateProvisioner(shellScriptInfrastructureProvisioner))
         .hasMessage("Script Body can not be empty");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testExtractEncryptedTextVariablesUpdateSecretsRunTimeusage() {
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("access_token").value("access-token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("region").value("us-east-1").valueType("TEXT").build());
+
+    Optional<EncryptedDataDetail> encryptedDataDetailOptional =
+        Optional.of(EncryptedDataDetail.builder().fieldName("fieldName").build());
+    doReturn(encryptedDataDetailOptional).when(secretManager).encryptedDataDetails(any(), any(), any(), any());
+
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
+    Map<String, EncryptedDataDetail> encryptedTextVariables =
+        infrastructureProvisionerService.extractEncryptedTextVariables(
+            nameValuePairList, APP_ID, WORKFLOW_EXECUTION_ID);
+    verify(secretManager, times(1)).encryptedDataDetails(any(), any(), any(), any());
+    assertThat(encryptedTextVariables.size()).isOne();
+    assertThat(encryptedTextVariables.get("access_token").getFieldName()).isEqualTo("fieldName");
   }
 }

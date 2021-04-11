@@ -3,6 +3,7 @@ package software.wings.service.impl.workflow;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -15,6 +16,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
+import static io.harness.exception.FailureType.TIMEOUT_ERROR;
 import static io.harness.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -42,7 +44,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
-import static software.wings.common.ProvisionerConstants.ARM_ROLLBACK;
+import static software.wings.common.ProvisionerConstants.GENERIC_ROLLBACK_NAME_FORMAT;
 import static software.wings.common.WorkflowConstants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
@@ -95,16 +97,20 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.RepairActionCode;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.WorkflowType;
 import io.harness.data.parser.CsvParser;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.FailureType;
@@ -113,7 +119,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -284,6 +289,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
@@ -304,6 +310,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final String VERIFY = "Verify";
   private static final String ROLLBACK_PROVISION_INFRASTRUCTURE = "Rollback Provision Infrastructure";
@@ -642,7 +649,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                   .build();
 
           List<WorkflowExecution> workflowExecutions =
-              workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
+              workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false, false)
                   .getResponse();
 
           workflowExecutions.forEach(we -> we.setStateMachine(null));
@@ -1131,6 +1138,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       boolean onSaveCallNeeded, boolean infraChanged, boolean envChanged, boolean cloned, boolean migration) {
     workflowServiceHelper.validateWaitInterval(workflow);
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+
+    validateFailureStrategiesWithTimeoutErrorFailureType(accountId, orchestrationWorkflow);
+
     WorkflowServiceHelper.cleanupWorkflowStrategies(orchestrationWorkflow);
     Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
 
@@ -1234,6 +1244,125 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       updateLinkedArtifactStreamIds(finalWorkflow, linkedArtifactStreamIds);
     }
     return finalWorkflow;
+  }
+
+  private void validateFailureStrategiesWithTimeoutErrorFailureType(
+      String accountId, OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+
+      validateOrchestrationLevelFailureStrategies(canaryOrchestrationWorkflow);
+
+      if (featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, accountId)) {
+        Map<List<GraphNode>, List<FailureStrategy>> stepsToStrategiesMap =
+            canaryOrchestrationWorkflow.getWorkflowPhases()
+                .stream()
+                .flatMap(phase -> phase.getPhaseSteps().stream())
+                .filter(this::phaseStepContainsStrategyForTimeoutOnly)
+                .collect(toMap(
+                    PhaseStep::getSteps, PhaseStep::getFailureStrategies, (strategies1, strategies2) -> strategies1));
+
+        stepsToStrategiesMap.putAll(Stream
+                                        .of(canaryOrchestrationWorkflow.getPreDeploymentSteps(),
+                                            canaryOrchestrationWorkflow.getPostDeploymentSteps())
+                                        .filter(Objects::nonNull)
+                                        .filter(this::phaseStepContainsStrategyForTimeoutOnly)
+                                        .collect(toMap(PhaseStep::getSteps, PhaseStep::getFailureStrategies,
+                                            (strategies1, strategies2) -> strategies1)));
+
+        if (isNotEmpty(canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap())) {
+          stepsToStrategiesMap.putAll(canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap()
+                                          .values()
+                                          .stream()
+                                          .map(WorkflowPhase::getPhaseSteps)
+                                          .flatMap(Collection::stream)
+                                          .filter(Objects::nonNull)
+                                          .filter(this::phaseStepContainsStrategyForTimeoutOnly)
+                                          .collect(toMap(PhaseStep::getSteps, PhaseStep::getFailureStrategies,
+                                              (strategies1, strategies2) -> strategies1)));
+        }
+
+        validateStepsToStrategiesPairs(stepsToStrategiesMap);
+      } else {
+        if (anyFailureStrategyContainsTimeoutErrorFailureType(canaryOrchestrationWorkflow)) {
+          throw new InvalidRequestException("Timeout error is not supported");
+        }
+      }
+    }
+  }
+
+  private boolean anyFailureStrategyContainsTimeoutErrorFailureType(
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+    return Stream
+        .concat(canaryOrchestrationWorkflow.getWorkflowPhases()
+                    .stream()
+                    .flatMap(phase -> phase.getPhaseSteps().stream())
+                    .flatMap(phaseStep -> phaseStep.getFailureStrategies().stream()),
+            Stream
+                .of(canaryOrchestrationWorkflow.getPreDeploymentSteps(),
+                    canaryOrchestrationWorkflow.getPostDeploymentSteps())
+                .filter(Objects::nonNull)
+                .flatMap(phaseStep -> phaseStep.getFailureStrategies().stream()))
+        .map(FailureStrategy::getFailureTypes)
+        .anyMatch(failureTypes -> failureTypes.contains(TIMEOUT_ERROR));
+  }
+
+  private boolean phaseStepContainsStrategyForTimeoutOnly(PhaseStep phaseStep) {
+    List<FailureStrategy> failureStrategies = phaseStep.getFailureStrategies();
+    return isNotEmpty(failureStrategies)
+        && failureStrategies.stream().anyMatch(failureStrategy
+            -> isNotEmpty(failureStrategy.getFailureTypes())
+                && failureStrategy.getFailureTypes().contains(TIMEOUT_ERROR)
+                && failureStrategy.getFailureTypes().size() == 1);
+  }
+
+  private boolean isStrategyForTimeoutOnly(FailureStrategy failureStrategy) {
+    return isNotEmpty(failureStrategy.getFailureTypes()) && failureStrategy.getFailureTypes().contains(TIMEOUT_ERROR)
+        && failureStrategy.getFailureTypes().size() == 1;
+  }
+
+  private void validateOrchestrationLevelFailureStrategies(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+    List<FailureStrategy> orchestrationFailureStrategies = canaryOrchestrationWorkflow.getFailureStrategies();
+    if (isNotEmpty(orchestrationFailureStrategies)
+        && orchestrationFailureStrategies.stream()
+               .map(FailureStrategy::getFailureTypes)
+               .filter(EmptyPredicate::isNotEmpty)
+               .flatMap(Collection::stream)
+               .anyMatch(failureType -> failureType == TIMEOUT_ERROR)) {
+      throw new InvalidRequestException("Timeout error is not supported on orchestration level.");
+    }
+  }
+
+  private void validateStepsToStrategiesPairs(Map<List<GraphNode>, List<FailureStrategy>> map) {
+    for (Entry<List<GraphNode>, List<FailureStrategy>> entry : map.entrySet()) {
+      entry.getValue()
+          .stream()
+          .filter(this::isStrategyForTimeoutOnly)
+          .forEach(failureStrategy -> validateAgainstSupportedTypes(entry.getKey(), failureStrategy));
+    }
+  }
+
+  private void validateAgainstSupportedTypes(List<GraphNode> steps, FailureStrategy failureStrategy) {
+    List<String> supportedTypesNames = Arrays.stream(StepType.values())
+                                           .filter(StepType::supportsTimeoutFailure)
+                                           .map(StepType::getName)
+                                           .collect(toList());
+    List<String> supportedTypes = Arrays.stream(StepType.values())
+                                      .filter(StepType::supportsTimeoutFailure)
+                                      .map(StepType::getType)
+                                      .collect(toList());
+
+    if (isEmpty(failureStrategy.getSpecificSteps())) {
+      throw new InvalidRequestException(
+          format("Specify the steps for timeout error. Allowed step types are: %s", supportedTypesNames), USER);
+    } else {
+      Map<String, String> stepsNameToTypeMap = steps.stream().collect(toMap(GraphNode::getName, GraphNode::getType));
+      if (failureStrategy.getSpecificSteps().stream().anyMatch(
+              specificStep -> !supportedTypes.contains(stepsNameToTypeMap.get(specificStep)))) {
+        throw new InvalidRequestException(
+            format("Timeout error is allowed only for step types: %s", supportedTypesNames), USER);
+      }
+    }
   }
 
   private void updateEnvIdInLinkedPipelines(
@@ -1468,7 +1597,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         rollbackProvisionerNodes.add(GraphNode.builder()
                                          .type(stateType.name())
                                          .rollback(true)
-                                         .name("Rollback " + step.getName())
+                                         .name(format(GENERIC_ROLLBACK_NAME_FORMAT, step.getName()))
                                          .properties(propertiesMap)
                                          .build());
       }
@@ -1512,7 +1641,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       rollbackProvisionerNodes.add(GraphNode.builder()
                                        .type(stateType.name())
                                        .rollback(true)
-                                       .name(ARM_ROLLBACK)
+                                       .name(format(GENERIC_ROLLBACK_NAME_FORMAT, step.getName()))
                                        .properties(propertiesMap)
                                        .build());
     });

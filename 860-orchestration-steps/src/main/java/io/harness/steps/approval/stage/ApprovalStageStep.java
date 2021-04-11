@@ -1,7 +1,9 @@
 package io.harness.steps.approval.stage;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.beans.VariablesSweepingOutput;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public class ApprovalStageStep implements ChildExecutable<ApprovalStageStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.APPROVAL_STAGE).build();
 

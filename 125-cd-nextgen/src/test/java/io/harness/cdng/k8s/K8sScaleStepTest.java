@@ -13,6 +13,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
@@ -37,11 +39,9 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.LinkedList;
-import java.util.Map;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +50,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sScaleStepTest extends CategoryTest {
   @Mock private OutcomeService outcomeService;
   @Mock private K8sStepHelper k8sStepHelper;
@@ -170,34 +171,33 @@ public class K8sScaleStepTest extends CategoryTest {
     assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testHandleTaskResultSucceeded() {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(SUCCESS)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(SUCCESS)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testHandleTaskResultFailed() {
+  public void testHandleTaskResultFailed() throws Exception {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .errorMessage("Execution failed.")
-            .commandExecutionStatus(FAILURE)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .errorMessage("Execution failed.")
+                                         .commandExecutionStatus(FAILURE)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
   }

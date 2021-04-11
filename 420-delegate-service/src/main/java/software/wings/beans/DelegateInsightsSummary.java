@@ -1,6 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
@@ -21,14 +24,16 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "delegateInsightsSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(DEL)
 public class DelegateInsightsSummary implements PersistentEntity, UuidAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("byAcctGrpTime")
+                 .name("byAcctGrpTimeType")
                  .field(DelegateInsightsSummaryKeys.accountId)
                  .field(DelegateInsightsSummaryKeys.delegateGroupId)
                  .field(DelegateInsightsSummaryKeys.periodStartTime)
+                 .field(DelegateInsightsSummaryKeys.insightsType)
                  .build())
         .build();
   }

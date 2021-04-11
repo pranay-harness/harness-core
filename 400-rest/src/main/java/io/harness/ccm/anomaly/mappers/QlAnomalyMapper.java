@@ -1,5 +1,10 @@
 package io.harness.ccm.anomaly.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyData;
@@ -8,6 +13,8 @@ import software.wings.graphql.schema.type.aggregation.anomaly.QLEntityInfo;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class QlAnomalyMapper {
   public QLAnomalyData toDto(AnomalyEntity source) {
     QLAnomalyData returnDTO = new QLAnomalyData();

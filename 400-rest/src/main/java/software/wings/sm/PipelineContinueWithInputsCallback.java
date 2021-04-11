@@ -1,9 +1,9 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
+import static io.harness.beans.ExecutionInterruptType.CONTINUE_WITH_DEFAULTS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_PIPELINE_STAGE;
-import static io.harness.interrupts.ExecutionInterruptType.CONTINUE_WITH_DEFAULTS;
 
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
@@ -11,7 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.api.ContinuePipelineResponseData;
 import software.wings.dl.WingsPersistence;
@@ -35,7 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(CDC)
 @Data
 @NoArgsConstructor
-public class PipelineContinueWithInputsCallback implements NotifyCallback {
+public class PipelineContinueWithInputsCallback implements OldNotifyCallback {
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;

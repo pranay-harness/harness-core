@@ -1,9 +1,11 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -15,6 +17,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@OwnedBy(CDP)
 public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
   @InjectMocks private K8sApplyStep k8sApplyStep;
 
@@ -50,7 +53,7 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
     K8sApplyRequest request = executeTask(stepParameters, K8sApplyRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
     assertThat(request.isSkipSteadyStateCheck()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeout(stepParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepParameters));
   }
 
   @Override

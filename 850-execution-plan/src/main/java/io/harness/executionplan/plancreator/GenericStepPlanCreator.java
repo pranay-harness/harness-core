@@ -1,14 +1,15 @@
 package io.harness.executionplan.plancreator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.plancreator.beans.PlanCreatorType.STEP_PLAN_CREATOR;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
-import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -27,6 +28,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDC)
 public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator<StepElement> {
   @Inject private StepDependencyService stepDependencyService;
 
@@ -52,7 +54,6 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
     PlanNodeBuilder planNodeBuilder = PlanNode.builder();
 
     // Add Step dependencies.
-    GenericStepInfo genericStepInfo = (GenericStepInfo) stepElement.getStepSpecType();
     Map<String, StepDependencySpec> stepDependencyMap = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(stepDependencyMap)) {
       stepDependencyMap.forEach(
@@ -62,12 +63,13 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
     planNodeBuilder.uuid(nodeId)
         .name(nodeName)
         .identifier(stepElement.getIdentifier())
-        .stepType(StepType.newBuilder().setType(genericStepInfo.getStepType().getType()).build())
+        .stepType(StepType.newBuilder().setType(stepElement.getStepSpecType().getStepType().getType()).build())
         .group(StepOutcomeGroup.STEP.name())
         .stepParameters(stepElement.getStepSpecType().getStepParameters())
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder()
-                .setType(FacilitatorType.newBuilder().setType(genericStepInfo.getFacilitatorType()).build())
+                .setType(
+                    FacilitatorType.newBuilder().setType(stepElement.getStepSpecType().getFacilitatorType()).build())
                 .build());
 
     return planNodeBuilder.build();

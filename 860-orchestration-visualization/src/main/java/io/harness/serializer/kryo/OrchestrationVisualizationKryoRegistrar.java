@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
+import io.harness.beans.RepresentationStrategy;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.dto.GraphDelegateSelectionLogParams;
@@ -23,5 +24,7 @@ public class OrchestrationVisualizationKryoRegistrar implements KryoRegistrar {
     kryo.register(EdgeListInternal.class, 3306);
     kryo.register(Document.class, 3307);
     kryo.register(GraphDelegateSelectionLogParams.class, 3308);
+
+    kryo.register(RepresentationStrategy.class, 35012);
   }
 }

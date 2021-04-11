@@ -24,7 +24,7 @@ public class DefaultOrganizationManager {
   private final AccountOrgProjectValidator accountOrgProjectValidator;
 
   public void createDefaultOrganization(String accountIdentifier) {
-    if (!accountOrgProjectValidator.isPresent(accountIdentifier, DEFAULT_ORG_IDENTIFIER, null)) {
+    if (accountOrgProjectValidator.isPresent(accountIdentifier, DEFAULT_ORG_IDENTIFIER, null)) {
       log.info(String.format("Default Organization for account %s already present", accountIdentifier));
       return;
     }

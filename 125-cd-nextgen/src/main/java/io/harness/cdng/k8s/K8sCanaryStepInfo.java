@@ -1,17 +1,21 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sCanaryStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -23,6 +27,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -50,11 +55,6 @@ public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepIn
   }
 
   @Override
-  public String getDisplayName() {
-    return name;
-  }
-
-  @Override
   public StepType getStepType() {
     return K8sCanaryStep.STEP_TYPE;
   }
@@ -70,16 +70,15 @@ public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepIn
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
     return K8sCanaryStepParameters.infoBuilder()
         .instanceSelection(instanceSelection)
         .skipDryRun(skipDryRun)
-        .timeout(baseStepParameterInfo.getTimeout())
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
-        .name(baseStepParameterInfo.getName())
-        .identifier(baseStepParameterInfo.getIdentifier())
-        .skipCondition(baseStepParameterInfo.getSkipCondition())
-        .description(baseStepParameterInfo.getDescription())
+        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
+        .name(stepElementConfig.getName())
+        .identifier(stepElementConfig.getIdentifier())
+        .skipCondition(stepElementConfig.getSkipCondition())
+        .description(stepElementConfig.getDescription())
         .build();
   }
 }

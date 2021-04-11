@@ -1,15 +1,20 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -41,6 +46,7 @@ import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
@@ -69,6 +75,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -109,6 +119,8 @@ import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
@@ -164,7 +176,9 @@ import org.mongodb.morphia.query.UpdateResults;
  *
  * @author Rishi
  */
+@OwnedBy(HarnessTeam.CDC)
 @Listeners(GeneralNotifyEventListener.class)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
   @InjectMocks
@@ -233,6 +247,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(writeResult.getN()).thenReturn(1);
 
     when(wingsPersistence.createQuery(eq(StateExecutionInstance.class))).thenReturn(statequery);
+    when(workflowExecutionServiceHelper.fetchFailureDetails(APP_ID, WORKFLOW_EXECUTION_ID))
+        .thenReturn("failureDetails");
   }
 
   @Test
@@ -243,7 +259,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     PageResponse<WorkflowExecution> pageResponse = aPageResponse().build();
     when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
     PageResponse<WorkflowExecution> pageResponse2 =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, true);
+        workflowExecutionService.listExecutions(pageRequest, false, true, false, true, false);
     assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
     verify(wingsPersistence).query(WorkflowExecution.class, pageRequest);
   }
@@ -980,6 +996,30 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testPipelineAuthorizationWithWebhookTriggerAuthorizationFfOn() {
+    Variable envVariable = aVariable().name("Environment").entityType(EntityType.ENVIRONMENT).build();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).build();
+    pipeline.setEnvIds(Collections.singletonList("Environment"));
+    pipeline.setPipelineVariables(Collections.singletonList(envVariable));
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowVariables(ImmutableMap.of("Environment", ENV_ID));
+    when(pipelineService.readPipelineResolvedVariablesLoopedInfo(any(), any(), any())).thenReturn(pipeline);
+    when(featureFlagService.isEnabled(eq(WEBHOOK_TRIGGER_AUTHORIZATION), any())).thenReturn(true);
+    User user = anUser().build();
+    UserThreadLocal.set(user);
+
+    assertThatThrownBy(()
+                           -> workflowExecutionService.triggerPipelineExecution(APP_ID, PIPELINE_ID, executionArgs,
+                               Trigger.builder().uuid(TRIGGER_ID).condition(new WebHookTriggerCondition()).build()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage("You can not deploy an empty pipeline.");
+    verify(deploymentAuthHandler).authorizePipelineExecution(eq(APP_ID), eq(PIPELINE_ID));
+    verify(authService).checkIfUserAllowedToDeployPipelineToEnv(eq(APP_ID), eq("Environment"));
+  }
+
+  @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldPopulateHelmChartsInWorkflowExecution() {
@@ -1294,5 +1334,96 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(WorkflowExecutionKeys.envId)
         .isEqualTo(ENV_ID);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFetchFailureDetails() {
+    assertThat(workflowExecutionService.fetchFailureDetails(APP_ID, WORKFLOW_EXECUTION_ID)).isEqualTo("failureDetails");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldPopulateFailureDetailsForASingleWorkflowExecution() {
+    WorkflowExecution workflowExecution = getFailedOrchestrationWorkflowExecution();
+    workflowExecutionService.populateFailureDetails(workflowExecution);
+    assertThat(workflowExecution.getFailureDetails()).isEqualTo("failureDetails");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotPopulateFailureDetailsForSuccessfulWorkflowExecution() {
+    WorkflowExecution workflowExecution = getSuccessfulOrchestrationWorkflowExecution();
+    workflowExecutionService.populateFailureDetails(workflowExecution);
+    assertThat(workflowExecution.getFailureDetails()).isNull();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldPopulateFailureDetailsForEachWorkflowExecutionWithinPipeline() {
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .uuid(WORKFLOW_EXECUTION_ID)
+            .appId(APP_ID)
+            .workflowType(WorkflowType.PIPELINE)
+            .pipelineExecution(PipelineExecution.Builder.aPipelineExecution()
+                                   .withPipelineStageExecutions(singletonList(
+                                       PipelineStageExecution.builder()
+                                           .workflowExecutions(asList(getFailedOrchestrationWorkflowExecution(),
+                                               getFailedOrchestrationWorkflowExecution()))
+                                           .build()))
+                                   .build())
+            .build();
+    workflowExecutionService.populateFailureDetails(workflowExecution);
+    assertThat(workflowExecution.getPipelineExecution().getPipelineStageExecutions().get(0).getWorkflowExecutions())
+        .allMatch(execution -> execution.getFailureDetails().equals("failureDetails"));
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotPopulateFailureDetailsForSuccessfulExecutionWithinPipeline() {
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .uuid(WORKFLOW_EXECUTION_ID)
+            .appId(APP_ID)
+            .workflowType(WorkflowType.PIPELINE)
+            .pipelineExecution(PipelineExecution.Builder.aPipelineExecution()
+                                   .withPipelineStageExecutions(singletonList(
+                                       PipelineStageExecution.builder()
+                                           .workflowExecutions(asList(getFailedOrchestrationWorkflowExecution(),
+                                               getSuccessfulOrchestrationWorkflowExecution()))
+                                           .build()))
+                                   .build())
+            .build();
+    workflowExecutionService.populateFailureDetails(workflowExecution);
+    WorkflowExecution failedExecution =
+        workflowExecution.getPipelineExecution().getPipelineStageExecutions().get(0).getWorkflowExecutions().get(0);
+    WorkflowExecution successfulExecution =
+        workflowExecution.getPipelineExecution().getPipelineStageExecutions().get(0).getWorkflowExecutions().get(1);
+    assertThat(failedExecution.getFailureDetails()).isEqualTo("failureDetails");
+    assertThat(successfulExecution.getFailureDetails()).isNull();
+  }
+
+  private WorkflowExecution getFailedOrchestrationWorkflowExecution() {
+    return WorkflowExecution.builder()
+        .uuid(WORKFLOW_EXECUTION_ID)
+        .appId(APP_ID)
+        .status(FAILED)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .build();
+  }
+
+  private WorkflowExecution getSuccessfulOrchestrationWorkflowExecution() {
+    return WorkflowExecution.builder()
+        .uuid(WORKFLOW_EXECUTION_ID)
+        .appId(APP_ID)
+        .status(SUCCESS)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .build();
   }
 }

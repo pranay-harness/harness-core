@@ -1,11 +1,15 @@
 package io.harness.ccm.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 
 import software.wings.beans.SettingAttribute;
 
 import java.util.List;
 
+@OwnedBy(CE)
 public interface CCMSettingService {
   boolean isCloudCostEnabled(String accountId);
   boolean isCloudCostEnabled(SettingAttribute settingAttribute);

@@ -1,37 +1,27 @@
 package io.harness.gitsync.persistance;
 
-import io.harness.git.model.ChangeType;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
-import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.git.model.ChangeType;
+import io.harness.gitsync.beans.YamlDTO;
+
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(DX)
 public interface GitAwarePersistence {
-  <B> B findAndModify(@NotNull Query query, @NotNull Update update, @NotNull Class<B> entityClass);
+  <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(
+      @NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
 
-  <B> B findOne(@NotNull Query query, @NotNull Class<B> entityClass);
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass);
 
-  <B> List<B> find(@NotNull Query query, @NotNull Class<B> entityClass);
+  /**
+   * Default save which will treat changeType as ADD on git.
+   */
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, Y yaml, Class<B> entityClass);
 
-  <B> List<B> findDistinct(
-      @NotNull Query query, @NotNull String field, @NotNull Class<?> entityClass, @NotNull Class<B> resultClass);
-
-  <Y> UpdateResult upsert(@NotNull Query query, @NotNull Update update, @NotNull Class<?> entityClass, Y yaml);
-
-  <Y> UpdateResult updateFirst(@NotNull Query query, @NotNull Update update, @NotNull Class<?> entityClass, Y yaml);
-
-  <Y> DeleteResult remove(@NotNull GitSyncableEntity object, @NotNull String collectionName, Y yaml);
-
-  <Y> DeleteResult remove(@NotNull Object object, Y yaml);
-
-  <T extends GitSyncableEntity, Y> T save(T objectToSave, Y yaml, ChangeType changeType);
-
-  <T extends GitSyncableEntity, Y> T save(T objectToSave, Y yaml);
-
-  <T extends GitSyncableEntity, Y> T insert(T objectToSave, Y yaml);
-
-  <T extends GitSyncableEntity, Y> T insert(T objectToSave, String collectionName, Y yaml);
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, ChangeType changeType, Class<B> entityClass);
 }

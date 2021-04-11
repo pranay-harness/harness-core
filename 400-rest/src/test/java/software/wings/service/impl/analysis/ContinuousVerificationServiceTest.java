@@ -17,6 +17,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.notifications.AlertNotificationHandler;
@@ -70,6 +74,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ContinuousVerificationServiceTest extends WingsBaseTest {
   private String accountId;
   private String appId;
@@ -135,6 +141,10 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
             .analysisMinute(5)
             .build();
     stateExecutionMap.put(displayName, verificationStateAnalysisExecutionData);
+    wingsPersistence.save(AnalysisContext.builder()
+                              .stateExecutionId(stateExecutionId)
+                              .prevWorkflowExecutionId(verificationStateAnalysisExecutionData.getBaselineExecutionId())
+                              .build());
 
     wingsPersistence.updateField(StateExecutionInstance.class, stateExecutionId,
         StateExecutionInstanceKeys.stateExecutionMap, stateExecutionMap);
@@ -157,6 +167,36 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
         .isEqualTo(verificationStateAnalysisExecutionData.getAnalysisMinute());
     assertThat(verificationStateExecutionData.getProgressPercentage()).isEqualTo(100);
     assertThat(verificationStateExecutionData.getRemainingMinutes()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetVerificationStateExecutionData_withBaselineExecution() {
+    String stateExecutionId =
+        wingsPersistence.save(Builder.aStateExecutionInstance().status(ExecutionStatus.SUCCESS).build());
+    String prevWorkflowExecutionId = generateUuid();
+    wingsPersistence.save(AnalysisContext.builder()
+                              .stateExecutionId(stateExecutionId)
+                              .prevWorkflowExecutionId(prevWorkflowExecutionId)
+                              .build());
+    final String displayName = "new relic";
+    Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+    final VerificationStateAnalysisExecutionData verificationStateAnalysisExecutionData =
+        VerificationStateAnalysisExecutionData.builder().stateExecutionInstanceId(stateExecutionId).build();
+    stateExecutionMap.put(displayName, verificationStateAnalysisExecutionData);
+
+    wingsPersistence.updateField(StateExecutionInstance.class, stateExecutionId,
+        StateExecutionInstanceKeys.stateExecutionMap, stateExecutionMap);
+    wingsPersistence.updateField(
+        StateExecutionInstance.class, stateExecutionId, StateExecutionInstanceKeys.displayName, displayName);
+    VerificationStateAnalysisExecutionData verificationStateExecutionData =
+        (VerificationStateAnalysisExecutionData) continuousVerificationService.getVerificationStateExecutionData(
+            stateExecutionId);
+    assertThat(verificationStateExecutionData).isNotNull();
+    assertThat(verificationStateExecutionData.getStateExecutionInstanceId())
+        .isEqualTo(verificationStateAnalysisExecutionData.getStateExecutionInstanceId());
+    assertThat(verificationStateExecutionData.getBaselineExecutionId()).isEqualTo(prevWorkflowExecutionId);
   }
 
   @Test
@@ -214,7 +254,11 @@ public class ContinuousVerificationServiceTest extends WingsBaseTest {
     wingsPersistence.updateField(
         StateExecutionInstance.class, stateExecutionId, StateExecutionInstanceKeys.displayName, displayName);
     final AnalysisContext analysisContext =
-        AnalysisContext.builder().timeDuration(8).stateExecutionId(stateExecutionId).build();
+        AnalysisContext.builder()
+            .timeDuration(8)
+            .stateExecutionId(stateExecutionId)
+            .prevWorkflowExecutionId(verificationStateAnalysisExecutionData.getBaselineExecutionId())
+            .build();
     wingsPersistence.save(analysisContext);
 
     VerificationStateAnalysisExecutionData verificationStateExecutionData =

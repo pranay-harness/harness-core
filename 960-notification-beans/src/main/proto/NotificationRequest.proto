@@ -9,6 +9,7 @@ enum Team {
   CI = 3;
   FFM = 4;
   PIPELINE = 5;
+  PL = 6;
 }
 
 message NotificationRequest {
@@ -26,6 +27,7 @@ message NotificationRequest {
   message Slack {
     repeated string slackWebHookUrls = 7;
     repeated string userGroupIds = 8;
+    repeated UserGroup userGroup = 9;
     map<string, string> templateData = 4;
     string templateId = 3;
   }
@@ -33,6 +35,7 @@ message NotificationRequest {
   message Email {
     repeated string emailIds = 7;
     repeated string userGroupIds = 8;
+    repeated UserGroup userGroup = 9;
     map<string, string> templateData = 4;
     string templateId = 3;
   }
@@ -40,6 +43,7 @@ message NotificationRequest {
   message PagerDuty {
     repeated string pagerDutyIntegrationKeys = 7;
     repeated string userGroupIds = 8;
+    repeated UserGroup userGroup = 9;
     map<string, string> templateData = 4;
     string templateId = 3;
   }
@@ -47,7 +51,14 @@ message NotificationRequest {
   message MSTeam {
     repeated string msTeamKeys = 7;
     repeated string userGroupIds = 8;
+    repeated UserGroup userGroup = 9;
     map<string, string> templateData = 4;
     string templateId = 3;
+  }
+
+  message UserGroup {
+    string identifier = 1;
+    string orgIdentifier = 2;
+    string projectIdentifier = 3;
   }
 }

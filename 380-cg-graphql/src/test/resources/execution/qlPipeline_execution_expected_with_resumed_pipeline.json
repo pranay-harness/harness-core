@@ -53,5 +53,6 @@
       "runtimeInputVariables": null,
       "status": "QUEUED"
     }
-  ]
+  ],
+  "failureDetails":"failureDetails"
 }

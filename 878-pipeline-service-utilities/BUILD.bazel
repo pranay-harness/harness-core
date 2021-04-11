@@ -15,15 +15,35 @@ java_library(
         "//882-pms-sdk-core:module",
         "//910-delegate-service-driver:module",
         "//930-delegate-tasks:module",
+        "//948-access-control-sdk:module",
         "//950-timeout-engine:module",
         "//950-log-client:module",
         "//955-delegate-beans:module",
         "//960-persistence:module",
         "//970-grpc:module",
         "//980-commons:module",
+        "@maven//:com_squareup_retrofit2_converter_gson",
         "//:lombok",
     ],
 )
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "module",
+        "//:lombok",
+        "//960-persistence:module",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+run_tests()
 
 checkstyle()
 

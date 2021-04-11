@@ -12,6 +12,7 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProv
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
@@ -25,12 +26,21 @@ public class GcpDataFetcherHelper {
       input.getSkipValidation().getValue().ifPresent(configBuilder::skipValidation);
     }
 
-    if (input.getUseDelegate().isPresent()) {
-      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegate);
+    if (input.getUseDelegate().getValue().isPresent()) {
+      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegateSelectors);
     }
 
-    if (input.getDelegateSelector().isPresent()) {
-      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
+    if (input.getUseDelegateSelectors().isPresent()) {
+      input.getUseDelegateSelectors().getValue().ifPresent(configBuilder::useDelegateSelectors);
+    }
+
+    if (input.getDelegateSelector().getValue().isPresent()) {
+      input.getDelegateSelector().getValue().ifPresent(
+          delegateSelector -> configBuilder.delegateSelectors(Collections.singletonList(delegateSelector)));
+    }
+
+    if (input.getDelegateSelectors().isPresent()) {
+      input.getDelegateSelectors().getValue().ifPresent(configBuilder::delegateSelectors);
     }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {
@@ -58,11 +68,20 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getUseDelegate().isPresent()) {
-      input.getUseDelegate().getValue().ifPresent(config::setUseDelegate);
+      input.getUseDelegate().getValue().ifPresent(config::setUseDelegateSelectors);
+    }
+
+    if (input.getUseDelegateSelectors().isPresent()) {
+      input.getUseDelegateSelectors().getValue().ifPresent(config::setUseDelegateSelectors);
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
+      input.getDelegateSelector().getValue().ifPresent(
+          delegateSelector -> config.setDelegateSelectors(Collections.singletonList(delegateSelector)));
+    }
+
+    if (input.getDelegateSelectors().isPresent()) {
+      input.getDelegateSelectors().getValue().ifPresent(config::setDelegateSelectors);
     }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {

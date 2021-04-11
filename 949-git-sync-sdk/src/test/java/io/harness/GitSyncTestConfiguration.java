@@ -1,7 +1,10 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
@@ -20,10 +23,12 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
+@OwnedBy(DX)
 public class GitSyncTestConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("gitSyncClientConfig") GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
+  @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
   @JsonProperty("redis") private RedisConfig redisConfig;
 
   public GitSyncTestConfiguration() {

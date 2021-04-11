@@ -1,5 +1,9 @@
 package io.harness.ccm.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.api.services.cloudresourcemanager.model.Binding;
 import com.google.api.services.cloudresourcemanager.model.Policy;
 import java.util.ArrayList;
@@ -9,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(CE)
 public class GcpResourceManagerUtils {
   // add a member to a pre-existing role or create fresh binding
   public void addBinding(Policy policy, String role, String member) {

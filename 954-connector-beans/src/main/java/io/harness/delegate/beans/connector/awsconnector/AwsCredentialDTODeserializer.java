@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -9,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 
+@OwnedBy(HarnessTeam.DX)
 public class AwsCredentialDTODeserializer extends StdDeserializer<AwsCredentialDTO> {
   public AwsCredentialDTODeserializer() {
     super(io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO.class);
@@ -28,8 +31,11 @@ public class AwsCredentialDTODeserializer extends StdDeserializer<AwsCredentialD
     AwsCredentialType type = getType(typeNode);
     AwsCredentialSpecDTO awsCredentialSpecDTO = null;
     ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-    CrossAccountAccessDTO crossAccountAccessDTO =
-        mapper.readValue(crossAccNode.toString(), CrossAccountAccessDTO.class);
+
+    CrossAccountAccessDTO crossAccountAccessDTO = null;
+    if (crossAccNode != null && !crossAccNode.isNull()) {
+      crossAccountAccessDTO = mapper.readValue(crossAccNode.toString(), CrossAccountAccessDTO.class);
+    }
     if (type == AwsCredentialType.MANUAL_CREDENTIALS) {
       awsCredentialSpecDTO = mapper.readValue(authSpec.toString(), AwsManualConfigSpecDTO.class);
     } else if (type == AwsCredentialType.INHERIT_FROM_DELEGATE) {

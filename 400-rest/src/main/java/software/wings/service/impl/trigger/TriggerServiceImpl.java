@@ -364,36 +364,35 @@ public class TriggerServiceImpl implements TriggerService {
   public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Trigger.class).filter(Trigger.APP_ID_KEY2, appId).asList().forEach(trigger -> {
       delete(appId, trigger.getUuid());
-      auditServiceHelper.reportDeleteForAuditing(appId, trigger);
-      harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), trigger.getUuid());
     });
   }
 
   @Override
   public void pruneByPipeline(String appId, String pipelineId) {
     List<Trigger> triggers = triggerServiceHelper.getTriggersByWorkflow(appId, pipelineId);
-    triggers.forEach(trigger -> triggerServiceHelper.delete(trigger.getUuid()));
+    triggers.forEach(trigger -> delete(appId, trigger.getUuid()));
 
-    triggerServiceHelper.deletePipelineCompletionTriggers(appId, pipelineId);
+    triggerServiceHelper.getPipelineCompletionTriggers(appId, pipelineId)
+        .forEach(trigger -> delete(appId, trigger.getUuid()));
   }
 
   @Override
   public void pruneByWorkflow(String appId, String workflowId) {
     List<Trigger> triggers = triggerServiceHelper.getTriggersByWorkflow(appId, workflowId);
-    triggers.forEach(trigger -> triggerServiceHelper.delete(trigger.getUuid()));
+    triggers.forEach(trigger -> delete(appId, trigger.getUuid()));
   }
 
   @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     for (Trigger trigger : triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId)) {
-      triggerServiceHelper.delete(trigger.getUuid());
+      delete(appId, trigger.getUuid());
     }
   }
 
   @Override
   public void pruneByApplicationManifest(String appId, String applicationManifestId) {
     for (Trigger trigger : triggerServiceHelper.getNewManifestConditionTriggers(appId, applicationManifestId)) {
-      triggerServiceHelper.delete(trigger.getUuid());
+      delete(appId, trigger.getUuid());
     }
   }
 
@@ -720,11 +719,9 @@ public class TriggerServiceImpl implements TriggerService {
           if (preferArtifactSelectionOverTriggeringArtifact) {
             List<Artifact> artifactsFromSelection = new ArrayList<>();
             List<HelmChart> helmCharts = new ArrayList<>();
-            if (isNotEmpty(trigger.getArtifactSelections())) {
-              log.info("Artifact selections found collecting artifacts as per artifactStream selections");
-              addArtifactsFromSelectionsTriggeringArtifactSource(
-                  trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
-            }
+            addArtifactsFromSelectionsTriggeringArtifactSource(
+                trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
+
             if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
               addHelmChartsFromSelections(appId, trigger, helmCharts);
             }
@@ -767,12 +764,18 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private void addArtifactsFromSelectionsTriggeringArtifactSource(
+  @VisibleForTesting
+  void addArtifactsFromSelectionsTriggeringArtifactSource(
       String appId, Trigger trigger, List<Artifact> artifactSelections, List<Artifact> triggeringArtifacts) {
     if (isEmpty(trigger.getArtifactSelections())) {
+      log.info(
+          "Artifact selections not found for trigger with name: {}, triggerId: {} used to trigger {}. Collecting all artifacts.",
+          trigger.getName(), trigger.getUuid(),
+          trigger.getWorkflowType() == PIPELINE ? trigger.getPipelineName() : trigger.getWorkflowName());
       artifactSelections.addAll(triggeringArtifacts);
       return;
     }
+    log.info("Artifact selections found collecting artifacts as per artifactStream selections");
     trigger.getArtifactSelections().forEach(artifactSelection -> {
       if (artifactSelection.getType() == LAST_COLLECTED) {
         addLastCollectedArtifact(appId, artifactSelection, artifactSelections);

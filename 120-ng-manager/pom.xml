@@ -82,7 +82,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>909-access-control-sdk</artifactId>
+            <artifactId>948-access-control-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -107,7 +107,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-ng-signup</artifactId>
+            <artifactId>920-ng-signup</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

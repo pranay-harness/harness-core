@@ -5,6 +5,7 @@ import static io.harness.security.SecurityContextBuilder.ACCOUNT_ID;
 import static io.harness.security.SecurityContextBuilder.EMAIL;
 import static io.harness.security.SecurityContextBuilder.PRINCIPAL_NAME;
 import static io.harness.security.SecurityContextBuilder.PRINCIPAL_TYPE;
+import static io.harness.security.SecurityContextBuilder.USERNAME;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -16,20 +17,24 @@ import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(PL)
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("USER")
+@TypeAlias("UserPrincipal")
 public class UserPrincipal extends Principal {
   String email;
+  String username;
   String accountId;
 
-  public UserPrincipal(String name, String email, String accountId) {
+  public UserPrincipal(String name, String email, String username, String accountId) {
     this.type = USER;
     this.name = name;
     this.email = email;
+    this.username = username;
     this.accountId = accountId;
   }
 
@@ -39,6 +44,7 @@ public class UserPrincipal extends Principal {
     claims.put(PRINCIPAL_TYPE, getType().toString());
     claims.put(PRINCIPAL_NAME, getName());
     claims.put(EMAIL, getEmail());
+    claims.put(USERNAME, getUsername());
     claims.put(ACCOUNT_ID, getAccountId());
     return claims;
   }
@@ -46,6 +52,7 @@ public class UserPrincipal extends Principal {
   public static UserPrincipal getPrincipal(Map<String, Claim> claims) {
     return new UserPrincipal(claims.get(PRINCIPAL_NAME) == null ? null : claims.get(PRINCIPAL_NAME).asString(),
         claims.get(EMAIL) == null ? null : claims.get(EMAIL).asString(),
+        claims.get(USERNAME) == null ? null : claims.get(USERNAME).asString(),
         claims.get(ACCOUNT_ID) == null ? null : claims.get(ACCOUNT_ID).asString());
   }
 }

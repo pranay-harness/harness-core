@@ -1,5 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -9,6 +10,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.NO_STATE_EXECUTION_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
@@ -51,6 +55,8 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(CV)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;

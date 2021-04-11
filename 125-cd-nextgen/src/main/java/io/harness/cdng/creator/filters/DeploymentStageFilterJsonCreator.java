@@ -2,19 +2,21 @@ package io.harness.cdng.creator.filters;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.filters.FilterCreatorHelper;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter.CdFilterBuilder;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.filter.creation.FilterCreationResponse.FilterCreationResponseBuilder;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
-import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorHelper;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.CDC)
 public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
   @Inject private SimpleVisitorFactory simpleVisitorFactory;
 
@@ -65,6 +68,12 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     }
 
     ServiceYaml service = deploymentStageConfig.getServiceConfig().getService();
+    if (service == null
+        && (deploymentStageConfig.getServiceConfig().getServiceRef() == null
+            || deploymentStageConfig.getServiceConfig().getServiceRef().fetchFinalValue() == null)
+        && deploymentStageConfig.getServiceConfig().getUseFromStage() == null) {
+      throw new InvalidRequestException("One of service, serviceRef and useFromStage should be present");
+    }
     if (service != null && isNotEmpty(service.getName())) {
       cdFilter.serviceName(service.getName());
     }
@@ -75,15 +84,25 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
     }
 
     PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
-    if (infrastructure != null && infrastructure.getEnvironment() != null
-        && isNotEmpty(infrastructure.getEnvironment().getName())) {
+    if (infrastructure == null) {
+      throw new InvalidRequestException("Infrastructure cannot be null");
+    }
+    if (infrastructure.getEnvironment() == null
+        && (infrastructure.getEnvironmentRef() == null || infrastructure.getEnvironmentRef().fetchFinalValue() == null)
+        && infrastructure.getUseFromStage() == null) {
+      throw new InvalidRequestException("One of environment, environment and useFromStage should be present");
+    }
+
+    if (infrastructure.getEnvironment() != null && isNotEmpty(infrastructure.getEnvironment().getName())) {
       cdFilter.environmentName(infrastructure.getEnvironment().getName());
     }
 
-    if (infrastructure != null && infrastructure.getInfrastructureDefinition() != null
+    if (infrastructure.getInfrastructureDefinition() != null
         && isNotEmpty(infrastructure.getInfrastructureDefinition().getType())) {
       cdFilter.infrastructureType(infrastructure.getInfrastructureDefinition().getType());
     }
+
+    creationResponse.dependencies(CDExecutionUtils.getDependencies(filterCreationContext.getCurrentField()));
 
     creationResponse.pipelineFilter(cdFilter.build());
     return creationResponse.build();

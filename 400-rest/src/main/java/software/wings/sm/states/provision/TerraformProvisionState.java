@@ -47,7 +47,10 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -59,6 +62,8 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.provision.TfVarScriptRepositorySource;
@@ -67,7 +72,6 @@ import io.harness.provision.TfVarSource.TfVarSourceType;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ScriptStateExecutionData;
@@ -93,8 +97,6 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.TerraformProvisionParameters;
-import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
-import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
 import software.wings.dl.WingsPersistence;
@@ -146,6 +148,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public abstract class TerraformProvisionState extends State {
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;
@@ -562,8 +565,8 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
     if (isNotEmpty(allBackendConfigs)) {
       backendConfigs = infrastructureProvisionerService.extractTextVariables(allBackendConfigs, context);
-      encryptedBackendConfigs =
-          infrastructureProvisionerService.extractEncryptedTextVariables(allBackendConfigs, context.getAppId());
+      encryptedBackendConfigs = infrastructureProvisionerService.extractEncryptedTextVariables(
+          allBackendConfigs, context.getAppId(), context.getWorkflowExecutionId());
     }
 
     List<NameValuePair> allVariables = element.getVariables();
@@ -571,8 +574,8 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedTextVariables = null;
     if (isNotEmpty(allVariables)) {
       textVariables = infrastructureProvisionerService.extractUnresolvedTextVariables(allVariables);
-      encryptedTextVariables =
-          infrastructureProvisionerService.extractEncryptedTextVariables(allVariables, context.getAppId());
+      encryptedTextVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
+          allVariables, context.getAppId(), context.getWorkflowExecutionId());
     }
 
     List<NameValuePair> allEnvVars = element.getEnvironmentVariables();
@@ -580,7 +583,8 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedEnvVars = null;
     if (isNotEmpty(allEnvVars)) {
       envVars = infrastructureProvisionerService.extractUnresolvedTextVariables(allEnvVars);
-      encryptedEnvVars = infrastructureProvisionerService.extractEncryptedTextVariables(allEnvVars, context.getAppId());
+      encryptedEnvVars = infrastructureProvisionerService.extractEncryptedTextVariables(
+          allEnvVars, context.getAppId(), context.getWorkflowExecutionId());
     }
 
     List<String> targets = element.getTargets();
@@ -627,6 +631,8 @@ public abstract class TerraformProvisionState extends State {
             .encryptedTfPlan(element.getEncryptedTfPlan())
             .secretManagerConfig(secretManagerConfig)
             .planName(getPlanName(context))
+            .useTfClient(
+                featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .build();
     return createAndRunTask(activityId, executionContext, parameters, element.getDelegateTag());
   }
@@ -641,9 +647,11 @@ public abstract class TerraformProvisionState extends State {
   protected ExecutionResponse createAndRunTask(String activityId, ExecutionContextImpl executionContext,
       TerraformProvisionParameters parameters, String delegateTag) {
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    String accountId = requireNonNull(executionContext.getApp()).getAccountId();
+
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .accountId(requireNonNull(executionContext.getApp()).getAccountId())
+            .accountId(accountId)
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, requireNonNull(executionContext.getApp()).getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD,
@@ -722,13 +730,13 @@ public abstract class TerraformProvisionState extends State {
       rawVariablesList.addAll(validVariables);
 
       variables = infrastructureProvisionerService.extractUnresolvedTextVariables(validVariables);
-      encryptedVariables =
-          infrastructureProvisionerService.extractEncryptedTextVariables(validVariables, context.getAppId());
+      encryptedVariables = infrastructureProvisionerService.extractEncryptedTextVariables(
+          validVariables, context.getAppId(), context.getWorkflowExecutionId());
 
       if (this.backendConfigs != null) {
         backendConfigs = infrastructureProvisionerService.extractTextVariables(this.backendConfigs, context);
-        encryptedBackendConfigs =
-            infrastructureProvisionerService.extractEncryptedTextVariables(this.backendConfigs, context.getAppId());
+        encryptedBackendConfigs = infrastructureProvisionerService.extractEncryptedTextVariables(
+            this.backendConfigs, context.getAppId(), context.getWorkflowExecutionId());
       }
 
       if (this.environmentVariables != null) {
@@ -736,7 +744,7 @@ public abstract class TerraformProvisionState extends State {
             validateAndFilterVariables(this.environmentVariables, terraformProvisioner.getEnvironmentVariables());
         environmentVars = infrastructureProvisionerService.extractUnresolvedTextVariables(validEnvironmentVariables);
         encryptedEnvironmentVars = infrastructureProvisionerService.extractEncryptedTextVariables(
-            validEnvironmentVariables, context.getAppId());
+            validEnvironmentVariables, context.getAppId(), context.getWorkflowExecutionId());
       }
 
     } else if (this instanceof DestroyTerraformProvisionState) {
@@ -843,6 +851,8 @@ public abstract class TerraformProvisionState extends State {
             .secretManagerConfig(secretManagerConfig)
             .encryptedTfPlan(null)
             .planName(getPlanName(context))
+            .useTfClient(
+                featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .build();
 
     return createAndRunTask(activityId, executionContext, parameters, delegateTag);
@@ -902,7 +912,7 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedData = null;
     if (isNotEmpty(rawData)) {
       encryptedData = infrastructureProvisionerService.extractEncryptedTextVariables(
-          extractVariables(rawData, "ENCRYPTED_TEXT"), context.getAppId());
+          extractVariables(rawData, "ENCRYPTED_TEXT"), context.getAppId(), context.getWorkflowExecutionId());
     }
     return encryptedData;
   }

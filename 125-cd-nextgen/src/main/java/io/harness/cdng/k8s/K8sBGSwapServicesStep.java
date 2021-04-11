@@ -1,10 +1,11 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -28,12 +29,12 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.ResponseData;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
-import java.util.Map;
 
-public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesStepParameters> {
+@OwnedBy(CDP)
+public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesStepParameters, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_BG_SWAP_SERVICES.getYamlType()).build();
   public static final String K8S_BG_SWAP_SERVICES_COMMAND_NAME = "Blue/Green Swap Services";
@@ -73,7 +74,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .commandName(K8S_BG_SWAP_SERVICES_COMMAND_NAME)
             .taskType(K8sTaskType.SWAP_SERVICE_SELECTORS)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, swapServiceSelectorsRequest, ambiance, infrastructure)
@@ -81,16 +82,9 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    ResponseData responseData = responseDataMap.values().iterator().next();
-    if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
-          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
-          .build();
-    }
-
-    K8sDeployResponse executionResponse = (K8sDeployResponse) responseData;
+  public StepResponse handleTaskResult(Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters,
+      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+    K8sDeployResponse executionResponse = responseSupplier.get();
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
 
@@ -101,8 +95,8 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
           .build();
     }
 
-    // Save BGSwapServices Outcome only if you are in forward phase. We use this in rollback to check if we need to run
-    // this step or not.
+    // Save BGSwapServices Outcome only if you are in forward phase. We use this in rollback to check if we need to
+    // run this step or not.
     if (!StepUtils.isStepInRollbackSection(ambiance)) {
       K8sBGSwapServicesOutcome bgSwapServicesOutcome = K8sBGSwapServicesOutcome.builder().build();
       stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()

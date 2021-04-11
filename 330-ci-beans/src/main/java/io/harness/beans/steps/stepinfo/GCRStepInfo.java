@@ -1,10 +1,14 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -35,6 +39,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("BuildAndPushGCR")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("gcrStepInfo")
+@OwnedBy(CI)
 public class GCRStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GCR).build();
@@ -50,7 +55,6 @@ public class GCRStepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -71,25 +75,22 @@ public class GCRStepInfo implements PluginCompatibleStep {
   @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> buildArgs;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> optimize;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "host",
-      "projectID", "imageName", "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "host", "projectID", "imageName",
+      "tags", "context", "dockerfile", "target", "labels", "buildArgs", "runAsUser", "optimize"})
   public GCRStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> host,
-      ParameterField<String> projectID, ParameterField<String> imageName, ParameterField<List<String>> tags,
-      ParameterField<String> context, ParameterField<String> dockerfile, ParameterField<String> target,
-      ParameterField<Map<String, String>> labels, ParameterField<Map<String, String>> buildArgs) {
+      ContainerResource resources, ParameterField<String> host, ParameterField<String> projectID,
+      ParameterField<String> imageName, ParameterField<List<String>> tags, ParameterField<String> context,
+      ParameterField<String> dockerfile, ParameterField<String> target, ParameterField<Map<String, String>> labels,
+      ParameterField<Map<String, String>> buildArgs, ParameterField<Integer> runAsUser,
+      ParameterField<Boolean> optimize) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.containerImage =
-        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/kaniko-gcr:latest"));
-
-    if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/kaniko-gcr:latest");
-    }
     this.resources = resources;
     this.host = host;
     this.projectID = projectID;
@@ -100,16 +101,13 @@ public class GCRStepInfo implements PluginCompatibleStep {
     this.target = target;
     this.labels = labels;
     this.buildArgs = buildArgs;
+    this.runAsUser = runAsUser;
+    this.optimize = optimize;
   }
 
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override

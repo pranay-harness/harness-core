@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -45,6 +47,8 @@ import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 /**
  * Helper class to interact with K8 cluster for CRUD operation on K8 entities.
@@ -52,10 +56,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CIK8CtlHandler {
   @Inject private SecretSpecBuilder secretSpecBuilder;
   @Inject Provider<ExecCommandListener> execListenerProvider;
   @Inject private Sleeper sleeper;
+
+  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
+  private final int MAX_ATTEMPTS = 3;
 
   public Secret createRegistrySecret(
       KubernetesClient kubernetesClient, String namespace, String secretName, ImageDetailsWithConnector imageDetails) {
@@ -64,7 +72,10 @@ public class CIK8CtlHandler {
       return null;
     }
 
-    return kubernetesClient.secrets().inNamespace(namespace).create(secret);
+    RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying failed to create registry secret; attempt: {}",
+        "Failing registry secret creation after retrying {} times");
+    return Failsafe.with(retryPolicy)
+        .get(() -> kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret));
   }
 
   public void createPVC(
@@ -124,37 +135,49 @@ public class CIK8CtlHandler {
     Secret secret = secretSpecBuilder.createSecret(secretName, namespace, data);
 
     if (secret != null) {
-      kubernetesClient.secrets().inNamespace(namespace).create(secret);
+      RetryPolicy<Object> retryPolicy = getRetryPolicy(
+          "[Retrying failed to create secret in attempt: {}", "Failing secret creation after retrying {} times");
+      return Failsafe.with(retryPolicy)
+          .get(() -> kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret));
     }
     return secret;
   }
 
   public Pod createPod(KubernetesClient kubernetesClient, Pod pod, String namespace) {
-    return kubernetesClient.pods().inNamespace(namespace).create(pod);
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy("[Retrying failed pod creation; attempt: {}", "Failed pod creation after retrying {} times");
+    return Failsafe.with(retryPolicy).get(() -> kubernetesClient.pods().inNamespace(namespace).createOrReplace(pod));
   }
 
   // Waits for the pod to exit PENDING state and returns true if pod is in RUNNING state, else false.
   public PodStatus waitUntilPodIsReady(KubernetesClient kubernetesClient, String podName, String namespace)
       throws InterruptedException {
-    Pod pod = kubernetesClient.pods().inNamespace(namespace).withName(podName).get();
+    int errorCounter = 0;
+    Pod pod = null;
     Instant startTime = Instant.now();
     Instant currTime = startTime;
     while (Duration.between(startTime, currTime).getSeconds() < CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS) {
-      if (pod == null) {
-        throw new PodNotFoundException(format("Pod %s is not present in namespace %s", podName, namespace));
-      }
-
       // Either pod is in pending phase where it is waiting for scheduling / creation of containers
       // or pod is waiting for containers to move to running state.
-      if (!isPodInPendingPhase(pod) && !isPodInWaitingState(pod)) {
+      if (pod != null && !isPodInPendingPhase(pod) && !isPodInWaitingState(pod) && isIpAssigned(pod)) {
         return PodStatus.builder()
             .status(PodStatus.Status.RUNNING)
+            .ip(pod.getStatus().getPodIP())
             .ciContainerStatusList(getContainersStatus(pod))
             .build();
       }
 
       sleeper.sleep(CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000L);
-      pod = kubernetesClient.pods().inNamespace(namespace).withName(podName).get();
+      try {
+        pod = kubernetesClient.pods().inNamespace(namespace).withName(podName).get();
+      } catch (Exception ex) {
+        errorCounter = errorCounter + 1;
+        log.error("Pod get call failed, errorCounter: {}", errorCounter, ex);
+        if (errorCounter >= 5) {
+          throw new PodNotFoundException(format("Pod %s is not present in namespace %s", podName, namespace), ex);
+        }
+        continue;
+      }
       currTime = Instant.now();
     }
 
@@ -193,6 +216,13 @@ public class CIK8CtlHandler {
       if (containerStatus.getState().getWaiting() != null) {
         return true;
       }
+    }
+    return false;
+  }
+
+  private boolean isIpAssigned(Pod pod) {
+    if (pod.getStatus().getPodIP() != null) {
+      return true;
     }
     return false;
   }
@@ -306,5 +336,14 @@ public class CIK8CtlHandler {
       execCommandStatus = ExecCommandStatus.TIMEOUT;
     }
     return execCommandStatus;
+  }
+
+  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }

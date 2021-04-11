@@ -54,6 +54,10 @@ public class CEMetadataRecordDao {
       updateOperations.set(CEMetadataRecordKeys.azureDataPresent, ceMetadataRecord.getAzureDataPresent());
     }
 
+    if (null != ceMetadataRecord.getApplicationDataPresent()) {
+      updateOperations.set(CEMetadataRecordKeys.applicationDataPresent, ceMetadataRecord.getApplicationDataPresent());
+    }
+
     FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
     return persistence.upsert(query, updateOperations, findAndModifyOptions);
   }

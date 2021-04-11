@@ -23,7 +23,7 @@ var _ Client = (*HTTPClient)(nil)
 const (
 	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
 	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
-	cgEndpoint = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
+	cgEndpoint   = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -117,7 +117,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			// 5xx's are typically not permanent errors and may
 			// relate to outages on the server side.
 			if res.StatusCode >= 500 {
-				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: server error: reconnect and retry")
+				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: ti-server error: reconnect and retry")
 				if duration == backoff.Stop {
 					return nil, err
 				}

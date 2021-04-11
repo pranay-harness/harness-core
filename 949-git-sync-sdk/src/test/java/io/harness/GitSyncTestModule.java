@@ -1,7 +1,8 @@
 package io.harness;
 
-import io.harness.gitsync.ChangeSetHelperServiceImpl;
-import io.harness.gitsync.gittoharness.ChangeSetHelperService;
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -28,6 +29,7 @@ import java.util.Set;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(DX)
 public class GitSyncTestModule extends AbstractModule {
   private final GitSyncTestConfiguration config;
 
@@ -61,7 +63,6 @@ public class GitSyncTestModule extends AbstractModule {
         });
       }
     });
-    bind(ChangeSetHelperService.class).to(ChangeSetHelperServiceImpl.class);
   }
 
   @Provides

@@ -1,8 +1,10 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
@@ -15,6 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
@@ -27,19 +30,16 @@ public class K8sCanaryDeleteStepParameters implements K8sStepParameters {
   ParameterField<Boolean> skipDryRun;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-  RollbackInfo rollbackInfo;
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sCanaryDeleteStepParameters(String name, String identifier, String description,
-      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun,
-      RollbackInfo rollbackInfo) {
+      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun) {
     this.name = name;
     this.identifier = identifier;
     this.description = description;
     this.skipCondition = skipCondition;
     this.timeout = timeout;
     this.skipDryRun = skipDryRun;
-    this.rollbackInfo = rollbackInfo;
   }
 
   @Override

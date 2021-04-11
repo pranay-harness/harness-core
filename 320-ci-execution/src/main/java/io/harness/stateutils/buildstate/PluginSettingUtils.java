@@ -13,6 +13,8 @@ import static java.lang.String.format;
 import static org.springframework.util.StringUtils.trimLeadingCharacter;
 import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
@@ -33,6 +35,7 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class PluginSettingUtils {
   public static final String PLUGIN_REGISTRY = "PLUGIN_REGISTRY";
   public static final String PLUGIN_REPO = "PLUGIN_REPO";
@@ -52,6 +55,8 @@ public class PluginSettingUtils {
   public static final String PLUGIN_EXIT_CODE = "PLUGIN_EXIT_CODE";
   public static final String PLUGIN_PATH_STYLE = "PLUGIN_PATH_STYLE";
   public static final String PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT = "PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT";
+  public static final String PLUGIN_SNAPSHOT_MODE = "PLUGIN_SNAPSHOT_MODE";
+  public static final String REDO_SNAPSHOT_MODE = "redo";
   public static final String PLUGIN_BACKEND_OPERATION_TIMEOUT = "PLUGIN_BACKEND_OPERATION_TIMEOUT";
   public static final String PLUGIN_CACHE_KEY = "PLUGIN_CACHE_KEY";
   public static final String PLUGIN_BACKEND = "PLUGIN_BACKEND";
@@ -133,6 +138,11 @@ public class PluginSettingUtils {
     if (isNotEmpty(labels)) {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
+
+    boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
+    if (optimize) {
+      setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
+    }
     return map;
   }
 
@@ -179,6 +189,11 @@ public class PluginSettingUtils {
     if (isNotEmpty(labels)) {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
+
+    boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
+    if (optimize) {
+      setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
+    }
     return map;
   }
 
@@ -214,6 +229,11 @@ public class PluginSettingUtils {
     Map<String, String> labels = resolveMapParameter("labels", "DockerHub", identifier, stepInfo.getLabels(), false);
     if (isNotEmpty(labels)) {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
+    }
+
+    boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
+    if (optimize) {
+      setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
     }
 
     return map;
