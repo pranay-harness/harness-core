@@ -165,8 +165,8 @@ public class GitCommandCallback implements OldNotifyCallback {
         gitSyncService.createGitFileActivitySummaryForCommit(
             processingCommitId, accountId, false, GitCommit.Status.COMPLETED, yamlGitConfig);
       }
-      yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.get().getOrganizationId(),
-          yamlChangeSet.get().getProjectId(),
+      yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.get().getOrgIdentifier(),
+          yamlChangeSet.get().getProjectIdentifier(),
           getAllFilesSuccessFullyProccessed(yamlChangeSet.get().getGitFileChanges(), filesCommited));
     }
   }

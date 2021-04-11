@@ -90,8 +90,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   public YamlGitConfigDTO getYamlGitConfigForHarnessToGitChangeSet(
       GitFileChange harnessToGitFileChange, YamlChangeSet harnessToGitChangeSet) {
     String rootFolderId = harnessToGitFileChange.getRootPathId();
-    return weNeedToPushChanges(harnessToGitChangeSet.getAccountId(), harnessToGitChangeSet.getOrganizationId(),
-        harnessToGitChangeSet.getProjectId(), rootFolderId);
+    return weNeedToPushChanges(harnessToGitChangeSet.getAccountId(), harnessToGitChangeSet.getOrgIdentifier(),
+        harnessToGitChangeSet.getProjectIdentifier(), rootFolderId);
   }
 
   private Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO yamlGitConfig) {
@@ -188,12 +188,12 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (!connector.isPresent()) {
       throw new GeneralException(
           format(GIT_YAML_LOG_PREFIX + "No git sync configured for accountId [{%s}], orgId [{%s}], projectId [{%s}]",
-              yamlChangeSet.getAccountId(), yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId()));
+              yamlChangeSet.getAccountId(), yamlChangeSet.getOrgIdentifier(), yamlChangeSet.getProjectIdentifier()));
     }
 
     log.info(GIT_YAML_LOG_PREFIX + "Creating DIFF git delegate task for entity");
     TaskData taskData = getTaskDataForDiff(yamlChangeSet, yamlGitConfig, connector.get(), accountId,
-        yamlChangeSet.getOrganizationId(), yamlChangeSet.getProjectId(), lastProcessedCommitId, endCommitId);
+        yamlChangeSet.getOrgIdentifier(), yamlChangeSet.getProjectIdentifier(), lastProcessedCommitId, endCommitId);
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", accountId);
     // TODO (abhinav) : Adopt this to use delegate 2.0 . Meanwhile replacing taskId with some dummy string
     // String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);

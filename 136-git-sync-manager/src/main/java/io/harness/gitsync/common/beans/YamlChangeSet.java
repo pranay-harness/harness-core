@@ -10,9 +10,6 @@ import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.core.beans.GitSyncMetadata;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
 import io.harness.mongo.index.FdIndex;
-import io.harness.ng.core.OrganizationAccess;
-import io.harness.ng.core.ProjectAccess;
-import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -46,27 +43,28 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("io.harness.gitsync.common.beans.yamlChangeSet")
 @Entity(value = "yamlChangeSetNG", noClassnameStored = true)
 @OwnedBy(DX)
-public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                      UpdatedByAware, AccountAccess, OrganizationAccess, ProjectAccess {
+public class YamlChangeSet
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   public static final String MAX_RETRY_COUNT_EXCEEDED_CODE = "MAX_RETRY_COUNT_EXCEEDED";
   public static final String MAX_QUEUE_DURATION_EXCEEDED_CODE = "MAX_QUEUE_DURATION_EXCEEDED";
 
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
-  @Trimmed @NotEmpty private String accountId;
-  @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
+  @Trimmed @NotEmpty private String accountIdentifier;
+  private String orgIdentifier;
+  private String projectIdentifier;
   @FdIndex @NotNull private String status;
-  private boolean forcePush;
-  private long queuedOn = System.currentTimeMillis();
-  private boolean fullSync;
-  private String parentYamlChangeSetId;
-  private GitWebhookRequestAttributes gitWebhookRequestAttributes;
+  private Scope scope;
+
   @Default private Integer retryCount = 0;
   private String messageCode;
   private String queueKey;
   private GitSyncMetadata gitSyncMetadata;
-  private String organizationId;
-  private String projectId;
-  private Scope scope;
+
+  @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
+  private boolean forcePush;
+  private long queuedOn = System.currentTimeMillis();
+  private boolean fullSync;
+  private GitWebhookRequestAttributes gitWebhookRequestAttributes;
 
   public enum Status { QUEUED, RUNNING, FAILED, COMPLETED, SKIPPED }
 
@@ -79,25 +77,24 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   @LastModifiedDate private long lastUpdatedAt;
 
   @Builder
-  public YamlChangeSet(String uuid, String accountId, List<GitFileChange> gitFileChanges, String status,
-      boolean forcePush, long queuedOn, boolean fullSync, String parentYamlChangeSetId,
-      GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount, String messageCode, String queueKey,
-      GitSyncMetadata gitSyncMetadata, String organizationId, String projectId, Scope scope) {
+  public YamlChangeSet(String uuid, String accountIdentifier, List<GitFileChange> gitFileChanges, String status,
+      boolean forcePush, long queuedOn, boolean fullSync, GitWebhookRequestAttributes gitWebhookRequestAttributes,
+      Integer retryCount, String messageCode, String queueKey, GitSyncMetadata gitSyncMetadata, String orgIdentifier,
+      String projectIdentifier, Scope scope) {
     this.uuid = uuid;
-    this.accountId = accountId;
+    this.accountIdentifier = accountIdentifier;
     this.gitFileChanges = gitFileChanges;
     this.status = status;
     this.forcePush = forcePush;
     this.queuedOn = queuedOn;
     this.fullSync = fullSync;
-    this.parentYamlChangeSetId = parentYamlChangeSetId;
     this.gitWebhookRequestAttributes = gitWebhookRequestAttributes;
     this.retryCount = retryCount;
     this.messageCode = messageCode;
     this.queueKey = queueKey;
     this.gitSyncMetadata = gitSyncMetadata;
-    this.organizationId = organizationId;
-    this.projectId = projectId;
+    this.orgIdentifier = orgIdentifier;
+    this.projectIdentifier = projectIdentifier;
     this.scope = scope;
   }
 }
