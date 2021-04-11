@@ -37,14 +37,15 @@ public class GitSyncGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
+    Multibinder<Service> serviceBinder =
+        Multibinder.newSetBinder(binder(), Service.class, Names.named("git-sync-services"));
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("gitsync-grpc-service")));
   }
 
   @Provides
   @Singleton
   @Named("git-sync")
-  public ServiceManager serviceManager(Set<Service> services) {
+  public ServiceManager serviceManager(@Named("git-sync-services") Set<Service> services) {
     return new ServiceManager(services);
   }
 
@@ -52,12 +53,13 @@ public class GitSyncGrpcModule extends AbstractModule {
   @Singleton
   @Named("gitsync-grpc-service")
   public Service gitSyncGrpcService(GitSyncServiceConfiguration configuration, HealthStatusManager healthStatusManager,
-      Set<BindableService> services) {
+      @Named("git-sync-bindable-services") Set<BindableService> services) {
     return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), services, Collections.emptySet(),
         healthStatusManager);
   }
 
   @Provides
+  @Named("git-sync-bindable-services")
   private Set<BindableService> bindableServices(
       HealthStatusManager healthStatusManager, HarnessToGitPushInfoGrpcService harnessToGitPushInfoGrpcService) {
     Set<BindableService> services = new HashSet<>();
