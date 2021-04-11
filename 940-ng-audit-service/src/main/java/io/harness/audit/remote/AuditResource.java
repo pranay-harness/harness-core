@@ -6,6 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditEventDTO;
@@ -51,6 +54,8 @@ import org.springframework.data.domain.Page;
     })
 public class AuditResource {
   @Inject private final AuditService auditService;
+  @Inject private final AccessControlClient accessControlClient;
+  private static final String AUDIT_VIEW_PERMISSION = "core_audit_view";
 
   @POST
   @ApiOperation(hidden = true, value = "Create an Audit", nickname = "postAudit")
@@ -65,6 +70,11 @@ public class AuditResource {
   public ResponseDTO<PageResponse<AuditEventDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @BeanParam PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+    for (io.harness.audit.beans.ResourceScopeDTO resourceScopeDTO : auditFilterPropertiesDTO.getScopes()) {
+      accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, resourceScopeDTO.getOrgIdentifier(),
+                                                    resourceScopeDTO.getProjectIdentifier()),
+          Resource.NONE, AUDIT_VIEW_PERMISSION);
+    }
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order = SortOrder.Builder.aSortOrder().withField(AuditEventKeys.timestamp, DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
