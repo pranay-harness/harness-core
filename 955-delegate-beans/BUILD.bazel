@@ -13,3 +13,13 @@ java_library(
         "//980-commons:module",
     ],
 )
+
+load("//:macros.bzl", "sonarqube_test")
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = glob(["src/main/**/*.java"]),
+    targets = [
+        ":module",
+    ],
+)

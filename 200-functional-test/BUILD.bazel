@@ -22,7 +22,6 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    testonly = True,
     srcs = glob([
         "src/main/**/*.java",
     ]),
@@ -90,3 +89,13 @@ java_library(
 checkstyle()
 
 pmd()
+
+load("//:macros.bzl", "sonarqube_test")
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = glob(["src/main/**/*.java"]),
+    targets = [
+        ":module",
+    ],
+)
