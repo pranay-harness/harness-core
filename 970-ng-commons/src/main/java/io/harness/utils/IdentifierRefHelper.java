@@ -1,5 +1,7 @@
 package io.harness.utils;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.IdentifierRef.IdentifierRefBuilder;
 import io.harness.data.structure.EmptyPredicate;
@@ -10,6 +12,7 @@ import io.harness.exception.InvalidRequestException;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class IdentifierRefHelper {
   public final String IDENTIFIER_REF_DELIMITER = "\\."; // check if this is the correct delimiter
