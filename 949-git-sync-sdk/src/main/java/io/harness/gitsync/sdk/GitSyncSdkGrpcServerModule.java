@@ -38,14 +38,15 @@ public class GitSyncSdkGrpcServerModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
+    Multibinder<Service> serviceBinder =
+        Multibinder.newSetBinder(binder(), Service.class, Names.named("git-sync-sdk-services"));
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("gitsync-sdk-grpc-service")));
   }
 
   @Provides
   @Singleton
   @Named("gitsync-sdk-service-manager")
-  public ServiceManager serviceManager(Set<Service> services) {
+  public ServiceManager serviceManager(@Named("git-sync-sdk-services") Set<Service> services) {
     return new ServiceManager(services);
   }
 
