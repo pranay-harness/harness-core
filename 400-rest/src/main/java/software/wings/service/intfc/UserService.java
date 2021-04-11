@@ -521,7 +521,7 @@ public interface UserService extends OwnedByAccount {
   boolean postCustomEvent(String accountId, String event);
 
   PasswordStrengthViolations checkPasswordViolations(
-      String resetPasswordToken, PasswordSource passwordSource, String password);
+      String resetPasswordToken, PasswordSource passwordSource, String password, String accountId);
 
   User applyUpdateOperations(User user, UpdateOperations<User> updateOperations);
 
