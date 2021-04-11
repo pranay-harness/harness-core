@@ -1,5 +1,8 @@
 package io.harness.ng.core.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Encrypted;
 
 import software.wings.annotation.EncryptableSetting;
@@ -11,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @ToString(exclude = "secretText")
