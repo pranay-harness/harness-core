@@ -169,6 +169,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     mapper.registerModule(new PmsBeansJacksonModule());
   }
 
+  
   @Override
   public void run(NextGenConfiguration appConfig, Environment environment) {
     log.info("Starting Next Gen Application ...");
