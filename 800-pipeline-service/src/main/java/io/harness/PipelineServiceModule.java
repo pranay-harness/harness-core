@@ -355,4 +355,11 @@ public class PipelineServiceModule extends AbstractModule {
   public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
     return configuration.getLogStreamingServiceConfig();
   }
+
+  @Provides
+  @Singleton
+  public PipelineServiceIteratorsConfig getIteratorsConfig() {
+    return configuration.getIteratorsConfig() == null ? PipelineServiceIteratorsConfig.builder().build()
+                                                      : configuration.getIteratorsConfig();
+  }
 }
