@@ -39,6 +39,11 @@ import io.harness.service.ScmClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.ManagedChannel;
+import io.grpc.netty.NettyChannelBuilder;
+import io.netty.channel.kqueue.KQueueDomainSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.unix.DomainSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,8 +57,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(DX)
 public class SCMServiceGitClientImpl implements ScmClient {
   SCMGrpc.SCMBlockingStub scmBlockingStub;
-  ScmGitProviderMapper scmGitProviderMapper;
-  ScmGitProviderHelper scmGitProviderHelper;
+  io.harness.impl.scm.ScmGitProviderMapper scmGitProviderMapper;
+  io.harness.impl.scm.ScmGitProviderHelper scmGitProviderHelper;
 
   @Override
   public CreateFileResponse createFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
@@ -167,7 +172,18 @@ public class SCMServiceGitClientImpl implements ScmClient {
   @Override
   public ListBranchesResponse listBranches(ScmConnector scmConnector) {
     ListBranchesRequest listBranchesRequest = getListBranchesRequest(scmConnector);
-    return scmBlockingStub.listBranches(listBranchesRequest);
+
+    KQueueEventLoopGroup klg = new KQueueEventLoopGroup();
+    ManagedChannel channel = NettyChannelBuilder.forAddress(new DomainSocketAddress("/tmp/bla"))
+                                 .eventLoopGroup(klg)
+                                 .channelType(KQueueDomainSocketChannel.class)
+                                 .usePlaintext()
+                                 .build();
+
+    //    Channel channel = NettyChannelBuilder.forTarget("localhost:8091").usePlaintext().build();
+
+    SCMGrpc.SCMBlockingStub stub = SCMGrpc.newBlockingStub(channel);
+    return stub.listBranches(listBranchesRequest);
   }
 
   @Override
