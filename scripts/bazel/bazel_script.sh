@@ -150,6 +150,7 @@ BAZEL_MODULES="\
   //953-git-sync-commons:module \
   //953-git-sync-commons/src/main/proto:all \
   //954-connector-beans:module \
+  //955-account-mgmt:module \
   //955-filters-sdk:module \
   //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \

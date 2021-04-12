@@ -101,6 +101,7 @@ directories:
   953-git-sync-commons
   952-scm-java-client
   954-connector-beans
+  955-account-mgmt
   955-filters-sdk
   955-outbox-sdk
   955-setup-usage-sdk
