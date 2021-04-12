@@ -102,6 +102,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.validation.ExpressionUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -124,6 +125,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -135,7 +137,9 @@ public class K8sStepHelper {
       ManifestType.K8Manifest, ManifestType.HelmChart, ManifestType.Kustomize, ManifestType.OpenshiftTemplate);
 
   public static final String MISSING_INFRASTRUCTURE_ERROR = "Infrastructure section is missing or is not configured";
-
+  public static final String RELEASE_NAME_VALIDATION_REGEX =
+      "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
+  public static final Pattern releaseNamePattern = Pattern.compile(RELEASE_NAME_VALIDATION_REGEX);
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private SecretManagerClientService secretManagerClientService;
   @Inject private EngineExpressionService engineExpressionService;
@@ -145,17 +149,29 @@ public class K8sStepHelper {
   @Inject private EncryptionHelper encryptionHelper;
 
   String getReleaseName(InfrastructureOutcome infrastructure) {
+    String releaseName;
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
         K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
-        return k8SDirectInfrastructure.getReleaseName();
-
+        releaseName = k8SDirectInfrastructure.getReleaseName();
+        break;
       case KUBERNETES_GCP:
         K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
-        return k8sGcpInfrastructure.getReleaseName();
-
+        releaseName = k8sGcpInfrastructure.getReleaseName();
+        break;
       default:
         throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
+    }
+    validateReleaseName(releaseName);
+    return releaseName;
+  }
+
+  private static void validateReleaseName(String name) {
+    if (!ExpressionUtils.matchesPattern(releaseNamePattern, name)) {
+      throw new InvalidRequestException(format(
+          "Invalid Release name format: %s. Release name must consist of lower case alphanumeric characters, '-' or '.'"
+              + ", and must start and end with an alphanumeric character (e.g. 'example.com')",
+          name));
     }
   }
 
