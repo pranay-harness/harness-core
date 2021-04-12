@@ -19,6 +19,7 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SSOConfig;
 
 import com.google.inject.Inject;
@@ -233,5 +234,11 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   public SSOConfig deleteSAMLMetadata(@NotNull String accountIdentifier) {
     SSOConfig ssoConfig = getResponse(managerClient.deleteSAMLMetadata(accountIdentifier));
     return ssoConfig;
+  }
+
+  @Override
+  public LoginTypeResponse getSAMLLoginTest(@NotNull String accountIdentifier) {
+    LoginTypeResponse loginTypeResponse = getResponse(managerClient.getSAMLLoginTest(accountIdentifier));
+    return loginTypeResponse;
   }
 }

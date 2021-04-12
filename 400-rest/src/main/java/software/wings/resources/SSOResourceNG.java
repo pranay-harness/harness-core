@@ -6,13 +6,17 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SSOConfig;
+import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.SSOService;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -31,6 +35,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Api(value = "/ng/sso", hidden = true)
 @Path("/ng/sso")
@@ -47,6 +52,7 @@ public class SSOResourceNG {
   public SSOResourceNG(SSOService ssoService) {
     this.ssoService = ssoService;
   }
+  @Inject private SamlClientService samlClientService;
 
   @GET
   @Path("get-access-management")
@@ -119,5 +125,17 @@ public class SSOResourceNG {
   @ExceptionMetered
   public RestResponse<SSOConfig> deleteSamlMetaData(@QueryParam("accountId") String accountId) {
     return new RestResponse<SSOConfig>(ssoService.deleteSamlConfiguration(accountId));
+  }
+
+  @GET
+  @Path("saml-login-test")
+  public RestResponse<LoginTypeResponse> getSamlLoginTest(@QueryParam("accountId") @NotBlank String accountId) {
+    LoginTypeResponse.LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
+    try {
+      builder.SSORequest(samlClientService.generateTestSamlRequest(accountId));
+      return new RestResponse<>(builder.authenticationMechanism(AuthenticationMechanism.SAML).build());
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION);
+    }
   }
 }

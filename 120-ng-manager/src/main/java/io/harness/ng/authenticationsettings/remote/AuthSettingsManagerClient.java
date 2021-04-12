@@ -7,6 +7,7 @@ import io.harness.rest.RestResponse;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SSOConfig;
 
 import java.util.Set;
@@ -72,5 +73,8 @@ public interface AuthSettingsManagerClient {
       @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl);
 
   @DELETE(API_PREFIX + "sso/delete-saml-idp-metadata")
-  Call<RestResponse<SSOConfig>> deleteSAMLMetadata(@Query("accountId") @NotEmpty String accountIdentifier);
+  Call<RestResponse<SSOConfig>> deleteSAMLMetadata(@Query("accountId") String accountIdentifier);
+
+  @GET(API_PREFIX + "sso/saml-login-test")
+  Call<RestResponse<LoginTypeResponse>> getSAMLLoginTest(@Query("accountId") @NotEmpty String accountIdentifier);
 }

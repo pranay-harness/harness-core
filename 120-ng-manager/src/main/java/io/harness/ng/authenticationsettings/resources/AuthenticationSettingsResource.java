@@ -12,6 +12,7 @@ import io.harness.stream.BoundedInputStream;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SSOConfig;
 
 import com.amazonaws.util.IOUtils;
@@ -153,6 +154,14 @@ public class AuthenticationSettingsResource {
   public RestResponse<SSOConfig> deleteSamlMetadata(
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
     SSOConfig response = authenticationSettingsService.deleteSAMLMetadata(accountIdentifier);
+    return new RestResponse<>(response);
+  }
+
+  @GET
+  @Path("/saml-login-test")
+  @ApiOperation(value = "Get SAML Login Test", nickname = "getSamlLoginTest")
+  public RestResponse<LoginTypeResponse> getSamlLoginTest(@QueryParam("accountId") @NotEmpty String accountId) {
+    LoginTypeResponse response = authenticationSettingsService.getSAMLLoginTest(accountId);
     return new RestResponse<>(response);
   }
 }
