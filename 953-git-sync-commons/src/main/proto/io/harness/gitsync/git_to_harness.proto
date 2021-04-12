@@ -56,3 +56,8 @@ enum ProcessingFailureStage {
   PROCESS_STAGE = 2;
   POST_PROCESS_STAGE = 3;
 }
+
+message GitToHarnessInfo {
+  string yamlGitConfigId = 1;
+  string branch = 2;
+}

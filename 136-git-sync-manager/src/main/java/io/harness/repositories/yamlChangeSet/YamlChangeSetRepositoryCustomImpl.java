@@ -37,8 +37,11 @@ public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositor
   @Override
   public UpdateResult updateYamlChangeSetsStatus(
       YamlChangeSet.Status oldStatus, YamlChangeSet.Status newStatus, String accountId) {
-    Query query = new Query().addCriteria(
-        new Criteria().and(YamlChangeSetKeys.accountId).is(accountId).and(YamlChangeSetKeys.status).is(oldStatus));
+    Query query = new Query().addCriteria(new Criteria()
+                                              .and(YamlChangeSetKeys.accountIdentifier)
+                                              .is(accountId)
+                                              .and(YamlChangeSetKeys.status)
+                                              .is(oldStatus));
     Update update = new Update().set(YamlChangeSetKeys.status, newStatus);
     return mongoTemplate.updateMulti(query, update, YamlChangeSet.class);
   }
@@ -79,6 +82,6 @@ public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositor
   public List<String> findDistinctAccountIdByStatus(YamlChangeSet.Status status) {
     Criteria criteria = Criteria.where(YamlChangeSetKeys.status).is(status);
     Query query = query(criteria);
-    return mongoTemplate.findDistinct(query, YamlChangeSetKeys.accountId, YamlChangeSet.class, String.class);
+    return mongoTemplate.findDistinct(query, YamlChangeSetKeys.accountIdentifier, YamlChangeSet.class, String.class);
   }
 }

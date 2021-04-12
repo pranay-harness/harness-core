@@ -98,7 +98,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       throw NoResultFoundException.newBuilder()
           .message(format(
               "unable to find yamlGitConfig for git to harness changeset for account =[%s], git connector id =[%s], branch=[%s]. Git Sync might not have been configured",
-              yamlChangeSet.getAccountId(), yamlChangeSet.getGitWebhookRequestAttributes().getGitConnectorId(),
+              yamlChangeSet.getAccountIdentifier(), yamlChangeSet.getGitWebhookRequestAttributes().getGitConnectorId(),
               yamlChangeSet.getGitWebhookRequestAttributes().getBranchName()))
           .build();
     }
@@ -144,7 +144,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   private boolean accountQuotaMaxedOut(String accountId, int maxRunningChangesetsForAccount) {
-    return yamlChangeSetRepository.countByAccountIdAndStatus(accountId, RUNNING) >= maxRunningChangesetsForAccount;
+    return yamlChangeSetRepository.countByAccountIdentifierAndStatus(accountId, RUNNING)
+        >= maxRunningChangesetsForAccount;
   }
 
   private YamlChangeSet selectQueuedChangeSetWithPriority(String accountId, String queueKey) {
@@ -184,17 +185,17 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   private Optional<YamlChangeSet> peekQueueHead(String accountId, String queueKey) {
-    return yamlChangeSetRepository.findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
+    return yamlChangeSetRepository.findFirstByAccountIdentifierAndQueueKeyAndStatusOrderByCreatedAt(
         accountId, queueKey, QUEUED);
   }
 
   private Optional<YamlChangeSet> getOldestGitToHarnessChangeSet(String accountId, String queueKey) {
-    return yamlChangeSetRepository.findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
+    return yamlChangeSetRepository.findFirstByAccountIdentifierAndQueueKeyAndStatusOrderByCreatedAt(
         accountId, queueKey, QUEUED);
   }
 
   private boolean anyChangeSetRunningFoQueueKey(String accountId, String queueKey) {
-    return yamlChangeSetRepository.countByAccountIdAndStatusAndQueueKey(accountId, RUNNING, queueKey) > 0;
+    return yamlChangeSetRepository.countByAccountIdentifierAndStatusAndQueueKey(accountId, RUNNING, queueKey) > 0;
   }
   @Override
   public boolean updateStatus(String accountId, String changeSetId, Status newStatus) {
@@ -216,7 +217,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                         .set(YamlChangeSetKeys.status, SKIPPED)
                         .set(YamlChangeSetKeys.messageCode, MAX_RETRY_COUNT_EXCEEDED_CODE);
     Query query = new Query().addCriteria(new Criteria()
-                                              .and(YamlChangeSetKeys.accountId)
+                                              .and(YamlChangeSetKeys.accountIdentifier)
                                               .is(accountId)
                                               .and(YamlChangeSetKeys.status)
                                               .is(SKIPPED)
@@ -239,7 +240,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     updateOps.inc(YamlChangeSetKeys.retryCount);
 
     Query query = new Query(new Criteria()
-                                .and(YamlChangeSetKeys.accountId)
+                                .and(YamlChangeSetKeys.accountIdentifier)
                                 .is(accountId)
                                 .and(YamlChangeSetKeys.status)
                                 .in(currentStatuses)
@@ -259,7 +260,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     }
 
     Query query = new Query().addCriteria(new Criteria()
-                                              .and(YamlChangeSetKeys.accountId)
+                                              .and(YamlChangeSetKeys.accountIdentifier)
                                               .is(accountId)
                                               .and(YamlChangeSetKeys.status)
                                               .in(currentStatuses)
@@ -287,7 +288,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public List<YamlChangeSet> findByAccountIdsStatusLastUpdatedAtLessThan(
       List<String> runningAccountIdList, long timeout) {
-    return yamlChangeSetRepository.findByAccountIdAndStatusAndLastUpdatedAtLessThan(
+    return yamlChangeSetRepository.findByAccountIdentifierAndStatusAndLastUpdatedAtLessThan(
         runningAccountIdList, Status.RUNNING, System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeout));
   }
 

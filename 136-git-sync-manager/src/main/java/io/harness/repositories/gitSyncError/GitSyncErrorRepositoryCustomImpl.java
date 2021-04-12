@@ -64,8 +64,8 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
         .set(GitSyncErrorKeys.gitSyncDirection, gitSyncDirection)
         .set(GitSyncErrorKeys.yamlFilePath, yamlFilePath)
         .set(GitSyncErrorKeys.failureReason, errorMessage != null ? errorMessage : "Reason could not be captured.")
-        .set(GitSyncErrorKeys.projectIdentifier, projectId)
-        .set(GitSyncErrorKeys.orgIdentifier, orgId)
+        .set(GitSyncErrorKeys.projectId, projectId)
+        .set(GitSyncErrorKeys.organizationId, orgId)
         .set(GitSyncErrorKeys.additionalErrorDetails, gitSyncErrorDetails)
         .set(GitSyncErrorKeys.changeType, changeType);
 

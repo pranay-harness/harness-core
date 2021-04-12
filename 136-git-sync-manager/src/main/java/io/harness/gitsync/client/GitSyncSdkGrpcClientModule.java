@@ -66,12 +66,12 @@ public class GitSyncSdkGrpcClientModule extends AbstractModule {
   public Map<Microservice, GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient(
       @Named("GitSyncGrpcClientConfigs") Map<Microservice, GrpcClientConfig> clientConfigs) throws SSLException {
     Map<Microservice, GitToHarnessServiceBlockingStub> map = new HashMap<>();
-    map.put(GmsClientConstants.moduleType,
-        GitToHarnessServiceGrpc.newBlockingStub(
-            InProcessChannelBuilder.forName(GitSyncGrpcConstants.GitSyncSdkInternalService).build()));
     for (Map.Entry<Microservice, GrpcClientConfig> entry : clientConfigs.entrySet()) {
       map.put(entry.getKey(), GitToHarnessServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
     }
+    map.put(GmsClientConstants.moduleType,
+        GitToHarnessServiceGrpc.newBlockingStub(
+            InProcessChannelBuilder.forName(GitSyncGrpcConstants.GitSyncSdkInternalService).build()));
     return map;
   }
 }

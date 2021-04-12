@@ -90,7 +90,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public YamlGitConfigDTO getYamlGitConfigForHarnessToGitChangeSet(
       GitFileChange harnessToGitFileChange, YamlChangeSet harnessToGitChangeSet) {
     String rootFolderId = harnessToGitFileChange.getRootPathId();
-    return weNeedToPushChanges(harnessToGitChangeSet.getAccountId(), harnessToGitChangeSet.getOrgIdentifier(),
+    return weNeedToPushChanges(harnessToGitChangeSet.getAccountIdentifier(), harnessToGitChangeSet.getOrgIdentifier(),
         harnessToGitChangeSet.getProjectIdentifier(), rootFolderId);
   }
 
@@ -113,7 +113,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public List<YamlGitConfigDTO> getYamlGitConfigsForGitToHarnessChangeSet(YamlChangeSet gitToHarnessChangeSet) {
-    final String accountId = gitToHarnessChangeSet.getAccountId();
+    final String accountId = gitToHarnessChangeSet.getAccountIdentifier();
     checkNotNull(gitToHarnessChangeSet.getGitWebhookRequestAttributes(),
         "GitWebhookRequestAttributes not available in changeset = [%s]", gitToHarnessChangeSet.getUuid());
 
@@ -188,7 +188,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     if (!connector.isPresent()) {
       throw new GeneralException(
           format(GIT_YAML_LOG_PREFIX + "No git sync configured for accountId [{%s}], orgId [{%s}], projectId [{%s}]",
-              yamlChangeSet.getAccountId(), yamlChangeSet.getOrgIdentifier(), yamlChangeSet.getProjectIdentifier()));
+              yamlChangeSet.getAccountIdentifier(), yamlChangeSet.getOrgIdentifier(),
+              yamlChangeSet.getProjectIdentifier()));
     }
 
     log.info(GIT_YAML_LOG_PREFIX + "Creating DIFF git delegate task for entity");

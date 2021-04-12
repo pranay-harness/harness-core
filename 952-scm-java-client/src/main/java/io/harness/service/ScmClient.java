@@ -51,4 +51,6 @@ public interface ScmClient {
   ListBranchesResponse listBranches(ScmConnector scmConnector);
 
   ListCommitsResponse listCommits(ScmConnector scmConnector, String branch);
+
+  void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName);
 }

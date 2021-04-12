@@ -37,6 +37,8 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
         getRequestParamFromContext(GitSyncApiConstants.LAST_OBJECT_ID_KEY, pathParameters, queryParameters);
     final String createPrKey =
         getRequestParamFromContext(GitSyncApiConstants.CREATE_PR_KEY, pathParameters, queryParameters);
+    final String isNewBranch =
+        getRequestParamFromContext(GitSyncApiConstants.NEW_BRANCH, pathParameters, queryParameters);
     // todo(abhinav): see how we can add repo and other details automatically, if not we expect it in every request.
     final GitEntityInfo branchInfo = GitEntityInfo.builder()
                                          .branch(branchName)
@@ -44,7 +46,8 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
                                          .yamlGitConfigId(yamlGitConfigId)
                                          .commitMsg(commitMsg)
                                          .lastObjectId(lastObjectId)
-                                         .createPr(Boolean.getBoolean(createPrKey))
+                                         .createPr(Boolean.valueOf(createPrKey))
+                                         .isNewBranch(Boolean.valueOf(isNewBranch))
                                          .build();
     GitSyncBranchThreadLocal.set(branchInfo);
   }

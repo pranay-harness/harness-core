@@ -218,7 +218,7 @@ public class GitSyncTriggerServiceImpl implements GitSyncTriggerService {
   private YamlChangeSet buildYamlChangeSetForGitToHarness(String accountId, String yamlWebHookPayload,
       HttpHeaders headers, String gitConnectorId, String repoName, String branchName, String headCommitId) {
     return YamlChangeSet.builder()
-        .accountId(accountId)
+        .accountIdentifier(accountId)
         .status(YamlChangeSet.Status.QUEUED.name())
         .gitWebhookRequestAttributes(GitWebhookRequestAttributes.builder()
                                          .webhookBody(yamlWebHookPayload)

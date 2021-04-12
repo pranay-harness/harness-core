@@ -102,7 +102,7 @@ public class GitChangeSetRunnable implements Runnable {
   }
 
   private void processChangeSet(YamlChangeSet yamlChangeSet) {
-    final String accountId = yamlChangeSet.getAccountId();
+    final String accountId = yamlChangeSet.getAccountIdentifier();
     try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
       log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getUuid());
@@ -210,7 +210,7 @@ public class GitChangeSetRunnable implements Runnable {
     if (isNotEmpty(stuckChangeSets)) {
       // Map Acc vs such yamlChangeSets (with multigit support, there can be more than 1 for an account)
       Map<String, List<YamlChangeSet>> accountIdToStuckChangeSets =
-          stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSet::getAccountId));
+          stuckChangeSets.stream().collect(Collectors.groupingBy(YamlChangeSet::getAccountIdentifier));
 
       // Mark these yamlChagneSets as Queued.
       accountIdToStuckChangeSets.forEach(this::retryOrSkipStuckChangeSets);
@@ -263,9 +263,9 @@ public class GitChangeSetRunnable implements Runnable {
   @NotNull
   private Set<ChangeSetGroupingKey> getChangesetGroupingKeys(Criteria criteria) {
     Aggregation aggregation = Aggregation.newAggregation(Aggregation.match(criteria),
-        Aggregation.group(YamlChangeSetKeys.accountId, YamlChangeSetKeys.queueKey)
-            .first(YamlChangeSetKeys.accountId)
-            .as(YamlChangeSetKeys.accountId)
+        Aggregation.group(YamlChangeSetKeys.accountIdentifier, YamlChangeSetKeys.queueKey)
+            .first(YamlChangeSetKeys.accountIdentifier)
+            .as(YamlChangeSetKeys.accountIdentifier)
             .first(YamlChangeSetKeys.queueKey)
             .as(YamlChangeSetKeys.queueKey)
             .count()

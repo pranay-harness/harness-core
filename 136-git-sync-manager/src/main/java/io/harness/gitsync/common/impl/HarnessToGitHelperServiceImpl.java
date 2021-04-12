@@ -76,6 +76,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         .accountId(accountId)
         .orgIdentifier(entityReference.getOrgIdentifier())
         .projectIdentifier(entityReference.getProjectIdentifier())
+        .defaultBranchName(yamlGitConfig.getBranch())
         .build();
   }
 
@@ -101,14 +102,9 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(entityRef.getProjectIdentifier(),
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
     gitEntityService.save(pushInfo.getAccountId(), entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail),
-        yamlGitConfigDTO, pushInfo.getFilePath(), pushInfo.getCommitId());
-    if (pushInfo.getIsNewBranch()) {
-      String branch = pushInfo.getBranchName();
-      if (branch.equals("test")) {
-        onBranchCreationReadFilesAndProcessThem(entityRef.getAccountIdentifier(), yamlGitConfigDTO.getIdentifier(),
-            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(), branch);
-      }
-    }
+        yamlGitConfigDTO, pushInfo.getFilePath(), pushInfo.getCommitId(), pushInfo.getBranchName());
+    onBranchCreationReadFilesAndProcessThem(entityRef.getAccountIdentifier(), yamlGitConfigDTO.getIdentifier(),
+        yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(), "master");
     // todo(abhinav): record git commit and git file activity.
   }
 

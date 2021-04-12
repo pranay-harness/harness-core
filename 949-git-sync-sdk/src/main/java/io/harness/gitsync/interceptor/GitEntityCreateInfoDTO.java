@@ -24,4 +24,5 @@ public class GitEntityCreateInfoDTO {
   @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath;
   @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg;
   @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) boolean createPr;
+  @QueryParam(GitSyncApiConstants.NEW_BRANCH) boolean isNewBranch;
 }

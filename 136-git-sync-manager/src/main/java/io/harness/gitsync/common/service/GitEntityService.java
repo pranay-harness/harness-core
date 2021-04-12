@@ -28,8 +28,8 @@ public interface GitEntityService {
 
   GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType);
 
-  boolean save(
-      String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String filePath, String commitId);
+  boolean save(String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String filePath,
+      String commitId, String branchName);
 
   List<GitSyncEntityListDTO> listSummaryByRepoAndBranch(String projectIdentifier, String organizationIdentifier,
       String accountIdentifier, ModuleType moduleType, String searchTerm, String gitSyncConfigIdentifier, String branch,

@@ -102,4 +102,7 @@ public class JgitGitServiceImpl implements ScmClient {
   public ListCommitsResponse listCommits(ScmConnector scmConnector, String branch) {
     return null;
   }
+
+  @Override
+  public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {}
 }

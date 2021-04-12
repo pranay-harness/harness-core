@@ -85,6 +85,7 @@ import software.wings.jersey.KryoFeature;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -240,6 +241,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {
     final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(CONNECTORS);
     Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
+    ObjectMapper ngObjectMapper = new ObjectMapper(new YAMLFactory());
+    configureObjectMapper(ngObjectMapper);
     gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
                                           .entityType(CONNECTORS)
                                           .yamlClass(ConnectorDTO.class)
@@ -256,6 +259,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .eventsRedisConfig(config.getEventsFrameworkConfiguration().getRedisConfig())
         .serviceHeader(NG_MANAGER)
         .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
+        .objectMapper(ngObjectMapper)
         .build();
   }
 

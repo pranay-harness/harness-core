@@ -66,6 +66,7 @@ public class GitSyncModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    registerRequiredBindings();
     install(SCMJavaClientModule.getInstance());
     install(GitSyncSdkGrpcClientModule.getInstance());
     bind(YamlGitService.class).to(YamlGitServiceImpl.class);
@@ -83,7 +84,6 @@ public class GitSyncModule extends AbstractModule {
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
     bind(HarnessShortlistedBranchService.class).to(HarnessShortlistedBranchServiceImpl.class);
-    registerRequiredBindings();
   }
 
   private void registerRequiredBindings() {

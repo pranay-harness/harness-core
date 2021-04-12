@@ -106,4 +106,9 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   public ListCommitsResponse listCommits(ScmConnector scmConnector, String branch) {
     return scmServiceGitClient.listCommits(scmConnector, branch);
   }
+
+  @Override
+  public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
+    scmServiceGitClient.createNewBranch(scmConnector, branch, defaultBranchName);
+  }
 }

@@ -27,7 +27,7 @@ public class YamlChangeSetServiceImplTest extends GitSyncTestBase {
   @Category(UnitTests.class)
   public void testUpdateStatusAndIncrementRetryCountForYamlChangeSets() {
     YamlChangeSet yamlChangeSet = yamlChangeSetRepository.save(
-        YamlChangeSet.builder().accountId(ACCOUNT_ID).status(Status.SKIPPED.name()).build());
+        YamlChangeSet.builder().accountIdentifier(ACCOUNT_ID).status(Status.SKIPPED.name()).build());
     assertThat(yamlChangeSetService.updateStatusAndIncrementRetryCountForYamlChangeSets(ACCOUNT_ID, Status.QUEUED,
                    Collections.singletonList(YamlChangeSet.Status.valueOf(yamlChangeSet.getStatus())),
                    Collections.singletonList(yamlChangeSet.getUuid())))
@@ -42,7 +42,7 @@ public class YamlChangeSetServiceImplTest extends GitSyncTestBase {
   @Category(UnitTests.class)
   public void testUpdateStatusForGivenYamlChangeSets() {
     YamlChangeSet yamlChangeSet = yamlChangeSetRepository.save(
-        YamlChangeSet.builder().accountId(ACCOUNT_ID).status(Status.SKIPPED.name()).build());
+        YamlChangeSet.builder().accountIdentifier(ACCOUNT_ID).status(Status.SKIPPED.name()).build());
     assertThat(yamlChangeSetService.updateStatusForGivenYamlChangeSets(ACCOUNT_ID, Status.QUEUED,
                    Collections.singletonList(YamlChangeSet.Status.valueOf(yamlChangeSet.getStatus())),
                    Collections.singletonList(yamlChangeSet.getUuid())))

@@ -19,4 +19,5 @@ public class GitEntityInfo {
   String commitMsg;
   boolean createPr;
   String lastObjectId; // required in case of update file
+  boolean isNewBranch;
 }

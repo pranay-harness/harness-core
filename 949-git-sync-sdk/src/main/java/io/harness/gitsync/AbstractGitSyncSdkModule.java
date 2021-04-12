@@ -22,6 +22,7 @@ import io.harness.gitsync.persistance.GitAwareRepository;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.grpc.client.GrpcClientConfig;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -131,5 +132,12 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
     return emptyIfNull(getGitSyncSdkConfiguration().getGitSyncEntitiesConfiguration())
         .stream()
         .collect(Collectors.toMap(GitSyncEntitiesConfiguration::getEntityType, Function.identity()));
+  }
+
+  @Provides
+  @Singleton
+  @Named("GitSyncObjectMapper")
+  public ObjectMapper getGitSyncObjectMapper() {
+    return getGitSyncSdkConfiguration().getObjectMapper();
   }
 }

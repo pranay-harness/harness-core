@@ -49,6 +49,7 @@ message InfoForPush {
   string account_id = 7;
   google.protobuf.StringValue org_identifier = 8;
   google.protobuf.StringValue project_identifier = 9;
+  string defaultBranchName = 10;
 }
 
 message IsGitSyncEnabled {

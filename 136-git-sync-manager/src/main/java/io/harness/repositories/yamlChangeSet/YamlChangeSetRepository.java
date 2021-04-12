@@ -14,13 +14,13 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @OwnedBy(HarnessTeam.DX)
 public interface YamlChangeSetRepository
     extends PagingAndSortingRepository<YamlChangeSet, String>, YamlChangeSetRepositoryCustom {
-  int countByAccountIdAndStatus(String accountId, Status status);
+  int countByAccountIdentifierAndStatus(String accountIdentifier, Status status);
 
-  int countByAccountIdAndStatusAndQueueKey(String accountId, Status status, String queueKey);
+  int countByAccountIdentifierAndStatusAndQueueKey(String accountIdentifier, Status status, String queueKey);
 
-  Optional<YamlChangeSet> findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
-      String accountId, String queueKey, Status status);
+  Optional<YamlChangeSet> findFirstByAccountIdentifierAndQueueKeyAndStatusOrderByCreatedAt(
+      String accountIdentifier, String queueKey, Status status);
 
-  List<YamlChangeSet> findByAccountIdAndStatusAndLastUpdatedAtLessThan(
-      List<String> accountIds, Status status, Long lastUpdatedCutOff);
+  List<YamlChangeSet> findByAccountIdentifierAndStatusAndLastUpdatedAtLessThan(
+      List<String> accountIdentifiers, Status status, Long lastUpdatedCutOff);
 }

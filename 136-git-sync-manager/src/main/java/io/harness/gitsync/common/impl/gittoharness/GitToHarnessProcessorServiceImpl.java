@@ -15,6 +15,7 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
 import io.harness.gitsync.ChangeType;
+import io.harness.gitsync.GitToHarnessInfo;
 import io.harness.gitsync.GitToHarnessServiceGrpc;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
@@ -65,7 +66,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   @Override
   public void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfig, String branch, String accountId) {
     ScmConnector connectorAssociatedWithGitSyncConfig =
-        gitSyncConnectorHelper.getConnectorAssociatedWithGitSyncConfig(yamlGitConfig, accountId);
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfig, accountId);
     FileBatchContentResponse harnessFilesOfBranch =
         getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, branch, yamlGitConfig);
     processTheChangesWeGotFromGit(harnessFilesOfBranch, yamlGitConfig, branch, accountId);
@@ -105,8 +106,10 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
     for (Map.Entry<Microservice, List<ChangeSet>> entry : groupedFilesByMicroservices.entrySet()) {
       GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub gitToHarnessServiceBlockingStub =
           gitToHarnessServiceGrpcClient.get(entry.getKey());
-      gitToHarnessServiceBlockingStub.process(
-          ChangeSets.newBuilder().addAllChangeSet(entry.getValue()).setAccountId(accountId).build());
+      ChangeSets changeSets = ChangeSets.newBuilder().addAllChangeSet(entry.getValue()).setAccountId(accountId).build();
+      GitToHarnessInfo gitToHarnessInfo =
+          GitToHarnessInfo.newBuilder().setYamlGitConfigId(gitSyncConfigDTO.get).setBranch().build();
+      gitToHarnessServiceBlockingStub.process(changeSets);
     }
   }
 

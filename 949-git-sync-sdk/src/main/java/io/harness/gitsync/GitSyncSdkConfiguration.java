@@ -11,6 +11,7 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.redis.RedisConfig;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -36,5 +37,6 @@ public class GitSyncSdkConfiguration {
   ScmConnectionConfig scmConnectionConfig;
   AuthorizationServiceHeader serviceHeader;
   Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfiguration;
+  ObjectMapper objectMapper;
   public enum DeployMode { REMOTE, IN_PROCESS }
 }

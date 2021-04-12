@@ -15,7 +15,9 @@ public class InfoForGitPush {
   ScmConnector scmConnector;
   String filePath;
   boolean isDefault;
+  boolean isNewBranch;
   String branch;
+  String defaultBranchName;
   String yamlGitConfigId;
   String accountId;
   String projectIdentifier;

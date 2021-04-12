@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.exception.UnexpectedException;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileRequest;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
@@ -41,7 +42,17 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -182,6 +193,60 @@ public class SCMServiceGitClientImpl implements ScmClient {
   public ListCommitsResponse listCommits(ScmConnector scmConnector, String branch) {
     ListCommitsRequest listCommitsRequest = getListCommitsRequest(scmConnector, branch);
     return scmBlockingStub.listCommits(listCommitsRequest);
+  }
+
+  @Override
+  public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
+    // todo @deepak: Move this logic of branch creation to scm service
+    String latestShaOfBranch = getLatestShaOfBranch(scmConnector, defaultBranchName);
+    createNewBranchFromDefault(scmConnector, branch, latestShaOfBranch);
+  }
+
+  private void createNewBranchFromDefault(ScmConnector scmConnector, String branch, String latestShaOfBranch) {
+    Client client = ClientBuilder.newClient();
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    String githubToken = getGithubToken(gitProvider);
+    WebTarget resource = client.target("https://api.github.com/repos/" + slug + "/git/refs");
+    Invocation.Builder request = resource.request();
+    request.accept(MediaType.APPLICATION_JSON);
+    request.header("Authorization", "token " + githubToken);
+    Map<String, String> body = new HashMap<>();
+    //    Form form = new Form();
+    //    form.param("ref", "refs/heads/" + branch);
+    //    form.param("sha", latestShaOfBranch);
+    body.put("ref", "refs/heads/" + branch);
+    body.put("sha", latestShaOfBranch);
+    Response post = request.post(Entity.entity(body, MediaType.APPLICATION_JSON));
+  }
+
+  private String getLatestShaOfBranch(ScmConnector scmConnector, String defaultBranchName) {
+    Client client = ClientBuilder.newClient();
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    String githubToken = getGithubToken(gitProvider);
+    WebTarget resource = client.target("https://api.github.com/repos/" + slug + "/git/refs/heads");
+    Invocation.Builder request = resource.request();
+    request.accept(MediaType.APPLICATION_JSON);
+    request.header("Authorization", "token " + githubToken);
+    List<GetRefResponse> response = request.get(Response.class).readEntity(new GenericType<List<GetRefResponse>>() {});
+    if (response == null) {
+      throw new UnexpectedException("Could not read the default branch");
+    } else {
+      for (GetRefResponse refResponse : response) {
+        String ref = refResponse.getRef();
+        String[] splitted = ref.split("/");
+        String branchName = splitted[splitted.length - 1];
+        if (branchName.equals(defaultBranchName)) {
+          return refResponse.getObject().getSha();
+        }
+      }
+    }
+    return null;
+  }
+
+  private String getGithubToken(Provider gitProvider) {
+    return gitProvider.getGithub().getAccessToken();
   }
 
   private GetBatchFileRequest createBatchFileRequest(

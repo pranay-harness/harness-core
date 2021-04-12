@@ -19,7 +19,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
 import java.util.Map;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -29,7 +28,7 @@ public class ChangeSetHelperServiceImpl implements ChangeSetHelperService {
   @Inject
   @Named("GitSyncEntityConfigurations")
   Map<EntityType, GitSyncEntitiesConfiguration> gitSyncEntityConfigurationsMap;
-  @Inject ObjectMapper objectMapper;
+  @Inject @Named("GitSyncObjectMapper") ObjectMapper objectMapper;
   @Inject Map<String, EntityGitPersistenceHelperService> gitPersistenceHelperServiceMap;
 
   @Override
