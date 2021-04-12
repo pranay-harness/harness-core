@@ -19,6 +19,7 @@ import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.helpers.ScmUserHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncConstants;
+import io.harness.gitsync.scm.beans.SCMNoOpResponse;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
 import io.harness.gitsync.scm.beans.ScmDeleteFileResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
@@ -48,6 +49,14 @@ public class SCMGitSyncHelper {
   public ScmPushResponse pushToGit(
       GitEntityInfo gitBranchInfo, String yaml, ChangeType changeType, EntityDetail entityDetail) {
     final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
+    if (gitBranchInfo.isSyncFromGit()) {
+      return SCMNoOpResponse.builder()
+          .filePath(gitBranchInfo.getFilePath())
+          .pushToDefaultBranch(infoForPush.isDefault())
+          .objectId(gitBranchInfo.getLastObjectId())
+          .yamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
+          .build();
+    }
     return pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
   }
 

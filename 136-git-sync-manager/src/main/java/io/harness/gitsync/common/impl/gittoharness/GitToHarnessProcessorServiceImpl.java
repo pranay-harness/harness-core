@@ -142,15 +142,19 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   private ChangeSet mapToChangeSet(FileContent fileContent, String accountId) {
     // todo @deepak: Set the correct values here
     EntityType entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
-    return ChangeSet.newBuilder()
-        .setAccountId(accountId)
-        .setChangeType(ChangeType.ADD)
-        .setCommitId(StringValue.of("dummy"))
-        .setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType))
-        .setId("dummy")
-        .setObjectId(StringValue.of("dummy"))
-        .setYaml(fileContent.getContent())
-        .build();
+    ChangeSet.Builder builder = ChangeSet.newBuilder()
+                                    .setAccountId(accountId)
+                                    .setChangeType(ChangeType.ADD)
+                                    .setCommitId(StringValue.of("dummy"))
+                                    .setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType))
+                                    .setId("dummy")
+                                    .setObjectId(StringValue.of(fileContent.getBlobId()))
+                                    .setYaml(fileContent.getContent())
+                                    .setFilePath(fileContent.getPath());
+    if (isNotBlank(fileContent.getBlobId())) {
+      builder.setObjectId(StringValue.of(fileContent.getBlobId()));
+    }
+    return builder.build();
   }
 
   private Map<Microservice, List<ChangeSet>> groupFilesByMicroservices(
