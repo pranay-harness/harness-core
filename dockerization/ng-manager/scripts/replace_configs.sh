@@ -15,6 +15,7 @@ yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServer.connectors[0]
 yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE gitSyncServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
