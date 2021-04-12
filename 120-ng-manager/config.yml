@@ -108,16 +108,16 @@ grpcServer:
   connectors:
     - port: 9980
       secure: true
-      keyFilePath: 120-ng-manager/key.pem
-      certFilePath: 120-ng-manager/cert.pem
+      keyFilePath: key.pem
+      certFilePath: cert.pem
     - port: 9979
 
 gitSyncServerConfig:
   connectors:
     - port: 13001
       secure: true
-      keyFilePath: 120-ng-manager/key.pem
-      certFilePath: 120-ng-manager/cert.pem
+      keyFilePath: key.pem
+      certFilePath: cert.pem
     - port: 13002
 
 shouldDeployWithGitSync: true
