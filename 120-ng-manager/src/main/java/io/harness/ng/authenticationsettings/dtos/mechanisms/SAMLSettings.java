@@ -23,13 +23,18 @@ public class SAMLSettings extends NGAuthSettings {
   @NotNull private String origin;
   private String logoutUrl;
   private String groupMembershipAttr;
+  private String displayName;
+  private Boolean authorizationEnabled;
 
   public SAMLSettings(@JsonProperty("origin") String origin, @JsonProperty("logoutUrl") String logoutUrl,
-      @JsonProperty("groupMembershipAttr") String groupMembershipAttr) {
+      @JsonProperty("groupMembershipAttr") String groupMembershipAttr, @JsonProperty("displayName") String displayName,
+      @JsonProperty("authorizationEnabled") Boolean authorizationEnabled) {
     super(AuthenticationMechanism.SAML);
+    this.displayName = displayName;
     this.origin = origin;
     this.logoutUrl = logoutUrl;
     this.groupMembershipAttr = groupMembershipAttr;
+    this.authorizationEnabled = authorizationEnabled;
   }
 
   @Override

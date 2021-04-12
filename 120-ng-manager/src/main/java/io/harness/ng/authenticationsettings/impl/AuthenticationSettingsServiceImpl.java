@@ -103,6 +103,8 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
                              .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
                              .logoutUrl(samlSettings.getLogoutUrl())
                              .origin(samlSettings.getOrigin())
+                             .displayName(samlSettings.getDisplayName())
+                             .authorizationEnabled(samlSettings.isAuthorizationEnabled())
                              .build());
       }
     } else if (authenticationMechanism == AuthenticationMechanism.OAUTH) {
@@ -124,6 +126,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
                            .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
                            .logoutUrl(samlSettings.getLogoutUrl())
                            .origin(samlSettings.getOrigin())
+                           .displayName(samlSettings.getDisplayName())
                            .build());
     }
     return settingsList;
