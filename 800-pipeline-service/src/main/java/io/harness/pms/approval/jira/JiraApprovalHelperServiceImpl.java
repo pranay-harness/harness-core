@@ -24,17 +24,22 @@ import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HarnessJiraException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.jira.JiraActionNG;
 import io.harness.jira.JiraIssueNG;
 import io.harness.logging.AutoLogContext;
+import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.ApprovalInstanceRepository;
@@ -76,83 +81,112 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   private final SecretManagerClient secretManagerClient;
   private final WaitNotifyEngine waitNotifyEngine;
   private final ApprovalInstanceRepository approvalInstanceRepository;
+  private final LogStreamingStepClientFactory logStreamingStepClientFactory;
 
   @Inject
   public JiraApprovalHelperServiceImpl(NgDelegate2TaskExecutor ngDelegate2TaskExecutor,
       ConnectorResourceClient connectorResourceClient, KryoSerializer kryoSerializer,
       SecretManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
-      ApprovalInstanceRepository approvalInstanceRepository) {
+      ApprovalInstanceRepository approvalInstanceRepository,
+      LogStreamingStepClientFactory logStreamingStepClientFactory) {
     this.ngDelegate2TaskExecutor = ngDelegate2TaskExecutor;
     this.connectorResourceClient = connectorResourceClient;
     this.kryoSerializer = kryoSerializer;
     this.secretManagerClient = secretManagerClient;
     this.waitNotifyEngine = waitNotifyEngine;
     this.approvalInstanceRepository = approvalInstanceRepository;
+    this.logStreamingStepClientFactory = logStreamingStepClientFactory;
   }
 
   @Override
   public void handlePollingEvent(JiraApprovalInstance entity) {
+    Ambiance ambiance = entity.getAmbiance();
+    NGLogCallback logCallback = new NGLogCallback(logStreamingStepClientFactory, ambiance, null, true);
+
+    JiraTaskNGResponse jiraTaskNGResponse;
     try (AutoLogContext ignore = entity.autoLogContext()) {
-      log.info("Polling jira approval status");
+      log.info("Polling jira approval instance");
+      logCallback.saveExecutionLog("-----");
+      logCallback.saveExecutionLog("Fetching jira issue to check approval/rejection criteria");
 
       String instanceId = entity.getId();
-      String accountIdentifier = entity.getAccountId();
-      String orgIdentifier = entity.getOrgIdentifier();
-      String projectIdentifier = entity.getProjectIdentifier();
+      String accountIdentifier = AmbianceUtils.getAccountId(ambiance);
+      String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+      String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
       String issueKey = entity.getIssueKey();
       String connectorRef = entity.getConnectorRef();
 
       validateField(instanceId, ApprovalInstanceKeys.id);
-      validateField(accountIdentifier, ApprovalInstanceKeys.accountId);
-      validateField(orgIdentifier, ApprovalInstanceKeys.orgIdentifier);
-      validateField(projectIdentifier, ApprovalInstanceKeys.projectIdentifier);
+      validateField(accountIdentifier, "accountIdentifier");
+      validateField(orgIdentifier, "orgIdentifier");
+      validateField(projectIdentifier, "projectIdentifier");
       validateField(issueKey, JiraApprovalInstanceKeys.issueKey);
       validateField(connectorRef, JiraApprovalInstanceKeys.connectorRef);
 
       JiraTaskNGParameters jiraTaskNGParameters =
           prepareJiraTaskParameters(accountIdentifier, orgIdentifier, projectIdentifier, issueKey, connectorRef);
-      JiraTaskNGResponse jiraTaskNGResponse = fetchJiraTaskResponse(accountIdentifier, jiraTaskNGParameters);
+      logCallback.saveExecutionLog(
+          String.format("Jira url: %s", jiraTaskNGParameters.getJiraConnectorDTO().getJiraUrl()));
+
+      jiraTaskNGResponse = fetchJiraTaskResponse(accountIdentifier, jiraTaskNGParameters, logCallback);
       if (isNull(jiraTaskNGResponse.getIssue())) {
+        logCallback.saveExecutionLog("Missing issue in jira response. Retrying in sometime...");
         throw new HarnessJiraException("Missing Issue in JiraTaskNGResponse");
       }
-      checkApprovalAndRejectionCriteria(jiraTaskNGResponse.getIssue(), entity);
+      logCallback.saveExecutionLog(String.format("Issue url: %s", jiraTaskNGResponse.getIssue().getUrl()));
+    } catch (Exception ex) {
+      log.warn("Error occurred while fetching issue for JiraApproval. Continuing to poll in sometime", ex);
+      return;
+    }
+
+    try (AutoLogContext ignore = entity.autoLogContext()) {
+      checkApprovalAndRejectionCriteria(jiraTaskNGResponse.getIssue(), entity, logCallback);
     } catch (Exception ex) {
       log.warn(
-          "Error occurred while processing JiraApproval. Continuing to poll next minute. Id: {}", entity.getId(), ex);
+          "Error occurred while approving/rejecting criteria for JiraApproval. Continuing to poll in sometime", ex);
     }
   }
 
-  private void checkApprovalAndRejectionCriteria(JiraIssueNG issue, JiraApprovalInstance jiraApprovalInstance) {
+  private void checkApprovalAndRejectionCriteria(
+      JiraIssueNG issue, JiraApprovalInstance jiraApprovalInstance, NGLogCallback logCallback) {
     try {
       if (isNull(jiraApprovalInstance.getApprovalCriteria())
           || isNull(jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO())) {
         throw new InvalidRequestException("Approval criteria can't be empty");
       }
 
+      logCallback.saveExecutionLog("Evaluating approval criteria...");
       CriteriaSpecDTO approvalCriteriaSpec = jiraApprovalInstance.getApprovalCriteria().getCriteriaSpecDTO();
       boolean approvalEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, approvalCriteriaSpec);
       if (approvalEvaluationResult) {
         log.info("Approval criteria has been met");
+        logCallback.saveExecutionLog("Approval criteria has been met");
         updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.APPROVED);
         waitNotifyEngine.doneWith(jiraApprovalInstance.getId(),
             JiraApprovalResponseData.builder().instanceId(jiraApprovalInstance.getId()).build());
         return;
       }
+      logCallback.saveExecutionLog("Approval criteria has not been met");
 
       if (isNull(jiraApprovalInstance.getRejectionCriteria())
           || isNull(jiraApprovalInstance.getRejectionCriteria().getCriteriaSpecDTO())) {
         throw new InvalidRequestException("Rejection criteria can't be empty");
       }
 
+      logCallback.saveExecutionLog("Evaluating approval criteria...");
       CriteriaSpecDTO rejectionCriteriaSpec = jiraApprovalInstance.getRejectionCriteria().getCriteriaSpecDTO();
       boolean rejectionEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, rejectionCriteriaSpec);
       if (rejectionEvaluationResult) {
-        log.info("Rejection criteria for has been met");
+        log.info("Rejection criteria has been met");
+        logCallback.saveExecutionLog("Rejection criteria has been met");
         updateJiraApprovalInstance(jiraApprovalInstance, ApprovalStatus.REJECTED);
         waitNotifyEngine.doneWith(jiraApprovalInstance.getId(),
             JiraApprovalResponseData.builder().instanceId(jiraApprovalInstance.getId()).build());
       }
+      logCallback.saveExecutionLog("Rejection criteria has also not been met");
     } catch (Exception e) {
+      logCallback.saveExecutionLog(String.format(
+          "Error evaluating approval/rejection criteria: %s. Retrying in sometime...", ExceptionUtils.getMessage(e)));
       throw new HarnessJiraException("Error while evaluating approval/rejection criteria", e, USER_SRE);
     }
   }
@@ -181,12 +215,23 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   }
 
   private JiraTaskNGResponse fetchJiraTaskResponse(
-      String accountIdentifier, JiraTaskNGParameters jiraTaskNGParameters) {
+      String accountIdentifier, JiraTaskNGParameters jiraTaskNGParameters, NGLogCallback logCallback) {
     TaskRequest jiraTaskRequest = prepareJiraTaskRequest(accountIdentifier, jiraTaskNGParameters);
-    ResponseData response = ngDelegate2TaskExecutor.executeTask(new HashMap<>(), jiraTaskRequest);
-    Object responseObject = kryoSerializer.asInflatedObject(((BinaryResponseData) response).getData());
+
+    Object responseObject;
+    try {
+      ResponseData response = ngDelegate2TaskExecutor.executeTask(new HashMap<>(), jiraTaskRequest);
+      responseObject = kryoSerializer.asInflatedObject(((BinaryResponseData) response).getData());
+    } catch (Exception ex) {
+      logCallback.saveExecutionLog(String.format(
+          "Error fetching jira issue response: %s. Retrying in sometime...", ExceptionUtils.getMessage(ex)));
+      throw ex;
+    }
+
     if (responseObject instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorResponse = (ErrorNotifyResponseData) responseObject;
+      logCallback.saveExecutionLog(String.format(
+          "Error fetching jira issue response: %s. Retrying in sometime...", errorResponse.getErrorMessage()));
       throw new GeneralException(format("Failed to fetch jira response. Error: %s", errorResponse.getErrorMessage()));
     }
     return (JiraTaskNGResponse) responseObject;
