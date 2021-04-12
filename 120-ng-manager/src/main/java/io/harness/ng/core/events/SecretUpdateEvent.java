@@ -14,6 +14,7 @@ import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,6 +32,8 @@ public class SecretUpdateEvent implements Event {
     this.accountIdentifier = accountIdentifier;
   }
 
+  @JsonIgnore
+  @Override
   public ResourceScope getResourceScope() {
     if (isNotEmpty(newSecret.getOrgIdentifier())) {
       if (isEmpty(newSecret.getProjectIdentifier())) {
@@ -42,10 +45,14 @@ public class SecretUpdateEvent implements Event {
     return new AccountScope(accountIdentifier);
   }
 
+  @JsonIgnore
+  @Override
   public Resource getResource() {
     return Resource.builder().identifier(newSecret.getIdentifier()).type(SECRET).build();
   }
 
+  @JsonIgnore
+  @Override
   public String getEventType() {
     return "SecretUpdated";
   }
