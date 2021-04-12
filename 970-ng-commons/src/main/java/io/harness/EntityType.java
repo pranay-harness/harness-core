@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
+import io.harness.beans.TriggerReference;
 import io.harness.common.EntityReference;
 import io.harness.common.EntityTypeConstants;
 import io.harness.common.EntityYamlRootNames;
@@ -65,7 +66,9 @@ public enum EntityType {
       ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STAGE, EntityYamlRootNames.DEPLOYMENT_STAGE, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.APPROVAL_STAGE)
   APPROVAL_STAGE(
-      ModuleType.CD, EntityTypeConstants.APPROVAL_STAGE, EntityYamlRootNames.APPROVAL_STAGE, IdentifierRef.class);
+      ModuleType.CD, EntityTypeConstants.APPROVAL_STAGE, EntityYamlRootNames.APPROVAL_STAGE, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.TRIGGERS)
+  TRIGGERS(ModuleType.CD, EntityTypeConstants.TRIGGERS, EntityYamlRootNames.TRIGGERS, TriggerReference.class);
 
   private final ModuleType moduleType;
   String yamlName;

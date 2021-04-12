@@ -1,5 +1,9 @@
 package io.harness.common;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 /**
  * Name of the top element in yaml.
  * For example:
@@ -9,6 +13,7 @@ package io.harness.common;
  * </p>
  * In this the top element is <b>connector</b>
  */
+@OwnedBy(PL)
 public class EntityYamlRootNames {
   public static String PROJECT = "project";
   public static String PIPELINE = "pipeline";
@@ -28,4 +33,5 @@ public class EntityYamlRootNames {
   public static String DEPLOYMENT_STEP = "deploymentSteps";
   public static String DEPLOYMENT_STAGE = "deploymentStage";
   public static String APPROVAL_STAGE = "approvalStage";
+  public static String TRIGGERS = "trigger";
 }
