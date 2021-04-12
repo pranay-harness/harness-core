@@ -203,6 +203,7 @@ public class UserResourceNG {
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+        .accountIds(user.getAccountIds())
         .build();
   }
 
