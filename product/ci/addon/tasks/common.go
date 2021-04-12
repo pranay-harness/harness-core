@@ -199,7 +199,11 @@ func selectTests(ctx context.Context, files []types.File, stepID string, log *za
 	if err != nil {
 		return res, err
 	}
-	branch, err := external.GetSourceBranch()
+	source, err := external.GetSourceBranch()
+	if err != nil {
+		return res, err
+	}
+	target, err := external.GetTargetBranch()
 	if err != nil {
 		return res, err
 	}
@@ -219,11 +223,12 @@ func selectTests(ctx context.Context, files []types.File, stepID string, log *za
 		return res, err
 	}
 	req := &pb.SelectTestsRequest{
-		StepId: stepID,
-		Repo:   repo,
-		Sha:    sha,
-		Branch: branch,
-		Body:   string(b),
+		StepId:       stepID,
+		Repo:         repo,
+		Sha:          sha,
+		SourceBranch: source,
+		TargetBranch: target,
+		Body:         string(b),
 	}
 	resp, err := client.Client().SelectTests(ctx, req)
 	if err != nil {

@@ -29,7 +29,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 
 		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam,
-			stageIdParam, stepIdParam, repoParam, shaParam, branchParam)
+			stageIdParam, stepIdParam, repoParam, shaParam, sourceBranchParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -42,24 +42,29 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
 		repo := r.FormValue(repoParam)
-		branch := r.FormValue(branchParam)
+		source := r.FormValue(sourceBranchParam)
+		target := r.FormValue(targetBranchParam)
 		sha := r.FormValue(shaParam)
 
 		var req types.SelectTestsReq
+		req.TargetBranch = target
+		req.Repo = repo
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			WriteBadRequest(w, err)
 			log.Errorw("api: could not unmarshal input for test selection",
-				"account_id", accountId, "repo", repo, "branch", branch, "sha", sha, zap.Error(err))
+				"account_id", accountId, "repo", repo, "source", source, "target", target,
+				"sha", sha, zap.Error(err))
 			return
 		}
-		log.Infow("got a files list", "account_id", accountId, "files", req.Files, "repo", repo, "branch", branch, "sha", sha)
+		log.Infow("got a files list", "account_id", accountId, "files", req.Files,
+			"repo", repo, "source", source, "target", target, "sha", sha)
 
 		// Make call to Mongo DB to get the tests to run
 		selected, err := tidb.GetTestsToRun(ctx, req)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not select tests", "account_id", accountId,
-				"repo", repo, "branch", branch, "sha", sha, zap.Error(err))
+				"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
 			return
 		}
 
@@ -69,7 +74,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write changed file information", "account_id", accountId,
-				"repo", repo, "branch", branch, "sha", sha, zap.Error(err))
+				"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
 		}
 
 		// Classify and write the test selection stats to timescaleDB
@@ -78,15 +83,15 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write selected tests", "account_id", accountId,
-				"repo", repo, "branch", branch, "sha", sha, zap.Error(err))
+				"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
 			return
 		}
 
 		// Write the selected tests back
 		WriteJSON(w, selected, 200)
 		log.Infow("completed test selection", "account_id", accountId,
-			"repo", repo, "branch", branch, "sha", sha, "tests", selected.Tests,
-			"num_tests", len(selected.Tests), "time_taken", time.Since(st))
+			"repo", repo, "source", source, "target", target, "sha", sha, "tests",
+			selected.Tests, "num_tests", len(selected.Tests), "time_taken", time.Since(st))
 
 	}
 }
@@ -125,7 +130,7 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 
 func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, branchParam, shaParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, shaParam)
 		if err != nil {
 			WriteBadRequest(w, err)
 			return
@@ -135,7 +140,7 @@ func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 		proj := r.FormValue(projectIdParam)
 		info := mongodb.VCSInfo{
 			Repo:     r.FormValue(repoParam),
-			Branch:   r.FormValue(branchParam),
+			Branch:   r.FormValue(sourceBranchParam),
 			CommitId: r.FormValue(shaParam),
 		}
 		var data []byte
@@ -145,26 +150,31 @@ func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 		}
 		cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 		if err != nil {
-			log.Errorw("failed to create callgraph serializer instance", accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch, zap.Error(err))
+			log.Errorw("failed to create callgraph serializer instance", accountIDParam, acc,
+				repoParam, info.Repo, sourceBranchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		}
 		cgString, err := cgSer.Deserialize(data)
 		if err != nil {
-			log.Errorw("failed to deserialize callgraph", accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch, zap.Error(err))
+			log.Errorw("failed to deserialize callgraph", accountIDParam, acc, repoParam, info.Repo,
+				sourceBranchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		}
 		cg, err := ti.FromStringMap(cgString.(map[string]interface{}))
 		if err != nil {
-			log.Errorw("failed to construct callgraph object from interface object", accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch, zap.Error(err))
+			log.Errorw("failed to construct callgraph object from interface object",
+				accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		}
-		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)), accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch)
+		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)),
+			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch)
 		err = tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj)
 		if err != nil {
-			log.Errorw("failed to write callgraph to db", accountIDParam, acc, repoParam, info.Repo, branchParam, info.Branch, zap.Error(err))
+			log.Errorw("failed to write callgraph to db", accountIDParam, acc, repoParam, info.Repo,
+				sourceBranchParam, info.Branch, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		}
