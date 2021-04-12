@@ -38,6 +38,7 @@ import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.cdng.services.impl.CVNGAsyncWaitEngine;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
@@ -133,6 +134,7 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.threading.ThreadPool;
@@ -310,7 +312,7 @@ public class CVServiceModule extends AbstractModule {
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
 
       bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
-
+      bind(AsyncWaitEngine.class).to(CVNGAsyncWaitEngine.class);
       MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
           MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
       dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
