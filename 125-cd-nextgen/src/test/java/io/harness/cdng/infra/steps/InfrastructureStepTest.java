@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
@@ -18,8 +19,10 @@ import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.infra.beans.K8sGcpInfraMapping;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.infra.yaml.K8SDirectInfrastructure.K8SDirectInfrastructureBuilder;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.services.EnvironmentService;
@@ -119,5 +122,31 @@ public class InfrastructureStepTest extends CategoryTest {
                                                 .tags(Collections.emptyList())
                                                 .build();
     doReturn(expectedEnv).when(environmentService).upsert(expectedEnv);
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testValidateInfrastructure() {
+    assertThatThrownBy(() -> infrastructureStep.validateInfrastructure(null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Infrastructure definition can't be null or empty");
+
+    K8SDirectInfrastructureBuilder k8SDirectInfrastructureBuilder = K8SDirectInfrastructure.builder();
+    infrastructureStep.validateInfrastructure(k8SDirectInfrastructureBuilder.build());
+
+    k8SDirectInfrastructureBuilder.connectorRef(ParameterField.createValueField("connector"));
+    infrastructureStep.validateInfrastructure(k8SDirectInfrastructureBuilder.build());
+
+    k8SDirectInfrastructureBuilder.connectorRef(new ParameterField<>(null, true, "expression1", null, true));
+    assertThatThrownBy(() -> infrastructureStep.validateInfrastructure(k8SDirectInfrastructureBuilder.build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Unresolved Expression : [expression1]");
+
+    k8SDirectInfrastructureBuilder.connectorRef(ParameterField.createValueField("connector"));
+    k8SDirectInfrastructureBuilder.releaseName(new ParameterField<>(null, true, "expression2", null, true));
+    assertThatThrownBy(() -> infrastructureStep.validateInfrastructure(k8SDirectInfrastructureBuilder.build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Unresolved Expression : [expression2]");
   }
 }
