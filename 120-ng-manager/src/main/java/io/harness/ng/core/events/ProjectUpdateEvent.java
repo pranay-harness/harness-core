@@ -10,6 +10,7 @@ import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.dto.ProjectDTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,16 +29,19 @@ public class ProjectUpdateEvent implements Event {
     this.accountIdentifier = accountIdentifier;
   }
 
+  @JsonIgnore
   @Override
   public ResourceScope getResourceScope() {
     return new ProjectScope(accountIdentifier, newProject.getOrgIdentifier(), newProject.getIdentifier());
   }
 
+  @JsonIgnore
   @Override
   public Resource getResource() {
     return Resource.builder().identifier(oldProject.getIdentifier()).type(PROJECT).build();
   }
 
+  @JsonIgnore
   @Override
   public String getEventType() {
     return "ProjectUpdated";

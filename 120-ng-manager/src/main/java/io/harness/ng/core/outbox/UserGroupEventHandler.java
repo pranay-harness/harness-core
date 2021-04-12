@@ -2,7 +2,7 @@ package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.remote.NGObjectMapperHelper.ngDefaultObjectMapper;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
@@ -45,7 +45,7 @@ public class UserGroupEventHandler implements OutboxEventHandler {
   @Inject
   public UserGroupEventHandler(
       @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, AuditClientService auditClientService) {
-    this.objectMapper = ngDefaultObjectMapper;
+    this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
   }

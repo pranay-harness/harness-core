@@ -2,36 +2,47 @@ package io.harness.outbox.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_EVENT_FILTER;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.Event;
+import io.harness.exception.UnexpectedException;
 import io.harness.manage.GlobalContextManager;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxDao;
 import io.harness.outbox.api.OutboxService;
 import io.harness.outbox.filter.OutboxEventFilter;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import java.util.List;
+import javax.annotation.Nullable;
 
 @OwnedBy(PL)
 public class OutboxServiceImpl implements OutboxService {
   private final OutboxDao outboxDao;
-  private final Gson gson;
+  private final ObjectMapper objectMapper;
 
   @Inject
-  public OutboxServiceImpl(OutboxDao outboxDao, Gson gson) {
+  public OutboxServiceImpl(OutboxDao outboxDao, @Nullable ObjectMapper objectMapper) {
     this.outboxDao = outboxDao;
-    this.gson = gson;
+    this.objectMapper = objectMapper == null ? NG_DEFAULT_OBJECT_MAPPER : objectMapper;
   }
 
   @Override
   public OutboxEvent save(Event event) {
+    String eventData;
+    try {
+      eventData = objectMapper.writeValueAsString(event);
+    } catch (JsonProcessingException exception) {
+      throw new UnexpectedException(
+          "JsonProcessingException occurred while serializing eventData in the outbox.", exception);
+    }
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .resourceScope(event.getResourceScope())
                                   .resource(event.getResource())
-                                  .eventData(gson.toJson(event))
+                                  .eventData(eventData)
                                   .eventType(event.getEventType())
                                   .globalContext(GlobalContextManager.obtainGlobalContext())
                                   .build();
