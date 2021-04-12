@@ -1,12 +1,7 @@
 package io.harness.cvng.client;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
-import io.harness.network.NoopHostnameVerifier;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.JsonSubtypeResolver;
 
@@ -36,8 +31,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
-@OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class CVNGServiceClientFactory implements Provider<CVNGServiceClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new ManagerClientX509TrustManager());
@@ -86,7 +79,7 @@ public class CVNGServiceClientFactory implements Provider<CVNGServiceClient> {
                                     .readTimeout(30, TimeUnit.SECONDS)
                                     .retryOnConnectionFailure(true)
                                     .addInterceptor(getAuthorizationInterceptor())
-                                    .hostnameVerifier(new NoopHostnameVerifier())
+                                    .hostnameVerifier((hostname, session) -> true)
                                     .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
                                     .build();
 
