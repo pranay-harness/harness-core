@@ -210,6 +210,11 @@ public class WingsException extends RuntimeException {
     return this;
   }
 
+  public WingsException metaData(String key, String value) {
+    metaData.put(key, value);
+    return this;
+  }
+
   public void excludeReportTarget(ErrorCode errorCode, Set<ReportTarget> targets) {
     if (code == errorCode) {
       if (targets != null) {
