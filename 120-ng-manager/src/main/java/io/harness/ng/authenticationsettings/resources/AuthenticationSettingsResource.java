@@ -133,10 +133,12 @@ public class AuthenticationSettingsResource {
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled,
       @FormDataParam("logoutUrl") String logoutUrl) {
     try {
-      byte[] bytes = IOUtils.toByteArray(
-          new BoundedInputStream(uploadedInputStream, mainConfiguration.getFileUploadLimits().getCommandUploadLimit()));
-      final MultipartBody.Part formData =
-          MultipartBody.Part.createFormData("file", null, RequestBody.create(MultipartBody.FORM, bytes));
+      MultipartBody.Part formData = null;
+      if (uploadedInputStream != null) {
+        byte[] bytes = IOUtils.toByteArray(new BoundedInputStream(
+            uploadedInputStream, mainConfiguration.getFileUploadLimits().getCommandUploadLimit()));
+        formData = MultipartBody.Part.createFormData("file", null, RequestBody.create(MultipartBody.FORM, bytes));
+      }
       SSOConfig response = authenticationSettingsService.updateSAMLMetadata(
           accountId, formData, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl);
       return new RestResponse<>(response);

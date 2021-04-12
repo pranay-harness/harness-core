@@ -217,9 +217,8 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   }
 
   @Override
-  public SSOConfig updateSAMLMetadata(@NotNull String accountId, @NotNull MultipartBody.Part inputStream,
-      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled,
-      String logoutUrl) {
+  public SSOConfig updateSAMLMetadata(@NotNull String accountId, MultipartBody.Part inputStream, String displayName,
+      String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
