@@ -247,9 +247,8 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
 
-    SSOConfig ssoConfig = getResponse(managerClient.uploadSAMLMetadata(
+    return getResponse(managerClient.uploadSAMLMetadata(
         accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
-    return ssoConfig;
   }
 
   @Override
@@ -260,20 +259,17 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
 
-    SSOConfig ssoConfig = getResponse(managerClient.updateSAMLMetadata(
+    return getResponse(managerClient.updateSAMLMetadata(
         accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
-    return ssoConfig;
   }
 
   @Override
   public SSOConfig deleteSAMLMetadata(@NotNull String accountIdentifier) {
-    SSOConfig ssoConfig = getResponse(managerClient.deleteSAMLMetadata(accountIdentifier));
-    return ssoConfig;
+    return getResponse(managerClient.deleteSAMLMetadata(accountIdentifier));
   }
 
   @Override
   public LoginTypeResponse getSAMLLoginTest(@NotNull String accountIdentifier) {
-    LoginTypeResponse loginTypeResponse = getResponse(managerClient.getSAMLLoginTest(accountIdentifier));
-    return loginTypeResponse;
+    return getResponse(managerClient.getSAMLLoginTest(accountIdentifier));
   }
 }
