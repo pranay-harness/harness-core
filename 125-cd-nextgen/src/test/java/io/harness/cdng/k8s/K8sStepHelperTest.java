@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,6 +25,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
+import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
@@ -131,6 +133,40 @@ public class K8sStepHelperTest extends CategoryTest {
 
     ConnectorInfoDTO actualConnector = k8sStepHelper.getConnector("org.abcConnector", ambiance);
     assertThat(actualConnector).isEqualTo(connectorDTO);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void testGetReleaseName() {
+    // Invalid formats
+    assertThatThrownBy(()
+                           -> k8sStepHelper.getReleaseName(
+                               K8sDirectInfrastructureOutcome.builder().releaseName("NameWithUpperCase").build()))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(
+        ()
+            -> k8sStepHelper.getReleaseName(
+                K8sGcpInfrastructureOutcome.builder().releaseName("-starting.with.non.alphanumeric").build()))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(
+        ()
+            -> k8sStepHelper.getReleaseName(
+                K8sDirectInfrastructureOutcome.builder().releaseName(".starting.with.non.alphanumeric").build()))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(
+        ()
+            -> k8sStepHelper.getReleaseName(
+                K8sGcpInfrastructureOutcome.builder().releaseName("containing)invalid.characters+").build()))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // Valid Formats
+    k8sStepHelper.getReleaseName(K8sDirectInfrastructureOutcome.builder().releaseName("alphanumeriname124").build());
+    k8sStepHelper.getReleaseName(K8sGcpInfrastructureOutcome.builder().releaseName("1starting.with.number").build());
+    k8sStepHelper.getReleaseName(
+        K8sDirectInfrastructureOutcome.builder().releaseName("starting.with.alphabet").build());
+    k8sStepHelper.getReleaseName(K8sGcpInfrastructureOutcome.builder().releaseName("containing.dot").build());
+    k8sStepHelper.getReleaseName(K8sDirectInfrastructureOutcome.builder().releaseName("containing-hyphen").build());
   }
 
   @Test
