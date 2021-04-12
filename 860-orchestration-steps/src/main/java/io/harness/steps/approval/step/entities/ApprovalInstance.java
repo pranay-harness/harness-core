@@ -8,9 +8,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.logging.AutoLogContext;
-import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -54,10 +54,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public abstract class ApprovalInstance implements PersistentEntity, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("status_deadline")
                  .field(ApprovalInstanceKeys.status)
-                 .field(ApprovalInstanceKeys.deadline)
+                 .ascSortField(ApprovalInstanceKeys.deadline)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("status_type_nextIteration")
+                 .field(ApprovalInstanceKeys.status)
+                 .field(ApprovalInstanceKeys.type)
+                 .descSortField(ApprovalInstanceKeys.nextIteration)
                  .build())
         .build();
   }

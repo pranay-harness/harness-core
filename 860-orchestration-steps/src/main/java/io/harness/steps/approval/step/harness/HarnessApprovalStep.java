@@ -12,7 +12,6 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.repositories.ApprovalInstanceRepository;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.ApprovalInstanceService;
@@ -28,7 +27,6 @@ public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepP
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(StepSpecTypeConstants.HARNESS_APPROVAL).build();
 
-  @Inject private ApprovalInstanceRepository approvalInstanceRepository;
   @Inject private ApprovalInstanceService approvalInstanceService;
   @Inject private ApprovalNotificationHandler approvalNotificationHandler;
 
@@ -41,7 +39,7 @@ public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepP
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, HarnessApprovalStepParameters stepParameters, StepInputPackage inputPackage) {
     HarnessApprovalInstance approvalInstance = HarnessApprovalInstance.fromStepParameters(ambiance, stepParameters);
-    approvalInstance = approvalInstanceRepository.save(approvalInstance);
+    approvalInstance = (HarnessApprovalInstance) approvalInstanceService.save(approvalInstance);
     approvalNotificationHandler.sendNotification(approvalInstance, ambiance);
 
     return AsyncExecutableResponse.newBuilder()
@@ -66,7 +64,6 @@ public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepP
   @Override
   public void handleAbort(
       Ambiance ambiance, HarnessApprovalStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
-    approvalInstanceRepository.findByNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
-        .ifPresent(instance -> approvalInstanceService.expire(instance.getId()));
+    approvalInstanceService.expireByNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
   }
 }
