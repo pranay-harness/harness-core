@@ -2,6 +2,7 @@ package io.harness.gitsync.gittoharness;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.gitsync.interceptor.GitSyncBranchThreadLocal.gitBranchGuard;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,9 +10,13 @@ import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
 import io.harness.gitsync.FileProcessingResponse;
 import io.harness.gitsync.FileProcessingStatus;
+import io.harness.gitsync.GitToHarnessInfo;
 import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
+import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,13 +36,16 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
   ChangeSetInterceptorService changeSetInterceptorService;
   ChangeSetHelperService changeSetHelperService;
   Supplier<List<EntityType>> sortOrder;
+  GitSyncThreadDecorator gitSyncThreadDecorator;
 
   @Inject
   public GitToHarnessProcessorImpl(ChangeSetInterceptorService changeSetInterceptorService,
-      ChangeSetHelperService changeSetHelperService, @Named("GitSyncSortOrder") Supplier<List<EntityType>> sortOrder) {
+      ChangeSetHelperService changeSetHelperService, @Named("GitSyncSortOrder") Supplier<List<EntityType>> sortOrder,
+      GitSyncThreadDecorator gitSyncThreadDecorator) {
     this.changeSetInterceptorService = changeSetInterceptorService;
     this.changeSetHelperService = changeSetHelperService;
     this.sortOrder = sortOrder;
+    this.gitSyncThreadDecorator = gitSyncThreadDecorator;
   }
 
   /**
@@ -64,7 +72,7 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
     if (sortStage(changeSets, processingResponseMap)) {
       return flattenProcessingResponse(processingResponseMap, accountId, ProcessingFailureStage.SORT_STAGE);
     }
-    if (processStage(changeSets, processingResponseMap)) {
+    if (processStage(changeSets, processingResponseMap, gitToHarnessRequest)) {
       return flattenProcessingResponse(processingResponseMap, accountId, ProcessingFailureStage.PROCESS_STAGE);
     }
 
@@ -86,11 +94,13 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
     return false;
   }
 
-  private boolean processStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap) {
+  private boolean processStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap,
+      GitToHarnessProcessRequest gitToHarnessRequest) {
     try {
       // todo(abhinav): Do parallel processing.
       for (ChangeSet changeSet : changeSets.getChangeSetList()) {
-        try {
+        try (GitSyncBranchThreadLocal.Guard guard =
+                 gitBranchGuard(createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet))) {
           changeSetHelperService.process(changeSet);
           updateFileProcessingResponse(FileProcessingStatus.SUCCESS, null, processingResponseMap, changeSet.getId());
           processingResponseMap.put(changeSet.getId(),
@@ -108,6 +118,16 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
       return true;
     }
     return false;
+  }
+
+  private GitEntityInfo createGitEntityInfo(GitToHarnessInfo gitToHarnessBranchInfo, ChangeSet changeSet) {
+    return GitEntityInfo.builder()
+        .branch(gitToHarnessBranchInfo.getBranch())
+        .filePath(changeSet.getFilePath())
+        .yamlGitConfigId(gitToHarnessBranchInfo.getYamlGitConfigId())
+        .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().toString())
+        .isSyncFromGit(true)
+        .build();
   }
 
   private boolean sortStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap) {

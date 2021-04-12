@@ -203,7 +203,6 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
         && isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
             entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
       final String yamlString = NGYamlUtils.getYamlString(yaml);
-
       final ScmPushResponse scmPushResponse =
           scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
 

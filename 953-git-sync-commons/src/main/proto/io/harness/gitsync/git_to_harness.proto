@@ -26,6 +26,7 @@ message ChangeSet {
   google.protobuf.StringValue commit_id = 5;
   google.protobuf.StringValue object_id = 6;
   io.harness.gitsync.ChangeType change_type = 7;
+  string filePath = 8;
 }
 
 message ProcessingResponse {

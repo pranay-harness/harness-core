@@ -57,13 +57,4 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
     return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : DEFAULT_BRANCH;
   }
-
-  public void populateGitToHarnessContextInThread(GitToHarnessInfo gitToHarnessInfo) {
-    final GitEntityInfo branchInfo = GitEntityInfo.builder()
-                                         .branch(gitToHarnessInfo.getBranch())
-                                         .yamlGitConfigId(gitToHarnessInfo.getYamlGitConfigId())
-                                         .isSyncFromGit(true)
-                                         .build();
-    GitSyncBranchThreadLocal.set(branchInfo);
-  }
 }
