@@ -52,8 +52,6 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
-    log.info("[Artifactory Delegate Selection] Get Builds for artifact stream {} and delegate selectors - {}",
-        artifactStreamAttributes.getArtifactStreamId(), artifactoryConfig.getDelegateSelectors());
     return wrapNewBuildsWithLabels(
         getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, MANUAL_PULL_ARTIFACTORY_LIMIT),
         artifactStreamAttributes, artifactoryConfig);
@@ -62,8 +60,6 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
-    log.info("[Artifactory Delegate Selection] Get Builds for artifact stream {} and delegate selectors - {}",
-        artifactStreamAttributes.getArtifactStreamId(), artifactoryConfig.getDelegateSelectors());
     return wrapNewBuildsWithLabels(
         getBuildsInternal(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, limit),
         artifactStreamAttributes, artifactoryConfig);
@@ -103,8 +99,6 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    log.info("[Artifactory Delegate Selection] Get artifact paths for job name {} and delegate selectors - {}", jobName,
-        config.getDelegateSelectors());
     if (isEmpty(groupId)) {
       log.info("Retrieving {} repo paths.", jobName);
       List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, jobName);
@@ -122,16 +116,12 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public Map<String, String> getPlans(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    log.info("[Artifactory Delegate Selection] Get plans delegate selectors - {}", config.getDelegateSelectors());
     return artifactoryService.getRepositories(config, encryptionDetails);
   }
 
   @Override
   public Map<String, String> getPlans(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType) {
-    log.info(
-        "[Artifactory Delegate Selection] Get plans for artifactType {} repository type {} delegate selectors - {}",
-        artifactType, repositoryType, config.getDelegateSelectors());
     if (RepositoryType.docker.name().equalsIgnoreCase(repositoryType) || artifactType == DOCKER) {
       return artifactoryService.getRepositories(config, encryptionDetails, DOCKER);
     }
@@ -141,16 +131,12 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public Map<String, String> getPlans(
       ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType) {
-    log.info("[Artifactory Delegate Selection] Get plans for repository type {} delegate selectors - {}",
-        repositoryType, config.getDelegateSelectors());
     return artifactoryService.getRepositories(config, encryptionDetails, repositoryType);
   }
 
   @Override
   public List<String> getGroupIds(
       String repoType, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    log.info("[Artifactory Delegate Selection] Get group ids for repoType {} delegate selectors - {}", repoType,
-        config.getDelegateSelectors());
     log.info("Retrieving {} docker images.", repoType);
     List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repoType);
     log.info("Retrieved {} docker images.", repoPaths.size());
@@ -160,8 +146,6 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public List<String> getGroupIds(String repositoryName, String repositoryType, ArtifactoryConfig config,
       List<EncryptedDataDetail> encryptionDetails) {
-    log.info("[Artifactory Delegate Selection] Get groupIds for repositoryName {} delegate selectors - {}",
-        repositoryName, config.getDelegateSelectors());
     log.info("Retrieving {} docker images.", repositoryName);
     List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repositoryName);
     log.info("Retrieved {} docker images.", repoPaths.size());
@@ -170,8 +154,6 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public boolean validateArtifactServer(ArtifactoryConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
-    log.info("[Artifactory Delegate Selection] Validate artifact server delegate selectors - {}",
-        config.getDelegateSelectors());
     if (!connectableHttpUrl(config.getArtifactoryUrl())) {
       throw new InvalidArtifactServerException(
           "Could not reach Artifactory Server at : " + config.getArtifactoryUrl(), USER);
@@ -182,8 +164,6 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public boolean validateArtifactSource(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    log.info("[Artifactory Delegate Selection] Validate artifact server job name {} delegate selectors - {}",
-        artifactStreamAttributes.getJobName(), config.getDelegateSelectors());
     if (artifactStreamAttributes.getArtifactPattern() != null) {
       return artifactoryService.validateArtifactPath(config, encryptionDetails, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getArtifactPattern(), artifactStreamAttributes.getRepositoryType());

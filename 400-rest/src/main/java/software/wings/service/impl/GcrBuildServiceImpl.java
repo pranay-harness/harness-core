@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.equalCheck;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifacts.gcr.service.GcrApiService;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +28,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by brett on 8/2/17
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
@@ -50,8 +54,6 @@ public class GcrBuildServiceImpl implements GcrBuildService {
     try {
       // Decrypt gcpConfig
       encryptionService.decrypt(gcpConfig, encryptionDetails, false);
-      log.info("[GCR Delegate Selection] Get builds for image " + artifactStreamAttributes.getImageName()
-          + " with selectors " + gcpConfig.getDelegateSelectors());
       return wrapNewBuildsWithLabels(
           gcrApiService
               .getBuilds(GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
@@ -65,14 +67,12 @@ public class GcrBuildServiceImpl implements GcrBuildService {
     } catch (IOException e) {
       log.error("", e);
     }
-    return null;
+    return new ArrayList<>();
   }
 
   @Override
   public List<JobDetails> getJobs(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    log.info("[GCR Delegate Selection] Get Jobs " + parentJobName.orElse("NONE") + " with selectors "
-        + gcpConfig.getDelegateSelectors());
     return Lists.newArrayList();
   }
 
@@ -90,7 +90,6 @@ public class GcrBuildServiceImpl implements GcrBuildService {
 
   @Override
   public Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    log.info("[GCR Delegate Selection] Get Plans with selectors " + config.getDelegateSelectors());
     return getJobs(config, encryptionDetails, Optional.empty())
         .stream()
         .collect(Collectors.toMap(JobDetails::getJobName, JobDetails::getJobName));
@@ -110,8 +109,6 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Override
   public boolean validateArtifactSource(GcpConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    log.info("[GCR Delegate Selection] Validate artifact source for image " + artifactStreamAttributes.getImageName()
-        + " with selectors " + config.getDelegateSelectors());
     try {
       // Decrypt gcpConfig
       encryptionService.decrypt(config, encryptionDetails, false);
