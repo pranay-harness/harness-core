@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -70,6 +71,7 @@ public class PipelineServiceConfiguration extends Configuration {
   private String managerAuthority;
   private ScmConnectionConfig scmConnectionConfig;
   private ServiceHttpClientConfig managerClientConfig;
+  private LogStreamingServiceConfiguration logStreamingServiceConfig;
 
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

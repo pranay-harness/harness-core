@@ -134,4 +134,8 @@ pipelineServiceBaseUrl: https://localhost:8181/#
 scmConnectionConfig:
   url: localhost:8091
 
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+
 enableAuth: false
