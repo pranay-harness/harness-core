@@ -4,9 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.ChangeSet;
-import io.harness.gitsync.ChangeSets;
+import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.GitToHarnessServiceGrpc.GitToHarnessServiceImplBase;
 import io.harness.gitsync.ProcessingResponse;
+import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(DX)
 public class GitToHarnessGrpcService extends GitToHarnessServiceImplBase {
   @Inject GitToHarnessProcessor gitToHarnessProcessor;
+  @Inject GitSyncThreadDecorator gitSyncThreadDecorator;
 
   @Override
   public void syncRequestFromGit(ChangeSet request, StreamObserver<ProcessingResponse> responseObserver) {
@@ -25,10 +27,12 @@ public class GitToHarnessGrpcService extends GitToHarnessServiceImplBase {
   }
 
   @Override
-  public void process(ChangeSets changeSets, StreamObserver<ProcessingResponse> responseObserver) {
+  public void process(
+      GitToHarnessProcessRequest gitToHarnessRequest, StreamObserver<ProcessingResponse> responseObserver) {
     // todo: add proper ids so that we can check the git flows
     log.info("Grpc request recieved");
-    gitToHarnessProcessor.process(changeSets);
+    gitToHarnessProcessor.gitToHarnessProcessingRequest(gitToHarnessRequest);
+    gitSyncThreadDecorator.populateGitToHarnessContextInThread(gitToHarnessRequest.getGitToHarnessBranchInfo());
     responseObserver.onNext(ProcessingResponse.newBuilder().build());
     responseObserver.onCompleted();
     log.info("Grpc request completed");

@@ -10,7 +10,7 @@ import "google/protobuf/wrappers.proto";
 
 service GitToHarnessService {
   rpc syncRequestFromGit(ChangeSet) returns (ProcessingResponse);
-  rpc process(ChangeSets) returns (ProcessingResponse);
+  rpc process(GitToHarnessProcessRequest) returns (ProcessingResponse);
 }
 
 message ChangeSets {
@@ -63,4 +63,9 @@ message GitToHarnessInfo {
   string yamlGitConfigProjectIdentifier = 3;
   string yamlGitConfigId = 4;
   string branch = 5;
+}
+
+message GitToHarnessProcessRequest {
+  ChangeSets change_sets = 1;
+  GitToHarnessInfo gitToHarnessBranchInfo = 2;
 }

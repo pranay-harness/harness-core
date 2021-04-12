@@ -9,6 +9,7 @@ import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
 import io.harness.gitsync.FileProcessingResponse;
 import io.harness.gitsync.FileProcessingStatus;
+import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
 
@@ -45,9 +46,11 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
    * <li><b>Sort step.</b> Changesets are sorted as per sort order.</li>
    * <li><b>Process step.</b> Change sets are processed by calling various service layers.</li>
    * <li><b>Post process step.</b> Collection of all the return data happens.</li>
+   * @param changeSets
    */
   @Override
-  public ProcessingResponse process(ChangeSets changeSets) {
+  public ProcessingResponse gitToHarnessProcessingRequest(GitToHarnessProcessRequest gitToHarnessRequest) {
+    ChangeSets changeSets = gitToHarnessRequest.getChangeSets();
     Map<String, FileProcessingResponse> processingResponseMap = initializeProcessingResponse(changeSets);
     String accountId = changeSets.getAccountId();
 

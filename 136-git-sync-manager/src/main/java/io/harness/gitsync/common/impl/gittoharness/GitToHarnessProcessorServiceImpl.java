@@ -5,6 +5,7 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.EntityType;
 import io.harness.Microservice;
@@ -16,6 +17,7 @@ import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
 import io.harness.gitsync.ChangeType;
 import io.harness.gitsync.GitToHarnessInfo;
+import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.GitToHarnessServiceGrpc;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
@@ -107,9 +109,23 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub gitToHarnessServiceBlockingStub =
           gitToHarnessServiceGrpcClient.get(entry.getKey());
       ChangeSets changeSets = ChangeSets.newBuilder().addAllChangeSet(entry.getValue()).setAccountId(accountId).build();
-      GitToHarnessInfo gitToHarnessInfo =
-          GitToHarnessInfo.newBuilder().setYamlGitConfigId(gitSyncConfigDTO.getIdentifier()).setBranch(branch).build();
-      gitToHarnessServiceBlockingStub.process(changeSets);
+      GitToHarnessInfo.Builder gitToHarnessInfo =
+          GitToHarnessInfo.newBuilder()
+              .setAccountIdentifier(accountId)
+              .setYamlGitConfigProjectIdentifier(gitSyncConfigDTO.getProjectIdentifier())
+              .setYamlGitConfigId(gitSyncConfigDTO.getIdentifier())
+              .setBranch(branch);
+      if (isNotBlank(gitSyncConfigDTO.getOrganizationIdentifier())) {
+        gitToHarnessInfo.setYamlGitConfigOrgIdentifier(gitSyncConfigDTO.getOrganizationIdentifier());
+      }
+      if (isNotBlank(gitSyncConfigDTO.getProjectIdentifier())) {
+        gitToHarnessInfo.setYamlGitConfigOrgIdentifier(gitSyncConfigDTO.getProjectIdentifier());
+      }
+      GitToHarnessProcessRequest gitToHarnessProcessRequest = GitToHarnessProcessRequest.newBuilder()
+                                                                  .setChangeSets(changeSets)
+                                                                  .setGitToHarnessBranchInfo(gitToHarnessInfo)
+                                                                  .build();
+      gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);
     }
   }
 

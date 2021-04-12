@@ -6,6 +6,7 @@ import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT_BRANCH;
 import static javax.ws.rs.Priorities.HEADER_DECORATOR;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.GitToHarnessInfo;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
 
 import com.google.inject.Singleton;
@@ -55,5 +56,14 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
   private String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
     return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : DEFAULT_BRANCH;
+  }
+
+  public void populateGitToHarnessContextInThread(GitToHarnessInfo gitToHarnessInfo) {
+    final GitEntityInfo branchInfo = GitEntityInfo.builder()
+                                         .branch(gitToHarnessInfo.getBranch())
+                                         .yamlGitConfigId(gitToHarnessInfo.getYamlGitConfigId())
+                                         .isSyncFromGit(true)
+                                         .build();
+    GitSyncBranchThreadLocal.set(branchInfo);
   }
 }
