@@ -58,6 +58,9 @@ enum ProcessingFailureStage {
 }
 
 message GitToHarnessInfo {
-  string yamlGitConfigId = 1;
-  string branch = 2;
+  string accountIdentifier = 1;
+  string yamlGitConfigOrgIdentifier = 2;
+  string yamlGitConfigProjectIdentifier = 3;
+  string yamlGitConfigId = 4;
+  string branch = 5;
 }

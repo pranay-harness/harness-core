@@ -108,7 +108,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
           gitToHarnessServiceGrpcClient.get(entry.getKey());
       ChangeSets changeSets = ChangeSets.newBuilder().addAllChangeSet(entry.getValue()).setAccountId(accountId).build();
       GitToHarnessInfo gitToHarnessInfo =
-          GitToHarnessInfo.newBuilder().setYamlGitConfigId(gitSyncConfigDTO.get).setBranch().build();
+          GitToHarnessInfo.newBuilder().setYamlGitConfigId(gitSyncConfigDTO.getIdentifier()).setBranch(branch).build();
       gitToHarnessServiceBlockingStub.process(changeSets);
     }
   }
