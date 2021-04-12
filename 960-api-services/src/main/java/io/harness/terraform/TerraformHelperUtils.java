@@ -66,10 +66,6 @@ public class TerraformHelperUtils {
         ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
         : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, workspace)).toFile();
 
-    if (tfStateFile.exists()) {
-      return tfStateFile;
-    }
-
-    return null;
+    return tfStateFile.exists() ? tfStateFile : null;
   }
 }

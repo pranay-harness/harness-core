@@ -62,6 +62,7 @@ import io.harness.logging.PlanJsonLogOutputStream;
 import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.terraform.TerraformHelperUtils;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
 
 import software.wings.api.TerraformExecutionData;
@@ -443,7 +444,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                             .withFileName(TERRAFORM_STATE_FILE_NAME)
                                             .build();
 
-      File tfStateFile = getTerraformStateFile(scriptDirectory, parameters.getWorkspace());
+      File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, parameters.getWorkspace());
       if (tfStateFile != null) {
         try (InputStream initialStream = new FileInputStream(tfStateFile)) {
           delegateFileManager.upload(delegateFile, initialStream);
@@ -767,18 +768,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       }
     }
     return targetArgs.toString();
-  }
-
-  private File getTerraformStateFile(String scriptDirectory, String workspace) {
-    File tfStateFile = isEmpty(workspace)
-        ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
-        : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, workspace)).toFile();
-
-    if (tfStateFile.exists()) {
-      return tfStateFile;
-    }
-
-    return null;
   }
 
   @VisibleForTesting
