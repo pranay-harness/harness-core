@@ -9,6 +9,7 @@ import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.utils.URLDecoderUtility;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -40,8 +41,8 @@ public class GitBranchResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
-    return ResponseDTO.newResponse(gitBranchService.listBranchesForRepoByConnector(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, repoURL));
+    return ResponseDTO.newResponse(gitBranchService.listBranchesForRepoByConnector(accountIdentifier, orgIdentifier,
+        projectIdentifier, connectorIdentifier, URLDecoderUtility.getDecodedString(repoURL)));
   }
 
   @GET
