@@ -13,12 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
-public class AccessControlEventHandler implements OutboxEventHandler {
+public class AccessControlOutboxEventHandler implements OutboxEventHandler {
   private final RoleEventHandler roleEventHandler;
   private final RoleAssignmentEventHandler roleAssignmentEventHandler;
 
   @Inject
-  public AccessControlEventHandler(
+  public AccessControlOutboxEventHandler(
       RoleEventHandler roleEventHandler, RoleAssignmentEventHandler roleAssignmentEventHandler) {
     this.roleEventHandler = roleEventHandler;
     this.roleAssignmentEventHandler = roleAssignmentEventHandler;
