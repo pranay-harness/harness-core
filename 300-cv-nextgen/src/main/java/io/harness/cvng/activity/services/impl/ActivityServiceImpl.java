@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
@@ -73,6 +75,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class ActivityServiceImpl implements ActivityService {
   private static final int RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE = 5;
   @Inject private WebhookService webhookService;
@@ -106,8 +109,8 @@ public class ActivityServiceImpl implements ActivityService {
         webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
     return register(accountId, activityDTO);
   }
-
-  private String register(String accountId, ActivityDTO activityDTO) {
+  @Override
+  public String register(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
     Activity activity = getActivityFromDTO(activityDTO);
     activity.validate();

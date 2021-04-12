@@ -47,8 +47,8 @@ grpcClientConfigs:
   cd:
     target: localhost:12101
     authority: localhost
-  cv:
-    target: localhost:12201
+  cvng:
+    target: localhost:12401
     authority: localhost
   ci:
     target: localhost:12301
