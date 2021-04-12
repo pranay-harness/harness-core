@@ -50,11 +50,10 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
+import io.harness.time.TimeModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -138,7 +137,7 @@ public class AccessControlModule extends AbstractModule {
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    install(TimeModule.getInstance());
     install(PersistentLockModule.getInstance());
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
