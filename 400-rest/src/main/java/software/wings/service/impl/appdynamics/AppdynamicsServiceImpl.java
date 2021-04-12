@@ -56,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(CV)
-@TargetModule(HarnessModule._360_CG_MANGER)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;

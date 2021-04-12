@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -10,6 +11,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
@@ -235,6 +237,7 @@ import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -255,8 +258,12 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -338,6 +345,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.workflow.StepSkipStrategy;
+import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
@@ -347,12 +355,14 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -400,6 +410,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -410,6 +421,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 /**
@@ -417,7 +429,9 @@ import org.mongodb.morphia.query.UpdateOperations;
  *
  * @author Rishi
  */
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
+@OwnedBy(CDC)
 @Listeners(GeneralNotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
   private static final String CLONE = " - (clone)";
@@ -447,6 +461,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private PersonalizationService personalizationService;
+  @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private HarnessTagService harnessTagService;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
@@ -5071,5 +5087,28 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> workflowService.updateWorkflowPhase(savedWorkflow.getAppId(), savedWorkflow.getUuid(), workflowPhase))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testPruneByApplication() throws IllegalAccessException {
+    WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+    FieldUtils.writeField(workflowService, "wingsPersistence", wingsPersistence, true);
+
+    Query query = mock(Query.class);
+    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(StateMachine.class)).thenReturn(query);
+    when(wingsPersistence.delete(eq(Workflow.class), anyString(), anyString())).thenReturn(true);
+    when(query.filter(anyString(), anyString())).thenReturn(query);
+    when(query.project(anyString(), anyBoolean())).thenReturn(query);
+    Workflow workflow = aWorkflow().uuid(UUID).accountId(ACCOUNT_ID).appId(APP_ID).build();
+    when(query.asList()).thenReturn(Collections.singletonList(workflow));
+    workflowService.pruneByApplication(APP_ID);
+    verify(auditServiceHelper).reportDeleteForAuditing(APP_ID, workflow);
+    verify(harnessTagService).pruneTagLinks(ACCOUNT_ID, UUID);
+    verify(wingsPersistence).delete(eq(Workflow.class), anyString(), anyString());
+    verify(wingsPersistence).delete(any(Query.class));
+    verify(wingsPersistence).createQuery(StateMachine.class);
   }
 }

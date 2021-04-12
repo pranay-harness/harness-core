@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
@@ -8,6 +9,7 @@ import static io.harness.validation.Validator.equalCheck;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.docker.service.DockerRegistryService;
 import io.harness.exception.InvalidRequestException;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by anubhaw on 1/6/17.
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
@@ -45,8 +48,6 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
-    log.info("[Delegate Selection] Get builds for image " + artifactStreamAttributes.getImageName() + " with selectors "
-        + dockerConfig.getDelegateSelectors());
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), DOCKER.name());
     encryptionService.decrypt(dockerConfig, encryptionDetails, false);
     List<BuildDetailsInternal> builds =
@@ -94,7 +95,6 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public boolean validateArtifactServer(DockerConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(config, encryptedDataDetails, false);
-    log.info("[Delegate Selection] Validate Artifact Server with selectors " + config.getDelegateSelectors());
     return dockerRegistryService.validateCredentials(DockerConfigToInternalMapper.toDockerInternalConfig(config));
   }
 
@@ -102,8 +102,6 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   public boolean validateArtifactSource(DockerConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
     encryptionService.decrypt(config, encryptionDetails, false);
-    log.info("[Delegate Selection] Validate artifact source " + artifactStreamAttributes.getImageName()
-        + " with selectors " + config.getDelegateSelectors());
     return dockerRegistryService.verifyImageName(
         DockerConfigToInternalMapper.toDockerInternalConfig(config), artifactStreamAttributes.getImageName());
   }
@@ -129,8 +127,6 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   public List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(dockerConfig, encryptionDetails, false);
-    log.info("[Delegate Selection] Get labels image " + artifactStreamAttributes.getImageName() + " with selectors "
-        + dockerConfig.getDelegateSelectors());
     return dockerRegistryService.getLabels(DockerConfigToInternalMapper.toDockerInternalConfig(dockerConfig),
         artifactStreamAttributes.getImageName(), buildNos);
   }

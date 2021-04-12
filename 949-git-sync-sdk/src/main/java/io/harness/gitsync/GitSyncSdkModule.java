@@ -14,6 +14,8 @@ import io.harness.gitsync.gittoharness.GitToHarnessProcessorImpl;
 import io.harness.gitsync.gittoharness.NoOpChangeSetInterceptorServiceImpl;
 import io.harness.gitsync.persistance.EntityKeySource;
 import io.harness.gitsync.persistance.EntityLookupHelper;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
 import io.harness.gitsync.sdk.GitSyncGrpcClientModule;
 import io.harness.gitsync.sdk.GitSyncSdkGrpcServerModule;
 import io.harness.ng.core.event.MessageListener;
@@ -46,5 +48,11 @@ public class GitSyncSdkModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(GIT_CONFIG_STREAM))
         .to(GitSyncConfigEventMessageListener.class);
+    bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
+    //    AnnotationConfigApplicationContext context =
+    //            new AnnotationConfigApplicationContext(GitAwarePersistenceBean.class);
+    //    Injector injector = new SpringInjector(context);
+
+    //    install(new SpringModule(BeanFactoryProvider.from(GitAwarePersistenceBean.class)));
   }
 }

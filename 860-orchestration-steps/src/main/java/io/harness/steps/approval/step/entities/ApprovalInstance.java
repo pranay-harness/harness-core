@@ -8,9 +8,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.logging.AutoLogContext;
-import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -33,7 +33,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -55,21 +54,23 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public abstract class ApprovalInstance implements PersistentEntity, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("status_deadline")
                  .field(ApprovalInstanceKeys.status)
-                 .field(ApprovalInstanceKeys.deadline)
+                 .ascSortField(ApprovalInstanceKeys.deadline)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("status_type_nextIteration")
+                 .field(ApprovalInstanceKeys.status)
+                 .field(ApprovalInstanceKeys.type)
+                 .descSortField(ApprovalInstanceKeys.nextIteration)
                  .build())
         .build();
   }
 
   @Id @org.mongodb.morphia.annotations.Id String id;
 
-  @NotEmpty String accountId;
-  @NotEmpty String orgIdentifier;
-  @NotEmpty String projectIdentifier;
-
-  @NotNull String planExecutionId;
+  @NotNull Ambiance ambiance;
   @FdIndex @NotNull String nodeExecutionId;
 
   @NotNull ApprovalType type;
@@ -87,13 +88,9 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
   }
 
   private Map<String, String> logContextMap() {
-    Map<String, String> logContext = new HashMap<>();
+    Map<String, String> logContext = new HashMap<>(AmbianceUtils.logContextMap(ambiance));
     logContext.put("approvalInstanceId", id);
     logContext.put("approvalType", type.getDisplayName());
-    logContext.put(ApprovalInstanceKeys.accountId, accountId);
-    logContext.put(ApprovalInstanceKeys.orgIdentifier, orgIdentifier);
-    logContext.put(ApprovalInstanceKeys.projectIdentifier, projectIdentifier);
-    logContext.put(ApprovalInstanceKeys.planExecutionId, planExecutionId);
     logContext.put(ApprovalInstanceKeys.nodeExecutionId, nodeExecutionId);
     return logContext;
   }
@@ -104,10 +101,7 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
     }
 
     setId(generateUuid());
-    setAccountId(AmbianceUtils.getAccountId(ambiance));
-    setOrgIdentifier(AmbianceUtils.getOrgIdentifier(ambiance));
-    setProjectIdentifier(AmbianceUtils.getProjectIdentifier(ambiance));
-    setPlanExecutionId(ambiance.getPlanExecutionId());
+    setAmbiance(ambiance);
     setNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     setType(stepParameters.getApprovalType());
     setStatus(ApprovalStatus.WAITING);

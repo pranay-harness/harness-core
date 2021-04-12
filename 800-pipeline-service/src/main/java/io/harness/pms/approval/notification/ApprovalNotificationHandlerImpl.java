@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO.UserGroupFilterDTOBuilder;
@@ -70,7 +71,14 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
     this.pmsExecutionService = pmsExecutionService;
   }
 
+  @Override
   public void sendNotification(HarnessApprovalInstance approvalInstance, Ambiance ambiance) {
+    try (AutoLogContext ignore = approvalInstance.autoLogContext()) {
+      sendNotificationInternal(approvalInstance, ambiance);
+    }
+  }
+
+  private void sendNotificationInternal(HarnessApprovalInstance approvalInstance, Ambiance ambiance) {
     try {
       PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity = getPipelineExecutionSummary(ambiance);
 
@@ -93,7 +101,7 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
       generateModuleSpecificSummary(approvalSummary, pipelineExecutionSummaryEntity);
       sendNotification(userGroups, approvalSummary.toParams());
     } catch (Exception e) {
-      log.warn("Error while sending notification for HarnessApproval. {}", approvalInstance, e);
+      log.error("Error while sending notification for harness approval", e);
     }
   }
 
@@ -185,12 +193,13 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
       return userGroups;
     }
 
+    String accountId = AmbianceUtils.getAccountId(instance.getAmbiance());
+    String orgId = AmbianceUtils.getOrgIdentifier(instance.getAmbiance());
+    String projectId = AmbianceUtils.getProjectIdentifier(instance.getAmbiance());
     Map<Scope, List<IdentifierRef>> identifierRefs =
         new HashSet<>(userGroupIds)
             .stream()
-            .map(ug
-                -> IdentifierRefHelper.getIdentifierRef(
-                    ug, instance.getAccountId(), instance.getOrgIdentifier(), instance.getProjectIdentifier()))
+            .map(ug -> IdentifierRefHelper.getIdentifierRef(ug, accountId, orgId, projectId))
             .collect(Collectors.groupingBy(IdentifierRef::getScope));
 
     List<UserGroupFilterDTO> userGroupFilters = ImmutableList.of(Scope.ACCOUNT, Scope.ORG, Scope.PROJECT)

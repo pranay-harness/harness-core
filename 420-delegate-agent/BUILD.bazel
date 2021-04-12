@@ -4,6 +4,8 @@ load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+HarnessTeam = "DEL"
+
 shared_dependencies = [
     "//890-sm-core:module",
     "//930-delegate-tasks:module",

@@ -61,7 +61,7 @@ import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.beans.logstreaming.NGLogCallback;
+import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
@@ -1869,7 +1869,7 @@ public class K8sTaskHelperBase {
 
   public LogCallback getLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName,
       boolean shouldOpenStream, CommandUnitsProgress commandUnitsProgress) {
-    return new NGLogCallback(logStreamingTaskClient, commandUnitName, shouldOpenStream, commandUnitsProgress);
+    return new NGDelegateLogCallback(logStreamingTaskClient, commandUnitName, shouldOpenStream, commandUnitsProgress);
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,

@@ -1,5 +1,7 @@
 package io.harness.cvng;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -36,6 +38,7 @@ import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.cdng.services.impl.CVNGAsyncWaitEngine;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
@@ -63,6 +66,7 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -86,6 +90,7 @@ import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
+import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
@@ -127,9 +132,9 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
-import io.harness.ff.FeatureFlagModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.threading.ThreadPool;
@@ -158,6 +163,7 @@ import org.apache.commons.io.IOUtils;
  * @author Raghu
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class CVServiceModule extends AbstractModule {
   private VerificationConfiguration verificationConfiguration;
 
@@ -170,8 +176,6 @@ public class CVServiceModule extends AbstractModule {
    */
   @Override
   protected void configure() {
-    install(FeatureFlagModule.getInstance());
-
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
@@ -308,7 +312,7 @@ public class CVServiceModule extends AbstractModule {
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
 
       bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
-
+      bind(AsyncWaitEngine.class).to(CVNGAsyncWaitEngine.class);
       MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
           MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
       dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
@@ -324,7 +328,10 @@ public class CVServiceModule extends AbstractModule {
       dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER)
           .to(StackDriverCVConfigUpdatableEntity.class);
       dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
-
+      // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
+      // if something goes wrong in feature flags stream
+      // We are dependent on source of truth (Manager) for this.
+      bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

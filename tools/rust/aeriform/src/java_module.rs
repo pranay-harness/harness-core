@@ -7,17 +7,38 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, JavaClass, populate_internal_info};
+use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
+use crate::repo::GIT_REPO_ROOT_DIR;
+use crate::team::SHARED_BETWEEN_TEAMS;
+
+lazy_static! {
+    pub static ref TEAM_OWNER_PATTERN: Regex = Regex::new(r#"\nHarnessTeam = "([A-Z]+)"\n"#).unwrap();
+    pub static ref DEPRECATED_PATTERN: Regex = Regex::new(r"\nDeprecated = True\n").unwrap();
+}
 
 #[derive(Debug)]
 pub struct JavaModule {
     pub name: String,
+    pub team: Option<String>,
     pub deprecated: bool,
     pub index: f32,
     pub directory: String,
     pub jar: String,
     pub srcs: HashMap<String, JavaClass>,
     pub dependencies: HashSet<String>,
+}
+
+pub trait JavaModuleTraits {
+    fn team(&self) -> String;
+}
+
+impl JavaModuleTraits for &JavaModule {
+    fn team(&self) -> String {
+        match &self.team {
+            None => SHARED_BETWEEN_TEAMS.to_string(),
+            Some(team) => team.clone(),
+        }
+    }
 }
 
 pub fn model_names() -> HashMap<String, String> {
@@ -299,6 +320,18 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
         target_name
     );
 
+    let path = &format!("{}/{}/BUILD.bazel", GIT_REPO_ROOT_DIR.as_str(), directory);
+    let build = fs::read_to_string(path).expect(&format!("failed to read file {}", path));
+
+    let captures_team = TEAM_OWNER_PATTERN.captures(&build);
+    let team = if captures_team.is_none() {
+        None
+    } else {
+        Some(captures_team.unwrap().get(1).unwrap().as_str().to_string())
+    };
+
+    let deprecated = DEPRECATED_PATTERN.is_match(&build);
+
     let module_dependencies = populate_module_dependencies(name, modules);
 
     let (dependencies, maybe_protos) = populate_dependencies(name);
@@ -314,7 +347,8 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
 
     JavaModule {
         name: name.clone(),
-        deprecated: is_deprecated(name),
+        team: team,
+        deprecated: deprecated,
         index: directory
             .chars()
             .take(3)
@@ -327,10 +361,6 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
         srcs: srcs,
         dependencies: module_dependencies,
     }
-}
-
-fn is_deprecated(name: &String) -> bool {
-    name.contains("/400-rest:")
 }
 
 fn index_fraction(name: &String) -> f32 {
@@ -388,6 +418,7 @@ fn populate_from_external(
 
     JavaModule {
         name: name.to_string(),
+        team: team,
         deprecated: false,
         index: 1000.0,
         directory: "n/a".to_string(),

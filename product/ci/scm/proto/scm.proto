@@ -290,16 +290,18 @@ message FileModifyRequest {
   }
   string content = 5;
   string message = 6;
-  string sha = 7;  // only needed for the UpdateFile service. Not pushfile
-  Signature signature = 8;
-  Provider provider = 9;
+  string commit_id = 7;
+  string blob_id = 8;
+  Signature signature = 9;
+  Provider provider = 10;
 }
 
 message FileContent {
   string content = 1;
   int32 status = 2;
-  string object_id = 3;
-  string path = 4;
+  string path = 3;
+  string commit_id = 4;
+  string blob_id = 5;
 }
 
 message FileBatchContentResponse {
@@ -309,21 +311,30 @@ message FileBatchContentResponse {
 message FindFilesInBranchRequest {
   string slug = 1;
   string branch = 2;
-  Provider provider = 3;
+  string path = 3;
+  Provider provider = 4;
 }
 
 message FindFilesInCommitRequest {
   string slug = 1;
   string ref = 2;
-  Provider provider = 3;
+  string path = 3;
+  Provider provider = 4;
+}
+
+enum ContentType {
+  UNKNOWN_CONTENT = 0;
+  FILE = 1;
+  DIRECTORY = 2;
+  SYMLINK = 3;
+  GITLINK = 4;
 }
 
 message FileChange {
   string path = 1;
-  bool added = 2;
-  bool renamed = 3;
-  bool deleted = 4;
-  string object_id = 5;
+  ContentType content_type = 2;
+  string commit_id = 3;
+  string blob_id = 4;
 }
 
 message IsLatestFileRequest {
@@ -333,7 +344,8 @@ message IsLatestFileRequest {
     string branch = 3;
     string ref = 4;
   }
-  string object_id = 6;
+  string commit_id = 5;
+  string blob_id = 6;
   Provider provider = 7;
 }
 

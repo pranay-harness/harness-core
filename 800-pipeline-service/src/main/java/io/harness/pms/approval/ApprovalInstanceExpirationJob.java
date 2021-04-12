@@ -1,5 +1,7 @@
 package io.harness.pms.approval;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.steps.approval.step.ApprovalInstanceService;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -10,8 +12,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
+@Slf4j
 public class ApprovalInstanceExpirationJob implements Managed {
   @Inject private ApprovalInstanceService approvalInstanceService;
 
@@ -34,6 +39,7 @@ public class ApprovalInstanceExpirationJob implements Managed {
   }
 
   private void run() {
+    log.info("Running ApprovalInstanceExpirationJob");
     approvalInstanceService.markExpiredInstances();
   }
 }

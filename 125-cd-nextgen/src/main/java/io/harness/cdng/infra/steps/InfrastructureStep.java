@@ -2,6 +2,8 @@ package io.harness.cdng.infra.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import static java.lang.String.format;
+
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.ResourceScope;
@@ -12,20 +14,25 @@ import io.harness.cdng.infra.InfrastructureMapper;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.infra.yaml.InfrastructureKind;
+import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.AccessDeniedException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.logStreaming.LogStreamingStepClientFactory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
+import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -34,13 +41,13 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
-import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.steps.EntityReferenceExtractorUtils;
@@ -48,6 +55,7 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.executable.SyncExecutableWithRbac;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
@@ -79,8 +87,8 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
   public StepResponse executeSyncAfterRbac(Ambiance ambiance, InfraStepParameters infraStepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     long startTime = System.currentTimeMillis();
-    NGManagerLogCallback ngManagerLogCallback =
-        new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, INFRASTRUCTURE_COMMAND_UNIT, true);
+    NGLogCallback ngManagerLogCallback =
+        new NGLogCallback(logStreamingStepClientFactory, ambiance, INFRASTRUCTURE_COMMAND_UNIT, true);
     ngManagerLogCallback.saveExecutionLog("Starting Infrastructure logs");
     PipelineInfrastructure pipelineInfrastructure = infraStepParameters.getPipelineInfrastructure();
 
@@ -95,9 +103,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
     Infrastructure infrastructure = pipelineInfrastructure.getInfrastructureDefinition().getInfrastructure();
     Infrastructure finalInfrastructure =
         infraOverrides != null ? infrastructure.applyOverrides(infraOverrides) : infrastructure;
-    if (finalInfrastructure == null) {
-      throw new InvalidRequestException("Infrastructure definition can't be null or empty");
-    }
+    validateInfrastructure(finalInfrastructure);
     EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.ENVIRONMENT));
     InfrastructureOutcome infrastructureOutcome =
@@ -118,6 +124,37 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
                                                         .setEndTime(System.currentTimeMillis())
                                                         .build()))
         .build();
+  }
+
+  @VisibleForTesting
+  void validateInfrastructure(Infrastructure infrastructure) {
+    if (infrastructure == null) {
+      throw new InvalidRequestException("Infrastructure definition can't be null or empty");
+    }
+    switch (infrastructure.getKind()) {
+      case InfrastructureKind.KUBERNETES_DIRECT:
+        K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
+        validateExpression(k8SDirectInfrastructure.getConnectorRef(), k8SDirectInfrastructure.getNamespace(),
+            k8SDirectInfrastructure.getReleaseName());
+        break;
+
+      case InfrastructureKind.KUBERNETES_GCP:
+        K8sGcpInfrastructure k8sGcpInfrastructure = (K8sGcpInfrastructure) infrastructure;
+        validateExpression(k8sGcpInfrastructure.getConnectorRef(), k8sGcpInfrastructure.getNamespace(),
+            k8sGcpInfrastructure.getReleaseName(), k8sGcpInfrastructure.getCluster());
+        break;
+      default:
+        throw new InvalidArgumentsException(format("Unknown Infrastructure Kind : [%s]", infrastructure.getKind()));
+    }
+  }
+
+  @SafeVarargs
+  private final <T> void validateExpression(ParameterField<T>... inputs) {
+    for (ParameterField<T> input : inputs) {
+      if (!ParameterField.isNull(input) && input.isExpression()) {
+        throw new InvalidRequestException(format("Unresolved Expression : [%s]", input.getExpressionValue()));
+      }
+    }
   }
 
   @Override

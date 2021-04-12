@@ -16,6 +16,7 @@ mod prepare;
 mod java_class;
 mod java_module;
 mod repo;
+mod team;
 
 #[derive(Clap)]
 #[clap(version = "1.0", author = "George Georgiev <george@harness.io>")]

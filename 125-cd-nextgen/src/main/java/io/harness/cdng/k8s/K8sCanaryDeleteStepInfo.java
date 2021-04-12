@@ -16,7 +16,6 @@ import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
@@ -31,22 +30,14 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_CANARY_DELETE)
 @TypeAlias("k8sCanaryDeleteStepInfo")
 public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore private String name;
-  @JsonIgnore private String identifier;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sCanaryDeleteStepInfo(String name, String identifier) {
-    this.name = name;
-    this.identifier = identifier;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
+  public K8sCanaryDeleteStepInfo(ParameterField<Boolean> skipDryRun) {
+    this.skipDryRun = skipDryRun;
   }
 
   @Override

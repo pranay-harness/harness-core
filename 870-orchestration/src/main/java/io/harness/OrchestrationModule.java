@@ -9,16 +9,12 @@ import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
-import io.harness.engine.executions.node.PmsNodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
-import io.harness.engine.interrupts.PMSInterruptServiceImpl;
-import io.harness.engine.outcomes.OutcomeServiceImpl;
-import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
 import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
@@ -31,11 +27,7 @@ import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
-import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
 import io.harness.pms.sdk.core.registries.registrar.ResolverRegistrar;
-import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationResolverRegistrar;
@@ -102,12 +94,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
     if (!config.isWithPMS()) {
       bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
-      if (!config.isPipelineService()) {
-        bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceImpl.class).in(Singleton.class);
-        bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class).in(Singleton.class);
-        bind(OutcomeService.class).to(OutcomeServiceImpl.class).in(Singleton.class);
-        bind(PMSInterruptService.class).to(PMSInterruptServiceImpl.class).in(Singleton.class);
-      }
     }
   }
 

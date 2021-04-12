@@ -55,7 +55,9 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		log.Infow("configuring TI service to use Timescale DB",
 			"endpoint", config.TimeScaleDb.Host,
 			"db_name", config.TimeScaleDb.DbName,
-			"test_table_name", config.TimeScaleDb.HyperTableName)
+			"test_table_name", config.TimeScaleDb.HyperTableName,
+			"selection_stats_table", config.TimeScaleDb.SelectionTable,
+			"coverage_table", config.TimeScaleDb.CoverageTable)
 		db, err = timescaledb.New(
 			config.TimeScaleDb.Username,
 			config.TimeScaleDb.Password,
@@ -105,7 +107,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			}
 			topic := fmt.Sprintf("%s:streams:webhook_request_payload_data", config.EventsFramework.EnvNamespace)
 			log.Infow("registering webhook payload consumer with events framework", "topic", topic)
-			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg)
+			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db, config)
 			rdb.Run()
 			log.Infow("done registering webhook consumer")
 		} else {

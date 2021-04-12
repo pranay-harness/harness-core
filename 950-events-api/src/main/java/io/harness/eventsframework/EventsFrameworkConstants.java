@@ -12,7 +12,7 @@ public final class EventsFrameworkConstants {
   public static final String FEATURE_FLAG_STREAM = "harness_internal_feature_flags";
   public static final String SETUP_USAGE = "setup_usage";
   public static final String ENTITY_ACTIVITY = "entity_activity";
-  public static final String USER_ACCOUNT_MEMBERSHIP = "user_account_membership";
+  public static final String USERMEMBERSHIP = "usermembership";
   public static final String HARNESS_TO_GIT_PUSH = "harness_to_git_push";
   public static final String WEBHOOK_REQUEST_PAYLOAD_DETAILS = "webhook_request_payload_data";
   // created for git sdk, dont use outside sdk.

@@ -35,37 +35,6 @@ func TestFindFileBitbucketCloudRealRequest(t *testing.T) {
 	assert.Contains(t, got.Content, "test repo for source control operations")
 }
 
-func TestUpsertFileBitbucketCloudRealRequest(t *testing.T) {
-	in := &pb.FileModifyRequest{
-		Slug:    "tphoney/scm-test",
-		Path:    "sample_path",
-		Message: "sample message",
-		Type: &pb.FileModifyRequest_Branch{
-			Branch: "main",
-		},
-		Content: "sample\n data",
-		Signature: &pb.Signature{
-			Name:  "tp honey",
-			Email: "tp@harness.io",
-		},
-		Provider: &pb.Provider{
-			Hook: &pb.Provider_BitbucketCloud{
-				BitbucketCloud: &pb.BitbucketCloudProvider{
-					Username:    "tphoney",
-					AppPassword: "UcNZEUnQp3CjWXHtfeWU",
-				},
-			},
-			Debug: true,
-		},
-	}
-
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	got, err := CreateFile(context.Background(), in, log.Sugar())
-
-	assert.Nil(t, err, "no errors")
-	assert.Equal(t, int32(201), got.Status)
-}
-
 func TestFindFileGiteaRealRequest(t *testing.T) {
 	//c85c8cd30b5e04cdde9a71b4145571db76d7da03
 	in := &pb.GetFileRequest{

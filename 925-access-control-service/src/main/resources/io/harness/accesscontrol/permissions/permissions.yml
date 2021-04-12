@@ -1,0 +1,189 @@
+permissions:
+  - identifier: core_project_delete
+    name: Delete Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core_project_view
+    name: View Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - organization
+      - project
+  - identifier: core_project_edit
+    name: Edit a Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core_project_create
+    name: Create a Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - organization
+  - identifier: core_organization_delete
+    name: Delete Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - organization
+  - identifier: core_organization_view
+    name: View Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+  - identifier: core_organization_edit
+    name: Edit an Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - organization
+  - identifier: core_organization_create
+    name: Create an Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+  - identifier: core_secret_delete
+    name: Delete Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_secret_view
+    name: View Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_secret_access
+    name: Access a Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_secret_edit
+    name: Create or Edit a Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_connector_create
+    name: Create Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_connector_view
+    name: View Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_connector_edit
+    name: Edit Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_connector_delete
+    name: Delete Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_connector_runtimeAccess
+    name: Runtime Access to Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_pipeline_view
+    name: View Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core_pipeline_edit
+    name: Create or Edit Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core_pipeline_delete
+    name: Delete Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core_pipeline_execute
+    name: Run Pipeline
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core_service_view
+    name: View Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_service_edit
+    name: Create or Edit Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_service_delete
+    name: Delete Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_service_runtimeAccess
+    name: Runtime Access to Service
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_view
+    name: View Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_edit
+    name: Create or Edit Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_delete
+    name: Delete Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_environment_runtimeAccess
+    name: Runtime Access to Environment
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_audit_view
+    name: View Audits
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project

@@ -20,6 +20,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -28,7 +29,6 @@ import io.harness.mongo.MongoConfig;
 import io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
@@ -176,7 +176,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private boolean checkIfUserAlreadyAdded(Invite invite) {
-    Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail(), invite.getAccountIdentifier());
+    Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail());
     if (!userOptional.isPresent()) {
       return false;
     }
@@ -267,7 +267,7 @@ public class InviteServiceImpl implements InviteService {
     }
 
     Invite invite = inviteOptional.get();
-    Optional<UserInfo> ngUserOpt = ngUserService.getUserFromEmail(invite.getEmail(), invite.getAccountIdentifier());
+    Optional<UserInfo> ngUserOpt = ngUserService.getUserFromEmail(invite.getEmail());
     markInviteApproved(invite);
     return InviteAcceptResponse.builder()
         .response(InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED)
@@ -416,7 +416,7 @@ public class InviteServiceImpl implements InviteService {
     }
     Invite invite = inviteOpt.get();
     String email = invite.getEmail();
-    Optional<UserInfo> userOpt = ngUserService.getUserFromEmail(email, invite.getAccountIdentifier());
+    Optional<UserInfo> userOpt = ngUserService.getUserFromEmail(email);
     Preconditions.checkState(userOpt.isPresent(), "Illegal state: user doesn't exits");
     UserInfo user = userOpt.get();
     Scope scope = Scope.builder()

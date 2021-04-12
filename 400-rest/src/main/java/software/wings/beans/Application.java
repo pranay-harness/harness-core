@@ -1,11 +1,13 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -42,7 +44,8 @@ import org.mongodb.morphia.annotations.Transient;
  *
  * @author Rishi
  */
-@OwnedBy(PL)
+@OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
@@ -84,6 +87,8 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
 
   private transient Map<String, String> defaults = new HashMap<>();
   private boolean sample;
+
+  @Getter @Setter private Boolean isManualTriggerAuthorized;
 
   public boolean isSample() {
     return sample;
@@ -340,6 +345,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     private Map<String, String> defaults;
     private YamlGitConfig yamlGitConfig;
     private boolean sample;
+    private Boolean isManualTriggerAuthorized;
 
     private Builder() {}
 
@@ -437,6 +443,11 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       return this;
     }
 
+    public Builder isManualTriggerAuthorized(Boolean isManualTriggerAuthorized) {
+      this.isManualTriggerAuthorized = isManualTriggerAuthorized;
+      return this;
+    }
+
     public Builder but() {
       return anApplication()
           .name(name)
@@ -455,7 +466,8 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
           .lastUpdatedBy(lastUpdatedBy)
           .lastUpdatedAt(lastUpdatedAt)
           .yamlGitConfig(yamlGitConfig)
-          .sample(sample);
+          .sample(sample)
+          .isManualTriggerAuthorized(isManualTriggerAuthorized);
     }
 
     public Application build() {
@@ -478,6 +490,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       application.setDefaults(defaults);
       application.setYamlGitConfig(yamlGitConfig);
       application.setSample(sample);
+      application.setIsManualTriggerAuthorized(isManualTriggerAuthorized);
       return application;
     }
   }
@@ -494,6 +507,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private String description;
+    private Boolean isManualTriggerAuthorized;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String description) {

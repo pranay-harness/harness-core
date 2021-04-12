@@ -13,6 +13,7 @@ import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,6 +32,7 @@ public class ResourceGroupUpdateEvent implements Event {
     this.oldResourceGroup = oldResourceGroup;
   }
 
+  @JsonIgnore
   @Override
   public ResourceScope getResourceScope() {
     if (isEmpty(newResourceGroup.getOrgIdentifier())) {
@@ -38,14 +40,17 @@ public class ResourceGroupUpdateEvent implements Event {
     } else if (isEmpty(newResourceGroup.getProjectIdentifier())) {
       return new OrgScope(accountIdentifier, newResourceGroup.getOrgIdentifier());
     }
-    return new ProjectScope(accountIdentifier, newResourceGroup.getOrgIdentifier(), newResourceGroup.getIdentifier());
+    return new ProjectScope(
+        accountIdentifier, newResourceGroup.getOrgIdentifier(), newResourceGroup.getProjectIdentifier());
   }
 
+  @JsonIgnore
   @Override
   public Resource getResource() {
     return Resource.builder().identifier(newResourceGroup.getIdentifier()).type(RESOURCE_GROUP).build();
   }
 
+  @JsonIgnore
   @Override
   public String getEventType() {
     return "ResourceGroupUpdated";

@@ -22,11 +22,11 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
-import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
@@ -143,7 +143,7 @@ public class InviteServiceImplTest extends CategoryTest {
                                                                               .build()))
                                         .build();
 
-    when(ngUserService.getUserFromEmail(eq(emailId), any())).thenReturn(Optional.of(user));
+    when(ngUserService.getUserFromEmail(eq(emailId))).thenReturn(Optional.of(user));
     when(ngUserService.getUserMembership(any())).thenReturn(Optional.of(userMembership));
     InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
     assertThat(inviteOperationResponse).isEqualTo(USER_ALREADY_ADDED);
@@ -154,7 +154,7 @@ public class InviteServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreate_UserAlreadyExists_UserNotInvitedYet() {
     UserInfo user = UserInfo.builder().name(randomAlphabetic(7)).email(emailId).uuid(userId).build();
-    when(ngUserService.getUserFromEmail(eq(emailId), any())).thenReturn(Optional.of(user));
+    when(ngUserService.getUserFromEmail(eq(emailId))).thenReturn(Optional.of(user));
     when(ngUserService.getUserMembership(eq(userId))).thenReturn(Optional.empty());
     when(inviteRepository.save(any())).thenReturn(getDummyInvite());
     when(inviteRepository.findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndDeletedFalse(
@@ -171,7 +171,7 @@ public class InviteServiceImplTest extends CategoryTest {
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
   public void testCreate_UserDNE_UserNotInvitedYet() {
-    when(ngUserService.getUserFromEmail(eq(emailId), any())).thenReturn(Optional.empty());
+    when(ngUserService.getUserFromEmail(eq(emailId))).thenReturn(Optional.empty());
     when(inviteRepository.save(any())).thenReturn(getDummyInvite());
     when(inviteRepository.findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndDeletedFalse(
              any(), any(), any(), any()))
@@ -190,7 +190,7 @@ public class InviteServiceImplTest extends CategoryTest {
     ArgumentCaptor<String> idArgumentCaptor = ArgumentCaptor.forClass(String.class);
     UserInfo user = UserInfo.builder().name(randomAlphabetic(7)).email(emailId).uuid(userId).build();
 
-    when(ngUserService.getUserFromEmail(eq(emailId), any())).thenReturn(Optional.of(user), Optional.empty());
+    when(ngUserService.getUserFromEmail(eq(emailId))).thenReturn(Optional.of(user), Optional.empty());
     when(ngUserService.getUserMembership(eq(userId))).thenReturn(Optional.empty());
     when(inviteRepository.save(any())).thenReturn(getDummyInvite());
     when(inviteRepository.findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndDeletedFalse(
@@ -232,7 +232,7 @@ public class InviteServiceImplTest extends CategoryTest {
                         .inviteType(ADMIN_INITIATED_INVITE)
                         .approved(Boolean.TRUE)
                         .build();
-    when(ngUserService.getUserFromEmail(eq(emailId), any())).thenReturn(Optional.empty());
+    when(ngUserService.getUserFromEmail(eq(emailId))).thenReturn(Optional.empty());
     when(inviteRepository.findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndDeletedFalse(
              any(), any(), any(), any()))
         .thenReturn(Optional.of(invite));
@@ -296,7 +296,7 @@ public class InviteServiceImplTest extends CategoryTest {
     when(claim.asString()).thenReturn(inviteId);
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(invite));
-    when(ngUserService.getUserFromEmail(any(), any())).thenReturn(Optional.of(user));
+    when(ngUserService.getUserFromEmail(any())).thenReturn(Optional.of(user));
 
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(dummyJWTToken);
 
@@ -371,7 +371,7 @@ public class InviteServiceImplTest extends CategoryTest {
     when(claim.asString()).thenReturn(inviteId);
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
-    when(ngUserService.getUserFromEmail(any(), any())).thenReturn(Optional.empty());
+    when(ngUserService.getUserFromEmail(any())).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> inviteService.completeInvite(dummyJWTTOken)).isInstanceOf(IllegalStateException.class);
   }
@@ -388,7 +388,7 @@ public class InviteServiceImplTest extends CategoryTest {
     when(claim.asString()).thenReturn(inviteId);
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
-    when(ngUserService.getUserFromEmail(any(), any())).thenReturn(Optional.of(user));
+    when(ngUserService.getUserFromEmail(any())).thenReturn(Optional.of(user));
     boolean result = inviteService.completeInvite(dummyJWTTOken);
 
     assertThat(result).isTrue();

@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.conditionchecker;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.CONTAINS_OPERATOR;
 import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.ENDS_WITH_OPERATOR;
@@ -13,6 +14,7 @@ import static io.harness.ngtriggers.conditionchecker.OperationEvaluator.STARTS_W
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidArgumentsException;
 
@@ -25,6 +27,7 @@ import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class ConditionEvaluator {
   public boolean evaluate(String input, String standard, String operator) {
     if (isBlank(input) && isBlank(standard) && isBlank(operator)) {
@@ -145,7 +148,13 @@ public class ConditionEvaluator {
       }
 
       Set<String> allowedValuesSet = generateAllowedValuesSet(standard);
-      return allowedValuesSet.contains(input);
+      if (allowedValuesSet.contains(input)) {
+        return true;
+      }
+
+      // check for regex
+      OperationEvaluator operationEvaluator = evaluatorMap.get(REGEX_OPERATOR);
+      return allowedValuesSet.stream().filter(value -> operationEvaluator.evaluate(input, value)).findAny().isPresent();
     }
   }
 

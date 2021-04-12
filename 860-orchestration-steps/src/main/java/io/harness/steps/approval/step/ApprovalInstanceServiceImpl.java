@@ -14,11 +14,13 @@ import io.harness.steps.approval.step.harness.HarnessApprovalResponseData;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalAction;
 import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivityRequestDTO;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
+import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
 import io.harness.utils.RetryUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
 import java.time.Duration;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -53,6 +55,11 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   }
 
   @Override
+  public ApprovalInstance save(@NotNull ApprovalInstance instance) {
+    return approvalInstanceRepository.save(instance);
+  }
+
+  @Override
   public ApprovalInstance get(@NotNull String approvalInstanceId) {
     Optional<ApprovalInstance> optional = approvalInstanceRepository.findById(approvalInstanceId);
     if (!optional.isPresent()) {
@@ -67,19 +74,34 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   }
 
   @Override
-  public HarnessApprovalInstance expire(@NotNull String approvalInstanceId) {
-    return (HarnessApprovalInstance) approvalInstanceRepository.updateFirst(
-        new Query(Criteria.where(Mapper.ID_KEY).is(approvalInstanceId))
+  public void expireByNodeExecutionId(@NotNull String nodeExecutionId) {
+    // Only allow waiting instances to be expired. This is to prevent race condition between instance expiry and
+    // instance approval/rejection.
+    approvalInstanceRepository.updateFirst(
+        new Query(Criteria.where(ApprovalInstanceKeys.nodeExecutionId).is(nodeExecutionId))
             .addCriteria(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING)),
         new Update().set(ApprovalInstanceKeys.status, ApprovalStatus.EXPIRED));
   }
 
   @Override
   public void markExpiredInstances() {
-    approvalInstanceRepository.updateMulti(
+    UpdateResult result = approvalInstanceRepository.updateMulti(
         new Query(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING))
             .addCriteria(Criteria.where(ApprovalInstanceKeys.deadline).lt(System.currentTimeMillis())),
         new Update().set(ApprovalInstanceKeys.status, ApprovalStatus.EXPIRED));
+    log.info(String.format("No of approval instance expired: %d", result.getModifiedCount()));
+  }
+
+  @Override
+  public void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status) {
+    // Only allow waiting instances to be approved or rejected. This is to prevent race condition between instance
+    // expiry and instance approval/rejection.
+    approvalInstanceRepository.updateFirst(
+        new Query(Criteria.where(Mapper.ID_KEY).is(approvalInstanceId))
+            .addCriteria(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING)),
+        new Update().set(ApprovalInstanceKeys.status, status));
+    waitNotifyEngine.doneWith(
+        approvalInstanceId, JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build());
   }
 
   @Override

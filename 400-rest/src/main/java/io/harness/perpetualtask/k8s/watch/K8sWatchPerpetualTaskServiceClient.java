@@ -1,7 +1,9 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.delegate.task.k8s.K8sTaskType.APPLY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -22,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class K8sWatchPerpetualTaskServiceClient implements PerpetualTaskServiceClient {
   @Inject private K8sClusterConfigFactory k8sClusterConfigFactory;
   @Inject private KryoSerializer kryoSerializer;
@@ -62,7 +65,7 @@ public class K8sWatchPerpetualTaskServiceClient implements PerpetualTaskServiceC
         (K8sClusterConfig) kryoSerializer.asObject(params.getK8SClusterConfig().toByteArray());
 
     K8sTaskParameters k8sTaskParameters =
-        new K8sTaskParameters("", "", "", "", k8sClusterConfig, "", "", 0, APPLY, null);
+        new K8sTaskParameters("", "", "", "", k8sClusterConfig, "", "", 0, APPLY, null, null);
 
     return DelegateTask.builder()
         .accountId(accountId)

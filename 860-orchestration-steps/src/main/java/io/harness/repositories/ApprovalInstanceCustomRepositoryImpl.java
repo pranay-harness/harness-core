@@ -1,6 +1,8 @@
 package io.harness.repositories;
 
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 
 import com.mongodb.client.result.UpdateResult;
@@ -10,6 +12,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(HarnessTeam.CDC)
 @HarnessRepo
 public class ApprovalInstanceCustomRepositoryImpl implements ApprovalInstanceCustomRepository {
   private final MongoTemplate mongoTemplate;

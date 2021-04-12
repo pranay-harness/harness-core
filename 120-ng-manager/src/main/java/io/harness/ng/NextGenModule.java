@@ -45,6 +45,7 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.logstreaming.NGLogStreamingClientFactory;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
@@ -105,6 +106,7 @@ import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
@@ -114,9 +116,9 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.signup.SignupModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
-import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -233,7 +235,7 @@ public class NextGenModule extends AbstractModule {
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(TimeModule.getInstance());
     bind(NextGenConfiguration.class).toInstance(appConfig);
 
@@ -256,7 +258,10 @@ public class NextGenModule extends AbstractModule {
          return appConfig.getSecondaryMongoConfig();
        }
      });*/
-    bind(LogStreamingServiceRestClient.class).toProvider(NGLogStreamingClientFactory.class);
+    bind(LogStreamingServiceRestClient.class)
+        .toProvider(NGLogStreamingClientFactory.builder()
+                        .logStreamingServiceBaseUrl(appConfig.getLogStreamingServiceConfig().getBaseUrl())
+                        .build());
     install(new ValidationModule(getValidatorFactory()));
     install(new AbstractMongoModule() {
       @Override
@@ -268,6 +273,8 @@ public class NextGenModule extends AbstractModule {
     install(new CoreModule());
     install(AccessControlMigrationModule.getInstance());
     install(new InviteModule(this.appConfig.getManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
     install(new GitSyncModule());

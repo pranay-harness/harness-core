@@ -19,6 +19,10 @@ import static software.wings.metrics.ThresholdType.ALERT_WHEN_HIGHER;
 import static software.wings.metrics.ThresholdType.ALERT_WHEN_LOWER;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -98,6 +102,8 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService {
   public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private WingsPersistence wingsPersistence;
@@ -708,6 +714,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     setOverAllRisk(deploymentTimeSeriesAnalysis, metricAnalyses);
     deploymentTimeSeriesAnalysis.setTotal(metricAnalyses.size());
 
+    List<NewRelicMetricAnalysis> riskyMetrics =
+        metricAnalyses.stream()
+            .filter(newRelicMetricAnalysis -> !newRelicMetricAnalysis.getRiskLevel().equals(RiskLevel.LOW))
+            .collect(Collectors.toList());
     Collections.sort(metricAnalyses);
     for (int i = txnOffset; i < metricAnalyses.size() && i < txnOffset + txnPageSize; i++) {
       deploymentTimeSeriesAnalysis.getMetricAnalyses().add(metricAnalyses.get(i));
@@ -971,10 +981,14 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId, String cvConfigId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates) {
     String accountId = appService.getAccountIdByAppId(appId);
+    Map<String, TimeSeriesMetricDefinition> metricDefinitions = new HashMap<>();
+    metricTemplates.forEach(
+        (metricName, timeSeriesMetricDefinition)
+            -> metricDefinitions.put(replaceDotWithUnicode(metricName), timeSeriesMetricDefinition));
     TimeSeriesMetricTemplates metricTemplate = TimeSeriesMetricTemplates.builder()
                                                    .stateType(stateType)
                                                    .stateExecutionId(stateExecutionId)
-                                                   .metricTemplates(metricTemplates)
+                                                   .metricTemplates(metricDefinitions)
                                                    .cvConfigId(cvConfigId)
                                                    .accountId(accountId)
                                                    .build();

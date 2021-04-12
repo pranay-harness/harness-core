@@ -2,8 +2,12 @@ package io.harness.cvng;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.remote.ManagerAuthConfig;
@@ -31,6 +35,7 @@ import org.reflections.Reflections;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(HarnessTeam.CV)
 public class VerificationConfiguration extends Configuration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
@@ -39,6 +44,10 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("nextGen") private NGManagerServiceConfig ngManagerServiceConfig;
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
+  @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
+  @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
+  @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   private String portalUrl;
   /**
    * Instantiates a new Main configuration.
