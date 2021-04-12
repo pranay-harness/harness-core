@@ -54,6 +54,7 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.openapi.ApiClient;
 import io.harness.config.PipelineConfig;
+import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.client.CVNGService;
@@ -856,7 +857,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
       @Override
       protected void configure() {
         RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
-        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+        String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
+        if (DeployMode.isOnPrem(deployMode) || redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));

@@ -4,6 +4,8 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+HarnessTeam = "CV"
+
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
@@ -12,6 +14,7 @@ shared_dependencies = [
     "//430-cv-nextgen-commons:module",
     "//440-connector-nextgen:module",
     "//876-orchestration-beans:module",
+    "//879-pms-sdk:module",
     "//940-notification-client:module",
     "//940-secret-manager-client:module",
     "//950-events-api:module",
@@ -19,6 +22,7 @@ shared_dependencies = [
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//980-commons:module",
+    "//860-orchestration-steps:module",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_fasterxml_jackson_core_jackson_core",
     "@maven//:com_fasterxml_jackson_core_jackson_databind",

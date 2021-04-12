@@ -136,7 +136,7 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 }
 
 // queryHelper gets the tests that need to be run corresponding to the packages and classes
-func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.RunnableTest, error) {
+func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []string) ([]types.RunnableTest, error) {
 	if len(pkgs) != len(classes) {
 		return nil, fmt.Errorf("Length of pkgs: %d and length of classes: %d don't match", len(pkgs), len(classes))
 	}
@@ -151,7 +151,10 @@ func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.RunnableTest, e
 	allowedPairs := []interface{}{}
 	for idx, pkg := range pkgs {
 		cls := classes[idx]
-		allowedPairs = append(allowedPairs, bson.M{"package": pkg, "class": cls})
+		allowedPairs = append(allowedPairs,
+			bson.M{"package": pkg, "class": cls,
+				"vcs_info.repo":   repo,
+				"vcs_info.branch": targetBranch})
 	}
 	err := mgm.Coll(&Node{}).SimpleFind(&nodes, bson.M{"$or": allowedPairs})
 	if err != nil {
@@ -171,7 +174,10 @@ func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.RunnableTest, e
 	// Query 2
 	// Get unique test IDs corresponding to these nodes
 	relations := []Relation{}
-	err = mgm.Coll(&Relation{}).SimpleFind(&relations, bson.M{"source": bson.M{"$in": nids}})
+	err = mgm.Coll(&Relation{}).SimpleFind(&relations,
+		bson.M{"source": bson.M{"$in": nids},
+			"vcs_info.branch": targetBranch,
+			"vcs_info.repo":   repo})
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +195,11 @@ func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.RunnableTest, e
 	// Query 3
 	// Get test information corresponding to test IDs
 	tnodes := []Node{}
-	err = mgm.Coll(&Node{}).SimpleFind(&tnodes, bson.M{"id": bson.M{"$in": tids}, "type": "test"})
+	err = mgm.Coll(&Node{}).SimpleFind(&tnodes,
+		bson.M{"id": bson.M{"$in": tids},
+			"type":            "test",
+			"vcs_info.branch": targetBranch,
+			"vcs_info.repo":   repo})
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +263,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 
 	// Get list of all tests with unique pkg/class information
 	all := []Node{}
-	err = mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test"})
+	err = mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test", "vcs_info.branch": req.TargetBranch, "vcs_info.repo": req.Repo})
 	if err != nil {
 		return res, err
 	}
@@ -328,7 +338,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 		}, nil
 	}
 
-	tests, err := mdb.queryHelper(pkgs, cls)
+	tests, err := mdb.queryHelper(req.TargetBranch, req.Repo, pkgs, cls)
 	if err != nil {
 		return res, err
 	}

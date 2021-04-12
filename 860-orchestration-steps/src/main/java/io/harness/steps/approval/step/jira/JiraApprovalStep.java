@@ -3,6 +3,7 @@ package io.harness.steps.approval.step.jira;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -14,6 +15,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.repositories.ApprovalInstanceRepository;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.StepUtils;
 import io.harness.steps.approval.step.ApprovalInstanceService;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
@@ -22,6 +24,7 @@ import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.Map;
 
 @OwnedBy(CDC)
@@ -39,6 +42,8 @@ public class JiraApprovalStep implements AsyncExecutable<JiraApprovalStepParamet
     return AsyncExecutableResponse.newBuilder()
         .addCallbackIds(approvalInstance.getId())
         .setMode(AsyncExecutableMode.APPROVAL_WAITING_MODE)
+        .addAllLogKeys(CollectionUtils.emptyIfNull(
+            StepUtils.generateLogKeys(StepUtils.generateLogAbstractions(ambiance), Collections.emptyList())))
         .build();
   }
 

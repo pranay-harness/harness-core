@@ -1,15 +1,22 @@
 package io.harness.serializer;
 
+import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.cdng.beans.CVStepInfoBase;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CVNGKryoRegistrar;
 import io.harness.serializer.morphia.CVNextGenMorphiaRegister;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CV)
 public class CvNextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -31,5 +38,15 @@ public class CvNextGenRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(PersistenceRegistrars.morphiaConverters)
           .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+          .build();
+  public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
+      ImmutableList.<YamlSchemaRootClass>builder()
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.DEPLOYMENT_STEPS)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(CVStepInfoBase.class)
+                   .build())
           .build();
 }

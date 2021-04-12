@@ -27,6 +27,10 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
+import io.harness.logstreaming.LogStreamingModule;
+import io.harness.logstreaming.LogStreamingServiceConfiguration;
+import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.logstreaming.NGLogStreamingClientFactory;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
@@ -193,6 +197,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
@@ -223,6 +228,10 @@ public class PipelineServiceModule extends AbstractModule {
     bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
     bind(JiraStepHelperService.class).to(JiraStepHelperServiceImpl.class);
     bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
+    bind(LogStreamingServiceRestClient.class)
+        .toProvider(NGLogStreamingClientFactory.builder()
+                        .logStreamingServiceBaseUrl(configuration.getLogStreamingServiceConfig().getBaseUrl())
+                        .build());
 
     registerEventsFrameworkMessageListeners();
   }
@@ -339,5 +348,11 @@ public class PipelineServiceModule extends AbstractModule {
     ObjectMapper objectMapper = Jackson.newObjectMapper();
     PipelineServiceApplication.configureObjectMapper(objectMapper);
     return objectMapper;
+  }
+
+  @Provides
+  @Singleton
+  public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
+    return configuration.getLogStreamingServiceConfig();
   }
 }
