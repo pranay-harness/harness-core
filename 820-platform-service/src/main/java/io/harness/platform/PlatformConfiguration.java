@@ -2,6 +2,7 @@ package io.harness.platform;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.platform.audit.AuditServiceConfiguration;
 import io.harness.platform.notification.NotificationServiceConfiguration;
@@ -44,6 +45,7 @@ public class PlatformConfiguration extends Configuration {
   @JsonProperty("secrets") private PlatformSecrets platformSecrets;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
+  @JsonProperty(value = "accessControlClient") private AccessControlClientConfiguration accessControlClientConfig;
 
   public static Collection<Class<?>> getNotificationServiceResourceClasses() {
     Reflections reflections = new Reflections(NOTIFICATION_RESOURCE_PACKAGE);

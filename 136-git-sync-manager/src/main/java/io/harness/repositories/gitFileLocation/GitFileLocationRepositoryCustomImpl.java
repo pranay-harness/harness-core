@@ -84,7 +84,8 @@ public class GitFileLocationRepositoryCustomImpl implements GitFileLocationRepos
   }
 
   @Override
-  public List<GitSyncEntityListDTO> getByProjectIdAndOrganizationIdAndAccountIdAndRepoUrlAndEntityTypeListAndBranch(
+  public List<GitSyncEntityListDTO>
+  getByProjectIdAndOrganizationIdAndAccountIdAndGitSyncConfigIdentifierAndEntityTypeListAndBranch(
       String projectIdentifier, String orgIdentifier, String accountIdentifier, String gitSyncConfigIdentifier,
       String branch, List<EntityType> entityTypeList, String searchTerm, int size) {
     List<String> entityTypeListString = new ArrayList<>();
@@ -122,10 +123,10 @@ public class GitFileLocationRepositoryCustomImpl implements GitFileLocationRepos
                             .is(accountIdentifier)
                             .and(GitFileLocationKeys.gitSyncConfigId)
                             .is(gitSyncConfigIdentifier)
-                            .and(GitFileLocationKeys.entityIdentifier)
-                            .regex(".*" + searchTerm + ".*")
                             .and(GitFileLocationKeys.branch)
-                            .is(branch);
+                            .is(branch)
+                            .orOperator(Criteria.where(GitFileLocationKeys.entityIdentifier).regex(searchTerm, "i"),
+                                Criteria.where(GitFileLocationKeys.entityGitPath).regex(searchTerm, "i"));
     return match(criteria);
   }
 
@@ -141,10 +142,10 @@ public class GitFileLocationRepositoryCustomImpl implements GitFileLocationRepos
                             .is(accountIdentifier)
                             .and(GitFileLocationKeys.gitSyncConfigId)
                             .in(gitSyncConfigIdentifierList)
-                            .and(GitFileLocationKeys.entityIdentifier)
-                            .regex(".*" + searchTerm + ".*")
                             .and(GitFileLocationKeys.isDefault)
-                            .is(true);
+                            .is(true)
+                            .orOperator(Criteria.where(GitFileLocationKeys.entityIdentifier).regex(searchTerm, "i"),
+                                Criteria.where(GitFileLocationKeys.entityGitPath).regex(searchTerm, "i"));
     return match(criteria);
   }
 }
