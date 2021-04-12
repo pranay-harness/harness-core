@@ -114,6 +114,16 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
                            .allowedProviders(oAuthSettings.getAllowedProviders())
                            .filter(oAuthSettings.getFilter())
                            .build());
+      if (isSAMLEnabled(ssoConfig)) {
+        SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
+        settingsList.add(SAMLSettings.builder()
+                             .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
+                             .logoutUrl(samlSettings.getLogoutUrl())
+                             .origin(samlSettings.getOrigin())
+                             .displayName(samlSettings.getDisplayName())
+                             .authorizationEnabled(samlSettings.isAuthorizationEnabled())
+                             .build());
+      }
     } else if (authenticationMechanism == AuthenticationMechanism.LDAP) {
       LdapSettings ldapSettings = (LdapSettings) getLDAPSetting(ssoConfig);
       settingsList.add(LDAPSettings.builder()
@@ -121,6 +131,23 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
                            .userSettingsList(ldapSettings.getUserSettingsList())
                            .groupSettingsList(ldapSettings.getGroupSettingsList())
                            .build());
+      if (isOauthEnabled(ssoConfig)) {
+        OauthSettings oAuthSettings = (OauthSettings) getOauthSetting(ssoConfig);
+        settingsList.add(OAuthSettings.builder()
+                             .allowedProviders(oAuthSettings.getAllowedProviders())
+                             .filter(oAuthSettings.getFilter())
+                             .build());
+      }
+      if (isSAMLEnabled(ssoConfig)) {
+        SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
+        settingsList.add(SAMLSettings.builder()
+                             .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
+                             .logoutUrl(samlSettings.getLogoutUrl())
+                             .origin(samlSettings.getOrigin())
+                             .displayName(samlSettings.getDisplayName())
+                             .authorizationEnabled(samlSettings.isAuthorizationEnabled())
+                             .build());
+      }
     } else if (authenticationMechanism == AuthenticationMechanism.SAML) {
       SamlSettings samlSettings = (SamlSettings) getSAMLSetting(ssoConfig);
       settingsList.add(SAMLSettings.builder()
@@ -128,7 +155,15 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
                            .logoutUrl(samlSettings.getLogoutUrl())
                            .origin(samlSettings.getOrigin())
                            .displayName(samlSettings.getDisplayName())
+                           .authorizationEnabled(samlSettings.isAuthorizationEnabled())
                            .build());
+      if (isOauthEnabled(ssoConfig)) {
+        OauthSettings oAuthSettings = (OauthSettings) getOauthSetting(ssoConfig);
+        settingsList.add(OAuthSettings.builder()
+                             .allowedProviders(oAuthSettings.getAllowedProviders())
+                             .filter(oAuthSettings.getFilter())
+                             .build());
+      }
     }
     return settingsList;
   }
