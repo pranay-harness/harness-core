@@ -26,6 +26,8 @@ import lombok.Value;
 @Builder
 @OwnedBy(CDP)
 public class TerraformTaskNGParameters implements TaskParameters, ExecutionCapabilityDemander {
+  public static final String COMMAND_UNIT = "Execute Terraform";
+
   @NonNull String accountId;
   String currentStateFileId;
 
