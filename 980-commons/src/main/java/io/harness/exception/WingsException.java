@@ -72,6 +72,8 @@ public class WingsException extends RuntimeException {
 
   private Map<String, String> contextObjects;
 
+  private Map<String, Object> metaData = new HashMap<>();
+
   private EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
 
   @Builder
