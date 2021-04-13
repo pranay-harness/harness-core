@@ -17,10 +17,8 @@ import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
-import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,28 +34,13 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = K8sScaleStepInfoVisitorHelper.class)
 @TypeAlias("k8sScale")
 public class K8sScaleStepInfo extends K8sScaleBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore private String name;
-  @JsonIgnore private String identifier;
-
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sScaleStepInfo(ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,
-      InstanceSelectionWrapper instanceSelection, ParameterField<String> workload, String name, String identifier) {
+      InstanceSelectionWrapper instanceSelection, ParameterField<String> workload) {
     super(instanceSelection, workload, skipDryRun, skipSteadyStateCheck);
-    this.name = name;
-    this.identifier = identifier;
-  }
-
-  public K8sScaleStepInfo(String name, String identifier) {
-    this.name = name;
-    this.identifier = identifier;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override
@@ -68,12 +51,6 @@ public class K8sScaleStepInfo extends K8sScaleBaseStepInfo implements CDStepInfo
   @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.TASK;
-  }
-
-  @NotNull
-  @Override
-  public String getIdentifier() {
-    return identifier;
   }
 
   @Override

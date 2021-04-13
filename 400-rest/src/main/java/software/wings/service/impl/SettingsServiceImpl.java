@@ -607,8 +607,10 @@ public class SettingsServiceImpl implements SettingsService {
       if (variable.getValue() instanceof CustomArtifactServerConfig) {
         ((CustomArtifactServerConfig) variable.getValue()).setAccountId(variable.getAccountId());
       }
-    }
-    if (null != variable.getValue()) {
+      if (variable.getValue() instanceof HostConnectionAttributes
+          && null == ((HostConnectionAttributes) variable.getValue()).getSshPort()) {
+        ((HostConnectionAttributes) variable.getValue()).setSshPort(22);
+      }
       variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
     }
   }
@@ -1099,6 +1101,10 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute update(SettingAttribute settingAttribute, boolean updateConnectivity, boolean pushToGit) {
     if (isOpenSSHKeyUsed(settingAttribute)) {
       restrictOpenSSHKey(settingAttribute);
+    }
+    if (settingAttribute.getValue() instanceof HostConnectionAttributes
+        && null == ((HostConnectionAttributes) settingAttribute.getValue()).getSshPort()) {
+      ((HostConnectionAttributes) settingAttribute.getValue()).setSshPort(22);
     }
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     SettingAttribute prevSettingAttribute = existingSetting;

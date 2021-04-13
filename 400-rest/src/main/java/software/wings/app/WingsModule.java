@@ -48,9 +48,13 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
+import io.harness.cf.CFApi;
 import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.cf.client.api.CfClient;
+import io.harness.cf.openapi.ApiClient;
 import io.harness.config.PipelineConfig;
+import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.client.CVNGService;
@@ -99,6 +103,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
+import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ServersModule;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
 import io.harness.governance.pipeline.service.PipelineGovernanceService;
@@ -743,7 +748,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANGER)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
@@ -841,7 +846,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
@@ -852,7 +857,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
       @Override
       protected void configure() {
         RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
-        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+        String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
+        if (DeployMode.isOnPrem(deployMode) || redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
@@ -863,7 +869,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
           bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
+              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
           bind(Producer.class)
@@ -879,8 +885,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
                   EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
           bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP, redisConfig,
+              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+              .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
                   EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
         }
       }
@@ -890,8 +896,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(MainConfiguration.class).toInstance(configuration);
     // RetryOnException Binding start
     bind(MethodExecutionHelper.class); // untargetted binding for eager loading
-    RetryOnExceptionInterceptor retryOnExceptionInterceptor = new RetryOnExceptionInterceptor();
-    requestInjection(retryOnExceptionInterceptor);
+    ProviderMethodInterceptor retryOnExceptionInterceptor =
+        new ProviderMethodInterceptor(getProvider(RetryOnExceptionInterceptor.class));
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
     // Retry On Exception Binding ends
     bind(SchedulerConfig.class)
@@ -1287,8 +1293,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
 
-    ApiBlocker apiBlocker = new ApiBlocker();
-    requestInjection(apiBlocker);
+    ProviderMethodInterceptor apiBlocker = new ProviderMethodInterceptor(getProvider(ApiBlocker.class));
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RestrictedApi.class), apiBlocker);
 
     switch (configuration.getExecutionLogsStorageMode()) {
@@ -1317,7 +1322,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
       log.info("Could not create the connector resource client module", ex);
     }
 
-    // User-Sync Dependencies
+    // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
@@ -1579,6 +1584,21 @@ public class WingsModule extends AbstractModule implements ServersModule {
     String apiKey = cfClientConfig.getApiKey();
 
     return new CfClient(apiKey);
+  }
+
+  @Provides
+  @Singleton
+  CFApi providesCfAPI() {
+    CfMigrationConfig migrationConfig = configuration.getCfMigrationConfig();
+    ApiClient apiClient = new ApiClient();
+    apiClient.setBasePath(migrationConfig.getAdminUrl());
+    return new CFApi(apiClient);
+  }
+
+  @Provides
+  @Singleton
+  CfMigrationConfig providesCfMigrationConfig() {
+    return configuration.getCfMigrationConfig();
   }
 
   @Provides

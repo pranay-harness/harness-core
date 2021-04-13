@@ -1,9 +1,12 @@
 package io.harness.cvng.client;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.utils.IdentifierRefHelper;
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CV)
 public class NextGenServiceImpl implements NextGenService {
   @Inject private NextGenClient nextGenClient;
   @Inject private RequestExecutor requestExecutor;
@@ -117,6 +121,13 @@ public class NextGenServiceImpl implements NextGenService {
             nextGenClient.listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null, null))
         .getData()
         .getTotalItems();
+  }
+
+  @Override
+  public ProjectDTO getProject(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return requestExecutor.execute(nextGenClient.getProject(projectIdentifier, accountIdentifier, orgIdentifier))
+        .getData()
+        .getProject();
   }
 
   @Value

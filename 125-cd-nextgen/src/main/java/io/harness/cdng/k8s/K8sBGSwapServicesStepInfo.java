@@ -16,7 +16,6 @@ import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
@@ -33,22 +32,14 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_BG_SWAP_SERVICES)
 @TypeAlias("k8sBGSwapServicesStepInfo")
 public class K8sBGSwapServicesStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore private String name;
-  @JsonIgnore private String identifier;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sBGSwapServicesStepInfo(String name, String identifier) {
-    this.name = name;
-    this.identifier = identifier;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
+  public K8sBGSwapServicesStepInfo(ParameterField<Boolean> skipDryRun) {
+    this.skipDryRun = skipDryRun;
   }
 
   @Override

@@ -29,7 +29,7 @@ public class StepElementParameters implements StepParameters {
   ParameterField<String> when;
 
   String type;
-  StepSpecParameters spec;
+  SpecParameters spec;
 
   ParameterField<List<String>> delegateSelectors;
 
@@ -46,6 +46,12 @@ public class StepElementParameters implements StepParameters {
         .type(this.type)
         .name(this.name)
         .description(this.description)
+        .identifier(this.identifier)
+        .timeout(this.timeout)
+        .failureStrategies(this.failureStrategies)
+        .when(this.when)
+        .skipCondition(this.skipCondition)
+        .delegateSelectors(this.delegateSelectors)
         .build();
   }
 }

@@ -16,11 +16,13 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +37,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class DelegateSyncServiceImpl implements DelegateSyncService {
   @Inject private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject @Named("disableDeserialization") private boolean disableDeserialization;
 
   @VisibleForTesting public final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -92,6 +95,9 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
           "Task has expired. It wasn't picked up by any delegate or delegate did not have enough time to finish the execution.");
     }
 
+    if (disableDeserialization) {
+      return (T) BinaryResponseData.builder().data(taskResponse.getResponseData()).build();
+    }
     // throw exception here
     Object response = kryoSerializer.asInflatedObject(taskResponse.getResponseData());
     if (response instanceof ErrorNotifyResponseData) {

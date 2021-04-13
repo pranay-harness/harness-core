@@ -1,3 +1,11 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: http
+      port: 8190
+  adminConnectors:
+    - type: http
+      port: 8191
+
 harness-mongo:
   uri: mongodb://localhost:30001/harness
   connectTimeout: 30000

@@ -3,6 +3,8 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+HarnessTeam = "DEL"
+
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [

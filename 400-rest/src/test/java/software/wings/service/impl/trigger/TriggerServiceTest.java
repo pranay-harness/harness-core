@@ -865,14 +865,22 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = SRINIVAS)
+  @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void shouldDeleteTriggersForPipeline() {
     Trigger trigger = triggerService.save(pipelineCondTrigger);
     assertThat(trigger).isNotNull();
     assertThat(trigger.getUuid()).isEqualTo(TRIGGER_ID);
     assertThat(trigger.getAppId()).isEqualTo(APP_ID);
+    scheduledConditionTrigger.setUuid("Trigger 2");
+    Trigger trigger2 = triggerService.save(scheduledConditionTrigger);
+    assertThat(trigger2).isNotNull();
+    assertThat(trigger2.getUuid()).isEqualTo("Trigger 2");
+    assertThat(trigger2.getAppId()).isEqualTo(APP_ID);
+
     triggerService.pruneByPipeline(APP_ID, PIPELINE_ID);
+    verify(auditServiceHelper).reportDeleteForAuditing(APP_ID, trigger);
+    verify(auditServiceHelper).reportDeleteForAuditing(APP_ID, trigger2);
   }
 
   @Test
@@ -885,6 +893,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(trigger.getAppId()).isEqualTo(APP_ID);
     assertThat(trigger.getWorkflowId()).isEqualTo(WORKFLOW_ID);
     triggerService.pruneByWorkflow(APP_ID, WORKFLOW_ID);
+    verify(auditServiceHelper).reportDeleteForAuditing(APP_ID, trigger);
   }
 
   @Test
@@ -897,6 +906,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(trigger.getAppId()).isEqualTo(APP_ID);
 
     triggerService.pruneByArtifactStream(APP_ID, ARTIFACT_STREAM_ID);
+    verify(auditServiceHelper).reportDeleteForAuditing(APP_ID, trigger);
   }
 
   @Test
@@ -910,6 +920,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(trigger.getAppId()).isEqualTo(APP_ID);
 
     triggerService.pruneByApplicationManifest(APP_ID, MANIFEST_ID);
+    verify(auditServiceHelper).reportDeleteForAuditing(APP_ID, trigger);
   }
 
   @Test
@@ -921,6 +932,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(trigger.getUuid()).isEqualTo(TRIGGER_ID);
     assertThat(trigger.getAppId()).isEqualTo(APP_ID);
     triggerService.pruneByApplication(APP_ID);
+    verify(auditServiceHelper).reportDeleteForAuditing(APP_ID, trigger);
   }
 
   @Test

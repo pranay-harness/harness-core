@@ -11,14 +11,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @OwnedBy(PIPELINE)
 public interface WithStepElementParameters {
+  @JsonIgnore
   default StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
     StepElementParametersBuilder stepParametersBuilder = StepParametersUtils.getStepParameters(stepElementConfig);
-    stepParametersBuilder.spec(getStepSpecParameters());
+    stepParametersBuilder.spec(getSpecParameters());
     return stepParametersBuilder.build();
   }
 
   @JsonIgnore
-  default StepSpecParameters getStepSpecParameters() {
+  default SpecParameters getSpecParameters() {
     return null;
   }
 }

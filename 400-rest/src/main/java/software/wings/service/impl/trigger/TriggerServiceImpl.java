@@ -364,36 +364,35 @@ public class TriggerServiceImpl implements TriggerService {
   public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Trigger.class).filter(Trigger.APP_ID_KEY2, appId).asList().forEach(trigger -> {
       delete(appId, trigger.getUuid());
-      auditServiceHelper.reportDeleteForAuditing(appId, trigger);
-      harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), trigger.getUuid());
     });
   }
 
   @Override
   public void pruneByPipeline(String appId, String pipelineId) {
     List<Trigger> triggers = triggerServiceHelper.getTriggersByWorkflow(appId, pipelineId);
-    triggers.forEach(trigger -> triggerServiceHelper.delete(trigger.getUuid()));
+    triggers.forEach(trigger -> delete(appId, trigger.getUuid()));
 
-    triggerServiceHelper.deletePipelineCompletionTriggers(appId, pipelineId);
+    triggerServiceHelper.getPipelineCompletionTriggers(appId, pipelineId)
+        .forEach(trigger -> delete(appId, trigger.getUuid()));
   }
 
   @Override
   public void pruneByWorkflow(String appId, String workflowId) {
     List<Trigger> triggers = triggerServiceHelper.getTriggersByWorkflow(appId, workflowId);
-    triggers.forEach(trigger -> triggerServiceHelper.delete(trigger.getUuid()));
+    triggers.forEach(trigger -> delete(appId, trigger.getUuid()));
   }
 
   @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     for (Trigger trigger : triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId)) {
-      triggerServiceHelper.delete(trigger.getUuid());
+      delete(appId, trigger.getUuid());
     }
   }
 
   @Override
   public void pruneByApplicationManifest(String appId, String applicationManifestId) {
     for (Trigger trigger : triggerServiceHelper.getNewManifestConditionTriggers(appId, applicationManifestId)) {
-      triggerServiceHelper.delete(trigger.getUuid());
+      delete(appId, trigger.getUuid());
     }
   }
 

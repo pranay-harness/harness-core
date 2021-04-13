@@ -1,7 +1,7 @@
 package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.remote.NGObjectMapperHelper.ngDefaultObjectMapper;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
@@ -33,7 +33,7 @@ public class SecretEventHandler implements OutboxEventHandler {
 
   @Inject
   public SecretEventHandler(AuditClientService auditClientService) {
-    this.objectMapper = ngDefaultObjectMapper;
+    this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     this.auditClientService = auditClientService;
   }
 
@@ -74,7 +74,7 @@ public class SecretEventHandler implements OutboxEventHandler {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
     SecretUpdateEvent secretUpdateEvent = objectMapper.readValue(outboxEvent.getEventData(), SecretUpdateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.CREATE)
+                                .action(Action.UPDATE)
                                 .module(ModuleType.CORE)
                                 .newYaml(NGYamlUtils.getYamlString(
                                     SecretRequestWrapper.builder().secret(secretUpdateEvent.getNewSecret()).build()))
@@ -92,7 +92,7 @@ public class SecretEventHandler implements OutboxEventHandler {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
     SecretDeleteEvent secretDeleteEvent = objectMapper.readValue(outboxEvent.getEventData(), SecretDeleteEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
-                                .action(Action.CREATE)
+                                .action(Action.DELETE)
                                 .module(ModuleType.CORE)
                                 .newYaml(NGYamlUtils.getYamlString(
                                     SecretRequestWrapper.builder().secret(secretDeleteEvent.getSecret()).build()))

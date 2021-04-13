@@ -50,7 +50,6 @@ import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfoType;
-import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
@@ -305,21 +304,6 @@ public class CIExecutionPlanTestHelper {
         .usePVC(true)
         .executionElementConfig(getExecutionElementConfig())
         .infrastructure(getInfrastructure())
-        .build();
-  }
-
-  public BuildEnvSetupStepInfo getBuildEnvSetupStepInfoOnFirstPod() {
-    return BuildEnvSetupStepInfo.builder()
-        .identifier(ENV_SETUP_NAME)
-        .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
-        .branchName("master")
-        .gitConnectorIdentifier("testGitConnector")
-        .build();
-  }
-  public BuildEnvSetupStepInfo getBuildEnvSetupStepInfoOnOtherPods() {
-    return BuildEnvSetupStepInfo.builder()
-        .identifier(ENV_SETUP_NAME)
-        .buildJobEnvInfo(getCIBuildJobEnvInfoOnOtherPods())
         .build();
   }
 

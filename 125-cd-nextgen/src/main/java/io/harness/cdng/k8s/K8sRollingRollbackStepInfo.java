@@ -17,10 +17,8 @@ import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
-import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,23 +34,12 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = K8sRollingRollbackStepInfoVisitorHelper.class)
 @TypeAlias("k8sRollingRollback")
 public class K8sRollingRollbackStepInfo extends K8sRollingRollbackBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore private String name;
-  @JsonIgnore private String identifier;
-
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingRollbackStepInfo(
-      ParameterField<String> timeout, ParameterField<Boolean> skipDryRun, String name, String identifier) {
+  public K8sRollingRollbackStepInfo(ParameterField<Boolean> skipDryRun) {
     super(skipDryRun);
-    this.name = name;
-    this.identifier = identifier;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override
@@ -63,12 +50,6 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackBaseStepInfo i
   @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.TASK;
-  }
-
-  @NotNull
-  @Override
-  public String getIdentifier() {
-    return identifier;
   }
 
   @Override

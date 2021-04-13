@@ -3,6 +3,7 @@ package io.harness.ng.core.user.remote;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -11,6 +12,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.entities.UserMembership.Scope;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.utils.PageUtils;
 
@@ -53,5 +55,20 @@ public class NgUserResource {
     Pageable pageable = getPageRequest(pageRequest);
     Page<UserInfo> users = ngUserService.list(accountIdentifier, searchString, pageable);
     return ResponseDTO.newResponse(PageUtils.getNGPageResponse(users.map(UserSearchMapper::writeDTO)));
+  }
+
+  @GET
+  @Path("usermembership")
+  @ApiOperation(value = "Check if user part of scope", nickname = "checkUserMembership", hidden = true)
+  public ResponseDTO<Boolean> checkUserMembership(@QueryParam(NGCommonEntityConstants.USER_ID) String userId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    return ResponseDTO.newResponse(ngUserService.isUserAtScope(userId, scope));
   }
 }

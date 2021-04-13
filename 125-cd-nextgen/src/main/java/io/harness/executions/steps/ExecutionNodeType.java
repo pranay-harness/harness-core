@@ -1,11 +1,10 @@
 package io.harness.executions.steps;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.YamlTypes;
 
-@OwnedBy(CDP)
+@OwnedBy(HarnessTeam.CDP)
 public enum ExecutionNodeType {
   SERVICE("SERVICE", YamlTypes.SERVICE_CONFIG),
   MANIFEST_FETCH("MANIFEST_FETCH", YamlTypes.MANIFEST_LIST_CONFIG),

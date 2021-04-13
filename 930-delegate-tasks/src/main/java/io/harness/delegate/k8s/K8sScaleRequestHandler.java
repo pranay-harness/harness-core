@@ -79,6 +79,10 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
+    if (resourceIdToScale == null) {
+      return getSuccessResponse(K8sScaleResponse.builder().build());
+    }
+
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sScaleRequest.getTimeoutIntervalInMin());
     LogCallback scaleLogCallback =
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Scale, true, commandUnitsProgress);
@@ -120,10 +124,7 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
 
       wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
 
-      return K8sDeployResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-          .k8sNGTaskResponse(k8sScaleResponse)
-          .build();
+      return getSuccessResponse(k8sScaleResponse);
     } catch (Exception ex) {
       wrapUpLogCallback.saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
       throw ex;
@@ -133,6 +134,13 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
   private K8sDeployResponse getFailureResponse() {
     K8sScaleResponse k8sScaleResponse = K8sScaleResponse.builder().build();
     return getGenericFailureResponse(k8sScaleResponse);
+  }
+
+  private K8sDeployResponse getSuccessResponse(K8sScaleResponse k8sScaleResponse) {
+    return K8sDeployResponse.builder()
+        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+        .k8sNGTaskResponse(k8sScaleResponse)
+        .build();
   }
 
   @VisibleForTesting

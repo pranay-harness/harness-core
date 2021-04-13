@@ -14,6 +14,7 @@ import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -1427,6 +1428,56 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleNullSshPortWhenSaveWithPruning() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withName("NAME")
+                                            .withValue(aHostConnectionAttributes()
+                                                           .withAccessType(AccessType.KEY)
+                                                           .withAccountId(UUIDGenerator.generateUuid())
+                                                           .withConnectionType(SSH)
+                                                           .withSshPort(null)
+                                                           .withKey("Test Private Key".toCharArray())
+                                                           .withKeyless(false)
+                                                           .withUserName("TestUser")
+                                                           .build())
+                                            .build();
+    ArgumentCaptor<SettingAttribute> settingAttributeArgumentCaptor = ArgumentCaptor.forClass(SettingAttribute.class);
+    SettingAttribute savedSettingAttribute = settingsService.saveWithPruning(settingAttribute, APP_ID, ACCOUNT_ID);
+    verify(mockWingsPersistence).save(settingAttributeArgumentCaptor.capture());
+    assertThat(((HostConnectionAttributes) savedSettingAttribute.getValue()).getSshPort()).isEqualTo(22);
+    assertThat(((HostConnectionAttributes) settingAttributeArgumentCaptor.getValue().getValue()).getSshPort())
+        .isEqualTo(22);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleSshPortWhenSaveWithPruning() {
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withName("NAME")
+                                            .withValue(aHostConnectionAttributes()
+                                                           .withAccessType(AccessType.KEY)
+                                                           .withAccountId(UUIDGenerator.generateUuid())
+                                                           .withConnectionType(SSH)
+                                                           .withSshPort(11)
+                                                           .withKey("Test Private Key".toCharArray())
+                                                           .withKeyless(false)
+                                                           .withUserName("TestUser")
+                                                           .build())
+                                            .build();
+
+    ArgumentCaptor<SettingAttribute> settingAttributeArgumentCaptor = ArgumentCaptor.forClass(SettingAttribute.class);
+    SettingAttribute savedSettingAttributeWithPort =
+        settingsService.saveWithPruning(settingAttribute, APP_ID, ACCOUNT_ID);
+    verify(mockWingsPersistence).save(settingAttributeArgumentCaptor.capture());
+    assertThat(((HostConnectionAttributes) savedSettingAttributeWithPort.getValue()).getSshPort()).isEqualTo(11);
+    assertThat(((HostConnectionAttributes) settingAttributeArgumentCaptor.getValue().getValue()).getSshPort())
+        .isEqualTo(11);
+  }
+
+  @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testForceSaveWithReferencedSecrets() {
@@ -1446,6 +1497,40 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     settingsService.update(settingAttribute);
     verify(settingServiceHelper).updateReferencedSecrets(eq(settingAttribute));
     verify(settingServiceHelper).resetEncryptedFields(any());
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testUpdateHostConnectionAttributesWithNullSshPort() {
+    String uuid = UUIDGenerator.generateUuid();
+    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                            .withName("NAME")
+                                            .withUuid(UUID.randomUUID().toString())
+                                            .withAppId(APP_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withCategory(SettingCategory.CONNECTOR)
+                                            .withValue(aHostConnectionAttributes()
+                                                           .withAccessType(AccessType.KEY)
+                                                           .withAccountId(uuid)
+                                                           .withConnectionType(SSH)
+                                                           .withSshPort(null)
+                                                           .withKey("Test Private Key".toCharArray())
+                                                           .withKeyless(false)
+                                                           .withUserName("TestUser")
+                                                           .build())
+                                            .build();
+    when(mockWingsPersistence.get(any(), any())).thenReturn(settingAttribute);
+    when(settingServiceHelper.hasReferencedSecrets(settingAttribute)).thenReturn(true);
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
+    doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
+    doReturn(settingAttribute).when(spyQuery).get();
+
+    ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+    settingsService.update(settingAttribute);
+    verify(mockWingsPersistence).updateFields(any(), any(), argumentCaptor.capture(), any());
+    assertThat(((HostConnectionAttributes) argumentCaptor.getValue().get("value")).getSshPort()).isEqualTo(22);
   }
 
   private SettingAttribute prepareAzureArtifactsSetting() {

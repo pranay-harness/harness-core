@@ -53,6 +53,7 @@ applications {"name": "createdAt_1", "background": true} {"createdAt": 1}
 applications {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
 approvalInstances {"name": "nodeExecutionId_1", "background": true} {"nodeExecutionId": 1}
 approvalInstances {"name": "status_deadline", "background": true} {"status": 1, "deadline": 1}
+approvalInstances {"name": "status_type_nextIteration", "background": true} {"status": 1, "type": 1, "nextIteration": -1}
 approvalPollingJob {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 artifactSourceNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
 artifactSourceNG {"name": "uniqueHash", "unique": true} {"uniqueHash": 1}
@@ -436,6 +437,7 @@ limitCounters {"name": "accountId_1", "background": true} {"accountId": 1}
 limitCounters {"name": "appId_1", "background": true} {"appId": 1}
 limitCounters {"name": "createdAt_1", "background": true} {"createdAt": 1}
 limitCounters {"name": "key_1", "unique": true} {"key": 1}
+logAnalysisRecords {"name": "accountId_1", "background": true} {"accountId": 1}
 logAnalysisRecords {"name": "analysisSummaryIndex", "background": true} {"stateExecutionId": 1, "logCollectionMinute": 1, "analysisStatus": 1, "lastUpdatedAt": -1}
 logAnalysisRecords {"name": "appId_1", "background": true} {"appId": 1}
 logAnalysisRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -444,6 +446,7 @@ logAnalysisRecords {"name": "cvConfigId_1_deprecated_1_logCollectionMinute_-1_la
 logAnalysisRecords {"name": "stateExecStatusIdx", "background": true} {"stateExecutionId": 1, "analysisStatus": 1}
 logAnalysisRecords {"name": "stateExecutionId_1_analysisStatus_1_logCollectionMinute_-1", "background": true} {"stateExecutionId": 1, "analysisStatus": 1, "logCollectionMinute": -1}
 logAnalysisRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+logAnalysisRecords {"name": "workflowExecutionId_1", "background": true} {"workflowExecutionId": 1}
 logDataRecords {"name": "appId_1", "background": true} {"appId": 1}
 logDataRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 logDataRecords {"name": "cvBumpIdx", "background": true} {"cvConfigId": 1, "logCollectionMinute": 1, "host": 1, "createdAt": -1}

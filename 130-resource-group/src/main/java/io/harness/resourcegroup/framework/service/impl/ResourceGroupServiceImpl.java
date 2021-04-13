@@ -235,7 +235,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
         resourceGroupRepository.findOneByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
             identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
     if (!resourceGroupOpt.isPresent() && identifier.equals(DEFAULT_RESOURCE_GROUP_IDENTIFIER)) {
-      Optional.ofNullable(createDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier));
+      return Optional.ofNullable(createDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier));
     }
     return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroupOpt.orElse(null)));
   }
@@ -273,7 +273,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {
       throw new InvalidRequestException("Can't update managed resource group");
     }
-    ResourceGroup oldResourceGroup = (ResourceGroup) NGObjectMapperHelper.clone(savedResourceGroup);
+    ResourceGroupDTO oldResourceGroup =
+        (ResourceGroupDTO) NGObjectMapperHelper.clone(ResourceGroupMapper.toDTO(savedResourceGroup));
     savedResourceGroup.setName(resourceGroup.getName());
     savedResourceGroup.setColor(resourceGroup.getColor());
     savedResourceGroup.setTags(resourceGroup.getTags());
@@ -285,7 +286,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     resourceGroup = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       ResourceGroup updatedResourceGroup = resourceGroupRepository.save(savedResourceGroup);
       outboxService.save(new ResourceGroupUpdateEvent(savedResourceGroup.getAccountIdentifier(),
-          ResourceGroupMapper.toDTO(updatedResourceGroup), ResourceGroupMapper.toDTO(oldResourceGroup)));
+          ResourceGroupMapper.toDTO(updatedResourceGroup), oldResourceGroup));
       return updatedResourceGroup;
     }));
     return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));
@@ -348,9 +349,9 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
                             .is(resourcePrimaryKey.getAccountIdentifier())
                             .and(ResourceGroupKeys.orgIdentifier)
                             .is(resourcePrimaryKey.getOrgIdentifier())
-                            .and(ResourceGroupKeys.deleted)
                             .and(ResourceGroupKeys.projectIdentifier)
                             .is(resourcePrimaryKey.getProjectIdentifer())
+                            .and(ResourceGroupKeys.deleted)
                             .is(false);
 
     if (resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT)) {

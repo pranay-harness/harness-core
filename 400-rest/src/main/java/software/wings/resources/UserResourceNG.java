@@ -15,6 +15,9 @@ import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.user.remote.UserSearchFilter;
 
 import software.wings.beans.User;
+import software.wings.security.authentication.TwoFactorAuthenticationManager;
+import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
@@ -52,6 +55,7 @@ import retrofit2.http.Body;
 @TargetModule(HarnessModule._820_PLATFORM_SERVICE)
 public class UserResourceNG {
   private final UserService userService;
+  private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
 
   @GET
@@ -148,9 +152,40 @@ public class UserResourceNG {
     return new RestResponse<>(userService.safeDeleteUser(userId, accountId));
   }
 
+  @GET
+  @Path("/two-factor-auth/{auth-mechanism}")
+  public RestResponse<Optional<TwoFactorAuthenticationSettings>> getTwoFactorAuthSettings(
+      @PathParam("auth-mechanism") TwoFactorAuthenticationMechanism authMechanism,
+      @QueryParam("emailId") String emailId) {
+    return new RestResponse<>(Optional.ofNullable(twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(
+        userService.getUserByEmail(emailId), authMechanism)));
+  }
+
+  @PUT
+  @Path("/enable-two-factor-auth")
+  public RestResponse<Optional<UserInfo>> enableTwoFactorAuth(
+      @QueryParam("emailId") String emailId, @Body TwoFactorAuthenticationSettings settings) {
+    return new RestResponse<>(
+        Optional.ofNullable(convertUserToNgUser(twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(
+            userService.getUserByEmail(emailId), settings))));
+  }
+
+  @PUT
+  @Path("/disable-two-factor-auth")
+  public RestResponse<Optional<UserInfo>> disableTwoFactorAuth(@QueryParam("emailId") String emailId) {
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(
+        twoFactorAuthenticationManager.disableTwoFactorAuthentication(userService.getUserByEmail(emailId)))));
+  }
+
   private List<UserInfo> convertUserToNgUser(List<User> userList) {
     return userList.stream()
-        .map(user -> UserInfo.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build())
+        .map(user
+            -> UserInfo.builder()
+                   .email(user.getEmail())
+                   .name(user.getName())
+                   .uuid(user.getUuid())
+                   .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+                   .build())
         .collect(Collectors.toList());
   }
 
@@ -167,6 +202,7 @@ public class UserResourceNG {
                 .map(x
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
+        .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .build();
   }
 

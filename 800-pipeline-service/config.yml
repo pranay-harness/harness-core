@@ -47,8 +47,8 @@ grpcClientConfigs:
   cd:
     target: localhost:12101
     authority: localhost
-  cv:
-    target: localhost:12201
+  cvng:
+    target: localhost:12401
     authority: localhost
   ci:
     target: localhost:12301
@@ -133,5 +133,14 @@ pipelineServiceBaseUrl: https://localhost:8181/#
 
 scmConnectionConfig:
   url: localhost:8091
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+
+iteratorsConfig:
+  approvalInstanceIteratorConfig:
+    enabled: true
+    targetIntervalInSeconds: 60
 
 enableAuth: false

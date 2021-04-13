@@ -25,7 +25,7 @@ import javax.validation.constraints.NotNull;
  * Created by rsingh on 4/17/17.
  */
 @OwnedBy(CV)
-@TargetModule(HarnessModule._360_CG_MANGER)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public interface AppdynamicsService {
   List<NewRelicApplication> getApplications(@NotNull String settingId);
   List<NewRelicApplication> getApplications(@NotNull String settingId, String appId, String workflowExecutionId);

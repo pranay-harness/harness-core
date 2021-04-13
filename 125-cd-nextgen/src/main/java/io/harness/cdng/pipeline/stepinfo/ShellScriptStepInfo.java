@@ -8,7 +8,7 @@ import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelp
 import io.harness.data.structure.CollectionUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
-import io.harness.plancreator.steps.common.StepSpecParameters;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -41,27 +41,18 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("shellScriptStepInfo")
 @OwnedBy(HarnessTeam.CDC)
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
   public ShellScriptStepInfo(ShellType shell, ShellScriptSourceWrapper source, ExecutionTarget executionTarget,
-      ParameterField<Boolean> onDelegate, String name, String identifier, List<NGVariable> outputVariables,
-      List<NGVariable> environmentVariables, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+      ParameterField<Boolean> onDelegate, List<NGVariable> outputVariables, List<NGVariable> environmentVariables,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(shell, source, executionTarget, onDelegate);
-    this.name = name;
-    this.identifier = identifier;
     this.outputVariables = outputVariables;
     this.environmentVariables = environmentVariables;
     this.delegateSelectors = delegateSelectors;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override
@@ -82,7 +73,7 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   }
 
   @Override
-  public StepSpecParameters getStepSpecParameters() {
+  public SpecParameters getSpecParameters() {
     return ShellScriptStepParameters.infoBuilder()
         .executionTarget(getExecutionTarget())
         .onDelegate(getOnDelegate())

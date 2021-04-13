@@ -37,11 +37,11 @@ public interface NgUserService {
 
   void addUserToScope(String user, Scope scope, String roleIdentifier);
 
-  void addUserToScope(UserInfo user, Scope scope, String roleIdentifier, boolean postCreation);
+  void addUserToScope(UserInfo user, Scope scope, boolean postCreation);
 
   boolean isUserInAccount(String accountId, String userId);
 
-  void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  boolean isUserAtScope(String userId, Scope scope);
 
-  boolean removeUserMembership(String userId);
+  void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

@@ -2937,10 +2937,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public PasswordStrengthViolations checkPasswordViolations(
-      String token, PasswordSource passwordSource, String password) {
+      String token, PasswordSource passwordSource, String password, String accountId) {
     Account account = null;
     try {
-      if (PasswordSource.PASSWORD_RESET_FLOW == passwordSource) {
+      if (!isBlank(accountId)) {
+        account = accountService.get(accountId);
+      } else if (PasswordSource.PASSWORD_RESET_FLOW == passwordSource) {
         account = getAccountFromResetPasswordToken(token);
       } else if (PasswordSource.SIGN_UP_FLOW == passwordSource) {
         account = getAccountFromInviteId(token);

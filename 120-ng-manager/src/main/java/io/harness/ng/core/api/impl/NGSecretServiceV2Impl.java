@@ -159,7 +159,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
         accountIdentifier, secretDTO.getOrgIdentifier(), secretDTO.getProjectIdentifier(), secretDTO.getIdentifier());
     if (secretOptional.isPresent()) {
       Secret oldSecret = secretOptional.get();
-      Secret oldSecretClone = (Secret) NGObjectMapperHelper.clone(oldSecret);
+      SecretDTOV2 oldSecretClone = (SecretDTOV2) NGObjectMapperHelper.clone(oldSecret.toDTO());
 
       Secret newSecret = secretDTO.toEntity();
       oldSecret.setDescription(newSecret.getDescription());
@@ -171,7 +171,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
       try {
         return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
           secretRepository.save(oldSecret);
-          outboxService.save(new SecretUpdateEvent(accountIdentifier, oldSecret.toDTO(), oldSecretClone.toDTO()));
+          outboxService.save(new SecretUpdateEvent(accountIdentifier, oldSecret.toDTO(), oldSecretClone));
           createSecretUpdateActivity(accountIdentifier, secretDTO);
           return oldSecret;
         }));

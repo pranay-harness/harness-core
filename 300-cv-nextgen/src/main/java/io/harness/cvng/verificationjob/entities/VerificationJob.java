@@ -8,6 +8,8 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -55,9 +57,20 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Entity(value = "verificationJobs")
 @HarnessEntity(exportable = true)
 @SuperBuilder
+@OwnedBy(HarnessTeam.CV)
 // Also the serialization of duration is in millis.
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  private static final String RUNTIME_PARAMS_VALUE_KEY = "value";
+  private static final String RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY = "isRuntimeParam";
+  public static final String SERVICE_IDENTIFIER_VALUE_KEY =
+      String.format("%s.%s", VerificationJobKeys.serviceIdentifier, RUNTIME_PARAMS_VALUE_KEY);
+  public static final String SERVICE_IDENTIFIER_IS_RUNTIME_PARAM_KEY =
+      String.format("%s.%s", VerificationJobKeys.serviceIdentifier, RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY);
+  public static final String ENV_IDENTIFIER_VALUE_KEY =
+      String.format("%s.%s", VerificationJobKeys.envIdentifier, RUNTIME_PARAMS_VALUE_KEY);
+  public static final String ENV_IDENTIFIER_IS_RUNTIME_PARAM_KEY =
+      String.format("%s.%s", VerificationJobKeys.envIdentifier, RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY);
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

@@ -14,6 +14,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @OwnedBy(PL)
 public class RoleBinding {
+  String identifier;
   @ApiModelProperty(required = true) String roleIdentifier;
   @ApiModelProperty(required = true) String roleName;
   String resourceGroupIdentifier;

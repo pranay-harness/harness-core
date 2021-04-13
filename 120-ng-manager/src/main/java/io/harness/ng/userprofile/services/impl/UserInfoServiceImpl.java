@@ -3,6 +3,8 @@ package io.harness.ng.userprofile.services.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
+import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.remote.client.RestClientUtils;
@@ -36,6 +38,41 @@ public class UserInfoServiceImpl implements UserInfoService {
       userInfo.setEmail(userEmail.get());
       Optional<UserInfo> updatedUserInfo = RestClientUtils.getResponse(userClient.updateUser(userInfo));
       return updatedUserInfo.get();
+    } else {
+      throw new IllegalStateException("user login required");
+    }
+  }
+
+  @Override
+  public TwoFactorAuthSettingsInfo getTwoFactorAuthSettingsInfo(TwoFactorAuthMechanismInfo twoFactorAuthMechanismInfo) {
+    Optional<String> userEmail = getUserEmail();
+    if (userEmail.isPresent()) {
+      Optional<TwoFactorAuthSettingsInfo> twoFactorAuthSettingsInfo = RestClientUtils.getResponse(
+          userClient.getUserTwoFactorAuthSettings(twoFactorAuthMechanismInfo, userEmail.get()));
+      return twoFactorAuthSettingsInfo.get();
+    } else {
+      throw new IllegalStateException("user login required");
+    }
+  }
+
+  @Override
+  public UserInfo updateTwoFactorAuthInfo(TwoFactorAuthSettingsInfo authSettingsInfo) {
+    Optional<String> userEmail = getUserEmail();
+    if (userEmail.isPresent()) {
+      Optional<UserInfo> userInfo =
+          RestClientUtils.getResponse(userClient.updateUserTwoFactorAuthInfo(userEmail.get(), authSettingsInfo));
+      return userInfo.get();
+    } else {
+      throw new IllegalStateException("user login required");
+    }
+  }
+
+  @Override
+  public UserInfo disableTFA() {
+    Optional<String> userEmail = getUserEmail();
+    if (userEmail.isPresent()) {
+      Optional<UserInfo> userInfo = RestClientUtils.getResponse(userClient.disableUserTwoFactorAuth(userEmail.get()));
+      return userInfo.get();
     } else {
       throw new IllegalStateException("user login required");
     }

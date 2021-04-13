@@ -11,13 +11,17 @@ import javax.validation.constraints.NotNull;
 import org.springframework.data.mongodb.core.query.Query;
 
 @OwnedBy(DX)
-public interface GitAwarePersistence<B extends GitSyncableEntity, Y extends YamlDTO> {
-  List<B> find(@NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId);
+public interface GitAwarePersistence {
+  <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(
+      @NotNull Query query, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
 
-  B save(B objectToSave, Y yaml, ChangeType changeType);
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass);
 
   /**
    * Default save which will treat changeType as ADD on git.
    */
-  B save(B objectToSave, Y yaml);
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, Y yaml, Class<B> entityClass);
+
+  <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, ChangeType changeType, Class<B> entityClass);
 }

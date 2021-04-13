@@ -7,6 +7,8 @@ cd dist
 cp -R ../scripts/jenkins/ .
 cd ..
 
+curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
+
 mkdir -p dist/manager ;
 
 cd dist/manager
@@ -19,6 +21,7 @@ cp ../../360-cg-manager/cert.pem .
 cp ../../360-cg-manager/newrelic.yml .
 cp ../../360-cg-manager/config.yml .
 cp ../../400-rest/src/main/resources/redisson-jcache.yaml .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -41,6 +44,7 @@ cd dist/cv-nextgen
 cp ${HOME}/.bazel-dirs/bin/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.jar
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -81,6 +85,7 @@ cd dist/command-library-server
 cp ${HOME}/.bazel-dirs/bin/210-command-library-server/module_deploy.jar command-library-app-capsule.jar
 cp ../../210-command-library-server/keystore.jks .
 cp ../../210-command-library-server/command-library-server-config.yml .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 
 cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/command-library-server/Dockerfile-command-library-server-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -214,6 +219,7 @@ cp ../../120-ng-manager/config.yml .
 cp ../../keystore.jks .
 cp ../../120-ng-manager/key.pem .
 cp ../../120-ng-manager/cert.pem .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 
 cp ../../dockerization/ng-manager/Dockerfile-ng-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/ng-manager/Dockerfile-ng-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -235,6 +241,7 @@ cp ../../310-ci-manager/ci-manager-config.yml .
 cp ../../keystore.jks .
 cp ../../310-ci-manager/key.pem .
 cp ../../310-ci-manager/cert.pem .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -277,6 +284,7 @@ cp ../../800-pipeline-service/config.yml .
 cp ../../800-pipeline-service/keystore.jks .
 cp ../../800-pipeline-service/key.pem .
 cp ../../800-pipeline-service/cert.pem .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/pipeline-service/scripts/ .
@@ -307,9 +315,9 @@ cd ../..
 mkdir -p dist/accesscontrol-service
 cd dist/accesscontrol-service
 
-cp ${HOME}/.bazel-dirs/bin/900-access-control-service/module_deploy.jar accesscontrol-service-capsule.jar
-cp ../../900-access-control-service/config.yml .
-cp ../../900-access-control-service/keystore.jks .
+cp ${HOME}/.bazel-dirs/bin/925-access-control-service/module_deploy.jar accesscontrol-service-capsule.jar
+cp ../../925-access-control-service/config.yml .
+cp ../../925-access-control-service/keystore.jks .
 cp ../../dockerization/accesscontrol-service/Dockerfile-accesscontrol-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/accesscontrol-service/Dockerfile-accesscontrol-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/accesscontrol-service/scripts/ .

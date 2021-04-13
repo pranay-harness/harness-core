@@ -146,3 +146,15 @@ fi
 if [[ "" != "$ENABLE_AUDIT_SERVICE" ]]; then
   yq write -i $CONFIG_FILE auditServiceConfig.enableAuditService $ENABLE_AUDIT_SERVICE
 fi
+
+if [[ "" != "$ACCESS_CONTROL_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.enableAccessControl $ACCESS_CONTROL_ENABLED
+fi
+
+if [[ "" != "$ACCESS_CONTROL_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.accessControlServiceConfig.baseUrl $ACCESS_CONTROL_BASE_URL
+fi
+
+if [[ "" != "$ACCESS_CONTROL_SECRET" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.accessControlServiceSecret $ACCESS_CONTROL_SECRET
+fi

@@ -101,7 +101,6 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			for _, c := range dto.GetParsedResponse().GetPush().GetCommits() {
 				commitList = append(commitList, c.GetSha())
 			}
-			commitList = append(commitList, "sha")
 			// Get list of files corresponding to these sha values
 			req.Diff, err = db.GetDiffFiles(ctx, config.TimeScaleDb.CoverageTable, accountId, commitList)
 			if err != nil {

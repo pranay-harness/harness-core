@@ -7,7 +7,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -17,6 +19,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
@@ -48,6 +51,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @FieldNameConstants(innerTypeName = "AccountKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
@@ -109,6 +113,8 @@ public class Account extends Base implements PersistentRegularIterable {
   @Transient private boolean forImport;
 
   @Getter @Setter private String migratedToClusterUrl;
+
+  @Getter @Setter DefaultExperience defaultExperience;
 
   /**
    * If this flag is set, all encryption/decryption activities will go through LOCAL security manager.
@@ -511,6 +517,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
     private AccountPreferences accountPreferences;
+    private DefaultExperience defaultExperience;
 
     private Builder() {}
 
@@ -525,6 +532,11 @@ public class Account extends Base implements PersistentRegularIterable {
 
     public Builder withAccountName(String accountName) {
       this.accountName = accountName;
+      return this;
+    }
+
+    public Builder withDefaultExperience(DefaultExperience defaultExperience) {
+      this.defaultExperience = defaultExperience;
       return this;
     }
 
@@ -672,6 +684,7 @@ public class Account extends Base implements PersistentRegularIterable {
           .withOauthEnabled(oauthEnabled)
           .withSubdomainUrl(subdomainUrl)
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
+          .withDefaultExperience(defaultExperience)
           .withAccountPreferences(accountPreferences);
     }
 
@@ -702,6 +715,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setSubdomainUrl(subdomainUrl);
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
+      account.setDefaultExperience(defaultExperience);
       account.setAccountPreferences(accountPreferences);
       return account;
     }

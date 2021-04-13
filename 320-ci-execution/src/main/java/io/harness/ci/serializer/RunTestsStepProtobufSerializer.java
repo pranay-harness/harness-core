@@ -1,7 +1,9 @@
 package io.harness.ci.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
@@ -25,6 +27,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(CI)
 public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<RunTestsStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
@@ -89,7 +92,7 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
         .setId(step.getIdentifier())
         .setTaskId(callbackId)
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
-        .setDisplayName(Optional.ofNullable(runTestsStepInfo.getDisplayName()).orElse(""))
+        .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setRunTests(runTestsStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .setLogKey(logKey)

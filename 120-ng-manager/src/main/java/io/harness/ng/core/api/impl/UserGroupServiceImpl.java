@@ -123,7 +123,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup userGroup = toEntity(userGroupDTO);
     userGroup.setId(savedUserGroup.getId());
     userGroup.setVersion(savedUserGroup.getVersion());
-    return updateInternal(userGroup, savedUserGroup);
+    return updateInternal(userGroup, toDTO(savedUserGroup));
   }
 
   @Override
@@ -183,7 +183,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup addMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier) {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
-    UserGroup oldUserGroup = (UserGroup) NGObjectMapperHelper.clone(existingUserGroup);
+    UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
     existingUserGroup.getUsers().add(userIdentifier);
     return updateInternal(existingUserGroup, oldUserGroup);
   }
@@ -192,7 +192,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup removeMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier) {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
-    UserGroup oldUserGroup = (UserGroup) NGObjectMapperHelper.clone(existingUserGroup);
+    UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
     existingUserGroup.getUsers().remove(userIdentifier);
     return updateInternal(existingUserGroup, oldUserGroup);
   }
@@ -206,13 +206,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     return userGroupOptional.get();
   }
 
-  private UserGroup updateInternal(UserGroup newUserGroup, UserGroup oldUserGroup) {
+  private UserGroup updateInternal(UserGroup newUserGroup, UserGroupDTO oldUserGroup) {
     validate(newUserGroup);
     try {
       return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         UserGroup updatedUserGroup = userGroupRepository.save(newUserGroup);
-        outboxService.save(new UserGroupUpdateEvent(
-            updatedUserGroup.getAccountIdentifier(), toDTO(updatedUserGroup), toDTO(oldUserGroup)));
+        outboxService.save(
+            new UserGroupUpdateEvent(updatedUserGroup.getAccountIdentifier(), toDTO(updatedUserGroup), oldUserGroup));
         return updatedUserGroup;
       }));
     } catch (DuplicateKeyException ex) {

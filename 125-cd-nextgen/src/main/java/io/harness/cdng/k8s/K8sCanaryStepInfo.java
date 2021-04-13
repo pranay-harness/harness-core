@@ -55,11 +55,6 @@ public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepIn
   }
 
   @Override
-  public String getDisplayName() {
-    return name;
-  }
-
-  @Override
   public StepType getStepType() {
     return K8sCanaryStep.STEP_TYPE;
   }

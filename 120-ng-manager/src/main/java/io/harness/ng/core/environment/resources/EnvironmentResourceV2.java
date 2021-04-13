@@ -12,6 +12,7 @@ import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
@@ -22,7 +23,9 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.accesscontrol.PlatformResourceTypes;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
+import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -34,6 +37,8 @@ import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
 import io.harness.ng.core.environment.mappers.EnvironmentMapper;
 import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.rbac.CDNGRbacPermissions;
+import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
@@ -161,14 +166,20 @@ public class EnvironmentResourceV2 {
   }
 
   @GET
-  @ApiOperation(value = "Gets environment list for a project", nickname = "getEnvironmentListForProjectV2")
-  @NGAccessControlCheck(resourceType = PlatformResourceTypes.PROJECT, permission = "core_environment_view")
-  public ResponseDTO<PageResponse<EnvironmentResponse>> listEnvironmentsForProject(
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
+  @ApiOperation(value = "Gets environment list", nickname = "getEnvironmentList")
+  public ResponseDTO<PageResponse<EnvironmentResponse>> listEnvironment(@QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("100") int size,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
+    boolean hasAccess = accessControlClient.hasAccess(CDNGRbacUtility.getPermissionDTO(
+        accountId, orgIdentifier, projectIdentifier, CDNGRbacPermissions.ENVIRONMENT_VIEW_PERMISSION));
+    if (!hasAccess) {
+      throw new AccessDeniedException(
+          "Unauthorized to list environments", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+    }
     Criteria criteria =
         EnvironmentFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     Pageable pageRequest;

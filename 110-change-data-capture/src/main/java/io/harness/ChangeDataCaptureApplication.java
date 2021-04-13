@@ -8,6 +8,8 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.govern.ProviderModule;
+import io.harness.health.HealthService;
+import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaModule;
@@ -16,9 +18,12 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPool;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -31,7 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.model.Resource;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @Slf4j
@@ -44,13 +51,22 @@ public class ChangeDataCaptureApplication extends Application<ChangeDataCaptureS
 
   public static void main(String[] args) throws Exception {
     log.info("Starting Change Data Capture Application...");
-
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("Shutdown hook, entering maintenance...");
+      MaintenanceController.forceMaintenance(true);
+    }));
     new ChangeDataCaptureApplication().run(args);
   }
 
   @Override
   public void run(ChangeDataCaptureServiceConfig changeDataCaptureServiceConfig, Environment environment)
       throws Exception {
+    log.info("Entering startup maintenance mode");
+    MaintenanceController.forceMaintenance(true);
+
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
+        1, 10, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
       @Provides
@@ -94,6 +110,9 @@ public class ChangeDataCaptureApplication extends Application<ChangeDataCaptureS
     Injector injector = Guice.createInjector(modules);
     registerStores(changeDataCaptureServiceConfig, injector);
     registerManagedBeans(environment, injector);
+    registerResources(environment, injector);
+    registerHealthCheck(environment, injector);
+    MaintenanceController.forceMaintenance(false);
   }
 
   private static void registerStores(ChangeDataCaptureServiceConfig config, Injector injector) {
@@ -107,6 +126,20 @@ public class ChangeDataCaptureApplication extends Application<ChangeDataCaptureS
       final HPersistence hPersistence = injector.getInstance(HPersistence.class);
       hPersistence.register(CDC_STORE, config.getCdcMongo().getUri());
     }
+  }
+
+  private void registerResources(Environment environment, Injector injector) {
+    for (Class<?> resource : ChangeDataCaptureServiceConfig.getResourceClasses()) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("Change Data Capture Application", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

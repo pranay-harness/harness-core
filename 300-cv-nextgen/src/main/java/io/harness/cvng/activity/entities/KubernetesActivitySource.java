@@ -1,5 +1,7 @@
 package io.harness.cvng.activity.entities;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @FieldNameConstants(innerTypeName = "KubernetesActivitySourceKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(HarnessTeam.CV)
 public class KubernetesActivitySource extends ActivitySource {
   public static final String SERVICE_IDENTIFIER_KEY =
       KubernetesActivitySourceKeys.activitySourceConfigs + "." + KubernetesActivitySourceConfigKeys.serviceIdentifier;
@@ -33,12 +36,8 @@ public class KubernetesActivitySource extends ActivitySource {
   @NotNull @NotEmpty Set<KubernetesActivitySourceConfig> activitySourceConfigs;
 
   public ActivitySourceDTO toDTO() {
-    return KubernetesActivitySourceDTO.builder()
+    return fillCommon(KubernetesActivitySourceDTO.builder())
         .uuid(getUuid())
-        .identifier(getIdentifier())
-        .orgIdentifier(getOrgIdentifier())
-        .projectIdentifier(getProjectIdentifier())
-        .name(getName())
         .connectorIdentifier(connectorIdentifier)
         .activitySourceConfigs(activitySourceConfigs)
         .createdAt(getCreatedAt())

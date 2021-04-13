@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.CDCEntity;
 import io.harness.entities.CECloudAccountCDCEntity;
 import io.harness.persistence.HPersistence;
+import io.harness.threading.ExecutorModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
@@ -53,6 +54,7 @@ public class ChangeDataCaptureModule extends AbstractModule {
                                                           : TimeScaleDBConfig.builder().build());
     bindEntities();
     install(new RegistrarsModule());
+    install(ExecutorModule.getInstance());
   }
 
   private void bindEntities() {

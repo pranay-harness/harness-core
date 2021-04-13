@@ -14,7 +14,7 @@ harness_grpc_library(
         "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entityactivity:950_events_api_proto",
         "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entitysetupusage:950_events_api_proto",
         "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/featureflag:950_events_api_proto",
-        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/useraccountmembership:950_events_api_proto",
+        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/usermembership:950_events_api_proto",
         "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads:950_events_api_proto",
         "//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:970_ng_commons_proto",
         "//product/ci/scm/proto:ciscmpb_proto",

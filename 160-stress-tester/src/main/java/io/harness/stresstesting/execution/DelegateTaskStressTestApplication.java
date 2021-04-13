@@ -89,7 +89,7 @@ public class DelegateTaskStressTestApplication extends Application<DelegateTaskS
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        install(DelegateServiceDriverModule.getInstance());
+        install(DelegateServiceDriverModule.getInstance(false));
         bind(io.harness.persistence.HPersistence.class).to(io.harness.mongo.MongoPersistence.class);
         MapBinder<Class, String> morphiaClasses = MapBinder.newMapBinder(
             binder(), new TypeLiteral<Class>() {}, new TypeLiteral<String>() {}, Names.named("morphiaClasses"));

@@ -219,15 +219,18 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   private Map<String, List<UserSearchDTO>> getProjectCollaboratorMap(
       List<UserMembership> userMemberships, Map<String, UserSearchDTO> userMap) {
     Map<String, List<UserSearchDTO>> orgProjectUserMap = new HashMap<>();
-    userMemberships.forEach(userMembership -> userMembership.getScopes().forEach(scope -> {
-      String orgProjectId = getUniqueOrgProjectId(scope.getOrgIdentifier(), scope.getProjectIdentifier());
-      if (!orgProjectUserMap.containsKey(orgProjectId)) {
-        orgProjectUserMap.put(orgProjectId, new ArrayList<>());
-      }
-      if (userMap.containsKey(userMembership.getUserId())) {
-        orgProjectUserMap.get(orgProjectId).add(userMap.get(userMembership.getUserId()));
-      }
-    }));
+    userMemberships.forEach(userMembership
+        -> userMembership.getScopes()
+               .stream()
+               .filter(scope -> scope.getOrgIdentifier() != null && scope.getProjectIdentifier() != null)
+               .map(scope -> getUniqueOrgProjectId(scope.getOrgIdentifier(), scope.getProjectIdentifier()))
+               .distinct()
+               .forEach(orgProjectId -> {
+                 orgProjectUserMap.computeIfAbsent(orgProjectId, arg -> new ArrayList<>());
+                 if (userMap.containsKey(userMembership.getUserId())) {
+                   orgProjectUserMap.get(orgProjectId).add(userMap.get(userMembership.getUserId()));
+                 }
+               }));
     return orgProjectUserMap;
   }
 

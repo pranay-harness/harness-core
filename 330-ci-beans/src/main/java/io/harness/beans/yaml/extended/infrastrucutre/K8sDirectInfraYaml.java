@@ -1,6 +1,9 @@
 package io.harness.beans.yaml.extended.infrastrucutre;
 
+import io.harness.pms.yaml.ParameterField;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,5 +28,7 @@ public class K8sDirectInfraYaml implements Infrastructure {
   public static class K8sDirectInfraYamlSpec {
     private String connectorRef;
     private String namespace;
+    private ParameterField<Map<String, String>> annotations;
+    private ParameterField<Map<String, String>> labels;
   }
 }

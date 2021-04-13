@@ -21,11 +21,12 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.sdk.PmsSdkTestBase;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
+import io.harness.pms.sdk.response.events.SdkResponseEventPublisher;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -49,6 +50,7 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
       mock(NodeExecutionProtoServiceImplBase.class, delegatesTo(new PmsNodeExecutionTestGrpcSevice() {}));
 
   @Mock private EngineObtainmentHelper engineObtainmentHelper;
+  @Mock private SdkResponseEventPublisher sdkResponseEventPublisher;
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private StepRegistry stepRegistry;
 
@@ -65,10 +67,11 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
         InProcessServerBuilder.forName(serverName).directExecutor().addService(serviceImpl).build().start());
     ManagedChannel channel = grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
     NodeExecutionProtoServiceBlockingStub stub = NodeExecutionProtoServiceGrpc.newBlockingStub(channel);
-    PmsNodeExecutionService pmsNodeExecutionService = new PmsNodeExecutionServiceGrpcImpl();
-    on(pmsNodeExecutionService).set("nodeExecutionProtoServiceBlockingStub", stub);
-    on(pmsNodeExecutionService).set("stepRegistry", stepRegistry);
-    on(eventListener).set("pmsNodeExecutionService", pmsNodeExecutionService);
+    SdkNodeExecutionService sdkNodeExecutionService = new SdkNodeExecutionServiceImpl();
+    on(sdkNodeExecutionService).set("nodeExecutionProtoServiceBlockingStub", stub);
+    on(sdkNodeExecutionService).set("stepRegistry", stepRegistry);
+    on(sdkNodeExecutionService).set("sdkResponseEventPublisher", sdkResponseEventPublisher);
+    on(eventListener).set("sdkNodeExecutionService", sdkNodeExecutionService);
   }
 
   @Test

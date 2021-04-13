@@ -1,6 +1,8 @@
 package io.harness.app;
 
 import io.harness.CIExecutionServiceModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.impl.CIBuildInfoServiceImpl;
 import io.harness.app.impl.CIYamlSchemaServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
@@ -46,6 +48,7 @@ import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class CIManagerServiceModule extends AbstractModule {
   private final CIManagerConfiguration ciManagerConfiguration;
 
@@ -126,7 +129,7 @@ public class CIManagerServiceModule extends AbstractModule {
 
     install(new CIExecutionServiceModule(
         ciManagerConfiguration.getCiExecutionServiceConfig(), ciManagerConfiguration.getShouldConfigureWithPMS()));
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));
 

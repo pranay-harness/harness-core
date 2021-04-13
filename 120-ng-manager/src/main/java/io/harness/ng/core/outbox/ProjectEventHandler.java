@@ -2,7 +2,7 @@ package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
-import static io.harness.remote.NGObjectMapperHelper.ngDefaultObjectMapper;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import static io.harness.security.SourcePrincipalContextData.SOURCE_PRINCIPAL;
 
 import io.harness.ModuleType;
@@ -52,7 +52,7 @@ public class ProjectEventHandler implements OutboxEventHandler {
   @Inject
   public ProjectEventHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
       AuditClientService auditClientService, NgUserService ngUserService) {
-    this.objectMapper = ngDefaultObjectMapper;
+    this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
     this.ngUserService = ngUserService;

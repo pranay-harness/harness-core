@@ -16,6 +16,8 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import static java.lang.Integer.max;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -114,6 +116,7 @@ import org.mongodb.morphia.query.Sort;
  * Created by rsingh on 9/26/17.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
@@ -763,12 +766,19 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
       String appId, StateType stateType, String stateExecutionId, String cvConfigId) {
-    TimeSeriesMetricTemplates newRelicMetricTemplates =
+    TimeSeriesMetricTemplates metricTemplates =
         wingsPersistence.createQuery(TimeSeriesMetricTemplates.class, excludeAuthority)
             .filter(TimeSeriesMetricTemplatesKeys.stateExecutionId, stateExecutionId)
             .filter(TimeSeriesMetricTemplatesKeys.cvConfigId, cvConfigId)
             .get();
-    return newRelicMetricTemplates == null ? null : newRelicMetricTemplates.getMetricTemplates();
+    if (metricTemplates == null) {
+      return null;
+    }
+    Map<String, TimeSeriesMetricDefinition> metricDefinitions = new HashMap<>();
+    metricTemplates.getMetricTemplates().forEach(
+        (metricName, timeSeriesMetricDefinition)
+            -> metricDefinitions.put(replaceUnicodeWithDot(metricName), timeSeriesMetricDefinition));
+    return metricDefinitions;
   }
 
   private Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(

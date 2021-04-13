@@ -1,9 +1,13 @@
 package io.harness.cdng.visitor.helpers.cdstepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.k8s.K8sRollingStepInfo;
 import io.harness.walktree.visitor.validation.ConfigValidator;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 
+@OwnedBy(CDP)
 public class K8sRollingStepInfoVisitorHelper implements ConfigValidator {
   @Override
   public void validate(Object object, ValidationVisitor visitor) {
@@ -12,7 +16,6 @@ public class K8sRollingStepInfoVisitorHelper implements ConfigValidator {
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    K8sRollingStepInfo k8sRollingRollbackStepInfo = (K8sRollingStepInfo) originalElement;
-    return K8sRollingStepInfo.infoBuilder().identifier(k8sRollingRollbackStepInfo.getIdentifier()).build();
+    return K8sRollingStepInfo.infoBuilder().build();
   }
 }

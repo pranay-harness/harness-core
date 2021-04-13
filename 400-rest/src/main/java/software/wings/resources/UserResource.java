@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -20,6 +22,8 @@ import static software.wings.utils.Utils.urlDecode;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -132,6 +136,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Scope(ResourceType.USER)
 @AuthRule(permissionType = LOGGED_IN)
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(_970_RBAC_CORE)
 public class UserResource {
   private UserService userService;
   private AuthService authService;
@@ -449,8 +455,9 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse checkPasswordViolations(@NotEmpty @QueryParam("token") String token,
-      @QueryParam("pollType") PasswordSource passwordSource, @HeaderParam(HttpHeaders.AUTHORIZATION) String password) {
-    return new RestResponse(userService.checkPasswordViolations(token, passwordSource, password));
+      @QueryParam("pollType") PasswordSource passwordSource, @HeaderParam(HttpHeaders.AUTHORIZATION) String password,
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse(userService.checkPasswordViolations(token, passwordSource, password, accountId));
   }
 
   /**

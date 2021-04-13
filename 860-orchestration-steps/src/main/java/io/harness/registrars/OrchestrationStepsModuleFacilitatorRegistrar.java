@@ -17,10 +17,8 @@ import lombok.experimental.UtilityClass;
 public class OrchestrationStepsModuleFacilitatorRegistrar {
   public Map<FacilitatorType, Class<? extends Facilitator>> getEngineFacilitators() {
     Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators = new HashMap<>();
-
     engineFacilitators.put(BarrierFacilitator.FACILITATOR_TYPE, BarrierFacilitator.class);
     engineFacilitators.put(ResourceRestraintFacilitator.FACILITATOR_TYPE, ResourceRestraintFacilitator.class);
-
     return engineFacilitators;
   }
 }

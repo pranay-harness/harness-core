@@ -27,6 +27,8 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContext;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -75,6 +77,7 @@ public class ContainerSpecBuilderTestHelper {
 
   private static String secretVolumeMountPath = "/etc/secret";
   private static String secretsVolumeName = "secrets";
+  private static SecurityContext securityContext = new SecurityContextBuilder().withPrivileged(false).build();
 
   public static CIK8ContainerParams basicCreateSpecInput() {
     ImageDetails imageDetailsWithoutCred =
@@ -88,8 +91,12 @@ public class ContainerSpecBuilderTestHelper {
   }
 
   public static ContainerSpecBuilderResponse basicCreateSpecResponse() {
-    ContainerBuilder builder =
-        new ContainerBuilder().withName(containerName).withArgs(args).withCommand(commands).withImage(imageCtrName);
+    ContainerBuilder builder = new ContainerBuilder()
+                                   .withName(containerName)
+                                   .withArgs(args)
+                                   .withCommand(commands)
+                                   .withImage(imageCtrName)
+                                   .withSecurityContext(securityContext);
     return ContainerSpecBuilderResponse.builder().containerBuilder(builder).volumes(new ArrayList<>()).build();
   }
 
@@ -120,7 +127,8 @@ public class ContainerSpecBuilderTestHelper {
                                    .withArgs(args)
                                    .withCommand(commands)
                                    .withImage(imageCtrName)
-                                   .withEnv(ctrEnvVars);
+                                   .withEnv(ctrEnvVars)
+                                   .withSecurityContext(securityContext);
     return ContainerSpecBuilderResponse.builder().containerBuilder(builder).volumes(new ArrayList<>()).build();
   }
 
@@ -187,7 +195,8 @@ public class ContainerSpecBuilderTestHelper {
                                    .withImage(imageCtrName)
                                    .withEnv(ctrEnvVars)
                                    .withWorkingDir(workingDir)
-                                   .withPorts(Arrays.asList(containerPort));
+                                   .withPorts(Arrays.asList(containerPort))
+                                   .withSecurityContext(securityContext);
     return ContainerSpecBuilderResponse.builder().containerBuilder(builder).volumes(new ArrayList<>()).build();
   }
 
@@ -228,7 +237,8 @@ public class ContainerSpecBuilderTestHelper {
                                    .withCommand(commands)
                                    .withImage(imageCtrName)
                                    .withEnv(ctrEnvVars)
-                                   .withVolumeMounts(ctrVolumeMounts);
+                                   .withVolumeMounts(ctrVolumeMounts)
+                                   .withSecurityContext(securityContext);
     return ContainerSpecBuilderResponse.builder().containerBuilder(builder).volumes(new ArrayList<>()).build();
   }
 
@@ -275,7 +285,8 @@ public class ContainerSpecBuilderTestHelper {
                                    .withCommand(commands)
                                    .withImage(imageCtrName)
                                    .withEnv(ctrEnvVars)
-                                   .withVolumeMounts(ctrVolumeMounts);
+                                   .withVolumeMounts(ctrVolumeMounts)
+                                   .withSecurityContext(securityContext);
     return ContainerSpecBuilderResponse.builder()
         .containerBuilder(builder)
         .imageSecret(new LocalObjectReference(imageSecret))
@@ -346,7 +357,8 @@ public class ContainerSpecBuilderTestHelper {
                                    .withImage(imageCtrName)
                                    .withEnv(ctrEnvVars)
                                    .withVolumeMounts(ctrVolumeMounts)
-                                   .withResources(resourceRequirements);
+                                   .withResources(resourceRequirements)
+                                   .withSecurityContext(securityContext);
     return ContainerSpecBuilderResponse.builder()
         .containerBuilder(builder)
         .imageSecret(new LocalObjectReference(imageSecret))
@@ -417,7 +429,8 @@ public class ContainerSpecBuilderTestHelper {
                                    .withCommand(commands)
                                    .withImage(imageCtrName)
                                    .withEnv(ctrEnvVars)
-                                   .withVolumeMounts(ctrVolumeMounts);
+                                   .withVolumeMounts(ctrVolumeMounts)
+                                   .withSecurityContext(securityContext);
     return ContainerSpecBuilderResponse.builder()
         .containerBuilder(builder)
         .imageSecret(new LocalObjectReference(imageSecret))

@@ -1,0 +1,50 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//947-access-control-core:module",
+        "//947-access-control-decision-commons:module",
+        "//948-access-control-sdk:module",
+        "//960-ng-core-beans:module",
+        "//960-persistence:module",
+        "@maven//:com_google_inject_guice",
+        "@maven//:io_debezium_debezium_api",
+        "@maven//:io_debezium_debezium_connector_mongodb",
+        "@maven//:io_debezium_debezium_core",
+        "@maven//:io_debezium_debezium_embedded",
+        "@maven//:io_github_resilience4j_resilience4j_retry",
+        "@maven//:org_apache_kafka_connect_api",
+        "@maven//:org_apache_kafka_connect_runtime",
+        "@maven//:org_apache_kafka_kafka_clients",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+    ],
+)
+
+run_tests()
+
+checkstyle()
+
+pmd()

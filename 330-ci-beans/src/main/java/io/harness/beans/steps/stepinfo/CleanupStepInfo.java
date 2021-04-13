@@ -1,5 +1,9 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -7,11 +11,13 @@ import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -23,6 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @YamlSchemaIgnoreSubtype
 @TypeAlias("CleanupStepInfo")
+@OwnedBy(CI)
 public class CleanupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
@@ -37,14 +44,17 @@ public class CleanupStepInfo implements CIStepInfo {
   @NotNull Infrastructure infrastructure;
   @NotNull private String podName;
   private String name;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "infrastructure", "podName"})
-  public CleanupStepInfo(String identifier, String name, Infrastructure infrastructure, String podName) {
+  @ConstructorProperties({"identifier", "name", "infrastructure", "podName", "runAsUser"})
+  public CleanupStepInfo(String identifier, String name, Infrastructure infrastructure, String podName,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.infrastructure = infrastructure;
     this.podName = podName;
+    this.runAsUser = runAsUser;
   }
 
   public static CleanupStepInfoBuilder builder() {
@@ -54,11 +64,6 @@ public class CleanupStepInfo implements CIStepInfo {
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   public int getRetry() {

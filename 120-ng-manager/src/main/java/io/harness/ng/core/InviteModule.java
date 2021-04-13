@@ -37,7 +37,7 @@ public class InviteModule extends AbstractModule {
     bind(InviteService.class).to(InviteServiceImpl.class);
     bind(NgUserService.class).to(NgUserServiceImpl.class);
     registerRequiredBindings();
-    install(new UserClientModule(this.serviceHttpClientConfig, this.managerServiceSecret, this.clientId));
+    install(UserClientModule.getInstance(serviceHttpClientConfig, managerServiceSecret, clientId));
   }
 
   @Provides

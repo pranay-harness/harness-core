@@ -17,6 +17,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
+import io.harness.plancreator.steps.common.StageElementParameters.StageElementParametersBuilder;
+import io.harness.plancreator.steps.common.StepParametersUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -28,7 +30,6 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -143,13 +144,14 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   @Override
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, StageElementConfig config, List<String> childrenNodeIds) {
-    StepParameters stepParameters = DeploymentStageStepParameters.getStepParameters(config, childrenNodeIds.get(0));
+    StageElementParametersBuilder stageParameters = StepParametersUtils.getStageParameters(config);
+    stageParameters.spec(DeploymentStageStepParameters.getStepParameters(childrenNodeIds.get(0)));
     return PlanNode.builder()
         .uuid(config.getUuid())
         .name(config.getName())
         .identifier(config.getIdentifier())
         .group(StepOutcomeGroup.STAGE.name())
-        .stepParameters(stepParameters)
+        .stepParameters(stageParameters.build())
         .stepType(DeploymentStageStep.STEP_TYPE)
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
         .whenCondition(RunInfoUtils.getRunCondition(config.getWhen(), true))

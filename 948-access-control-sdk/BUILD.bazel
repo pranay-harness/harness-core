@@ -1,0 +1,41 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//949-access-control-commons:module",
+        "//960-ng-core-beans:module",
+        "//960-persistence:module",
+        "//970-ng-commons:module",
+        "@maven//:com_google_inject_guice",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//980-commons:module",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+    ],
+)
+
+run_tests()
+
+checkstyle()
+
+pmd()

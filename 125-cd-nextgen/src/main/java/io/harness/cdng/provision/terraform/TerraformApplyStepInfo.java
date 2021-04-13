@@ -1,18 +1,15 @@
 package io.harness.cdng.provision.terraform;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.cdng.provision.terraform.TerraformApplyStepParameters.TerraformApplyStepParametersBuilder;
-import static io.harness.cdng.provision.terraform.TerraformStepConfigurationType.INLINE;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.executions.steps.StepSpecTypeConstants.TERRAFORM_APPLY;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.pipeline.CDStepInfo;
+import io.harness.cdng.provision.terraform.TerraformApplyStepParameters.TerraformApplyStepParametersBuilder;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.utils.NGVariablesUtils;
 
@@ -31,27 +28,16 @@ import lombok.experimental.FieldDefaults;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@OwnedBy(CDP)
-@JsonTypeName(TERRAFORM_APPLY)
+@OwnedBy(HarnessTeam.CDP)
+@JsonTypeName(StepSpecTypeConstants.TERRAFORM_APPLY)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implements CDStepInfo {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
-
   @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformApplyStepInfo(String provisionerIdentifier, String name, String identifier,
-      TerrformStepConfiguration terrformStepConfiguration) {
+  public TerraformApplyStepInfo(String provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
     super(provisionerIdentifier);
-    this.name = name;
-    this.identifier = identifier;
     this.terrformStepConfiguration = terrformStepConfiguration;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override
@@ -67,16 +53,14 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public SpecParameters getSpecParameters() {
     TerraformApplyStepParametersBuilder builder = TerraformApplyStepParameters.infoBuilder();
-    builder.name(baseStepParameterInfo.getName());
-    builder.identifier(baseStepParameterInfo.getIdentifier());
     builder.provisionerIdentifier(provisionerIdentifier);
 
     TerraformStepConfigurationType stepConfigurationType =
         terrformStepConfiguration.getTerraformStepConfigurationType();
     builder.stepConfigurationType(stepConfigurationType);
-    if (INLINE == stepConfigurationType) {
+    if (TerraformStepConfigurationType.INLINE == stepConfigurationType) {
       TerraformExecutionData executionData = terrformStepConfiguration.getTerraformExecutionData();
       builder.workspace(executionData.getWorkspace());
       builder.targets(executionData.getTargets());
@@ -92,7 +76,7 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
       List<StoreConfigWrapper> remoteVarFiles = new ArrayList<>();
       List<String> inlineVarFiles = new ArrayList<>();
       List<TerraformVarFile> terraformVarFiles = executionData.getTerraformVarFiles();
-      if (isNotEmpty(terraformVarFiles)) {
+      if (EmptyPredicate.isNotEmpty(terraformVarFiles)) {
         terraformVarFiles.forEach(varFile -> {
           TerraformVarFileSpec varFileSpec = varFile.getTerraformVarFileSpec();
           if (varFileSpec instanceof InlineTerraformVarFileSpec) {
@@ -102,10 +86,10 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
           }
         });
       }
-      if (isNotEmpty(remoteVarFiles)) {
+      if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
         builder.remoteVarFiles(remoteVarFiles);
       }
-      if (isNotEmpty(inlineVarFiles)) {
+      if (EmptyPredicate.isNotEmpty(inlineVarFiles)) {
         builder.inlineVarFiles(ParameterField.createValueField(inlineVarFiles));
       }
     }

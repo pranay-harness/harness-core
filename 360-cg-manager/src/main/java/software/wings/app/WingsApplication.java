@@ -39,8 +39,6 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
-import io.harness.core.userchangestream.UserMembershipChangeStreamModule;
-import io.harness.core.userchangestream.UserMembershipChangeStreamService;
 import io.harness.cvng.client.CVNGClientModule;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.state.CVNGVerificationTaskHandler;
@@ -174,7 +172,6 @@ import software.wings.scheduler.audit.EntityAuditRecordHandler;
 import software.wings.scheduler.events.segment.SegmentGroupEventJob;
 import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
 import software.wings.scheduler.persistance.PersistentLockCleanup;
-import software.wings.search.framework.ElasticsearchSyncService;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
@@ -494,7 +491,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
     modules.add(new GrpcServiceConfigurationModule(
         configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
-    modules.add(UserMembershipChangeStreamModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -769,12 +765,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskMigrationJob.class));
     environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
-    if (configuration.isUserChangeStreamEnabled()) {
-      environment.lifecycle().manage(injector.getInstance(UserMembershipChangeStreamService.class));
-    }
-    if (configuration.isSearchEnabled()) {
-      environment.lifecycle().manage(injector.getInstance(ElasticsearchSyncService.class));
-    }
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
