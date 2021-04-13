@@ -35,10 +35,9 @@ public class ChangeSetHelperServiceImpl implements ChangeSetHelperService {
   public void process(ChangeSet changeSet) {
     EntityType entityType = EventProtoToEntityHelper.getEntityTypeFromProto(changeSet.getEntityType());
     GitSyncEntitiesConfiguration gitSyncEntitiesConfiguration = gitSyncEntityConfigurationsMap.get(entityType);
-    Class<? extends EntityGitPersistenceHelperService<? extends GitSyncableEntity, ? extends YamlDTO>>
-        entityHelperClass = gitSyncEntitiesConfiguration.getEntityHelperClass();
+    Class<? extends GitSyncableEntity> entityClass = gitSyncEntitiesConfiguration.getEntityClass();
     EntityGitPersistenceHelperService entityGitPersistenceHelperService =
-        gitPersistenceHelperServiceMap.get(entityHelperClass.getCanonicalName());
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
     String yaml = changeSet.getYaml();
     switch (changeSet.getChangeType()) {
       case ADD:

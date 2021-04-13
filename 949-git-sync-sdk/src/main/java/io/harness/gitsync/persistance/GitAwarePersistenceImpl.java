@@ -139,7 +139,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
           mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), entityClass);
       processGitBranchMetadata(modifiedObject, changeType, gitBranchInfo, entityDetail, scmPushResponse, objectIdOfYaml,
           entityGitBranchMetadata);
-      gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse);
+      gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse, gitBranchInfo);
     } else {
       update.addToSet("isDefault", true);
     }
@@ -219,7 +219,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
       processGitBranchMetadata(objectToSave, changeType, gitBranchInfo, entityDetail, scmPushResponse, objectIdOfYaml,
           entityGitBranchMetadata);
 
-      gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse);
+      gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse, gitBranchInfo);
     } else {
       savedObject = mongoTemplate.save(objectToSave);
     }

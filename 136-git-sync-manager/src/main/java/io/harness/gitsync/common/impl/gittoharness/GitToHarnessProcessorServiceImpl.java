@@ -35,7 +35,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.StringValue;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,13 +71,21 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfig, accountId);
     FileBatchContentResponse harnessFilesOfBranch =
         getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, defaultBranch, yamlGitConfig);
-    removeTheExcludedFile(harnessFilesOfBranch, filePathToBeExcluded);
-    processTheChangesWeGotFromGit(harnessFilesOfBranch, yamlGitConfig, branch, accountId);
+    List<FileContent> filteredFileList = removeTheExcludedFile(harnessFilesOfBranch, filePathToBeExcluded);
+    processTheChangesWeGotFromGit(filteredFileList, yamlGitConfig, branch, accountId);
   }
 
-  private void removeTheExcludedFile(FileBatchContentResponse allFilesOfDefaultBranch, String filePathToBeExcluded) {
-    allFilesOfDefaultBranch.getFileContentsList().removeIf(
-        fileContent -> fileContent.getPath().equals(filePathToBeExcluded));
+  private List<FileContent> removeTheExcludedFile(
+      FileBatchContentResponse allFilesOfDefaultBranch, String filePathToBeExcluded) {
+    List<FileContent> fileContents = allFilesOfDefaultBranch.getFileContentsList();
+    List<FileContent> filteredFileContents = new ArrayList<>();
+    for (FileContent fileContent : fileContents) {
+      if (fileContent.getPath().equals(filePathToBeExcluded)) {
+        continue;
+      }
+      filteredFileContents.add(fileContent);
+    }
+    return filteredFileContents;
   }
 
   private void saveTheShortListedBranch(YamlGitConfigDTO yamlGitConfig, String branch) {
@@ -105,8 +112,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
     return emptyIfNull(gitSyncEntityDTOS).stream().map(GitFileLocation::getEntityGitPath).collect(toList());
   }
 
-  private void processTheChangesWeGotFromGit(FileBatchContentResponse harnessFilesOfBranch,
-      YamlGitConfigDTO gitSyncConfigDTO, String branch, String accountId) {
+  private void processTheChangesWeGotFromGit(
+      List<FileContent> harnessFilesOfBranch, YamlGitConfigDTO gitSyncConfigDTO, String branch, String accountId) {
     List<ChangeSet> fileContentsList = convertFileListFromSCMToChangeSetList(harnessFilesOfBranch, accountId);
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent = createMapOfEntityTypeAndFileContent(fileContentsList);
     Map<Microservice, List<ChangeSet>> groupedFilesByMicroservices =
@@ -135,10 +142,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
     }
   }
 
-  private List<ChangeSet> convertFileListFromSCMToChangeSetList(
-      FileBatchContentResponse harnessFilesOfBranch, String accountId) {
-    List<FileContent> fileContentsList =
-        harnessFilesOfBranch == null ? Collections.emptyList() : harnessFilesOfBranch.getFileContentsList();
+  private List<ChangeSet> convertFileListFromSCMToChangeSetList(List<FileContent> fileContentsList, String accountId) {
     return emptyIfNull(fileContentsList)
         .stream()
         .map(fileContent -> mapToChangeSet(fileContent, accountId))

@@ -106,11 +106,13 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
     gitEntityService.save(pushInfo.getAccountId(), entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail),
         yamlGitConfigDTO, pushInfo.getFilePath(), pushInfo.getCommitId(), pushInfo.getBranchName());
-    executorService.submit(()
-                               -> onBranchCreationReadFilesAndProcessThem(entityRef.getAccountIdentifier(),
-                                   yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
-                                   yamlGitConfigDTO.getOrganizationIdentifier(), pushInfo.getBranchName(),
-                                   yamlGitConfigDTO.getBranch(), pushInfo.getFilePath()));
+    if (pushInfo.getIsNewBranch()) {
+      executorService.submit(()
+                                 -> onBranchCreationReadFilesAndProcessThem(entityRef.getAccountIdentifier(),
+                                     yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
+                                     yamlGitConfigDTO.getOrganizationIdentifier(), pushInfo.getBranchName(),
+                                     yamlGitConfigDTO.getBranch(), pushInfo.getFilePath()));
+    }
     // todo(abhinav): record git commit and git file activity.
   }
 
