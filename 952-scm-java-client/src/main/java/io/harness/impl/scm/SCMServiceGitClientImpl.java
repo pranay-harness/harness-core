@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.ScmUnixManager;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
@@ -44,6 +45,7 @@ import io.grpc.netty.NettyChannelBuilder;
 import io.netty.channel.kqueue.KQueueDomainSocketChannel;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.unix.DomainSocketAddress;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -173,17 +175,20 @@ public class SCMServiceGitClientImpl implements ScmClient {
   public ListBranchesResponse listBranches(ScmConnector scmConnector) {
     ListBranchesRequest listBranchesRequest = getListBranchesRequest(scmConnector);
 
-    KQueueEventLoopGroup klg = new KQueueEventLoopGroup();
-    ManagedChannel channel = NettyChannelBuilder.forAddress(new DomainSocketAddress("/tmp/bla"))
-                                 .eventLoopGroup(klg)
-                                 .channelType(KQueueDomainSocketChannel.class)
-                                 .usePlaintext()
-                                 .build();
-
-    //    Channel channel = NettyChannelBuilder.forTarget("localhost:8091").usePlaintext().build();
-
-    SCMGrpc.SCMBlockingStub stub = SCMGrpc.newBlockingStub(channel);
-    return stub.listBranches(listBranchesRequest);
+    ScmUnixManager scmUnixManager = null;
+    try {
+      scmUnixManager = new ScmUnixManager();
+      SCMGrpc.SCMBlockingStub stub = SCMGrpc.newBlockingStub(scmUnixManager.getChannel());
+      return stub.listBranches(listBranchesRequest);
+    } catch (IOException ioException) {
+      // handle it here
+      return null;
+    } finally {
+      try {
+        scmUnixManager.close();
+      } catch (Exception ignored) {
+      }
+    }
   }
 
   @Override
