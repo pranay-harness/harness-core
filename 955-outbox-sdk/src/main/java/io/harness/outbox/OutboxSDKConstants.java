@@ -18,9 +18,11 @@ public class OutboxSDKConstants {
   public static final List<SortOrder> DEFAULT_CREATED_AT_ASC_SORT_ORDER =
       Collections.singletonList(SortOrder.Builder.aSortOrder().withField(OutboxEventKeys.createdAt, ASC).build());
 
-  public static final int DEFAULT_MAX_ATTEMPTS = 10;
+  public static final int DEFAULT_MAX_ATTEMPTS = 7;
 
   public static final int DEFAULT_MAX_EVENTS_POLLED = 50;
+
+  public static final int DEFAULT_UNBLOCK_RETRY_INTERVAL_IN_MINUTES = 10;
 
   public static final OutboxEventIteratorConfiguration DEFAULT_OUTBOX_ITERATOR_CONFIGURATION =
       OutboxEventIteratorConfiguration.builder()
@@ -28,7 +30,7 @@ public class OutboxSDKConstants {
           .intervalInSeconds(5)
           .targetIntervalInSeconds(15)
           .acceptableNoAlertDelayInSeconds(60)
-          .maximumOutboxEventHandlingAttempts(10)
+          .maximumOutboxEventHandlingAttempts(DEFAULT_MAX_ATTEMPTS)
           .build();
 
   public static final OutboxPollConfiguration DEFAULT_OUTBOX_POLL_CONFIGURATION =
@@ -39,9 +41,5 @@ public class OutboxSDKConstants {
           .build();
 
   public static final OutboxEventFilter DEFAULT_OUTBOX_EVENT_FILTER =
-      OutboxEventFilter.builder()
-          .maximumEventsPolled(DEFAULT_MAX_EVENTS_POLLED)
-          .blocked(false)
-          .maximumAttempts(DEFAULT_MAX_ATTEMPTS)
-          .build();
+      OutboxEventFilter.builder().maximumEventsPolled(DEFAULT_MAX_EVENTS_POLLED).build();
 }
