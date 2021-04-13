@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -38,6 +39,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -48,6 +50,7 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
 import io.harness.delegate.beans.Delegate;
@@ -208,6 +211,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(_955_ACCOUNT_MGMT)
 public class AccountServiceImpl implements AccountService {
   private static final SecureRandom random = new SecureRandom();
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
@@ -497,6 +501,24 @@ public class AccountServiceImpl implements AccountService {
     }
     LicenseUtils.decryptLicenseInfo(account, false);
     return account;
+  }
+
+  @Override
+  public AccountDetails getDetails(String accountId) {
+    Account account = wingsPersistence.get(Account.class, accountId);
+    if (account == null) {
+      throw new AccountNotFoundException(
+          "Account is not found for the given id:" + accountId, null, ACCOUNT_DOES_NOT_EXIST, Level.ERROR, USER, null);
+    }
+    LicenseUtils.decryptLicenseInfo(account, false);
+    AccountDetails accountDetails = new AccountDetails();
+    accountDetails.setAccountId(accountId);
+    accountDetails.setAccountName(account.getAccountName());
+    accountDetails.setCompanyName(account.getCompanyName());
+    accountDetails.setCluster(mainConfiguration.getClusterName());
+    accountDetails.setLicenseInfo(account.getLicenseInfo());
+    accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
+    return accountDetails;
   }
 
   @Override
