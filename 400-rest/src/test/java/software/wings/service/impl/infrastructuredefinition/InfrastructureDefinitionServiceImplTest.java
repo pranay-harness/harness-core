@@ -55,6 +55,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -1342,6 +1343,146 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
     Map<String, String> loadBalancers =
         infrastructureDefinitionService.listElasticLoadBalancers(APP_ID, INFRA_MAPPING_ID);
     assertThat(loadBalancers.keySet()).containsOnly("a", "b", "c");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListElasticLoadBalancersWithProvisioner() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .provisionerId("provisioner1")
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    doThrow(new RuntimeException("Failed to fetch ELB from AWS"))
+        .when(awsInfrastructureProvider)
+        .listElasticBalancers(any(), anyString(), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    Map<String, String> loadBalancers =
+        infrastructureDefinitionService.listElasticLoadBalancers(APP_ID, INFRA_MAPPING_ID);
+    assertThat(loadBalancers).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListElasticLoadBalancersExceptionCase() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    doThrow(new RuntimeException("Failed to fetch ELB from AWS"))
+        .when(awsInfrastructureProvider)
+        .listElasticBalancers(any(), anyString(), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    try {
+      infrastructureDefinitionService.listElasticLoadBalancers(APP_ID, INFRA_MAPPING_ID);
+    } catch (Exception ex) {
+      assertThat(ex.getMessage()).isEqualTo("Failed to fetch ELB from AWS");
+      assertThat(ex).isInstanceOf(RuntimeException.class);
+    }
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListTargetGroups() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    Map<String, String> targetGroups = new HashMap<>();
+    targetGroups.put("arn1", "tg1");
+    targetGroups.put("arn2", "tg2");
+    doReturn(targetGroups).when(awsInfrastructureProvider).listTargetGroups(any(), anyString(), eq("lb1"), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    Map<String, String> loadBalancers =
+        infrastructureDefinitionService.listTargetGroups(APP_ID, INFRA_DEFINITION_ID, "lb1");
+    assertThat(loadBalancers.keySet()).containsOnly("arn1", "arn2");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListTargetGroupsWithProvisioner() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .provisionerId("provisioner1")
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    Map<String, String> targetGroups = new HashMap<>();
+    targetGroups.put("arn1", "tg1");
+    targetGroups.put("arn2", "tg2");
+    doThrow(new RuntimeException("Failed to fetch Target Group from AWS"))
+        .when(awsInfrastructureProvider)
+        .listTargetGroups(any(), anyString(), eq("lb1"), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    Map<String, String> loadBalancers =
+        infrastructureDefinitionService.listTargetGroups(APP_ID, INFRA_DEFINITION_ID, "lb1");
+    assertThat(loadBalancers).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testListTargetGroupsExceptionCase() {
+    doReturn(InfrastructureDefinition.builder()
+                 .infrastructure(AwsEcsInfrastructure.builder().region(Regions.US_EAST_1.name()).build())
+                 .build())
+        .when(wingsPersistence)
+        .getWithAppId(any(), anyString(), anyString());
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute().withCategory(SettingCategory.SETTING).build())
+        .when(mockSettingsService)
+        .get(anyString());
+
+    AwsInfrastructureProvider awsInfrastructureProvider = mock(AwsInfrastructureProvider.class);
+    Map<String, String> targetGroups = new HashMap<>();
+    targetGroups.put("arn1", "tg1");
+    targetGroups.put("arn2", "tg2");
+    doThrow(new RuntimeException("Failed to fetch Target Group from AWS"))
+        .when(awsInfrastructureProvider)
+        .listTargetGroups(any(), anyString(), eq("lb1"), anyString());
+    doReturn(awsInfrastructureProvider).when(infrastructureProviderMap).get(anyString());
+
+    try {
+      infrastructureDefinitionService.listTargetGroups(APP_ID, INFRA_DEFINITION_ID, "lb1");
+    } catch (Exception ex) {
+      assertThat(ex.getMessage()).isEqualTo("Failed to fetch Target Group from AWS");
+      assertThat(ex).isInstanceOf(RuntimeException.class);
+    }
   }
 
   @Test
