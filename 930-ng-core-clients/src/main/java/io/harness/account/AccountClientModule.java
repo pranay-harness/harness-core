@@ -1,4 +1,4 @@
-package io.harness.ng.core.account.remote;
+package io.harness.account;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

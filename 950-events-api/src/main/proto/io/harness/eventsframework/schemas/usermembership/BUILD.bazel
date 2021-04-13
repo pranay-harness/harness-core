@@ -6,6 +6,7 @@ proto_library(
     name = "950_events_api_proto",
     srcs = ["usermembership.proto"],
     visibility = ["//visibility:public"],
+    deps = ["@com_google_protobuf//:wrappers_proto"],
 )
 
 go_proto_library(

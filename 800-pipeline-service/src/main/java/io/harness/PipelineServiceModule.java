@@ -7,6 +7,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -31,7 +32,6 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;

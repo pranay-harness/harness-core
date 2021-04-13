@@ -1,5 +1,7 @@
 syntax = "proto3";
+
 package io.harness.eventsframework.schemas.usermembership;
+import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
 option go_package = "950_events_api";
@@ -11,7 +13,7 @@ message UserMembershipDTO {
 }
 
 message Scope {
-  string accountIdentifier = 4;
-  string orgIdentifier = 5;
-  string projectIdentifier = 6;
+  google.protobuf.StringValue accountIdentifier = 4;
+  google.protobuf.StringValue orgIdentifier = 5;
+  google.protobuf.StringValue projectIdentifier = 6;
 }

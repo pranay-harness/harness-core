@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -290,6 +291,15 @@ public class NgUserServiceImpl implements NgUserService {
 
   private void publishEvent(String userId, Scope scope, String action) {
     try {
+      io.harness.eventsframework.schemas.usermembership.Scope.Builder scopeBuilder =
+          io.harness.eventsframework.schemas.usermembership.Scope.newBuilder().setAccountIdentifier(
+              StringValue.of(scope.getAccountIdentifier()));
+      if (scope.getOrgIdentifier() != null) {
+        scopeBuilder.setOrgIdentifier(StringValue.of(scope.getOrgIdentifier()));
+      }
+      if (scope.getProjectIdentifier() != null) {
+        scopeBuilder.setProjectIdentifier(StringValue.of(scope.getProjectIdentifier()));
+      }
       eventProducer.send(Message.newBuilder()
                              .putAllMetadata(ImmutableMap.of("accountId", scope.getAccountIdentifier(),
                                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkConstants.USERMEMBERSHIP,
@@ -297,11 +307,7 @@ public class NgUserServiceImpl implements NgUserService {
                              .setData(UserMembershipDTO.newBuilder()
                                           .setAction(action)
                                           .setUserId(userId)
-                                          .setScope(io.harness.eventsframework.schemas.usermembership.Scope.newBuilder()
-                                                        .setAccountIdentifier(scope.getAccountIdentifier())
-                                                        .setOrgIdentifier(scope.getOrgIdentifier())
-                                                        .setProjectIdentifier(scope.getProjectIdentifier())
-                                                        .build())
+                                          .setScope(scopeBuilder.build())
                                           .build()
                                           .toByteString())
                              .build());

@@ -298,6 +298,8 @@ aeriform("//950-log-client:tests")
 
 aeriform("//950-ng-audit-commons:module")
 
+aeriform("//950-ng-authentication-service:module")
+
 aeriform("//950-ng-core:module")
 
 aeriform("//950-ng-core:tests")

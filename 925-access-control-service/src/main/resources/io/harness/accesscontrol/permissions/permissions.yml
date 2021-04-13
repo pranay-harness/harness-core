@@ -180,3 +180,10 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_audit_view
+    name: View Audits
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
