@@ -13,7 +13,7 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectResponse;
-import io.harness.projectmanagerclient.remote.ProjectManagerClient;
+import io.harness.project.remote.ProjectClient;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
@@ -38,13 +38,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class ProjectResourceValidatorImpl implements ResourceValidator {
-  ProjectManagerClient projectManagerClient;
+  ProjectClient projectClient;
 
   @Override
   public List<Boolean> validate(
       List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     PageResponse<ProjectResponse> projects =
-        getResponse(projectManagerClient.listProjects(accountIdentifier, orgIdentifier, resourceIds));
+        getResponse(projectClient.listProjects(accountIdentifier, orgIdentifier, resourceIds));
     Set<String> validResourceIds =
         projects.getContent().stream().map(e -> e.getProject().getIdentifier()).collect(Collectors.toSet());
     return resourceIds.stream()

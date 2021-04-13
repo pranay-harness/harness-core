@@ -1,5 +1,8 @@
-package io.harness.projectmanagerclient.remote;
+package io.harness.project.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.AbstractHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
@@ -10,17 +13,17 @@ import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton
-public class ProjectManagerHttpClientFactory
-    extends AbstractHttpClientFactory implements Provider<ProjectManagerClient> {
-  public ProjectManagerHttpClientFactory(ServiceHttpClientConfig projectManagerClientConfig, String serviceSecret,
+public class ProjectHttpClientFactory extends AbstractHttpClientFactory implements Provider<ProjectClient> {
+  public ProjectHttpClientFactory(ServiceHttpClientConfig projectManagerClientConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
     super(projectManagerClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
   }
 
   @Override
-  public ProjectManagerClient get() {
-    return getRetrofit().create(ProjectManagerClient.class);
+  public ProjectClient get() {
+    return getRetrofit().create(ProjectClient.class);
   }
 }

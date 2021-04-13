@@ -1,9 +1,12 @@
-package io.harness.organizationmanagerclient.remote;
+package io.harness.organization.remote;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.OrganizationRequest;
 import io.harness.ng.core.dto.OrganizationResponse;
@@ -21,7 +24,8 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-public interface OrganizationManagerClient {
+@OwnedBy(PL)
+public interface OrganizationClient {
   String ORGANIZATIONS_API = "organizations";
 
   @POST(ORGANIZATIONS_API)
