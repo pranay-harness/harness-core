@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -23,4 +24,5 @@ public class UserInfo {
   String email;
   boolean admin;
   boolean twoFactorAuthenticationEnabled;
+  List<String> accountIds;
 }
