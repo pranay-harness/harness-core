@@ -388,7 +388,6 @@ public class K8sStepHelper {
     List<String> paths = new ArrayList<>();
     switch (manifestType) {
       case ManifestType.HelmChart:
-      case ManifestType.TerraformConfig:
         paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
         break;
       case ManifestType.Kustomize:
