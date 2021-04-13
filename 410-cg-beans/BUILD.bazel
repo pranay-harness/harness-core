@@ -1,0 +1,15 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "test_targets_list")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+)
+
+checkstyle()
+
+pmd()
