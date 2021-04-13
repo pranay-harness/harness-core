@@ -115,3 +115,18 @@ func ParseFileNames(files []string) ([]Node, error) {
 	}
 	return nodes, nil
 }
+
+// GetSliceDiff returns the unique element in sIDs which are not present in dIDs
+func GetSliceDiff(sIDs []int, dIDs []int) []int {
+	mp := make(map[int]bool)
+	var ret []int
+	for _, id := range dIDs {
+		mp[id] = true
+	}
+	for _, id := range sIDs {
+		if _, ok := mp[id]; !ok {
+			ret = append(ret, id)
+		}
+	}
+	return ret
+}
