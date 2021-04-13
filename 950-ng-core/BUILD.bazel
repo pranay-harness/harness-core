@@ -12,8 +12,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//950-events-api:module",
-        "//950-events-api/src/main/proto/io/harness/eventsframework/schemas/entity_crud:950_events_api_proto",
+        "//953-events-api:module",
+        "//953-events-api/src/main/proto/io/harness/eventsframework/schemas/entity_crud:953_events_api_proto",
         "//955-setup-usage-sdk:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",

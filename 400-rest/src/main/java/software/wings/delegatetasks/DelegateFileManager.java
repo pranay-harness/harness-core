@@ -2,6 +2,8 @@ package software.wings.delegatetasks;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.FileBucket;
@@ -14,11 +16,8 @@ import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created by rishi on 12/19/16.
- */
+@OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
-@BreakDependencyOn("io.harness.delegate.beans.DelegateAgentFileService")
 @BreakDependencyOn("software.wings.beans.artifact.ArtifactStreamAttributes")
 public interface DelegateFileManager extends DelegateFileManagerBase {
   // TODO: this method does not seem to belong here

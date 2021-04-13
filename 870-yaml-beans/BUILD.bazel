@@ -32,12 +32,6 @@ java_library(
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
-    ],
-)
-
-java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
