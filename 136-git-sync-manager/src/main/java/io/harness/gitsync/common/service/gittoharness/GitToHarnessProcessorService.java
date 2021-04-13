@@ -6,5 +6,6 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 
 @OwnedBy(HarnessTeam.DX)
 public interface GitToHarnessProcessorService {
-  void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfigDTO, String branch, String accountId);
+  void readFilesFromBranchAndProcess(
+      YamlGitConfigDTO yamlGitConfigDTO, String branch, String accountId, String defaultBranch);
 }

@@ -66,11 +66,12 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   }
 
   @Override
-  public void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfig, String branch, String accountId) {
+  public void readFilesFromBranchAndProcess(
+      YamlGitConfigDTO yamlGitConfig, String branch, String accountId, String defaultBranch) {
     ScmConnector connectorAssociatedWithGitSyncConfig =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfig, accountId);
     FileBatchContentResponse harnessFilesOfBranch =
-        getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, branch, yamlGitConfig);
+        getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, defaultBranch, yamlGitConfig);
     processTheChangesWeGotFromGit(harnessFilesOfBranch, yamlGitConfig, branch, accountId);
     saveTheShortListedBranch(yamlGitConfig, branch);
   }
