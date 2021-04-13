@@ -10,6 +10,8 @@ import java.util.List;
 public interface DelegateTokenService {
   DelegateTokenDetails createDelegateToken(String accountId, String tokenName);
 
+  DelegateTokenDetails upsertDefaultToken(String accountId, String tokenValue);
+
   void revokeDelegateToken(String accountId, String tokenName);
 
   void deleteDelegateToken(String accountId, String tokenName);
