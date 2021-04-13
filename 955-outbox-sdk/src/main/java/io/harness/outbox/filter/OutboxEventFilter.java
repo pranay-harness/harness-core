@@ -15,6 +15,4 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OutboxEventFilter {
   int maximumEventsPolled;
-  Boolean blocked;
-  Integer maximumAttempts;
 }
