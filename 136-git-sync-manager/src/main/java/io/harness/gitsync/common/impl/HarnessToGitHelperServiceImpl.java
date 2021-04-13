@@ -106,11 +106,11 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
     gitEntityService.save(pushInfo.getAccountId(), entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail),
         yamlGitConfigDTO, pushInfo.getFilePath(), pushInfo.getCommitId(), pushInfo.getBranchName());
-    executorService.submit(
-        ()
-            -> onBranchCreationReadFilesAndProcessThem(entityRef.getAccountIdentifier(),
-                yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
-                yamlGitConfigDTO.getOrganizationIdentifier(), pushInfo.getBranchName(), yamlGitConfigDTO.getBranch()));
+    executorService.submit(()
+                               -> onBranchCreationReadFilesAndProcessThem(entityRef.getAccountIdentifier(),
+                                   yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
+                                   yamlGitConfigDTO.getOrganizationIdentifier(), pushInfo.getBranchName(),
+                                   yamlGitConfigDTO.getBranch(), pushInfo.getFilePath()));
     // todo(abhinav): record git commit and git file activity.
   }
 
@@ -122,9 +122,11 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
 
   @Override
   public void onBranchCreationReadFilesAndProcessThem(String accountId, String gitSyncConfigId,
-      String projectIdentifier, String orgIdentifier, String branch, String defaultBranch) {
+      String projectIdentifier, String orgIdentifier, String branch, String defaultBranch,
+      String filePathToBeExcluded) {
     final YamlGitConfigDTO yamlGitConfigDTO =
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
-    gitToHarnessProcessorService.readFilesFromBranchAndProcess(yamlGitConfigDTO, branch, accountId, defaultBranch);
+    gitToHarnessProcessorService.readFilesFromBranchAndProcess(
+        yamlGitConfigDTO, branch, accountId, defaultBranch, filePathToBeExcluded);
   }
 }

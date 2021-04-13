@@ -62,7 +62,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   @Trimmed @NotEmpty String accountIdentifier;
   @Trimmed String orgIdentifier;
   @Trimmed String projectIdentifier;
-  @FdUniqueIndex @NotEmpty String fullyQualifiedIdentifier;
+  @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;

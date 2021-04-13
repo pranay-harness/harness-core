@@ -66,14 +66,19 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   }
 
   @Override
-  public void readFilesFromBranchAndProcess(
-      YamlGitConfigDTO yamlGitConfig, String branch, String accountId, String defaultBranch) {
+  public void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfig, String branch, String accountId,
+      String defaultBranch, String filePathToBeExcluded) {
     ScmConnector connectorAssociatedWithGitSyncConfig =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfig, accountId);
     FileBatchContentResponse harnessFilesOfBranch =
         getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, defaultBranch, yamlGitConfig);
+    removeTheExcludedFile(harnessFilesOfBranch, filePathToBeExcluded);
     processTheChangesWeGotFromGit(harnessFilesOfBranch, yamlGitConfig, branch, accountId);
-    saveTheShortListedBranch(yamlGitConfig, branch);
+  }
+
+  private void removeTheExcludedFile(FileBatchContentResponse allFilesOfDefaultBranch, String filePathToBeExcluded) {
+    allFilesOfDefaultBranch.getFileContentsList().removeIf(
+        fileContent -> fileContent.getPath().equals(filePathToBeExcluded));
   }
 
   private void saveTheShortListedBranch(YamlGitConfigDTO yamlGitConfig, String branch) {
