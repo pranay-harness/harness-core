@@ -17,13 +17,13 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
-import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
-import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
+import io.harness.organization.OrganizationClientModule;
+import io.harness.organization.remote.OrganizationClient;
 import io.harness.outbox.api.OutboxService;
 import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pipeline.remote.PipelineServiceClient;
-import io.harness.projectmanagerclient.ProjectManagementClientModule;
-import io.harness.projectmanagerclient.remote.ProjectManagerClient;
+import io.harness.project.ProjectClientModule;
+import io.harness.project.remote.ProjectClient;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
@@ -117,18 +117,18 @@ public class ResourceGroupModule extends AbstractModule {
 
   private void addResourceValidatorConstraints() {
     requireBinding(SecretNGManagerClient.class);
-    requireBinding(ProjectManagerClient.class);
-    requireBinding(OrganizationManagerClient.class);
+    requireBinding(ProjectClient.class);
+    requireBinding(OrganizationClient.class);
     requireBinding(ConnectorResourceClient.class);
     requireBinding(PipelineServiceClient.class);
     requireBinding(AccountClient.class);
   }
 
   private void installResourceValidators() {
-    install(new ProjectManagementClientModule(
+    install(new ProjectClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
         resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
-    install(new OrganizationManagementClientModule(
+    install(new OrganizationClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
         resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
     install(new SecretNGManagerClientModule(

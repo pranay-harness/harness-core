@@ -71,6 +71,7 @@ directories:
   955-alert-beans
   955-delegate-beans
   935-access-control-decision
+  940-cg-audit-service
   940-feature-flag
   940-ng-audit-service
   940-notification-client

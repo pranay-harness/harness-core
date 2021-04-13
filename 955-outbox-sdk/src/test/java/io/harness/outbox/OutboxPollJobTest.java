@@ -59,6 +59,7 @@ public class OutboxPollJobTest extends CategoryTest {
     when(outboxService.delete(id)).thenReturn(true);
     outboxEventPollJob.run();
     verify(outboxService, times(1)).delete(id);
+    verify(outboxEventHandler, times(1)).handle(any());
     verify(outboxService, times(0)).update(any());
   }
 
@@ -74,6 +75,7 @@ public class OutboxPollJobTest extends CategoryTest {
     final ArgumentCaptor<OutboxEvent> outboxEventArgumentCaptor = ArgumentCaptor.forClass(OutboxEvent.class);
     outboxEventPollJob.run();
     verify(outboxService, times(0)).delete(any());
+    verify(outboxEventHandler, times(3)).handle(any());
     verify(outboxService, times(1)).update(outboxEventArgumentCaptor.capture());
     OutboxEvent updateOutboxEvent = outboxEventArgumentCaptor.getValue();
     assertEquals(id, updateOutboxEvent.getId());

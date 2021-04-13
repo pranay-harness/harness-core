@@ -238,6 +238,10 @@ aeriform("//935-access-control-decision:module")
 
 aeriform("//935-access-control-decision:tests")
 
+aeriform("//940-cg-audit-service:module")
+
+aeriform("//940-cg-audit-service:tests")
+
 aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")

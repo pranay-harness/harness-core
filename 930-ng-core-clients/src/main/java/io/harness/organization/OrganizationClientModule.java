@@ -1,7 +1,10 @@
-package io.harness.organizationmanagerclient;
+package io.harness.organization;
 
-import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
-import io.harness.organizationmanagerclient.remote.OrganizationManagerHttpClientFactory;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.organization.remote.OrganizationClient;
+import io.harness.organization.remote.OrganizationHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -10,12 +13,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
-public class OrganizationManagementClientModule extends AbstractModule {
+@OwnedBy(PL)
+public class OrganizationClientModule extends AbstractModule {
   private final ServiceHttpClientConfig organizationManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
 
-  public OrganizationManagementClientModule(
+  public OrganizationClientModule(
       ServiceHttpClientConfig organizationManagerClientConfig, String serviceSecret, String clientId) {
     this.organizationManagerClientConfig = organizationManagerClientConfig;
     this.serviceSecret = serviceSecret;
@@ -23,14 +27,14 @@ public class OrganizationManagementClientModule extends AbstractModule {
   }
 
   @Provides
-  private OrganizationManagerHttpClientFactory organizationManagerHttpClientFactory(
+  private OrganizationHttpClientFactory organizationManagerHttpClientFactory(
       KryoConverterFactory kryoConverterFactory) {
-    return new OrganizationManagerHttpClientFactory(
+    return new OrganizationHttpClientFactory(
         organizationManagerClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 
   @Override
   protected void configure() {
-    bind(OrganizationManagerClient.class).toProvider(OrganizationManagerHttpClientFactory.class).in(Scopes.SINGLETON);
+    bind(OrganizationClient.class).toProvider(OrganizationHttpClientFactory.class).in(Scopes.SINGLETON);
   }
 }
