@@ -72,6 +72,7 @@ public class PipelineServiceConfiguration extends Configuration {
   private ScmConnectionConfig scmConnectionConfig;
   private ServiceHttpClientConfig managerClientConfig;
   private LogStreamingServiceConfiguration logStreamingServiceConfig;
+  private PipelineServiceIteratorsConfig iteratorsConfig;
 
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

@@ -74,6 +74,7 @@ import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.NGTriggerRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
@@ -279,6 +280,7 @@ public class PipelineServiceModule extends AbstractModule {
   List<YamlSchemaRootClass> yamlSchemaRootClasses() {
     return ImmutableList.<YamlSchemaRootClass>builder()
         .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
+        .addAll(NGTriggerRegistrars.yamlSchemaRegistrars)
         .build();
   }
 
@@ -354,5 +356,12 @@ public class PipelineServiceModule extends AbstractModule {
   @Singleton
   public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
     return configuration.getLogStreamingServiceConfig();
+  }
+
+  @Provides
+  @Singleton
+  public PipelineServiceIteratorsConfig getIteratorsConfig() {
+    return configuration.getIteratorsConfig() == null ? PipelineServiceIteratorsConfig.builder().build()
+                                                      : configuration.getIteratorsConfig();
   }
 }

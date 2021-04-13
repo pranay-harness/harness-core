@@ -25,6 +25,7 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.exception.WingsExceptionMapper;
@@ -295,6 +296,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
+    environment.lifecycle().manage(injector.getInstance(ApprovalInstanceExpirationJob.class));
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {

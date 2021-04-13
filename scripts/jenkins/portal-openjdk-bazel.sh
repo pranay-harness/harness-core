@@ -301,7 +301,7 @@ cd ../..
 mkdir -p dist/eventsapi-monitor
 cd dist/eventsapi-monitor
 
-cp -r ../../950-events-api/src/monitoring/* .
+cp -r ../../953-events-api/src/monitoring/* .
 
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt

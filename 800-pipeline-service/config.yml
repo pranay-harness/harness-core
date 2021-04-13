@@ -138,4 +138,9 @@ logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
 
+iteratorsConfig:
+  approvalInstanceIteratorConfig:
+    enabled: true
+    targetIntervalInSeconds: 60
+
 enableAuth: false

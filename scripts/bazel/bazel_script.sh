@@ -136,8 +136,8 @@ BAZEL_MODULES="\
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
-  //950-events-api/src/main/proto:all \
-  //950-events-api:module \
+  //953-events-api/src/main/proto:all \
+  //953-events-api:module \
   //950-events-framework:module \
   //950-ng-authentication-service:module \
   //950-ng-core:module \
@@ -413,7 +413,7 @@ build_bazel_module 950-command-library-common
 build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
-build_bazel_module 950-events-api
+build_bazel_module 953-events-api
 build_bazel_module 950-events-framework
 build_bazel_module 950-ng-audit-commons
 build_bazel_module 949-git-sync-sdk
@@ -450,7 +450,6 @@ build_bazel_tests 960-persistence
 build_bazel_tests 400-rest
 build_bazel_tests 220-graphql-test
 
-build_java_proto_module 950-events-api
 build_java_proto_module 960-notification-beans
 
 build_proto_module ciengine product/ci/engine/proto

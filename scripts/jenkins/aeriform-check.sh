@@ -36,6 +36,10 @@ scripts/bazel/prepare_aeriform.sh
 
 #bazel-bin/tools/rust/aeriform/aeriform analyze --team-filter $TEAM
 
+scripts/bazel/aeriform.sh analyze \
+  --kind-filter Critical \
+  --exit-code
+
 if [ ! -z "$TRACK_FILES" ]
 then
 	scripts/bazel/aeriform.sh analyze \

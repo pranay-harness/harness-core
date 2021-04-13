@@ -286,8 +286,6 @@ aeriform("//950-delegate-tasks-beans:module")
 
 aeriform("//950-delegate-tasks-beans:tests")
 
-aeriform("//950-events-api:module")
-
 aeriform("//950-events-framework:module")
 
 aeriform("//950-events-framework:tests")
@@ -323,6 +321,10 @@ aeriform("//950-walktree-visitor:tests")
 aeriform("//952-scm-java-client:module")
 
 aeriform("//952-scm-java-client:tests")
+
+aeriform("//953-events-api:module")
+
+aeriform("//953-events-api:tests")
 
 aeriform("//953-git-sync-commons:module")
 
