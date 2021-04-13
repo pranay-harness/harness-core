@@ -87,7 +87,7 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
         .taskType(TFTaskType.APPLY)
         .provisionerIdentifier(stepParameters.getProvisionerIdentifier())
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
-        .configFiles(helper.getGitFetchFilesConfig(
+        .configFile(helper.getGitFetchFilesConfig(
             stepParameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
         .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFiles()));
     if (EmptyPredicate.isNotEmpty(stepParameters.getRemoteVarFiles())) {
@@ -129,7 +129,7 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
     TerraformInheritOutput inheritOutput =
         helper.getSavedInheritOutput(stepParameters.getProvisionerIdentifier(), ambiance);
     builder.workspace(inheritOutput.getWorkspace())
-        .configFiles(helper.getGitFetchFilesConfig(
+        .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
     if (EmptyPredicate.isNotEmpty(inheritOutput.getRemoteVarFiles())) {
       List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
