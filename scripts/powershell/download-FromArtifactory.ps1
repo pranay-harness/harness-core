@@ -9,4 +9,5 @@ $Headers = @{
     Authorization = $basicAuthValue
 }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$ProgressPreference = 'SilentlyContinue'
 Invoke-WebRequest -Uri $srcPath -Headers $Headers -OutFile $destFile
