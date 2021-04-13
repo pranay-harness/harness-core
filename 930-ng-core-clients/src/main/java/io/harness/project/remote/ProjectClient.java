@@ -1,10 +1,13 @@
-package io.harness.projectmanagerclient.remote;
+package io.harness.project.remote;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 
 import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.ng.core.dto.ProjectResponse;
@@ -22,7 +25,8 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-public interface ProjectManagerClient {
+@OwnedBy(PL)
+public interface ProjectClient {
   String PROJECTS_API = "projects";
 
   @POST(PROJECTS_API)
