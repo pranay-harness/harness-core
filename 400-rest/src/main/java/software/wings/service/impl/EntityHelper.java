@@ -18,6 +18,10 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SecretManagerConfig;
@@ -30,7 +34,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
-import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
+import io.harness.globalcontex.EntityOperationIdentifier.EntityOperation;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.manage.GlobalContextManager;
@@ -94,6 +98,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._940_CG_AUDIT_SERVICE)
 public class EntityHelper {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlHelper yamlHelper;
@@ -652,7 +658,7 @@ public class EntityHelper {
                                                         .entityId(affectedResourceId)
                                                         .entityName(affectedResourceName)
                                                         .entityType(entityType.name())
-                                                        .operation(entityOperation.CREATE)
+                                                        .operation(EntityOperation.CREATE)
                                                         .build();
     if (auditGlobalContextData.getEntityOperationIdentifierSet().contains(operationIdentifier)) {
       return Type.CREATE.name();

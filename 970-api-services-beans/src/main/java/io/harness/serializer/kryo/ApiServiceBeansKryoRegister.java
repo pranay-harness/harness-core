@@ -33,6 +33,7 @@ import io.harness.git.model.GitFileChange;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
+import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.jira.JiraAction;
@@ -311,5 +312,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(JiraIssueTransitionsNG.class, 97017);
     kryo.register(JiraIssueUpdateMetadataNG.class, 97018);
     kryo.register(JiraUpdateIssueRequestNG.class, 97019);
+
+    kryo.register(EntityOperationIdentifier.class, 97021);
+    kryo.register(EntityOperationIdentifier.EntityOperation.class, 97022);
   }
 }
