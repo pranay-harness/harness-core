@@ -187,7 +187,7 @@ public class K8sStepHelper {
     return connectorDTO.get().getConnector();
   }
 
-  private void validateManifest(String manifestStoreType, ConnectorInfoDTO connectorInfoDTO, String message) {
+  public void validateManifest(String manifestStoreType, ConnectorInfoDTO connectorInfoDTO, String message) {
     switch (manifestStoreType) {
       case ManifestStoreType.GIT:
         if (!(connectorInfoDTO.getConnectorConfig() instanceof GitConfigDTO)) {

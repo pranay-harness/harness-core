@@ -1,14 +1,13 @@
 package io.harness.cdng.provision.terraform;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@OwnedBy(CDP)
+@OwnedBy(HarnessTeam.CDP)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
