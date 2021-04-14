@@ -11,6 +11,7 @@ import io.harness.product.ci.engine.proto.LiteEngineGrpc;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.internal.GrpcUtil;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,11 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     }
 
     String target = String.format("%s:%d", cik8ExecuteStepTaskParams.getIp(), cik8ExecuteStepTaskParams.getPort());
-    ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+    ManagedChannelBuilder managedChannelBuilder = ManagedChannelBuilder.forTarget(target).usePlaintext();
+    if (!cik8ExecuteStepTaskParams.isLocal()) {
+      managedChannelBuilder.proxyDetector(GrpcUtil.NOOP_PROXY_DETECTOR);
+    }
+    ManagedChannel channel = managedChannelBuilder.build();
     try {
       try {
         LiteEngineGrpc.LiteEngineBlockingStub liteEngineBlockingStub = LiteEngineGrpc.newBlockingStub(channel);
