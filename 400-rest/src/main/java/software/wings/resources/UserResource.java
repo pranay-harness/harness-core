@@ -119,6 +119,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -406,7 +409,7 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse resetPassword(@NotNull ResetPasswordRequest passwordRequest) {
     try {
-      return new RestResponse<>(userService.resetPassword(passwordRequest.getEmail()));
+      return new RestResponse<>(userService.resetPassword(passwordRequest));
     } catch (Exception exception) {
       bugsnagErrorReporter.report(
           ErrorData.builder().exception(exception).email(passwordRequest.getEmail()).tabs(tab).build());
@@ -1287,8 +1290,10 @@ public class UserResource {
   /**
    * The type Reset password request.
    */
+  @NoArgsConstructor
   public static class ResetPasswordRequest {
     private String email;
+    @Getter @Setter private Boolean isNG = false;
 
     /**
      * Gets email.
