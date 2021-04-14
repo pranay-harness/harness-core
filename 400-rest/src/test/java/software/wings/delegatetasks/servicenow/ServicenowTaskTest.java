@@ -14,6 +14,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -51,6 +55,8 @@ import retrofit2.Response;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Response.class, JsonNode.class})
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ServicenowTaskTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String TABLE_NAME = "TABLE_NAME";
@@ -282,7 +288,8 @@ public class ServicenowTaskTest {
         .issueId(ISSUE_ID)
         .issueNumber(ISSUE_NUMBER)
         .jsonBody(JSON_BODY)
-        .serviceNowConfig(ServiceNowConfig.builder().baseUrl("base.url").password("".toCharArray()).build())
+        .serviceNowConfig(
+            ServiceNowConfig.builder().username("user").baseUrl("base.url").password("".toCharArray()).build())
         .ticketType(ticketType)
         .build();
   }
