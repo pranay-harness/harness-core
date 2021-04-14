@@ -1,5 +1,6 @@
 package io.harness.terraform;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
@@ -10,6 +11,7 @@ import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.filesystem.FileIo;
 
@@ -25,6 +27,7 @@ import org.eclipse.jgit.api.errors.JGitInternalException;
 
 @Slf4j
 @UtilityClass
+@OwnedBy(CDP)
 public class TerraformHelperUtils {
   public String generateCommandFlagsString(List<String> arguments, String command) {
     StringBuilder stringargs = new StringBuilder();
