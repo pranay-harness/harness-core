@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -57,6 +58,9 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
@@ -120,6 +124,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
               .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
               .varParams(terraformExecuteStepRequest.getVarParams())
               .targets(terraformExecuteStepRequest.getTargets())
+              .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .build();
       terraformClient.refresh(terraformRefreshCommandRequest, terraformExecuteStepRequest.getEnvVars(),
           terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
@@ -133,9 +138,9 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     terraformClient.apply(terraformApplyCommandRequest, terraformExecuteStepRequest.getEnvVars(),
         terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
 
-    response = terraformClient.output(terraformExecuteStepRequest.getTfOutputsFile().toString(),
-        terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
-        terraformExecuteStepRequest.getLogCallback());
+    response =
+        terraformClient.output(terraformExecuteStepRequest.getTfOutputsFile(), terraformExecuteStepRequest.getEnvVars(),
+            terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
     return response;
   }
 
@@ -178,6 +183,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
               .varParams(terraformExecuteStepRequest.getVarParams())
               .targets(terraformExecuteStepRequest.getTargets())
               .destroySet(false)
+              .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .build();
       response = terraformClient.plan(terraformPlanCommandRequest, terraformExecuteStepRequest.getEnvVars(),
           terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
@@ -213,6 +219,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
             .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
             .varParams(terraformExecuteStepRequest.getVarParams())
             .targets(terraformExecuteStepRequest.getTargets())
+            .uiLogs(terraformExecuteStepRequest.getUiLogs())
             .build();
     terraformClient.refresh(terraformRefreshCommandRequest, terraformExecuteStepRequest.getEnvVars(),
         terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
@@ -245,6 +252,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
               .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
               .varParams(terraformExecuteStepRequest.getVarParams())
               .targets(terraformExecuteStepRequest.getTargets())
+              .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .build();
       terraformClient.refresh(terraformRefreshCommandRequest, terraformExecuteStepRequest.getEnvVars(),
           terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
@@ -257,6 +265,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
               .varParams(terraformExecuteStepRequest.getVarParams())
               .targets(terraformExecuteStepRequest.getTargets())
               .destroySet(true)
+              .uiLogs(terraformExecuteStepRequest.getUiLogs())
               .build();
       response = terraformClient.plan(terraformPlanCommandRequest, terraformExecuteStepRequest.getEnvVars(),
           terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
@@ -320,5 +329,21 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     return Paths
         .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), workingDir, scriptPath == null ? "" : scriptPath)
         .toString();
+  }
+
+  public String getLatestCommitSHA(File repoDir) {
+    if (repoDir.exists()) {
+      try (Git git = Git.open(repoDir)) {
+        Iterator<RevCommit> commits = git.log().call().iterator();
+        if (commits.hasNext()) {
+          RevCommit firstCommit = commits.next();
+
+          return firstCommit.toString().split(" ")[1];
+        }
+      } catch (IOException | GitAPIException e) {
+        log.error("Failed to extract the commit id from the cloned repo.");
+      }
+    }
+    return null;
   }
 }
