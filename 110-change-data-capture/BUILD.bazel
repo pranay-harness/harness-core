@@ -39,6 +39,7 @@ test_dependencies = shared_dependencies + [
     "//400-rest:supporter-test",
     "//960-persistence:supporter-test",
     "//990-commons-test:module",
+    "@maven//:io_dropwizard_dropwizard_testing",
     "@maven//:org_powermock_powermock_api_mockito",
     "@maven//:org_springframework_boot_spring_boot_starter_test",
     "@maven//:junit_junit",
@@ -52,7 +53,6 @@ java_library(
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
-        "resource",
         "//:resource",
     ],
     resources = [
