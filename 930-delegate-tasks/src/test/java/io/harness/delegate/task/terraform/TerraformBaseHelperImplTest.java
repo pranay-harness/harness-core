@@ -1,10 +1,12 @@
 package io.harness.delegate.task.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -12,13 +14,16 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.cli.CliResponse;
-import io.harness.delegate.task.terraform.TerraformBaseHelperImpl;
+import io.harness.filesystem.FileIo;
 import io.harness.logging.LogCallback;
 import io.harness.logging.PlanJsonLogOutputStream;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.security.encryption.EncryptionConfig;
 import io.harness.terraform.TerraformClientImpl;
 import io.harness.terraform.request.TerraformApplyCommandRequest;
 import io.harness.terraform.request.TerraformDestroyCommandRequest;
@@ -32,6 +37,7 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +54,8 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
   @Mock private PlanJsonLogOutputStream planJsonLogOutputStream;
   @Mock private TerraformClientImpl terraformClient;
   private TerraformBaseHelperImpl spyTerraformBaseHelper;
+  @Mock EncryptionConfig encryptionConfig;
+  @Mock private EncryptDecryptHelper encryptDecryptHelper;
 
   private final EncryptedRecordData encryptedPlanContent =
       EncryptedRecordData.builder().name("planName").encryptedValue("encryptedPlan".toCharArray()).build();
@@ -174,10 +182,20 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void testsaveTerraformPlanContentToFile() {
-    // EncryptionConfig encryptionConfig, EncryptedRecordData encryptedTfPlan,
-    //      String scriptDirectory, String terraformOutputFileName
-    // terraformBaseHelper.saveTerraformPlanContentToFile();
+  public void testsaveTerraformPlanContentToFile() throws IOException {
+    String scriptDirectory = "repository/testSaveAndGetTerraformPlanFile";
+    FileIo.createDirectoryIfDoesNotExist(scriptDirectory);
+    byte[] planContent = "terraformPlanContent".getBytes();
+
+    doReturn(planContent).when(encryptDecryptHelper).getDecryptedContent(any(), any());
+
+    terraformBaseHelper.saveTerraformPlanContentToFile(
+        encryptionConfig, encryptedPlanContent, scriptDirectory, TERRAFORM_PLAN_FILE_OUTPUT_NAME);
+    List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
+    assertThat(fileDataList.size()).isEqualTo(1);
+    assertThat(fileDataList.get(0).getFileBytes()).isEqualTo(planContent);
+
+    FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
   }
 
   private TerraformExecuteStepRequestBuilder getTerraformExecuteStepRequest() {
