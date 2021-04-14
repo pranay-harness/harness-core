@@ -3,6 +3,7 @@ package io.harness.cdng.provision.terraform;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -17,7 +18,6 @@ import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -54,7 +54,7 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TerraformStepHelper helper;
   @Inject private FileService fileService;
-  @Inject private FeatureFlagService featureFlagService;
+  @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -102,7 +102,7 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
     }
     builder.backendConfig(ParameterFieldHelper.getParameterFieldValue(stepParameters.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(stepParameters.getTargets()))
-        .saveTerraformStateJson(featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, accountId))
+        .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
         .environmentVariables(helper.getEnvironmentVariablesMap(stepParameters.getEnvironmentVariables()));
 
     TaskData taskData =
@@ -125,7 +125,7 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
     String entityId = helper.generateFullIdentifier(stepParameters.getProvisionerIdentifier(), ambiance);
-    builder.currentStateFileId(fileService.getLatestFileId(entityId, FileBucket.TERRAFORM_STATE));
+    // builder.currentStateFileId(fileService.getLatestFileId(entityId, FileBucket.TERRAFORM_STATE));
     TerraformInheritOutput inheritOutput =
         helper.getSavedInheritOutput(stepParameters.getProvisionerIdentifier(), ambiance);
     builder.workspace(inheritOutput.getWorkspace())
@@ -144,7 +144,7 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
     builder.inlineVarFiles(inheritOutput.getInlineVarFiles())
         .backendConfig(inheritOutput.getBackendConfig())
         .targets(inheritOutput.getTargets())
-        .saveTerraformStateJson(featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, accountId))
+        .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
         .encryptionConfig(inheritOutput.getEncryptionConfig())
         .encryptedTfPlan(inheritOutput.getEncryptedTfPlan())
         .planName(inheritOutput.getPlanName())
