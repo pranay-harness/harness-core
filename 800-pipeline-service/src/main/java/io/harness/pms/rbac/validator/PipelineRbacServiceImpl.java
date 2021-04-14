@@ -32,7 +32,7 @@ public class PipelineRbacServiceImpl implements PipelineRbacService {
 
   public void validateStaticallyReferredEntitiesInYaml(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String pipelineId, String pipelineYaml) {
-    List<EntityDetail> entityDetails = pipelineSetupUsageHelper.getReferrencesOfPipeline(
+    List<EntityDetail> entityDetails = pipelineSetupUsageHelper.getReferencesOfPipeline(
         accountIdentifier, orgIdentifier, projectIdentifier, pipelineId, pipelineYaml, null);
     List<PermissionCheckDTO> permissionCheckDTOS =
         entityDetails.stream().map(pipelineRbacHelper::convertToPermissionCheckDTO).collect(Collectors.toList());
