@@ -69,6 +69,13 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_secret_runtimeAccess
+    name: Runtime Access on a secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
   - identifier: core_connector_create
     name: Create Connector
     status: ACTIVE

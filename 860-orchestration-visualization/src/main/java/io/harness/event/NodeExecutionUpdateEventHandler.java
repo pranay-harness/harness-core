@@ -2,6 +2,8 @@ package io.harness.event;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -10,7 +12,6 @@ import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,9 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NodeExecutionUpdateEventHandler implements AsyncOrchestrationEventHandler {
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private GraphGenerationService graphGenerationService;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
 
   public OrchestrationGraph handleEvent(OrchestrationEvent event, OrchestrationGraph orchestrationGraph) {
@@ -43,6 +44,7 @@ public class NodeExecutionUpdateEventHandler implements AsyncOrchestrationEventH
         }
         graphVertex.setProgressDataMap(nodeExecution.getProgressDataMap());
         graphVertex.setUnitProgresses(nodeExecution.getUnitProgresses());
+        graphVertex.setEndTs(nodeExecution.getEndTs());
         graphVertexMap.put(nodeExecutionId, graphVertex);
         return orchestrationGraph;
       }

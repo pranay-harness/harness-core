@@ -6,9 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.facilitator.async.AsyncFacilitator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.StepSpecTypeConstants;
-import io.harness.steps.barriers.BarrierFacilitator;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.BarrierStepParameters;
 
@@ -48,7 +48,7 @@ public class BarrierStepInfo implements PMSStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return BarrierFacilitator.FACILITATOR_TYPE.getType();
+    return AsyncFacilitator.FACILITATOR_TYPE.getType();
   }
 
   @Override

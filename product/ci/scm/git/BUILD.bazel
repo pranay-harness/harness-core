@@ -17,6 +17,12 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = ["git_test.go"],
+    data = [
+        "testdata/branches.json",
+        "testdata/commit.json",
+        "testdata/commits.json",
+        "testdata/pr.json",
+    ],
     embed = [":go_default_library"],
     deps = [
         "//commons/go/lib/logs:go_default_library",
