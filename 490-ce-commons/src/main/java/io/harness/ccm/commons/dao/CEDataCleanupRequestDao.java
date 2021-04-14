@@ -4,6 +4,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 
 import io.harness.ccm.commons.entities.CEDataCleanupRequest;
 import io.harness.ccm.commons.entities.CEDataCleanupRequest.CEDataCleanupRequestKeys;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -38,5 +39,17 @@ public class CEDataCleanupRequestDao {
 
     FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
     return persistence.upsert(query, updateOperations, findAndModifyOptions);
+  }
+
+  public String save(CEDataCleanupRequest ceDataCleanupRequest) {
+    if (ceDataCleanupRequest.getAccountId() == null || ceDataCleanupRequest.getBatchJobType() == null
+        || ceDataCleanupRequest.getStartAt() == null) {
+      throw new InvalidRequestException("Not all required details were entered");
+    }
+    return persistence.save(ceDataCleanupRequest);
+  }
+
+  public boolean delete(String uuid) {
+    return persistence.delete(CEDataCleanupRequest.class, uuid);
   }
 }
