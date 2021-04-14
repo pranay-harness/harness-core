@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
+import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -32,12 +33,12 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.provision.TerraformConstants;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
 
 import software.wings.beans.TaskType;
-import software.wings.service.intfc.FileService;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -53,8 +54,8 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TerraformStepHelper helper;
-  @Inject private FileService fileService;
   @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
+  @Inject private FileServiceClient fileServiceClient;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -83,7 +84,9 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
     String entityId = helper.generateFullIdentifier(stepParameters.getProvisionerIdentifier(), ambiance);
-    builder.currentStateFileId(fileService.getLatestFileId(entityId, FileBucket.TERRAFORM_STATE))
+    builder
+        .currentStateFileId(
+            RestClientUtils.getResponse(fileServiceClient.getLatestFileId(entityId, FileBucket.TERRAFORM_STATE)))
         .taskType(TFTaskType.APPLY)
         .provisionerIdentifier(stepParameters.getProvisionerIdentifier())
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
