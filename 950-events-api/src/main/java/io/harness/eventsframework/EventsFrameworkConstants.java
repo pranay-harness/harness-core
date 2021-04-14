@@ -26,7 +26,7 @@ public final class EventsFrameworkConstants {
   public static final int ENTITY_CRUD_MAX_TOPIC_SIZE = 1000000;
   public static final int FEATURE_FLAG_MAX_TOPIC_SIZE = 1000000;
   public static final int SETUP_USAGE_MAX_TOPIC_SIZE = 1000000;
-  public static final int ENTITY_ACTIVITY_MAX_TOPIC_SIZE = 1000000;
+  public static final int ENTITY_ACTIVITY_MAX_TOPIC_SIZE = 10000;
   public static final int HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE = 1000000;
   public static final int WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE = 1000000;
   public static final int GIT_CONFIG_STREAM_MAX_TOPIC_SIZE = 1000000;
