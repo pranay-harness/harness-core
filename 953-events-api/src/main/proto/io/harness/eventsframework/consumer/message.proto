@@ -1,0 +1,14 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+
+import "953-events-api/src/main/proto/io/harness/eventsframework/producer/message.proto";
+package io.harness.eventsframework.consumer;
+
+option java_multiple_files = true;
+option go_package = "953_events_api";
+
+message Message {
+  string id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  io.harness.eventsframework.producer.Message message = 3;
+}

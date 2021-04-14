@@ -13,6 +13,7 @@ import io.harness.outbox.filter.OutboxEventFilter;
 import io.harness.repositories.OutboxEventRepository;
 
 import com.google.inject.Inject;
+import java.time.Instant;
 import java.util.List;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.Assert;
@@ -44,14 +45,12 @@ public class OutboxDaoImpl implements OutboxDao {
 
   private Criteria getCriteria(OutboxEventFilter outboxEventFilter) {
     Criteria criteria = new Criteria();
-    if (Boolean.TRUE.equals(outboxEventFilter.getBlocked())) {
-      criteria.and(OutboxEventKeys.blocked).is(Boolean.TRUE);
-    } else if (Boolean.FALSE.equals(outboxEventFilter.getBlocked())) {
-      criteria.and(OutboxEventKeys.blocked).ne(Boolean.TRUE);
-    }
-    if (outboxEventFilter.getMaximumAttempts() != null) {
-      criteria.and(OutboxEventKeys.attempts).lt(outboxEventFilter.getMaximumAttempts());
-    }
+    Criteria blockedNotTrueCriteria = Criteria.where(OutboxEventKeys.blocked).ne(Boolean.TRUE);
+    Criteria blockedTrueCriteria = Criteria.where(OutboxEventKeys.blocked)
+                                       .is(Boolean.TRUE)
+                                       .and(OutboxEventKeys.nextUnblockAttemptAt)
+                                       .lt(Instant.now());
+    criteria.orOperator(blockedNotTrueCriteria, blockedTrueCriteria);
     return criteria;
   }
 

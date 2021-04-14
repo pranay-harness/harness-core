@@ -685,7 +685,7 @@ java_binary(
 )
 
 test_dependencies = [
-    "@maven//:com_squareup_okhttp3_okhttp",
+    "@delegate//:com_squareup_okhttp3_okhttp",
 ] + [
     "//400-rest:supporter-test",
     "//955-alert-beans:module",

@@ -18,6 +18,7 @@ import lombok.Data;
 public class CIK8ExecuteStepTaskParams implements CIExecuteStepTaskParams, ExecutionCapabilityDemander {
   @NotNull private String ip;
   @NotNull private int port;
+  private boolean isLocal;
   @NotNull private byte[] serializedStep;
 
   @Builder.Default private static final CIExecuteStepTaskParams.Type type = CIExecuteStepTaskParams.Type.K8;
@@ -29,6 +30,7 @@ public class CIK8ExecuteStepTaskParams implements CIExecuteStepTaskParams, Execu
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Collections.singletonList(LiteEngineConnectionCapability.builder().ip(ip).port(port).build());
+    return Collections.singletonList(
+        LiteEngineConnectionCapability.builder().ip(ip).port(port).isLocal(isLocal).build());
   }
 }

@@ -1,14 +1,17 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.CLIENT_KEY_CERT;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.OPEN_ID_CONNECT;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.SERVICE_ACCOUNT;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
+import static io.harness.rule.OwnerRule.ABOSII;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
@@ -33,6 +36,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
   @InjectMocks K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   private static final String defaultNamespace = "default";
@@ -233,6 +237,62 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void createKubernetesConfigFromClusterConfigForOIDCTokenNullSecret() {
+    String oidClientIdIdentifier = "oidcClientIdRef";
+    String oidcIssuerUrl = "oidcIssuerUrl";
+    String oidcPasswordIdentifier = "oidcPasswordRef";
+    String oidcScopes = "oidcScopes";
+    String oidcSecretIdentifier = "oidcSecretRef";
+    String oidcUsername = "oidcUsername";
+    String masterUrl = "https://abc.com";
+    String oidcCleintId = "oidcClientId";
+    String oidcPassword = "oidcPassword";
+
+    SecretRefData oidcCleintIdRef = SecretRefData.builder()
+                                        .identifier(oidClientIdIdentifier)
+                                        .scope(Scope.ACCOUNT)
+                                        .decryptedValue(oidcCleintId.toCharArray())
+                                        .build();
+    SecretRefData oidcPasswordSecretRe = SecretRefData.builder()
+                                             .identifier(oidcPasswordIdentifier)
+                                             .scope(Scope.ACCOUNT)
+                                             .decryptedValue(oidcPassword.toCharArray())
+                                             .build();
+
+    KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
+                                              .authType(OPEN_ID_CONNECT)
+                                              .credentials(KubernetesOpenIdConnectDTO.builder()
+                                                               .oidcClientIdRef(oidcCleintIdRef)
+                                                               .oidcIssuerUrl(oidcIssuerUrl)
+                                                               .oidcPasswordRef(oidcPasswordSecretRe)
+                                                               .oidcScopes(oidcScopes)
+                                                               .oidcUsername(oidcUsername)
+                                                               .build())
+                                              .build();
+
+    KubernetesClusterConfigDTO connectorDTOWithOpenIdConnectCred =
+        KubernetesClusterConfigDTO.builder()
+            .credential(
+                KubernetesCredentialDTO.builder()
+                    .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                    .config(KubernetesClusterDetailsDTO.builder().masterUrl(masterUrl).auth(kubernetesAuthDTO).build())
+                    .build())
+            .build();
+
+    KubernetesConfig config =
+        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(connectorDTOWithOpenIdConnectCred, null);
+
+    assertThat(config.getOidcClientId()).isEqualTo(oidcCleintId.toCharArray());
+    assertThat(config.getOidcIdentityProviderUrl()).isEqualTo(oidcIssuerUrl);
+    assertThat(config.getOidcPassword()).isEqualTo(oidcPassword.toCharArray());
+    assertThat(config.getOidcScopes()).isEqualTo(oidcScopes);
+    assertThat(config.getOidcSecret()).isNull();
+    assertThat(config.getOidcUsername()).isEqualTo(oidcUsername);
+  }
+
+  @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void createKubernetesConfigFromClusterConfigForInheritFromDelegateCreds() {
@@ -248,5 +308,45 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
     KubernetesConfig config =
         k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(connectorDTOWithDelegateCreds, null);
     assertThat(config).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void createKubernetesConfigFromClusterConfigForInheritFromDelegateRunningInCluster() {
+    final String serviceHost = "svc.cluster.local";
+    final String servicePort = "443";
+    final KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
+        KubernetesClusterConfigDTO.builder()
+            .delegateSelectors(Collections.singleton("delegate"))
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+                            .config(KubernetesDelegateDetailsDTO.builder().build())
+                            .build())
+            .build();
+    String kubernetesServiceHostTemp = System.getProperty("KUBERNETES_SERVICE_HOST");
+    String kubernetesServicePortTemp = System.getProperty("KUBERNETES_SERVICE_PORT");
+    KubernetesConfig config;
+    try {
+      System.setProperty("KUBERNETES_SERVICE_HOST", serviceHost);
+      System.setProperty("KUBERNETES_SERVICE_PORT", servicePort);
+
+      config =
+          k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(connectorDTOWithDelegateCreds, "service");
+    } finally {
+      if (kubernetesServiceHostTemp != null) {
+        System.setProperty("KUBERNETES_SERVICE_HOST", kubernetesServiceHostTemp);
+      } else {
+        System.getProperties().remove("KUBERNETES_SERVICE_HOST");
+      }
+
+      if (kubernetesServicePortTemp != null) {
+        System.setProperty("KUBERNETES_SERVICE_PORT", kubernetesServicePortTemp);
+      } else {
+        System.getProperties().remove("KUBERNETES_SERVICE_PORT");
+      }
+    }
+
+    assertThat(config.getMasterUrl()).isEqualTo("https://svc.cluster.local:443");
   }
 }

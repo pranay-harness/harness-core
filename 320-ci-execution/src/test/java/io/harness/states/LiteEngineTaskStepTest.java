@@ -26,6 +26,7 @@ import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -57,6 +58,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
   private Ambiance ambiance;
   private LiteEngineTaskStepInfo liteEngineTaskStepInfo;
+  private StepElementParameters stepElementParameters;
 
   @Before
   public void setUp() {
@@ -87,6 +89,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                             .build()))
                     .build())
             .build();
+    stepElementParameters = StepElementParameters.builder().name("name").spec(liteEngineTaskStepInfo).build();
   }
 
   @Test
@@ -120,7 +123,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
     StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -139,7 +142,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
     StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 
@@ -171,7 +174,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
     StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -201,7 +204,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
     StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 }

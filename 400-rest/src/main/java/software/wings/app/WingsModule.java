@@ -138,7 +138,6 @@ import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
-import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -1315,8 +1314,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
-      install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
           configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);

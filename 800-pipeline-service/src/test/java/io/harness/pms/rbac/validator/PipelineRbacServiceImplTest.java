@@ -1,0 +1,126 @@
+package io.harness.pms.rbac.validator;
+
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.rule.OwnerRule.NAMAN;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
+
+import io.harness.EntityType;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
+import io.harness.category.element.UnitTests;
+import io.harness.encryption.Scope;
+import io.harness.exception.AccessDeniedException;
+import io.harness.ng.core.EntityDetail;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
+import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.rule.Owner;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+@OwnedBy(PIPELINE)
+public class PipelineRbacServiceImplTest {
+  @Mock private PipelineSetupUsageHelper pipelineSetupUsageHelper;
+  @Mock private AccessControlClient accessControlClient;
+  @Mock private PipelineRbacHelper pipelineRbacHelper;
+  @InjectMocks private PipelineRbacServiceImpl pipelineRbacService;
+
+  @Before
+  public void init() {
+    MockitoAnnotations.initMocks(this);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testValidateStaticallyReferredEntitiesInYaml() {
+    String accountIdentifier = "account";
+    String orgIdentifier = "default";
+    String projectIdentifier = "test";
+    String pipelineIdentifier = "pipelineId";
+    String pipelineYaml = "pipelineYaml";
+
+    List<EntityDetail> entityDetails = new ArrayList<>();
+    entityDetails.add(EntityDetail.builder()
+                          .type(EntityType.CONNECTORS)
+                          .entityRef(IdentifierRef.builder()
+                                         .accountIdentifier(accountIdentifier)
+                                         .orgIdentifier(orgIdentifier)
+                                         .projectIdentifier(projectIdentifier)
+                                         .identifier("DOCKER_NEW_TEST")
+                                         .scope(Scope.PROJECT)
+                                         .metadata(Collections.singletonMap(PreFlightCheckMetadata.FQN,
+                                             "pipeline.stages.deploy.serviceConfig.artifacts.primary.connectorRef"))
+                                         .build())
+                          .build());
+    entityDetails.add(EntityDetail.builder()
+                          .type(EntityType.CONNECTORS)
+                          .entityRef(IdentifierRef.builder()
+                                         .accountIdentifier(accountIdentifier)
+                                         .orgIdentifier(orgIdentifier)
+                                         .projectIdentifier(projectIdentifier)
+                                         .identifier("conn")
+                                         .scope(Scope.UNKNOWN)
+                                         .metadata(Collections.singletonMap(PreFlightCheckMetadata.FQN,
+                                             "pipeline.stages.deploy.infrastructure.connectorRef"))
+                                         .build())
+                          .build());
+    when(pipelineSetupUsageHelper.getReferencesOfPipeline(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(entityDetails);
+
+    when(pipelineRbacHelper.convertToPermissionCheckDTO(any(EntityDetail.class))).thenCallRealMethod();
+
+    pipelineRbacService.validateStaticallyReferredEntitiesInYaml(
+        accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
+
+    List<AccessControlDTO> accessControlList = new ArrayList<>();
+    accessControlList.add(AccessControlDTO.builder()
+                              .permission("core_connector_runtimeAccess")
+                              .resourceScope(ResourceScope.builder()
+                                                 .accountIdentifier(accountIdentifier)
+                                                 .orgIdentifier(orgIdentifier)
+                                                 .projectIdentifier(projectIdentifier)
+                                                 .build())
+                              .resourceIdentifier("DOCKER_NEW_TEST")
+                              .resourceType("CONNECTOR")
+                              .permitted(true)
+                              .build());
+    accessControlList.add(AccessControlDTO.builder()
+                              .permission("core_connector_runtimeAccess")
+                              .resourceScope(ResourceScope.builder().accountIdentifier(accountIdentifier).build())
+                              .resourceIdentifier("conn")
+                              .resourceType("CONNECTOR")
+                              .permitted(false)
+                              .build());
+
+    when(accessControlClient.checkForAccess(anyListOf(PermissionCheckDTO.class)))
+        .thenReturn(AccessCheckResponseDTO.builder().accessControlList(accessControlList).build());
+    assertThatThrownBy(()
+                           -> pipelineRbacService.validateStaticallyReferredEntitiesInYaml(
+                               accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml))
+        .isInstanceOf(AccessDeniedException.class);
+
+    accessControlList.remove(1);
+    pipelineRbacService.validateStaticallyReferredEntitiesInYaml(
+        accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
+  }
+}

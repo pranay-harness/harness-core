@@ -12,6 +12,8 @@ aeriform("//125-cd-nextgen:tests")
 
 aeriform("//130-resource-group:module")
 
+aeriform("//130-resource-group:tests")
+
 aeriform("//136-git-sync-manager:module")
 
 aeriform("//136-git-sync-manager:tests")
@@ -238,6 +240,10 @@ aeriform("//935-access-control-decision:module")
 
 aeriform("//935-access-control-decision:tests")
 
+aeriform("//940-cg-audit-service:module")
+
+aeriform("//940-cg-audit-service:tests")
+
 aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
@@ -286,8 +292,6 @@ aeriform("//950-delegate-tasks-beans:module")
 
 aeriform("//950-delegate-tasks-beans:tests")
 
-aeriform("//950-events-api:module")
-
 aeriform("//950-events-framework:module")
 
 aeriform("//950-events-framework:tests")
@@ -323,6 +327,10 @@ aeriform("//950-walktree-visitor:tests")
 aeriform("//952-scm-java-client:module")
 
 aeriform("//952-scm-java-client:tests")
+
+aeriform("//953-events-api:module")
+
+aeriform("//953-events-api:tests")
 
 aeriform("//953-git-sync-commons:module")
 

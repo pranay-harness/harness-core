@@ -12,6 +12,7 @@ import io.harness.ci.plan.creator.execution.CIStageModuleInfo;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -58,8 +59,10 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     Ambiance ambiance = nodeExecutionProto.getAmbiance();
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
     try {
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo = RecastOrchestrationUtils.fromDocumentJson(
-          nodeExecutionProto.getResolvedStepParameters(), LiteEngineTaskStepInfo.class);
+      StepElementParameters stepElementParameters = RecastOrchestrationUtils.fromDocumentJson(
+          nodeExecutionProto.getResolvedStepParameters(), StepElementParameters.class);
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+
       if (liteEngineTaskStepInfo == null) {
         return null;
       }

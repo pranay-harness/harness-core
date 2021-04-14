@@ -126,7 +126,7 @@ public class StatusUtils {
       case SUCCEEDED:
         return EnumSet.allOf(Status.class);
       case IGNORE_FAILED:
-        return EnumSet.of(FAILED, INTERVENTION_WAITING);
+        return EnumSet.of(EXPIRED, FAILED, INTERVENTION_WAITING);
       default:
         throw new IllegalStateException("Unexpected value: " + status);
     }
