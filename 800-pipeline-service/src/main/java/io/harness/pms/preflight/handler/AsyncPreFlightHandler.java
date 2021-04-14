@@ -70,7 +70,7 @@ public class AsyncPreFlightHandler implements Runnable {
       throw new InvalidRequestException("Invalid merged pipeline yaml");
     }
 
-    List<EntityDetail> allReferredUsages = pipelineSetupUsageHelper.getReferrencesOfPipeline(
+    List<EntityDetail> allReferredUsages = pipelineSetupUsageHelper.getReferencesOfPipeline(
         entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier(),
         entity.getPipelineIdentifier(), entity.getPipelineYaml(), EntityType.CONNECTORS);
     Map<Scope, List<String>> scopeToConnectorIdentifiers = new HashMap<>();
