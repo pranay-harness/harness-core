@@ -1,8 +1,11 @@
 package io.harness.serializer.kryo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthType;
@@ -121,7 +124,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
 import java.util.LinkedHashSet;
-
+@OwnedBy(HarnessTeam.PL)
 public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -243,5 +246,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BitbucketApiAccessType.class, 19662);
     kryo.register(BitbucketApiAccessSpecDTO.class, 19663);
     kryo.register(NewRelicConnectorDTO.class, 19664);
+    kryo.register(AppDynamicsAuthType.class, 19665);
   }
 }

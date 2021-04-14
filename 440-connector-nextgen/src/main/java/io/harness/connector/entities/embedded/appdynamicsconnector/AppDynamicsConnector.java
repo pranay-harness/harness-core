@@ -1,6 +1,9 @@
 package io.harness.connector.entities.embedded.appdynamicsconnector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthType;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -17,10 +20,14 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector")
+@OwnedBy(HarnessTeam.CV)
 public class AppDynamicsConnector extends Connector {
   private String username;
   private String accountname;
   private String passwordRef;
   private String controllerUrl;
   private String accountId;
+  private AppDynamicsAuthType authType;
+  private String clientId;
+  private String clientSecret;
 }
