@@ -1464,7 +1464,7 @@ maven_install(
         "com.splunk:splunk:1.6.3.0",
         "com.squareup.okhttp3:logging-interceptor:3.9.1",
         "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-        "com.squareup.okhttp3:okhttp:3.9.1",
+        "com.squareup.okhttp3:okhttp:3.6.0",
         "com.squareup.okhttp3:mockwebxxxxxxxx3.9.1",
         "com.squareup.okio:okio:1.13.0",
         "com.squareup.retrofit2:adapter-rxjava:2.7.2",
