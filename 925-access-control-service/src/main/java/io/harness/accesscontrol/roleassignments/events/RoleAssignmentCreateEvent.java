@@ -14,6 +14,7 @@ import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,6 +33,7 @@ public class RoleAssignmentCreateEvent implements Event {
     this.scope = scope;
   }
 
+  @JsonIgnore
   @Override
   public ResourceScope getResourceScope() {
     if (isEmpty(scope.getOrgIdentifier())) {
@@ -42,11 +44,13 @@ public class RoleAssignmentCreateEvent implements Event {
     return new ProjectScope(accountIdentifier, scope.getOrgIdentifier(), scope.getProjectIdentifier());
   }
 
+  @JsonIgnore
   @Override
   public Resource getResource() {
     return Resource.builder().identifier(roleAssignment.getIdentifier()).type(ROLE_ASSIGNMENT).build();
   }
 
+  @JsonIgnore
   @Override
   public String getEventType() {
     return ROLE_ASSIGNMENT_CREATE_EVENT;

@@ -220,9 +220,9 @@ outboxPollConfig:
   maximumRetryAttemptsForAnEvent: 7
 
 accessControlClient:
-  enableAccessControl: false
+  enableAccessControl: true
   accessControlServiceConfig:
-    baseUrl: http://localhost:9006/api
+    baseUrl: http://localhost:9006/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
