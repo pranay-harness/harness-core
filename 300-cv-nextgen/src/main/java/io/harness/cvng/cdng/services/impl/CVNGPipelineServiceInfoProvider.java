@@ -29,6 +29,7 @@ public class CVNGPipelineServiceInfoProvider implements PipelineServiceInfoProvi
   @Override
   public List<FilterJsonCreator> getFilterJsonCreators() {
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
+    filterJsonCreators.add(new CVNGStepFilterJsonCreator());
     injectorUtils.injectMembers(filterJsonCreators);
     return filterJsonCreators;
   }
