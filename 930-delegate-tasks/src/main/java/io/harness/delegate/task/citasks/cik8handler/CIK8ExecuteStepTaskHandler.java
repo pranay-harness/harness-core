@@ -31,6 +31,7 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     ExecuteStepRequest executeStepRequest;
     try {
       executeStepRequest = ExecuteStepRequest.parseFrom(cik8ExecuteStepTaskParams.getSerializedStep());
+      log.info("parsed call for execute step with id {} is successful ", executeStepRequest.getStep().getId());
     } catch (InvalidProtocolBufferException e) {
       log.error("Failed to parse serialized step with err: {}", e.getMessage());
       return K8sTaskExecutionResponse.builder()

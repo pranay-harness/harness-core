@@ -1,7 +1,7 @@
 package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
+import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -11,25 +11,24 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
-import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
-import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
-import io.harness.delegate.task.HDelegateTask;
-import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -45,7 +44,6 @@ import io.harness.stateutils.buildstate.BuildSetupUtils;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -62,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CI)
-public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo, K8sTaskExecutionResponse> {
+public class LiteEngineTaskStep implements TaskExecutable<StepElementParameters, K8sTaskExecutionResponse> {
   public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
@@ -74,14 +72,16 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.STEP_TYPE;
 
   @Override
-  public Class<LiteEngineTaskStepInfo> getStepParametersClass() {
-    return LiteEngineTaskStepInfo.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 
   @Override
   public TaskRequest obtainTask(
-      Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, StepInputPackage inputPackage) {
-    Map<String, String> taskIds = addCallBackIds(stepParameters, ambiance);
+      Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    LiteEngineTaskStepInfo stepParameters = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+
+    Map<String, String> taskIds = new HashMap<>();
     String logPrefix = getLogPrefix(ambiance);
     Map<String, String> stepLogKeys = getStepLogKeys(stepParameters, ambiance, logPrefix);
 
@@ -100,18 +100,31 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, LiteEngineTaskStepInfo stepParameters,
+  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
       ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier) throws Exception {
     K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
 
+    LiteEngineTaskStepInfo stepParameters = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+
     DependencyOutcome dependencyOutcome =
         getDependencyOutcome(ambiance, stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse());
+    LiteEnginePodDetailsOutcome liteEnginePodDetailsOutcome =
+        getPodDetailsOutcome(k8sTaskExecutionResponse.getK8sTaskResponse());
+
     StepResponse.StepOutcome stepOutcome =
         StepResponse.StepOutcome.builder().name(DEPENDENCY_OUTCOME).outcome(dependencyOutcome).build();
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       log.info(
           "LiteEngineTaskStep pod creation task executed successfully with response [{}]", k8sTaskExecutionResponse);
-      return StepResponse.builder().status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
+      return StepResponse.builder()
+          .status(Status.SUCCEEDED)
+          .stepOutcome(stepOutcome)
+          .stepOutcome(StepResponse.StepOutcome.builder()
+                           .name(POD_DETAILS_OUTCOME)
+                           .group(StepOutcomeGroup.STAGE.name())
+                           .outcome(liteEnginePodDetailsOutcome)
+                           .build())
+          .build();
 
     } else {
       log.error("LiteEngineTaskStep execution finished with status [{}] and response [{}]",
@@ -124,6 +137,14 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       }
       return stepResponseBuilder.build();
     }
+  }
+
+  private LiteEnginePodDetailsOutcome getPodDetailsOutcome(CiK8sTaskResponse ciK8sTaskResponse) {
+    if (ciK8sTaskResponse != null && ciK8sTaskResponse.getPodStatus() != null) {
+      String ip = ciK8sTaskResponse.getPodStatus().getIp();
+      return LiteEnginePodDetailsOutcome.builder().ipAddress(ip).build();
+    }
+    throw new CIStageExecutionException("Pod creation failed, make sure to have sufficient resources");
   }
 
   private DependencyOutcome getDependencyOutcome(
@@ -180,57 +201,6 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       }
     }
     return DependencyOutcome.builder().serviceDependencyList(serviceDependencyList).build();
-  }
-
-  Map<String, String> addCallBackIds(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
-    Map<String, String> taskIds = new HashMap<>();
-    liteEngineTaskStepInfo.getExecutionElementConfig().getSteps().forEach(
-        executionWrapper -> addCallBackId(executionWrapper, ambiance, taskIds));
-
-    executionSweepingOutputResolver.consume(
-        ambiance, CALLBACK_IDS, StepTaskDetails.builder().taskIds(taskIds).build(), StepOutcomeGroup.STAGE.name());
-    return taskIds;
-  }
-
-  private void addCallBackId(ExecutionWrapperConfig executionWrapper, Ambiance ambiance, Map<String, String> taskIds) {
-    final String accountId = ambiance.getSetupAbstractionsMap().get("accountId");
-
-    if (executionWrapper != null) {
-      if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
-        StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
-        createStepCallbackIds(ambiance, stepElementConfig, accountId, taskIds);
-      } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
-        ParallelStepElementConfig parallelStepElementConfig =
-            IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
-        parallelStepElementConfig.getSections().forEach(section -> addCallBackId(section, ambiance, taskIds));
-      } else {
-        throw new InvalidRequestException("Only Parallel or StepElement is supported");
-      }
-    }
-  }
-
-  private void createStepCallbackIds(
-      Ambiance ambiance, StepElementConfig stepElement, String accountId, Map<String, String> taskIds) {
-    // TODO replace identifier as key in case two steps can have same identifier
-    long timeout = TimeoutUtils.getTimeoutInSeconds(
-        stepElement.getTimeout(), ((CIStepInfo) stepElement.getStepSpecType()).getDefaultTimeout());
-    String taskId = queueDelegateTask(ambiance, timeout, accountId, ciDelegateTaskExecutor);
-    taskIds.put(stepElement.getIdentifier(), taskId);
-  }
-
-  private String queueDelegateTask(Ambiance ambiance, long timeout, String accountId, CIDelegateTaskExecutor executor) {
-    final TaskData taskData = TaskData.builder()
-                                  .async(true)
-                                  .parked(true)
-                                  .taskType(LE_STATUS_TASK_TYPE)
-                                  .parameters(new Object[] {StepStatusTaskParameters.builder().build()})
-                                  .timeout(timeout)
-                                  .build();
-
-    HDelegateTask task =
-        (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap());
-
-    return executor.queueTask(ambiance.getSetupAbstractionsMap(), task);
   }
 
   private Map<String, String> getStepLogKeys(
