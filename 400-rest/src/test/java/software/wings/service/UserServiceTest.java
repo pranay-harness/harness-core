@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -79,6 +81,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -123,6 +127,7 @@ import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.resources.UserResource;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -196,6 +201,8 @@ import org.mongodb.morphia.query.UpdateOperations;
  * Created by anubhaw on 3/9/16.
  */
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(_970_RBAC_CORE)
 public class UserServiceTest extends WingsBaseTest {
   private final User.Builder userBuilder = anUser().appId(APP_ID).email(USER_EMAIL).name(USER_NAME).password(PASSWORD);
 
@@ -1171,7 +1178,10 @@ public class UserServiceTest extends WingsBaseTest {
     when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL + "/");
-    userService.resetPassword(USER_EMAIL);
+    UserResource.ResetPasswordRequest resetPasswordRequest = new UserResource.ResetPasswordRequest();
+    resetPasswordRequest.setEmail(USER_EMAIL);
+    resetPasswordRequest.setIsNG(false);
+    userService.resetPassword(resetPasswordRequest);
 
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTo().get(0)).isEqualTo(USER_EMAIL);

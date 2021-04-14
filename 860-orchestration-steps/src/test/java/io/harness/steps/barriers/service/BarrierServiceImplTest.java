@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationStepsTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.repositories.BarrierNodeRepository;
@@ -30,6 +32,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.internal.util.collections.Sets;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class BarrierServiceImplTest extends OrchestrationStepsTestBase {
   @Inject private BarrierNodeRepository barrierNodeRepository;
   @Inject BarrierService barrierService;
@@ -82,31 +85,22 @@ public class BarrierServiceImplTest extends OrchestrationStepsTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   @RealMongo
-  public void shouldFindAllByIdentifier() {
+  public void shouldFindByIdentifier() {
     String identifier = generateUuid();
     String planExecutionId = generateUuid();
-    List<BarrierExecutionInstance> barrierExecutionInstances = Lists.newArrayList(BarrierExecutionInstance.builder()
-                                                                                      .uuid(generateUuid())
-                                                                                      .identifier(identifier)
-                                                                                      .planExecutionId(planExecutionId)
-                                                                                      .build(),
-        BarrierExecutionInstance.builder()
-            .uuid(generateUuid())
-            .identifier(identifier)
-            .planExecutionId(planExecutionId)
-            .build(),
-        BarrierExecutionInstance.builder()
-            .uuid(generateUuid())
-            .identifier(identifier)
-            .planExecutionId(planExecutionId)
-            .build());
-    barrierNodeRepository.saveAll(barrierExecutionInstances);
 
-    List<BarrierExecutionInstance> barrierExecutionInstanceList =
+    BarrierExecutionInstance bar = BarrierExecutionInstance.builder()
+                                       .uuid(generateUuid())
+                                       .identifier(identifier)
+                                       .planExecutionId(planExecutionId)
+                                       .build();
+    barrierNodeRepository.save(bar);
+
+    BarrierExecutionInstance barrierExecutionInstance =
         barrierService.findByIdentifierAndPlanExecutionId(identifier, planExecutionId);
 
-    assertThat(barrierExecutionInstanceList).isNotNull();
-    assertThat(barrierExecutionInstanceList).containsExactlyInAnyOrderElementsOf(barrierExecutionInstances);
+    assertThat(barrierExecutionInstance).isNotNull();
+    assertThat(barrierExecutionInstance).isEqualTo(bar);
   }
 
   @Test
@@ -142,10 +136,8 @@ public class BarrierServiceImplTest extends OrchestrationStepsTestBase {
             .uuid(generateUuid())
             .name(generateUuid())
             .barrierState(STANDING)
-            .barrierGroupId(generateUuid())
             .identifier(generateUuid())
             .planExecutionId(planExecutionId)
-            .planNodeId(generateUuid())
             .setupInfo(BarrierSetupInfo.builder()
                            .stages(Sets.newSet(StageDetail.builder().identifier(stageIdentifier).build()))
                            .build())
@@ -154,10 +146,8 @@ public class BarrierServiceImplTest extends OrchestrationStepsTestBase {
             .uuid(generateUuid())
             .name(generateUuid())
             .barrierState(DOWN)
-            .barrierGroupId(generateUuid())
             .identifier(generateUuid())
             .planExecutionId(planExecutionId)
-            .planNodeId(generateUuid())
             .setupInfo(BarrierSetupInfo.builder()
                            .stages(Sets.newSet(StageDetail.builder().identifier(stageIdentifier).build()))
                            .build())

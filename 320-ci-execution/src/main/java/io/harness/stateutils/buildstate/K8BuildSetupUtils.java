@@ -1,6 +1,7 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
@@ -57,6 +58,7 @@ import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
@@ -106,7 +108,6 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.product.ci.engine.proto.Execution;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tiserviceclient.TIServiceUtils;
@@ -128,7 +129,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
@@ -283,6 +283,7 @@ public class K8BuildSetupUtils {
     List<CIK8ContainerParams> containerParams = new ArrayList<>();
     containerParams.add(liteEngineContainerParams);
     // user input containers with custom entry point
+    consumePortDetails(ambiance, podSetupInfo.getPodSetupParams().getContainerDefinitionInfos());
     for (ContainerDefinitionInfo containerDefinitionInfo :
         podSetupInfo.getPodSetupParams().getContainerDefinitionInfos()) {
       CIK8ContainerParams cik8ContainerParams =
@@ -291,6 +292,14 @@ public class K8BuildSetupUtils {
       containerParams.add(cik8ContainerParams);
     }
     return containerParams;
+  }
+
+  private void consumePortDetails(Ambiance ambiance, List<ContainerDefinitionInfo> containerDefinitionInfos) {
+    Map<String, List<Integer>> portDetails = containerDefinitionInfos.stream().collect(
+        Collectors.toMap(ContainerDefinitionInfo::getStepIdentifier, ContainerDefinitionInfo::getPorts));
+
+    executionSweepingOutputResolver.consume(ambiance, PORT_DETAILS,
+        ContainerPortDetails.builder().portDetails(portDetails).build(), StepOutcomeGroup.STAGE.name());
   }
 
   private CIK8ContainerParams createCIK8ContainerParams(NGAccess ngAccess,
@@ -375,21 +384,10 @@ public class K8BuildSetupUtils {
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
 
-    String accountId = AmbianceHelper.getAccountId(ambiance);
-    String serializedLiteEngineStepInfo =
-        getSerializedLiteEngineStepInfo(liteEngineTaskStepInfo, taskIds, accountId, stepLogKeys);
     String serviceToken = serviceTokenUtils.getServiceToken();
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, stepConnectorDetails,
-        k8PodDetails, serializedLiteEngineStepInfo, serviceToken, stageCpuRequest, stageMemoryRequest,
-        serviceGrpcPortList, logEnvVars, tiEnvVars, volumeToMountPath, workDirPath, logPrefix, ambiance);
-  }
-
-  private String getSerializedLiteEngineStepInfo(LiteEngineTaskStepInfo liteEngineTaskStepInfo,
-      Map<String, String> taskIds, String accountId, Map<String, String> stepLogKeys) {
-    Execution executionPrototype = protobufSerializer.convertExecutionElement(
-        liteEngineTaskStepInfo.getExecutionElementConfig(), liteEngineTaskStepInfo, taskIds, stepLogKeys);
-    Execution execution = Execution.newBuilder(executionPrototype).setAccountId(accountId).build();
-    return Base64.encodeBase64String(execution.toByteArray());
+        k8PodDetails, serviceToken, stageCpuRequest, stageMemoryRequest, serviceGrpcPortList, logEnvVars, tiEnvVars,
+        volumeToMountPath, workDirPath, logPrefix, ambiance);
   }
 
   @NotNull

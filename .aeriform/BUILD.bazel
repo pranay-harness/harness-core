@@ -12,6 +12,8 @@ aeriform("//125-cd-nextgen:tests")
 
 aeriform("//130-resource-group:module")
 
+aeriform("//130-resource-group:tests")
+
 aeriform("//136-git-sync-manager:module")
 
 aeriform("//136-git-sync-manager:tests")

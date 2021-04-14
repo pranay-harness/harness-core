@@ -50,6 +50,36 @@ index bdfe753b01..2bef85919d 100644
         google.golang.org/api v0.24.0
 ```
 
+## Running SCM binary with a unix socket and using the test client
+
+How to build the scm binary and use a unix socket then run an example test client.
+
+```BASH
+# build the scm binary
+bazelisk build //product/ci/scm/...
+# where it is located
+ls -al $(bazelisk info bazel-bin)/product/ci/scm/*stripped/scm
+INFO: Invocation ID: 69ecbe65-f101-469e-a5b9-4d39f25a426b
+-r-xr-xr-x 1 tp tp 13149393 Apr 12 11:38 /home/tp/.cache/bazel/_bazel_tp/529a9f5eb5d3c3de90f20271ededd500/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin/product/ci/scm/linux_amd64_stripped/scm
+# run the scm binary using a unix socket, remove the socket first
+rm /tmp/bla
+$(bazelisk info bazel-bin)/product/ci/scm/*stripped/scm --unix=/tmp/bla
+ ls -al /tmp/bla
+srwxr-xr-x 1 tp tp 0 Apr 12 11:46 /tmp/bla
+
+
+# build the test unix_socket_client
+bazelisk build //product/ci/scm/test/unix_socket_client/...
+# where it is located
+ls -al $(bazelisk info bazel-bin)/product/ci/scm/test/unix_socket_client/*stripped/unix_socket_client
+INFO: Invocation ID: 1a900e85-523f-4bf0-b0bd-37ce9ed6aa55
+-r-xr-xr-x 1 tp tp 10119187 Apr 12 11:38 /home/tp/.cache/bazel/_bazel_tp/529a9f5eb5d3c3de90f20271ededd500/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin/product/ci/scm/test/unix_socket_client/linux_amd64_stripped/unix_socket_client
+# run the test unix_socket_client
+$(bazelisk info bazel-bin)/product/ci/scm/test/unix_socket_client/*stripped/unix_socket_client
+INFO: Invocation ID: 1b31454f-5079-4f3b-9a52-9c132013e6c1
+content: content:"# scm-test\ntest repo for source control operations\n" path:"README.md" blob_id:"81e158a64f10351f15a17e9c3888f06101855eca" %
+```
+
 ## Example requests
 
 I tested using grpc calls using `https://github.com/uw-labs/bloomrpc`

@@ -2,6 +2,7 @@ package io.harness.pms.sdk.core.pipeline.filters;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
@@ -23,6 +24,7 @@ public abstract class ChildrenFilterJsonCreator<T> implements FilterJsonCreator<
     response.addDependencies(dependencies);
     response.setPipelineFilter(getFilterForGivenField());
     response.addStageNames(getStageNames(filterCreationContext, dependencies.values()));
+    response.setReferredEntities(getReferredEntities(filterCreationContext, field));
     // Note: Currently we treat that all the dependency fields are children but that might not be true.
     // Todo: Support for dependency not as direct children
     response.setStageCount(getStageCount(filterCreationContext, dependencies.values()));
@@ -30,6 +32,10 @@ public abstract class ChildrenFilterJsonCreator<T> implements FilterJsonCreator<
   }
 
   public List<String> getStageNames(FilterCreationContext filterCreationContext, Collection<YamlField> children) {
+    return new ArrayList<>();
+  }
+
+  public List<EntityDetailProtoDTO> getReferredEntities(FilterCreationContext context, T field) {
     return new ArrayList<>();
   }
 

@@ -1,5 +1,9 @@
 package software.wings.service.impl;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
@@ -18,6 +22,8 @@ import retrofit2.Response;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class ReCaptchaVerifier {
   private ReCaptchaClientBuilder reCaptchaClientBuilder;
 
@@ -48,7 +54,6 @@ public class ReCaptchaVerifier {
    */
   private Optional<Error> verifyCaptcha(String captchaToken) {
     String secret = System.getenv("RECAPTCHA_SECRET");
-
     if (StringUtils.isEmpty(secret)) {
       log.error(
           "Could not find captcha secret. Marking captcha verification as pass since it is an error on our side.");

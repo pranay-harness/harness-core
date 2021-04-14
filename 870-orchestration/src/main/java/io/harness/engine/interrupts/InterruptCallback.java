@@ -53,7 +53,7 @@ public class InterruptCallback implements OldNotifyCallback {
               .interruptConfig(interruptConfig)
               .build());
     });
-    engine.endTransition(updatedNodeExecution, null);
+    engine.endTransition(updatedNodeExecution);
     waitNotifyEngine.doneWith(nodeExecutionId + "|" + interruptId, response.values().iterator().next());
   }
 

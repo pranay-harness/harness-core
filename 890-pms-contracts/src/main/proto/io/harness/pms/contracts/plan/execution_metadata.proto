@@ -17,4 +17,5 @@ message ExecutionMetadata {
   string executionUuid = 6;
   string yaml = 7;
   ExecutionPrincipalInfo principalInfo = 8;
+  string processedYaml = 9;
 }

@@ -115,7 +115,8 @@ public class PipelineExecuteHelper {
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
       ExecutionMetadata executionMetadata) throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, executionMetadata);
+    ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder(executionMetadata);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, executionMetadataBuilder);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
         ImmutableMap.<String, String>builder()
@@ -123,7 +124,7 @@ public class PipelineExecuteHelper {
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
-    return orchestrationService.startExecution(plan, abstractionsBuilder.build(), executionMetadata);
+    return orchestrationService.startExecution(plan, abstractionsBuilder.build(), executionMetadataBuilder.build());
   }
 
   public String startPreflightCheck(@NotNull String accountId, @NotNull String orgIdentifier,

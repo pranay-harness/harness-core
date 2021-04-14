@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
@@ -43,12 +44,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
+import io.harness.datahandler.models.AccountDetails;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -137,6 +140,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(PL)
+@TargetModule(_955_ACCOUNT_MGMT)
 public class AccountServiceTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
@@ -165,6 +169,7 @@ public class AccountServiceTest extends WingsBaseTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   private static final String HARNESS_NAME = "Harness";
+  private static final String CLUSTER_NAME = "Paid";
   private final String serviceId = UUID.randomUUID().toString();
   private final String envId = UUID.randomUUID().toString();
   private final String accountId = UUID.randomUUID().toString();
@@ -218,6 +223,18 @@ public class AccountServiceTest extends WingsBaseTest {
     boolean result = accountService.disableAccount(account.getUuid(), null);
     assertThat(result).isTrue();
     assertThat(governanceConfig.isDeploymentFreeze()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testGetAccountDetails() {
+    when(configuration.getClusterName()).thenReturn(CLUSTER_NAME);
+    Account account = setUpDataForTestingSetAccountStatusInternal(AccountType.PAID);
+    AccountDetails details = accountService.getDetails(account.getUuid());
+    assertThat(details.getCluster()).isEqualTo(CLUSTER_NAME);
+    assertThat(details.getAccountName()).isEqualTo(HARNESS_NAME);
+    assertThat(details.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
   }
 
   @Test
