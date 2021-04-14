@@ -2,7 +2,6 @@ package io.harness.managerclient;
 
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
-import io.harness.network.NoopHostnameVerifier;
 import io.harness.security.TokenGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,7 +68,7 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
             return chain.proceed(request.build());
           })
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
-          .hostnameVerifier(new NoopHostnameVerifier())
+          .hostnameVerifier((hostname, session) -> true)
           .build();
     } catch (Exception e) {
       throw new RuntimeException(e);
