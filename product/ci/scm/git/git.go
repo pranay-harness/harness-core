@@ -40,6 +40,35 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 	}
 	return out, nil
 }
+
+func CreateBranch(ctx context.Context, request *pb.CreateBranchRequest, log *zap.SugaredLogger) (out *pb.CreateBranchResponse, err error) {
+	start := time.Now()
+	log.Infow("CreateBranch starting", "slug", request.GetSlug())
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("CreateBranch failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	inputParams := scm.CreateBranch{
+		Name: request.GetName(),
+		Sha:  request.GetCommitId(),
+	}
+
+	response, err := client.Git.CreateBranch(ctx, request.GetSlug(), &inputParams)
+	if err != nil {
+		log.Errorw("CreateBranch failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "Name", request.GetName(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+	log.Infow("CreateBranch success", "slug", request.GetSlug(), "Name", request.GetName(), "elapsed_time_ms", utils.TimeSince(start))
+
+	out = &pb.CreateBranchResponse{
+		Status: int32(response.Status),
+	}
+	return out, nil
+}
+
 func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, log *zap.SugaredLogger) (out *pb.GetLatestCommitResponse, err error) {
 	start := time.Now()
 	log.Infow("GetLatestCommit starting", "slug", request.GetSlug())
