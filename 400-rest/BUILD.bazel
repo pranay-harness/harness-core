@@ -10,7 +10,6 @@ shared_dependencies = [
     "@maven//:io_netty_netty_all",
 ] + [
     "//:lombok",
-    "//410-cg-beans:module",
     "//420-delegate-service:module",
     "//430-cv-nextgen-commons:module",
     "//450-ce-views:module",
