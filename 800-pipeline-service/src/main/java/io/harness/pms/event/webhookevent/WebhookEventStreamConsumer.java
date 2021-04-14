@@ -1,9 +1,8 @@
-package io.harness.pms.event;
+package io.harness.pms.event.webhookevent;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
@@ -25,16 +24,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(PIPELINE)
-public class PMSEntityCRUDStreamConsumer implements Runnable {
+public class WebhookEventStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
 
   @Inject
-  public PMSEntityCRUDStreamConsumer(@Named(ENTITY_CRUD) Consumer redisConsumer,
-      @Named(PIPELINE_ENTITY + ENTITY_CRUD) MessageListener pipelineEntityCRUDStreamListener) {
+  public WebhookEventStreamConsumer(@Named(WEBHOOK_TRIGGER_EVENT_DATA) Consumer redisConsumer,
+      @Named(WEBHOOK_TRIGGER_EVENT_DATA) MessageListener webhookEventListener) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
-    messageListenersList.add(pipelineEntityCRUDStreamListener);
+    messageListenersList.add(webhookEventListener);
   }
 
   @Override

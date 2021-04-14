@@ -833,6 +833,7 @@ versionedTemplate {"name": "yaml", "unique": true} {"accountId": 1, "templateId"
 waitInstances {"name": "correlationIds_1", "background": true} {"correlationIds": 1}
 waitInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 waitInstances {"name": "waitingOnCorrelationIds_1", "background": true} {"waitingOnCorrelationIds": 1}
+webhookEvents {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 whitelist {"name": "accountId_1", "background": true} {"accountId": 1}
 whitelist {"name": "appId_1", "background": true} {"appId": 1}
 whitelist {"name": "createdAt_1", "background": true} {"createdAt": 1}
