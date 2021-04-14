@@ -33,7 +33,7 @@ public class DownloadLogsEntity implements PersistentEntity, AccountAccess, Uuid
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
   @NotEmpty @FdUniqueIndex String logKey;
-  @NotEmpty @FdTtlIndex Date validUntil;
+  @NotNull @FdTtlIndex Date validUntil;
 
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;

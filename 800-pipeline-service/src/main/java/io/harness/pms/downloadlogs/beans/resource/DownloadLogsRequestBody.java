@@ -16,5 +16,4 @@ import lombok.experimental.FieldDefaults;
 public class DownloadLogsRequestBody {
   @DefaultValue("36h") String timeToLive;
   @NonNull String logKey;
-  @JsonIgnore Date createdAt;
 }

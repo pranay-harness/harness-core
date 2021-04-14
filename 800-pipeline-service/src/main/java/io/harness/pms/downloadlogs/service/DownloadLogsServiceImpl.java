@@ -21,6 +21,8 @@ public class DownloadLogsServiceImpl implements DownloadLogsService {
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Download link for log key  [%s] under Account [%s] already exists";
 
+  private static final String LOG_KEY_STARTING_FORMAT_STRING = "accountId:%s/orgId:%s/projectId:%s/pipelineId:%s/";
+
   @Override
   public DownloadLogsEntity create(DownloadLogsEntity downloadLogsEntity) {
     try {
@@ -48,5 +50,13 @@ public class DownloadLogsServiceImpl implements DownloadLogsService {
       return downloadLogsEntityOptional.get();
     }
     throw new InvalidRequestException("No download link exists for given downloadId. Please generate a new one");
+  }
+
+  @Override
+  public void verifyLogKey(String logKey, String accountId, String orgId, String projectId, String pipelineId) {
+    String expectedLogKeyStarting = format(LOG_KEY_STARTING_FORMAT_STRING, accountId, orgId, projectId, pipelineId);
+    if (!logKey.startsWith(expectedLogKeyStarting)) {
+      throw new InvalidRequestException("The log key given by user does not match the access credentials");
+    }
   }
 }

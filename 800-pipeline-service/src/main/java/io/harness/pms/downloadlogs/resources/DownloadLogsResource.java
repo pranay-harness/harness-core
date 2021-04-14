@@ -24,8 +24,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.time.OffsetDateTime;
-import java.util.Date;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import lombok.AccessLevel;
@@ -58,13 +56,10 @@ public class DownloadLogsResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
       @BeanParam DownloadLogsRequestBody downloadLogsRequestBody) {
-    // TODO: Verify logKey
-
-    downloadLogsRequestBody.setCreatedAt(Date.from(OffsetDateTime.now().toInstant()));
+    downloadLogsService.verifyLogKey(downloadLogsRequestBody.getLogKey(), accountId, orgId, projectId, pipelineId);
 
     DownloadLogsEntity entity = DownloadLogsMapper.toDownloadLogsEntity(downloadLogsRequestBody.getLogKey(),
-        downloadLogsRequestBody.getCreatedAt(), downloadLogsRequestBody.getTimeToLive(), accountId, orgId, projectId,
-        pipelineId);
+        downloadLogsRequestBody.getTimeToLive(), accountId, orgId, projectId, pipelineId);
     DownloadLogsEntity createdEntity = downloadLogsService.create(entity);
 
     String downloadId = createdEntity.getUuid();
@@ -85,7 +80,10 @@ public class DownloadLogsResource {
         ResourceScope.of(downloadLogsEntity.getAccountId(), downloadLogsEntity.getOrgIdentifier(),
             downloadLogsEntity.getProjectIdentifier()),
         Resource.of("PIPELINE", downloadLogsEntity.getPipelineIdentifier()), PipelineRbacPermissions.PIPELINE_VIEW);
-    // TODO: Verify logKey
+
+    downloadLogsService.verifyLogKey(downloadLogsEntity.getLogKey(), downloadLogsEntity.getAccountId(),
+        downloadLogsEntity.getOrgIdentifier(), downloadLogsEntity.getProjectIdentifier(),
+        downloadLogsEntity.getPipelineIdentifier());
 
     // TODO: Functionality for GET call
     /*

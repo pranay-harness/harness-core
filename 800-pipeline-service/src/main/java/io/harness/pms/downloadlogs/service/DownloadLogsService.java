@@ -8,4 +8,6 @@ public interface DownloadLogsService {
   DownloadLogsEntity get(String accountId, String logKey);
 
   DownloadLogsEntity getByDownloadId(String downloadId);
+
+  void verifyLogKey(String logKey, String accountId, String orgId, String projectId, String pipelineId);
 }

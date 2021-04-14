@@ -1,9 +1,11 @@
 package io.harness.pms.downloadlogs.mappers;
 
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.pms.downloadlogs.beans.entity.DownloadLogsEntity;
 import io.harness.pms.downloadlogs.beans.resource.DownloadLogsResponseDTO;
 import io.harness.yaml.core.timeout.Timeout;
 
+import java.time.Instant;
 import java.util.Date;
 import lombok.experimental.UtilityClass;
 
@@ -13,15 +15,15 @@ public class DownloadLogsMapper {
     return DownloadLogsResponseDTO.builder()
         .downloadLink(downloadLink)
         .validUntil(validUntil)
-        .waitTime(findWaitTime(downloadLink))
+        .estimatedWaitTime(findEstimatedWaitTime(downloadLink))
         .build();
   }
 
-  public DownloadLogsEntity toDownloadLogsEntity(String logKey, Date createdAt, String timeToLive, String accountId,
+  public DownloadLogsEntity toDownloadLogsEntity(String logKey, String timeToLive, String accountId,
       String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
     return DownloadLogsEntity.builder()
         .logKey(logKey)
-        .validUntil(generateValidUntil(createdAt, timeToLive))
+        .validUntil(generateValidUntil(timeToLive))
         .accountId(accountId)
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
@@ -40,14 +42,16 @@ public class DownloadLogsMapper {
         .build();
   }
 
-  private Date generateValidUntil(Date createdAt, String timeToLive) {
-    long ttlInMillis = Timeout.fromString(timeToLive).getTimeoutInMillis();
-    Date validUntil = new Date();
-    validUntil.setTime(createdAt.getTime() + ttlInMillis);
-    return validUntil;
+  private Date generateValidUntil(String timeToLive) {
+    Timeout ttlTimeout = Timeout.fromString(timeToLive);
+    if (ttlTimeout == null) {
+      throw new InvalidArgumentsException("Empty timeout has been given by user");
+    }
+    long ttlInMillis = ttlTimeout.getTimeoutInMillis();
+    return Date.from(Instant.now().plusMillis(ttlInMillis));
   }
 
-  private String findWaitTime(String downloadLink) {
+  private String findEstimatedWaitTime(String downloadLink) {
     // TODO: Do head call to find wait time
     return "Sample wait time for link to be ready for " + downloadLink;
   }

@@ -18,6 +18,6 @@ import lombok.experimental.FieldDefaults;
 public class DownloadLogsResponseDTO {
   String downloadLink;
   Date validUntil;
-  String waitTime;
+  String estimatedWaitTime;
   // wait time is time needed for link to start working, given to user in a human readable format
 }
