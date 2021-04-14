@@ -12,6 +12,7 @@ import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfigurati
 import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.redis.RedisConfig;
@@ -68,6 +69,7 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("enableAudit") private boolean enableAudit;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
+  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
 
   public boolean isAuthEnabled() {
     return this.enableAuth;

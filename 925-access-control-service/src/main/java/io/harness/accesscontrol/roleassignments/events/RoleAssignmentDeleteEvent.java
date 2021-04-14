@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class RoleAssignmentDeleteEvent implements Event {
+  public static final String ROLE_ASSIGNMENT_DELETE_EVENT = "RoleAssignmentDeleted";
   private String accountIdentifier;
   private RoleAssignmentDTO roleAssignment;
   private ScopeDTO scope;
@@ -48,6 +49,6 @@ public class RoleAssignmentDeleteEvent implements Event {
 
   @Override
   public String getEventType() {
-    return "RoleAssignmentDeleted";
+    return ROLE_ASSIGNMENT_DELETE_EVENT;
   }
 }

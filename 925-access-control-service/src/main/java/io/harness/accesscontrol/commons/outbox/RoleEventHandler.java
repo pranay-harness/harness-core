@@ -1,5 +1,8 @@
 package io.harness.accesscontrol.commons.outbox;
 
+import static io.harness.accesscontrol.roles.events.RoleCreateEvent.ROLE_CREATE_EVENT;
+import static io.harness.accesscontrol.roles.events.RoleDeleteEvent.ROLE_DELETE_EVENT;
+import static io.harness.accesscontrol.roles.events.RoleUpdateEvent.ROLE_UPDATE_EVENT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
@@ -39,11 +42,11 @@ public class RoleEventHandler implements OutboxEventHandler {
   public boolean handle(OutboxEvent outboxEvent) {
     try {
       switch (outboxEvent.getEventType()) {
-        case "RoleCreated":
+        case ROLE_CREATE_EVENT:
           return handleRoleCreateEvent(outboxEvent);
-        case "RoleUpdated":
+        case ROLE_UPDATE_EVENT:
           return handleRoleUpdateEvent(outboxEvent);
-        case "RoleDeleted":
+        case ROLE_DELETE_EVENT:
           return handleRoleDeleteEvent(outboxEvent);
         default:
           throw new InvalidArgumentsException(String.format("Not supported event type %s", outboxEvent.getEventType()));

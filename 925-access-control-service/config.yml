@@ -79,6 +79,8 @@ redisLockConfig:
   userName: ${LOCK_CONFIG_REDIS_USERNAME:-""}
   password: ${LOCK_CONFIG_REDIS_PASSWORD:-""}
 
+distributedLockImplementation: ${DISTRIBUTED_LOCK_IMPLEMENTATION:-MONGO}
+
 iteratorsConfig:
   resourceGroupIteratorConfig:
     enabled: ${RESOURCE_GROUP_ITERATOR_ENABLED:-true}

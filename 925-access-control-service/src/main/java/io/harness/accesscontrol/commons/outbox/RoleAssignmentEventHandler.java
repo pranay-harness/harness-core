@@ -1,5 +1,8 @@
 package io.harness.accesscontrol.commons.outbox;
 
+import static io.harness.accesscontrol.roleassignments.events.RoleAssignmentCreateEvent.ROLE_ASSIGNMENT_CREATE_EVENT;
+import static io.harness.accesscontrol.roleassignments.events.RoleAssignmentDeleteEvent.ROLE_ASSIGNMENT_DELETE_EVENT;
+import static io.harness.accesscontrol.roleassignments.events.RoleAssignmentUpdateEvent.ROLE_ASSIGNMENT_UPDATE_EVENT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
@@ -39,11 +42,11 @@ public class RoleAssignmentEventHandler implements OutboxEventHandler {
   public boolean handle(OutboxEvent outboxEvent) {
     try {
       switch (outboxEvent.getEventType()) {
-        case "RoleAssignmentCreated":
+        case ROLE_ASSIGNMENT_CREATE_EVENT:
           return handleRoleAssignmentCreateEvent(outboxEvent);
-        case "RoleAssignmentUpdated":
+        case ROLE_ASSIGNMENT_UPDATE_EVENT:
           return handleRoleAssignmentUpdateEvent(outboxEvent);
-        case "RoleAssignmentDeleted":
+        case ROLE_ASSIGNMENT_DELETE_EVENT:
           return handleRoleAssignmentDeleteEvent(outboxEvent);
         default:
           throw new InvalidArgumentsException(String.format("Not supported event type %s", outboxEvent.getEventType()));

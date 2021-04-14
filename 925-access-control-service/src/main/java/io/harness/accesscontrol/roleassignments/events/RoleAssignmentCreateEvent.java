@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class RoleAssignmentCreateEvent implements Event {
+  public static final String ROLE_ASSIGNMENT_CREATE_EVENT = "RoleAssignmentCreated";
   private String accountIdentifier;
   private RoleAssignmentDTO roleAssignment;
   private ScopeDTO scope;
@@ -48,6 +49,6 @@ public class RoleAssignmentCreateEvent implements Event {
 
   @Override
   public String getEventType() {
-    return "RoleAssignmentCreated";
+    return ROLE_ASSIGNMENT_CREATE_EVENT;
   }
 }

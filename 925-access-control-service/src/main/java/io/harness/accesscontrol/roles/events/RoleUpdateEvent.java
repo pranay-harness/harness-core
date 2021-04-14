@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class RoleUpdateEvent implements Event {
+  public static final String ROLE_UPDATE_EVENT = "RoleUpdated";
   private String accountIdentifier;
   private RoleDTO newRole;
   private RoleDTO oldRole;
@@ -50,6 +51,6 @@ public class RoleUpdateEvent implements Event {
 
   @Override
   public String getEventType() {
-    return "RoleUpdated";
+    return ROLE_UPDATE_EVENT;
   }
 }

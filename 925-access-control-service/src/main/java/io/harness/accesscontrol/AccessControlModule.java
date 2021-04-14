@@ -87,7 +87,7 @@ public class AccessControlModule extends AbstractModule {
   @Provides
   @Singleton
   DistributedLockImplementation distributedLockImplementation() {
-    return MONGO;
+    return config.getDistributedLockImplementation() == null ? MONGO : config.getDistributedLockImplementation();
   }
 
   @Provides
