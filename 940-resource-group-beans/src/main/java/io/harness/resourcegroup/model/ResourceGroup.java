@@ -1,8 +1,10 @@
 package io.harness.resourcegroup.model;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.DbAliases.NG_MANAGER;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
@@ -14,6 +16,7 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -33,6 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ResourceGroupKeys")
@@ -96,6 +100,7 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
     return this.nextIteration;
   }
 
+  @JsonIgnore
   @Override
   public String getUuid() {
     return this.id;

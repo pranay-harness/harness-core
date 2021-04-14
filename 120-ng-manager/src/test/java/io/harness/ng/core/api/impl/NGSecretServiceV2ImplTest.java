@@ -1,5 +1,6 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,10 +9,12 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.encryption.SecretRefData;
@@ -30,6 +33,7 @@ import io.harness.ng.core.models.Secret;
 import io.harness.ng.core.models.TGTKeyTabFilePathSpec;
 import io.harness.ng.core.remote.SSHKeyValidationMetadata;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
+import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SSHAuthScheme;
@@ -47,7 +51,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 public class NGSecretServiceV2ImplTest extends CategoryTest {
   private SecretRepository secretRepository;
   private SecretManagerClientService secretManagerClientService;
@@ -56,6 +62,8 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
   private NGSecretServiceV2Impl secretServiceV2;
   private NGSecretServiceV2Impl secretServiceV2Spy;
   private NGSecretActivityService ngSecretActivityService;
+  private OutboxService outboxService;
+  private TransactionTemplate transactionTemplate;
 
   @Before
   public void setup() {
@@ -64,8 +72,10 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
     delegateGrpcClientWrapper = mock(DelegateGrpcClientWrapper.class);
     sshKeySpecDTOHelper = mock(SshKeySpecDTOHelper.class);
     ngSecretActivityService = mock(NGSecretActivityService.class);
+    outboxService = mock(OutboxService.class);
+    transactionTemplate = mock(TransactionTemplate.class);
     secretServiceV2 = new NGSecretServiceV2Impl(secretRepository, secretManagerClientService, delegateGrpcClientWrapper,
-        sshKeySpecDTOHelper, ngSecretActivityService);
+        sshKeySpecDTOHelper, ngSecretActivityService, outboxService, transactionTemplate);
     secretServiceV2Spy = spy(secretServiceV2);
   }
 
@@ -98,11 +108,11 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
     Secret secret = Secret.builder().build();
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
     doNothing().when(secretRepository).delete(any());
-
+    when(transactionTemplate.execute(any())).thenReturn(true);
     boolean success = secretServiceV2Spy.delete("account", "org", "proj", "identifier");
     assertThat(success).isTrue();
     verify(secretServiceV2Spy).get(any(), any(), any(), any());
-    verify(secretRepository).delete(any());
+    verify(secretRepository, times(0)).delete(any());
   }
 
   @Test
@@ -112,10 +122,12 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
     SecretDTOV2 secretDTOV2 = getSecretDTO();
     Secret secret = secretDTOV2.toEntity();
     when(secretRepository.save(any())).thenReturn(secret);
+    when(transactionTemplate.execute(any())).thenReturn(secret);
+
     Secret savedSecret = secretServiceV2.create("account", secretDTOV2, false);
     assertThat(secret).isNotNull();
     assertThat(secret).isEqualTo(savedSecret);
-    verify(secretRepository).save(any());
+    verify(secretRepository, times(0)).save(any());
   }
 
   @Test
@@ -126,10 +138,12 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
     SecretDTOV2 secretDTOV2 = getSecretDTO();
     when(secretRepository.save(any())).thenReturn(secret);
+    when(transactionTemplate.execute(any())).thenReturn(secret);
+
     Secret success = secretServiceV2Spy.update("account", secretDTOV2, false);
     assertThat(success).isNotNull();
     verify(secretServiceV2Spy).get(any(), any(), any(), any());
-    verify(secretRepository).save(any());
+    verify(secretRepository, times(0)).save(any());
   }
 
   @Test

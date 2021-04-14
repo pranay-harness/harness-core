@@ -15,17 +15,17 @@ import lombok.Value;
 @Value
 @Builder
 public class EngineResumeCallback implements OldNotifyCallback {
-  @Inject PmsNodeExecutionService pmsNodeExecutionService;
+  @Inject SdkNodeExecutionService sdkNodeExecutionService;
 
   String nodeExecutionId;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    pmsNodeExecutionService.resumeNodeExecution(nodeExecutionId, response, false);
+    sdkNodeExecutionService.resumeNodeExecution(nodeExecutionId, response, false);
   }
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    pmsNodeExecutionService.resumeNodeExecution(nodeExecutionId, response, true);
+    sdkNodeExecutionService.resumeNodeExecution(nodeExecutionId, response, true);
   }
 }

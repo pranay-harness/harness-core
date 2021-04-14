@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.InterventionWaitTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -38,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class InterventionWaitAdviserResponseHandlerTest extends OrchestrationTestBase {
   @Inject InterventionWaitAdviserResponseHandler interventionWaitAdviserResponseHandler;
   @Inject private PlanExecutionService planExecutionService;
@@ -105,6 +108,5 @@ public class InterventionWaitAdviserResponseHandlerTest extends OrchestrationTes
     assertThat(tracker.getDimension()).isEqualTo(AbsoluteTimeoutTrackerFactory.DIMENSION);
 
     PlanExecution planExecution = planExecutionService.get(PLAN_EXECUTION_ID);
-    assertThat(planExecution.getStatus()).isEqualTo(Status.INTERVENTION_WAITING);
   }
 }

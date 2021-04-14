@@ -10,12 +10,16 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
@@ -32,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -45,6 +50,8 @@ import org.springframework.data.mongodb.core.query.Update;
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
+
+  @Getter private final Subject<StepStatusUpdate> stepStatusUpdateSubject = new Subject<>();
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -204,6 +211,18 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
+      stepStatusUpdateSubject.fireInform(StepStatusUpdate::onStepStatusUpdate,
+          StepStatusUpdateInfo.builder()
+              .nodeExecutionId(updated.getUuid())
+              .planExecutionId(updated.getAmbiance().getPlanExecutionId())
+              .status(updated.getStatus())
+              .interruptId(EmptyPredicate.isEmpty(updated.getInterruptHistories())
+                      ? null
+                      : updated.getInterruptHistories()
+                            .get(updated.getInterruptHistories().size() - 1)
+                            .getInterruptId())
+              .build());
+
       emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
     }
     return updated;

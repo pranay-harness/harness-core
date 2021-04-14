@@ -1,10 +1,13 @@
 package io.harness.resourcegroup.resourceclient.secret;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -13,7 +16,6 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
-import io.harness.resourcegroup.model.Scope;
 import io.harness.secrets.remote.SecretNGManagerClient;
 
 import com.google.inject.Inject;
@@ -32,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class SecretResourceValidatorImpl implements ResourceValidator {
   SecretNGManagerClient secretManagerClient;
 

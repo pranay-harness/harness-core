@@ -22,6 +22,7 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 public abstract class SourceCodeManagerDTO {
+  String id;
   String userIdentifier;
   @NotNull String name;
   Long createdAt;

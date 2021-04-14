@@ -1,7 +1,10 @@
 package io.harness.cvng.activity.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
+import io.harness.cvng.beans.activity.ActivitySourceDTO.ActivitySourceDTOBuilder;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.iterator.PersistentRegularIterable;
@@ -39,6 +42,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "activitySources")
 @HarnessEntity(exportable = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
+@OwnedBy(HarnessTeam.CV)
 public abstract class ActivitySource
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
@@ -98,4 +102,13 @@ public abstract class ActivitySource
   }
 
   protected abstract void validateParams();
+
+  protected <C extends ActivitySourceDTO, B extends ActivitySourceDTOBuilder<C, B>> ActivitySourceDTOBuilder<C, B>
+  fillCommon(ActivitySourceDTOBuilder<C, B> activitySourceDTOBuilder) {
+    activitySourceDTOBuilder.identifier(identifier);
+    activitySourceDTOBuilder.name(name);
+    activitySourceDTOBuilder.orgIdentifier(orgIdentifier);
+    activitySourceDTOBuilder.projectIdentifier(projectIdentifier);
+    return activitySourceDTOBuilder;
+  }
 }

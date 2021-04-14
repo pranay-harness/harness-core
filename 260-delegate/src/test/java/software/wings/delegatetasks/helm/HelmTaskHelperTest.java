@@ -119,35 +119,19 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
+  @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testExecuteCommand() throws Exception {
-    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
-    helmTaskHelperBase.executeCommand("", ".", "", LONG_TIMEOUT_INTERVAL);
+  public void testAddRepoForwardHelmTaskHelperBase() {
+    doNothing()
+        .when(helmTaskHelperBase)
+        .addRepo("vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3,
+            LONG_TIMEOUT_INTERVAL);
+    helmTaskHelper.addRepo("vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3,
+        LONG_TIMEOUT_INTERVAL);
 
-    doThrow(new IOException()).when(processExecutor).execute();
-    assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", LONG_TIMEOUT_INTERVAL))
-        .withNoCause()
-        .withMessageContaining("[IO exception]");
-
-    doThrow(new InterruptedException()).when(processExecutor).execute();
-    assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "foo", LONG_TIMEOUT_INTERVAL))
-        .withNoCause()
-        .withMessageContaining("[Interrupted] foo");
-
-    doThrow(new TimeoutException()).when(processExecutor).execute();
-    assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", null, LONG_TIMEOUT_INTERVAL))
-        .withNoCause()
-        .withMessageContaining("[Timed out]");
-
-    doThrow(new RuntimeException("test")).when(processExecutor).execute();
-    assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", LONG_TIMEOUT_INTERVAL))
-        .withNoCause()
-        .withMessageContaining("test");
+    verify(helmTaskHelperBase)
+        .addRepo("vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3,
+            LONG_TIMEOUT_INTERVAL);
   }
 
   @Test
@@ -984,77 +968,25 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testInitHelm() throws Exception {
+  public void testInitHelmForwardToHelmTaskHelperBase() throws Exception {
     String workingDirectory = "/working/directory";
-    String expectedInitCommand = format("v2/helm init -c --skip-refresh --home %s/helm", workingDirectory);
-    doReturn(workingDirectory).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
-    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
-        .when(helmTaskHelperBase)
-        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand,
-            LONG_TIMEOUT_INTERVAL);
+    doNothing().when(helmTaskHelperBase).initHelm(workingDirectory, V2, LONG_TIMEOUT_INTERVAL);
     assertThatCode(() -> helmTaskHelper.initHelm("/working/directory", V2, LONG_TIMEOUT_INTERVAL))
         .doesNotThrowAnyException();
+    verify(helmTaskHelperBase).initHelm(workingDirectory, V2, LONG_TIMEOUT_INTERVAL);
   }
 
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testInitHelmFailed() throws Exception {
-    String workingDirectory = "/working/directory";
-    String expectedInitCommand = format("v2/helm init -c --skip-refresh --home %s/helm", workingDirectory);
-    doReturn(workingDirectory).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
-    doReturn(new ProcessResult(1, new ProcessOutput("something went wrong executing command".getBytes())))
-        .when(helmTaskHelperBase)
-        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand,
-            LONG_TIMEOUT_INTERVAL);
-    assertThatThrownBy(() -> helmTaskHelperBase.initHelm("/working/directory", V2, LONG_TIMEOUT_INTERVAL))
-        .isInstanceOf(HelmClientException.class)
-        .hasMessageContaining("Failed to init helm")
-        .hasMessageContaining("something went wrong executing command");
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testRemoveRepo() {
-    String workingDirectory = "/working/directory";
-    String repoName = "repoName";
-    String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
-    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
-        .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), LONG_TIMEOUT_INTERVAL);
+  public void testRemoveRepoForwardHelmTaskHelperBase() {
+    final String workingDirectory = "/working/directory";
+    final String repoName = "repoName";
+    doNothing().when(helmTaskHelperBase).removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL);
 
     assertThatCode(() -> helmTaskHelper.removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL))
         .doesNotThrowAnyException();
-  }
 
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testRemoveRepoFailedWithoutAnyExceptions() {
-    String workingDirectory = "/working/directory";
-    String repoName = "repoName";
-    String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
-    doReturn(new ProcessResult(1, new ProcessOutput("something went wrong executing command".getBytes())))
-        .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), LONG_TIMEOUT_INTERVAL);
-
-    assertThatCode(() -> helmTaskHelper.removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL))
-        .doesNotThrowAnyException();
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testRemoveRepoFailedWithException() {
-    String workingDirectory = "/working/directory";
-    String repoName = "repoName";
-    String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
-    doThrow(new InvalidRequestException("Something went wrong", USER))
-        .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), LONG_TIMEOUT_INTERVAL);
-
-    assertThatCode(() -> helmTaskHelper.removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL))
-        .doesNotThrowAnyException();
+    verify(helmTaskHelperBase).removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL);
   }
 }

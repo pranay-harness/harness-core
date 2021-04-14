@@ -1,5 +1,6 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
@@ -159,14 +160,19 @@ public class K8BuildSetupUtils {
     K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
 
     final String clusterName = k8sDirectInfraYaml.getSpec().getConnectorRef();
+    Map<String, String> annotations = resolveMapParameter(
+        "annotations", "K8BuildInfra", "stageSetup", k8sDirectInfraYaml.getSpec().getAnnotations(), false);
+    Map<String, String> labels = resolveMapParameter(
+        "annotations", "K8BuildInfra", "stageSetup", k8sDirectInfraYaml.getSpec().getLabels(), false);
 
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
     ConnectorDetails k8sConnector = connectorUtils.getConnectorDetails(ngAccess, clusterName);
     String workDir = ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getWorkDir();
-    CIK8PodParams<CIK8ContainerParams> podParams = getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo,
-        liteEngineTaskStepInfo.isUsePVC(), liteEngineTaskStepInfo.getCiCodebase(),
-        liteEngineTaskStepInfo.isSkipGitClone(), workDir, taskIds, logPrefix, stepLogKeys, ambiance);
+    CIK8PodParams<CIK8ContainerParams> podParams =
+        getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo, liteEngineTaskStepInfo.isUsePVC(),
+            liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone(), workDir, taskIds,
+            logPrefix, stepLogKeys, ambiance, annotations, labels);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
     return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
@@ -183,8 +189,8 @@ public class K8BuildSetupUtils {
 
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, K8PodDetails k8PodDetails,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
-      String workDir, Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys,
-      Ambiance ambiance) {
+      String workDir, Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance,
+      Map<String, String> annotations, Map<String, String> labels) {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageRegistryConnectorDetails = null;
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
@@ -232,10 +238,16 @@ public class K8BuildSetupUtils {
             .build(),
         StepOutcomeGroup.STAGE.name());
 
+    Map<String, String> buildLabels = getBuildLabels(ambiance, k8PodDetails);
+    if (isNotEmpty(labels)) {
+      buildLabels.putAll(labels);
+    }
+
     return CIK8PodParams.<CIK8ContainerParams>builder()
         .name(podSetupInfo.getName())
         .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
-        .labels(getBuildLabels(ambiance, k8PodDetails))
+        .labels(buildLabels)
+        .annotations(annotations)
         .gitConnector(gitConnector)
         .stepExecVolumeName(STEP_EXEC)
         .stepExecWorkingDir(workDir)
@@ -334,6 +346,8 @@ public class K8BuildSetupUtils {
             .args(containerDefinitionInfo.getArgs())
             .imageDetailsWithConnector(imageDetailsWithConnector)
             .volumeToMountPath(volumeToMountPath)
+            .privileged(containerDefinitionInfo.isPrivileged())
+            .runAsUser(containerDefinitionInfo.getRunAsUser())
             .build();
     if (containerDefinitionInfo.getContainerType() != CIContainerType.SERVICE) {
       cik8ContainerParams.setWorkingDir(workDirPath);

@@ -4,15 +4,62 @@ if [ -z "${HARNESS_TEAM}" ]
 then
   if [ ! -z "${ghprbPullTitle}" ]
   then
-    HARNESS_TEAM=`echo "${ghprbPullTitle}" | sed -e 's/[[]\([A-Z]*\)-[0-9]*]:.*/\1/g'`
+    PROJECT=`echo "${ghprbPullTitle}" | sed -e 's/[[]\([A-Z]*\)-[0-9]*]:.*/\1/g'`
   else
-    HARNESS_TEAM=`git log -1 --pretty=format:%s | sed -e 's/[[]\([A-Z]*\)-[0-9]*]:.*/\1/g'`
+    PROJECT=`git log -1 --pretty=format:%s | sed -e 's/[[]\([A-Z]*\)-[0-9]*]:.*/\1/g'`
   fi
+
+  case "${PROJECT}" in
+     "BT") export HARNESS_TEAM="PL"
+     ;;
+     "CCE") export HARNESS_TEAM="CE"
+     ;;
+     "CCM") export HARNESS_TEAM="CE"
+     ;;
+     "CDC") export HARNESS_TEAM="CDC"
+     ;;
+     "CDNG") export HARNESS_TEAM="CDC"
+     ;;
+     "CDP") export HARNESS_TEAM="CDP"
+     ;;
+     "CE") export HARNESS_TEAM="CE"
+     ;;
+     "CI") export HARNESS_TEAM="CI"
+     ;;
+     "CV") export HARNESS_TEAM="CV"
+     ;;
+     "CVNG") export HARNESS_TEAM="CV"
+     ;;
+     "DEL") export HARNESS_TEAM="DEL"
+     ;;
+     "DOC") export HARNESS_TEAM="DX"
+     ;;
+     "DX") export HARNESS_TEAM="DX"
+     ;;
+     "ER") export HARNESS_TEAM="CDC"
+     ;;
+     "DX") export HARNESS_TEAM="DX"
+     ;;
+     "FFM") HARNESS_TEAM="CF"
+     ;;
+     "OPS") export HARNESS_TEAM="PL"
+     ;;
+     "PL") export HARNESS_TEAM="PL"
+     ;;
+     "SEC") export HARNESS_TEAM="PL"
+     ;;
+     "SWAT") export HARNESS_TEAM="PL"
+     ;;
+     "GTM") export HARNESS_TEAM="GTM"
+     ;;
+     "ONP") export HARNESS_TEAM="PL"
+     ;;
+  esac
 fi
 
 if [ -z "${HARNESS_TEAM}" ]
 then
-  echo failed to deduct the team this commit is for
+  echo failed to deduct the team this commit is for, the project is "${PROJECT}"
   exit 1
 fi
 
@@ -34,7 +81,9 @@ TRACK_FILES=`git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep "
 
 scripts/bazel/prepare_aeriform.sh
 
-#bazel-bin/tools/rust/aeriform/aeriform analyze --team-filter $TEAM
+scripts/bazel/aeriform.sh analyze \
+  --kind-filter Critical \
+  --exit-code
 
 if [ ! -z "$TRACK_FILES" ]
 then
@@ -44,5 +93,10 @@ then
     --kind-filter Critical \
     --kind-filter ToDo \
     --kind-filter Warning \
+    --exit-code
+
+	scripts/bazel/aeriform.sh analyze \
+    ${TRACK_FILES} \
+    --team-filter ${HARNESS_TEAM} \
     --exit-code
 fi

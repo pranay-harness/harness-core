@@ -1,10 +1,16 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
+import static java.util.Collections.emptyList;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -51,6 +57,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(_870_CG_ORCHESTRATION)
+@OwnedBy(CDP)
 public class K8sRollingDeployRollback extends AbstractK8sState {
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
@@ -75,6 +83,15 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
   @Override
   public Integer getTimeoutMillis() {
     return StateTimeoutUtils.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);
+  }
+
+  @Override
+  public List<String> getDelegateSelectors(ExecutionContext context) {
+    K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
+    if (k8sContextElement == null) {
+      return emptyList();
+    }
+    return k8sContextElement.getDelegateSelectors();
   }
 
   @Override

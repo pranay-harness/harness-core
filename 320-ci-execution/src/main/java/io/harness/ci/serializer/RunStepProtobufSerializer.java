@@ -1,9 +1,11 @@
 package io.harness.ci.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
@@ -29,6 +31,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 @Singleton
+@OwnedBy(CI)
 public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
@@ -74,7 +77,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
         .setId(step.getIdentifier())
         .setTaskId(callbackId)
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
-        .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
+        .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setRun(runStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .setLogKey(logKey)

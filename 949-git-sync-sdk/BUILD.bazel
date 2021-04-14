@@ -9,8 +9,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//950-events-api:module",
         "//952-scm-java-client:module",
+        "//953-events-api:module",
         "//953-git-sync-commons:module",
         "//960-persistence:module",
         "//970-api-services-beans:module",

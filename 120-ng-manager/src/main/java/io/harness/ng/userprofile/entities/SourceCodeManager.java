@@ -71,6 +71,7 @@ public abstract class SourceCodeManager implements PersistentEntity {
     }
 
     public void setCommonFieldsDTO(SourceCodeManager scm, SourceCodeManagerDTO scmDTO) {
+      scmDTO.setId(scm.getId());
       scmDTO.setName(scm.getName());
       scmDTO.setUserIdentifier(scm.getUserIdentifier());
       scmDTO.setCreatedAt(scm.getCreatedAt());

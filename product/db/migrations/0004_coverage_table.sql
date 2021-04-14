@@ -1,28 +1,15 @@
--- This table gives a snapshot of source method code coverage.
--- It lists all source methods that don't have any test coverage
--- The TI service responds to an API by returning the list of tests to be run after running selection algorithm
--- It should also populate this table with high level stats for analytics purpose
-
+-- This table gives details about files changed in the PR.
+-- It contains paths of the files as well as whether they were modified, added or deleted.
+-- Information in this table is required for the correct merging of the partial call
+-- graph to master, as we don't get data of removed tests in the call graph.
 DO
 $do$
 BEGIN
    IF NOT EXISTS (
       SELECT FROM pg_type  -- SELECT list can be empty for this
-      WHERE  typname = 'code_type_t') THEN
-      CREATE TYPE code_type_t AS ENUM ('source','test','conf','resource','unknown');
-      COMMENT ON TYPE code_type_t IS 'type of a source code';
-   END IF;
-END
-$do$;
-
-DO
-$do$
-BEGIN
-   IF NOT EXISTS (
-      SELECT FROM pg_type  -- SELECT list can be empty for this
-      WHERE  typname = 'skip_criterion_t') THEN
-      CREATE TYPE skip_criterion_t AS ENUM ('missing_test','tiignore','unknown');
-      COMMENT ON TYPE skip_criterion_t IS 'why was this source skipped from testing?';
+      WHERE  typname = 'status_t') THEN
+      CREATE TYPE status_t AS ENUM ('modified','added','deleted');
+      COMMENT ON TYPE status_t IS 'status of the file in the PR';
    END IF;
 END
 $do$;
@@ -40,12 +27,9 @@ CREATE TABLE IF NOT EXISTS coverage(
   stage_id TEXT NOT NULL,
   step_id TEXT NOT NULL,
 
-  filename  TEXT,
-  suite_name TEXT NOT NULL,
-  class_name TEXT,
-  name TEXT NOT NULL,
-  type code_type_t DEFAULT 'source',
-  criterion skip_criterion_t DEFAULT 'missing_test'
+  sha TEXT,
+  file_path  TEXT,
+  status status_t DEFAULT 'modified'
 );
 
 
@@ -61,13 +45,9 @@ comment on column coverage.build_id is 'The unique Build number across the pipel
 comment on column coverage.stage_id is 'stage ID';
 comment on column coverage.step_id is 'step ID';
 
-comment on column coverage.filename is 'filename';
-comment on column coverage.suite_name is 'suite name';
-comment on column coverage.class_name is 'class name. Not applicable to all programming languages';
-comment on column coverage.name is 'Name of the source/test method';
-comment on column coverage.type is 'type of code. it could be source/test';
-comment on column coverage.criterion is 'indicates why a source method was not tested';
-
+comment on column coverage.sha is 'The commit ID where this change was made. Note that the commit id stored here has information on all the files changed uptil that commit in the PR.';
+comment on column coverage.file_path is 'Path of the changed file in the PR.';
+comment on column coverage.status is 'Whether the file was modified/added/deleted';
 
 
 -- distributed hypertable is supported only in 2.0. As we are using TSDB 1.7, using create_hypertable for now

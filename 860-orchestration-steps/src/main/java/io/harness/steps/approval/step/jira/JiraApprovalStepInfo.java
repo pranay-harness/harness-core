@@ -5,14 +5,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.filters.WithConnectorRef;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.step.ApprovalBaseStepInfo;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Lists;
@@ -63,21 +64,16 @@ public class JiraApprovalStepInfo extends ApprovalBaseStepInfo implements WithCo
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
     return JiraApprovalStepParameters.infoBuilder()
         .name(getName())
         .identifier(getIdentifier())
-        .timeout(baseStepParameterInfo.getTimeout())
+        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
         .connectorRef(connectorRef)
         .issueKey(issueKey)
         .approvalCriteria(approvalCriteria)
         .rejectionCriteria(rejectionCriteria)
         .build();
-  }
-
-  @Override
-  public boolean validateStageFailureStrategy() {
-    return false;
   }
 
   @Override

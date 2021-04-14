@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -13,6 +14,7 @@ import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -44,6 +46,7 @@ import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
@@ -116,6 +119,8 @@ import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
@@ -988,6 +993,30 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecutionService.triggerPipelineExecution(APP_ID, PIPELINE_ID, executionArgs, null);
     verify(deploymentAuthHandler).authorizePipelineExecution(eq(APP_ID), eq(PIPELINE_ID));
     verify(authService).checkIfUserAllowedToDeployPipelineToEnv(eq(APP_ID), eq(ENV_ID));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testPipelineAuthorizationWithWebhookTriggerAuthorizationFfOn() {
+    Variable envVariable = aVariable().name("Environment").entityType(EntityType.ENVIRONMENT).build();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).build();
+    pipeline.setEnvIds(Collections.singletonList("Environment"));
+    pipeline.setPipelineVariables(Collections.singletonList(envVariable));
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowVariables(ImmutableMap.of("Environment", ENV_ID));
+    when(pipelineService.readPipelineResolvedVariablesLoopedInfo(any(), any(), any())).thenReturn(pipeline);
+    when(featureFlagService.isEnabled(eq(WEBHOOK_TRIGGER_AUTHORIZATION), any())).thenReturn(true);
+    User user = anUser().build();
+    UserThreadLocal.set(user);
+
+    assertThatThrownBy(()
+                           -> workflowExecutionService.triggerPipelineExecution(APP_ID, PIPELINE_ID, executionArgs,
+                               Trigger.builder().uuid(TRIGGER_ID).condition(new WebHookTriggerCondition()).build()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage("You can not deploy an empty pipeline.");
+    verify(deploymentAuthHandler).authorizePipelineExecution(eq(APP_ID), eq(PIPELINE_ID));
+    verify(authService).checkIfUserAllowedToDeployPipelineToEnv(eq(APP_ID), eq("Environment"));
   }
 
   @Test

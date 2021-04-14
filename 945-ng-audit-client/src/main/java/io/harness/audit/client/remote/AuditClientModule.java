@@ -1,5 +1,8 @@
 package io.harness.audit.client.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.audit.client.api.impl.AuditClientServiceImpl;
 import io.harness.audit.client.api.impl.NoopAuditClientServiceImpl;
@@ -11,11 +14,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
+@OwnedBy(PL)
 public class AuditClientModule extends AbstractModule {
   private final ServiceHttpClientConfig auditClientConfig;
   private final String serviceSecret;
   private final String clientId;
-  private boolean enableAuditClient;
+  private final boolean enableAuditClient;
 
   public AuditClientModule(ServiceHttpClientConfig projectManagerClientConfig, String serviceSecret, String clientId) {
     this(projectManagerClientConfig, serviceSecret, clientId, true);

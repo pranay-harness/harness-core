@@ -4,11 +4,16 @@
 
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -34,19 +39,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 
@@ -76,6 +87,7 @@ import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -111,6 +123,8 @@ import org.mongodb.morphia.query.UpdateOperations;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class AppServiceTest extends WingsBaseTest {
   /**
    * The Query.
@@ -147,6 +161,8 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private YamlGitService yamlGitService;
   @Mock private TemplateService templateService;
+  @Mock private UsageRestrictionsService usageRestrictionsService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Mock private BackgroundJobScheduler backgroundJobScheduler;
   @Mock private ServiceJobScheduler serviceJobScheduler;
@@ -344,6 +360,53 @@ public class AppServiceTest extends WingsBaseTest {
     }
   }
 
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldUpdateApplicationWithIsManualTriggerAuthorized() {
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+    Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+
+    appService.update(anApplication()
+                          .uuid(APP_ID)
+                          .name("App_Name")
+                          .description("Description")
+                          .isManualTriggerAuthorized(true)
+                          .accountId(ACCOUNT_ID)
+                          .build());
+    verify(query).filter(ID_KEY, APP_ID);
+    verify(updateOperations).set("name", "App_Name");
+    verify(updateOperations).set("description", "Description");
+    verify(updateOperations)
+        .set("keywords", new HashSet<>(asList("App_Name".toLowerCase(), "Description".toLowerCase())));
+    verify(updateOperations).set("isManualTriggerAuthorized", true);
+    verify(wingsPersistence).update(query, updateOperations);
+    verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
+    verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, application, application, Type.UPDATE, false, true);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldUpdateApplicationWithoutIsManualTriggerAuthorized() {
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+    Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
+
+    appService.update(
+        anApplication().uuid(APP_ID).name("App_Name").description("Description").accountId(ACCOUNT_ID).build());
+    verify(query).filter(ID_KEY, APP_ID);
+    verify(updateOperations).set("name", "App_Name");
+    verify(updateOperations).set("description", "Description");
+    verify(updateOperations)
+        .set("keywords", new HashSet<>(asList("App_Name".toLowerCase(), "Description".toLowerCase())));
+    verify(updateOperations, never()).set("isManualTriggerAuthorized", true);
+    verify(wingsPersistence).update(query, updateOperations);
+    verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
+    verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, application, application, Type.UPDATE, false, true);
+  }
+
   /**
    * Should delete.
    */
@@ -462,5 +525,19 @@ public class AppServiceTest extends WingsBaseTest {
     when(workflowExecutionService.runningExecutionsForApplication(APP_ID))
         .thenReturn(asList(PIPELINE_EXECUTION_ID, WORKFLOW_EXECUTION_ID));
     assertThatThrownBy(() -> appService.delete(APP_ID, false)).isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldPruneApp() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    when(wingsPersistence.get(Application.class, APP_ID))
+        .thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build());
+    when(workflowExecutionService.runningExecutionsForApplication(APP_ID)).thenReturn(null);
+    appService.delete(APP_ID, false);
+    verify(yamlPushService).pushYamlChangeSet(anyString(), any(), any(), any(), anyBoolean(), anyBoolean());
+    verify(usageRestrictionsService).removeAppEnvReferences(anyString(), anyString(), anyString());
+    verify(wingsPersistence).delete(any(), anyString());
   }
 }

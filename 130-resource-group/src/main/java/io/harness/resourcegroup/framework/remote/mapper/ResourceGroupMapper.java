@@ -1,15 +1,19 @@
 package io.harness.resourcegroup.framework.remote.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 
+import java.util.ArrayList;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PL)
 public class ResourceGroupMapper {
   public static ResourceGroup fromDTO(ResourceGroupDTO resourceGroupDTO) {
     if (resourceGroupDTO == null) {
@@ -23,9 +27,10 @@ public class ResourceGroupMapper {
         .name(resourceGroupDTO.getName())
         .color(resourceGroupDTO.getColor())
         .tags(convertToList(resourceGroupDTO.getTags()))
-        .resourceSelectors(resourceGroupDTO.getResourceSelectors())
         .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
         .description(resourceGroupDTO.getDescription())
+        .resourceSelectors(resourceGroupDTO.getResourceSelectors().isEmpty() ? new ArrayList<>()
+                                                                             : resourceGroupDTO.getResourceSelectors())
         .build();
   }
 
@@ -41,9 +46,9 @@ public class ResourceGroupMapper {
         .name(resourceGroup.getName())
         .color(resourceGroup.getColor())
         .tags(convertToMap(resourceGroup.getTags()))
-        .resourceSelectors(resourceGroup.getResourceSelectors())
         .fullScopeSelected(Boolean.TRUE.equals(resourceGroup.getFullScopeSelected()))
         .description(resourceGroup.getDescription())
+        .resourceSelectors(resourceGroup.getResourceSelectors())
         .build();
   }
 

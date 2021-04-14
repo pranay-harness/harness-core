@@ -26,7 +26,6 @@ import io.harness.outbox.api.OutboxDao;
 import io.harness.outbox.filter.OutboxEventFilter;
 import io.harness.rule.Owner;
 
-import com.google.gson.Gson;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -45,7 +44,7 @@ public class OutboxServiceImplTest extends CategoryTest {
   @Before
   public void setup() {
     outboxDao = mock(OutboxDao.class);
-    outboxService = spy(new OutboxServiceImpl(outboxDao, new Gson()));
+    outboxService = spy(new OutboxServiceImpl(outboxDao, null));
   }
 
   @Data
@@ -87,7 +86,6 @@ public class OutboxServiceImplTest extends CategoryTest {
     verify(outboxDao, times(1)).list(outboxEventFilterArgumentCaptor.capture());
     OutboxEventFilter outboxEventFilter = outboxEventFilterArgumentCaptor.getValue();
     assertNotNull(outboxEventFilter);
-    assertEquals(Boolean.FALSE, outboxEventFilter.getBlocked());
     assertEquals(50, outboxEventFilter.getMaximumEventsPolled());
   }
 }

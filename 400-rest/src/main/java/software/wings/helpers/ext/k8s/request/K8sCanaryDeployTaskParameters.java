@@ -14,6 +14,7 @@ import software.wings.beans.InstanceUnitType;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,9 +37,9 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements 
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       Integer instances, InstanceUnitType instanceUnitType, Integer maxInstances, boolean skipDryRun,
-      HelmVersion helmVersion, Boolean skipVersioningForAllK8sObjects) {
+      HelmVersion helmVersion, Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.instances = instances;

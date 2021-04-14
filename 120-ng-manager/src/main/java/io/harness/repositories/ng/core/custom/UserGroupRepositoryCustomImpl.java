@@ -1,7 +1,7 @@
 package io.harness.repositories.ng.core.custom;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.core.utils.NGUtils.getPaginatedResult;
+import static io.harness.springdata.SpringDataMongoUtils.getPaginatedResult;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entities.UserGroup;

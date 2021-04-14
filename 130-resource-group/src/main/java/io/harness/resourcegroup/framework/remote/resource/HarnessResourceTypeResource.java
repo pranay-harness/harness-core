@@ -1,11 +1,14 @@
 package io.harness.resourcegroup.framework.remote.resource;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
-import io.harness.resourcegroup.model.Scope;
 import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -34,6 +37,7 @@ import lombok.AllArgsConstructor;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @NextGenManagerAuth
+@OwnedBy(PL)
 public class HarnessResourceTypeResource {
   ResourceTypeService resourceTypeService;
 

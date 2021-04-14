@@ -4,6 +4,7 @@ import io.harness.ccm.budget.ApplicationBudgetScope;
 import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.ClusterBudgetScope;
 import io.harness.ccm.budget.PerspectiveBudgetScope;
+import io.harness.ccm.commons.entities.CEDataCleanupRequest;
 import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.commons.entities.LatestClusterInfo;
@@ -20,6 +21,7 @@ public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(InstanceData.class);
     set.add(CEMetadataRecord.class);
+    set.add(CEDataCleanupRequest.class);
     set.add(LatestClusterInfo.class);
     set.add(K8sWorkloadRecommendation.class);
     set.add(PartialRecommendationHistogram.class);

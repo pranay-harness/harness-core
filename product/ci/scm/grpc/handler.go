@@ -51,7 +51,7 @@ func (h *handler) GetLatestFile(ctx context.Context, in *pb.GetLatestFileRequest
 		},
 		Provider: in.Provider,
 	}
-	log.Infow("GetLatestFile using FindFile", "slug", in.Slug, "path", in.Path, "branch", in.Branch)
+	log.Infow("GetLatestFile using FindFile", "slug", in.GetSlug(), "path", in.GetPath(), "branch", in.GetBranch())
 	return file.FindFile(ctx, findFileIn, log)
 }
 
@@ -59,9 +59,9 @@ func (h *handler) GetLatestFile(ctx context.Context, in *pb.GetLatestFileRequest
 func (h *handler) IsLatestFile(ctx context.Context, in *pb.IsLatestFileRequest) (*pb.IsLatestFileResponse, error) {
 	log := h.log
 	findFileIn := &pb.GetFileRequest{
-		Slug:     in.Slug,
-		Path:     in.Path,
-		Provider: in.Provider,
+		Slug:     in.GetSlug(),
+		Path:     in.GetPath(),
+		Provider: in.GetProvider(),
 	}
 	if in.GetBranch() != "" {
 		findFileIn.Type = &pb.GetFileRequest_Branch{
@@ -79,7 +79,14 @@ func (h *handler) IsLatestFile(ctx context.Context, in *pb.IsLatestFileRequest) 
 		log.Errorw("IsLatestFile failure", "slug ", in.GetSlug(), "path", in.GetPath(), "ref", in.GetRef(), "branch", in.GetBranch(), zap.Error(err))
 		return nil, err
 	}
-	match := response.ObjectId == in.ObjectId
+	var match bool
+	// github uses blob id for update check, others use commit id
+	switch findFileIn.GetProvider().Hook.(type) {
+	case *pb.Provider_Github:
+		match = in.GetBlobId() == response.GetBlobId()
+	default:
+		match = in.GetBlobId() == response.GetCommitId()
+	}
 	out := &pb.IsLatestFileResponse{
 		Latest: match,
 	}
@@ -109,6 +116,16 @@ func (h *handler) FindFilesInBranch(ctx context.Context, in *pb.FindFilesInBranc
 // FindFilesInCommit is used to return a list of files in a given commit.
 func (h *handler) FindFilesInCommit(ctx context.Context, in *pb.FindFilesInCommitRequest) (*pb.FindFilesInCommitResponse, error) {
 	return file.FindFilesInCommit(ctx, in, h.log)
+}
+
+// CreatePR creates a PR given a source branch and target branch.
+func (h *handler) CreatePR(ctx context.Context, in *pb.CreatePRRequest) (*pb.CreatePRResponse, error) {
+	return git.CreatePR(ctx, in, h.log)
+}
+
+// CreateBranch creates a Branch given a branch name and commit_id.
+func (h *handler) CreateBranch(ctx context.Context, in *pb.CreateBranchRequest) (*pb.CreateBranchResponse, error) {
+	return git.CreateBranch(ctx, in, h.log)
 }
 
 // GetLatestCommit returns the latest commit_id for a branch.

@@ -67,15 +67,15 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
+import io.harness.invites.remote.InviteAcceptResponse;
+import io.harness.invites.remote.NgInviteClient;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.common.beans.Generation;
-import io.harness.ng.core.invites.InviteAcceptResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
-import io.harness.ng.core.invites.client.NgInviteClient;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.UuidAware;
 import io.harness.remote.client.NGRestUtils;
@@ -129,6 +129,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.licensing.LicenseService;
+import software.wings.resources.UserResource;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.PermissionAttribute.Action;
@@ -667,6 +668,14 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public List<User> getUsersByEmail(List<String> emailIds, String accountId) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field(UserKeys.email).in(emailIds);
+    query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
+  }
+
+  @Override
   public User getUserByEmail(String email, String accountId) {
     User user = null;
     if (isNotEmpty(email)) {
@@ -804,6 +813,14 @@ public class UserServiceImpl implements UserService {
   private String buildAbsoluteUrl(String fragment, String accountId) throws URISyntaxException {
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setFragment(fragment);
+    return uriBuilder.toString();
+  }
+
+  private String buildAbsoluteUrl(String path, String fragment, String accountId) throws URISyntaxException {
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(path);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
   }
@@ -1748,7 +1765,8 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public boolean resetPassword(String email) {
+  public boolean resetPassword(UserResource.ResetPasswordRequest resetPasswordRequest) {
+    String email = resetPasswordRequest.getEmail();
     User user = getUserByEmail(email);
 
     if (user == null) {
@@ -1768,7 +1786,7 @@ public class UserServiceImpl implements UserService {
                          .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
                          .withClaim("email", email)
                          .sign(algorithm);
-      sendResetPasswordEmail(user, token);
+      sendResetPasswordEmail(user, token, resetPasswordRequest.getIsNG());
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new GeneralException(EXC_MSG_RESET_PASS_LINK_NOT_GEN);
     }
@@ -1927,9 +1945,9 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
-  private void sendResetPasswordEmail(User user, String token) {
+  private void sendResetPasswordEmail(User user, String token, boolean isNGRequest) {
     try {
-      String resetPasswordUrl = getResetPasswordUrl(token, user);
+      String resetPasswordUrl = getResetPasswordUrl(token, user, isNGRequest);
 
       Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       List<String> toList = new ArrayList<>();
@@ -1971,9 +1989,13 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private String getResetPasswordUrl(String token, User user) throws URISyntaxException {
+  private String getResetPasswordUrl(String token, User user, boolean isNGRequest) throws URISyntaxException {
     String accountIdParam = "?accountId=" + user.getDefaultAccountId();
-    return buildAbsoluteUrl("/reset-password/" + token + accountIdParam, user.getDefaultAccountId());
+    if (isNGRequest) {
+      return buildAbsoluteUrl("auth/", "/reset-password/" + token + accountIdParam, user.getDefaultAccountId());
+    } else {
+      return buildAbsoluteUrl("/reset-password/" + token + accountIdParam, user.getDefaultAccountId());
+    }
   }
 
   /* (non-Javadoc)
@@ -2323,8 +2345,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public List<User> getUsers(List<String> userIds) {
-    return wingsPersistence.createQuery(User.class).field("uuid").in(userIds).asList();
+  public List<User> getUsers(List<String> userIds, String accountId) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
+    query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
+        query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
   }
 
   private void loadSupportAccounts(User user) {
@@ -2845,7 +2870,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendPasswordExpirationWarningMail(User user, String token, Integer passExpirationDays) {
     try {
-      String resetPasswordUrl = getResetPasswordUrl(token, user);
+      // @Todo(Raj): Fix isNgRequest url
+      String resetPasswordUrl = getResetPasswordUrl(token, user, false);
 
       Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       templateModel.put("passExpirationDays", passExpirationDays.toString());
@@ -2888,7 +2914,8 @@ public class UserServiceImpl implements UserService {
 
   private void sendPasswordExpirationMail(User user, String token) {
     try {
-      String resetPasswordUrl = getResetPasswordUrl(token, user);
+      // @Todo (Raj): Fix isNGrequest
+      String resetPasswordUrl = getResetPasswordUrl(token, user, false);
 
       Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
 
@@ -2926,10 +2953,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public PasswordStrengthViolations checkPasswordViolations(
-      String token, PasswordSource passwordSource, String password) {
+      String token, PasswordSource passwordSource, String password, String accountId) {
     Account account = null;
     try {
-      if (PasswordSource.PASSWORD_RESET_FLOW == passwordSource) {
+      if (!isBlank(accountId)) {
+        account = accountService.get(accountId);
+      } else if (PasswordSource.PASSWORD_RESET_FLOW == passwordSource) {
         account = getAccountFromResetPasswordToken(token);
       } else if (PasswordSource.SIGN_UP_FLOW == passwordSource) {
         account = getAccountFromInviteId(token);

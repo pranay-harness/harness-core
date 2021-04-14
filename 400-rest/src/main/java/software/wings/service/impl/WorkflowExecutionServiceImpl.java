@@ -22,6 +22,7 @@ import static io.harness.beans.ExecutionStatus.activeStatuses;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static io.harness.beans.FeatureName.NEW_DEPLOYMENT_FREEZE;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -219,6 +220,7 @@ import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.beans.execution.WorkflowExecutionInfo.WorkflowExecutionInfoBuilder;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidBaselineConfigurationException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -1195,6 +1197,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
       }
     }
+
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
+      if (trigger != null && user != null
+          && trigger.getCondition().getConditionType() == TriggerConditionType.WEBHOOK) {
+        deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
+        if (isNotEmpty(pipeline.getEnvIds())) {
+          pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
+        }
+      }
+    }
+
     checkPreDeploymentConditions(accountId, appId);
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
@@ -1340,6 +1353,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (trigger == null && user != null && isEmpty(pipelineExecutionId)) {
       deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
       authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
+    }
+
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
+      if (trigger != null && user != null && trigger.getCondition().getConditionType() == TriggerConditionType.WEBHOOK
+          && isEmpty(pipelineExecutionId)) {
+        deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
+        authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
+      }
     }
 
     // Doing this check here so that workflow is already fetched from databae.

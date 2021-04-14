@@ -10,6 +10,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
@@ -20,6 +22,8 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.rule.Owner;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
+import io.harness.steps.barriers.beans.BarrierPositionInfo;
+import io.harness.steps.barriers.beans.BarrierPositionInfo.BarrierPosition;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.beans.StageDetail;
 import io.harness.steps.barriers.service.BarrierService;
@@ -33,6 +37,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.internal.util.collections.Sets;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PMSBarrierServiceTest extends PipelineServiceTestBase {
   @Mock private BarrierService barrierService;
   @Mock private NodeExecutionService nodeExecutionService;
@@ -47,6 +52,7 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestGetBarrierExecutionInfoList() {
+    String nodeRuntimeId = generateUuid();
     Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
     NodeExecution stageNode = NodeExecution.builder()
                                   .uuid("stageNode")
@@ -61,9 +67,7 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
         BarrierExecutionInstance.builder()
             .uuid(generateUuid())
             .name(generateUuid())
-            .planNodeId(generateUuid())
             .barrierState(STANDING)
-            .barrierGroupId(generateUuid())
             .identifier(generateUuid())
             .planExecutionId(ambiance.getPlanExecutionId())
             .setupInfo(BarrierSetupInfo.builder()
@@ -72,6 +76,10 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
                                                    .identifier(stageNode.getNode().getIdentifier())
                                                    .build()))
                            .build())
+            .positionInfo(BarrierPositionInfo.builder()
+                              .barrierPositionList(
+                                  Lists.newArrayList(BarrierPosition.builder().stepRuntimeId(nodeRuntimeId).build()))
+                              .build())
             .build();
 
     when(nodeExecutionService.getByPlanNodeUuid(stageNode.getUuid(), ambiance.getPlanExecutionId()))
@@ -80,8 +88,7 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
     when(barrierService.findByStageIdentifierAndPlanExecutionIdAnsStateIn(anyString(), anyString(), anySet()))
         .thenReturn(Lists.newArrayList(instance1));
 
-    when(nodeExecutionService.getByPlanNodeUuid(instance1.getPlanNodeId(), ambiance.getPlanExecutionId()))
-        .thenThrow(new InvalidRequestException("Exception"));
+    when(nodeExecutionService.get(nodeRuntimeId)).thenThrow(new InvalidRequestException("Exception"));
 
     List<BarrierExecutionInfo> barrierExecutionInfoList =
         pmsBarrierService.getBarrierExecutionInfoList(stageNode.getUuid(), ambiance.getPlanExecutionId());
@@ -113,9 +120,7 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
         BarrierExecutionInstance.builder()
             .uuid(generateUuid())
             .name(generateUuid())
-            .planNodeId(planNodeId)
             .barrierState(STANDING)
-            .barrierGroupId(generateUuid())
             .identifier(generateUuid())
             .planExecutionId(ambiance.getPlanExecutionId())
             .setupInfo(BarrierSetupInfo.builder()
@@ -123,6 +128,10 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
                            .stages(Sets.newSet(
                                StageDetail.builder().name("stage-name").identifier("stage-identifier").build()))
                            .build())
+            .positionInfo(
+                BarrierPositionInfo.builder()
+                    .barrierPositionList(Lists.newArrayList(BarrierPosition.builder().stepSetupId(planNodeId).build()))
+                    .build())
             .build();
 
     when(barrierService.findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId()))

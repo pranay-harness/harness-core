@@ -37,11 +37,11 @@ public class TerraformTaskNGParameters implements TaskParameters, ExecutionCapab
   @Expression(ALLOW_SECRETS) List<String> inlineVarFiles;
   @Expression(ALLOW_SECRETS) String backendConfig;
   @Expression(DISALLOW_SECRETS) List<String> targets;
-  @Expression(ALLOW_SECRETS) Map<String, Object> environmentVariables;
+  @Expression(ALLOW_SECRETS) Map<String, String> environmentVariables;
   boolean saveTerraformStateJson;
 
   // For plan
-  // ToDo: Add Tf Plan Command from 950 delegate task beans after promotion
+  TerraformCommand terraformCommand;
 
   // For Apply when inheriting from plan
   EncryptionConfig encryptionConfig;

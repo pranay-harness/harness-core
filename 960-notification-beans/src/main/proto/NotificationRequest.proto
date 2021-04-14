@@ -9,6 +9,7 @@ enum Team {
   CI = 3;
   FFM = 4;
   PIPELINE = 5;
+  PL = 6;
 }
 
 message NotificationRequest {

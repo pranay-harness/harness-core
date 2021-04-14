@@ -1,5 +1,7 @@
 package io.harness.serializer;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
@@ -11,6 +13,7 @@ import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -20,6 +23,7 @@ public class OrchestrationBeansRegistrars {
           .add(PmsSdkCoreKryoRegistrar.class)
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
+          .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .add(OrchestrationBeansKryoRegistrar.class)
           .build();
@@ -31,6 +35,7 @@ public class OrchestrationBeansRegistrars {
           .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .add(PmsCommonsMorphiaRegistrar.class)
           .add(PmsSdkCoreMorphiaRegistrar.class)
+          .addAll(WaitEngineRegistrars.morphiaRegistrars)
           .add(OrchestrationBeansMorphiaRegistrar.class)
           .build();
 

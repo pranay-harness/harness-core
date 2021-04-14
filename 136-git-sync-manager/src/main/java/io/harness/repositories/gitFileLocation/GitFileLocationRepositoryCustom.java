@@ -23,7 +23,8 @@ public interface GitFileLocationRepositoryCustom {
       String projectIdentifier, String orgIdentifier, String accountIdentifier,
       List<String> gitSyncConfigIdentifierList, List<EntityType> entityTypeList, String searchTerm, int size);
 
-  List<GitSyncEntityListDTO> getByProjectIdAndOrganizationIdAndAccountIdAndRepoUrlAndEntityTypeListAndBranch(
+  List<GitSyncEntityListDTO>
+  getByProjectIdAndOrganizationIdAndAccountIdAndGitSyncConfigIdentifierAndEntityTypeListAndBranch(
       String projectIdentifier, String orgIdentifier, String accountIdentifier, String gitSyncConfigIdentifier,
       String branch, List<EntityType> entityTypeList, String searchTerm, int size);
 }

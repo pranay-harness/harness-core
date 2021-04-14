@@ -13,8 +13,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.interrupts.statusupdate.ResumeStepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -34,7 +32,6 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private ResumeStepStatusUpdate resumeStepStatusUpdate;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -83,12 +80,6 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
                 .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
-    resumeStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                                  .planExecutionId(interrupt.getPlanExecutionId())
-                                                  .nodeExecutionId(nodeExecutionId)
-                                                  .interruptId(interrupt.getUuid())
-                                                  .status(Status.QUEUED)
-                                                  .build());
     return interrupt;
   }
 }

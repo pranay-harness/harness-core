@@ -29,6 +29,7 @@ const (
 	serviceLogKeyEnv = "HARNESS_SERVICE_LOG_KEY"
 	secretList       = "HARNESS_SECRETS_LIST"
 	dSourceBranch    = "DRONE_SOURCE_BRANCH"
+	dTargetBranch    = "DRONE_TARGET_BRANCH"
 	dRemoteUrl       = "DRONE_REMOTE_URL"
 	dCommitSha       = "DRONE_COMMIT_SHA"
 	wrkspcPath       = "HARNESS_WORKSPACE"
@@ -214,11 +215,19 @@ func GetStageId() (string, error) {
 }
 
 func GetSourceBranch() (string, error) {
-	stage, ok := os.LookupEnv(dSourceBranch)
+	source, ok := os.LookupEnv(dSourceBranch)
 	if !ok {
 		return "", fmt.Errorf("source branch variable not set %s", dSourceBranch)
 	}
-	return stage, nil
+	return source, nil
+}
+
+func GetTargetBranch() (string, error) {
+	target, ok := os.LookupEnv(dTargetBranch)
+	if !ok {
+		return "", fmt.Errorf("target branch variable not set %s", dTargetBranch)
+	}
+	return target, nil
 }
 
 func GetRepo() (string, error) {

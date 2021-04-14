@@ -1,6 +1,8 @@
 package io.harness.migrations;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.all.AddAccountIdToActivityCollection;
 import io.harness.migrations.all.AddAccountIdToBarrierInstanceCollection;
@@ -55,6 +57,7 @@ import io.harness.migrations.all.CleanupOrphanInstances;
 import io.harness.migrations.all.CleanupSyncStatusForDeletedEntities;
 import io.harness.migrations.all.ConvertHttpHeadersStringTypeToList;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
+import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
 import io.harness.migrations.all.DeleteInvalidServiceGuardConfigs;
 import io.harness.migrations.all.DeleteOrphanNotificationGroups;
@@ -118,6 +121,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @UtilityClass
 @TargetModule(HarnessModule._390_DB_MIGRATION)
+@OwnedBy(HarnessTeam.PL)
 public class MigrationBackgroundList {
   /**
    * Add your background migrations to the end of the list with the next sequence number.
@@ -317,6 +321,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(189, CleanupOrphanInfraMappings.class))
         .add(Pair.of(190, InstanceSyncPerpetualTaskInfoMigration.class))
         .add(Pair.of(191, GcpConfigMultipleDelegateMigration.class))
+        .add(Pair.of(192, DelegatesWithoutGroupMigration.class))
         .build();
   }
 }

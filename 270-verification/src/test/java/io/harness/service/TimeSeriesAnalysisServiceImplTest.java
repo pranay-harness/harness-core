@@ -3,6 +3,7 @@ package io.harness.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -22,6 +23,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.harness.VerificationBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -105,6 +108,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class TimeSeriesAnalysisServiceImplTest extends VerificationBase {
   private String cvConfigId;
   private String serviceId;
@@ -1487,6 +1491,31 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBase {
         timeSeriesAnalysisService.getMetricTemplates(accountId, StateType.NEW_RELIC, stateExecutionId, cvConfigId);
 
     assertThat(timeSeriesMetricDefinitionResult).isEqualTo(timeSeriesMetricDefinitionMap);
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetMetricTemplatesWithDotsInName() {
+    String metricName = "metric.with.dots.in.name";
+    TimeSeriesMetricDefinition timeSeriesMetricDefinition =
+        TimeSeriesMetricDefinition.builder().metricName(replaceDotWithUnicode(metricName)).build();
+    Map<String, TimeSeriesMetricDefinition> timeSeriesMetricDefinitionMap = new HashMap<>();
+    timeSeriesMetricDefinitionMap.put(timeSeriesMetricDefinition.getMetricName(), timeSeriesMetricDefinition);
+    TimeSeriesMetricTemplates timeSeriesMetricTemplates = TimeSeriesMetricTemplates.builder()
+                                                              .stateExecutionId(stateExecutionId)
+                                                              .cvConfigId(cvConfigId)
+                                                              .stateType(StateType.NEW_RELIC)
+                                                              .metricTemplates(timeSeriesMetricDefinitionMap)
+                                                              .build();
+
+    wingsPersistence.save(timeSeriesMetricTemplates);
+    Map<String, TimeSeriesMetricDefinition> timeSeriesMetricDefinitionResult =
+        timeSeriesAnalysisService.getMetricTemplates(accountId, StateType.NEW_RELIC, stateExecutionId, cvConfigId);
+
+    Map<String, TimeSeriesMetricDefinition> expectedDefinitionMap = new HashMap<>();
+    expectedDefinitionMap.put(metricName, timeSeriesMetricDefinition);
+    assertThat(timeSeriesMetricDefinitionResult).isEqualTo(expectedDefinitionMap);
   }
 
   @Test

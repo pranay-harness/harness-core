@@ -5,9 +5,9 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepSpecTypeConstants;
@@ -15,6 +15,7 @@ import io.harness.steps.approval.step.ApprovalBaseStepInfo;
 import io.harness.steps.approval.step.harness.beans.ApproverInputInfo;
 import io.harness.steps.approval.step.harness.beans.Approvers;
 import io.harness.yaml.YamlSchemaTypes;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -70,20 +71,15 @@ public class HarnessApprovalStepInfo extends ApprovalBaseStepInfo {
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
     return HarnessApprovalStepParameters.infoBuilder()
         .name(getName())
         .identifier(getIdentifier())
-        .timeout(baseStepParameterInfo.getTimeout())
+        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
         .approvalMessage(approvalMessage)
         .includePipelineExecutionHistory(includePipelineExecutionHistory)
         .approvers(approvers)
         .approverInputs(approverInputs)
         .build();
-  }
-
-  @Override
-  public boolean validateStageFailureStrategy() {
-    return false;
   }
 }

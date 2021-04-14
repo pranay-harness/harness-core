@@ -1,14 +1,17 @@
 package software.wings.helpers.ext.k8s.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
 import io.harness.k8s.model.HelmVersion;
 
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +19,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class K8sApplyTaskParameters extends K8sTaskParameters implements ManifestAwareTaskParams {
   @Expression(ALLOW_SECRETS) private K8sDelegateManifestConfig k8sDelegateManifestConfig;
   @Expression(ALLOW_SECRETS) private List<String> valuesYamlList;
@@ -28,9 +32,10 @@ public class K8sApplyTaskParameters extends K8sTaskParameters implements Manifes
   public K8sApplyTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
-      String filePaths, boolean skipSteadyStateCheck, boolean skipDryRun, HelmVersion helmVersion) {
+      String filePaths, boolean skipSteadyStateCheck, boolean skipDryRun, HelmVersion helmVersion,
+      Set<String> delegateSelectors) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
 
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;

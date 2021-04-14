@@ -1,9 +1,14 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._950_DELEGATE_TASKS_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
@@ -15,11 +20,14 @@ import software.wings.service.impl.ContainerServiceParams;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@TargetModule(_950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
@@ -30,6 +38,7 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
   private final ContainerServiceParams containerServiceParams;
   private boolean isBindTaskFeatureSet; // BIND_FETCH_FILES_TASK_TO_DELEGATE
   private String executionLogName;
+  private Set<String> delegateSelectors;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
@@ -48,6 +57,10 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
                                       .encryptedDataDetails(gitFetchFileConfig.getEncryptedDataDetails())
                                       .build());
       }
+    }
+
+    if (isNotEmpty(delegateSelectors)) {
+      executionCapabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
     }
 
     return executionCapabilities;

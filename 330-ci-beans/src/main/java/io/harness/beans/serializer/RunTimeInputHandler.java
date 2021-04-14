@@ -58,6 +58,14 @@ public class RunTimeInputHandler {
     }
   }
 
+  public Integer resolveIntegerParameter(ParameterField<Integer> parameterField, Integer defaultValue) {
+    if (parameterField == null || parameterField.isExpression() || parameterField.getValue() == null) {
+      return defaultValue;
+    } else {
+      return (Integer) parameterField.fetchFinalValue();
+    }
+  }
+
   public String resolveStringParameter(String fieldName, String stepType, String stepIdentifier,
       ParameterField<String> parameterField, boolean isMandatory) {
     if (parameterField == null) {

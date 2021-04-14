@@ -23,6 +23,7 @@ enum TagEntityType {
   ENVIRONMENT
   WORKFLOW
   PIPELINE
+  PROVISIONER
 }
 
 input DetachTagInput {

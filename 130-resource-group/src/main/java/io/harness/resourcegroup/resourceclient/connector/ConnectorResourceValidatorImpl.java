@@ -1,10 +1,13 @@
 package io.harness.resourcegroup.resourceclient.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
@@ -15,7 +18,6 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
-import io.harness.resourcegroup.model.Scope;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class ConnectorResourceValidatorImpl implements ResourceValidator {
   ConnectorResourceClient connectorResourceClient;
 

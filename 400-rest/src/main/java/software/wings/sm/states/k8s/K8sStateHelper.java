@@ -1,14 +1,22 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutputInstance;
@@ -63,6 +71,7 @@ import java.io.StringReader;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +79,8 @@ import org.apache.commons.io.LineIterator;
 
 @Singleton
 @Slf4j
+@TargetModule(_870_CG_ORCHESTRATION)
+@OwnedBy(CDP)
 public class K8sStateHelper {
   @Inject private transient ApplicationManifestService applicationManifestService;
 
@@ -333,5 +344,14 @@ public class K8sStateHelper {
       return null;
     }
     return (K8sElement) kryoSerializer.asInflatedObject(result.getOutput());
+  }
+
+  public Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context, List<String> delegateSelectors) {
+    if (isEmpty(delegateSelectors)) {
+      return emptySet();
+    }
+    List<String> renderedSelectors = delegateSelectors.stream().map(context::renderExpression).collect(toList());
+    List<String> trimmedSelectors = trimStrings(renderedSelectors);
+    return new HashSet<>(trimmedSelectors);
   }
 }

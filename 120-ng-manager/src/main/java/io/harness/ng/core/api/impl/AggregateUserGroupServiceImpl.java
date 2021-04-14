@@ -26,8 +26,8 @@ import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
-import io.harness.ng.core.invites.remote.UserSearchMapper;
-import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.ng.core.user.remote.UserSearchMapper;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.utils.UserGroupMapper;
 import io.harness.utils.PageUtils;
 
@@ -85,7 +85,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
         });
 
     Map<String, UserSearchDTO> userSearchDTOMap =
-        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers))
+        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
             .stream()
             .map(UserSearchMapper::writeDTO)
             .collect(Collectors.toMap(UserSearchDTO::getUuid, Function.identity()));
@@ -133,7 +133,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
         });
 
     Map<String, UserSearchDTO> userSearchDTOMap =
-        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers))
+        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
             .stream()
             .map(UserSearchMapper::writeDTO)
             .collect(Collectors.toMap(UserSearchDTO::getUuid, Function.identity()));
@@ -169,7 +169,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     Set<String> userIdentifiers =
         userGroupOpt.get().getUsers() == null ? new HashSet<>() : userGroupOpt.get().getUsers();
 
-    List<UserSearchDTO> users = ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers))
+    List<UserSearchDTO> users = ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
                                     .stream()
                                     .map(UserSearchMapper::writeDTO)
                                     .collect(toList());
@@ -202,6 +202,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
             -> roleAssignment.getPrincipal().getIdentifier(),
             Collectors.mapping(roleAssignment
                 -> RoleAssignmentMetadataDTO.builder()
+                       .identifier(roleAssignment.getIdentifier())
                        .roleIdentifier(roleAssignment.getRoleIdentifier())
                        .resourceGroupIdentifier(roleAssignment.getResourceGroupIdentifier())
                        .roleName(roleMap.get(roleAssignment.getRoleIdentifier()).getRole().getName())

@@ -3,6 +3,7 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.advisers.manualIntervention.ManualInterventionAdviserRollbackParameters;
+import io.harness.advisers.nextstep.NextStepAdviserParameters;
 import io.harness.advisers.retry.RetryAdviserRollbackParameters;
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.advisers.rollback.RollbackStrategy;
@@ -18,5 +19,6 @@ public class PipelineServiceUtilKryoRegistrar implements KryoRegistrar {
     kryo.register(RollbackStrategy.class, 87802);
     kryo.register(OnFailRollbackParameters.class, 87803);
     kryo.register(ManualInterventionAdviserRollbackParameters.class, 87804);
+    kryo.register(NextStepAdviserParameters.class, 87805);
   }
 }

@@ -32,6 +32,7 @@ public class GcpConnectorValidator extends AbstractConnectorValidator {
         GcpValidationRequest manualCredentialsRequest = gcpValidationRequestBuilder.gcpManualDetailsDTO(gcpDetailsDTO)
                                                             .encryptionDetails(super.getEncryptionDetail(gcpDetailsDTO,
                                                                 accountIdentifier, orgIdentifier, projectIdentifier))
+                                                            .delegateSelectors(gcpConnectorDTO.getDelegateSelectors())
                                                             .build();
         return GcpTaskParameters.builder()
             .gcpRequest(manualCredentialsRequest)

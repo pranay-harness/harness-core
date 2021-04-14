@@ -1,5 +1,8 @@
 package io.harness.ci.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoUtils;
@@ -20,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@OwnedBy(CI)
 public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<PluginCompatibleStep> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
@@ -56,7 +60,7 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
         .setId(step.getIdentifier())
         .setTaskId(callbackId)
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
-        .setDisplayName(Optional.ofNullable(pluginCompatibleStep.getDisplayName()).orElse(""))
+        .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .setPlugin(pluginStep)
         .setLogKey(logKey)

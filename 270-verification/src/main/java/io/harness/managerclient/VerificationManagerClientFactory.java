@@ -1,9 +1,6 @@
 package io.harness.managerclient;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
-import io.harness.network.NoopHostnameVerifier;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.security.VerificationAuthInterceptor;
 
@@ -23,7 +20,11 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-class VerificationManagerClientX509TrustManager implements X509TrustManager {
+/**
+ * Created by raghu on 11/29/16.
+ */
+
+class ManagerClientX509TrustManager implements X509TrustManager {
   @Override
   public X509Certificate[] getAcceptedIssuers() {
     return new X509Certificate[] {};
@@ -36,10 +37,9 @@ class VerificationManagerClientX509TrustManager implements X509TrustManager {
   public void checkServerTrusted(X509Certificate[] certs, String authType) {}
 }
 
-@OwnedBy(HarnessTeam.CV)
 public class VerificationManagerClientFactory implements Provider<VerificationManagerClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
-      ImmutableList.of(new VerificationManagerClientX509TrustManager());
+      ImmutableList.of(new ManagerClientX509TrustManager());
 
   private String baseUrl;
   private ServiceTokenGenerator tokenGenerator;
@@ -76,7 +76,7 @@ public class VerificationManagerClientFactory implements Provider<VerificationMa
           .retryOnConnectionFailure(true)
           .addInterceptor(new VerificationAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
-          .hostnameVerifier(new NoopHostnameVerifier())
+          .hostnameVerifier((hostname, session) -> true)
           .build();
     } catch (Exception e) {
       throw new RuntimeException(e);

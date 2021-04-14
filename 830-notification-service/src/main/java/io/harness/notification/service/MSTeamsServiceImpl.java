@@ -56,10 +56,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StrSubstitutor;
 import org.apache.commons.validator.routines.UrlValidator;
 
-@OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class MSTeamsServiceImpl implements ChannelService {
   private static final String ARTIFACTS = "ARTIFACTS";
   private static final String ASTERISK = "\\*";
@@ -122,7 +122,7 @@ public class MSTeamsServiceImpl implements ChannelService {
     }
     NotificationProcessingResponse response = send(Collections.singletonList(webhookUrl), TEST_MSTEAMS_TEMPLATE,
         Collections.emptyMap(), msTeamSettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
-    if (NotificationProcessingResponse.isNotificationResquestFailed(response)) {
+    if (NotificationProcessingResponse.isNotificationRequestFailed(response)) {
       throw new NotificationException("Invalid webhook Url encountered while processing Test Connection request "
               + notificationSettingDTO.getNotificationId(),
           DEFAULT_ERROR_CODE, USER);
@@ -166,7 +166,7 @@ public class MSTeamsServiceImpl implements ChannelService {
     } else {
       processingResponse = microsoftTeamsSender.send(microsoftTeamsWebhookUrls, message, notificationId);
     }
-    log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+    log.info(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
             ? "Failed to send notification for request {}"
             : "Notification request {} sent",
         notificationId);

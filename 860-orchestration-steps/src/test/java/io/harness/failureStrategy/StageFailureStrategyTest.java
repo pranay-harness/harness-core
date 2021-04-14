@@ -1,5 +1,6 @@
 package io.harness.failureStrategy;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.ANY_OTHER_ERRORS;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHORIZATION_ERROR;
@@ -10,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.FailureStrategiesUtils;
@@ -32,11 +34,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PIPELINE)
 @Slf4j
 public class StageFailureStrategyTest extends CategoryTest {
   @Test
@@ -59,12 +61,7 @@ public class StageFailureStrategyTest extends CategoryTest {
                            .build())
             .build());
 
-    boolean ans = new GenericStepPMSPlanCreator() {
-      @Override
-      public Set<String> getSupportedStepTypes() {
-        return null;
-      }
-    }.containsOnlyAnyOtherError(stageFailureStrategies1);
+    boolean ans = GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies1);
     assertThat(ans).isEqualTo(false);
 
     // Containing error type as ANY_OTHER_ERRORS only
@@ -76,12 +73,7 @@ public class StageFailureStrategyTest extends CategoryTest {
                                                      .build())
                                       .build());
 
-    ans = new GenericStepPMSPlanCreator() {
-      @Override
-      public Set<String> getSupportedStepTypes() {
-        return null;
-      }
-    }.containsOnlyAnyOtherError(stageFailureStrategies2);
+    ans = GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies2);
     assertThat(ans).isEqualTo(true);
 
     // Containing other error along with ANY_OTHER_ERRORS
@@ -93,12 +85,7 @@ public class StageFailureStrategyTest extends CategoryTest {
             .onFailure(
                 OnFailureConfig.builder().errors(test).action(AbortFailureActionConfig.builder().build()).build())
             .build());
-    ans = new GenericStepPMSPlanCreator() {
-      @Override
-      public Set<String> getSupportedStepTypes() {
-        return null;
-      }
-    }.containsOnlyAnyOtherError(stageFailureStrategies3);
+    ans = GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies3);
     assertThat(ans).isEqualTo(false);
   }
 

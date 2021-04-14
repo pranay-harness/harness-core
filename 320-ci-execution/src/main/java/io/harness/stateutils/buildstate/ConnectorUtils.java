@@ -68,6 +68,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +76,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 @Singleton
 @Slf4j
@@ -83,6 +86,9 @@ public class ConnectorUtils {
   private final ConnectorResourceClient connectorResourceClient;
   private final SecretManagerClientService secretManagerClientService;
   private final SecretUtils secretUtils;
+
+  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
+  private final int MAX_ATTEMPTS = 3;
 
   @Inject
   public ConnectorUtils(ConnectorResourceClient connectorResourceClient, SecretUtils secretUtils,
@@ -433,11 +439,19 @@ public class ConnectorUtils {
           connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(), connectorRef.getProjectIdentifier(),
           connectorRef.getOrgIdentifier());
 
-      connectorDTO =
-          SafeHttpCall
-              .execute(connectorResourceClient.get(connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(),
-                  connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier()))
-              .getData();
+      RetryPolicy<Object> retryPolicy =
+          getRetryPolicy(format("[Retrying failed call to fetch connector: [%s] with scope: [%s]; attempt: {}",
+                             connectorRef.getIdentifier(), connectorRef.getScope()),
+              format("Failed to fetch connector: [%s] with scope: [%s] after retrying {} times",
+                  connectorRef.getIdentifier(), connectorRef.getScope()));
+
+      connectorDTO = Failsafe.with(retryPolicy)
+                         .get(()
+                                  -> SafeHttpCall
+                                         .execute(connectorResourceClient.get(connectorRef.getIdentifier(),
+                                             connectorRef.getAccountIdentifier(), connectorRef.getOrgIdentifier(),
+                                             connectorRef.getProjectIdentifier()))
+                                         .getData());
 
     } catch (Exception e) {
       log.error(format("Unable to get connector information : [%s] with scope: [%s]", connectorRef.getIdentifier(),
@@ -501,5 +515,14 @@ public class ConnectorUtils {
       }
     }
     return null;
+  }
+
+  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }

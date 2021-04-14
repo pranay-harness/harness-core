@@ -10,6 +10,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SampleBean;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.utils.NGYamlUtils;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class EntityToYamlStringUtilsTest extends CategoryTest {
                                       .orgIdentifier("orgid")
                                       .projectIdentifier("projid")
                                       .build();
-    final String yamlString = EntityToYamlStringUtils.getYamlString(sampleBean);
+    final String yamlString = NGYamlUtils.getYamlString(sampleBean);
     String yaml = IOUtils.resourceToString("testYaml.yaml", UTF_8, this.getClass().getClassLoader());
     assertThat(yaml).isEqualTo(yamlString);
   }

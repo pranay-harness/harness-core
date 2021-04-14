@@ -34,7 +34,7 @@ public class AwsCredentialDTODeserializer extends StdDeserializer<AwsCredentialD
 
     CrossAccountAccessDTO crossAccountAccessDTO = null;
     if (crossAccNode != null && !crossAccNode.isNull()) {
-      mapper.readValue(crossAccNode.toString(), CrossAccountAccessDTO.class);
+      crossAccountAccessDTO = mapper.readValue(crossAccNode.toString(), CrossAccountAccessDTO.class);
     }
     if (type == AwsCredentialType.MANUAL_CREDENTIALS) {
       awsCredentialSpecDTO = mapper.readValue(authSpec.toString(), AwsManualConfigSpecDTO.class);

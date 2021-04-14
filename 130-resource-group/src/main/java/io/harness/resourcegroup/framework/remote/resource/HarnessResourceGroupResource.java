@@ -12,8 +12,10 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -39,8 +41,8 @@ import lombok.AllArgsConstructor;
 
 @Api("/resourcegroup")
 @Path("resourcegroup")
-@Produces({"application/json"})
-@Consumes({"application/json"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
@@ -61,7 +63,7 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.find(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
+        resourceGroupService.get(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 
@@ -87,6 +89,21 @@ public class HarnessResourceGroupResource {
     return ResponseDTO.newResponse(resourceGroupResponse);
   }
 
+  @POST
+  @Path("/createInternal")
+  @InternalApi
+  @ApiOperation(
+      value = "create default/harneess managed resource group", nickname = "createResourceGroupInternal", hidden = true)
+  public ResponseDTO<Boolean>
+  createManagedResourceGroup(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Valid ResourceGroupDTO resourceGroupDTO) {
+    resourceGroupService.createManagedResourceGroup(
+        accountIdentifier, orgIdentifier, projectIdentifier, resourceGroupDTO);
+    return ResponseDTO.newResponse(true);
+  }
+
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update a resource group", nickname = "updateResourceGroup")
@@ -104,6 +121,8 @@ public class HarnessResourceGroupResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Deletes a resource group", nickname = "deleteResourceGroup")
+  @Produces("application/json")
+  @Consumes()
   public ResponseDTO<Boolean> delete(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,

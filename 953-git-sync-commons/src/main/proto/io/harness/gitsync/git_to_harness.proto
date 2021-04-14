@@ -4,7 +4,7 @@ package io.harness.gitsync;
 
 option java_multiple_files = true;
 
-import "io/harness/eventsframework/schemas/entity/entity_type.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "io/harness/gitsync/change_type.proto";
 import "google/protobuf/wrappers.proto";
 

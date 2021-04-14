@@ -7,6 +7,6 @@ import io.harness.persistence.PersistentEntity;
 
 @OwnedBy(HarnessTeam.CE)
 public interface CDCEntity<T extends PersistentEntity> {
-  ChangeHandler getTimescaleChangeHandler();
+  ChangeHandler getTimescaleChangeHandler(String handlerClass);
   Class<? extends PersistentEntity> getSubscriptionEntity();
 }

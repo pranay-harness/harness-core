@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static java.util.Arrays.asList;
@@ -11,22 +12,18 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CommitDetails;
-import io.harness.beans.HeaderConfig;
 import io.harness.beans.PushWebhookEvent;
 import io.harness.beans.Repository;
-import io.harness.beans.WebhookBaseAttributes;
 import io.harness.beans.WebhookGitUser;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiTaskResponse;
 import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentTaskResult;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.ngtriggers.NgTriggersTestHelper;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
-import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
-import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
-import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.product.ci.scm.proto.Commit;
@@ -46,67 +43,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(PIPELINE)
 public class AwsCodeCommitDataObtainerTest extends CategoryTest {
   @Mock private WebhookEventPayloadParser webhookEventPayloadParser;
   @Spy @InjectMocks AwsCodeCommitDataObtainer awsCodeCommitDataObtainer;
   private static final List<TriggerDetails> triggerDetailsList;
   private static final Repository repository =
-      Repository.builder().httpURL("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test").build();
+      Repository.builder().id("arn:aws:codecommit:eu-central-1:44864EXAMPLE:test").build();
 
   private static final WebhookGitUser webhookGitUser =
       WebhookGitUser.builder()
           .gitId("arn:aws:iam::44864EXAMPLE:user/vault-okta-username.lastname@gitmail.io-a1616318518-9029")
           .build();
 
-  private static final PushWebhookEvent pushWebhookEvent =
-      PushWebhookEvent.builder()
-          .branchName("main")
-          .commitDetailsList(singletonList(
-              CommitDetails.builder()
-                  .commitId("f70e8226cac251f6116315984b6e9ed7098ce586")
-                  .ownerId("arn:aws:iam::44864EXAMPLE:user/vault-okta-username.lastname@gitmail.io-a1616318518-9029")
-                  .timeStamp(1616318557000L)
-                  .build()))
-          .repository(repository)
-          .baseAttributes(
-              WebhookBaseAttributes.builder()
-                  .ref("refs/heads/main")
-                  .target("main")
-                  .authorLogin(
-                      "arn:aws:iam::44864EXAMPLE:user/vault-okta-username.lastname@gitmail.io-a1616318518-9029")
-                  .sender("arn:aws:iam::44864EXAMPLE:user/vault-okta-username.lastname@gitmail.io-a1616318518-9029")
-                  .build())
-          .build();
+  private static final PushWebhookEvent pushWebhookEvent = NgTriggersTestHelper.getAwsCodecommitPushWebhookEvent();
 
   private static final TriggerWebhookEvent triggerWebhookEvent =
-      TriggerWebhookEvent.builder()
-          .payload("{\n"
-              + "  \"Type\" : \"Notification\",\n"
-              + "  \"MessageId\" : \"2d8bef2e-9233-543b-90c0-b7ff80aec631\",\n"
-              + "  \"TopicArn\" : \"arn:aws:sns:eu-central-1:44864EXAMPLE:aws_cc_push_trigger\",\n"
-              + "  \"Subject\" : \"UPDATE: AWS CodeCommit eu-central-1 push: test\",\n"
-              + "  \"Message\" : \"{\\\"Records\\\":[{\\\"awsRegion\\\":\\\"eu-central-1\\\",\\\"codecommit\\\":{\\\"references\\\":[{\\\"commit\\\":\\\"f70e8226cac251f6116315984b6e9ed7098ce586\\\",\\\"ref\\\":\\\"refs/heads/main\\\"}]},\\\"customData\\\":null,\\\"eventId\\\":\\\"6363f269-6070-4999-9b55-52c4e40d74b0\\\",\\\"eventName\\\":\\\"ReferenceChanges\\\",\\\"eventPartNumber\\\":1,\\\"eventSource\\\":\\\"aws:codecommit\\\",\\\"eventSourceARN\\\":\\\"arn:aws:codecommit:eu-central-1:44864EXAMPLE:test\\\",\\\"eventTime\\\":\\\"2021-03-21T09:22:37.156+0000\\\",\\\"eventTotalParts\\\":1,\\\"eventTriggerConfigId\\\":\\\"e15f4b05-bec2-47f8-9505-c10df79f4c42\\\",\\\"eventTriggerName\\\":\\\"push\\\",\\\"eventVersion\\\":\\\"1.0\\\",\\\"userIdentityARN\\\":\\\"arn:aws:iam::44864EXAMPLE:user/vault-okta-username.lastname@gitmail.io-a1616318518-9029\\\"}]}\",\n"
-              + "  \"Timestamp\" : \"2021-03-21T09:22:37.198Z\",\n"
-              + "  \"SignatureVersion\" : \"1\",\n"
-              + "  \"Signature\" : \"DnmP7IBvzHPEqm8054phY6aQztpvTktsBNTLqOeX1j48t65vFKxpyrhFvOKDh6vispOFZO+RgJjTvG7vq9LEEMtns56sLoNcZUYtyydRQC3KQdQjzFhPx+M/oZX81WxWc3gIUVNVteIF4izObmi9NUrU1ioiW+D/IBFVVbzW7Yw3TJT8SeF6verQdImDBuQ7izPVEPzz1RsZH/9DN8iQg5F5rMnQwADZzjNLLQ+hpbh0Addy40x89TMzjSYXYLSOS24hxxpnftWP9LTrZVlekwMz+NqFMhX6mzKWXI80mYnRqaCwDdy7ZaEskJvW+9gByl05MH++b6ZJGdIhmgyVMw==\",\n"
-              + "  \"SigningCertURL\" : \"https://sns.eu-central-1.amazonaws.com/SimpleNotificationService-010a507c1833636cd94bdb98bd93083a.pem\",\n"
-              + "  \"UnsubscribeURL\" : \"https://sns.eu-central-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-central-1:44864EXAMPLE:aws_cc_push_trigger:05b595dd-06fb-4002-b409-80a7a7bbfda6\"\n"
-              + "}")
-          .headers(
-              asList(HeaderConfig.builder().key("X-Amz-Sns-Message-Type").values(singletonList("Notification")).build(),
-                  HeaderConfig.builder()
-                      .key("X-Amz-Sns-Message-Id")
-                      .values(singletonList("2d8bef2e-9233-543b-90c0-b7ff80aec631"))
-                      .build(),
-                  HeaderConfig.builder()
-                      .key("X-Amz-Sns-Topic-Arn")
-                      .values(singletonList("arn:aws:sns:eu-central-1:44864EXAMPLE:aws_cc_push_trigger"))
-                      .build()))
-          .accountId("acc")
-          .orgIdentifier("org")
-          .projectIdentifier("proj")
-          .sourceRepoType("AWS_CODECOMMIT")
-          .build();
+      NgTriggersTestHelper.getTriggerWehookEventForAwsCodeCommitPush();
 
   private static final Commit commit =
       Commit.newBuilder()
@@ -134,7 +87,6 @@ public class AwsCodeCommitDataObtainerTest extends CategoryTest {
                                     .setPrivate(true)
                                     .setCreated(Timestamp.newBuilder().setSeconds(62135596800L).build())
                                     .setUpdated(Timestamp.newBuilder().setSeconds(62135596800L).build())
-
                                     .build())
                        .addCommits(commit)
                        .setCommit(commit)
@@ -150,41 +102,8 @@ public class AwsCodeCommitDataObtainerTest extends CategoryTest {
                                                                    .build();
 
   static {
-    TriggerDetails details1 =
-        TriggerDetails.builder()
-            .ngTriggerEntity(
-                NGTriggerEntity.builder()
-                    .accountId("acc")
-                    .orgIdentifier("org")
-                    .projectIdentifier("proj")
-                    .metadata(NGTriggerMetadata.builder()
-                                  .webhook(WebhookMetadata.builder()
-                                               .type("AWS_CODECOMMIT")
-                                               .git(GitMetadata.builder().connectorIdentifier("account.con1").build())
-                                               .build())
-                                  .build())
-                    .build())
-            .build();
-
-    TriggerDetails details2 =
-        TriggerDetails.builder()
-            .ngTriggerEntity(
-                NGTriggerEntity.builder()
-                    .accountId("acc")
-                    .orgIdentifier("org")
-                    .projectIdentifier("proj")
-                    .metadata(
-                        NGTriggerMetadata.builder()
-                            .webhook(
-                                WebhookMetadata.builder()
-                                    .type("AWS_CODECOMMIT")
-                                    .git(
-                                        GitMetadata.builder().repoName("repo2").connectorIdentifier("org.con1").build())
-                                    .build())
-                            .build())
-                    .build())
-            .build();
-
+    TriggerDetails details1 = NgTriggersTestHelper.getAwsRepoTriggerDetails();
+    TriggerDetails details2 = NgTriggersTestHelper.getAwsRegionTriggerDetails();
     triggerDetailsList = asList(details1, details2);
   }
 

@@ -52,9 +52,9 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.EmailValidator;
 
-@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class MailServiceImpl implements ChannelService {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
   private final NotificationSettingsService notificationSettingsService;
@@ -87,8 +87,8 @@ public class MailServiceImpl implements ChannelService {
     }
 
     try {
-      String subject = null;
-      String body = null;
+      String subject;
+      String body;
       Optional<EmailTemplate> emailTemplateOpt = getTemplate(templateId, notificationRequest.getTeam());
       if (!emailTemplateOpt.isPresent()) {
         log.error(
@@ -120,7 +120,7 @@ public class MailServiceImpl implements ChannelService {
     }
     NotificationProcessingResponse response = send(Collections.singletonList(email), emailSettingDTO.getSubject(),
         emailSettingDTO.getBody(), email, notificationSettingDTO.getAccountId());
-    if (response.getResult().isEmpty() || !response.getResult().get(0).booleanValue()) {
+    if (response.getResult().isEmpty() || NotificationProcessingResponse.isNotificationRequestFailed(response)) {
       throw new NotificationException("Failed to send email. Check SMTP configuration", DEFAULT_ERROR_CODE, USER);
     }
     return true;
@@ -128,9 +128,9 @@ public class MailServiceImpl implements ChannelService {
 
   private NotificationProcessingResponse send(
       List<String> emailIds, String subject, String body, String notificationId, String accountId) {
-    NotificationProcessingResponse notificationProcessingResponse = null;
+    NotificationProcessingResponse notificationProcessingResponse;
     SmtpConfigResponse smtpConfigResponse = notificationSettingsService.getSmtpConfigResponse(accountId);
-    if (notificationSettingsService.getSendNotificationViaDelegate(accountId) || Objects.nonNull(smtpConfigResponse)) {
+    if (notificationSettingsService.getSendNotificationViaDelegate(accountId) && Objects.nonNull(smtpConfigResponse)) {
       DelegateTaskRequest delegateTaskRequest =
           DelegateTaskRequest.builder()
               .accountId(accountId)
@@ -151,7 +151,7 @@ public class MailServiceImpl implements ChannelService {
     } else {
       notificationProcessingResponse = mailSender.send(emailIds, subject, body, notificationId, smtpConfigDefault);
     }
-    log.info(NotificationProcessingResponse.isNotificationResquestFailed(notificationProcessingResponse)
+    log.info(NotificationProcessingResponse.isNotificationRequestFailed(notificationProcessingResponse)
             ? "Failed to send notification for request {}"
             : "Notification request {} sent",
         notificationId);
@@ -183,7 +183,7 @@ public class MailServiceImpl implements ChannelService {
         template.process(dataMap, strWriter);
       } catch (InvalidReferenceException e) {
         exceptionCaught = true;
-        dataMap.put(e.getBlamedExpressionString(), String.format("${%s}", e.getBlamedExpressionString()));
+        dataMap.put(e.getBlamedExpressionString(), "");
       } catch (IOException | TemplateException e) {
         log.error("Failed to process template. Check template {}", templateName);
       }

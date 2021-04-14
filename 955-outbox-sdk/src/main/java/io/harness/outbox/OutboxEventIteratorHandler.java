@@ -40,15 +40,10 @@ public class OutboxEventIteratorHandler implements MongoPersistenceIterator.Hand
       log.error("Error occurred while handling outbox event with id {} with response [{}]", outbox.getId(),
           exception.getStackTrace());
     }
-    long maximumAttempts = config.getMaximumOutboxEventHandlingAttempts();
     if (success) {
       outboxService.delete(outbox.getId());
     } else {
-      long attempts = outbox.getAttempts() == null ? 0 : outbox.getAttempts();
-      if (attempts + 1 >= maximumAttempts) {
-        outbox.setBlocked(true);
-      }
-      outbox.setAttempts(attempts + 1);
+      outbox.setBlocked(true);
       outboxService.update(outbox);
     }
   }

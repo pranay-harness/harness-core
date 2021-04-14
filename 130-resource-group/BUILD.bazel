@@ -15,11 +15,14 @@ java_library(
     deps = [
         "//:lombok",
         "//888-pms-client:module",
-        "//908-access-control-admin-client:module",
         "//930-ng-core-clients:module",
+        "//940-feature-flag:module",
         "//940-resource-group-beans:module",
-        "//950-events-api:module",
-        "//950-events-api/src/main/proto:950_events_api_proto",
+        "//945-ng-audit-client:module",
+        "//948-access-control-admin-client:module",
+        "//950-ng-audit-commons:module",
+        "//953-events-api:module",
+        "//955-outbox-sdk:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
         "@maven//:com_google_inject_guice",
@@ -27,17 +30,27 @@ java_library(
     ],
 )
 
-#java_library(
-#    name = "tests",testonly=True,
-#    srcs = glob(["src/test/**/*.java"]),
-#    visibility = ["//visibility:public"],
-#    deps = [
-#        "module",
-#        "//:lombok",
-#    ],
-#)
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_process",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_springframework_spring_beans",
+    ],
+)
 
-#run_tests()
+run_tests()
 
 checkstyle()
 

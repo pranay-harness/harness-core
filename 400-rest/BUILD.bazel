@@ -3,6 +3,8 @@ load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+Deprecated = True
+
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
@@ -31,9 +33,7 @@ shared_dependencies = [
     "//950-command-library-common:module",
     "//950-common-entities:module",
     "//950-delegate-tasks-beans:module",
-    "//950-events-api:module",
-    "//950-events-api/src/main/proto:950_events_api_java_proto",
-    "//950-events-api/src/main/proto:950_events_api_proto",
+    "//953-events-api:module",
     "//950-events-framework:module",
     "//950-ng-core:module",
     "//950-ng-project-n-orgs:module",
@@ -262,6 +262,7 @@ shared_dependencies = [
     "@maven//:com_squareup_okhttp3_logging_interceptor",
     "@maven//:com_squareup_okhttp3_okhttp",
     "@maven//:com_squareup_okhttp3_okhttp_urlconnection",
+    "@maven//:com_squareup_okio_okio",
     "@maven//:com_squareup_retrofit2_adapter_rxjava",
     "@maven//:com_squareup_retrofit2_converter_gson",
     "@maven//:com_squareup_retrofit2_converter_jackson",

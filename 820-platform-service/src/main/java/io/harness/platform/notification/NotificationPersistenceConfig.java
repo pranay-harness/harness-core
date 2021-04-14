@@ -15,6 +15,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -67,6 +69,11 @@ public class NotificationPersistenceConfig extends AbstractMongoConfiguration {
   @Bean
   MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
     return new MongoTransactionManager(dbFactory);
+  }
+
+  @Override
+  protected Collection<String> getMappingBasePackages() {
+    return Collections.singleton("io.harness");
   }
 
   @Bean

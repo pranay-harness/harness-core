@@ -7,7 +7,6 @@ import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getExecutionLogOutp
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getOcCommandPrefix;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sConstants.ocRolloutUndoCommand;
-import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
@@ -84,19 +83,18 @@ public class K8sRollingRollbackBaseHandler {
     List<KubernetesResourceIdRevision> previousManagedWorkloads = rollbackHandlerConfig.getPreviousManagedWorkloads();
     List<KubernetesResource> previousCustomManagedWorkloads = rollbackHandlerConfig.getPreviousCustomManagedWorkloads();
     if (isEmpty(previousManagedWorkloads) && isEmpty(previousCustomManagedWorkloads)) {
-      logCallback.saveExecutionLog(
-          "Skipping Status Check since there is no previous eligible Managed Workload.", INFO, SUCCESS);
+      logCallback.saveExecutionLog("Skipping Status Check since there is no previous eligible Managed Workload.", INFO);
     } else {
       long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(timeoutInMin);
       List<KubernetesResourceId> kubernetesResourceIds =
           previousManagedWorkloads.stream().map(KubernetesResourceIdRevision::getWorkload).collect(Collectors.toList());
-      k8sTaskHelperBase.doStatusCheckForAllResources(client, kubernetesResourceIds, k8sDelegateTaskParams,
-          kubernetesConfig.getNamespace(), logCallback, previousCustomManagedWorkloads.isEmpty());
+      k8sTaskHelperBase.doStatusCheckForAllResources(
+          client, kubernetesResourceIds, k8sDelegateTaskParams, kubernetesConfig.getNamespace(), logCallback, false);
 
       if (isNotEmpty(previousCustomManagedWorkloads)) {
         k8sTaskHelperBase.checkSteadyStateCondition(previousCustomManagedWorkloads);
         k8sTaskHelperBase.doStatusCheckForAllCustomResources(client, previousCustomManagedWorkloads,
-            k8sDelegateTaskParams, logCallback, true, steadyStateTimeoutInMillis);
+            k8sDelegateTaskParams, logCallback, false, steadyStateTimeoutInMillis);
       }
       release.setStatus(Release.Status.Failed);
       // update the revision on the previous release.

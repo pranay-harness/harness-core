@@ -4,6 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.Rollback;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -50,7 +53,15 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
     K8sRollingDeployRollbackTaskParameters request = (K8sRollingDeployRollbackTaskParameters) k8sTaskParameters;
 
-    boolean success = init(request, k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(request, Init));
+    boolean success;
+    ExecutionLogCallback initLogCallback = k8sTaskHelper.getExecutionLogCallback(request, Init);
+    try {
+      success = init(request, k8sDelegateTaskParams, initLogCallback);
+    } catch (Exception e) {
+      initLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      throw e;
+    }
+
     if (!success) {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
@@ -61,11 +72,18 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    k8sRollingRollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams,
-        request.getTimeoutIntervalInMin(), k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState));
-    k8sRollingRollbackBaseHandler.postProcess(rollbackHandlerConfig, request.getReleaseName());
-
-    return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    ExecutionLogCallback waitForSteadyStateLogCallback =
+        k8sTaskHelper.getExecutionLogCallback(request, WaitForSteadyState);
+    try {
+      k8sRollingRollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams,
+          request.getTimeoutIntervalInMin(), waitForSteadyStateLogCallback);
+      k8sRollingRollbackBaseHandler.postProcess(rollbackHandlerConfig, request.getReleaseName());
+      waitForSteadyStateLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    } catch (Exception e) {
+      waitForSteadyStateLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      throw e;
+    }
   }
 
   private boolean init(K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters,

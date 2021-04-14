@@ -1,9 +1,11 @@
 package io.harness.resourcegroup;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
-import io.harness.annotations.dev.HarnessTeam;
+import io.harness.account.AccountClient;
+import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResourceClientModule;
@@ -15,14 +17,13 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
-import io.harness.ng.core.account.remote.AccountClient;
-import io.harness.ng.core.account.remote.AccountClientModule;
-import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
-import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
+import io.harness.organization.OrganizationClientModule;
+import io.harness.organization.remote.OrganizationClient;
+import io.harness.outbox.api.OutboxService;
 import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pipeline.remote.PipelineServiceClient;
-import io.harness.projectmanagerclient.ProjectManagementClientModule;
-import io.harness.projectmanagerclient.remote.ProjectManagerClient;
+import io.harness.project.ProjectClientModule;
+import io.harness.project.remote.ProjectClient;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
@@ -51,7 +52,7 @@ import lombok.experimental.FieldDefaults;
 import org.reflections.Reflections;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(PL)
 public class ResourceGroupModule extends AbstractModule {
   private static final String RESOURCE_GROUP_CLIENT = "ng-manager";
   private static final String RESOURCE_GROUP_CONSUMER_GROUP = "resource-group";
@@ -66,6 +67,7 @@ public class ResourceGroupModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    requireBinding(OutboxService.class);
     bind(ResourceGroupService.class).to(ResourceGroupServiceImpl.class);
     bind(ResourceGroupValidatorService.class)
         .annotatedWith(Names.named("StaticResourceValidator"))
@@ -115,18 +117,18 @@ public class ResourceGroupModule extends AbstractModule {
 
   private void addResourceValidatorConstraints() {
     requireBinding(SecretNGManagerClient.class);
-    requireBinding(ProjectManagerClient.class);
-    requireBinding(OrganizationManagerClient.class);
+    requireBinding(ProjectClient.class);
+    requireBinding(OrganizationClient.class);
     requireBinding(ConnectorResourceClient.class);
     requireBinding(PipelineServiceClient.class);
     requireBinding(AccountClient.class);
   }
 
   private void installResourceValidators() {
-    install(new ProjectManagementClientModule(
+    install(new ProjectClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
         resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
-    install(new OrganizationManagementClientModule(
+    install(new OrganizationClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
         resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
     install(new SecretNGManagerClientModule(

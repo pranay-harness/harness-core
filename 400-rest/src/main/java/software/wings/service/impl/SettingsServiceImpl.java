@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.USE_CREDENTIALS_AUTH_NEXUS_2;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -48,6 +49,9 @@ import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -196,6 +200,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Slf4j
 @ValidateOnExecution
 @Singleton
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._445_CG_CONNECTORS)
 public class SettingsServiceImpl implements SettingsService {
   public static final String TRIAL_LIMIT_EXCEEDED =
       "Please contact sales to enable CE on more than 2 Kubernetes clusters.";
@@ -528,16 +534,11 @@ public class SettingsServiceImpl implements SettingsService {
       // Try to get any secret references if possible.
       Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttributeWithUsageRestrictions);
       if (isNotEmpty(usedSecretIds)) {
-        if (featureFlagService.isEnabled(FeatureName.SETTING_API_BATCH_RBAC, accountId)) {
-          // Returning false only on SecretState.CANNOT_READ. Which means SecretState.CAN_READ, SecretState.NOT_FOUND
-          // are both allowed. This allows settings with mis matching/deleted secret Ids, this is done to
-          return usedSecretIds.stream()
-              .filter(secretIdsStateMap::containsKey)
-              .noneMatch(secretId -> secretIdsStateMap.get(secretId) == SecretState.CANNOT_READ);
-        } else {
-          // Runtime check using intersection of usage scopes of secretIds.
-          return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest);
-        }
+        // Returning false only on SecretState.CANNOT_READ. Which means SecretState.CAN_READ, SecretState.NOT_FOUND
+        // are both allowed. This allows settings with mis matching/deleted secret Ids, this is done to
+        return usedSecretIds.stream()
+            .filter(secretIdsStateMap::containsKey)
+            .noneMatch(secretId -> secretIdsStateMap.get(secretId) == SecretState.CANNOT_READ);
       }
     }
 
@@ -606,8 +607,10 @@ public class SettingsServiceImpl implements SettingsService {
       if (variable.getValue() instanceof CustomArtifactServerConfig) {
         ((CustomArtifactServerConfig) variable.getValue()).setAccountId(variable.getAccountId());
       }
-    }
-    if (null != variable.getValue()) {
+      if (variable.getValue() instanceof HostConnectionAttributes
+          && null == ((HostConnectionAttributes) variable.getValue()).getSshPort()) {
+        ((HostConnectionAttributes) variable.getValue()).setSshPort(22);
+      }
       variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
     }
   }
@@ -1098,6 +1101,10 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute update(SettingAttribute settingAttribute, boolean updateConnectivity, boolean pushToGit) {
     if (isOpenSSHKeyUsed(settingAttribute)) {
       restrictOpenSSHKey(settingAttribute);
+    }
+    if (settingAttribute.getValue() instanceof HostConnectionAttributes
+        && null == ((HostConnectionAttributes) settingAttribute.getValue()).getSshPort()) {
+      ((HostConnectionAttributes) settingAttribute.getValue()).setSshPort(22);
     }
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     SettingAttribute prevSettingAttribute = existingSetting;

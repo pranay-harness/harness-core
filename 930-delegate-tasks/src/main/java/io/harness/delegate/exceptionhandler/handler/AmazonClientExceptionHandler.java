@@ -37,8 +37,8 @@ public class AmazonClientExceptionHandler implements ExceptionHandler {
       return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_AWS_IAM_ROLE_CHECK,
           ExplanationException.EXPLANATION_AWS_AM_ROLE_CHECK,
           new InvalidRequestException("The IAM role on the Ec2 delegate does not exist OR does not"
-                  + " have required permissions.",
-              amazonClientException, USER));
+                  + " have required permissions. :: " + amazonClientException.getMessage(),
+              USER));
     } else {
       return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_AWS_CLIENT_UNKNOWN_ISSUE,
           ExplanationException.EXPLANATION_AWS_AM_ROLE_CHECK,

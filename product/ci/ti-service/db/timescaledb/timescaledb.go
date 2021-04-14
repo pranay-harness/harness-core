@@ -332,6 +332,7 @@ func (tdb *TimeScaleDb) GetTestSuites(
 	return types.TestSuites{Metadata: metadata, Suites: testSuites}, nil
 }
 
+// WriteSelectedTests write selected test information corresponding to a PR to the database
 func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
 	buildId, stageId, stepId string, s types.SelectTestsResp) error {
 	entries := 12
@@ -352,6 +353,7 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, table, accountID
 	return nil
 }
 
+// GetSelectionOverview provides high level stats for test selection
 func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
 	buildId string) (types.SelectionOverview, error) {
 	var ztotal, zsrc, znew, zupd zero.Int
@@ -362,7 +364,7 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, table, account
 		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5`, table)
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId)
 	if err != nil {
-		tdb.Log.Errorw("could not query database for test suites", zap.Error(err))
+		tdb.Log.Errorw("could not query database for selection overview", zap.Error(err))
 		return types.SelectionOverview{}, err
 	}
 	res := types.SelectionOverview{}
@@ -386,7 +388,94 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, table, account
 	return res, nil
 }
 
+// WriteDiffFiles writes the changed files in a PR along with their status (modified/added/deleted)
 func (tdb *TimeScaleDb) WriteDiffFiles(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
-	buildId, stageId, stepId string, files []types.File) error {
+	buildId, stageId, stepId string, diff types.DiffInfo) error {
+	entries := 10
+	i := 1
+	valueStrings := make([]string, 0, len(diff.Files))
+	valueArgs := make([]interface{}, 0, len(diff.Files)*entries)
+	for _, f := range diff.Files {
+		valueStrings = append(valueStrings, constructPsqlInsertStmt(i, i+entries-1))
+		valueArgs = append(valueArgs, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId, diff.Sha, f.Name, f.Status)
+		i = i + entries
+	}
+	stmt := fmt.Sprintf(
+		`
+					INSERT INTO %s
+					(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, sha, file_path, status)
+					VALUES %s`, table, strings.Join(valueStrings, ","))
+	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
+	if err != nil {
+		tdb.Log.Errorw("could not write file information to database", zap.Error(err))
+		return err
+	}
 	return nil
+}
+
+// GetDiffFiles returns the modified files in a PR corresponding to a list of commits in a
+// pull request. It returning information about the latest commit corresponding to the commits
+// present in sha.
+func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, table, accountID string, sha []string) (types.DiffInfo, error) {
+	res := types.DiffInfo{}
+	files := []types.File{}
+	var shaIn string
+	// Construct 'IN' clause list from string list
+	for idx, s := range sha {
+		shaIn += fmt.Sprintf("'%s'", s)
+		if idx != len(sha)-1 {
+			shaIn = shaIn + ","
+		}
+	}
+	// First query to get the latest commit out of the commits in []sha
+	query := fmt.Sprintf(
+		`
+		SELECT sha, MAX(created_at) AS ct
+		FROM %s
+		WHERE account_id = $1 AND sha IN (%s)
+		GROUP BY sha
+		ORDER BY ct desc`, table, shaIn)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID)
+	if err != nil {
+		tdb.Log.Errorw("could not get latest commit ID in list", zap.Error(err))
+		return res, err
+	}
+	var lastSha string
+	for rows.Next() {
+		var t time.Time
+		err = rows.Scan(&lastSha, &t)
+		if err != nil {
+			tdb.Log.Errorw("could not get last commit ID", zap.Error(err))
+			return res, err
+		}
+		break
+	}
+	if rows.Err() != nil {
+		return res, rows.Err()
+	}
+	query = fmt.Sprintf(
+		`
+		SELECT file_path, status
+		FROM %s
+		WHERE account_id = $1 AND sha = $2`, table)
+	rows, err = tdb.Conn.QueryContext(ctx, query, accountID, lastSha)
+	if err != nil {
+		tdb.Log.Errorw("could not query database for diff files", zap.Error(err))
+		return res, err
+	}
+	for rows.Next() {
+		f := types.File{}
+		err = rows.Scan(&f.Name, &f.Status)
+		if err != nil {
+			tdb.Log.Errorw("could not read diff files from db", zap.Error(err))
+			return res, err
+		}
+		files = append(files, f)
+	}
+	if rows.Err() != nil {
+		return res, rows.Err()
+	}
+	res.Sha = lastSha
+	res.Files = files
+	return res, nil
 }

@@ -1,6 +1,8 @@
 package io.harness.ci.integrationstage;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
@@ -280,6 +282,7 @@ public class BuildJobEnvInfoBuilder {
     envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier, timeout));
+    Integer runAsUser = resolveIntegerParameter(stepInfo.getRunAsUser(), null);
 
     return ContainerDefinitionInfo.builder()
         .name(containerName)
@@ -296,6 +299,7 @@ public class BuildJobEnvInfoBuilder {
         .containerType(CIContainerType.PLUGIN)
         .stepIdentifier(identifier)
         .stepName(stepName)
+        .runAsUser(runAsUser)
         .build();
   }
 
@@ -313,6 +317,9 @@ public class BuildJobEnvInfoBuilder {
     if (!isEmpty(envvars)) {
       stepEnvVars.putAll(envvars);
     }
+    boolean privileged = resolveBooleanParameter(runStepInfo.getPrivileged(), false);
+    Integer runAsUser = resolveIntegerParameter(runStepInfo.getRunAsUser(), null);
+
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(StepContainerUtils.getCommand())
@@ -330,6 +337,8 @@ public class BuildJobEnvInfoBuilder {
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.RUN)
         .stepName(name)
+        .privileged(privileged)
+        .runAsUser(runAsUser)
         .build();
   }
 
@@ -347,6 +356,9 @@ public class BuildJobEnvInfoBuilder {
     if (!isEmpty(envvars)) {
       stepEnvVars.putAll(envvars);
     }
+    boolean privileged = resolveBooleanParameter(runTestsStepInfo.getPrivileged(), false);
+    Integer runAsUser = resolveIntegerParameter(runTestsStepInfo.getRunAsUser(), null);
+
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(StepContainerUtils.getCommand())
@@ -361,6 +373,8 @@ public class BuildJobEnvInfoBuilder {
         .containerResourceParams(getStepContainerResource(runTestsStepInfo.getResources(), "RunTests", identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.TEST_INTELLIGENCE)
+        .privileged(privileged)
+        .runAsUser(runAsUser)
         .build();
   }
 
@@ -381,6 +395,9 @@ public class BuildJobEnvInfoBuilder {
         envVarMap.put(key, entry.getValue());
       }
     }
+    boolean privileged = resolveBooleanParameter(pluginStepInfo.getPrivileged(), false);
+    Integer runAsUser = resolveIntegerParameter(pluginStepInfo.getRunAsUser(), null);
+
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(StepContainerUtils.getCommand())
@@ -398,6 +415,8 @@ public class BuildJobEnvInfoBuilder {
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
         .stepName(name)
+        .privileged(privileged)
+        .runAsUser(runAsUser)
         .build();
   }
 

@@ -17,9 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CE)
 public class ChangeEvent<T extends PersistentEntity> {
-  @NonNull private String token;
+  private String token;
+  private Class<T> entityType;
   @NonNull private ChangeType changeType;
-  @NonNull private Class<T> entityType;
   @NonNull private String uuid;
   private DBObject fullDocument;
   private DBObject changes;

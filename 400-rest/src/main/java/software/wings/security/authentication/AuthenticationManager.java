@@ -19,7 +19,9 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 
 import static org.apache.cxf.common.util.UrlUtils.urlDecode;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
@@ -31,6 +33,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Event;
 import software.wings.beans.User;
+import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.oauth.OauthBasedAuthHandler;
@@ -59,6 +62,7 @@ import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Singleton
 @Slf4j
 public class AuthenticationManager {
@@ -76,6 +80,7 @@ public class AuthenticationManager {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private LoginSettingsService loginSettingsService;
 
   private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=invalidsso";
   private static final String LOGIN_ERROR_CODE_SAMLTESTSUCCESS = "#/login?errorCode=samltestsuccess";
@@ -286,7 +291,7 @@ public class AuthenticationManager {
         .build();
   }
 
-  private String[] decryptBasicToken(String basicToken) {
+  public String[] decryptBasicToken(String basicToken) {
     String[] decryptedData = decodeBase64ToString(basicToken).split(":", 2);
     if (decryptedData.length < 2) {
       throw new WingsException(INVALID_CREDENTIAL, USER);
@@ -353,6 +358,7 @@ public class AuthenticationManager {
       } else {
         user = authHandler.authenticate(userName, password).getUser();
       }
+
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {

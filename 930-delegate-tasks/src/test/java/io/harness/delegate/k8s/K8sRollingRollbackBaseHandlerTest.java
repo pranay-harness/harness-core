@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.k8s.K8sTestHelper.buildProcessResult;
 import static io.harness.delegate.k8s.K8sTestHelper.buildRelease;
 import static io.harness.delegate.k8s.K8sTestHelper.buildReleaseMultipleManagedWorkloads;
@@ -9,7 +10,6 @@ import static io.harness.delegate.k8s.K8sTestHelper.deployment;
 import static io.harness.delegate.k8s.K8sTestHelper.deploymentConfig;
 import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.k8s.model.Release.Status.Succeeded;
-import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
@@ -35,6 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.beans.K8sRollingRollbackHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -63,6 +64,7 @@ import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
+@OwnedBy(CDP)
 public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
   @Mock private LogCallback logCallback;
   @Mock private ReleaseHistory releaseHistory;
@@ -156,7 +158,7 @@ public class K8sRollingRollbackBaseHandlerTest extends CategoryTest {
 
     k8sRollingRollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, null, logCallback);
     verify(logCallback)
-        .saveExecutionLog("Skipping Status Check since there is no previous eligible Managed Workload.", INFO, SUCCESS);
+        .saveExecutionLog("Skipping Status Check since there is no previous eligible Managed Workload.", INFO);
     verify(k8sTaskHelperBase, never()).doStatusCheck(any(), any(), any(), any());
 
     k8sRollingRollbackBaseHandler.postProcess(rollbackHandlerConfig, releaseName);

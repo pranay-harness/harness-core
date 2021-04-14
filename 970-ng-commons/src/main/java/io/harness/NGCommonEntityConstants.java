@@ -33,6 +33,7 @@ public class NGCommonEntityConstants {
   public static final String MODULE_TYPE = "moduleType";
   public static final String ENTITY_TYPE = "entityType";
   public static final String SEARCH_TERM = "searchTerm";
+  public static final String USER_ID = "userId";
   public static final String PAGE = "page";
   public static final String SIZE = "size";
 

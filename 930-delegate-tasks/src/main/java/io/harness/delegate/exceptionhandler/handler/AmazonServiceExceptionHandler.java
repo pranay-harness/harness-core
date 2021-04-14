@@ -45,7 +45,7 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
     } else if (amazonServiceException instanceof ServiceNotFoundException) {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     } else {
-      return new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException, USER);
+      return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     }
   }
 }

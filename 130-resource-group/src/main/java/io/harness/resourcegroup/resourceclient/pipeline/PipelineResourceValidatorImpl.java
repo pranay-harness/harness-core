@@ -5,6 +5,7 @@ import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -15,7 +16,6 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
-import io.harness.resourcegroup.model.Scope;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;

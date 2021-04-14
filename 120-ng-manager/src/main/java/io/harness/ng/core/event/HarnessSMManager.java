@@ -2,19 +2,27 @@ package io.harness.ng.core.event;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
+import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
-import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
-import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.SecretManagementException;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.AccountOrgProjectValidator;
 import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.NGSecretManagerService;
+import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.security.encryption.EncryptionType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -59,7 +67,7 @@ public class HarnessSMManager {
     globalSecretManager.setProjectIdentifier(projectIdentifier);
     globalSecretManager.setOrgIdentifier(orgIdentifier);
     globalSecretManager.setDefault(true);
-    ConnectorDTO connectorDTO = getConnectorRequestDTO(globalSecretManager, true);
+    ConnectorDTO connectorDTO = getConnectorRequestDTO(globalSecretManager);
     secretManagerConnectorService.create(connectorDTO, accountIdentifier);
   }
 
@@ -76,5 +84,62 @@ public class HarnessSMManager {
       String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
     return secretManagerConnectorService.delete(
         accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER);
+  }
+
+  private ConnectorDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO) {
+    ConnectorInfoDTO connectorInfo;
+    switch (secretManagerConfigDTO.getEncryptionType()) {
+      case GCP_KMS:
+        GcpKmsConfigDTO gcpKmsConfig = (GcpKmsConfigDTO) secretManagerConfigDTO;
+        GcpKmsConnectorDTO gcpKmsConnectorDTO = GcpKmsConnectorDTO.builder()
+                                                    .region(gcpKmsConfig.getRegion())
+                                                    .keyRing(gcpKmsConfig.getKeyRing())
+                                                    .keyName(gcpKmsConfig.getKeyName())
+                                                    .projectId(gcpKmsConfig.getProjectId())
+                                                    .credentials(gcpKmsConfig.getCredentials())
+                                                    .isDefault(secretManagerConfigDTO.isDefault())
+                                                    .build();
+        gcpKmsConnectorDTO.setHarnessManaged(true);
+        connectorInfo = ConnectorInfoDTO.builder()
+                            .connectorType(GCP_KMS)
+                            .identifier(secretManagerConfigDTO.getIdentifier())
+                            .name(secretManagerConfigDTO.getName())
+                            .orgIdentifier(secretManagerConfigDTO.getOrgIdentifier())
+                            .projectIdentifier(secretManagerConfigDTO.getProjectIdentifier())
+                            .description(secretManagerConfigDTO.getDescription())
+                            .connectorConfig(gcpKmsConnectorDTO)
+                            .build();
+        break;
+      case LOCAL:
+        LocalConnectorDTO localConnectorDTO =
+            LocalConnectorDTO.builder().isDefault(secretManagerConfigDTO.isDefault()).build();
+        localConnectorDTO.setHarnessManaged(true);
+        connectorInfo = ConnectorInfoDTO.builder()
+                            .connectorType(LOCAL)
+                            .identifier(secretManagerConfigDTO.getIdentifier())
+                            .name(secretManagerConfigDTO.getName())
+                            .orgIdentifier(secretManagerConfigDTO.getOrgIdentifier())
+                            .projectIdentifier(secretManagerConfigDTO.getProjectIdentifier())
+                            .description(secretManagerConfigDTO.getDescription())
+                            .connectorConfig(localConnectorDTO)
+                            .build();
+        break;
+      default:
+        throw new SecretManagementException(
+            ErrorCode.SECRET_MANAGEMENT_ERROR, "Unsupported Secret Manager", WingsException.USER);
+    }
+    return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
+  }
+
+  private String getDefaultHarnessSecretManagerName(EncryptionType encryptionType) {
+    switch (encryptionType) {
+      case GCP_KMS:
+        return "Harness Secrets Manager Google KMS";
+      case LOCAL:
+        return "Harness Vault";
+      default:
+        throw new SecretManagementException(
+            ErrorCode.SECRET_MANAGEMENT_ERROR, "Unsupported Harness Secret Manager", WingsException.USER);
+    }
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.ng.core;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.VIKAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
@@ -17,6 +19,7 @@ import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceImpl;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
+import io.harness.outbox.api.OutboxService;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.repositories.ng.core.spring.SecretRepository;
@@ -33,6 +36,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -40,12 +44,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 public class SecretManagementModuleTest extends CategoryTest {
   private SecretManagementModule secretManagementModule;
   private SecretManagementClientModule secretManagementClientModule;
   private EntitySetupUsageClientModule entityReferenceClientModule;
   @Mock private SecretRepository secretRepository;
+  public static final String OUTBOX_TRANSACTION_TEMPLATE = "OUTBOX_TRANSACTION_TEMPLATE";
 
   @Before
   public void setup() {
@@ -99,6 +106,21 @@ public class SecretManagementModuleTest extends CategoryTest {
     modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
                                               .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
                                               .build()));
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      OutboxService registerOutboxService() {
+        return mock(OutboxService.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named(OUTBOX_TRANSACTION_TEMPLATE)
+      TransactionTemplate registerTransactionTemplate() {
+        return mock(TransactionTemplate.class);
+      }
+    });
     modules.add(secretManagementModule);
     modules.add(secretManagementClientModule);
     modules.add(entityReferenceClientModule);

@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -9,6 +10,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -20,6 +22,7 @@ import software.wings.helpers.ext.kustomize.KustomizeConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -39,6 +42,7 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
   private Integer timeoutIntervalInMin;
   @NotEmpty private K8sTaskType commandType;
   private HelmVersion helmVersion;
+  private Set<String> delegateSelectors;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
@@ -49,6 +53,9 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
           KustomizeCapability.builder()
               .pluginRootDir(fetchKustomizeConfig((ManifestAwareTaskParams) this).getPluginRootDir())
               .build());
+    }
+    if (isNotEmpty(delegateSelectors)) {
+      executionCapabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
     }
 
     return executionCapabilities;

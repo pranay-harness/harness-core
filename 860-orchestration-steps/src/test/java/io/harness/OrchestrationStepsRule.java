@@ -3,10 +3,12 @@ package io.harness;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.DelegateServiceGrpc;
@@ -21,6 +23,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
@@ -42,7 +45,6 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
-import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -88,6 +90,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
 

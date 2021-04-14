@@ -8,8 +8,13 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdateFactory;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.plan.Plan;
@@ -40,6 +45,8 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private StepStatusUpdateFactory stepStatusUpdateFactory;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
   public PlanExecution save(PlanExecution planExecution) {
@@ -110,12 +117,20 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
 
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    log.info("State Status Update Callback Fired : {}", stepStatusUpdateInfo);
+    StepStatusUpdate stepStatusUpdate = stepStatusUpdateFactory.obtainStepStatusUpdate(stepStatusUpdateInfo);
+    if (stepStatusUpdate != null) {
+      stepStatusUpdate.onStepStatusUpdate(stepStatusUpdateInfo);
+    }
   }
 
   public List<PlanExecution> findAllByPlanExecutionIdIn(List<String> planExecutionIds) {
     Query query = query(where(PlanExecutionKeys.uuid).in(planExecutionIds));
     return mongoTemplate.find(query, PlanExecution.class);
+  }
+
+  public Status calculateEndStatus(String planExecutionId) {
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
+    return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
   }
 
   private void emitEvent(PlanExecution planExecution) {

@@ -4,7 +4,6 @@ import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import io.harness.CDCStateEntity.cdcStateEntityKeys;
 import io.harness.annotations.ChangeDataCapture;
-import io.harness.annotations.ChangeDataCaptureSink;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.changestreamsframework.ChangeEvent;
@@ -44,18 +43,6 @@ public class ChangeEventProcessorTask implements Runnable {
     this.wingsPersistence = wingsPersistence;
   }
 
-  private String getChangeDataCaptureDataDestinationTable(Class<? extends PersistentEntity> clazz) {
-    return clazz.getAnnotation(ChangeDataCapture.class).table();
-  }
-
-  private ChangeDataCaptureSink[] getChangeDataCaptureDataSinks(Class<? extends PersistentEntity> clazz) {
-    return clazz.getAnnotation(ChangeDataCapture.class).sink();
-  }
-
-  private String[] getChangeDataCaptureFields(Class<? extends PersistentEntity> clazz) {
-    return clazz.getAnnotation(ChangeDataCapture.class).fields();
-  }
-
   @Override
   public void run() {
     executorService =
@@ -78,26 +65,23 @@ public class ChangeEventProcessorTask implements Runnable {
   }
 
   private Callable<Boolean> getProcessChangeEventTask(
-      ChangeHandler changeHandler, ChangeEvent changeEvent, Class<? extends PersistentEntity> clazz) {
+      ChangeHandler changeHandler, ChangeEvent changeEvent, ChangeDataCapture changeDataCapture) {
     return ()
-               -> changeHandler.handleChange(changeEvent,
-                   Strings.toLowerCase(getChangeDataCaptureDataDestinationTable(clazz)),
-                   getChangeDataCaptureFields(clazz));
+               -> changeHandler.handleChange(
+                   changeEvent, Strings.toLowerCase(changeDataCapture.table()), changeDataCapture.fields());
   }
 
   private boolean processChange(ChangeEvent<?> changeEvent) {
     List<Future<Boolean>> processChangeEventTaskFutures = new ArrayList<>();
     Class<? extends PersistentEntity> clazz = changeEvent.getEntityType();
-    ChangeDataCaptureSink[] changeDataCaptureDataSinks = getChangeDataCaptureDataSinks(clazz);
+    ChangeDataCapture[] dataCaptures = clazz.getAnnotationsByType(ChangeDataCapture.class);
 
     for (CDCEntity<?> cdcEntity : cdcEntities) {
       if (cdcEntity.getSubscriptionEntity().equals(clazz)) {
-        for (ChangeDataCaptureSink changeDataCaptureDataSink : changeDataCaptureDataSinks) {
-          ChangeHandler changeHandler = null;
-          if (changeDataCaptureDataSink == ChangeDataCaptureSink.TIMESCALE) {
-            changeHandler = cdcEntity.getTimescaleChangeHandler();
-          }
-          Callable<Boolean> processChangeEventTask = getProcessChangeEventTask(changeHandler, changeEvent, clazz);
+        for (ChangeDataCapture changeDataCapture : dataCaptures) {
+          ChangeHandler changeHandler = cdcEntity.getTimescaleChangeHandler(changeDataCapture.handler());
+          Callable<Boolean> processChangeEventTask =
+              getProcessChangeEventTask(changeHandler, changeEvent, changeDataCapture);
           processChangeEventTaskFutures.add(executorService.submit(processChangeEventTask));
         }
       }

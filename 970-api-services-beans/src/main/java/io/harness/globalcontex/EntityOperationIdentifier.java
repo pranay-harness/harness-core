@@ -1,16 +1,21 @@
 package io.harness.globalcontex;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(HarnessTeam.PL)
 public class EntityOperationIdentifier {
-  public enum entityOperation { CREATE, UPDATE, DELETE }
+  public enum EntityOperation { CREATE, UPDATE, DELETE }
+
   private String entityType;
   private String entityName;
   private String entityId;
-  private entityOperation operation;
+  private EntityOperation operation;
 
   @Override
   public String toString() {

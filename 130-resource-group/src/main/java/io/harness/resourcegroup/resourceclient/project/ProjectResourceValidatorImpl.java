@@ -1,21 +1,23 @@
 package io.harness.resourcegroup.resourceclient.project;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectResponse;
-import io.harness.projectmanagerclient.remote.ProjectManagerClient;
+import io.harness.project.remote.ProjectClient;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
 import io.harness.resourcegroup.framework.service.ResourceValidator;
-import io.harness.resourcegroup.model.Scope;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -34,14 +36,15 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class ProjectResourceValidatorImpl implements ResourceValidator {
-  ProjectManagerClient projectManagerClient;
+  ProjectClient projectClient;
 
   @Override
   public List<Boolean> validate(
       List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     PageResponse<ProjectResponse> projects =
-        getResponse(projectManagerClient.listProjects(accountIdentifier, orgIdentifier, resourceIds));
+        getResponse(projectClient.listProjects(accountIdentifier, orgIdentifier, resourceIds));
     Set<String> validResourceIds =
         projects.getContent().stream().map(e -> e.getProject().getIdentifier()).collect(Collectors.toSet());
     return resourceIds.stream()

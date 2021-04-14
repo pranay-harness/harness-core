@@ -13,6 +13,7 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 import static java.lang.Character.toLowerCase;
 import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
+import io.harness.advisers.nextstep.NextStepAdviserParameters;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
@@ -36,7 +37,6 @@ import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;

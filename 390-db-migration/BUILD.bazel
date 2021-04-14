@@ -17,10 +17,6 @@ java_library(
     srcs = glob([
         "src/main/**/*.java",
     ]),
-    tags = [
-        "aeriform",
-        "manual",
-    ],
     visibility = ["//visibility:public"],
     deps = shared_dependencies,
 )
@@ -46,10 +42,6 @@ java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
-    tags = [
-        "aeriform",
-        "manual",
-    ],
     visibility = ["//visibility:public"],
     deps = test_dependencies,
 )

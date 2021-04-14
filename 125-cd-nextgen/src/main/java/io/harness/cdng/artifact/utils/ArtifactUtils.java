@@ -3,6 +3,8 @@ package io.harness.cdng.artifact.utils;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.NGConstants;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
@@ -12,7 +14,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
-import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
+import io.harness.logstreaming.NGLogCallback;
 
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 public class ArtifactUtils {
   public final String PRIMARY_ARTIFACT = "primary";
@@ -33,7 +36,7 @@ public class ArtifactUtils {
   }
 
   public List<ArtifactConfig> convertArtifactListIntoArtifacts(
-      ArtifactListConfig artifactListConfig, NGManagerLogCallback ngManagerLogCallback) {
+      ArtifactListConfig artifactListConfig, NGLogCallback ngManagerLogCallback) {
     List<ArtifactConfig> artifacts = new LinkedList<>();
     if (artifactListConfig == null) {
       return artifacts;

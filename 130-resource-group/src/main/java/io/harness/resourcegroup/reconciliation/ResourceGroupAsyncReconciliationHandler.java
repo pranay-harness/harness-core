@@ -1,9 +1,11 @@
 package io.harness.resourcegroup.reconciliation;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofMinutes;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
@@ -20,6 +22,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class ResourceGroupAsyncReconciliationHandler implements MongoPersistenceIterator.Handler<ResourceGroup> {
   public static final String GROUP = "RESOURCE_GROUP_ASYNC_RECONCILIATION";
 
@@ -33,7 +36,7 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
   }
 
   public void registerIterators() {
-    Duration interval = ofMinutes(10);
+    Duration interval = ofMinutes(15);
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("ResourceGroupAsyncReconciliation")

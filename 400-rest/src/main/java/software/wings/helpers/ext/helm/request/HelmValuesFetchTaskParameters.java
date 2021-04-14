@@ -20,6 +20,7 @@ import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 
@@ -36,6 +37,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
   private long timeoutInMillis;
   @Expression(ALLOW_SECRETS) private HelmCommandFlag helmCommandFlag;
   private boolean mergeCapabilities; // HELM_MERGE_CAPABILITIES
+  private Set<String> delegateSelectors;
 
   // This is to support helm v1
   private ContainerServiceParams containerServiceParams;

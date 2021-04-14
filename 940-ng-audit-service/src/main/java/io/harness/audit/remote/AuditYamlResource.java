@@ -40,7 +40,7 @@ public class AuditYamlResource {
   @Inject private final AuditYamlService auditYamlService;
 
   @GET
-  @ApiOperation(value = "Get Audit With Yaml Diff", nickname = "getAuditWithYamlDiff")
+  @ApiOperation(value = "Get Yaml Diff for an audit", nickname = "getYamlDiff")
   public ResponseDTO<YamlDiffRecordDTO> get(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY)
                                             String accountIdentifier, @NotNull @QueryParam("auditId") String auditId) {
     return ResponseDTO.newResponse(toDTO(auditYamlService.get(auditId)));

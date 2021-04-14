@@ -12,6 +12,7 @@ proto_library(
     deps = [
         "//920-delegate-service-beans/src/main/proto/io/harness/paging:920_delegate_service_beans_proto",
         "//955-delegate-beans/src/main/proto/io/harness/delegate:955_delegate_beans_proto",
+        "//980-commons/src/main/proto:980_commons_proto",
     ],
 )
 
@@ -24,6 +25,7 @@ go_proto_library(
     deps = [
         "//920-delegate-service-beans/src/main/proto/io/harness/paging:go_default_library",
         "//955-delegate-beans/src/main/proto/io/harness/delegate:go_default_library",
+        "//980-commons/src/main/proto:980_commons_go_proto",
     ],
 )
 

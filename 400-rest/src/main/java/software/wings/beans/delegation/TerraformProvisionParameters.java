@@ -13,6 +13,7 @@ import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.provision.TfVarSource;
@@ -37,13 +38,6 @@ import lombok.Value;
 public class TerraformProvisionParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final long TIMEOUT_IN_MINUTES = 100;
   public static final String TERRAFORM = "terraform";
-
-  public enum TerraformCommandUnit {
-    Apply,
-    Adjust,
-    Destroy,
-    Rollback;
-  }
 
   private String accountId;
   private final String activityId;

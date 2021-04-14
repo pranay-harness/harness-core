@@ -55,6 +55,8 @@ public class PmsSdkModule extends AbstractModule {
     modules.add(PmsSdkQueueModule.getInstance(config));
     if (config.getDeploymentMode().isNonLocal()) {
       modules.add(PmsSdkGrpcModule.getInstance(config));
+    } else {
+      modules.add(PmsSdkDummyGrpcModule.getInstance());
     }
     return modules;
   }

@@ -2,6 +2,7 @@ syntax = "proto3";
 package io.harness.eventsframework.schemas.entity;
 
 option java_multiple_files = true;
+option go_package = "970_ng_commons";
 
 enum EntityTypeProtoEnum {
   PROJECTS = 0;
@@ -22,4 +23,5 @@ enum EntityTypeProtoEnum {
   DEPLOYMENT_STEPS = 15;
   PIPELINE_STEPS = 16;
   APPROVAL_STAGE = 17;
+  TRIGGERS = 18;
 }

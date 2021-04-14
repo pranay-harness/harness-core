@@ -3,6 +3,10 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -44,6 +48,8 @@ import org.slf4j.Logger;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @FieldNameConstants(innerTypeName = "PrometheusStateKeys")
 public class PrometheusState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";

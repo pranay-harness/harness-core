@@ -12,6 +12,7 @@ import lombok.Value;
 @Value
 @Builder
 public class RoleAssignmentMetadataDTO {
+  @ApiModelProperty(required = true) String identifier;
   @ApiModelProperty(required = true) String roleIdentifier;
   @ApiModelProperty(required = true) String roleName;
   @ApiModelProperty(required = true) String resourceGroupIdentifier;

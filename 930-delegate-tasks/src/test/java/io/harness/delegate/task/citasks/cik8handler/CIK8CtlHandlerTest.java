@@ -193,7 +193,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     verify(mockSecretSpecBuilder).getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
     verify(mockKubernetesClient).secrets();
     verify(mockKubeSecret).inNamespace(namespace);
-    verify(mockSecretNonNamespacedOp).create(mockSecret);
+    verify(mockSecretNonNamespacedOp).createOrReplace(mockSecret);
   }
 
   @Test
@@ -204,7 +204,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     Pod mockCreatedPod = new PodBuilder().build();
     when(mockKubernetesClient.pods()).thenReturn(mockKubePod);
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
-    when(mockPodNonNamespacedOp.create(mockPod)).thenReturn(mockCreatedPod);
+    when(mockPodNonNamespacedOp.createOrReplace(mockPod)).thenReturn(mockCreatedPod);
 
     assertEquals(mockCreatedPod, cik8CtlHandler.createPod(mockKubernetesClient, mockPod, namespace));
   }
@@ -378,7 +378,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     when(client.pods()).thenReturn(mockKubePod);
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
-    when(mockPodNamed.get()).thenReturn(null);
+    when(mockPodNamed.get()).thenThrow(new PodNotFoundException("not found"));
 
     cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace);
   }

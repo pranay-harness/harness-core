@@ -2,8 +2,10 @@ package io.harness;
 
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.client.DelegateSelectionLogHttpClient;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
-import io.harness.delegatelog.client.DelegateSelectionLogHttpClient;
 import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.ExecutionModeUtils;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class DelegateInfoHelper {
   // Todo: Remove dependency of orchestrationVisualization from 120-ng-manager
   @Inject(optional = true) private DelegateSelectionLogHttpClient delegateSelectionLogHttpClient;

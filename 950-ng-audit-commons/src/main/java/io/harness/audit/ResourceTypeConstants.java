@@ -11,4 +11,7 @@ import lombok.experimental.UtilityClass;
 public class ResourceTypeConstants {
   public static final String ORGANIZATION = "organization";
   public static final String PROJECT = "project";
+  public static final String USER_GROUP = "usergroup";
+  public static final String SECRET = "secret";
+  public static final String RESOURCE_GROUP = "resourcegroup";
 }

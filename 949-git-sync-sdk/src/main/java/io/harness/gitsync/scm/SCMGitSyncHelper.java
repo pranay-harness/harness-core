@@ -106,7 +106,7 @@ public class SCMGitSyncHelper {
   private InfoForGitPush getInfoForPush(GitEntityInfo gitBranchInfo, EntityDetail entityDetail) {
     final InfoForPush pushInfo = harnessToGitPushInfoServiceBlockingStub.getConnectorInfo(
         FileInfo.newBuilder()
-            .setAccountId(gitBranchInfo.getAccountId())
+            .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
             .setBranch(gitBranchInfo.getBranch())
             .setFilePath(gitBranchInfo.getFilePath())
             .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())

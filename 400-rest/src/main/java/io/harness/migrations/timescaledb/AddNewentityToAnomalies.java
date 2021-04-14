@@ -11,6 +11,6 @@ import io.harness.annotations.dev.TargetModule;
 public class AddNewentityToAnomalies extends AbstractTimeScaleDBMigration {
   @Override
   public String getFileName() {
-    return "timescaledb/add_newentity_to_anomalies.sql.sql";
+    return "timescaledb/add_newentity_to_anomalies.sql";
   }
 }

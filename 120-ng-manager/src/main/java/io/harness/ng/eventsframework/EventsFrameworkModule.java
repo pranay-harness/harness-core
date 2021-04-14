@@ -1,5 +1,6 @@
 package io.harness.ng.eventsframework;
 
+import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -56,9 +57,11 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
-
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
     } else {
       bind(Producer.class)
@@ -103,6 +106,10 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM, redisConfig,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
+              EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
     }
   }
 }

@@ -2,6 +2,8 @@ package io.harness.pms.sample.cd;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -40,6 +42,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class CdServiceModule extends AbstractModule {
   private final CdServiceConfiguration config;
 
@@ -78,7 +81,7 @@ public class CdServiceModule extends AbstractModule {
         });
       }
     });
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(
         config.getManagerServiceSecret(), config.getManagerTarget(), config.getManagerAuthority()));
   }

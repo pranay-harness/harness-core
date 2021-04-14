@@ -50,10 +50,10 @@ public class K8sScaleStepParameter extends K8sScaleBaseStepInfo implements K8sSt
   @JsonIgnore
   public List<String> getCommandUnits() {
     if (!ParameterField.isNull(skipSteadyStateCheck) && skipSteadyStateCheck.getValue()) {
-      return Arrays.asList(K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Scale);
+      return Arrays.asList(K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Scale, K8sCommandUnitConstants.WrapUp);
     } else {
-      return Arrays.asList(
-          K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Scale, K8sCommandUnitConstants.WaitForSteadyState);
+      return Arrays.asList(K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Scale,
+          K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
     }
   }
 
