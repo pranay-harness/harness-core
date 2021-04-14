@@ -45,6 +45,7 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
+import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -273,6 +274,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
+    injector.getInstance(WebhookEventProcessingService.class).registerIterators();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

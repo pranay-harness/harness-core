@@ -1,4 +1,4 @@
-package io.harness.pms.event;
+package io.harness.pms.event.entitycrud;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;

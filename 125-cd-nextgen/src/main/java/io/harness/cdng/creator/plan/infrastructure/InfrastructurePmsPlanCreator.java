@@ -2,6 +2,7 @@ package io.harness.cdng.creator.plan.infrastructure;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.advisers.RollbackCustomAdviser;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.infra.steps.InfraStepParameters;
@@ -99,6 +100,7 @@ public class InfrastructurePmsPlanCreator {
                 .build());
       }
     }
+    adviserObtainments.add(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build());
     return adviserObtainments;
   }
 
@@ -115,6 +117,7 @@ public class InfrastructurePmsPlanCreator {
                                              .build())))
               .build());
     }
+    adviserObtainments.add(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build());
     return adviserObtainments;
   }
 

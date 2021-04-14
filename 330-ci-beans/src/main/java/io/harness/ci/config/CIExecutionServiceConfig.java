@@ -16,4 +16,5 @@ public class CIExecutionServiceConfig {
   String addonImage;
   String liteEngineImage;
   CIStepConfig stepConfig;
+  boolean isLocal;
 }

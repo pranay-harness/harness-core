@@ -10,6 +10,7 @@ import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.when.beans.StageWhenCondition;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.variables.NGVariable;
 
@@ -35,9 +36,7 @@ public class StageElementConfig {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
-  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
-  @ApiModelProperty(hidden = true)
-  ParameterField<String> when;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) StageWhenCondition when;
 
   List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> variables;
@@ -49,7 +48,7 @@ public class StageElementConfig {
   @Builder
   public StageElementConfig(String uuid, String identifier, String name, ParameterField<String> description,
       List<FailureStrategyConfig> failureStrategies, List<NGVariable> variables, String type, StageInfoConfig stageType,
-      ParameterField<String> skipCondition, ParameterField<String> when) {
+      ParameterField<String> skipCondition, StageWhenCondition when) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;

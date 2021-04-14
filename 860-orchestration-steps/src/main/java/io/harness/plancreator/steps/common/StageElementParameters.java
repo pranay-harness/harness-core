@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.when.beans.StageWhenCondition;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.variables.NGVariable;
 
@@ -25,7 +26,7 @@ public class StageElementParameters implements StepParameters {
   ParameterField<String> description;
 
   ParameterField<String> skipCondition;
-  ParameterField<String> when;
+  StageWhenCondition when;
 
   List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> originalVariables;
