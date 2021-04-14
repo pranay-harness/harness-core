@@ -25,7 +25,6 @@ java_binary(
         "//946-access-control-aggregator:module",
         "//947-access-control-core:module",
         "//947-access-control-decision-commons:module",
-        "//950-ng-audit-commons:module",
         "//953-events-api:module",
         "//955-outbox-sdk:module",
         "//970-ng-commons:module",
