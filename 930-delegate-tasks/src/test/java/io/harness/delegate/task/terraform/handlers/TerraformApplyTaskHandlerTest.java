@@ -3,42 +3,43 @@ package io.harness.delegate.task.terraform.handlers;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cli.CliResponse;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
+import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
+import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.encryption.SecretRefData;
+import io.harness.filesystem.FileIo;
 import io.harness.git.GitClientHelper;
 import io.harness.git.GitClientV2;
-import io.harness.git.model.AuthRequest;
-import io.harness.git.model.GitBaseRequest;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
+import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,12 +53,13 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
   @Inject @Spy @InjectMocks TerraformApplyTaskHandler terraformApplyTaskHandler;
   @Mock private ILogStreamingTaskClient logStreamingTaskClient;
   @Mock LogCallback logCallback;
-  @Mock AuthRequest authRequest;
   @Mock SecretDecryptionService secretDecryptionService;
   @Mock TerraformBaseHelper terraformBaseHelper;
   @Mock GitClientV2 gitClient;
   @Mock GitClientHelper gitClientHelper;
   @Mock DelegateFileManagerBase delegateFileManager;
+  @Mock private SshSessionConfigMapper sshSessionConfigMapper;
+  @Mock private NGGitService ngGitService;
 
   final CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
   private final EncryptedRecordData encryptedPlanContent =
@@ -68,23 +70,24 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-
-    doReturn(logCallback)
-        .when(terraformApplyTaskHandler)
-        .getLogCallback(eq(logStreamingTaskClient), anyString(), anyBoolean(), eq(commandUnitsProgress));
   }
 
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void testApply() throws IOException {
+  public void testApply() throws IOException, TimeoutException, InterruptedException {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     when(terraformBaseHelper.resolveBaseDir("accountId", "provisionerIdentifier")).thenReturn("baseDir");
-    when(terraformBaseHelper.resolveScriptDirectory("workingDir", "main.tf")).thenReturn("main.tf");
+    when(terraformBaseHelper.resolveScriptDirectory("baseDir/script-repository", "main.tf")).thenReturn("sourceDir");
     doNothing().when(terraformBaseHelper).downloadTfStateFile(null, "accountId", null, "scriptDir");
     when(gitClientHelper.getRepoDirectory(any())).thenReturn("sourceDir");
-    terraformApplyTaskHandler.executeTaskInternal(getTerraformTaskParameters(), logStreamingTaskClient,
-        commandUnitsProgress, authRequest, "delegateId", "taskId");
+    FileIo.createDirectoryIfDoesNotExist("sourceDir");
+    File.createTempFile("sourceDir/terraform-provisionerIdentifier", ".tfvars");
+    when(terraformBaseHelper.executeTerraformApplyStep(any()))
+        .thenReturn(CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
+    TerraformTaskNGResponse response = terraformApplyTaskHandler.executeTaskInternal(
+        getTerraformTaskParameters(), "delegateId", "taskId", logCallback);
+    assertThat(response).isNotNull();
   }
 
   private TerraformTaskNGParameters getTerraformTaskParameters() {
