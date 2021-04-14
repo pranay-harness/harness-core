@@ -3,13 +3,10 @@ package io.harness.verificationclient;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.managerclient.DelegateAgentManagerClientX509TrustManager;
 import io.harness.managerclient.DelegateAuthInterceptor;
 import io.harness.network.Http;
-import io.harness.network.NoopHostnameVerifier;
 import io.harness.security.TokenGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +26,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
-@OwnedBy(HarnessTeam.CV)
 public class CVNextGenServiceClientFactory implements Provider<CVNextGenServiceClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());
@@ -76,7 +72,7 @@ public class CVNextGenServiceClientFactory implements Provider<CVNextGenServiceC
           .retryOnConnectionFailure(false)
           .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
-          .hostnameVerifier(new NoopHostnameVerifier())
+          .hostnameVerifier((hostname, session) -> true)
           .build();
     } catch (Exception e) {
       throw new IllegalStateException(e);
