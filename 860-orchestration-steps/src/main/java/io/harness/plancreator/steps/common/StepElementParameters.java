@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.when.beans.StepWhenCondition;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class StepElementParameters implements StepParameters {
   List<FailureStrategyConfig> failureStrategies;
 
   ParameterField<String> skipCondition;
-  ParameterField<String> when;
+  StepWhenCondition when;
 
   String type;
   SpecParameters spec;

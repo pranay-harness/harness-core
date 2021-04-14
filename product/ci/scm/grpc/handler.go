@@ -118,6 +118,16 @@ func (h *handler) FindFilesInCommit(ctx context.Context, in *pb.FindFilesInCommi
 	return file.FindFilesInCommit(ctx, in, h.log)
 }
 
+// CreatePR creates a PR given a source branch and target branch.
+func (h *handler) CreatePR(ctx context.Context, in *pb.CreatePRRequest) (*pb.CreatePRResponse, error) {
+	return git.CreatePR(ctx, in, h.log)
+}
+
+// CreateBranch creates a Branch given a branch name and commit_id.
+func (h *handler) CreateBranch(ctx context.Context, in *pb.CreateBranchRequest) (*pb.CreateBranchResponse, error) {
+	return git.CreateBranch(ctx, in, h.log)
+}
+
 // GetLatestCommit returns the latest commit_id for a branch.
 func (h *handler) GetLatestCommit(ctx context.Context, in *pb.GetLatestCommitRequest) (*pb.GetLatestCommitResponse, error) {
 	return git.GetLatestCommit(ctx, in, h.log)

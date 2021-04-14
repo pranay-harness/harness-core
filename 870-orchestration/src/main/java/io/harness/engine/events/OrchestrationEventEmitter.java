@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class OrchestrationEventEmitter {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
@@ -59,6 +59,7 @@ public class OrchestrationEventEmitter {
       }
     } catch (Exception ex) {
       log.error("Failed to create orchestration event", ex);
+      throw ex;
     }
   }
 }

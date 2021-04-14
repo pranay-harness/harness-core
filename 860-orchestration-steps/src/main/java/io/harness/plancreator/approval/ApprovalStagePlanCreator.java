@@ -10,7 +10,6 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
@@ -25,6 +24,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.approval.stage.ApprovalStageStep;
 import io.harness.steps.approval.stage.ApprovalStageStepParameters;
+import io.harness.when.utils.RunInfoUtils;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -75,7 +75,7 @@ public class ApprovalStagePlanCreator extends ChildrenPlanCreator<StageElementCo
         .stepParameters(stepParameters)
         .stepType(ApprovalStageStep.STEP_TYPE)
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen(), true))
+        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen()))
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();

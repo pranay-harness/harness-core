@@ -8,6 +8,7 @@ import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.filters.FilterCreatorHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
@@ -39,7 +40,7 @@ public class DockerHubArtifactConfigVisitorHelper implements ConfigValidator, En
     String fullQualifiedDomainName =
         VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
     result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier, projectIdentifier,
-        fullQualifiedDomainName, dockerHubArtifactConfig.getConnectorRef()));
+        fullQualifiedDomainName, dockerHubArtifactConfig.getConnectorRef(), EntityTypeProtoEnum.CONNECTORS));
     return result;
   }
 

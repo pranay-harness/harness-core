@@ -1,9 +1,6 @@
 package io.harness.cvng.client;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
-import io.harness.network.NoopHostnameVerifier;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.security.VerificationAuthInterceptor;
 import io.harness.serializer.JsonSubtypeResolver;
@@ -46,7 +43,6 @@ class ManagerClientX509TrustManager implements X509TrustManager {
 }
 
 @Singleton
-@OwnedBy(HarnessTeam.CV)
 public class VerificationManagerClientFactory implements Provider<VerificationManagerClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new ManagerClientX509TrustManager());
@@ -89,7 +85,7 @@ public class VerificationManagerClientFactory implements Provider<VerificationMa
           .retryOnConnectionFailure(true)
           .addInterceptor(new VerificationAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
-          .hostnameVerifier(new NoopHostnameVerifier())
+          .hostnameVerifier((hostname, session) -> true)
           .build();
     } catch (Exception e) {
       throw new IllegalStateException(e);

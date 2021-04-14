@@ -4,6 +4,7 @@ import io.harness.IdentifierRefProtoUtils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.exception.InvalidRequestException;
@@ -48,7 +49,8 @@ public class FilterCreatorHelper {
   }
 
   public EntityDetailProtoDTO convertToEntityDetailProtoDTO(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String fullQualifiedDomainName, ParameterField<String> connectorRef) {
+      String projectIdentifier, String fullQualifiedDomainName, ParameterField<String> connectorRef,
+      EntityTypeProtoEnum entityTypeProtoEnum) {
     Map<String, String> metadata =
         new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!connectorRef.isExpression()) {
@@ -57,7 +59,7 @@ public class FilterCreatorHelper {
           connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
       return EntityDetailProtoDTO.newBuilder()
           .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
-          .setType(EntityTypeProtoEnum.CONNECTORS)
+          .setType(entityTypeProtoEnum)
           .build();
     } else {
       metadata.put(PreFlightCheckMetadata.EXPRESSION, connectorRef.getExpressionValue());
@@ -65,7 +67,30 @@ public class FilterCreatorHelper {
           accountIdentifier, orgIdentifier, projectIdentifier, connectorRef.getExpressionValue(), metadata);
       return EntityDetailProtoDTO.newBuilder()
           .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
-          .setType(EntityTypeProtoEnum.CONNECTORS)
+          .setType(entityTypeProtoEnum)
+          .build();
+    }
+  }
+
+  public EntityDetailProtoDTO convertSecretToEntityDetailProtoDTO(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String fullQualifiedDomainName, ParameterField<SecretRefData> secretRef) {
+    Map<String, String> metadata =
+        new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
+    if (!secretRef.isExpression()) {
+      SecretRefData secretRefData = secretRef.getValue();
+      IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(secretRefData.getScope(),
+          secretRefData.getIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier, metadata);
+      return EntityDetailProtoDTO.newBuilder()
+          .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
+          .setType(EntityTypeProtoEnum.SECRETS)
+          .build();
+    } else {
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, secretRef.getExpressionValue());
+      IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(
+          accountIdentifier, orgIdentifier, projectIdentifier, secretRef.getExpressionValue(), metadata);
+      return EntityDetailProtoDTO.newBuilder()
+          .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
+          .setType(EntityTypeProtoEnum.SECRETS)
           .build();
     }
   }

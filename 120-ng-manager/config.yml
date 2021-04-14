@@ -217,7 +217,7 @@ logStreamingServiceConfig:
 outboxPollConfig:
   initialDelayInSeconds: 5
   pollingIntervalInSeconds: 5
-  maximumRetryAttemptsForAnEvent: 10
+  maximumRetryAttemptsForAnEvent: 7
 
 accessControlClient:
   enableAccessControl: false

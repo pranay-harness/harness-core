@@ -7,6 +7,7 @@ import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MI
 import static io.harness.helm.HelmConstants.HELM_COMMAND_FLAG_PLACEHOLDER;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.LogLevel.ERROR;
 
 import static software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper.lockObjects;
 
@@ -38,6 +39,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +48,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -167,7 +171,11 @@ public class HelmClientImpl implements HelmClient {
     logHelmCommandInExecutionLogs(commandRequest, listRelease);
     listRelease = applyKubeConfigToCommand(listRelease, kubeConfigLocation);
 
-    return executeHelmCLICommand(listRelease);
+    try (LogOutputStream errorStream = commandRequest.getExecutionLogCallback() != null
+            ? new ErrorActivityOutputStream(commandRequest.getExecutionLogCallback())
+            : new LogErrorStream()) {
+      return executeHelmCLICommand(listRelease, errorStream);
+    }
   }
 
   @Override
@@ -281,7 +289,11 @@ public class HelmClientImpl implements HelmClient {
     logHelmCommandInExecutionLogs(commandRequest, command);
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
-    return executeHelmCLICommand(command);
+    try (LogOutputStream errorStream = commandRequest.getExecutionLogCallback() != null
+            ? new ErrorActivityOutputStream(commandRequest.getExecutionLogCallback())
+            : new LogErrorStream()) {
+      return executeHelmCLICommand(command, errorStream);
+    }
   }
 
   /**
@@ -310,12 +322,24 @@ public class HelmClientImpl implements HelmClient {
   }
 
   @VisibleForTesting
+  HelmCliResponse executeHelmCLICommand(String command, OutputStream errorStream)
+      throws IOException, InterruptedException, TimeoutException {
+    return executeHelmCLICommand(command, DEFAULT_HELM_COMMAND_TIMEOUT, errorStream);
+  }
+
+  @VisibleForTesting
   HelmCliResponse executeHelmCLICommand(String command) throws IOException, InterruptedException, TimeoutException {
-    return executeHelmCLICommand(command, DEFAULT_HELM_COMMAND_TIMEOUT);
+    return executeHelmCLICommand(command, DEFAULT_HELM_COMMAND_TIMEOUT, null);
   }
 
   @VisibleForTesting
   HelmCliResponse executeHelmCLICommand(String command, long timeoutInMillis)
+      throws IOException, InterruptedException, TimeoutException {
+    return executeHelmCLICommand(command, timeoutInMillis, null);
+  }
+
+  @VisibleForTesting
+  HelmCliResponse executeHelmCLICommand(String command, long timeoutInMillis, OutputStream errorStream)
       throws IOException, InterruptedException, TimeoutException {
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
@@ -327,6 +351,10 @@ public class HelmClientImpl implements HelmClient {
                                               log.info(line);
                                             }
                                           });
+
+    if (errorStream != null) {
+      processExecutor.redirectError(errorStream);
+    }
 
     ProcessResult processResult = processExecutor.execute();
     CommandExecutionStatus status = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;
@@ -369,10 +397,6 @@ public class HelmClientImpl implements HelmClient {
       }
     }
     return fileOverrides.toString();
-  }
-
-  private String dryRunCommand(String command) {
-    return command + "--dry-run";
   }
 
   private void logHelmCommandInExecutionLogs(HelmCommandRequest helmCommandRequest, String helmCommand) {
@@ -421,5 +445,22 @@ public class HelmClientImpl implements HelmClient {
   @Override
   public String getHelmPath(HelmVersion helmVersion) {
     return helmVersion == HelmVersion.V3 ? k8sGlobalConfigService.getHelmPath(HelmVersion.V3) : "helm";
+  }
+
+  @RequiredArgsConstructor
+  static class ErrorActivityOutputStream extends LogOutputStream {
+    @NonNull private final LogCallback logCallback;
+
+    @Override
+    protected void processLine(String s) {
+      logCallback.saveExecutionLog(s, ERROR);
+    }
+  }
+
+  static class LogErrorStream extends LogOutputStream {
+    @Override
+    protected void processLine(String s) {
+      log.error(s);
+    }
   }
 }

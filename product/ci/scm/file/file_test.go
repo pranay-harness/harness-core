@@ -94,9 +94,7 @@ func TestCreateFile(t *testing.T) {
 		Slug:    "tphoney/scm-test",
 		Path:    "jello",
 		Message: "message",
-		Type: &pb.FileModifyRequest_Branch{
-			Branch: "main",
-		},
+		Branch:  "main",
 		Content: "data",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
@@ -134,9 +132,7 @@ func TestUpdateFile(t *testing.T) {
 		Slug:    "tphoney/scm-test",
 		Path:    "jello",
 		Message: "message",
-		Type: &pb.FileModifyRequest_Branch{
-			Branch: "main",
-		},
+		Branch:  "main",
 		Content: "data",
 		BlobId:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
 		Signature: &pb.Signature{
@@ -211,9 +207,7 @@ func TestPushNewFile(t *testing.T) {
 		Slug:    "tphoney/scm-test",
 		Path:    "jello",
 		Message: "message",
-		Type: &pb.FileModifyRequest_Branch{
-			Branch: "main",
-		},
+		Branch:  "main",
 		Content: "data",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
@@ -238,7 +232,7 @@ func TestPushNewFile(t *testing.T) {
 	assert.Equal(t, got.Status, int32(200), "status matches")
 }
 
-func TestFindFilesInBranchGithub(t *testing.T) {
+func TestFindFilesInBranch(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
@@ -268,7 +262,7 @@ func TestFindFilesInBranchGithub(t *testing.T) {
 	assert.Equal(t, len(got.File), 26, "one files")
 }
 
-func TestFindFilesInCommitGithub(t *testing.T) {
+func TestFindFilesInCommit(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
@@ -295,10 +289,10 @@ func TestFindFilesInCommitGithub(t *testing.T) {
 	got, err := FindFilesInCommit(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
-	assert.Equal(t, len(got.File), 26, "one files")
+	assert.Equal(t, 26, len(got.File), "26 files")
 }
 
-func TestBatchFindFileGithub(t *testing.T) {
+func TestBatchFindFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)

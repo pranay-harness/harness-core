@@ -96,8 +96,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
-  private PMSYamlSchemaService pmsYamlSchemaService;
-  private NodeExecutionService nodeExecutionService;
+  private final PMSYamlSchemaService pmsYamlSchemaService;
+  private final NodeExecutionService nodeExecutionService;
   private final AccessControlClient accessControlClient;
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
 
@@ -235,7 +235,7 @@ public class PipelineResource implements YamlSchemaResource {
         pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false)
             .orElseThrow(()
                              -> new InvalidRequestException(
-                                 String.format("Pipeline with the given ID: %s does not exisit", pipelineId))));
+                                 String.format("Pipeline with the given ID: %s does not exist", pipelineId))));
 
     return ResponseDTO.newResponse(pipelineSummary);
   }

@@ -47,8 +47,7 @@ public class AuditYamlServiceImpl implements AuditYamlService {
 
   @Override
   public void purgeYamlDiffOlderThanTimestamp(String accountIdentifier, Instant timestamp) {
-    auditYamlRepository.delete(new Criteria()
-                                   .where(YamlDiffRecordKeys.timestamp)
+    auditYamlRepository.delete(Criteria.where(YamlDiffRecordKeys.timestamp)
                                    .lte(timestamp)
                                    .and(YamlDiffRecordKeys.accountIdentifier)
                                    .is(accountIdentifier));

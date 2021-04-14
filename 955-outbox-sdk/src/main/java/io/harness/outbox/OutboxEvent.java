@@ -13,6 +13,7 @@ import io.harness.ng.core.Resource.ResourceKeys;
 import io.harness.ng.core.ResourceScope;
 
 import com.google.common.collect.ImmutableList;
+import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -44,8 +45,8 @@ public class OutboxEvent implements PersistentIterable, PersistentRegularIterabl
   @NotNull String eventData;
 
   @CreatedDate Long createdAt;
-  @Setter @Builder.Default Long attempts = 0L;
   @Setter @Builder.Default Boolean blocked = Boolean.FALSE;
+  @Setter Instant nextUnblockAttemptAt;
 
   GlobalContext globalContext;
 
@@ -54,10 +55,9 @@ public class OutboxEvent implements PersistentIterable, PersistentRegularIterabl
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("createdAt_blocked_attempts_outbox_Idx")
+                 .name("createdAt_blocked_outbox_Idx")
                  .field(OutboxEventKeys.createdAt)
                  .field(OutboxEventKeys.blocked)
-                 .field(OutboxEventKeys.attempts)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("resourceType_createdAt_outbox_Idx")

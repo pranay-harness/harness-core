@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._950_EVENTS_API)
+@TargetModule(HarnessModule._953_EVENTS_API)
 public class DeploymentFreezeActivationHandler implements Handler<GovernanceConfig> {
   private static final int POOL_SIZE = 3;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
