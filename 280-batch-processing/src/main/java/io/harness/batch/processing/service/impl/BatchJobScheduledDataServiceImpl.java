@@ -5,6 +5,7 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.CEDataCleanupRequest;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 
 import software.wings.beans.SettingAttribute;
@@ -117,6 +118,11 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       return batchJobScheduledData.getEndAt();
     }
     return null;
+  }
+
+  @Override
+  public void invalidateJobs(CEDataCleanupRequest ceDataCleanupRequest) {
+    batchJobScheduledDataDao.invalidateJobs(ceDataCleanupRequest);
   }
 
   @Override
