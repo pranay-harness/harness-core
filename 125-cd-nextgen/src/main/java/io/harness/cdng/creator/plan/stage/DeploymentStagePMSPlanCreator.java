@@ -22,7 +22,6 @@ import io.harness.plancreator.steps.common.StepParametersUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
@@ -36,6 +35,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.when.utils.RunInfoUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -154,7 +154,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         .stepParameters(stageParameters.build())
         .stepType(DeploymentStageStep.STEP_TYPE)
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen(), true))
+        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen()))
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
