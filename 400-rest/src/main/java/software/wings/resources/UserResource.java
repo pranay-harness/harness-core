@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
-import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -22,6 +21,7 @@ import static software.wings.utils.Utils.urlDecode;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
@@ -53,6 +53,7 @@ import software.wings.beans.PublicUser;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
@@ -136,7 +137,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Scope(ResourceType.USER)
 @AuthRule(permissionType = LOGGED_IN)
 @Slf4j
-@OwnedBy(PL)
+@OwnedBy(HarnessTeam.PL)
 @TargetModule(_970_RBAC_CORE)
 public class UserResource {
   private UserService userService;
@@ -151,6 +152,8 @@ public class UserResource {
   private MainConfiguration mainConfiguration;
   private AccountPasswordExpirationJob accountPasswordExpirationJob;
   private ReCaptchaVerifier reCaptchaVerifier;
+  private LoginSettingsService loginSettingsService;
+
   private static final String BASIC = "Basic";
   private static final List<BugsnagTab> tab =
       Collections.singletonList(BugsnagTab.builder().tabName(CLUSTER_TYPE).key(FREEMIUM).value(ONBOARDING).build());
@@ -162,7 +165,7 @@ public class UserResource {
       TwoFactorAuthenticationManager twoFactorAuthenticationManager, Map<String, Cache<?, ?>> caches,
       HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
       MainConfiguration mainConfiguration, AccountPasswordExpirationJob accountPasswordExpirationJob,
-      ReCaptchaVerifier reCaptchaVerifier) {
+      ReCaptchaVerifier reCaptchaVerifier, LoginSettingsService loginSettingsService) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
@@ -175,6 +178,7 @@ public class UserResource {
     this.mainConfiguration = mainConfiguration;
     this.accountPasswordExpirationJob = accountPasswordExpirationJob;
     this.reCaptchaVerifier = reCaptchaVerifier;
+    this.loginSettingsService = loginSettingsService;
   }
 
   /**
@@ -610,13 +614,12 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<User> login(LoginRequest loginBody, @QueryParam("accountId") String accountId,
       @QueryParam("captcha") @Nullable String captchaToken) {
-    if (!StringUtils.isEmpty(captchaToken)) {
-      reCaptchaVerifier.verify(captchaToken);
-    }
+    String basicAuthToken = authenticationManager.extractToken(loginBody.getAuthorization(), BASIC);
+
+    validateCaptchaToken(captchaToken, basicAuthToken);
 
     // accountId field is optional, it could be null.
-    return new RestResponse<>(authenticationManager.defaultLoginAccount(
-        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId));
+    return new RestResponse<>(authenticationManager.defaultLoginAccount(basicAuthToken, accountId));
   }
 
   /**
@@ -1334,5 +1337,20 @@ public class UserResource {
   @Data
   public static class ResendInvitationEmailRequest {
     @NotBlank private String email;
+  }
+
+  private void validateCaptchaToken(String captchaToken, String basicAuthToken) {
+    if (StringUtils.isEmpty(captchaToken)) {
+      return;
+    }
+
+    reCaptchaVerifier.verify(captchaToken);
+
+    // If the captcha was correct, reset the counter so that a fresh set of counter is started
+    // for displaying captcha. UI will handle removing the captcha in case of a successful captcha validation
+    String[] credentials = authenticationManager.decryptBasicToken(basicAuthToken);
+    String userEmail = credentials[0];
+    User user = userService.getUserByEmail(userEmail);
+    loginSettingsService.updateUserLockoutInfo(user, accountService.get(user.getDefaultAccountId()), 0);
   }
 }
