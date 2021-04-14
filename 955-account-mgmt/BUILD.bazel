@@ -1,0 +1,23 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//960-ng-core-beans:module",
+        "//970-ng-commons:module",
+        "@maven//:com_google_inject_guice",
+        "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:io_swagger_swagger_annotations",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+)
+
+checkstyle()
+
+pmd()
