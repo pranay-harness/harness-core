@@ -24,12 +24,10 @@ public class EngineAdviseCallback implements OldNotifyCallback {
   @Inject private OrchestrationEngine orchestrationEngine;
 
   String nodeExecutionId;
-  Status status;
 
   @Builder
   EngineAdviseCallback(String nodeExecutionId, Status status) {
     this.nodeExecutionId = nodeExecutionId;
-    this.status = status;
   }
 
   @SneakyThrows
@@ -37,7 +35,7 @@ public class EngineAdviseCallback implements OldNotifyCallback {
   public void notify(Map<String, ResponseData> response) {
     BinaryResponseData binaryResponseData = (BinaryResponseData) response.values().iterator().next();
     AdviserResponse adviserResponse = AdviserResponse.parseFrom(binaryResponseData.getData());
-    orchestrationEngine.handleAdvise(nodeExecutionId, status, adviserResponse);
+    orchestrationEngine.handleAdvise(nodeExecutionId, adviserResponse);
   }
 
   @Override

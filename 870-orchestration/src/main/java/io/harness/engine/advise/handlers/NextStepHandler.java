@@ -34,7 +34,7 @@ public class NextStepHandler implements AdviserResponseHandler {
           nodeExecution.getAmbiance().getPlanExecutionId(), advise.getNextNodeId()));
       engine.triggerExecution(nodeExecution.getAmbiance(), nextNode);
     } else {
-      engine.endTransition(nodeExecution, adviserResponse);
+      engine.endTransition(nodeExecution);
     }
   }
 }

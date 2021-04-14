@@ -28,4 +28,6 @@ public interface PlanExecutionService extends StepStatusUpdate {
   PlanNodeProto fetchExecutionNode(String planExecutionId, String nodeId);
 
   List<PlanExecution> findAllByPlanExecutionIdIn(List<String> planExecutionIds);
+
+  Status calculateEndStatus(String planExecutionId);
 }
