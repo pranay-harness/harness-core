@@ -20,7 +20,13 @@ go_test(
         "file_test.go",
         "providers_test.go",
     ],
-    data = glob(["testdata/**"]),
+    data = [
+        "testdata/FileCreateSource.json",
+        "testdata/FileErrorSource.json",
+        "testdata/FileFindSource.json",
+        "testdata/FileList.json",
+        "testdata/FileUpdateSource.json",
+    ],
     embed = [":go_default_library"],
     deps = [
         "//commons/go/lib/logs:go_default_library",

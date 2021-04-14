@@ -361,6 +361,31 @@ message FindFilesInCommitResponse {
   repeated FileChange file = 1;
 }
 
+message CreatePRRequest {
+  string slug = 1;
+  string title = 2;
+  string body = 3;
+  string source = 4;
+  string target = 5;
+  Provider provider = 6;
+}
+
+message CreatePRResponse {
+  int32 status = 1;
+}
+
+message CreateBranchRequest {
+  string slug = 1;
+  string branch = 2;
+  string commit_id = 3;
+  string blob_id = 4;
+  Provider provider = 5;
+}
+
+message CreateBranchResponse {
+  int32 status = 1;
+}
+
 message GetLatestCommitRequest {
   string slug = 1;
   string branch = 2;
@@ -402,6 +427,8 @@ service SCM {
   rpc GetBatchFile(GetBatchFileRequest) returns (FileBatchContentResponse);
   rpc GetLatestFile(GetLatestFileRequest) returns (FileContent);
   rpc IsLatestFile(IsLatestFileRequest) returns (IsLatestFileResponse);
+  rpc FindFilesInBranch(FindFilesInBranchRequest) returns (FindFilesInBranchResponse);
+  rpc FindFilesInCommit(FindFilesInCommitRequest) returns (FindFilesInCommitResponse);
   rpc PushFile(FileModifyRequest) returns (FileContent);
   // helpers
   rpc CreateFile(FileModifyRequest) returns (CreateFileResponse);
@@ -409,8 +436,8 @@ service SCM {
   rpc UpdateFile(FileModifyRequest) returns (UpdateFileResponse);
 
   // Git functions. branch and commits
-  rpc FindFilesInBranch(FindFilesInBranchRequest) returns (FindFilesInBranchResponse);
-  rpc FindFilesInCommit(FindFilesInCommitRequest) returns (FindFilesInCommitResponse);
+  rpc CreatePR(CreatePRRequest) returns (CreatePRResponse);
+  // rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse);
   rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);
   rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
   rpc ListCommits(ListCommitsRequest) returns (ListCommitsResponse);
