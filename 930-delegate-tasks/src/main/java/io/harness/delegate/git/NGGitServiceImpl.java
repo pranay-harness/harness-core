@@ -4,6 +4,8 @@ import static io.harness.git.model.GitRepositoryType.YAML;
 import static io.harness.shell.SshSessionFactory.getSSHSession;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
@@ -40,6 +42,7 @@ import org.eclipse.jgit.util.FS;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class NGGitServiceImpl implements NGGitService {
   @Inject private GitClientV2 gitClientV2;
   @Inject private SshSessionConfigMapper sshSessionConfigMapper;

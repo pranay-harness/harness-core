@@ -19,12 +19,10 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_INTERNAL_FOLDER;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
-import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
 import static io.harness.provision.TerraformConstants.WORKSPACE_DIR_BASE;
-import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
 import static io.harness.provision.TfVarSource.TfVarSourceType;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -99,7 +97,6 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -111,14 +108,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.NullInputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -800,21 +793,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   public String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {
-    File repoDir = new File(gitClientHelper.getRepoDirectory(gitOperationContext));
-    if (repoDir.exists()) {
-      try (Git git = Git.open(repoDir)) {
-        Iterator<RevCommit> commits = git.log().call().iterator();
-        if (commits.hasNext()) {
-          RevCommit firstCommit = commits.next();
-
-          return firstCommit.toString().split(" ")[1];
-        }
-      } catch (IOException | GitAPIException e) {
-        log.error("Failed to extract the commit id from the cloned repo.");
-      }
-    }
-
-    return null;
+    return terraformBaseHelper.getLatestCommitSHA(new File(gitClientHelper.getRepoDirectory(gitOperationContext)));
   }
 
   private void saveExecutionLog(
