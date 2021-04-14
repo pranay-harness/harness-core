@@ -197,7 +197,7 @@ public class NextGenModule extends AbstractModule {
 
   @Provides
   private FileServiceClientFactory fileServiceClientFactory(KryoConverterFactory kryoConverterFactory) {
-    return new FileServiceClientFactory(appConfig.getNgManagerClientConfig(),
+    return new FileServiceClientFactory(appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), new ServiceTokenGenerator(),
         kryoConverterFactory, NG_MANAGER.getServiceId());
   }

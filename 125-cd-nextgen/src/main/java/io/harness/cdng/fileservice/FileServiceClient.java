@@ -7,9 +7,9 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.rest.RestResponse;
 
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.QueryParam;
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Query;
 
 @OwnedBy(CDP)
 public interface FileServiceClient {
@@ -17,5 +17,5 @@ public interface FileServiceClient {
 
   @GET(FILE_SERVICE_API + "/latestFileId")
   Call<RestResponse<String>> getLatestFileId(
-      @QueryParam("entityId") @NotNull String entityId, @QueryParam("fileBucket") @NotNull FileBucket fileBucket);
+      @Query(value = "entityId") @NotNull String entityId, @Query(value = "fileBucket") @NotNull FileBucket fileBucket);
 }
