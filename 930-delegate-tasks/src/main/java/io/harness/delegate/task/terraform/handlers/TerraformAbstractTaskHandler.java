@@ -1,5 +1,8 @@
 package io.harness.delegate.task.terraform.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
@@ -11,6 +14,7 @@ import io.harness.logging.LogCallback;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public abstract class TerraformAbstractTaskHandler {
   public abstract TerraformTaskNGResponse executeTaskInternal(
       TerraformTaskNGParameters taskParameters, String delegateId, String taskId, LogCallback logCallback);

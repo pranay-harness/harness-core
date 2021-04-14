@@ -1,11 +1,13 @@
 package io.harness.terraform;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
@@ -20,6 +22,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class TerraformHelperUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)

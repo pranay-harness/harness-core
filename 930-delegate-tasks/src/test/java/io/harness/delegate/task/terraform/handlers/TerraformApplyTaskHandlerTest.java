@@ -39,7 +39,11 @@ import io.harness.security.encryption.SecretDecryptionService;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -82,12 +86,17 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
     doNothing().when(terraformBaseHelper).downloadTfStateFile(null, "accountId", null, "scriptDir");
     when(gitClientHelper.getRepoDirectory(any())).thenReturn("sourceDir");
     FileIo.createDirectoryIfDoesNotExist("sourceDir");
-    File.createTempFile("sourceDir/terraform-provisionerIdentifier", ".tfvars");
+    File putputFile = new File("sourceDir/terraform-provisionerIdentifier.tfvars");
+    FileUtils.touch(putputFile);
+
     when(terraformBaseHelper.executeTerraformApplyStep(any()))
         .thenReturn(CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
     TerraformTaskNGResponse response = terraformApplyTaskHandler.executeTaskInternal(
         getTerraformTaskParameters(), "delegateId", "taskId", logCallback);
     assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    Files.deleteIfExists(Paths.get(putputFile.getPath()));
+    Files.deleteIfExists(Paths.get("sourceDir"));
   }
 
   private TerraformTaskNGParameters getTerraformTaskParameters() {
@@ -96,6 +105,7 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
         .taskType(TFTaskType.APPLY)
         .provisionerIdentifier("provisionerIdentifier")
         .encryptedTfPlan(encryptedPlanContent)
+        .remoteVarfiles(new ArrayList<>())
         .configFile(
             GitFetchFilesConfig.builder()
                 .gitStoreDelegateConfig(
