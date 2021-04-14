@@ -9,8 +9,9 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 @OwnedBy(HarnessTeam.CV)
 public class CVNGPlanCreator extends GenericStepPMSPlanCreator {
+  public static final Set<String> CVNG_SUPPORTED_TYPES = Sets.newHashSet(CVNGStepType.CVNG_VERIFY.getDisplayName());
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet(CVNGStepType.CVNG_VERIFY.getDisplayName());
+    return CVNG_SUPPORTED_TYPES;
   }
 }
