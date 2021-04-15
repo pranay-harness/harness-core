@@ -145,6 +145,7 @@ BAZEL_MODULES="\
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-log-client:module \
+  //950-telemetry:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
@@ -172,6 +173,7 @@ BAZEL_MODULES="\
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
+  //970-telemetry-beans:module \
   //970-rbac-core:module \
   //980-commons:module \
   //990-commons-test:module \

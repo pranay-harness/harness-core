@@ -208,6 +208,11 @@ outboxPollConfig:
   pollingIntervalInSeconds: 5
   maximumRetryAttemptsForAnEvent: 7
 
+segmentConfiguration:
+  enabled: false
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
 accessControlClient:
   enableAccessControl: false
   accessControlServiceConfig:

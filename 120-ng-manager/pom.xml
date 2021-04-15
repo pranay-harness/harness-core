@@ -107,6 +107,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>950-telemetry</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>952-filters-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -123,6 +128,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>960-yaml-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>970-telemetry-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
