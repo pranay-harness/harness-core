@@ -27,6 +27,7 @@ roles:
         - core_environment_edit
         - core_environment_delete
         - core_environment_runtimeAccess
+        - core_audit_view
       allowedScopeLevels:
         - project
       managed: true
@@ -40,6 +41,7 @@ roles:
         - core_pipeline_view
         - core_service_view
         - core_environment_view
+        - core_audit_view
       allowedScopeLevels:
         - project
       managed: true
@@ -69,6 +71,7 @@ roles:
         - core_environment_edit
         - core_environment_delete
         - core_environment_runtimeAccess
+        - core_audit_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -83,6 +86,7 @@ roles:
         - core_connector_view
         - core_service_view
         - core_environment_view
+        - core_audit_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -109,6 +113,7 @@ roles:
         - core_environment_edit
         - core_environment_delete
         - core_environment_runtimeAccess
+        - core_audit_view
       allowedScopeLevels:
         - account
       managed: true
@@ -121,6 +126,7 @@ roles:
         - core_connector_view
         - core_service_view
         - core_environment_view
+        - core_audit_view
       allowedScopeLevels:
         - account
       managed: true
@@ -138,6 +144,7 @@ roles:
         - core_service_runtimeAccess
         - core_environment_view
         - core_environment_runtimeAccess
+        - core_audit_view
       allowedScopeLevels:
         - project
       managed: true

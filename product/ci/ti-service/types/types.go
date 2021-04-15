@@ -121,8 +121,10 @@ type SelectTestsResp struct {
 }
 
 type SelectTestsReq struct {
-	Files    []File   `json:"files"`
-	TiConfig TiConfig `json:"ti_config"`
+	Files        []File   `json:"files"`
+	TargetBranch string   `json:"target_branch"`
+	Repo         string   `json:"repo"`
+	TiConfig     TiConfig `json:"ti_config"`
 }
 
 type SelectionDetails struct {

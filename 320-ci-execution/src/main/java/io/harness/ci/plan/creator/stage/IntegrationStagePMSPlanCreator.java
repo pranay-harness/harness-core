@@ -34,7 +34,6 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
-import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
@@ -49,6 +48,7 @@ import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.states.IntegrationStageStepPMS;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.when.utils.RunInfoUtils;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
@@ -129,7 +129,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
         .stepType(IntegrationStageStepPMS.STEP_TYPE)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .skipCondition(SkipInfoUtils.getSkipCondition(stageElementConfig.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen(), true))
+        .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen()))
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
   }

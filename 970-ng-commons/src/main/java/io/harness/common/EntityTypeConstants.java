@@ -1,5 +1,10 @@
 package io.harness.common;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(PL)
 public interface EntityTypeConstants {
   String PROJECTS = "Projects";
   String PIPELINES = "Pipelines";
@@ -19,4 +24,5 @@ public interface EntityTypeConstants {
   String DEPLOYMENT_STEPS = "DeploymentSteps";
   String DEPLOYMENT_STAGE = "DeploymentStage";
   String APPROVAL_STAGE = "ApprovalStage";
+  String TRIGGERS = "Triggers";
 }

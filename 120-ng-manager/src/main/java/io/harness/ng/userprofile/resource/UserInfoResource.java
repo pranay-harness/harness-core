@@ -44,10 +44,10 @@ public class UserInfoResource {
   }
 
   @GET
-  @Path("two-factor-auth/{auth-mechanism}")
+  @Path("two-factor-auth/{authMechanism}")
   @ApiOperation(value = "get two factor auth settings", nickname = "getTwoFactorAuthSettings")
   public ResponseDTO<TwoFactorAuthSettingsInfo> getTwoFactorAuthSettingsInfo(
-      @PathParam("auth-mechanism") TwoFactorAuthMechanismInfo authMechanism) {
+      @PathParam("authMechanism") TwoFactorAuthMechanismInfo authMechanism) {
     return ResponseDTO.newResponse(userInfoService.getTwoFactorAuthSettingsInfo(authMechanism));
   }
 

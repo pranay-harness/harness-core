@@ -13,6 +13,7 @@ import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.dto.UserGroupDTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,6 +29,7 @@ public class UserGroupCreateEvent implements Event {
     this.userGroup = userGroup;
   }
 
+  @JsonIgnore
   @Override
   public ResourceScope getResourceScope() {
     if (isEmpty(userGroup.getOrgIdentifier())) {
@@ -38,11 +40,13 @@ public class UserGroupCreateEvent implements Event {
     return new ProjectScope(accountIdentifier, userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier());
   }
 
+  @JsonIgnore
   @Override
   public Resource getResource() {
     return Resource.builder().identifier(userGroup.getIdentifier()).type(USER_GROUP).build();
   }
 
+  @JsonIgnore
   @Override
   public String getEventType() {
     return "UserGroupCreated";

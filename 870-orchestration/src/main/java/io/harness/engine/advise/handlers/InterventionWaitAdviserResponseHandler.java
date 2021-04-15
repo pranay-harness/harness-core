@@ -60,9 +60,8 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
         (TimeoutParameters) kryoSerializer.asObject(timeoutObtainment.getParameters().toByteArray()));
     TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
 
-    nodeExecutionService.update(nodeExecution.getUuid(),
+    nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), INTERVENTION_WAITING,
         ops -> ops.set(NodeExecutionKeys.adviserTimeoutInstanceIds, Arrays.asList(instance.getUuid())));
-    nodeExecutionService.updateStatus(nodeExecution.getUuid(), INTERVENTION_WAITING);
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .eventType(OrchestrationEventType.INTERVENTION_WAIT_START)
                                .ambiance(nodeExecution.getAmbiance())

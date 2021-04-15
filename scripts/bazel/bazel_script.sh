@@ -96,6 +96,7 @@ BAZEL_MODULES="\
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
+  //871-cg-beans:module \
   //874-orchestration-delay:module \
   //876-orchestration-beans:module \
   //878-pipeline-service-utilities:module \
@@ -136,8 +137,8 @@ BAZEL_MODULES="\
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
-  //950-events-api/src/main/proto:all \
-  //950-events-api:module \
+  //953-events-api/src/main/proto:all \
+  //953-events-api:module \
   //950-events-framework:module \
   //950-ng-authentication-service:module \
   //950-ng-core:module \
@@ -150,7 +151,9 @@ BAZEL_MODULES="\
   //953-git-sync-commons:module \
   //953-git-sync-commons/src/main/proto:all \
   //954-connector-beans:module \
+  //955-account-mgmt:module \
   //955-filters-sdk:module \
+  //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \
   //952-scm-java-client:module \
   //960-api-services:module \
@@ -382,6 +385,7 @@ build_bazel_module 870-cg-yaml-beans
 build_bazel_module 870-cg-orchestration
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
+build_bazel_module 871-cg-beans
 build_bazel_module 874-orchestration-delay
 build_bazel_module 876-orchestration-beans
 build_bazel_module 878-pipeline-service-utilities
@@ -412,7 +416,7 @@ build_bazel_module 950-command-library-common
 build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
-build_bazel_module 950-events-api
+build_bazel_module 953-events-api
 build_bazel_module 950-events-framework
 build_bazel_module 950-ng-audit-commons
 build_bazel_module 949-git-sync-sdk
@@ -424,6 +428,7 @@ build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
 build_bazel_module 954-connector-beans
 build_bazel_module 955-filters-sdk
+build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 952-scm-java-client
 build_bazel_module 960-api-services
@@ -448,7 +453,6 @@ build_bazel_tests 960-persistence
 build_bazel_tests 400-rest
 build_bazel_tests 220-graphql-test
 
-build_java_proto_module 950-events-api
 build_java_proto_module 960-notification-beans
 
 build_proto_module ciengine product/ci/engine/proto

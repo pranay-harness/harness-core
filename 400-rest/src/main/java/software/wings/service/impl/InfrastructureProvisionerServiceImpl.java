@@ -419,6 +419,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
           }
         }
       }
+      detailsBuilder.azureARMResourceType(armInfrastructureProvisioner.getResourceType());
     }
     return detailsBuilder.build();
   }

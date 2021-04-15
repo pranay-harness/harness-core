@@ -101,6 +101,10 @@ import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
 import io.harness.ng.userprofile.services.impl.UserInfoServiceImpl;
+import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
+import io.harness.ng.webhook.services.api.WebhookService;
+import io.harness.ng.webhook.services.impl.WebhookEventProcessingServiceImpl;
+import io.harness.ng.webhook.services.impl.WebhookServiceImpl;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
@@ -393,6 +397,8 @@ public class NextGenModule extends AbstractModule {
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
     bind(DelegateProfileManagerNgService.class).to(DelegateProfileManagerNgServiceImpl.class);
     bind(UserInfoService.class).to(UserInfoServiceImpl.class);
+    bind(WebhookService.class).to(WebhookServiceImpl.class);
+    bind(WebhookEventProcessingService.class).to(WebhookEventProcessingServiceImpl.class);
 
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))

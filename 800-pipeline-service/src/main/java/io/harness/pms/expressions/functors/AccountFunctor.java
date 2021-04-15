@@ -1,13 +1,17 @@
 package io.harness.pms.expressions.functors;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.account.AccountClient;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.FunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
-import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
+@OwnedBy(PIPELINE)
 public class AccountFunctor implements LateBindingValue {
   private final AccountClient accountClient;
   private final Ambiance ambiance;

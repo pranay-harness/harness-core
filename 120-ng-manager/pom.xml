@@ -97,12 +97,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-events-api</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>950-events-api-proto</artifactId>
+            <artifactId>953-events-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

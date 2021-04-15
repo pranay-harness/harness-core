@@ -1,5 +1,7 @@
 package io.harness.cvng.activity.services.api;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
@@ -13,11 +15,14 @@ import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 
 import java.time.Instant;
 import java.util.List;
-
+@OwnedBy(HarnessTeam.CV)
 public interface ActivityService {
   Activity get(String activityId);
   Activity getByVerificationJobInstanceId(String verificationJobInstanceId);
   String register(String accountId, String webhookToken, ActivityDTO activityDTO);
+
+  String register(String accountId, ActivityDTO activityDTO);
+
   CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO);
 
   void updateActivityStatus(Activity activity);

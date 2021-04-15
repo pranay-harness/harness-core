@@ -7,6 +7,7 @@ import static io.harness.yaml.core.LevelNodeQualifierName.PATH_CONNECTOR;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
@@ -54,8 +55,8 @@ public abstract class GenericStepPMSFilterJsonCreator implements FilterJsonCreat
           connectorRefs.stream()
               .filter(Objects::nonNull)
               .map(connectorRef
-                  -> FilterCreatorHelper.convertToEntityDetailProtoDTO(
-                      accountIdentifier, orgIdentifier, projectIdentifier, fullQualifiedDomainName, connectorRef))
+                  -> FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier,
+                      projectIdentifier, fullQualifiedDomainName, connectorRef, EntityTypeProtoEnum.CONNECTORS))
               .collect(Collectors.toList());
       return FilterCreationResponse.builder().referredEntities(result).build();
     }

@@ -2,7 +2,7 @@ package io.harness.resourcegroup.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
-import static io.harness.remote.NGObjectMapperHelper.ngDefaultObjectMapper;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -47,7 +47,7 @@ public class ResourceGroupEventHandler implements OutboxEventHandler {
   @Inject
   public ResourceGroupEventHandler(
       @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, AuditClientService auditClientService) {
-    this.objectMapper = ngDefaultObjectMapper;
+    this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
   }

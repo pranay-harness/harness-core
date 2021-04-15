@@ -16,6 +16,8 @@ import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
+import io.harness.plancreator.steps.common.SpecParameters;
+import io.harness.plancreator.steps.common.WithStepElementParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.StepSpecType;
 
@@ -29,10 +31,10 @@ import java.util.List;
               SaveCacheGCSStepInfo.class, SaveCacheS3StepInfo.class, UploadToGCSStepInfo.class,
               UploadToS3StepInfo.class, UploadToArtifactoryStepInfo.class, RunTestsStepInfo.class})
 @OwnedBy(CI)
-public interface CIStepInfo extends StepSpecType {
+public interface CIStepInfo extends StepSpecType, WithStepElementParameters, SpecParameters {
   int MIN_RETRY = 0;
   int MAX_RETRY = 5;
-  long DEFAULT_TIMEOUT = Duration.ofHours(2).getSeconds();
+  long DEFAULT_TIMEOUT = Duration.ofHours(2).toMillis();
 
   @JsonIgnore TypeInfo getNonYamlInfo();
   @JsonIgnore int getRetry();
@@ -48,5 +50,10 @@ public interface CIStepInfo extends StepSpecType {
   @JsonIgnore
   default List<String> getDependencies() {
     return null;
+  }
+
+  @Override
+  default SpecParameters getSpecParameters() {
+    return this;
   }
 }

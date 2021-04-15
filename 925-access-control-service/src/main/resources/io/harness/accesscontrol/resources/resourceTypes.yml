@@ -14,3 +14,5 @@
   permissionKey: service
 - identifier: ENVIRONMENT
   permissionKey: environment
+- identifier: AUDIT
+  permissionKey: audit

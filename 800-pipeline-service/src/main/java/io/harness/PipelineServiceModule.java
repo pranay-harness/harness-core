@@ -4,9 +4,11 @@ import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -26,14 +28,17 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
+import io.harness.logstreaming.LogStreamingModule;
+import io.harness.logstreaming.LogStreamingServiceConfiguration;
+import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.logstreaming.NGLogStreamingClientFactory;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
+import io.harness.organization.OrganizationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
@@ -43,7 +48,8 @@ import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
 import io.harness.pms.approval.notification.ApprovalNotificationHandlerImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
-import io.harness.pms.event.PipelineEntityCRUDStreamListener;
+import io.harness.pms.event.entitycrud.PipelineEntityCRUDStreamListener;
+import io.harness.pms.event.webhookevent.WebhookEventStreamListener;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
@@ -65,11 +71,12 @@ import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceIm
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
-import io.harness.projectmanagerclient.ProjectManagementClientModule;
+import io.harness.project.ProjectClientModule;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.NGTriggerRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
@@ -176,9 +183,9 @@ public class PipelineServiceModule extends AbstractModule {
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), PIPELINE_SERVICE.getServiceId()));
 
-    install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+    install(new OrganizationClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new ProjectManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+    install(new ProjectClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(
         YamlSchemaClientModule.getInstance(configuration.getYamlSchemaClientConfig(), PIPELINE_SERVICE.getServiceId()));
@@ -193,6 +200,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
@@ -223,6 +231,10 @@ public class PipelineServiceModule extends AbstractModule {
     bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
     bind(JiraStepHelperService.class).to(JiraStepHelperServiceImpl.class);
     bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
+    bind(LogStreamingServiceRestClient.class)
+        .toProvider(NGLogStreamingClientFactory.builder()
+                        .logStreamingServiceBaseUrl(configuration.getLogStreamingServiceConfig().getBaseUrl())
+                        .build());
 
     registerEventsFrameworkMessageListeners();
   }
@@ -231,6 +243,10 @@ public class PipelineServiceModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(PIPELINE_ENTITY + ENTITY_CRUD))
         .to(PipelineEntityCRUDStreamListener.class);
+
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(WEBHOOK_TRIGGER_EVENT_DATA))
+        .to(WebhookEventStreamListener.class);
   }
 
   @Provides
@@ -270,6 +286,7 @@ public class PipelineServiceModule extends AbstractModule {
   List<YamlSchemaRootClass> yamlSchemaRootClasses() {
     return ImmutableList.<YamlSchemaRootClass>builder()
         .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
+        .addAll(NGTriggerRegistrars.yamlSchemaRegistrars)
         .build();
   }
 
@@ -339,5 +356,18 @@ public class PipelineServiceModule extends AbstractModule {
     ObjectMapper objectMapper = Jackson.newObjectMapper();
     PipelineServiceApplication.configureObjectMapper(objectMapper);
     return objectMapper;
+  }
+
+  @Provides
+  @Singleton
+  public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
+    return configuration.getLogStreamingServiceConfig();
+  }
+
+  @Provides
+  @Singleton
+  public PipelineServiceIteratorsConfig getIteratorsConfig() {
+    return configuration.getIteratorsConfig() == null ? PipelineServiceIteratorsConfig.builder().build()
+                                                      : configuration.getIteratorsConfig();
   }
 }

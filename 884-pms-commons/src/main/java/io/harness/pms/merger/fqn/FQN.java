@@ -1,5 +1,7 @@
 package io.harness.pms.merger.fqn;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlUtils;
 
@@ -10,6 +12,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(HarnessTeam.PIPELINE)
 public class FQN {
   private List<FQNNode> fqnList;
 
@@ -42,17 +45,34 @@ public class FQN {
 
   public String getExpressionFqn() {
     StringBuilder res = new StringBuilder();
-    for (FQNNode node : fqnList) {
-      if (node.getNodeType() == FQNNode.NodeType.KEY && !YamlUtils.shouldNotIncludeInQualifiedName(node.getKey())) {
-        res.append(node.getKey()).append('.');
-      } else if (node.getNodeType() == FQNNode.NodeType.KEY_WITH_UUID) {
-        res.append(node.getUuidValue()).append('.');
-      } else if (node.getNodeType() == FQNNode.NodeType.UUID) {
-        res.append(node.getUuidValue()).append('.');
+    for (int i = 0; i < fqnList.size(); i++) {
+      FQNNode currNode = fqnList.get(i);
+      if (currNode.getNodeType() == FQNNode.NodeType.KEY
+          && !YamlUtils.shouldNotIncludeInQualifiedName(currNode.getKey())) {
+        res.append(currNode.getKey()).append('.');
+      } else if (currNode.getNodeType() == FQNNode.NodeType.KEY_WITH_UUID) {
+        res.append(currNode.getUuidValue()).append('.');
+      } else if (currNode.getNodeType() == FQNNode.NodeType.UUID) {
+        res.append(currNode.getUuidValue()).append('.');
+        if (i < fqnList.size() - 1 && shouldSkipNextNode(currNode, fqnList.get(i + 1))) {
+          i++;
+        }
       }
     }
     String temp = res.toString();
     return temp.substring(0, temp.length() - 1);
+  }
+
+  /**
+   * It skips the next node if the currentNode is derived from name. Performs similar function as YamlUtils#265
+   * For example: In variables, it attaches the value node to the fqn `pipeline.variables.variable_name`
+   **/
+  private boolean shouldSkipNextNode(FQNNode currNode, FQNNode nextNode) {
+    if (!currNode.getUuidKey().equals(YAMLFieldNameConstants.NAME)) {
+      return false;
+    }
+    // NOTE: We are explicitly checking for value because the fqn should correspond to the value field in the yaml
+    return (nextNode.getNodeType() == FQNNode.NodeType.KEY) && nextNode.getKey().equals("value");
   }
 
   public boolean contains(FQN baseFQN) {

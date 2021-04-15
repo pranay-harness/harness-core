@@ -3,16 +3,17 @@ package io.harness.jira;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.utils.DateTimeUtils;
 
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 @OwnedBy(CDC)
 public interface JiraConstantsNG {
-  DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+  DateTimeFormatter DATE_FORMATTER = DateTimeUtils.DATE_FORMATTER;
   DateTimeFormatter[] DATE_FORMATTERS = {DATE_FORMATTER, DateTimeFormatter.ISO_LOCAL_DATE};
 
-  DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+  DateTimeFormatter DATETIME_FORMATTER = DateTimeUtils.DATETIME_FORMATTER;
   DateTimeFormatter[] DATETIME_FORMATTERS = {DATETIME_FORMATTER, DateTimeFormatter.ISO_DATE_TIME,
       DateTimeFormatter.ISO_OFFSET_DATE_TIME, DateTimeFormatter.ISO_ZONED_DATE_TIME};
 

@@ -15,6 +15,11 @@ import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.logging.LogLevel;
+import io.harness.security.PrincipalContextData;
+import io.harness.security.SourcePrincipalContextData;
+import io.harness.security.dto.Principal;
+import io.harness.security.dto.PrincipalType;
+import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.FailureResponseData;
@@ -47,5 +52,11 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(DelegateErrorHandlerException.class, 31012);
     kryo.register(KryoHandlerNotFoundException.class, 31013);
     kryo.register(ExceptionHandlerNotFoundException.class, 31014);
+
+    kryo.register(PrincipalContextData.class, 980001);
+    kryo.register(UserPrincipal.class, 980002);
+    kryo.register(SourcePrincipalContextData.class, 980003);
+    kryo.register(Principal.class, 980004);
+    kryo.register(PrincipalType.class, 980005);
   }
 }

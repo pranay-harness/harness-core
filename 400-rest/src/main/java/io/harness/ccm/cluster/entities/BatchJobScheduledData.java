@@ -55,6 +55,7 @@ public final class BatchJobScheduledData
   @Id String uuid;
   String accountId;
   String batchJobType;
+  String comments;
   long jobRunTimeMillis;
   boolean validRun;
   Instant startAt;

@@ -12,6 +12,8 @@ aeriform("//125-cd-nextgen:tests")
 
 aeriform("//130-resource-group:module")
 
+aeriform("//130-resource-group:tests")
+
 aeriform("//136-git-sync-manager:module")
 
 aeriform("//136-git-sync-manager:tests")
@@ -180,6 +182,8 @@ aeriform("//870-yaml-beans:module")
 
 aeriform("//870-yaml-beans:tests")
 
+aeriform("//871-cg-beans:module")
+
 aeriform("//874-orchestration-delay:module")
 
 aeriform("//876-orchestration-beans:module")
@@ -238,6 +242,10 @@ aeriform("//935-access-control-decision:module")
 
 aeriform("//935-access-control-decision:tests")
 
+aeriform("//940-cg-audit-service:module")
+
+aeriform("//940-cg-audit-service:tests")
+
 aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
@@ -286,8 +294,6 @@ aeriform("//950-delegate-tasks-beans:module")
 
 aeriform("//950-delegate-tasks-beans:tests")
 
-aeriform("//950-events-api:module")
-
 aeriform("//950-events-framework:module")
 
 aeriform("//950-events-framework:tests")
@@ -297,6 +303,8 @@ aeriform("//950-log-client:module")
 aeriform("//950-log-client:tests")
 
 aeriform("//950-ng-audit-commons:module")
+
+aeriform("//950-ng-authentication-service:module")
 
 aeriform("//950-ng-core:module")
 
@@ -321,6 +329,10 @@ aeriform("//950-walktree-visitor:tests")
 aeriform("//952-scm-java-client:module")
 
 aeriform("//952-scm-java-client:tests")
+
+aeriform("//953-events-api:module")
+
+aeriform("//953-events-api:tests")
 
 aeriform("//953-git-sync-commons:module")
 

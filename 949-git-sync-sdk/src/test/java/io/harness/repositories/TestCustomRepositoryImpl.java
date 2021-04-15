@@ -13,10 +13,10 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
 public class TestCustomRepositoryImpl implements TestCustomRepository {
-  private final GitAwarePersistence<SampleBean, SampleBean> mongoTemplate;
+  private final GitAwarePersistence mongoTemplate;
 
   @Override
   public SampleBean save(SampleBean sampleBean) {
-    return mongoTemplate.save(sampleBean, sampleBean);
+    return mongoTemplate.save(sampleBean, sampleBean, SampleBean.class);
   }
 }

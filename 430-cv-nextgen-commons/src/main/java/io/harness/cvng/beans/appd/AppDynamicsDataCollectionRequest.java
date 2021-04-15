@@ -8,7 +8,6 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConne
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.HashMap;
 import java.util.Map;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -20,9 +19,7 @@ import lombok.experimental.SuperBuilder;
 public abstract class AppDynamicsDataCollectionRequest extends DataCollectionRequest<AppDynamicsConnectorDTO> {
   @Override
   public Map<String, String> collectionHeaders() {
-    Map<String, String> headers = new HashMap<>();
-    headers.put("Authorization", AppDynamicsUtils.getAuthorizationHeader(getConnectorConfigDTO()));
-    return headers;
+    return AppDynamicsUtils.collectionHeaders(getConnectorConfigDTO());
   }
 
   @Override

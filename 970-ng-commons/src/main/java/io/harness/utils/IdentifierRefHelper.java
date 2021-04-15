@@ -72,6 +72,27 @@ public class IdentifierRefHelper {
     }
   }
 
+  public IdentifierRef getIdentifierRef(Scope scope, String identifier, String accountId, String orgIdentifier,
+      String projectIdentifier, Map<String, String> metadata) {
+    IdentifierRefBuilder identifierRefBuilder =
+        IdentifierRef.builder().accountIdentifier(accountId).identifier(identifier).scope(scope);
+
+    if (EmptyPredicate.isNotEmpty(metadata)) {
+      identifierRefBuilder.metadata(metadata);
+    }
+    if (scope == Scope.ACCOUNT) {
+      return identifierRefBuilder.build();
+    }
+    if (scope == Scope.ORG) {
+      return identifierRefBuilder.orgIdentifier(orgIdentifier).build();
+    }
+    if (scope == Scope.PROJECT) {
+      return identifierRefBuilder.orgIdentifier(orgIdentifier).projectIdentifier(projectIdentifier).build();
+    } else {
+      throw new InvalidRequestException("Invalid Identifier Reference.");
+    }
+  }
+
   public IdentifierRef getIdentifierRefFromEntityIdentifiers(
       String entityIdentifier, String accountId, String orgIdentifier, String projectIdentifier) {
     return IdentifierRef.builder()

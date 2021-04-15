@@ -8,7 +8,6 @@ import io.harness.cvng.beans.MetricPackDTO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -36,7 +35,7 @@ public class AppDynamicsMetricDataValidationRequest extends AppDynamicsDataColle
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    Map<String, Object> dslEnvVariables = new HashMap<>();
+    Map<String, Object> dslEnvVariables = AppDynamicsUtils.getCommonEnvVariables(getConnectorConfigDTO());
     dslEnvVariables.put("applicationName", getApplicationName());
     dslEnvVariables.put("tierName", getTierName());
     List<String> metricPaths = new ArrayList<>();

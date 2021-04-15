@@ -4,6 +4,7 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
+import io.harness.ccm.commons.entities.CEDataCleanupRequest;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -35,6 +36,27 @@ public class BatchJobScheduledDataDaoImpl implements BatchJobScheduledDataDao {
         query.criteria(BatchJobScheduledDataKeys.validRun).equal(true));
     query.order(Sort.descending(BatchJobScheduledDataKeys.endAt));
     return query.get();
+  }
+
+  public void invalidateJobs(CEDataCleanupRequest ceDataCleanupRequest) {
+    Query<BatchJobScheduledData> query =
+        hPersistence.createQuery(BatchJobScheduledData.class)
+            .filter(BatchJobScheduledDataKeys.batchJobType, ceDataCleanupRequest.getBatchJobType());
+
+    if (ceDataCleanupRequest.getAccountId() != null) {
+      query.criteria(BatchJobScheduledDataKeys.accountId).equal(ceDataCleanupRequest.getAccountId());
+    }
+
+    if (ceDataCleanupRequest.getStartAt() != null) {
+      query.criteria(BatchJobScheduledDataKeys.startAt).greaterThanOrEq(ceDataCleanupRequest.getStartAt());
+    }
+
+    UpdateOperations<BatchJobScheduledData> updateOperations =
+        hPersistence.createUpdateOperations(BatchJobScheduledData.class);
+    updateOperations.set(BatchJobScheduledDataKeys.validRun, false);
+    updateOperations.set(BatchJobScheduledDataKeys.comments, ceDataCleanupRequest.getUuid());
+    log.info("Query to invalidate jobs {}", query);
+    hPersistence.update(query, updateOperations);
   }
 
   @Override

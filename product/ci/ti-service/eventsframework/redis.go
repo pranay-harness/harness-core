@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	pb "github.com/wings-software/portal/950-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
+	pb "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
 	scmpb "github.com/wings-software/portal/product/ci/scm/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
@@ -88,7 +88,7 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 		}
 		switch x := dto.GetParsedResponse().Hook.(type) {
 		case *scmpb.ParseWebhookResponse_Push:
-			repo := dto.GetParsedResponse().GetPush().GetRepo().GetName()
+			repo := dto.GetParsedResponse().GetPush().GetRepo().GetLink()
 			p := dto.GetParsedResponse().GetPush().GetRef()
 			pList := strings.Split(p, "/")
 			branch := pList[len(pList)-1]
@@ -101,7 +101,6 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			for _, c := range dto.GetParsedResponse().GetPush().GetCommits() {
 				commitList = append(commitList, c.GetSha())
 			}
-			commitList = append(commitList, "sha")
 			// Get list of files corresponding to these sha values
 			req.Diff, err = db.GetDiffFiles(ctx, config.TimeScaleDb.CoverageTable, accountId, commitList)
 			if err != nil {

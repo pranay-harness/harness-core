@@ -1,5 +1,6 @@
 # main setup configs
 xxxxxxxx
+  rootPath: /ccm/api
   applicationConnectors:
     - type: https
       port: 6340
@@ -41,8 +42,8 @@ logging:
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
 
-mongo:
-  uri: mongodb://localhost:27017/ce-harness
+events-mongo:
+  uri: mongodb://localhost:27017/events
   connectTimeout: 30000
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000

@@ -54,6 +54,7 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.openapi.ApiClient;
 import io.harness.config.PipelineConfig;
+import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.client.CVNGService;
@@ -137,7 +138,6 @@ import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
-import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -856,7 +856,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
       @Override
       protected void configure() {
         RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
-        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+        String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
+        if (DeployMode.isOnPrem(deployMode) || redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
@@ -1313,8 +1314,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
-      install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
           configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);

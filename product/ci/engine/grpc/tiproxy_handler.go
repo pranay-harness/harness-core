@@ -62,9 +62,13 @@ func (h *tiProxyHandler) SelectTests(ctx context.Context, req *pb.SelectTestsReq
 	if repo == "" {
 		return nil, errors.New("repo not present in request")
 	}
-	branch := req.GetBranch()
-	if branch == "" {
-		return nil, errors.New("branch not present in request")
+	source := req.GetSourceBranch()
+	if source == "" {
+		return nil, errors.New("source branch not present in request")
+	}
+	target := req.GetTargetBranch()
+	if target == "" {
+		return nil, errors.New("target branch not present in request")
 	}
 	body := req.GetBody()
 	org, err := getOrgId()
@@ -87,7 +91,7 @@ func (h *tiProxyHandler) SelectTests(ctx context.Context, req *pb.SelectTestsReq
 	if err != nil {
 		return nil, err
 	}
-	selection, err := tc.SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch, body)
+	selection, err := tc.SelectTests(org, project, pipeline, build, stage, step, repo, sha, source, target, body)
 	if err != nil {
 		return nil, err
 	}

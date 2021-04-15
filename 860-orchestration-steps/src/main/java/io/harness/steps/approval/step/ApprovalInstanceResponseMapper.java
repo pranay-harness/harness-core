@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.jira.JiraIssueKeyNG;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.steps.approval.step.beans.ApprovalInstanceDetailsDTO;
 import io.harness.steps.approval.step.beans.ApprovalInstanceResponseDTO;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
@@ -77,8 +78,9 @@ public class ApprovalInstanceResponseMapper {
   }
 
   private ApprovalInstanceDetailsDTO toJiraApprovalInstanceDetailsDTO(JiraApprovalInstance instance) {
-    JiraConnectorDTO connectorDTO = jiraApprovalHelperService.getJiraConnector(instance.getAccountId(),
-        instance.getOrgIdentifier(), instance.getProjectIdentifier(), instance.getConnectorRef());
+    JiraConnectorDTO connectorDTO = jiraApprovalHelperService.getJiraConnector(
+        AmbianceUtils.getAccountId(instance.getAmbiance()), AmbianceUtils.getOrgIdentifier(instance.getAmbiance()),
+        AmbianceUtils.getProjectIdentifier(instance.getAmbiance()), instance.getConnectorRef());
 
     return JiraApprovalInstanceDetailsDTO.builder()
         .connectorRef(instance.getConnectorRef())

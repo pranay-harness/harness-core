@@ -5,7 +5,7 @@ if [[ -v "{hostname}" ]]; then
 fi
 
 if [[ -z "$MEMORY" ]]; then
-   export MEMORY=2048
+   export MEMORY=2048m
 fi
 
 if [[ -z "$COMMAND" ]]; then

@@ -26,7 +26,6 @@ import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviser;
@@ -55,6 +54,7 @@ import io.harness.timeout.TimeoutParameters;
 import io.harness.timeout.contracts.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
+import io.harness.when.utils.RunInfoUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
@@ -130,7 +130,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
             .adviserObtainments(adviserObtainmentFromMetaData)
             .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
             .whenCondition(isStepInsideRollback ? RunInfoUtils.getRunConditionForRollback(stepElement.getWhen())
-                                                : RunInfoUtils.getRunCondition(stepElement.getWhen(), false))
+                                                : RunInfoUtils.getRunCondition(stepElement.getWhen()))
             .timeoutObtainment(
                 TimeoutObtainment.newBuilder()
                     .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
