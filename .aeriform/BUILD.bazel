@@ -10,10 +10,6 @@ aeriform("//125-cd-nextgen:module")
 
 aeriform("//125-cd-nextgen:tests")
 
-aeriform("//130-resource-group:module")
-
-aeriform("//130-resource-group:tests")
-
 aeriform("//136-git-sync-manager:module")
 
 aeriform("//136-git-sync-manager:tests")
@@ -98,6 +94,8 @@ aeriform("//400-rest:supporter-test")
 
 aeriform("//400-rest:tests")
 
+aeriform("//410-cg-rest:module")
+
 aeriform("//420-delegate-agent:module")
 
 aeriform("//420-delegate-service:module")
@@ -149,6 +147,10 @@ aeriform("//820-platform-service:tests")
 aeriform("//830-notification-service:module")
 
 aeriform("//830-notification-service:tests")
+
+aeriform("//830-resource-group:module")
+
+aeriform("//830-resource-group:tests")
 
 aeriform("//835-notification-senders:module")
 

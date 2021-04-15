@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>130-resource-group</artifactId>
+            <artifactId>830-resource-group</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

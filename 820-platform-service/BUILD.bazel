@@ -5,8 +5,11 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all",
 ] + [
+    "//:lombok",
     "//830-notification-service:module",
+    "//830-resource-group:module",
     "//835-notification-senders:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
@@ -359,11 +362,7 @@ java_binary(
         "//830-notification-service/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
-    deps = shared_dependencies + [
-        "@maven//:io_netty_netty_all",
-        # keeping guava on top of maven_deps for right version resoulution
-        "//:lombok",
-    ],
+    deps = shared_dependencies,
 )
 
 test_deps = [
@@ -397,7 +396,6 @@ java_library(
     ],
     deps = shared_dependencies + test_deps + [
         "module",
-        "//:lombok",
     ],
 )
 

@@ -45,7 +45,6 @@ public class UserMembershipMigrationService implements Managed {
   private final ExecutorService executorService = Executors.newSingleThreadExecutor(
       new ThreadFactoryBuilder().setNameFormat("usermembership-migration-worker-thread").build());
   private Future userMembershipMigrationJob;
-  private Future defaultResourceGroupCreationFuture;
   Map<String, String> oldToNewRoleMap = new HashMap<>();
 
   @Inject
@@ -69,16 +68,11 @@ public class UserMembershipMigrationService implements Managed {
 
   @Override
   public void start() throws Exception {
-    defaultResourceGroupCreationFuture =
-        executorService.submit(defaultResourceGroupCreationService::defaultResourceGroupCreationJob);
     userMembershipMigrationJob = executorService.submit(this::userMembershipMigrationJob);
   }
 
   @Override
   public void stop() throws Exception {
-    if (defaultResourceGroupCreationFuture != null) {
-      defaultResourceGroupCreationFuture.cancel(true);
-    }
     if (userMembershipMigrationJob != null) {
       userMembershipMigrationJob.cancel(true);
     }
@@ -90,12 +84,20 @@ public class UserMembershipMigrationService implements Managed {
     log.info("Starting migration of UserProjectMap to UserMembership");
     SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
-      Criteria criteria = Criteria.where(UserProjectMapKeys.migrated).exists(false);
+      Criteria criteria = Criteria.where(UserProjectMapKeys.moved)
+                              .exists(false)
+                              .orOperator(Criteria.where(UserProjectMapKeys.tries).exists(false),
+                                  Criteria.where(UserProjectMapKeys.tries).lt(3));
       Optional<UserProjectMap> userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
       while (userProjectMapOptional.isPresent()) {
         UserProjectMap userProjectMap = userProjectMapOptional.get();
-        handleMigration(userProjectMap);
-        userProjectMap.setMigrated(true);
+        try {
+          handleMigration(userProjectMap);
+          userProjectMap.setMoved(true);
+        } finally {
+          int triesDone = userProjectMap.getTries() != null ? userProjectMap.getTries() : 0;
+          userProjectMap.setTries(triesDone + 1);
+        }
         userProjectMapRepository.save(userProjectMap);
         userProjectMapOptional = userProjectMapRepository.findFirstByCriteria(criteria);
       }
@@ -118,7 +120,7 @@ public class UserMembershipMigrationService implements Managed {
     List<Role> roles = userProjectMap.getRoles();
     for (Role role : roles) {
       if (!oldToNewRoleMap.containsKey(role.getName())) {
-        log.error("unidentified rolename {}found while migrating userProjectMap to userMembership", role.getName());
+        log.error("unidentified rolename {} found while migrating userProjectMap to userMembership", role.getName());
         continue;
       }
       RoleAssignmentDTO roleAssignmentDTO =
