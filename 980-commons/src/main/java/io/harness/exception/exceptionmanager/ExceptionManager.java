@@ -60,6 +60,7 @@ public class ExceptionManager {
         if (exceptionHandler != null) {
           handledException = exceptionHandler.handleException(exception);
         } else {
+          log.error("Exception:", exception);
           throw new DelegateErrorHandlerException("Exception handler not registered for exception : " + exception);
         }
         if (exception.getCause() != null) {
