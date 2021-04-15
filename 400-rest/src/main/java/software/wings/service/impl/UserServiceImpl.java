@@ -2568,12 +2568,12 @@ public class UserServiceImpl implements UserService {
   }
 
   private void addAccountRoles(User existingUser, Account account, List<Role> roles) {
-    UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     if (isNotEmpty(roles)) {
       updateOperations.addToSet("roles", roles);
     }
     if (account != null) {
-      updateOperations.addToSet(UserKeys.accounts, account);
+      updateOperations.addToSet(UserKeys.accounts, account.getUuid());
     }
     wingsPersistence.update(wingsPersistence.createQuery(User.class)
                                 .filter(UserKeys.email, existingUser.getEmail())
