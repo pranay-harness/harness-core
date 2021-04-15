@@ -13,10 +13,12 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -52,7 +54,8 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
                   .tookEffectAt(System.currentTimeMillis())
                   .interruptType(InterruptType.PAUSE_ALL)
                   .interruptConfig(interrupt.getInterruptConfig())
-                  .build()));
+                  .build()),
+          EnumSet.noneOf(Status.class));
       return pauseParents(nodeExecution.getParentId(), interruptId);
     } else {
       return false;

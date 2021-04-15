@@ -13,6 +13,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.data.StepOutcomeRef;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.io.StepOutcomeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.utils.RetryUtils;
@@ -21,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +69,7 @@ public class EndNodeExecutionHelper {
       if (stepResponse.getStatus() != EXPIRED) {
         setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, new ArrayList<>());
       }
-    });
+    }, EnumSet.noneOf(Status.class));
   }
 
   private List<StepOutcomeRef> handleOutcomes(
@@ -107,7 +109,7 @@ public class EndNodeExecutionHelper {
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
       setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
-    });
+    }, EnumSet.noneOf(Status.class));
   }
 
   public void endNodeForNullAdvise(NodeExecution nodeExecution) {

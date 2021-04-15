@@ -13,6 +13,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.registries.timeout.TimeoutRegistry;
@@ -31,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -61,7 +63,9 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
     TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
 
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), INTERVENTION_WAITING,
-        ops -> ops.set(NodeExecutionKeys.adviserTimeoutInstanceIds, Arrays.asList(instance.getUuid())));
+        ops
+        -> ops.set(NodeExecutionKeys.adviserTimeoutInstanceIds, Arrays.asList(instance.getUuid())),
+        EnumSet.noneOf(Status.class));
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .eventType(OrchestrationEventType.INTERVENTION_WAIT_START)
                                .ambiance(nodeExecution.getAmbiance())
