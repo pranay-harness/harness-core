@@ -32,7 +32,7 @@ public class OutboxEventPollJob implements Runnable {
   private final PersistentLocker persistentLocker;
   private final OutboxPollConfiguration outboxPollConfiguration;
   private final OutboxEventFilter outboxEventFilter;
-  private Retry retry;
+  private final Retry retry;
   private static final String OUTBOX_POLL_JOB_LOCK = "OUTBOX_POLL_JOB_LOCK";
 
   @Inject

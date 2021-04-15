@@ -14,4 +14,5 @@ public class ResourceTypeConstants {
   public static final String USER_GROUP = "usergroup";
   public static final String SECRET = "secret";
   public static final String RESOURCE_GROUP = "resourcegroup";
+  public static final String USER = "user";
 }
