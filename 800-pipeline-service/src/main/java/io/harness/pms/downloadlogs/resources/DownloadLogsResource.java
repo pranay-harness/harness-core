@@ -63,8 +63,8 @@ public class DownloadLogsResource {
     DownloadLogsEntity createdEntity = downloadLogsService.create(entity);
 
     String downloadId = createdEntity.getUuid();
-    // TODO: Call function to generate Download link
-    String downloadLink = "myDummyDownloadLink" + downloadId;
+    String downloadLink = downloadLogsService.generateDownloadURL(downloadId);
+    // TODO: Call function to populate Download link
 
     return ResponseDTO.newResponse(createdEntity.getVersion().toString(),
         DownloadLogsMapper.toDownloadLogsResponseDTO(downloadLink, createdEntity.getValidUntil()));

@@ -10,4 +10,6 @@ public interface DownloadLogsService {
   DownloadLogsEntity getByDownloadId(String downloadId);
 
   void verifyLogKey(String logKey, String accountId, String orgId, String projectId, String pipelineId);
+
+  String generateDownloadURL(String downloadId);
 }

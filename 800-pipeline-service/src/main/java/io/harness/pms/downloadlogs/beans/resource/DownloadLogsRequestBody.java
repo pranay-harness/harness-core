@@ -1,8 +1,6 @@
 package io.harness.pms.downloadlogs.beans.resource;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.Date;
 import javax.ws.rs.DefaultValue;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,6 +12,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DownloadLogsRequestBody {
-  @DefaultValue("36h") String timeToLive;
+  @DefaultValue("6h") String timeToLive;
   @NonNull String logKey;
 }
