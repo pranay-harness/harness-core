@@ -47,6 +47,7 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
     InterventionWaitAdvise interventionWaitAdvise = adviserResponse.getInterventionWaitAdvise();
 
+    timeoutEngine.deleteTimeouts(nodeExecution.getTimeoutInstanceIds());
     TimeoutCallback timeoutCallback =
         new InterventionWaitTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
     TimeoutObtainment timeoutObtainment =
