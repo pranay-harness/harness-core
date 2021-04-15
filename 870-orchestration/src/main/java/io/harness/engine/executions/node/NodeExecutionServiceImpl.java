@@ -196,9 +196,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
    */
 
   @Override
-  public NodeExecution updateStatusWithOps(
-      @NonNull String nodeExecutionId, @NonNull Status status, Consumer<Update> ops) {
-    EnumSet<Status> allowedStartStatuses = StatusUtils.nodeAllowedStartSet(status);
+  public NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status status,
+      Consumer<Update> ops, EnumSet<Status> overrideStatusSet) {
+    EnumSet<Status> allowedStartStatuses =
+        isEmpty(overrideStatusSet) ? StatusUtils.nodeAllowedStartSet(status) : overrideStatusSet;
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).in(allowedStartStatuses));
     Update updateOps = new Update()

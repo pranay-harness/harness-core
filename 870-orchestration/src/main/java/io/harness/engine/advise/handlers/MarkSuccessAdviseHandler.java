@@ -15,6 +15,7 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.util.EnumSet;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class MarkSuccessAdviseHandler implements AdviserResponseHandler {
@@ -26,7 +27,8 @@ public class MarkSuccessAdviseHandler implements AdviserResponseHandler {
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
     Status fromStatus = nodeExecution.getStatus();
     MarkSuccessAdvise markSuccessAdvise = adviserResponse.getMarkSuccessAdvise();
-    nodeExecutionService.updateStatus(nodeExecution.getUuid(), Status.SUCCEEDED);
+    nodeExecutionService.updateStatusWithOps(
+        nodeExecution.getUuid(), Status.SUCCEEDED, null, EnumSet.of(Status.FAILED, Status.EXPIRED));
     if (EmptyPredicate.isNotEmpty(markSuccessAdvise.getNextNodeId())) {
       PlanNodeProto nextNode = Preconditions.checkNotNull(planExecutionService.fetchExecutionNode(
           nodeExecution.getAmbiance().getPlanExecutionId(), markSuccessAdvise.getNextNodeId()));

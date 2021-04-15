@@ -27,6 +27,7 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.util.EnumSet;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -81,7 +82,8 @@ public class PauseAllInterruptHandler implements InterruptHandler {
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(interrupt.getType())
                 .interruptConfig(interrupt.getInterruptConfig())
-                .build()));
+                .build()),
+        EnumSet.noneOf(Status.class));
 
     waitNotifyEngine.waitForAllOn(
         publisherName, EngineResumeAllCallback.builder().nodeExecutionId(nodeExecutionId).build(), interrupt.getUuid());
