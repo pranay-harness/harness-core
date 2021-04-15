@@ -3,6 +3,8 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+HarnessTeam = "CI"
+
 shared_dependencies = [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
