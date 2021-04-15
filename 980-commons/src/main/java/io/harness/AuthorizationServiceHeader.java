@@ -17,6 +17,7 @@ public enum AuthorizationServiceHeader {
   AUDIT_SERVICE("AuditService"),
   PIPELINE_SERVICE("PipelineService"),
   ACCESS_CONTROL_SERVICE("accessControlService"),
+  RESOUCE_GROUP_SERVICE("ResourceGroupService"),
   DEFAULT("Default");
 
   private final String serviceId;
