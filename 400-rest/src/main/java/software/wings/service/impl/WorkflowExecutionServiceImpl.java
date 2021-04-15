@@ -4095,7 +4095,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         } else if (nextStateType == PCF_RESIZE) {
           PcfDeployStateExecutionData pcfDeployStateExecutionData =
               (PcfDeployStateExecutionData) next.fetchStateExecutionData();
-          instanceStatusSummaries.addAll(pcfDeployStateExecutionData.getNewInstanceStatusSummaries());
+          if (isNotEmpty(pcfDeployStateExecutionData.getNewInstanceStatusSummaries())) {
+            instanceStatusSummaries.addAll(pcfDeployStateExecutionData.getNewInstanceStatusSummaries());
+          }
         } else if (nextStateType == CUSTOM_DEPLOYMENT_FETCH_INSTANCES) {
           StateExecutionData stateExecutionData = next.fetchStateExecutionData();
           if (stateExecutionData instanceof InstanceFetchStateExecutionData) {
