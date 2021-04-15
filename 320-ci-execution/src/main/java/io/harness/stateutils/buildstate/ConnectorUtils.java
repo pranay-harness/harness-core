@@ -460,7 +460,6 @@ public class ConnectorUtils {
       throw new CIStageExecutionException(format("Unable to get connector information : [%s] with scope: [%s]",
           connectorRef.getIdentifier(), connectorRef.getScope()));
     }
-
     if (!connectorDTO.isPresent()) {
       throw new CIStageExecutionException(format("Connector not found for identifier : [%s] with scope: [%s]",
           connectorRef.getIdentifier(), connectorRef.getScope()));
