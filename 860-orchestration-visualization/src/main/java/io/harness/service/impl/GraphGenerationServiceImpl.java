@@ -16,7 +16,6 @@ import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.event.GraphStatusUpdateHelper;
-import io.harness.event.NodeExecutionUpdateEventHandler;
 import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
@@ -52,7 +51,6 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject OrchestrationStartEventHandler orchestrationStartEventHandler;
   @Inject OrchestrationEndEventHandler orchestrationEndEventHandler;
   @Inject PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
-  @Inject NodeExecutionUpdateEventHandler nodeExecutionUpdateEventHandler;
   @Inject GraphStatusUpdateHelper graphStatusUpdateHelper;
 
   @Override
@@ -173,6 +171,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         OrchestrationEventType eventType = orchestrationEventLog.getEvent().getEventType();
         switch (eventType) {
           case NODE_EXECUTION_STATUS_UPDATE:
+          case NODE_EXECUTION_UPDATE:
             orchestrationGraph =
                 graphStatusUpdateHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
             break;
@@ -186,10 +185,6 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
           case PLAN_EXECUTION_STATUS_UPDATE:
             orchestrationGraph =
                 planExecutionStatusUpdateEventHandler.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
-            break;
-          case NODE_EXECUTION_UPDATE:
-            orchestrationGraph =
-                nodeExecutionUpdateEventHandler.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
             break;
           default:
             // do Nothing
