@@ -65,7 +65,7 @@ public class WatcherBazelDependencyCheckTest extends CategoryTest {
       }
     }
 
-    assertThat(mismatchedVersions.stream().sorted()).hasSize(17);
+    assertThat(mismatchedVersions.stream().sorted()).hasSize(15);
   }
 
   List<String> getDepsInMavenInstallJson() throws IOException {
