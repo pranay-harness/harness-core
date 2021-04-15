@@ -1,0 +1,371 @@
+[{
+  "metricName" : "WebTransactionTotalTime/SpringController/products/mayWeSuggestViews (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 1.6666666666666667,
+	"controlValue" : 2.0869565217391304
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/v2/returns (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.16666666666666666
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/utility/programControls (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 1.6666666666666667,
+	"controlValue" : 1.7391304347826086
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/v2/returns/method/list (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.5555555555555556
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/purchaseorders/poCartItems (DELETE)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.0
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/v2/returns (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.23529411764705882
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/solr/hybridSearch (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.5,
+	"controlValue" : 0.05263157894736842
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/vendors/groups (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/omni/session-attribution/create (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.0
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/v2/discount (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.2222222222222222
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/freightClaims/trackingNumbers (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.8571428571428571,
+	"controlValue" : 0.96
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/returns/upsLabelRequestQuoted (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.0
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/v2/returns/fault/list (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.4444444444444444
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/remittance/batches (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.0
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/products (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "LOW",
+	"testValue" : 27.714285714285715,
+	"controlValue" : 30.580645161290324
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/v2/projects (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.0
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/v2/projects/timelines (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.10526315789473684
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/returns/ncrOrderNumber (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.8571428571428571,
+	"controlValue" : 0.65
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/vendors/shipping-coverage (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "LOW",
+	"testValue" : 9.666666666666666,
+	"controlValue" : 10.043478260869565
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/purchaseorders/saveItemsShipped (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.3333333333333333,
+	"controlValue" : 0.4
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/ge/v2/availability (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.15789473684210525
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/risk/userRiskReason (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.1111111111111111
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/v2/projects/quick-starts (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 3.3333333333333335,
+	"controlValue" : 4.631578947368421
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/products/drops/finish/uniqueId (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "LOW",
+	"testValue" : 179.33333333333334,
+	"controlValue" : 179.05263157894737
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/spifs/updateSpifOrderItemQuantities (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.0
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/purchaseorders/backorder (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/users/userChangeLogByType (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "LOW",
+	"testValue" : 12.285714285714286,
+	"controlValue" : 9.19047619047619
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/v2/returns/returnShipments (POST)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.0,
+	"controlValue" : 0.03333333333333333
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/v2/projects/checklists (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "LOW",
+	"testValue" : 25.25,
+	"controlValue" : 27.142857142857142
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/vendors/ndcStock (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.6666666666666666,
+	"controlValue" : 1.55
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "SpringController/autopmg/v2/customerRules (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.3333333333333333,
+	"controlValue" : 0.4230769230769231
+  } ],
+  "tag" : "DEFAULT"
+}, {
+  "metricName" : "WebTransactionTotalTime/SpringController/vendors/parentVendor (GET)",
+  "riskLevel" : "LOW",
+  "metricValues" : [ {
+	"name" : "requestsPerMinute",
+	"type" : "THROUGHPUT",
+	"alertType" : "1",
+	"riskLevel" : "NA",
+	"testValue" : 0.3333333333333333,
+	"controlValue" : 0.8695652173913043
+  } ],
+  "tag" : "DEFAULT"
+}]

@@ -714,10 +714,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     setOverAllRisk(deploymentTimeSeriesAnalysis, metricAnalyses);
     deploymentTimeSeriesAnalysis.setTotal(metricAnalyses.size());
 
-    List<NewRelicMetricAnalysis> riskyMetrics =
-        metricAnalyses.stream()
-            .filter(newRelicMetricAnalysis -> !newRelicMetricAnalysis.getRiskLevel().equals(RiskLevel.LOW))
-            .collect(Collectors.toList());
     Collections.sort(metricAnalyses);
     for (int i = txnOffset; i < metricAnalyses.size() && i < txnOffset + txnPageSize; i++) {
       deploymentTimeSeriesAnalysis.getMetricAnalyses().add(metricAnalyses.get(i));
