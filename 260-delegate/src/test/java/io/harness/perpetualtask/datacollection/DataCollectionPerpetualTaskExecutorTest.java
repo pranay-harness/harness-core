@@ -207,7 +207,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
                         new String(appDynamicsConnectorDTO.getPasswordRef().getDecryptedValue()))
                     .getBytes(StandardCharsets.UTF_8)));
     Map<String, Object> otherEnvVariables = runtimeParameters.getOtherEnvVariables();
-    assertThat(otherEnvVariables.size()).isEqualTo(4);
+    assertThat(otherEnvVariables.size()).isEqualTo(5);
     assertThat(otherEnvVariables.get("applicationName")).isEqualTo(dataCollectionInfo.getApplicationName());
     assertThat(otherEnvVariables.get("tierName")).isEqualTo(dataCollectionInfo.getTierName());
     assertThat(otherEnvVariables.get("collectHostData")).isEqualTo("false");

@@ -2834,6 +2834,13 @@
             "apiKeyRef": {
               "type": "string"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "newRelicAccountId": {
               "type": "string"
             },
