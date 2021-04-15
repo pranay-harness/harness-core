@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -20,6 +23,7 @@ import com.google.inject.Inject;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(DX)
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UpdateUserGroupPermissionsDataFetcher
@@ -39,6 +43,10 @@ public class UpdateUserGroupPermissionsDataFetcher
         userGroupPermissionsController.populateUserGroupAccountPermissionEntity(parameters.getPermissions());
     Set<AppPermission> appPermissions =
         userGroupPermissionsController.populateUserGroupAppPermissionEntity(parameters.getPermissions());
+    log.info("Testing: Setting app permissions {} of user group {} for account {} from graphql", appPermissions,
+        parameters.getUserGroupId(), accountId);
+    log.info("Testing: Setting account permissions {} of user group {} for account {} from graphql", accountPermissions,
+        parameters.getUserGroupId(), accountId);
     return userGroupService.setUserGroupPermissions(
         accountId, parameters.getUserGroupId(), accountPermissions, appPermissions);
   }

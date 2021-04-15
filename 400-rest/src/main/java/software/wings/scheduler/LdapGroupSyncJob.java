@@ -1,14 +1,19 @@
 package software.wings.scheduler;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
@@ -22,12 +27,14 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserResponse;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.WingsPersistence;
 import software.wings.features.LdapFeature;
 import software.wings.features.api.PremiumFeature;
 import software.wings.helpers.ext.ldap.LdapConstants;
@@ -60,18 +67,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
-
 /**
  * Periodic job which syncs the LDAP group users with the linked group in Harness for given SSO provider
  *
  * @author Swapnil
  */
+
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANGER)
 @Slf4j
 public class LdapGroupSyncJob implements Job {
   private static final SecureRandom random = new SecureRandom();
@@ -90,6 +102,7 @@ public class LdapGroupSyncJob implements Job {
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
   @Inject private AccountService accountService;
+  @Inject private WingsPersistence wingsPersistence;
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
 
   public static void addWithDelay(PersistentScheduler jobScheduler, String accountId, String ssoId) {
@@ -195,8 +208,13 @@ public class LdapGroupSyncJob implements Job {
 
   @VisibleForTesting
   UserGroup syncUserGroupMetadata(UserGroup userGroup, LdapGroupResponse groupResponse) {
-    userGroup.setSsoGroupName(groupResponse.getName());
-    return userGroupService.save(userGroup);
+    UpdateOperations<UserGroup> updateOperations = wingsPersistence.createUpdateOperations(UserGroup.class);
+    setUnset(updateOperations, UserGroupKeys.ssoGroupName, groupResponse.getName());
+    Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
+                                 .filter("_id", userGroup.getUuid())
+                                 .field(UserGroupKeys.accountId)
+                                 .equal(userGroup.getAccountId());
+    return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
   }
 
   private void syncUserGroupMembers(String accountId, Map<UserGroup, Set<User>> removedGroupMembers,
