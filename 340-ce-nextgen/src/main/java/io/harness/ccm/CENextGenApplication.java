@@ -1,13 +1,19 @@
-package io.harness.ceng;
+package io.harness.ccm;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
+import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.persistence.HPersistence;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -23,6 +29,7 @@ import com.google.inject.Injector;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.EnumSet;
@@ -41,8 +48,9 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
 @Slf4j
+@OwnedBy(CE)
 public class CENextGenApplication extends Application<CENextGenConfiguration> {
-  private static final String APPLICATION_NAME = "CENextGen Microservice";
+  private static final String APPLICATION_NAME = "CE NextGen Microservice";
   private final MetricRegistry metricRegistry = new MetricRegistry();
 
   public static void main(String[] args) throws Exception {
@@ -77,8 +85,8 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
         20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting CE NextGen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(
-        new io.harness.ceng.CENextGenModule(configuration), new MetricRegistryModule(metricRegistry));
+    Injector injector =
+        Guice.createInjector(new CENextGenModule(configuration), new MetricRegistryModule(metricRegistry));
 
     // create collection and indexes
     injector.getInstance(HPersistence.class);
@@ -89,7 +97,19 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     registerResources(environment, injector);
     initializeFeatureFlags(configuration, injector);
     registerHealthCheck(environment, injector);
+    registerExceptionMappers(environment.jersey());
+    registerCorrelationFilter(environment, injector);
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerExceptionMappers(JerseyEnvironment jersey) {
+    jersey.register(JerseyViolationExceptionMapperV2.class);
+    jersey.register(WingsExceptionMapperV2.class);
+    jersey.register(GenericExceptionMapperV2.class);
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
