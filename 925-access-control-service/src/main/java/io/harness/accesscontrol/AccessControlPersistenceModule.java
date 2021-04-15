@@ -104,10 +104,10 @@ public class AccessControlPersistenceModule extends PersistenceModule {
 
   @Override
   protected Class<?>[] getConfigClasses() {
-    return new Class[] {ResourceTypePersistenceConfig.class, ResourceGroupPersistenceConfig.class,
-        UserGroupPersistenceConfig.class, PermissionPersistenceConfig.class, RolePersistenceConfig.class,
-        RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class, AggregatorPersistenceConfig.class,
-        AccessControlPreferencePersistenceConfig.class, OutboxPersistenceConfig.class};
+    return new Class[] {OutboxPersistenceConfig.class, ResourceTypePersistenceConfig.class,
+        ResourceGroupPersistenceConfig.class, UserGroupPersistenceConfig.class, PermissionPersistenceConfig.class,
+        RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class,
+        AggregatorPersistenceConfig.class, AccessControlPreferencePersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {
