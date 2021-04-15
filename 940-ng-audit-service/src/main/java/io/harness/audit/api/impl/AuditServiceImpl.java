@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -99,6 +100,13 @@ public class AuditServiceImpl implements AuditService {
                                           .build();
       auditYamlService.save(yamlDiffRecord);
     }
+  }
+
+  @Override
+  public Optional<AuditEvent> get(String accountIdentifier, String auditId) {
+    Criteria criteria =
+        Criteria.where(AuditEventKeys.id).is(auditId).and(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY).is(accountIdentifier);
+    return Optional.ofNullable(auditRepository.get(criteria));
   }
 
   @Override

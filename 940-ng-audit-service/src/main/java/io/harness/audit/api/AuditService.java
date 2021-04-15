@@ -9,12 +9,15 @@ import io.harness.audit.entities.AuditEvent;
 import io.harness.ng.beans.PageRequest;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 
 @OwnedBy(PL)
 public interface AuditService {
   Boolean create(AuditEventDTO auditEventDTO);
+
+  Optional<AuditEvent> get(String accountIdentifier, String auditId);
 
   Page<AuditEvent> list(
       String accountIdentifier, PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO);

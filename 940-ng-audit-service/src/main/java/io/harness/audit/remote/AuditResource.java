@@ -3,16 +3,16 @@ package io.harness.audit.remote;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
-import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.Resource;
-import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.api.AuditService;
+import io.harness.audit.api.impl.AuditPermissionValidator;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import io.harness.audit.mapper.AuditEventMapper;
 import io.harness.beans.SortOrder;
@@ -54,8 +54,7 @@ import org.springframework.data.domain.Page;
     })
 public class AuditResource {
   @Inject private final AuditService auditService;
-  @Inject private final AccessControlClient accessControlClient;
-  private static final String AUDIT_VIEW_PERMISSION = "core_audit_view";
+  @Inject private final AuditPermissionValidator auditPermissionValidator;
 
   @POST
   @ApiOperation(hidden = true, value = "Create an Audit", nickname = "postAudit")
@@ -70,10 +69,13 @@ public class AuditResource {
   public ResponseDTO<PageResponse<AuditEventDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @BeanParam PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
-    for (io.harness.audit.beans.ResourceScopeDTO resourceScopeDTO : auditFilterPropertiesDTO.getScopes()) {
-      accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, resourceScopeDTO.getOrgIdentifier(),
-                                                    resourceScopeDTO.getProjectIdentifier()),
-          Resource.NONE, AUDIT_VIEW_PERMISSION);
+    if (auditFilterPropertiesDTO != null && isNotEmpty(auditFilterPropertiesDTO.getScopes())) {
+      for (ResourceScopeDTO resourceScopeDTO : auditFilterPropertiesDTO.getScopes()) {
+        auditPermissionValidator.validate(accountIdentifier, resourceScopeDTO);
+      }
+    } else {
+      auditPermissionValidator.validate(
+          accountIdentifier, ResourceScopeDTO.builder().accountIdentifier(accountIdentifier).build());
     }
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order = SortOrder.Builder.aSortOrder().withField(AuditEventKeys.timestamp, DESC).build();
