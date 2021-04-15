@@ -3,6 +3,8 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
+HarnessTeam = "CE"
+
 shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "//350-event-xxxxxxxxmodule",
     "//375-ce-graphql:module",
