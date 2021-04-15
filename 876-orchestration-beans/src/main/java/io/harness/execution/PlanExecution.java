@@ -4,10 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.time.Duration.ofDays;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
@@ -42,6 +44,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("planExecutions")
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"plan"})
 @TypeAlias("planExecution")
+@StoreIn(DbAliases.PMS)
 public class PlanExecution implements PersistentEntity, UuidAccess {
   public static final Duration TTL = ofDays(21);
 

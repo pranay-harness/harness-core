@@ -1,11 +1,13 @@
 package io.harness.pms.pipeline;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -45,6 +47,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("pipelinesPMS")
 @TypeAlias("pipelinesPMS")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.PMS)
 public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
