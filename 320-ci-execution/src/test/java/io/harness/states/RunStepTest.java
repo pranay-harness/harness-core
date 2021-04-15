@@ -20,6 +20,7 @@ import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.RunStepProtobufSerializer;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
@@ -69,6 +70,7 @@ public class RunStepTest extends CIExecutionTestBase {
 
   @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Mock private RunStepProtobufSerializer runStepProtobufSerializer;
+  @Mock private CIExecutionServiceConfig ciExecutionServiceConfig;
   @InjectMocks RunStep runStep;
 
   private Ambiance ambiance;
@@ -128,7 +130,7 @@ public class RunStepTest extends CIExecutionTestBase {
     when(executionSweepingOutputResolver.resolve(eq(ambiance), eq(refObject3))).thenReturn(containerPortDetails);
     when(outcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(POD_DETAILS_OUTCOME)))
         .thenReturn(liteEnginePodDetailsOutcome);
-
+    when(ciExecutionServiceConfig.isLocal()).thenReturn(false);
     when(ciDelegateTaskExecutor.queueTask(any(), any())).thenReturn(callbackId);
     when(runStepProtobufSerializer.serializeStepWithStepParameters(
              any(), any(), any(), any(), any(), any(), any(), any()))
