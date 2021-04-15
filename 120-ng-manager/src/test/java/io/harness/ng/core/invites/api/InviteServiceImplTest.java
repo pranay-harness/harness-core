@@ -40,12 +40,12 @@ import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.NotificationResultWithStatus;
 import io.harness.notification.notificationclient.NotificationClient;
+import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.invites.spring.InviteRepository;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
 import com.auth0.jwt.interfaces.Claim;
-import com.mongodb.client.result.UpdateResult;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -76,6 +76,7 @@ public class InviteServiceImplTest extends CategoryTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) AccountClient accountClient;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private AccessControlAdminClient accessControlAdminClient;
   @Mock private NotificationClient notificationClient;
+  @Mock private OutboxService outboxService;
 
   private InviteService inviteService;
 
@@ -84,7 +85,8 @@ public class InviteServiceImplTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
     inviteService = new InviteServiceImpl(USER_VERIFICATION_SECRET, mongoConfig, jwtGeneratorUtils, ngUserService,
-        transactionTemplate, inviteRepository, notificationClient, accessControlAdminClient, accountClient);
+        transactionTemplate, inviteRepository, notificationClient, accessControlAdminClient, accountClient,
+        outboxService);
 
     when(accountClient.getAccountDTO(any()).execute())
         .thenReturn(Response.success(new RestResponse(AccountDTO.builder()
@@ -248,7 +250,7 @@ public class InviteServiceImplTest extends CategoryTest {
   public void deleteInvite_inviteExists() {
     ArgumentCaptor<String> idArgumentCaptor = ArgumentCaptor.forClass(String.class);
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
-    when(inviteRepository.updateInvite(any(), any())).thenReturn(UpdateResult.acknowledged(1, (long) 1, null));
+    when(inviteRepository.updateInvite(any(), any())).thenReturn(getDummyInvite());
 
     inviteService.deleteInvite(inviteId);
 

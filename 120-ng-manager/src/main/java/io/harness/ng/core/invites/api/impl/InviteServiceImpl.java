@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.invites.InviteOperationResponse.FAIL;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
+import static io.harness.ng.core.invites.remote.InviteMapper.writeDTO;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -30,6 +31,9 @@ import io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.AccountDTO;
+import io.harness.ng.core.events.UserInviteCreateEvent;
+import io.harness.ng.core.events.UserInviteDeleteEvent;
+import io.harness.ng.core.events.UserInviteUpdateEvent;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.InviteService;
@@ -46,6 +50,7 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.channeldetails.EmailChannel.EmailChannelBuilder;
 import io.harness.notification.notificationclient.NotificationClient;
+import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.invites.spring.InviteRepository;
@@ -60,7 +65,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.MongoClientURI;
-import com.mongodb.client.result.UpdateResult;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -109,6 +113,7 @@ public class InviteServiceImpl implements InviteService {
   private final NotificationClient notificationClient;
   private final AccessControlAdminClient accessControlAdminClient;
   private final AccountClient accountClient;
+  private final OutboxService outboxService;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
@@ -119,7 +124,7 @@ public class InviteServiceImpl implements InviteService {
   public InviteServiceImpl(@Named("userVerificationSecret") String jwtPasswordSecret, MongoConfig mongoConfig,
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
       InviteRepository inviteRepository, NotificationClient notificationClient,
-      AccessControlAdminClient accessControlAdminClient, AccountClient accountClient) {
+      AccessControlAdminClient accessControlAdminClient, AccountClient accountClient, OutboxService outboxService) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
     this.ngUserService = ngUserService;
@@ -128,6 +133,7 @@ public class InviteServiceImpl implements InviteService {
     this.notificationClient = notificationClient;
     this.accessControlAdminClient = accessControlAdminClient;
     this.accountClient = accountClient;
+    this.outboxService = outboxService;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -222,11 +228,19 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public Optional<Invite> deleteInvite(String inviteId) {
+    return wrapperForTransactions(this::deleteInviteInternal, inviteId);
+  }
+
+  private Optional<Invite> deleteInviteInternal(String inviteId) {
     Optional<Invite> inviteOptional = getInvite(inviteId);
     if (inviteOptional.isPresent()) {
       Update update = new Update().set(InviteKeys.deleted, TRUE);
-      UpdateResult updateResponse = inviteRepository.updateInvite(inviteId, update);
-      return updateResponse.getModifiedCount() != 1 ? Optional.empty() : inviteOptional;
+      Invite updatedInvite = inviteRepository.updateInvite(inviteId, update);
+      if (updatedInvite != null) {
+        outboxService.save(new UserInviteDeleteEvent(updatedInvite.getAccountIdentifier(),
+            updatedInvite.getOrgIdentifier(), updatedInvite.getProjectIdentifier(), writeDTO(updatedInvite)));
+      }
+      return updatedInvite == null ? Optional.empty() : Optional.of(updatedInvite);
     }
     return Optional.empty();
   }
@@ -251,6 +265,9 @@ public class InviteServiceImpl implements InviteService {
                             Date.from(OffsetDateTime.now().plusDays(INVITATION_VALIDITY_IN_DAYS).toInstant()))
                         .set(InviteKeys.roleBindings, newInvite.getRoleBindings());
     inviteRepository.updateInvite(existingInvite.getId(), update);
+    outboxService.save(
+        new UserInviteUpdateEvent(existingInvite.getAccountIdentifier(), existingInvite.getOrgIdentifier(),
+            existingInvite.getProjectIdentifier(), writeDTO(existingInvite), writeDTO(newInvite)));
     try {
       sendInvitationMail(existingInvite);
     } catch (URISyntaxException e) {
@@ -334,6 +351,8 @@ public class InviteServiceImpl implements InviteService {
 
   private InviteOperationResponse newInvite(Invite invite) {
     Invite savedInvite = inviteRepository.save(invite);
+    outboxService.save(new UserInviteCreateEvent(
+        invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(), writeDTO(invite)));
     try {
       sendInvitationMail(savedInvite);
     } catch (URISyntaxException e) {
