@@ -163,7 +163,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 	if len(nodes) == 0 {
 		// Log error message for debugging if no nodes are found
 		mdb.Log.Errorw("could not find any nodes corresponding to the pkgs and classes",
-			"pkgs", pkgs, "classes", classes)
+			"pkgs", pkgs, "classes", classes, "repo", repo, "branch", targetBranch)
 	}
 
 	nids := []int{}
@@ -221,6 +221,7 @@ func isValid(t types.RunnableTest) bool {
 }
 
 func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
+	mdb.Log.Infow("getTestsToRun call", "req", req)
 	// parse package and class names from the files
 	fileNames := []string{}
 	for _, f := range req.Files {
@@ -407,17 +408,29 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	mdb.Log.Infow(
 		fmt.Sprintf("writing %d records in nodes and %d records in relations collection",
 			len(nodes), len(rels)), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
-	_, err = mdb.Database.Collection(nodeColl).InsertMany(ctx, nodes)
-	if err != nil {
-		return errors.Wrap(
-			err,
-			fmt.Sprintf("failed to write partial cg in nodes collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+	if len(nodes) > 0 {
+		res, err := mdb.Database.Collection(nodeColl).InsertMany(ctx, nodes)
+		if err != nil {
+			return errors.Wrap(
+				err,
+				fmt.Sprintf("failed to write partial cg in nodes collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+		}
+		mdb.Log.Infow(fmt.Sprintf("inserted %d records in nodes collection", len(res.InsertedIDs)),
+			"repo", info.Repo,
+			"branch", info.Branch,
+		)
 	}
-	_, err = mdb.Database.Collection(relnsColl).InsertMany(ctx, rels)
-	if err != nil {
-		return errors.Wrap(
-			err,
-			fmt.Sprintf("failed to write partial cg in relns collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+	if len(rels) > 0 {
+		res, err := mdb.Database.Collection(relnsColl).InsertMany(ctx, rels)
+		if err != nil {
+			return errors.Wrap(
+				err,
+				fmt.Sprintf("failed to write partial cg in relns collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+		}
+		mdb.Log.Infow(fmt.Sprintf("inserted %d records in relns colection", len(res.InsertedIDs)),
+			"repo", info.Repo,
+			"branch", info.Branch,
+		)
 	}
 	return nil
 }
@@ -430,13 +443,13 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCgRequest) error {
 	commit := req.Diff.Sha
 	branch := req.TargetBranch
-	repo := req.Repo
+	repo := utils.GetRepoUrl(req.Repo)
 	files := req.Diff.Files
 
 	// merging nodes
 	// get all the nids which are from the dest branch
 	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
-	dRelIDs, err := mdb.getNodeIds(ctx, commit, branch, repo, f)
+	dNids, err := mdb.getNodeIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
@@ -448,7 +461,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	}
 
 	// list of new nodes in src branch
-	nodesToMove := utils.GetSliceDiff(srcNids, dRelIDs)
+	nodesToMove := utils.GetSliceDiff(srcNids, dNids)
 	err = mdb.mergeNodes(ctx, commit, branch, repo, nodesToMove)
 	if err != nil {
 		return err
@@ -456,7 +469,8 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 
 	// merge relations
 	// get all the nids which are from the dest branch
-	dRelIDs, err = mdb.getRelIds(ctx, commit, branch, repo, f)
+	f = bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
+	dRelIDs, err := mdb.getRelIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
@@ -478,6 +492,12 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 			deletedF = append(deletedF, f.Name)
 		}
 	}
+
+	// if deleted files are empty, there are no nodes and relations to update
+	if len(deletedF) == 0 {
+		return nil
+	}
+
 	n, err := utils.ParseFileNames(deletedF)
 	mdb.Log.Infow(fmt.Sprintf("deleted %d files", len(n)),
 		"repo", repo,
@@ -636,17 +656,17 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo string,
 func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo string, sIDs []int, dIDs []int) error {
 	// list of new relToMove in src branch
 	relToMove := utils.GetSliceDiff(sIDs, dIDs)
-	// moveing relations records
+	// moving relations records
 	// update `branch` field of the relToMove from source to dest
 	if len(relToMove) > 0 {
-		f := bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$in": relToMove}, "vcs_info.repo": repo}
+		f := bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$in": relToMove}, "vcs_info.repo": repo}
 		u := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
 		res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, u)
 		if err != nil {
 			return formatError(err, "failed to merge cg in nodes collection for", repo, branch, commit)
 		}
 		mdb.Log.Infow(
-			fmt.Sprintf("matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			fmt.Sprintf("moving records: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
 			"repo", repo,
 			"branch", branch,
 			"commit", commit,
@@ -658,6 +678,8 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 	relIDToUpdate := utils.GetSliceDiff(sIDs, relToMove)
 	mdb.Log.Infow("updating relations",
 		"relIDToUpdate", relIDToUpdate,
+		"len(sIDs)", len(sIDs),
+		"len(relToMove)", len(relToMove),
 		"repo", repo,
 		"branch", branch,
 		"commit", commit)
