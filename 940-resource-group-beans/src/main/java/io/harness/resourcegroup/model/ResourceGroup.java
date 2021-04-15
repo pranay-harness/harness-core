@@ -1,7 +1,6 @@
 package io.harness.resourcegroup.model;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.DbAliases.NG_MANAGER;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,6 +12,7 @@ import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 
@@ -43,7 +43,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("resourceGroup")
 @Entity("resourceGroup")
 @TypeAlias("resourceGroup")
-@StoreIn(NG_MANAGER)
+@StoreIn(DbAliases.RESOURCEGROUP)
 public class ResourceGroup implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
