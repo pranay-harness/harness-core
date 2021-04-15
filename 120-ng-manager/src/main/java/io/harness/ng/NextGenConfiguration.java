@@ -20,6 +20,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
+import io.harness.telemetry.segment.SegmentConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
@@ -81,6 +82,7 @@ public class NextGenConfiguration extends Configuration {
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
+  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
