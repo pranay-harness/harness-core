@@ -39,6 +39,10 @@ public class UpdateUserGroupPermissionsDataFetcher
         userGroupPermissionsController.populateUserGroupAccountPermissionEntity(parameters.getPermissions());
     Set<AppPermission> appPermissions =
         userGroupPermissionsController.populateUserGroupAppPermissionEntity(parameters.getPermissions());
+    log.info("Testing: Setting app permissions {} of user group {} for account {} from graphql", appPermissions,
+        parameters.getUserGroupId(), accountId);
+    log.info("Testing: Setting account permissions {} of user group {} for account {} from graphql", accountPermissions,
+        parameters.getUserGroupId(), accountId);
     return userGroupService.setUserGroupPermissions(
         accountId, parameters.getUserGroupId(), accountPermissions, appPermissions);
   }
