@@ -1,5 +1,8 @@
-package io.harness.ceng;
+package io.harness.ccm;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.configuration.DeployMode;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -23,11 +26,13 @@ import org.reflections.Reflections;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CE)
 public class CENextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "cenextgen-microservice";
-  public static final String BASE_PACKAGE = "io.harness.ceng";
-  public static final String RESOURCE_PACKAGE = "io.harness.ceng.remote.resources";
-  @JsonProperty("mongo") private MongoConfig mongoConfig;
+  public static final String BASE_PACKAGE = "io.harness.ccm";
+  public static final String RESOURCE_PACKAGE = "io.harness.ccm.remote.resources";
+
+  @JsonProperty("events-mongo") private MongoConfig eventsMongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
@@ -46,7 +51,7 @@ public class CENextGenConfiguration extends Configuration {
 
   public CENextGenConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
-    defaultServerFactory.setJerseyRootPath("/api");
+    defaultServerFactory.setJerseyRootPath("/ccm/api");
     defaultServerFactory.setRequestLogFactory(getDefaultlogbackAccessRequestLogFactory());
     super.setServerFactory(defaultServerFactory);
   }
