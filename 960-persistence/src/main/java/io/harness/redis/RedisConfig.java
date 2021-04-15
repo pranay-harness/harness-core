@@ -28,4 +28,5 @@ public class RedisConfig {
   private boolean useScriptCache;
   private String password;
   private String userName;
+  private RedisSSLConfig sslConfig;
 }
