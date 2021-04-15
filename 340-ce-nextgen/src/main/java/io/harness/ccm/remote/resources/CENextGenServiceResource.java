@@ -1,8 +1,13 @@
-package io.harness.ceng.remote.resources;
+package io.harness.ccm.remote.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -13,28 +18,20 @@ import javax.ws.rs.Produces;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Api("/ceng/api")
-@Path("/ceng/api")
+@Api("health")
+@Path("health")
 @Produces({"application/json"})
 @Consumes({"application/json"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
 @Slf4j
+@OwnedBy(CE)
 public class CENextGenServiceResource {
-  /**
-   * A dummy endpoint just for starter. Will be removed when other APIs are populated here
-   * @return boolean response
-   */
-
-  //  @Inject ConnectorResourceClient connectorResourceClient;
   @GET
+  @Timed
   @ApiOperation(value = "Get ce microservice base api", nickname = "test")
+  @ExceptionMetered
   public ResponseDTO<Boolean> test() {
-    //  ResponseDTO<Optional<io.harness.connector.ConnectorDTO>> response =
-    //          connectorResourceClient.get("aws0", "kmpySmUISimoRrJL6NL73w", null, null).execute().body();
-    //  log.info("{}", response.getData().get().getConnectorInfo());
     return ResponseDTO.newResponse(true);
   }
-  // CENG GCP connector helper api calls will appear here
-  // like creating a service account tailormade for the gcp cloud connector.
 }

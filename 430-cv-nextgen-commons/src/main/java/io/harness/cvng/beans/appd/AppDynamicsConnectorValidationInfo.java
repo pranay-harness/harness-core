@@ -3,7 +3,6 @@ package io.harness.cvng.beans.appd;
 import io.harness.cvng.beans.ConnectorValidationInfo;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 
-import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -27,8 +26,11 @@ public class AppDynamicsConnectorValidationInfo extends ConnectorValidationInfo<
 
   @Override
   public Map<String, String> collectionHeaders() {
-    Map<String, String> headers = new HashMap<>();
-    headers.put("Authorization", AppDynamicsUtils.getAuthorizationHeader(connectorConfigDTO));
-    return headers;
+    return AppDynamicsUtils.collectionHeaders(getConnectorConfigDTO());
+  }
+
+  @Override
+  public Map<String, Object> getDslEnvVariables() {
+    return AppDynamicsUtils.getCommonEnvVariables(getConnectorConfigDTO());
   }
 }

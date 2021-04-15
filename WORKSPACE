@@ -1963,6 +1963,7 @@ maven_install(
         "io.confluent:kafka-protobuf-serializer:5.5.1",
         "io.confluent:kafka-schema-registry-client:5.5.1",
         "io.confluent:kafka-schema-serializer:5.5.1",
+        "io.leangen.graphql:spqr:0.11.2",
         "org.apache.avro:avro:1.9.2",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.71",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.71",
@@ -2059,6 +2060,49 @@ maven_install(
         "com.squareup.okhttp3:okhttp:3.6.0",
         "org.apache.httpcomponents:httpmime:4.5.1",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+maven_install(
+    name = "batch",
+    artifacts = [
+        "com.squareup.okhttp3:okhttp:4.9.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+maven_install(
+    name = "ce_nextgen",
+    artifacts = [
+        "com.graphql-java:graphql-java:16.2",
+        "org.antlr:antlr4-runtime:4.8",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

@@ -17,15 +17,26 @@
           "required": [
             "accountId",
             "accountname",
-            "controllerUrl",
-            "passwordRef",
-            "username"
+            "controllerUrl"
           ],
           "properties": {
             "accountId": {
               "type": "string"
             },
             "accountname": {
+              "type": "string"
+            },
+            "authType": {
+              "type": "string",
+              "enum": [
+                "UsernamePassword",
+                "ApiClientToken"
+              ]
+            },
+            "clientId": {
+              "type": "string"
+            },
+            "clientSecretRef": {
               "type": "string"
             },
             "controllerUrl": {
@@ -2822,6 +2833,13 @@
           "properties": {
             "apiKeyRef": {
               "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "newRelicAccountId": {
               "type": "string"

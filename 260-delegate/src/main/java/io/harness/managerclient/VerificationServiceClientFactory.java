@@ -1,8 +1,11 @@
 package io.harness.managerclient;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.network.Http;
+import io.harness.network.NoopHostnameVerifier;
 import io.harness.security.TokenGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +24,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
+@OwnedBy(HarnessTeam.CV)
 public class VerificationServiceClientFactory implements Provider<VerificationServiceClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());
@@ -60,7 +64,7 @@ public class VerificationServiceClientFactory implements Provider<VerificationSe
           .retryOnConnectionFailure(true)
           .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
-          .hostnameVerifier((hostname, session) -> true)
+          .hostnameVerifier(new NoopHostnameVerifier())
           .build();
     } catch (Exception e) {
       throw new RuntimeException(e);
