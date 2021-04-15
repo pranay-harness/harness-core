@@ -147,3 +147,15 @@ pmsGrpcClientConfig:
 apiUrl: https://localhost:8181/#/
 
 shouldConfigureWithPMS: false
+
+enableDashboardTimescale: false
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harness"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+

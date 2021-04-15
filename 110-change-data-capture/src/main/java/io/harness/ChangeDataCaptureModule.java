@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.CDCEntity;
 import io.harness.entities.CECloudAccountCDCEntity;
+import io.harness.entities.PipelineExecutionSummaryEntityCDCEntity;
 import io.harness.persistence.HPersistence;
 import io.harness.threading.ExecutorModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -61,6 +62,7 @@ public class ChangeDataCaptureModule extends AbstractModule {
     Multibinder<CDCEntity<?>> cdcEntityMultibinder =
         Multibinder.newSetBinder(binder(), new TypeLiteral<CDCEntity<?>>() {});
     cdcEntityMultibinder.addBinding().to(CECloudAccountCDCEntity.class);
+    cdcEntityMultibinder.addBinding().to(PipelineExecutionSummaryEntityCDCEntity.class);
   }
 
   @Provides
