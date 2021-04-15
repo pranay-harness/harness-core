@@ -73,6 +73,7 @@ BAZEL_MODULES="\
   //360-cg-manager:module \
   //380-cg-graphql:module \
   //400-rest:module \
+  //410-cg-rest:module \
   //400-rest:supporter-test \
   //420-delegate-agent:module \
   //420-delegate-service:module \
@@ -365,6 +366,7 @@ build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
 build_bazel_module 380-cg-graphql
 build_bazel_module 400-rest
+build_bazel_module 410-cg-rest
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons

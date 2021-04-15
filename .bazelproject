@@ -28,6 +28,7 @@ directories:
   380-cg-graphql
   390-db-migration
   400-rest
+  410-cg-rest
   420-delegate-agent
   420-delegate-service
   430-cv-nextgen-commons
