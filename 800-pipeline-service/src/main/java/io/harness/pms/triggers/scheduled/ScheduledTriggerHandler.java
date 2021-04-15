@@ -57,13 +57,15 @@ public class ScheduledTriggerHandler implements Handler<NGTriggerEntity> {
             .maximumDelayForCheck(ofSeconds(30))
             .handler(this)
             .filterExpander(query
-                -> query.addCriteria(
-                    new Criteria()
-                        .and(NGTriggerEntityKeys.enabled)
-                        .is(true)
-                        .and(NGTriggerEntityKeys.deleted)
-                        .is(false)
-                        .andOperator(Criteria.where(NGTriggerEntityKeys.type).is(NGTriggerType.SCHEDULED))))
+                -> query.addCriteria(new Criteria()
+                                         .and(NGTriggerEntityKeys.nextIterations)
+                                         .exists(true)
+                                         .and(NGTriggerEntityKeys.type)
+                                         .is(NGTriggerType.SCHEDULED)
+                                         .and(NGTriggerEntityKeys.enabled)
+                                         .is(true)
+                                         .and(NGTriggerEntityKeys.deleted)
+                                         .is(false)))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));
