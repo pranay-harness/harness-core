@@ -178,7 +178,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
             .resourceIdentifier(projectIdentifier)
             .resourceScope(
                 ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build())
-            .resourceType("project")
+            .resourceType("PROJECT")
             .build());
     if (!hasAccess) {
       throw new AccessDeniedException(
