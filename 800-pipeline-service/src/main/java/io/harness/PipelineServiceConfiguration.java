@@ -13,6 +13,7 @@ import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -65,6 +66,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("enableAuth") private boolean enableAuth;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
 
   private String managerServiceSecret;
   private String managerTarget;

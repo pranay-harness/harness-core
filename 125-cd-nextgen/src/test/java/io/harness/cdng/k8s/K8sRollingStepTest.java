@@ -20,6 +20,7 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -47,9 +48,10 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   public void testExecuteK8sTask() {
     K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
     stepParameters.setSkipDryRun(ParameterField.createValueField(true));
-    stepParameters.setTimeout(ParameterField.createValueField("30m"));
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
 
-    K8sRollingDeployRequest request = executeTask(stepParameters, K8sRollingDeployRequest.class);
+    K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
     assertThat(request.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
@@ -65,11 +67,12 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   public void testExecuteK8sTaskNullParameterFields() {
     K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
     stepParameters.setSkipDryRun(ParameterField.ofNull());
-    stepParameters.setTimeout(ParameterField.ofNull());
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
 
-    K8sRollingDeployRequest request = executeTask(stepParameters, K8sRollingDeployRequest.class);
+    K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepElementParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
@@ -79,6 +82,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testOutcomesInResponse() {
     K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 
     K8sDeployResponse k8sDeployResponse =
         K8sDeployResponse.builder()
@@ -88,7 +92,8 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
             .build();
     when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
 
-    StepResponse response = k8sRollingStep.finalizeExecution(ambiance, stepParameters, null, () -> k8sDeployResponse);
+    StepResponse response =
+        k8sRollingStep.finalizeExecution(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(response.getStepOutcomes()).hasSize(1);
 

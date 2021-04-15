@@ -11,6 +11,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
@@ -28,7 +29,7 @@ import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
-public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>, K8sStepExecutor {
+public class K8sApplyStep implements TaskChainExecutable<StepElementParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_APPLY.getYamlType()).build();
   private final String K8S_APPLY_COMMAND_NAME = "K8s Apply";
@@ -36,29 +37,30 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
   @Inject private K8sStepHelper k8sStepHelper;
 
   @Override
-  public Class<K8sApplyStepParameters> getStepParametersClass() {
-    return K8sApplyStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 
   @Override
   public TaskChainResponse startChainLink(
-      Ambiance ambiance, K8sApplyStepParameters k8sApplyStepParameters, StepInputPackage inputPackage) {
-    return k8sStepHelper.startChainLink(this, ambiance, k8sApplyStepParameters);
+      Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, K8sApplyStepParameters k8sApplyStepParameters,
+  public TaskChainResponse executeNextLink(Ambiance ambiance, StepElementParameters stepElementParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
       throws Exception {
-    return k8sStepHelper.executeNextLink(this, ambiance, k8sApplyStepParameters, passThroughData, responseSupplier);
+    return k8sStepHelper.executeNextLink(this, ambiance, stepElementParameters, passThroughData, responseSupplier);
   }
 
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+      StepElementParameters stepElementParameters, List<String> valuesFileContents,
+      InfrastructureOutcome infrastructure) {
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
-    K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepParameters;
-    boolean skipDryRun =
-        !ParameterField.isNull(k8sApplyStepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
+    K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
+    boolean skipDryRun = !ParameterField.isNull(k8sApplyStepParameters.getSkipDryRun())
+        && k8sApplyStepParameters.getSkipDryRun().getValue();
     boolean skipSteadyStateCheck = !ParameterField.isNull(k8sApplyStepParameters.getSkipSteadyStateCheck())
         && k8sApplyStepParameters.getSkipSteadyStateCheck().getValue();
 
@@ -69,7 +71,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
             .releaseName(releaseName)
             .commandName(K8S_APPLY_COMMAND_NAME)
             .taskType(K8sTaskType.APPLY)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
             .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
@@ -78,11 +80,11 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
             .filePaths(k8sApplyStepParameters.getFilePaths().getValue())
             .skipSteadyStateCheck(skipSteadyStateCheck)
             .build();
-    return k8sStepHelper.queueK8sTask(stepParameters, k8sApplyRequest, ambiance, infrastructure);
+    return k8sStepHelper.queueK8sTask(stepElementParameters, k8sApplyRequest, ambiance, infrastructure);
   }
 
   @Override
-  public StepResponse finalizeExecution(Ambiance ambiance, K8sApplyStepParameters k8sApplyStepParameters,
+  public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepElementParameters,
       PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
@@ -93,9 +95,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper
-          .getFailureResponseBuilder(k8sApplyStepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
-          .build();
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
     }
     return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }

@@ -14,6 +14,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
@@ -33,7 +34,7 @@ import io.harness.supplier.ThrowingSupplier;
 import com.google.inject.Inject;
 
 @OwnedBy(HarnessTeam.CDP)
-public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepParameters, K8sDeployResponse> {
+public class K8sCanaryDeleteStep implements TaskExecutable<StepElementParameters, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY_DELETE.getYamlType()).build();
   public static final String K8S_CANARY_DELETE_COMMAND_NAME = "Canary Delete";
@@ -48,7 +49,7 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
 
   @Override
   public TaskRequest obtainTask(
-      Ambiance ambiance, K8sCanaryDeleteStepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
 
@@ -84,21 +85,21 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
             .deleteNamespacesForRelease(false)
             .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(
-                NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
+                NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepParameters, request, ambiance, infrastructure).getTaskRequest();
+    return k8sStepHelper.queueK8sTask(stepElementParameters, request, ambiance, infrastructure).getTaskRequest();
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, K8sCanaryDeleteStepParameters stepParameters,
+  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
       ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
     K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
     StepResponseBuilder responseBuilder =
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, responseBuilder).build();
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
     }
 
     if (!StepUtils.isStepInRollbackSection(ambiance)) {
@@ -110,7 +111,7 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
   }
 
   @Override
-  public Class<K8sCanaryDeleteStepParameters> getStepParametersClass() {
-    return K8sCanaryDeleteStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 }

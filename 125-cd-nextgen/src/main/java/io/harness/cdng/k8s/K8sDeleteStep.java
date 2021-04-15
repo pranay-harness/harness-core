@@ -12,6 +12,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
@@ -29,7 +30,7 @@ import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
-public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameters>, K8sStepExecutor {
+public class K8sDeleteStep implements TaskChainExecutable<StepElementParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getYamlType()).build();
   public static final String K8S_DELETE_COMMAND_NAME = "Delete";
@@ -39,9 +40,10 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
 
   @Override
   public TaskChainResponse startChainLink(
-      Ambiance ambiance, K8sDeleteStepParameters stepParameters, StepInputPackage inputPackage) {
-    validate(stepParameters);
-    return k8sStepHelper.startChainLink(this, ambiance, stepParameters);
+      Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    K8sDeleteStepParameters k8sDeleteStepParameters = (K8sDeleteStepParameters) stepElementParameters.getSpec();
+    validate(k8sDeleteStepParameters);
+    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
   }
 
   private void validate(K8sDeleteStepParameters stepParameters) {
@@ -60,8 +62,8 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
 
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
-    K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepParameters;
+      StepElementParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+    K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepParameters.getSpec();
     boolean isResourceName = io.harness.delegate.task.k8s.DeleteResourcesType.ResourceName
         == deleteStepParameters.getDeleteResources().getType();
     boolean isManifestFiles = DeleteResourcesType.ManifestPath == deleteStepParameters.getDeleteResources().getType();
@@ -89,29 +91,28 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, K8sDeleteStepParameters stepParameters,
+  public TaskChainResponse executeNextLink(Ambiance ambiance, StepElementParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
       throws Exception {
     return k8sStepHelper.executeNextLink(this, ambiance, stepParameters, passThroughData, responseSupplier);
   }
 
   @Override
-  public StepResponse finalizeExecution(Ambiance ambiance, K8sDeleteStepParameters stepParameters,
+  public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepParameters,
       PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(stepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
-          .build();
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
     }
 
     return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 
   @Override
-  public Class<K8sDeleteStepParameters> getStepParametersClass() {
-    return K8sDeleteStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 }
