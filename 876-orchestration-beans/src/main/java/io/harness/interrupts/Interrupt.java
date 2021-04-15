@@ -3,8 +3,10 @@ package io.harness.interrupts;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.advisers.InterruptConfig;
@@ -36,6 +38,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(value = "interrupts")
 @FieldNameConstants(innerTypeName = "InterruptKeys")
 @TypeAlias("interrupt")
+@StoreIn(DbAliases.PMS)
 public class Interrupt implements PersistentEntity, UuidAccess {
   public enum State { REGISTERED, PROCESSING, PROCESSED_SUCCESSFULLY, PROCESSED_UNSUCCESSFULLY, DISCARDED }
 

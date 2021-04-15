@@ -11,4 +11,5 @@ public class DbAliases {
   public static final String ACCESS_CONTROL = "accesscontrol";
   public static final String AUDITS = "ng-audits";
   public static final String RESOURCEGROUP = "resourcegroup";
+  public static final String PMS = "pms-harness";
 }
