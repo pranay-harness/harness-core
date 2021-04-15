@@ -8,10 +8,10 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters.TerraformTaskNGParametersBuilder;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
@@ -112,7 +112,7 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
             .build();
 
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformConstants.COMMAND_UNIT), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
   }
 
   private TaskRequest obtainInheritedTask(
@@ -157,7 +157,7 @@ public class TerraformApplyStep implements TaskExecutable<StepElementParameters,
             .build();
 
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformConstants.COMMAND_UNIT), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+        Collections.singletonList(TerraformCommandUnit.Apply.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
   }
 
   @Override

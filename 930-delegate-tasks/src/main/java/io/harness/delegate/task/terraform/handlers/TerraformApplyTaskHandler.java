@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
+import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.provision.TerraformConstants.RESOURCE_READY_WAIT_TIME_SECONDS;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
@@ -99,6 +100,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
       gitClient.ensureRepoLocallyClonedAndUpdated(gitBaseRequestForConfigFile);
     } catch (RuntimeException ex) {
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
       log.error("Exception in processing git operation", ex);
       return TerraformTaskNGResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -121,6 +123,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
     } catch (Exception ex) {
       log.error("Exception in copying files to provisioner specific directory", ex);
       FileUtils.deleteQuietly(new File(baseDir));
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
       return TerraformTaskNGResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))
@@ -203,12 +206,14 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
     } catch (TerraformCommandExecutionException terraformCommandExecutionException) {
       log.warn("Failed to execute TerraformApplyStep", terraformCommandExecutionException);
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
       return TerraformTaskNGResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(terraformCommandExecutionException))
           .build();
     } catch (Exception exception) {
       log.warn("Exception Occurred", exception);
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
       return TerraformTaskNGResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(exception))

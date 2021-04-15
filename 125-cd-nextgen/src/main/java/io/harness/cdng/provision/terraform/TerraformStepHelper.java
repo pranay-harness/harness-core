@@ -82,6 +82,7 @@ public class TerraformStepHelper {
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = k8sStepHelper.getConnector(connectorId, ambiance);
     String validationMessage = String.format("Invalid type for manifestType: [%s]", identifier);
+    // TODO: fix manifest part, remove k8s dependency
     k8sStepHelper.validateManifest(store.getKind(), connectorDTO, validationMessage);
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
     NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
