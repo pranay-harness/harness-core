@@ -8,5 +8,5 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
 public interface DownloadLogsRepository extends PagingAndSortingRepository<DownloadLogsEntity, String> {
-  Optional<DownloadLogsEntity> findByAccountIdAndLogKey(String accountId, String logKey);
+  Optional<DownloadLogsEntity> findByLogKey(String logKey);
 }

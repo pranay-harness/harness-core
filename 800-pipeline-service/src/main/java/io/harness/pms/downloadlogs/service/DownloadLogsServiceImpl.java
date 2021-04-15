@@ -18,28 +18,20 @@ public class DownloadLogsServiceImpl implements DownloadLogsService {
   @Inject private DownloadLogsRepository downloadLogsRepository;
   @Inject private PipelineServiceConfiguration pipelineServiceConfiguration;
 
-  private static final String DUP_KEY_EXP_FORMAT_STRING =
-      "Download link for log key  [%s] under Account [%s] already exists";
-
   private static final String LOG_KEY_STARTING_FORMAT_STRING = "accountId:%s/orgId:%s/projectId:%s/pipelineId:%s/";
 
-  private static final String DOWNLOAD_LINK_FORMAT_STRING = "%s/pipeline/api/downloadLogs/%s";
+  private static final String DOWNLOAD_LINK_FORMAT_STRING = "%s/api/downloadLogs/%s";
 
   @Override
   public DownloadLogsEntity create(DownloadLogsEntity downloadLogsEntity) {
-    Optional<DownloadLogsEntity> downloadLogsEntityOptional = downloadLogsRepository.findByAccountIdAndLogKey(
-        downloadLogsEntity.getAccountId(), downloadLogsEntity.getLogKey());
-    if (downloadLogsEntityOptional.isPresent()) {
-      return downloadLogsEntityOptional.get();
-    } else {
-      return downloadLogsRepository.save(downloadLogsEntity);
-    }
+    Optional<DownloadLogsEntity> downloadLogsEntityOptional =
+        downloadLogsRepository.findByLogKey(downloadLogsEntity.getLogKey());
+    return downloadLogsEntityOptional.orElseGet(() -> downloadLogsRepository.save(downloadLogsEntity));
   }
 
   @Override
   public DownloadLogsEntity get(String accountId, String logKey) {
-    Optional<DownloadLogsEntity> downloadLogsEntityOptional =
-        downloadLogsRepository.findByAccountIdAndLogKey(accountId, logKey);
+    Optional<DownloadLogsEntity> downloadLogsEntityOptional = downloadLogsRepository.findByLogKey(logKey);
     if (downloadLogsEntityOptional.isPresent()) {
       return downloadLogsEntityOptional.get();
     }
