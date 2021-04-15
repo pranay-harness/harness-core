@@ -105,15 +105,18 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 				log.Errorw("could not establish connection with events framework Redis")
 				return errors.New("could not establish connection with events framework Redis")
 			}
-			topic := fmt.Sprintf("%s:streams:webhook_request_payload_data", config.EventsFramework.EnvNamespace)
+			var prefix string
+			if config.EventsFramework.EnvNamespace != "" {
+				prefix = fmt.Sprintf("%s:", config.EventsFramework.EnvNamespace)
+			}
+			topic := fmt.Sprintf("%sstreams:webhook_request_payload_data", prefix)
 			log.Infow("registering webhook payload consumer with events framework", "topic", topic)
 			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db, config)
 			rdb.Run()
 			log.Infow("done registering webhook consumer")
 		} else {
 			log.Errorw("events framework redis URL not configured")
-			// TODO: (vistaar) Remove this once redis client is stable
-			//return errors.New("events framework redis URL not configured")
+			return errors.New("events framework redis URL not configured")
 		}
 	} else {
 		log.Errorw("mongo DB not configured properly")
