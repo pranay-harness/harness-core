@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceListener;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 
 import com.google.inject.Injector;
@@ -61,10 +62,12 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
     // by default newScheduler does not create all needed mongo indexes.
     // it is a bit hack but we are going to add them from here
 
+    MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
+
     if (schedulerConfig.getJobStoreClass().equals(
             com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName())) {
-      MongoClientURI uri =
-          new MongoClientURI(getMongoUri(), MongoClientOptions.builder(MongoModule.defaultMongoClientOptions));
+      MongoClientURI uri = new MongoClientURI(
+          getMongoUri(), MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig)));
       try (MongoClient mongoClient = new MongoClient(uri)) {
         final String databaseName = uri.getDatabase();
         if (databaseName == null) {
@@ -115,6 +118,13 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       if (databaseName == null) {
         throw new WingsException("The mongo db uri does not specify database name");
       }
+      MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
+
+      props.setProperty("org.quartz.jobStore.mongoOptionEnableSSL", "true");
+      props.setProperty(
+          "org.quartz.jobStore.mongoOptionTrustStorePath", mongoConfig.getMongoSSLConfig().getTrustStorePath());
+      props.setProperty(
+          "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoConfig.getMongoSSLConfig().getTrustStorePassword());
 
       props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobStoreClass());
       props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());

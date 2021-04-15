@@ -13,6 +13,7 @@ import io.harness.persistence.Store;
 import io.harness.serializer.KryoModule;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
@@ -20,9 +21,16 @@ import com.google.inject.name.Named;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -31,6 +39,7 @@ import org.mongodb.morphia.ObjectFactory;
 @Slf4j
 public class MongoModule extends AbstractModule {
   private static volatile MongoModule instance;
+  private static Injector injector;
 
   static MongoModule getInstance() {
     if (instance == null) {
@@ -39,16 +48,32 @@ public class MongoModule extends AbstractModule {
     return instance;
   }
 
-  public static final MongoClientOptions defaultMongoClientOptions = MongoClientOptions.builder()
-                                                                         .retryWrites(true)
-                                                                         .connectTimeout(30000)
-                                                                         .serverSelectionTimeout(90000)
-                                                                         .maxConnectionIdleTime(600000)
-                                                                         .connectionsPerHost(300)
-                                                                         .build();
+  @Provides
+  @Named("defaultMongoClientOptions")
+  @Singleton
+  public static MongoClientOptions getDefaultMongoClientOptions(MongoConfig mongoConfig) {
+    MongoClientOptions defaultMongoClientOptions;
+
+    MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
+    if (mongoSSLConfig != null && mongoSSLConfig.isEnabled()) {
+      defaultMongoClientOptions = getMongoSslContextClientOptions(mongoConfig);
+    } else {
+      defaultMongoClientOptions = MongoClientOptions.builder()
+                                      .retryWrites(true)
+                                      .connectTimeout(30000)
+                                      .serverSelectionTimeout(90000)
+                                      .maxConnectionIdleTime(600000)
+                                      .connectionsPerHost(300)
+                                      .build();
+    }
+    return defaultMongoClientOptions;
+  }
 
   public static AdvancedDatastore createDatastore(Morphia morphia, String uri) {
-    MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(defaultMongoClientOptions));
+    MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
+
+    MongoClientURI clientUri =
+        new MongoClientURI(uri, MongoClientOptions.builder(getDefaultMongoClientOptions(mongoConfig)));
     MongoClient mongoClient = new MongoClient(clientUri);
 
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, clientUri.getDatabase());
@@ -75,6 +100,21 @@ public class MongoModule extends AbstractModule {
     MapBinder.newMapBinder(binder(), String.class, Migrator.class);
   }
 
+  private static MongoClientOptions getMongoSslContextClientOptions(MongoConfig mongoConfig) {
+    MongoClientOptions primaryMongoClientOptions;
+    primaryMongoClientOptions = MongoClientOptions.builder()
+                                    .retryWrites(true)
+                                    .connectTimeout(mongoConfig.getConnectTimeout())
+                                    .serverSelectionTimeout(mongoConfig.getServerSelectionTimeout())
+                                    .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
+                                    .connectionsPerHost(mongoConfig.getConnectionsPerHost())
+                                    .readPreference(mongoConfig.getReadPreference())
+                                    .sslContext(sslContext(mongoConfig.getMongoSSLConfig().getTrustStorePath(),
+                                        mongoConfig.getMongoSSLConfig().getTrustStorePassword()))
+                                    .build();
+    return primaryMongoClientOptions;
+  }
+
   @Provides
   @Named("primaryDatastore")
   @Singleton
@@ -87,14 +127,22 @@ public class MongoModule extends AbstractModule {
       }
     }
 
-    MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
-                                                       .retryWrites(defaultMongoClientOptions.getRetryWrites())
-                                                       .connectTimeout(mongoConfig.getConnectTimeout())
-                                                       .serverSelectionTimeout(mongoConfig.getServerSelectionTimeout())
-                                                       .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
-                                                       .connectionsPerHost(mongoConfig.getConnectionsPerHost())
-                                                       .readPreference(mongoConfig.getReadPreference())
-                                                       .build();
+    MongoClientOptions primaryMongoClientOptions;
+
+    MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
+    if (mongoSSLConfig != null && mongoSSLConfig.isEnabled()) {
+      primaryMongoClientOptions = getMongoSslContextClientOptions(mongoConfig);
+    } else {
+      primaryMongoClientOptions = MongoClientOptions.builder()
+                                      .retryWrites(true)
+                                      .connectTimeout(mongoConfig.getConnectTimeout())
+                                      .serverSelectionTimeout(mongoConfig.getServerSelectionTimeout())
+                                      .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
+                                      .connectionsPerHost(mongoConfig.getConnectionsPerHost())
+                                      .readPreference(mongoConfig.getReadPreference())
+                                      .build();
+    }
+
     MongoClientURI uri =
         new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(primaryMongoClientOptions));
     MongoClient mongoClient = new MongoClient(uri);
@@ -123,9 +171,11 @@ public class MongoModule extends AbstractModule {
   public MongoClient getLocksMongoClient(MongoConfig mongoConfig) {
     MongoClientURI uri;
     if (isNotEmpty(mongoConfig.getLocksUri())) {
-      uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(defaultMongoClientOptions));
+      uri = new MongoClientURI(
+          mongoConfig.getLocksUri(), MongoClientOptions.builder(getDefaultMongoClientOptions(mongoConfig)));
     } else {
-      uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(defaultMongoClientOptions));
+      uri = new MongoClientURI(
+          mongoConfig.getUri(), MongoClientOptions.builder(getDefaultMongoClientOptions(mongoConfig)));
     }
     return new MongoClient(uri);
   }
@@ -136,10 +186,32 @@ public class MongoModule extends AbstractModule {
   public String getLocksDatabase(MongoConfig mongoConfig) {
     MongoClientURI uri;
     if (isNotEmpty(mongoConfig.getLocksUri())) {
-      uri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(defaultMongoClientOptions));
+      uri = new MongoClientURI(
+          mongoConfig.getLocksUri(), MongoClientOptions.builder(getDefaultMongoClientOptions(mongoConfig)));
     } else {
-      uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(defaultMongoClientOptions));
+      uri = new MongoClientURI(
+          mongoConfig.getUri(), MongoClientOptions.builder(getDefaultMongoClientOptions(mongoConfig)));
     }
     return uri.getDatabase();
+  }
+
+  private static SSLContext sslContext(String keystoreFile, String password) {
+    SSLContext sslContext = null;
+    try {
+      KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+
+      InputStream in = new FileInputStream(keystoreFile);
+      keystore.load(in, password.toCharArray());
+
+      TrustManagerFactory trustManagerFactory =
+          TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(keystore);
+      sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+
+    } catch (GeneralSecurityException | IOException e) {
+      e.getCause();
+    }
+    return sslContext;
   }
 }

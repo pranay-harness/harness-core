@@ -57,6 +57,8 @@ public class MongoConfig {
 
   @JsonProperty(defaultValue = "300") @Default @NotEmpty private int connectionsPerHost = 300;
 
+  private MongoSSLConfig mongoSSLConfig;
+
   private boolean transactionsEnabled;
 
   @JsonProperty(defaultValue = "MANUAL") @Default @NotEmpty private IndexManager.Mode indexManagerMode = MANUAL;
