@@ -86,6 +86,9 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     for (EntitySetupUsageDTO referredUsage : allReferredUsages) {
       IdentifierRef ref = (IdentifierRef) referredUsage.getReferredEntity().getEntityRef();
       Map<String, String> metadata = ref.getMetadata();
+      if (metadata == null) {
+        continue;
+      }
       String fqn = metadata.get(PreFlightCheckMetadata.FQN);
 
       if (!metadata.containsKey(PreFlightCheckMetadata.EXPRESSION)) {
