@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.MOHIT;
 
 import static software.wings.beans.Account.Builder.anAccount;
@@ -14,6 +15,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
@@ -44,6 +48,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @RunWith(MockitoJUnitRunner.class)
 public class LdapGroupSyncJobTest {
   @Inject WingsPersistence wingsPersistence;

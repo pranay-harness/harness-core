@@ -16,43 +16,43 @@ import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import java.util.Map;
 import lombok.Builder;
 
 @OwnedBy(CDC)
-public class InterruptCallback implements OldNotifyCallback {
+public class AbortInterruptCallback implements OldNotifyCallback {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OrchestrationEngine engine;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   String nodeExecutionId;
   String interruptId;
-  Status finalStatus;
   InterruptConfig interruptConfig;
   InterruptType interruptType;
 
   @Builder
-  public InterruptCallback(String nodeExecutionId, String interruptId, Status finalStatus,
-      InterruptConfig interruptConfig, InterruptType interruptType) {
+  public AbortInterruptCallback(
+      String nodeExecutionId, String interruptId, InterruptConfig interruptConfig, InterruptType interruptType) {
     this.nodeExecutionId = nodeExecutionId;
     this.interruptId = interruptId;
-    this.finalStatus = finalStatus;
     this.interruptConfig = interruptConfig;
     this.interruptType = interruptType;
   }
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecutionId, finalStatus, ops -> {
-      ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
-      ops.addToSet(NodeExecutionKeys.interruptHistories,
-          InterruptEffect.builder()
-              .interruptId(interruptId)
-              .tookEffectAt(System.currentTimeMillis())
-              .interruptType(interruptType)
-              .interruptConfig(interruptConfig)
-              .build());
-    });
+    NodeExecution updatedNodeExecution =
+        nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.ABORTED, ops -> {
+          ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
+          ops.addToSet(NodeExecutionKeys.interruptHistories,
+              InterruptEffect.builder()
+                  .interruptId(interruptId)
+                  .tookEffectAt(System.currentTimeMillis())
+                  .interruptType(interruptType)
+                  .interruptConfig(interruptConfig)
+                  .build());
+        }, EnumSet.noneOf(Status.class));
     engine.endTransition(updatedNodeExecution);
     waitNotifyEngine.doneWith(nodeExecutionId + "|" + interruptId, response.values().iterator().next());
   }

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -50,34 +51,44 @@ public class NewRelicMetricPackValidationRequest extends DataCollectionRequest<N
     Map<String, Object> envVariables = new HashMap<>();
     envVariables.put("appId", applicationId);
     envVariables.put("appName", applicationName);
-    Map<String, String> queryPathMap = getQueryToPathMap();
-    envVariables.put("queries", new ArrayList<>(queryPathMap.keySet()));
-    envVariables.put("jsonPaths", new ArrayList<>(queryPathMap.values()));
-    envVariables.put("metricNames", getMetricNames());
+    List<NewRelicValidationCollectionInfo> collectionInfoList = getNewRelicValidationCollectionInfo();
+    List<String> queryList = new ArrayList<>();
+    List<String> metricNameList = new ArrayList<>();
+    List<String> jsonPathList = new ArrayList<>();
+
+    for (NewRelicValidationCollectionInfo validationCollectionInfo : collectionInfoList) {
+      queryList.add(validationCollectionInfo.getQuery());
+      jsonPathList.add(validationCollectionInfo.getJsonPath());
+      metricNameList.add(validationCollectionInfo.getMetricName());
+    }
+    envVariables.put("queries", queryList);
+    envVariables.put("jsonPaths", jsonPathList);
+    envVariables.put("metricNames", metricNameList);
     return envVariables;
   }
 
-  private List<String> getMetricNames() {
+  private List<NewRelicValidationCollectionInfo> getNewRelicValidationCollectionInfo() {
     if (metricPackDTOSet != null) {
-      List<String> metricNames = new ArrayList<>();
+      List<NewRelicValidationCollectionInfo> returnval = new ArrayList<>();
       metricPackDTOSet.forEach(metricPackDTO -> {
-        metricPackDTO.getMetrics().forEach(metricDefinitionDTO -> { metricNames.add(metricDefinitionDTO.getName()); });
+        metricPackDTO.getMetrics().forEach(metricDefinitionDTO -> {
+          returnval.add(NewRelicValidationCollectionInfo.builder()
+                            .jsonPath(metricDefinitionDTO.getValidationResponseJsonPath())
+                            .query(metricDefinitionDTO.getValidationPath())
+                            .metricName(metricDefinitionDTO.getName())
+                            .build());
+        });
       });
-      return metricNames;
+      return returnval;
     }
     return null;
   }
 
-  private Map<String, String> getQueryToPathMap() {
-    if (metricPackDTOSet != null) {
-      Map<String, String> returnMap = new HashMap<>();
-      metricPackDTOSet.forEach(metricPackDTO -> {
-        metricPackDTO.getMetrics().forEach(metricDefinitionDTO -> {
-          returnMap.put(metricDefinitionDTO.getValidationPath(), metricDefinitionDTO.getValidationResponseJsonPath());
-        });
-      });
-      return returnMap;
-    }
-    return null;
+  @Data
+  @Builder
+  static class NewRelicValidationCollectionInfo {
+    private String query;
+    private String jsonPath;
+    private String metricName;
   }
 }

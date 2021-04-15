@@ -9,7 +9,7 @@ import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
-import io.harness.engine.interrupts.InterruptCallback;
+import io.harness.engine.interrupts.AbortInterruptCallback;
 import io.harness.engine.interrupts.InterruptEventQueuePublisher;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.exception.InvalidRequestException;
@@ -52,8 +52,7 @@ public class AbortHelper {
       interruptEventQueuePublisher.send(nodeExecution.getNode().getServiceName(), interruptEvent);
 
       waitNotifyEngine.waitForAllOn(publisherName,
-          InterruptCallback.builder()
-              .finalStatus(Status.ABORTED)
+          AbortInterruptCallback.builder()
               .nodeExecutionId(nodeExecution.getUuid())
               .interruptId(interrupt.getUuid())
               .interruptType(interrupt.getType())

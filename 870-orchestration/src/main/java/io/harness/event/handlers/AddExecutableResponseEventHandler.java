@@ -16,6 +16,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.EnumSet;
 import java.util.List;
 
 @Singleton
@@ -39,7 +40,9 @@ public class AddExecutableResponseEventHandler implements SdkResponseEventHandle
           ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
     } else {
       nodeExecutionService.updateStatusWithOps(request.getNodeExecutionId(), request.getStatus(),
-          ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
+          ops
+          -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()),
+          EnumSet.noneOf(Status.class));
     }
   }
 }

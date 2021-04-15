@@ -4,6 +4,7 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
+    "//871-cg-beans:module",
     "//955-delegate-beans:module",
     "//874-orchestration-delay:module",
     "//950-wait-engine:module",

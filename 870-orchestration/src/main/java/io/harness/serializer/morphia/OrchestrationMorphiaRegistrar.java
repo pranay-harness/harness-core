@@ -3,7 +3,7 @@ package io.harness.serializer.morphia;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.interrupts.InterruptCallback;
+import io.harness.engine.interrupts.AbortInterruptCallback;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.progress.EngineProgressCallback;
@@ -31,6 +31,6 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     h.put("engine.pms.EngineFacilitationCallback", EngineFacilitationCallback.class);
     h.put("engine.pms.EngineAdviseCallback", EngineAdviseCallback.class);
     h.put("engine.progress.EngineProgressCallback", EngineProgressCallback.class);
-    h.put("engine.interrupts.InterruptCallback", InterruptCallback.class);
+    h.put("engine.interrupts.InterruptCallback", AbortInterruptCallback.class);
   }
 }

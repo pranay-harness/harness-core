@@ -1,8 +1,11 @@
-package io.harness.ceng.remote.resources;
+package io.harness.ccm.remote.resources;
+
+import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -16,6 +19,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CE)
 public class CENextGenServiceResourceTest extends CategoryTest {
   @InjectMocks CENextGenServiceResource ceNextGenServiceResource;
 

@@ -91,6 +91,7 @@ public class RetryAdviserWithRollback implements Adviser {
             .setType(AdviseType.END_PLAN)
             .build();
       case IGNORE:
+        // change here
         NextStepAdvise.Builder builder = NextStepAdvise.newBuilder();
         if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
           builder.setNextNodeId(parameters.getNextNodeId());

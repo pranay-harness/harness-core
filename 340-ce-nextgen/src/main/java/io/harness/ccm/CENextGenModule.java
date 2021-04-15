@@ -1,7 +1,9 @@
-package io.harness.ceng;
+package io.harness.ccm;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderModule;
@@ -32,10 +34,11 @@ import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProv
 import org.mongodb.morphia.converters.TypeConverter;
 import ru.vyarus.guice.validator.ValidationModule;
 
+@OwnedBy(CE)
 public class CENextGenModule extends AbstractModule {
-  private final CENextGenConfiguration configuration;
+  private final io.harness.ccm.CENextGenConfiguration configuration;
 
-  public CENextGenModule(CENextGenConfiguration configuration) {
+  public CENextGenModule(io.harness.ccm.CENextGenConfiguration configuration) {
     this.configuration = configuration;
   }
 
@@ -66,8 +69,8 @@ public class CENextGenModule extends AbstractModule {
 
       @Provides
       @Singleton
-      MongoConfig mongoConfig() {
-        return configuration.getMongoConfig();
+      MongoConfig eventsMongoConfig() {
+        return configuration.getEventsMongoConfig();
       }
     });
 
