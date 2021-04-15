@@ -182,6 +182,8 @@ aeriform("//870-yaml-beans:module")
 
 aeriform("//870-yaml-beans:tests")
 
+aeriform("//871-cg-beans:module")
+
 aeriform("//874-orchestration-delay:module")
 
 aeriform("//876-orchestration-beans:module")

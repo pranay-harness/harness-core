@@ -96,6 +96,7 @@ BAZEL_MODULES="\
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
+  //871-cg-beans:module \
   //874-orchestration-delay:module \
   //876-orchestration-beans:module \
   //878-pipeline-service-utilities:module \
@@ -384,6 +385,7 @@ build_bazel_module 870-cg-yaml-beans
 build_bazel_module 870-cg-orchestration
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
+build_bazel_module 871-cg-beans
 build_bazel_module 874-orchestration-delay
 build_bazel_module 876-orchestration-beans
 build_bazel_module 878-pipeline-service-utilities
