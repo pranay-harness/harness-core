@@ -14,6 +14,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
@@ -34,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
-public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepParameters>, K8sStepExecutor {
+public class K8sBlueGreenStep implements TaskChainExecutable<StepElementParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_BLUE_GREEN.getYamlType()).build();
   public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deploy";
@@ -43,28 +44,31 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
-  public Class<K8sBlueGreenStepParameters> getStepParametersClass() {
-    return K8sBlueGreenStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 
   @Override
   public TaskChainResponse startChainLink(
-      Ambiance ambiance, K8sBlueGreenStepParameters k8sBlueGreenStepParameters, StepInputPackage inputPackage) {
-    return k8sStepHelper.startChainLink(this, ambiance, k8sBlueGreenStepParameters);
+      Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, K8sBlueGreenStepParameters k8sBlueGreenStepParameters,
+  public TaskChainResponse executeNextLink(Ambiance ambiance, StepElementParameters stepElementParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
       throws Exception {
-    return k8sStepHelper.executeNextLink(this, ambiance, k8sBlueGreenStepParameters, passThroughData, responseSupplier);
+    return k8sStepHelper.executeNextLink(this, ambiance, stepElementParameters, passThroughData, responseSupplier);
   }
 
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+      StepElementParameters stepElementParameters, List<String> valuesFileContents,
+      InfrastructureOutcome infrastructure) {
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
-    boolean skipDryRun =
-        !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
+    K8sBlueGreenStepParameters k8sBlueGreenStepParameters =
+        (K8sBlueGreenStepParameters) stepElementParameters.getSpec();
+    boolean skipDryRun = !ParameterField.isNull(k8sBlueGreenStepParameters.getSkipDryRun())
+        && k8sBlueGreenStepParameters.getSkipDryRun().getValue();
     List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
     boolean isOpenshiftTemplate = ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType());
 
@@ -75,7 +79,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
             .releaseName(releaseName)
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.BLUE_GREEN_DEPLOY)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
             .valuesYamlList(!isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .openshiftParamList(isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
@@ -84,11 +88,11 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
             .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepParameters, k8sBGDeployRequest, ambiance, infrastructure);
+    return k8sStepHelper.queueK8sTask(stepElementParameters, k8sBGDeployRequest, ambiance, infrastructure);
   }
 
   @Override
-  public StepResponse finalizeExecution(Ambiance ambiance, K8sBlueGreenStepParameters k8sBlueGreenStepParameters,
+  public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepElementParameters,
       PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
@@ -99,9 +103,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper
-          .getFailureResponseBuilder(k8sBlueGreenStepParameters, k8sTaskExecutionResponse, responseBuilder)
-          .build();
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
     }
 
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;

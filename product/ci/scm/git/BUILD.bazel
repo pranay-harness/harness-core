@@ -20,6 +20,7 @@ go_test(
         "bitbucket_cloud_test.go",
         "git_test.go",
         "github_test.go",
+        "gitlab_test.go",
     ],
     data = [
         "testdata/branches.json",

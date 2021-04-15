@@ -17,7 +17,7 @@ import org.apache.commons.validator.routines.EmailValidator;
 @UtilityClass
 @OwnedBy(HarnessTeam.PL)
 public class InviteMapper {
-  static InviteDTO writeDTO(Invite invite) {
+  public static InviteDTO writeDTO(Invite invite) {
     if (invite == null) {
       return null;
     }

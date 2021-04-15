@@ -5,7 +5,6 @@ directories:
   110-change-data-capture
   120-ng-manager
   125-cd-nextgen
-  130-resource-group
   136-git-sync-manager
   160-model-gen-tool
   190-deployment-functional-tests
@@ -28,6 +27,7 @@ directories:
   380-cg-graphql
   390-db-migration
   400-rest
+  410-cg-rest
   420-delegate-agent
   420-delegate-service
   430-cv-nextgen-commons
@@ -42,6 +42,7 @@ directories:
   815-cg-triggers
   820-platform-service
   830-notification-service
+  830-resource-group
   835-notification-senders
   850-execution-plan
   850-ng-pipeline-commons

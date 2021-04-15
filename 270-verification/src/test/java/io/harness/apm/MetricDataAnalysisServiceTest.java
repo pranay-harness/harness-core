@@ -240,7 +240,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
     for (int i = 0; i < total; i++) {
       final TimeSeriesMLTxnSummary timeSeriesMLTxnSummary =
           timeSeriesMLAnalysisRecord.getTransactions().get(String.valueOf(i));
-      timeSeriesMLTxnSummary.setTxn_name("txn-" + i);
+      timeSeriesMLTxnSummary.setTxn_name("txn-" + (100 + i));
       timeSeriesMLTxnSummary.getMetrics().forEach((s, timeSeriesSummary) -> {
         timeSeriesSummary.setMax_risk(0);
         timeSeriesSummary.setTest_avg(0.0);
@@ -268,7 +268,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
       final NewRelicMetricAnalysis newRelicMetricAnalysis = newRelicMetricAnalysisRecord.getMetricAnalyses().get(i);
       newRelicMetricAnalysis.setRiskLevel(RiskLevel.LOW);
       newRelicMetricAnalysis.setMetricValues(Lists.newArrayList());
-      newRelicMetricAnalysis.setMetricName("txn-" + i);
+      newRelicMetricAnalysis.setMetricName("txn-" + (100 + i));
     }
 
     newRelicMetricAnalysisRecord.setStateExecutionId(stateExecutionId);
@@ -413,7 +413,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
     assertThat(metricsAnalysis.getMetricAnalyses().size()).isEqualTo(DEFAULT_PAGE_SIZE);
     assertThat(metricsAnalysis.getMetricAnalyses()).isEqualTo(metricAnalyses);
     for (int i = 0; i < DEFAULT_PAGE_SIZE; i++) {
-      assertThat(metricsAnalysis.getMetricAnalyses().get(i).getMetricName()).isEqualTo("txn-" + i);
+      assertThat(metricsAnalysis.getMetricAnalyses().get(i).getMetricName()).isEqualTo("txn-" + (100 + i));
     }
 
     // test with offset and page size
@@ -423,7 +423,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
           stateExecutionId, Optional.of(offset), Optional.of(DEFAULT_PAGE_SIZE), false);
 
       for (int i = 0; i < metricsAnalysis.getMetricAnalyses().size(); i++) {
-        assertThat(metricsAnalysis.getMetricAnalyses().get(i).getMetricName()).isEqualTo("txn-" + (offset + i));
+        assertThat(metricsAnalysis.getMetricAnalyses().get(i).getMetricName()).isEqualTo("txn-" + (offset + 100 + i));
       }
       offset += metricsAnalysis.getMetricAnalyses().size();
     }

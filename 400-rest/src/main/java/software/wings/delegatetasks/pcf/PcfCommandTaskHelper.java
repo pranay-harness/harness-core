@@ -121,6 +121,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -647,8 +648,8 @@ public class PcfCommandTaskHelper {
         pcfDeploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, executionLogCallback);
     executionLogCallback.saveExecutionLog(sb.append("# Application upsized successfully ").toString());
 
-    List<InstanceDetail> instances = detailsAfterUpsize.getInstanceDetails().stream().collect(toList());
-    instances.forEach(instance
+    List<InstanceDetail> newUpsizedInstances = filterNewUpsizedAppInstances(detailsBeforeUpsize, detailsAfterUpsize);
+    newUpsizedInstances.forEach(instance
         -> pcfInstanceElements.add(PcfInstanceElement.builder()
                                        .uuid(detailsAfterUpsize.getId() + instance.getIndex())
                                        .applicationId(detailsAfterUpsize.getId())
@@ -658,10 +659,26 @@ public class PcfCommandTaskHelper {
                                        .build()));
 
     // Instance token is ApplicationGuid:InstanceIndex, that can be used to connect to instance from outside world
+    List<InstanceDetail> instancesAfterUpsize = new ArrayList<>(detailsAfterUpsize.getInstanceDetails());
     executionLogCallback.saveExecutionLog(
         new StringBuilder().append("\n# Application state details after upsize:  ").toString());
     printApplicationDetail(detailsAfterUpsize, executionLogCallback);
-    printInstanceDetails(executionLogCallback, instances);
+    printInstanceDetails(executionLogCallback, instancesAfterUpsize);
+  }
+
+  private List<InstanceDetail> filterNewUpsizedAppInstances(
+      ApplicationDetail appDetailsBeforeUpsize, ApplicationDetail appDetailsAfterUpsize) {
+    if (isEmpty(appDetailsBeforeUpsize.getInstanceDetails()) || isEmpty(appDetailsAfterUpsize.getInstanceDetails())) {
+      return appDetailsAfterUpsize.getInstanceDetails();
+    }
+
+    List<String> alreadyUpsizedInstances =
+        appDetailsBeforeUpsize.getInstanceDetails().stream().map(InstanceDetail::getIndex).collect(toList());
+
+    return appDetailsAfterUpsize.getInstanceDetails()
+        .stream()
+        .filter(instanceDetail -> !alreadyUpsizedInstances.contains(instanceDetail.getIndex()))
+        .collect(Collectors.toList());
   }
 
   public void mapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,

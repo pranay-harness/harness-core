@@ -27,6 +27,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -87,8 +88,8 @@ public class QueueTaskAndAddExecutableResponseHandler implements SdkResponseEven
       nodeExecutionService.update(
           nodeExecutionId, ops -> ops.addToSet(NodeExecutionKeys.executableResponses, executableResponse));
     } else {
-      nodeExecutionService.updateStatusWithOps(
-          nodeExecutionId, status, ops -> ops.addToSet(NodeExecutionKeys.executableResponses, executableResponse));
+      nodeExecutionService.updateStatusWithOps(nodeExecutionId, status,
+          ops -> ops.addToSet(NodeExecutionKeys.executableResponses, executableResponse), EnumSet.noneOf(Status.class));
     }
   }
 }

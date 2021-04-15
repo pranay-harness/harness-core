@@ -57,6 +57,7 @@ import io.harness.walktree.visitor.SimpleVisitorFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.Set;
 
@@ -70,7 +71,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private SimpleVisitorFactory simpleVisitorFactory;
-  @Inject private AccessControlClient accessControlClient;
+  @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
 

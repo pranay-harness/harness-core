@@ -32,6 +32,7 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -75,8 +76,9 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   final K8sBlueGreenOutcome blueGreenOutcome =
       K8sBlueGreenOutcome.builder().primaryServiceName(primaryService).stageServiceName(stageService).build();
   final TaskRequest createdTaskRequest = TaskRequest.newBuilder().build();
-  final K8sBGSwapServicesStepParameters stepParameters =
-      K8sBGSwapServicesStepParameters.infoBuilder().timeout(ParameterField.createValueField("10m")).build();
+  final K8sBGSwapServicesStepParameters stepParameters = K8sBGSwapServicesStepParameters.infoBuilder().build();
+  final StepElementParameters stepElementParameters =
+      StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
   @Before
   public void setUp() {
@@ -87,7 +89,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   private void setupPreConditions(Ambiance ambiance) {
     doReturn(TaskChainResponse.builder().taskRequest(createdTaskRequest).build())
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
     doReturn(OptionalSweepingOutput.builder().found(true).output(blueGreenOutcome).build())
         .when(executionSweepingOutputService)
         .resolveOptional(
@@ -107,12 +109,13 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
         .resolveOptional(
             ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME));
 
-    k8sBGSwapServicesStep.obtainTask(ambiance, stepParameters, stepInputPackage);
+    k8sBGSwapServicesStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sSwapServiceSelectorsRequest> requestArgumentCaptor =
         ArgumentCaptor.forClass(K8sSwapServiceSelectorsRequest.class);
 
     verify(k8sStepHelper, times(1))
-        .queueK8sTask(eq(stepParameters), requestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(
+            eq(stepElementParameters), requestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
     K8sSwapServiceSelectorsRequest request = requestArgumentCaptor.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getService1()).isEqualTo(primaryService);
@@ -144,12 +147,13 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
 
     setupPreConditions(ambiance);
 
-    k8sBGSwapServicesStep.obtainTask(ambiance, stepParameters, stepInputPackage);
+    k8sBGSwapServicesStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sSwapServiceSelectorsRequest> requestArgumentCaptor =
         ArgumentCaptor.forClass(K8sSwapServiceSelectorsRequest.class);
 
     verify(k8sStepHelper, times(1))
-        .queueK8sTask(eq(stepParameters), requestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(
+            eq(stepElementParameters), requestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
     K8sSwapServiceSelectorsRequest request = requestArgumentCaptor.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getService1()).isEqualTo(primaryService);
@@ -166,7 +170,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
         .resolveOptional(
             ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME));
 
-    TaskRequest taskRequest = k8sBGSwapServicesStep.obtainTask(ambiance, stepParameters, stepInputPackage);
+    TaskRequest taskRequest = k8sBGSwapServicesStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     assertThat(taskRequest).isNotNull();
     assertThat(taskRequest.getSkipTaskRequest()).isNotNull();
     assertThat(taskRequest.getSkipTaskRequest().getMessage()).isEqualTo(SKIP_BG_SWAP_SERVICES_STEP_EXECUTION);
@@ -182,7 +186,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandExecutionStatus(SUCCESS)
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sBGSwapServicesOutcome.class);
@@ -201,7 +205,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandExecutionStatus(SUCCESS)
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }
@@ -216,7 +220,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandUnitsProgress(UnitProgressData.builder().build())
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, () -> responseData);
+    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(FAILED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }
@@ -235,7 +239,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     doThrow(new InvalidRequestException(MISSING_INFRASTRUCTURE_ERROR))
         .when(k8sStepHelper)
         .getInfrastructureOutcome(ambiance);
-    assertThatThrownBy(() -> k8sBGSwapServicesStep.obtainTask(ambiance, stepParameters, stepInputPackage))
+    assertThatThrownBy(() -> k8sBGSwapServicesStep.obtainTask(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(MISSING_INFRASTRUCTURE_ERROR);
 
@@ -243,7 +247,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
         .when(executionSweepingOutputService)
         .resolveOptional(
             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
-    assertThatThrownBy(() -> k8sBGSwapServicesStep.obtainTask(ambiance, stepParameters, stepInputPackage))
+    assertThatThrownBy(() -> k8sBGSwapServicesStep.obtainTask(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(BG_STEP_MISSING_ERROR);
   }

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,34 +23,11 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @EqualsAndHashCode
 @TypeAlias("k8sBGSwapServicesStepParameters")
-public class K8sBGSwapServicesStepParameters implements K8sStepParameters {
-  String name;
-  String identifier;
-  String description;
-  ParameterField<String> skipCondition;
-
-  @Override
-  public String toViewJson() {
-    return RecastOrchestrationUtils.toDocumentJson(K8sBGSwapServicesStepParameters.infoBuilder()
-                                                       .timeout(timeout)
-                                                       .name(name)
-                                                       .identifier(identifier)
-                                                       .description(description)
-                                                       .skipCondition(skipCondition)
-                                                       .build());
-  }
-
+public class K8sBGSwapServicesStepParameters implements K8sSpecParameters {
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sBGSwapServicesStepParameters(String name, String identifier, String description,
-      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun) {
-    this.name = name;
-    this.identifier = identifier;
-    this.timeout = timeout;
-    this.description = description;
-    this.skipCondition = skipCondition;
+  public K8sBGSwapServicesStepParameters(ParameterField<Boolean> skipDryRun) {
     this.skipDryRun = skipDryRun;
   }
 

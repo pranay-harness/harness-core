@@ -1,6 +1,9 @@
 package io.harness.pms.plan.execution.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.ChangeDataCapture;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -40,6 +43,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -48,6 +52,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("planExecutionsSummary")
 @TypeAlias("planExecutionsSummary")
 @HarnessEntity(exportable = true)
+@ChangeDataCapture(table = "pipeline_execution_summary_ci", dataStore = "pms-harness", fields = {},
+    handler = "PipelineExecutionSummaryEntity")
 public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 

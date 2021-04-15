@@ -15,6 +15,8 @@ import io.harness.callback.MongoDatabase;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
+import io.harness.core.ci.services.CIOverviewDashboardService;
+import io.harness.core.ci.services.CIOverviewDashboardServiceImpl;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -30,6 +32,9 @@ import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ThreadPool;
+import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.tiserviceclient.TIServiceClientModule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -113,6 +118,25 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(CIBuildInfoService.class).to(CIBuildInfoServiceImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
     bind(CIYamlSchemaService.class).to(CIYamlSchemaServiceImpl.class).in(Singleton.class);
+    bind(CIOverviewDashboardService.class).to(CIOverviewDashboardServiceImpl.class);
+    try {
+      bind(TimeScaleDBService.class)
+          .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
+    } catch (NoSuchMethodException e) {
+      log.error("TimeScaleDbServiceImpl Initialization Failed in due to missing constructor", e);
+    }
+    if (ciManagerConfiguration.getEnableDashboardTimescale() != null
+        && ciManagerConfiguration.getEnableDashboardTimescale()) {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(ciManagerConfiguration.getTimeScaleDBConfig() != null
+                  ? ciManagerConfiguration.getTimeScaleDBConfig()
+                  : TimeScaleDBConfig.builder().build());
+    } else {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(TimeScaleDBConfig.builder().build());
+    }
 
     // Keeping it to 1 thread to start with. Assuming executor service is used only to
     // serve health checks. If it's being used for other tasks also, max pool size should be increased.

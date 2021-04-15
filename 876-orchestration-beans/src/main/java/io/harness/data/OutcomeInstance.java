@@ -1,6 +1,6 @@
 package io.harness.data;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
@@ -26,7 +26,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Value
 @Builder
 @Entity(value = "outcomeInstances", noClassnameStored = true)
@@ -37,10 +37,11 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_producedBySetupIdIdx")
+                 .name("unique_producedBySetupIdRuntimeIdIdx")
                  .unique(true)
                  .field(OutcomeInstanceKeys.planExecutionId)
                  .field("producedBy.setupId")
+                 .field("producedBy.runtimeId")
                  .field(OutcomeInstanceKeys.name)
                  .build())
         .add(CompoundMongoIndex.builder()

@@ -1,0 +1,71 @@
+package io.harness.platform.resourcegroup;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceResourceClasses;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.health.HealthService;
+import io.harness.ng.core.CorrelationFilter;
+import io.harness.outbox.OutboxEventPollService;
+import io.harness.persistence.HPersistence;
+import io.harness.remote.CharsetResponseFilter;
+import io.harness.resourcegroup.ResourceGroupServiceConfig;
+import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
+import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
+
+import com.google.inject.Injector;
+import io.dropwizard.setup.Environment;
+import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.model.Resource;
+
+@Slf4j
+@OwnedBy(PL)
+public class ResourceGroupServiceSetup {
+  public static final String RESOURCE_GROUP_SERVICE = "ResourceGroupService";
+
+  public ResourceGroupServiceSetup() {
+    // sonar
+  }
+
+  public void setup(ResourceGroupServiceConfig appConfig, Environment environment, Injector injector) {
+    // Will create collections and Indexes
+    injector.getInstance(HPersistence.class);
+    registerResources(environment, injector);
+    registerCharsetResponseFilter(environment, injector);
+    registerCorrelationFilter(environment, injector);
+    registerIterators(injector);
+    registerManagedBeans(environment, injector);
+    registerHealthCheck(environment, injector);
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("ResourceGroup Application", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
+  }
+
+  private void registerIterators(Injector injector) {
+    injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
+  }
+
+  private void registerManagedBeans(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+  }
+
+  private void registerResources(Environment environment, Injector injector) {
+    for (Class<?> resource : getResourceGroupServiceResourceClasses()) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
+  }
+
+  private void registerCharsetResponseFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
+  }
+}

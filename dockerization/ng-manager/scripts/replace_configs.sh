@@ -219,27 +219,11 @@ replace_key_value accessControlAdminClient.accessControlServiceConfig.baseUrl "$
 
 replace_key_value accessControlAdminClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
 
-replace_key_value resourceGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
-
-replace_key_value resourceGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
-
-replace_key_value resourceGroupConfig.pipeline-service.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
-
-replace_key_value resourceGroupConfig.pipeline-service.secret "$PIPELINE_SERVICE_SECRET"
-
-replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
-
-replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
-
 replace_key_value outboxPollConfig.initialDelayInSeconds "$OUTBOX_POLL_INITIAL_DELAY"
 
 replace_key_value outboxPollConfig.pollingIntervalInSeconds "$OUTBOX_POLL_INTERVAL"
 
 replace_key_value outboxPollConfig.maximumRetryAttemptsForAnEvent "$OUTBOX_MAX_RETRY_ATTEMPTS"
-
-replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
-
-replace_key_value resourceGroupClientConfig.secret "$NEXT_GEN_MANAGER_SECRET"
 
 replace_key_value notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
 

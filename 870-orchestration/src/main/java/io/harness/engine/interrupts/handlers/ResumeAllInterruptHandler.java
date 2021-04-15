@@ -24,6 +24,7 @@ import io.harness.pms.sdk.core.steps.io.StatusNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,7 +79,8 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(interrupt.getType())
                 .interruptConfig(interrupt.getInterruptConfig())
-                .build()));
+                .build()),
+        EnumSet.noneOf(Status.class));
 
     return interrupt;
   }

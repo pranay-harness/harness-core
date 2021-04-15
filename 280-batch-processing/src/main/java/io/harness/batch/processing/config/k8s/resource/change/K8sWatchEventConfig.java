@@ -7,12 +7,13 @@ import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.CostEventSource;
 import io.harness.batch.processing.ccm.CostEventType;
 import io.harness.batch.processing.ccm.EnrichedEvent;
+import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.data.CostEventData.CostEventDataBuilder;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.batch.processing.k8s.EstimatedCostDiff;
 import io.harness.batch.processing.k8s.WatchEventCostEstimator;
-import io.harness.batch.processing.reader.EventReaderFactory;
+import io.harness.batch.processing.reader.PublishedMessageBatchedReader;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.support.Deduper;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
@@ -47,7 +48,6 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.support.builder.CompositeItemProcessorBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,15 +56,14 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class K8sWatchEventConfig {
   private static final int BATCH_SIZE = 100;
-  private final EventReaderFactory eventReaderFactory;
+  private final PublishedMessageDao publishedMessageDao;
   private final StepBuilderFactory stepBuilderFactory;
 
   private Cache<WorkloadId, Long> workloadLastChangeTimestamps = Caffeine.newBuilder().build();
   private Cache<WorkloadId, Deduper<WorkloadEventId>> workloadRecentHistoryCache = Caffeine.newBuilder().build();
 
-  public K8sWatchEventConfig(
-      @Qualifier("mongoEventReader") EventReaderFactory eventReaderFactory, StepBuilderFactory stepBuilderFactory) {
-    this.eventReaderFactory = eventReaderFactory;
+  public K8sWatchEventConfig(PublishedMessageDao publishedMessageDao, StepBuilderFactory stepBuilderFactory) {
+    this.publishedMessageDao = publishedMessageDao;
     this.stepBuilderFactory = stepBuilderFactory;
   }
 
@@ -72,7 +71,8 @@ public class K8sWatchEventConfig {
   @StepScope
   public ItemReader<PublishedMessage> reader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_WATCH_EVENT, startDate, endDate);
+    return new PublishedMessageBatchedReader(
+        accountId, EventTypeConstants.K8S_WATCH_EVENT, startDate, endDate, null, publishedMessageDao);
   }
 
   @Bean
