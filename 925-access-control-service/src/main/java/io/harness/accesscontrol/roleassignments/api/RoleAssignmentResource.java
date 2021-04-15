@@ -6,6 +6,7 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PACKAGE;
@@ -20,6 +21,9 @@ import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentUpdateResult;
+import io.harness.accesscontrol.roleassignments.events.RoleAssignmentCreateEvent;
+import io.harness.accesscontrol.roleassignments.events.RoleAssignmentDeleteEvent;
+import io.harness.accesscontrol.roleassignments.events.RoleAssignmentUpdateEvent;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.api.RoleDTOMapper;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
@@ -35,12 +39,17 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.outbox.api.OutboxService;
+import io.harness.utils.RetryUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -58,7 +67,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 import retrofit2.http.Body;
 
 @OwnedBy(PL)
@@ -73,6 +87,7 @@ import retrofit2.http.Body;
     })
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = PACKAGE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class RoleAssignmentResource {
   RoleAssignmentService roleAssignmentService;
   HarnessResourceGroupService harnessResourceGroupService;
@@ -82,6 +97,11 @@ public class RoleAssignmentResource {
   ResourceGroupService resourceGroupService;
   RoleAssignmentDTOMapper roleAssignmentDTOMapper;
   RoleDTOMapper roleDTOMapper;
+  @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate;
+  OutboxService outboxService;
+
+  RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
+      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @GET
   @ApiOperation(value = "Get Role Assignments", nickname = "getRoleAssignmentList")
@@ -147,7 +167,12 @@ public class RoleAssignmentResource {
       harnessUserGroupService.sync(roleAssignmentDTO.getPrincipal().getIdentifier(), scope);
     }
     RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(scope.toString(), roleAssignmentDTO));
-    return ResponseDTO.newResponse(roleAssignmentDTOMapper.toResponseDTO(createdRoleAssignment));
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignmentResponseDTO response = roleAssignmentDTOMapper.toResponseDTO(createdRoleAssignment);
+      outboxService.save(new RoleAssignmentCreateEvent(
+          response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
+      return ResponseDTO.newResponse(response);
+    }));
   }
 
   @PUT
@@ -161,8 +186,16 @@ public class RoleAssignmentResource {
     }
     RoleAssignmentUpdateResult roleAssignmentUpdateResult =
         roleAssignmentService.update(fromDTO(scope.toString(), roleAssignmentDTO));
-    return ResponseDTO.newResponse(
-        roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getUpdatedRoleAssignment()));
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignmentResponseDTO response =
+          roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getUpdatedRoleAssignment());
+      outboxService.save(
+          new RoleAssignmentUpdateEvent(response.getScope().getAccountIdentifier(), response.getRoleAssignment(),
+              roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getOriginalRoleAssignment())
+                  .getRoleAssignment(),
+              response.getScope()));
+      return ResponseDTO.newResponse(response);
+    }));
   }
 
   /**
@@ -218,6 +251,11 @@ public class RoleAssignmentResource {
         roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
           throw new NotFoundException("Role Assignment not found with the given scope and identifier");
         });
-    return ResponseDTO.newResponse(roleAssignmentDTOMapper.toResponseDTO(deletedRoleAssignment));
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignmentResponseDTO response = roleAssignmentDTOMapper.toResponseDTO(deletedRoleAssignment);
+      outboxService.save(new RoleAssignmentDeleteEvent(
+          response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
+      return ResponseDTO.newResponse(response);
+    }));
   }
 }

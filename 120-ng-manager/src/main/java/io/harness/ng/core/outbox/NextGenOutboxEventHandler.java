@@ -49,7 +49,7 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
         case USER:
           return userEventHandler.handle(outboxEvent);
         default:
-          return true;
+          return false;
       }
     } catch (Exception exception) {
       log.error(

@@ -62,7 +62,7 @@ public class AuditClientServiceImpl implements AuditClientService {
                                                     .module(auditEntry.getModule())
                                                     .auditEventData(auditEntry.getAuditEventData())
                                                     .environment(auditEntry.getEnvironment())
-                                                    .yamlDiffRecordDTO(yamlDiffRecordDTO)
+                                                    .yamlDiffRecord(yamlDiffRecordDTO)
                                                     .timestamp(auditEntry.getTimestamp());
 
     if (principal != null) {

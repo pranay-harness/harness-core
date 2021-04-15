@@ -66,7 +66,14 @@ public class OutboxEventPollJob implements Runnable {
         log.error("Could not acquire lock for outbox poll job");
         return;
       }
-      List<OutboxEvent> outboxEvents = outboxService.list(outboxEventFilter);
+      List<OutboxEvent> outboxEvents;
+      try {
+        outboxEvents = outboxService.list(outboxEventFilter);
+      } catch (InstantiationError error) {
+        log.error("InstantiationError occurred while fetching entries from the outbox", error);
+        return;
+      }
+
       for (OutboxEvent outbox : outboxEvents) {
         boolean success = handle(outbox);
         try {
