@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
@@ -28,10 +29,11 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
     K8sApplyStepParameters stepParameters = new K8sApplyStepParameters();
     stepParameters.setSkipDryRun(ParameterField.createValueField(true));
     stepParameters.setSkipSteadyStateCheck(ParameterField.createValueField(true));
-    stepParameters.setTimeout(ParameterField.createValueField("30m"));
     stepParameters.setFilePaths(ParameterField.createValueField(Arrays.asList("file1.yaml", "file2.yaml")));
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
 
-    K8sApplyRequest request = executeTask(stepParameters, K8sApplyRequest.class);
+    K8sApplyRequest request = executeTask(stepElementParameters, K8sApplyRequest.class);
     assertThat(request.getAccountId()).isEqualTo(accountId);
     assertThat(request.getFilePaths()).containsExactlyInAnyOrder("file1.yaml", "file2.yaml");
     assertThat(request.getTaskType()).isEqualTo(K8sTaskType.APPLY);
@@ -47,13 +49,15 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
     K8sApplyStepParameters stepParameters = new K8sApplyStepParameters();
     stepParameters.setSkipDryRun(ParameterField.ofNull());
     stepParameters.setSkipSteadyStateCheck(ParameterField.ofNull());
-    stepParameters.setTimeout(ParameterField.ofNull());
     stepParameters.setFilePaths(ParameterField.createValueField(Arrays.asList("file1.yaml", "file2.yaml")));
 
-    K8sApplyRequest request = executeTask(stepParameters, K8sApplyRequest.class);
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
+
+    K8sApplyRequest request = executeTask(stepElementParameters, K8sApplyRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
     assertThat(request.isSkipSteadyStateCheck()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepElementParameters));
   }
 
   @Override

@@ -12,6 +12,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -34,7 +35,7 @@ import io.harness.supplier.ThrowingSupplier;
 import com.google.inject.Inject;
 
 @OwnedBy(CDP)
-public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesStepParameters, K8sDeployResponse> {
+public class K8sBGSwapServicesStep implements TaskExecutable<StepElementParameters, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_BG_SWAP_SERVICES.getYamlType()).build();
   public static final String K8S_BG_SWAP_SERVICES_COMMAND_NAME = "Blue/Green Swap Services";
@@ -48,7 +49,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
 
   @Override
   public TaskRequest obtainTask(
-      Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME));
     boolean stepInRollbackSection = StepUtils.isStepInRollbackSection(ambiance);
@@ -74,15 +75,15 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .commandName(K8S_BG_SWAP_SERVICES_COMMAND_NAME)
             .taskType(K8sTaskType.SWAP_SERVICE_SELECTORS)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
+            .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepParameters, swapServiceSelectorsRequest, ambiance, infrastructure)
+    return k8sStepHelper.queueK8sTask(stepElementParameters, swapServiceSelectorsRequest, ambiance, infrastructure)
         .getTaskRequest();
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters,
+  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
       ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
     K8sDeployResponse executionResponse = responseSupplier.get();
     StepResponseBuilder stepResponseBuilder =
@@ -110,7 +111,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
   }
 
   @Override
-  public Class<K8sBGSwapServicesStepParameters> getStepParametersClass() {
-    return K8sBGSwapServicesStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 }
