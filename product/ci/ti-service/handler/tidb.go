@@ -47,8 +47,6 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		sha := r.FormValue(shaParam)
 
 		var req types.SelectTestsReq
-		req.TargetBranch = target
-		req.Repo = repo
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			WriteBadRequest(w, err)
 			log.Errorw("api: could not unmarshal input for test selection",
@@ -56,6 +54,8 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 				"sha", sha, zap.Error(err))
 			return
 		}
+		req.TargetBranch = target
+		req.Repo = repo
 		log.Infow("got a files list", "account_id", accountId, "files", req.Files,
 			"repo", repo, "source", source, "target", target, "sha", sha)
 

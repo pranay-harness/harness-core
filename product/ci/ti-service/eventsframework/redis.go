@@ -88,7 +88,7 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 		}
 		switch x := dto.GetParsedResponse().Hook.(type) {
 		case *scmpb.ParseWebhookResponse_Push:
-			repo := dto.GetParsedResponse().GetPush().GetRepo().GetName()
+			repo := dto.GetParsedResponse().GetPush().GetRepo().GetLink()
 			p := dto.GetParsedResponse().GetPush().GetRef()
 			pList := strings.Split(p, "/")
 			branch := pList[len(pList)-1]
