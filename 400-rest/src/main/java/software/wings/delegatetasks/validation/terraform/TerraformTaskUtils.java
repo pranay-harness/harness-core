@@ -29,6 +29,7 @@ import org.eclipse.jgit.api.errors.JGitInternalException;
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class TerraformTaskUtils {
+  // TODO: Remove from here, this is moved to lower module
   public static String getGitExceptionMessageIfExists(Throwable t) {
     if (t instanceof JGitInternalException) {
       return Throwables.getRootCause(t).getMessage();

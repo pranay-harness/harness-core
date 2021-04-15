@@ -19,12 +19,10 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_INTERNAL_FOLDER;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
-import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
 import static io.harness.provision.TerraformConstants.WORKSPACE_DIR_BASE;
-import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
 import static io.harness.provision.TfVarSource.TfVarSourceType;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -62,6 +60,7 @@ import io.harness.logging.PlanJsonLogOutputStream;
 import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.terraform.TerraformHelperUtils;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
 
 import software.wings.api.TerraformExecutionData;
@@ -98,7 +97,6 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -110,14 +108,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.NullInputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -203,7 +197,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .build();
     }
 
-    String baseDir = resolveBaseDir(parameters.getAccountId(), parameters.getEntityId());
+    String baseDir = terraformBaseHelper.resolveBaseDir(parameters.getAccountId(), parameters.getEntityId());
     String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
     String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
 
@@ -222,7 +216,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
-    String scriptDirectory = resolveScriptDirectory(workingDir, parameters.getScriptPath());
+    String scriptDirectory = terraformBaseHelper.resolveScriptDirectory(workingDir, parameters.getScriptPath());
     log.info("Script Directory: " + scriptDirectory);
     saveExecutionLog(
         format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING, INFO, logCallback);
@@ -443,7 +437,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                             .withFileName(TERRAFORM_STATE_FILE_NAME)
                                             .build();
 
-      File tfStateFile = getTerraformStateFile(scriptDirectory, parameters.getWorkspace());
+      File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, parameters.getWorkspace());
       if (tfStateFile != null) {
         try (InputStream initialStream = new FileInputStream(tfStateFile)) {
           delegateFileManager.upload(delegateFile, initialStream);
@@ -681,11 +675,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
   }
 
-  @NonNull
-  private String resolveBaseDir(String accountId, String entityId) {
-    return TF_BASE_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", entityId);
-  }
-
   @VisibleForTesting
   public void getCommandLineVariableParams(TerraformProvisionParameters parameters, File tfVariablesFile,
       StringBuilder executeParams, StringBuilder uiLogParams) throws IOException {
@@ -774,18 +763,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return targetArgs.toString();
   }
 
-  private File getTerraformStateFile(String scriptDirectory, String workspace) {
-    File tfStateFile = isEmpty(workspace)
-        ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
-        : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, workspace)).toFile();
-
-    if (tfStateFile.exists()) {
-      return tfStateFile;
-    }
-
-    return null;
-  }
-
   @VisibleForTesting
   public byte[] getTerraformPlanFile(String scriptDirectory, TerraformProvisionParameters parameters)
       throws IOException {
@@ -816,27 +793,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   public String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {
-    File repoDir = new File(gitClientHelper.getRepoDirectory(gitOperationContext));
-    if (repoDir.exists()) {
-      try (Git git = Git.open(repoDir)) {
-        Iterator<RevCommit> commits = git.log().call().iterator();
-        if (commits.hasNext()) {
-          RevCommit firstCommit = commits.next();
-
-          return firstCommit.toString().split(" ")[1];
-        }
-      } catch (IOException | GitAPIException e) {
-        log.error("Failed to extract the commit id from the cloned repo.");
-      }
-    }
-
-    return null;
-  }
-
-  private String resolveScriptDirectory(String workingDir, String scriptPath) {
-    return Paths
-        .get(Paths.get(System.getProperty(USER_DIR_KEY)).toString(), workingDir, scriptPath == null ? "" : scriptPath)
-        .toString();
+    return terraformBaseHelper.getLatestCommitSHA(new File(gitClientHelper.getRepoDirectory(gitOperationContext)));
   }
 
   private void saveExecutionLog(

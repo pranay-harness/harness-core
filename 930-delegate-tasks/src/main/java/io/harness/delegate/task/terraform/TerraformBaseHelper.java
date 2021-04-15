@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliResponse;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -24,4 +25,10 @@ public interface TerraformBaseHelper {
 
   CliResponse executeTerraformDestroyStep(TerraformExecuteStepRequest terraformExecuteStepRequest)
       throws InterruptedException, IOException, TimeoutException;
+
+  String resolveBaseDir(String accountId, String provisionerId);
+
+  String resolveScriptDirectory(String workingDir, String scriptPath);
+
+  String getLatestCommitSHA(File repoDir);
 }
