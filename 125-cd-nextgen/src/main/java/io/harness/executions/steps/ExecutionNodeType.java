@@ -1,7 +1,10 @@
 package io.harness.executions.steps;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.YamlTypes;
 
+@OwnedBy(HarnessTeam.CDP)
 public enum ExecutionNodeType {
   SERVICE("SERVICE", YamlTypes.SERVICE_CONFIG),
   MANIFEST_FETCH("MANIFEST_FETCH", YamlTypes.MANIFEST_LIST_CONFIG),
@@ -21,7 +24,8 @@ public enum ExecutionNodeType {
 
   ROLLBACK_SECTION("ROLLBACK_SECTION", "rollbackSection"),
   GENERIC_SECTION("GENERIC_SECTION", "genericSection"),
-  SHELL_SCRIPT("SHELL_SCRIPT", YamlTypes.SHELL_SCRIPT_STEP);
+  SHELL_SCRIPT("SHELL_SCRIPT", YamlTypes.SHELL_SCRIPT_STEP),
+  TERRAFORM_APPLY("TERRAFORM_APPLY", StepSpecTypeConstants.TERRAFORM_APPLY);
 
   private final String name;
   private final String yamlType;
