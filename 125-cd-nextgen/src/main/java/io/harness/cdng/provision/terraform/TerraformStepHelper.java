@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
@@ -20,6 +21,7 @@ import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigBuilde
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
@@ -39,6 +41,7 @@ import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -66,6 +69,7 @@ public class TerraformStepHelper {
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
+  @Inject private FileServiceClientFactory fileService;
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
     return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),
@@ -233,5 +237,15 @@ public class TerraformStepHelper {
       log.error("", exception);
     }
     return outputs;
+  }
+
+  public String getLatestFileId(String entityId) {
+    try {
+      return RestClientUtils.getResponse(fileService.get().getLatestFileId(entityId, FileBucket.TERRAFORM_STATE));
+    } catch (Exception exception) {
+      String message = String.format("Unable to call fileservice to fetch latest file id for %s", entityId);
+      log.warn(message, exception);
+      throw new InvalidRequestException(message);
+    }
   }
 }

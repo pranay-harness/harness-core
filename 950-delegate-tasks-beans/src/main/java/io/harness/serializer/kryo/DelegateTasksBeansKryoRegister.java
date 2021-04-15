@@ -318,8 +318,11 @@ import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
+import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
+import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
+import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHAuthDTO;
 import io.harness.ng.core.dto.secrets.SSHConfigDTO;
@@ -702,5 +705,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpTaskParameters.class, 543280);
     kryo.register(GcpTaskType.class, 543281);
     kryo.register(GcpClusterListTaskResponse.class, 543282);
+    kryo.register(TerraformTaskNGParameters.class, 543283);
+    kryo.register(TFTaskType.class, 543284);
+    kryo.register(TerraformTaskNGResponse.class, 543285);
   }
 }
