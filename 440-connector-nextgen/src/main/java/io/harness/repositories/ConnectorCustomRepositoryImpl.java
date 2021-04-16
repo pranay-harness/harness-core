@@ -1,16 +1,23 @@
 package io.harness.repositories;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.entities.Connector.CONNECTOR_COLLECTION_NAME;
 
-import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.Connector.ConnectorKeys;
+import io.harness.git.model.ChangeType;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
 
+import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Optional;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -19,15 +26,14 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
-@HarnessRepo
+@GitSyncableHarnessRepo
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository {
-  private final MongoTemplate mongoTemplate;
+  private MongoTemplate mongoTemplate;
+  private GitAwarePersistence gitAwarePersistence;
 
-  @Autowired
-  public ConnectorCustomRepositoryImpl(MongoTemplate mongoTemplate) {
-    this.mongoTemplate = mongoTemplate;
-  }
-
+  // todo(abhinav): This method is not yet migrated because of find By fqn
   @Override
   public Page<Connector> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
@@ -37,8 +43,21 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   }
 
   @Override
-  public Connector update(Query query, Update update) {
-    return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Connector.class);
+  public Page<Connector> findAll(
+      Criteria criteria, Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier) {
+    List<Connector> connectors = gitAwarePersistence.find(
+        criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
+    return PageableExecutionUtils.getPage(connectors, pageable,
+        ()
+            -> gitAwarePersistence.count(
+                criteria, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class));
+  }
+
+  @Override
+  public Connector update(Criteria criteria, Update update, ChangeType changeType, String projectIdentifier,
+      String orgIdentifier, String accountIdentifier) {
+    return gitAwarePersistence.findAndModify(
+        criteria, update, changeType, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
   }
 
   @Override
@@ -49,5 +68,38 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   @Override
   public <T> AggregationResults<T> aggregate(Aggregation aggregation, Class<T> classToFillResultIn) {
     return mongoTemplate.aggregate(aggregation, CONNECTOR_COLLECTION_NAME, classToFillResultIn);
+  }
+
+  @Override
+  public Optional<Connector> findByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier,
+      String projectIdentifier, String orgIdentifier, String accountIdentifier, boolean notDeleted) {
+    return gitAwarePersistence.findOne(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier)
+                                           .is(fullyQualifiedIdentifier)
+                                           .and(ConnectorKeys.deleted)
+                                           .is(!notDeleted),
+        projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
+  }
+
+  @Override
+  public boolean existsByFullyQualifiedIdentifier(
+      String fullyQualifiedIdentifier, String projectIdentifier, String orgIdentifier, String accountId) {
+    return gitAwarePersistence.exists(
+        Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).is(fullyQualifiedIdentifier), projectIdentifier,
+        orgIdentifier, accountId, Connector.class);
+  }
+
+  @Override
+  public Connector save(Connector objectToSave, ConnectorDTO yaml) {
+    return gitAwarePersistence.save(objectToSave, yaml, Connector.class);
+  }
+
+  @Override
+  public Connector save(Connector objectToSave, ChangeType changeType) {
+    return gitAwarePersistence.save(objectToSave, changeType, Connector.class);
+  }
+
+  @Override
+  public Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType) {
+    return gitAwarePersistence.save(objectToSave, connectorDTO, changeType, Connector.class);
   }
 }

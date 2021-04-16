@@ -43,11 +43,8 @@ public class GitBranchingHelper {
     return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getBranch).collect(Collectors.toList());
   }
 
-  public List<String> getObjectIdForDefaultBranchAndScope(String projectIdentifier,
-      String
-
-          orgIdentifier,
-      String accountId, EntityType entityType) {
+  public List<String> getObjectIdForDefaultBranchAndScope(
+      String projectIdentifier, String orgIdentifier, String accountId, EntityType entityType) {
     Criteria criteria = Criteria.where(EntityGitBranchMetadataKeys.accountId)
                             .is(accountId)
                             .and(EntityGitBranchMetadataKeys.orgIdentifier)

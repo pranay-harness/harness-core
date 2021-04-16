@@ -15,4 +15,12 @@ public interface GitSyncableEntity extends NGAccess, PersistentEntity {
   String getObjectIdOfYaml();
 
   void setObjectIdOfYaml(String objectId);
+
+  void setIsFromDefaultBranch(Boolean isDefault);
+
+  Boolean getIsFromDefaultBranch();
+
+  String getYamlGitConfigId();
+
+  void setYamlGitConfigId(String objectId);
 }

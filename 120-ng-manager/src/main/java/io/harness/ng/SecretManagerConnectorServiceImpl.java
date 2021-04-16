@@ -28,6 +28,7 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
+import io.harness.git.model.ChangeType;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -184,9 +185,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
                             .and(ConnectorKeys.identifier)
                             .is(HARNESS_SECRET_MANAGER_IDENTIFIER);
 
-    Query query = new Query(criteria);
     Update update = new Update().set(VaultConnectorKeys.isDefault, Boolean.TRUE);
-    connectorRepository.update(query, update);
+    connectorRepository.update(criteria, update, ChangeType.NONE, projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override

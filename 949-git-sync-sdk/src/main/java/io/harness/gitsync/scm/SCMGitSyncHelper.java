@@ -56,7 +56,7 @@ public class SCMGitSyncHelper {
     switch (changeType) {
       case ADD:
         final CreateFileResponse createFileResponse = doScmCreateFile(yaml, gitBranchInfo, infoForPush);
-        if (createFileResponse.getStatus() != 0) {
+        if (createFileResponse.getStatus() == 0) {
           throw new InvalidRequestException("Git push failed");
         }
         return ScmCreateFileResponse.builder()
@@ -70,7 +70,7 @@ public class SCMGitSyncHelper {
             .build();
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
-        if (deleteFileResponse.getStatus() != 0) {
+        if (deleteFileResponse.getStatus() == 0) {
           throw new InvalidRequestException("Git push failed");
         }
         return ScmDeleteFileResponse.builder()
@@ -85,7 +85,7 @@ public class SCMGitSyncHelper {
         throw new NotImplementedException("Not implemented");
       case MODIFY:
         final UpdateFileResponse updateFileResponse = doScmUpdateFile(yaml, gitBranchInfo, infoForPush);
-        if (updateFileResponse.getStatus() != 0) {
+        if (updateFileResponse.getStatus() == 0) {
           throw new InvalidRequestException("Git push failed");
         }
         return ScmUpdateFileResponse.builder()
@@ -120,7 +120,16 @@ public class SCMGitSyncHelper {
     }
     final ScmConnector scmConnector =
         (ScmConnector) kryoSerializer.asObject(pushInfo.getConnector().getValue().toByteArray());
-    return InfoForGitPush.builder().filePath(pushInfo.getFilePath().getValue()).scmConnector(scmConnector).build();
+    return InfoForGitPush.builder()
+        .filePath(pushInfo.getFilePath().getValue())
+        .scmConnector(scmConnector)
+        .projectIdentifier(pushInfo.getProjectIdentifier().getValue())
+        .orgIdentifier(pushInfo.getOrgIdentifier().getValue())
+        .accountId(pushInfo.getAccountId())
+        .branch(gitBranchInfo.getBranch())
+        .isDefault(pushInfo.getIsDefault())
+        .yamlGitConfigId(pushInfo.getYamlGitConfigId())
+        .build();
   }
 
   private DeleteFileResponse doScmDeleteFile(GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
