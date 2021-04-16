@@ -237,7 +237,7 @@ gitGrpcClientConfigs:
     target: localhost:12011
     authority: localhost
   core:
-    target: localhost:13002
+    target: localhost:13001
     authority: localhost
 
 
