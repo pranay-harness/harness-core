@@ -33,6 +33,7 @@ public class InterruptEvent extends Queuable {
   @NonNull String interruptUuid;
   @NonNull NodeExecutionProto nodeExecution;
   @NonNull InterruptType interruptType;
+  @Builder.Default Map<String, String> metadata = new HashMap<>();
   @Builder.Default String notifyId = generateUuid();
 
   public AutoLogContext autoLogContext() {

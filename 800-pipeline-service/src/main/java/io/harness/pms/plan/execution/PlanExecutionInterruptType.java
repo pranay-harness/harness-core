@@ -29,9 +29,15 @@ public enum PlanExecutionInterruptType {
 
   @JsonProperty("Ignore") IGNORE("Ignore execution of  nodes in the current workflow", InterruptType.IGNORE, "Ignore"),
 
-  @JsonProperty("MarkSuccess")
-  MARKSUCCESS(
-      "MarkSuccess execution of paused node in the current workflow", InterruptType.MARK_SUCCESS, "MarkSuccess"),
+  @JsonProperty("StageRollback")
+  STAGEROLLBACK("Do stage rollback of the execution", InterruptType.CUSTOM_FAILURE, "StageRollback"),
+
+  @JsonProperty("StepGroupRollback")
+  STEPGROUPROLLBACK("Do stage rollback of the execution", InterruptType.CUSTOM_FAILURE, "StepGroupRollback"),
+
+  @JsonProperty("MarkAsSuccess")
+  MARKASSUCCESS(
+      "MarkSuccess execution of paused node in the current workflow", InterruptType.MARK_SUCCESS, "MarkAsSuccess"),
 
   @JsonProperty("Retry") RETRY("Retry execution of  paused node in the current workflow", InterruptType.RETRY, "Retry");
 
