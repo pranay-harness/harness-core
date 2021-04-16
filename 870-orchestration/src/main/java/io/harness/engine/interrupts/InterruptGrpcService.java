@@ -24,4 +24,13 @@ public class InterruptGrpcService extends InterruptProtoServiceImplBase {
     responseObserver.onNext(InterruptResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
+
+  @Override
+  public void handleFailure(InterruptRequest request, StreamObserver<InterruptResponse> responseObserver) {
+    log.info("InterruptGrpcService#handleFailure reached.");
+    // adding a dummy response data object
+    waitNotifyEngine.doneWith(request.getNotifyId(), BinaryResponseData.builder().build());
+    responseObserver.onNext(InterruptResponse.newBuilder().build());
+    responseObserver.onCompleted();
+  }
 }

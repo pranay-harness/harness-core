@@ -32,6 +32,8 @@ import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -177,6 +179,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
                 InterruptConfig.newBuilder()
                     .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
                     .build())
+            .metadata(getMetadata(executionInterruptType))
             .build();
     Interrupt interrupt = orchestrationService.registerInterrupt(interruptPackage);
     return InterruptDTO.builder()
@@ -184,5 +187,13 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
         .planExecutionId(interrupt.getPlanExecutionId())
         .type(executionInterruptType)
         .build();
+  }
+
+  private Map<String, String> getMetadata(PlanExecutionInterruptType planExecutionInterruptType) {
+    if (planExecutionInterruptType == PlanExecutionInterruptType.STAGEROLLBACK
+        || planExecutionInterruptType == PlanExecutionInterruptType.STEPGROUPROLLBACK) {
+      return Collections.singletonMap("ROLLBACK", planExecutionInterruptType.getDisplayName());
+    }
+    return Collections.emptyMap();
   }
 }
