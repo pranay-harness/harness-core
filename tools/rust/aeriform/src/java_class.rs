@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use multimap::MultiMap;
 use regex::Regex;
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
@@ -77,13 +77,13 @@ impl JavaClassTraits for &JavaClass {
         self.location.contains("/generated/")
     }
 
-    fn target_module_team(&self, modules: &HashMap<String, JavaModule>) -> Option<String>{
+    fn target_module_team(&self, modules: &HashMap<String, JavaModule>) -> Option<String> {
         match &self.target_module {
             None => None,
-            Some(module_name) =>  match modules.get(module_name) {
+            Some(module_name) => match modules.get(module_name) {
                 None => None,
-                Some(module) => module.team.clone()
-            }
+                Some(module) => module.team.clone(),
+            },
         }
     }
 }
