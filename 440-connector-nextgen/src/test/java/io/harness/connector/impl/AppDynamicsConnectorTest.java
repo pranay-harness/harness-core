@@ -98,7 +98,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(appDynamicsConfig)).thenReturn(appDynamicsConfig);
+    when(connectorRepository.save(appDynamicsConfig, connectorRequest)).thenReturn(appDynamicsConfig);
     when(connectorMapper.writeDTO(appDynamicsConfig)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(appDynamicsConfig);
     doNothing().when(connectorService).assurePredefined(any(), any());
@@ -121,7 +121,8 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetAppDynamicsConnector() {
     createConnector();
-    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
+    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+             anyString(), anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Optional.of(appDynamicsConfig));
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureAppDynamicsConnectorFieldsAreCorrect(connectorDTO);

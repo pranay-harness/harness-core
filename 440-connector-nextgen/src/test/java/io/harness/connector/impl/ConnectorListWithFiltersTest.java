@@ -1,5 +1,6 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectorCategory.ARTIFACTORY;
 import static io.harness.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.connector.impl.ConnectorFilterServiceImpl.CREDENTIAL_TYPE_KEY;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorConnectivityDetails;
@@ -52,6 +54,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.git.model.ChangeType;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.repositories.ConnectorRepository;
@@ -74,6 +77,7 @@ import org.mockito.Spy;
 import org.springframework.data.domain.Page;
 
 @Slf4j
+@OwnedBy(DX)
 public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   @Mock OrganizationService organizationService;
   @Mock ProjectService projectService;
@@ -372,7 +376,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
       KubernetesClusterConfig connector = getConnectorEntity();
       connector.setName(name + System.currentTimeMillis());
       connector.setConnectivityDetails(ConnectorConnectivityDetails.builder().status(status).build());
-      connectorRepository.save(connector);
+      connectorRepository.save(connector, ChangeType.ADD);
     }
   }
 

@@ -7,6 +7,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.ConnectorMapper;
+import io.harness.encryption.ScopeHelper;
 import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
 import io.harness.ng.core.EntityDetail;
 
@@ -45,6 +46,9 @@ public class ConnectorGitSyncHelper implements EntityGitPersistenceHelperService
                        .accountIdentifier(entity.getAccountIdentifier())
                        .orgIdentifier(entity.getOrgIdentifier())
                        .projectIdentifier(entity.getProjectIdentifier())
+                       .scope(ScopeHelper.getScope(
+                           entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier()))
+                       .identifier(entity.getIdentifier())
                        .build())
         .build();
   }
