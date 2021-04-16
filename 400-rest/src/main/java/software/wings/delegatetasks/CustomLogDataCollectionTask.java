@@ -367,8 +367,9 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
         try {
           final long startTime = lastEndTime;
           final long endTime = getEndTime(startTime);
-
-          logCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(endTime - collectionStartTime) - 1);
+          if (!is24X7Task() && !isPerMinuteWorkflowState()) {
+            logCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(endTime - collectionStartTime) - 1);
+          }
 
           for (Map.Entry<String, Map<String, ResponseMapper>> logDataInfo :
               dataCollectionInfo.getLogResponseDefinition().entrySet()) {
@@ -460,7 +461,8 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
           }
 
           lastEndTime = endTime;
-          if (is24X7Task() || logCollectionMinute >= dataCollectionInfo.getCollectionTime() - 1) {
+          if (is24X7Task() || isPerMinuteWorkflowState()
+              || logCollectionMinute >= dataCollectionInfo.getCollectionTime() - 1) {
             // We are done with all data collection, so setting task status to success and quitting.
             log.info(
                 "Completed Log collection task. So setting task status to success and quitting. StateExecutionId {}",
