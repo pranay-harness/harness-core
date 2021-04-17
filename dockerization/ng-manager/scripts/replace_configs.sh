@@ -176,10 +176,10 @@ if [[ "" != "$PMS_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
 fi
 
-#
-#if [[ "" != "$NG_MANAGER_TARGET" ]]; then
-#  yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.target $NG_MANAGER_TARGET
-#fi
+
+if [[ "" != "$NG_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.target $NG_MANAGER_TARGET
+fi
 
 if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.authority $NG_MANAGER_AUTHORITY
