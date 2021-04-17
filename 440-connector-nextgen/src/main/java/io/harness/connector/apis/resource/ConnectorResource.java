@@ -1,11 +1,20 @@
 package io.harness.connector.apis.resource;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.DELETE_CONNECTOR_PERMISSION;
+import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.EDIT_CONNECTOR_PERMISSION;
+import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.VIEW_CONNECTOR_PERMISSION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
@@ -14,6 +23,7 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
@@ -77,24 +87,30 @@ public class ConnectorResource {
   private final ConnectorHeartbeatService connectorHeartbeatService;
   private final CEAwsSetupConfig ceAwsSetupConfig;
   private static final String CATEGORY_KEY = "category";
+  private final AccessControlClient accessControlClient;
 
   @Inject
   public ConnectorResource(@Named("connectorDecoratorService") ConnectorService connectorService,
-      ConnectorHeartbeatService connectorHeartbeatService, CEAwsSetupConfig ceAwsSetupConfig) {
+      ConnectorHeartbeatService connectorHeartbeatService, CEAwsSetupConfig ceAwsSetupConfig,
+      AccessControlClient accessControlClient) {
     this.connectorService = connectorService;
     this.connectorHeartbeatService = connectorHeartbeatService;
     this.ceAwsSetupConfig = ceAwsSetupConfig;
+    this.accessControlClient = accessControlClient;
   }
 
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get Connector", nickname = "getConnector")
+  @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = VIEW_CONNECTOR_PERMISSION)
   public ResponseDTO<ConnectorResponseDTO> get(
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @OrgIdentifier @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @ProjectIdentifier @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @EntityIdentifier @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @OrgIdentifier @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
+      @ProjectIdentifier @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
+      @EntityIdentifier @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY)
+      @ResourceIdentifier String connectorIdentifier, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     Optional<ConnectorResponseDTO> connectorResponseDTO =
         connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     if (!connectorResponseDTO.isPresent()) {
@@ -131,6 +147,8 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(NGResourceFilterConstants.TYPE_KEY) ConnectorType type,
       @QueryParam(CATEGORY_KEY) ConnectorCategory category) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
   }
@@ -148,6 +166,8 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
       @Body ConnectorFilterPropertiesDTO connectorListFilter, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
             projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
@@ -158,6 +178,11 @@ public class ConnectorResource {
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+            connector.getConnectorInfo().getProjectIdentifier()),
+        Resource.NONE, EDIT_CONNECTOR_PERMISSION);
+
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException(
           String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
@@ -171,8 +196,12 @@ public class ConnectorResource {
   @PUT
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
   public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+            connector.getConnectorInfo().getProjectIdentifier()),
+        Resource.of(ResourceTypes.CONNECTOR, connector.getConnectorInfo().getIdentifier()), EDIT_CONNECTOR_PERMISSION);
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }
@@ -182,10 +211,14 @@ public class ConnectorResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete a connector by identifier", nickname = "deleteConnector")
-  public ResponseDTO<Boolean> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotBlank String connectorIdentifier,
+  @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = DELETE_CONNECTOR_PERMISSION)
+  public ResponseDTO<Boolean> delete(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @NotNull String accountIdentifier,
+      @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier @io.harness.accesscontrol.
+      ProjectIdentifier String projectIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotBlank @ResourceIdentifier String connectorIdentifier,
       @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
       throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager");
@@ -234,6 +267,8 @@ public class ConnectorResource {
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         connectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier));
   }
