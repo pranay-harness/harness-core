@@ -9,7 +9,7 @@ use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION};
-use crate::java_module::{JavaModule, JavaModuleTraits, modules};
+use crate::java_module::{modules, JavaModule, JavaModuleTraits};
 use crate::team::UNKNOWN_TEAM;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
@@ -184,15 +184,31 @@ pub fn analyze(opts: Analyze) {
 
     let mut results: Vec<Report> = Vec::new();
     modules.iter().for_each(|tuple| {
-        results.extend(check_for_classes_in_more_than_one_module(tuple.1, &class_modules, &modules));
+        results.extend(check_for_classes_in_more_than_one_module(
+            tuple.1,
+            &class_modules,
+            &modules,
+        ));
         results.extend(check_for_reversed_dependency(tuple.1, &modules));
     });
 
     class_modules.iter().for_each(|tuple| {
-        results.extend(check_for_package(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
+        results.extend(check_for_package(
+            tuple.0,
+            tuple.1,
+            &tuple.0.target_module_team(&modules),
+        ));
         results.extend(check_for_team(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
-        results.extend(check_already_in_target(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
-        results.extend(check_for_extra_break(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
+        results.extend(check_already_in_target(
+            tuple.0,
+            tuple.1,
+            &tuple.0.target_module_team(&modules),
+        ));
+        results.extend(check_for_extra_break(
+            tuple.0,
+            tuple.1,
+            &tuple.0.target_module_team(&modules),
+        ));
         results.extend(check_for_promotion(
             tuple.0,
             tuple.1,
@@ -208,7 +224,11 @@ pub fn analyze(opts: Analyze) {
             &classes,
             &class_modules,
         ));
-        results.extend(check_for_deprecated_module(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
+        results.extend(check_for_deprecated_module(
+            tuple.0,
+            tuple.1,
+            &tuple.0.target_module_team(&modules),
+        ));
         results.extend(check_for_deprecation(
             tuple.0,
             class_dependees.get_vec(&tuple.0.name),
@@ -219,7 +239,8 @@ pub fn analyze(opts: Analyze) {
         ));
     });
 
-    let mut total = vec![0, 0, 0, 0, 0, 0, 0];
+    let mut kind_summary: HashMap<usize, i32> = HashMap::new();
+    let mut team_summary: HashMap<&String, HashMap<usize, i32>> = HashMap::new();
 
     results.sort_by(|a, b| {
         let ordering = (a.kind as usize).cmp(&(b.kind as usize));
@@ -269,7 +290,9 @@ pub fn analyze(opts: Analyze) {
                 println!("   {}", &report.action);
             }
             total_count += 1;
-            total[report.kind as usize] += 1;
+            *kind_summary.entry(report.kind as usize).or_insert(0) += 1;
+            let ts = team_summary.entry(&report.for_team).or_insert(HashMap::new());
+            *ts.entry(report.kind as usize).or_insert(0) += 1;
             explanations.insert(report.explanation);
         });
 
@@ -277,56 +300,78 @@ pub fn analyze(opts: Analyze) {
 
     if total_count == 0 {
         println!("aeriform did not find any issues");
-    } else {
-        let mut issue_points = 0;
-        for kind in Kind::iter() {
-            if total[kind as usize] > 0 {
-                let ip = total[kind as usize] * WEIGHTS[kind as usize];
-                issue_points += ip;
+        exit(0);
+    }
 
-                println!(
-                    "{:?} -> {} * {} = {}",
-                    kind, total[kind as usize], WEIGHTS[kind as usize], ip
-                );
-            }
-        }
+    team_summary.iter().for_each(|tuple| {
+        report(&Some(tuple.0.to_string()), tuple.1, &modules, &class_modules);
+        ()
+    });
 
-        let count = classes
-            .iter()
-            .filter(|(_, &class)| {
-                class.team.is_none()
-                    || opts.team_filter.is_none()
-                    || class.team.as_ref().unwrap().eq(opts.team_filter.as_ref().unwrap())
-            })
-            .count();
+    let ipc = report(&None, &kind_summary, &modules, &class_modules);
 
-        let ipc = issue_points as f64 / count as f64;
-        println!("IssuePoints -> {} / {} classes = {}", issue_points, count, ipc);
+    if explanations.contains(Explanation::TeamIsMissing) {
+        println!();
+        println!("{}", EXPLANATION_TEAM_IS_MISSING);
+    }
+    if explanations.contains(Explanation::DeprecatedModule) {
+        println!();
+        println!("{}", EXPLANATION_CLASS_IN_DEPRECATED_MODULE);
+    }
 
-        if explanations.contains(Explanation::TeamIsMissing) {
-            println!();
-            println!("{}", EXPLANATION_TEAM_IS_MISSING);
-        }
-        if explanations.contains(Explanation::DeprecatedModule) {
-            println!();
-            println!("{}", EXPLANATION_CLASS_IN_DEPRECATED_MODULE);
-        }
+    if opts.issue_points_per_class_limit.is_some() && opts.issue_points_per_class_limit.unwrap() < ipc {
+        println!();
+        println!(
+            "The analyze found {} that is more than the expected limit of issues per class {}.",
+            ipc,
+            opts.issue_points_per_class_limit.unwrap()
+        );
+        println!("{}", EXPLANATION_TOO_MANY_ISSUE_POINTS_PER_CLASS);
+        exit(1);
+    }
 
-        if opts.issue_points_per_class_limit.is_some() && opts.issue_points_per_class_limit.unwrap() < ipc {
-            println!();
-            println!(
-                "The analyze found {} that is more than the expected limit of issues per class {}.",
-                ipc,
-                opts.issue_points_per_class_limit.unwrap()
-            );
-            println!("{}", EXPLANATION_TOO_MANY_ISSUE_POINTS_PER_CLASS);
-            exit(1);
-        }
+    if opts.exit_code {
+        exit(1);
+    }
+}
 
-        if opts.exit_code {
-            exit(1);
+fn report(
+    team: &Option<String>,
+    summary: &HashMap<usize, i32>,
+    modules: &HashMap<String, JavaModule>,
+    class_modules: &HashMap<&JavaClass, &JavaModule>,
+) -> f64 {
+    println!();
+    if team.is_some() {
+        println!("Report for team {}", team.as_ref().unwrap())
+    }
+
+    let mut issue_points = 0;
+    for kind in Kind::iter() {
+        let count = summary.get(&(kind as usize));
+
+        if count.is_some() {
+            let ip = count.unwrap() * WEIGHTS[kind as usize];
+            issue_points += ip;
+
+            println!("{:?} -> {} * {} = {}", kind, count.unwrap(), WEIGHTS[kind as usize], ip);
         }
     }
+
+    let count = class_modules
+        .iter()
+        .filter(|(&class, &module)| {
+            team.is_none()
+                || class
+                    .team(module, &class.target_module_team(&modules))
+                    .eq(team.as_ref().unwrap())
+        })
+        .count();
+
+    let ipc = issue_points as f64 / count as f64;
+    println!("IssuePoints -> {} / {} classes = {}", issue_points, count, ipc);
+
+    ipc
 }
 
 fn filter_report(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
@@ -893,7 +938,7 @@ fn check_for_team(class: &JavaClass, module: &JavaModule, target_module_team: &O
         return results;
     }
 
-    if class.team(module, target_module_team) .eq(UNKNOWN_TEAM) {
+    if class.team(module, target_module_team).eq(UNKNOWN_TEAM) {
         results.push(Report {
             kind: Kind::ToDo,
             explanation: Explanation::TeamIsMissing,
@@ -909,7 +954,11 @@ fn check_for_team(class: &JavaClass, module: &JavaModule, target_module_team: &O
     results
 }
 
-fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {
+fn check_for_deprecated_module(
+    class: &JavaClass,
+    module: &JavaModule,
+    target_module_team: &Option<String>,
+) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
     if class.deprecated {

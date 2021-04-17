@@ -50,7 +50,7 @@ public class OutboxEventIteratorHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testHandle() {
     String id = randomAlphabetic(10);
-    OutboxEvent outboxEvent = OutboxEvent.builder().attempts(0L).blocked(false).id(id).build();
+    OutboxEvent outboxEvent = OutboxEvent.builder().blocked(false).id(id).build();
     when(outboxEventHandler.handle(outboxEvent)).thenReturn(true);
     when(config.getMaximumOutboxEventHandlingAttempts()).thenReturn(10L);
     ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
@@ -66,7 +66,7 @@ public class OutboxEventIteratorHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testMaxAttemptsHandle() {
     String id = randomAlphabetic(10);
-    OutboxEvent outboxEvent = OutboxEvent.builder().attempts(9L).blocked(false).id(id).build();
+    OutboxEvent outboxEvent = OutboxEvent.builder().blocked(false).id(id).build();
     when(outboxEventHandler.handle(outboxEvent)).thenReturn(false);
     when(config.getMaximumOutboxEventHandlingAttempts()).thenReturn(10L);
     ArgumentCaptor<OutboxEvent> outboxEventArgumentCaptor = ArgumentCaptor.forClass(OutboxEvent.class);
@@ -75,6 +75,5 @@ public class OutboxEventIteratorHandlerTest extends CategoryTest {
     verify(outboxService, times(1)).update(outboxEventArgumentCaptor.capture());
     OutboxEvent outbox = outboxEventArgumentCaptor.getValue();
     assertTrue(outbox.getBlocked());
-    assertEquals(10L, outbox.getAttempts().longValue());
   }
 }

@@ -120,7 +120,7 @@ gitSyncServerConfig:
       certFilePath: cert.pem
     - port: 13002
 
-shouldDeployWithGitSync: false
+shouldDeployWithGitSync: true
 
 eventsFramework:
   redis:
@@ -176,20 +176,9 @@ ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
 
-resourceGroupConfig:
-  ng-manager:
-    baseUrl: http://localhost:7457/
-    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-  pipeline-service:
-    baseUrl: http://localhost:12001/api/
-    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-  manager:
-    baseUrl: http://localhost:3457/api/
-    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-
 resourceGroupClientConfig:
   serviceConfig:
-    baseUrl: http://localhost:7457/
+    baseUrl: http://localhost:9005/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
@@ -217,7 +206,12 @@ logStreamingServiceConfig:
 outboxPollConfig:
   initialDelayInSeconds: 5
   pollingIntervalInSeconds: 5
-  maximumRetryAttemptsForAnEvent: 10
+  maximumRetryAttemptsForAnEvent: 7
+
+segmentConfiguration:
+  enabled: false
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
 
 accessControlClient:
   enableAccessControl: false
@@ -242,6 +236,10 @@ gitGrpcClientConfigs:
   pms:
     target: localhost:12011
     authority: localhost
+  core:
+    target: localhost:13001
+    authority: localhost
+
 
 scmConnectionConfig:
   url: localhost:8091

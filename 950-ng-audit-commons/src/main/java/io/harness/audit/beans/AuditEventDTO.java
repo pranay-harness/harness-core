@@ -12,6 +12,7 @@ import io.harness.request.RequestMetadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;
 import javax.validation.Valid;
@@ -45,11 +46,14 @@ public class AuditEventDTO {
 
   @NotNull @Valid ResourceDTO resource;
 
-  @ApiModelProperty(hidden = true) @Valid YamlDiffRecordDTO yamlDiffRecordDTO;
+  @ApiModelProperty(hidden = true) @Valid YamlDiffRecordDTO yamlDiffRecord;
 
   @NotNull Action action;
 
-  @Valid AuditEventData auditEventData;
+  @JsonTypeInfo(
+      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
+  @Valid
+  AuditEventData auditEventData;
 
   @ApiModelProperty(hidden = true) Map<String, String> internalInfo;
 }

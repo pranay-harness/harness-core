@@ -52,7 +52,6 @@ BAZEL_MODULES="\
   //110-change-data-capture:module \
   //120-ng-manager:module \
   //125-cd-nextgen:module \
-  //130-resource-group:module \
   //160-model-gen-tool:module \
   //136-git-sync-manager:module \
   //200-functional-test:module \
@@ -73,6 +72,7 @@ BAZEL_MODULES="\
   //360-cg-manager:module \
   //380-cg-graphql:module \
   //400-rest:module \
+  //410-cg-rest:module \
   //400-rest:supporter-test \
   //420-delegate-agent:module \
   //420-delegate-service:module \
@@ -87,6 +87,7 @@ BAZEL_MODULES="\
   //815-cg-triggers:module \
   //820-platform-service:module \
   //830-notification-service:module \
+  //830-resource-group:module \
   //835-notification-senders:module \
   //850-execution-plan:module \
   //850-ng-pipeline-commons:module \
@@ -96,6 +97,7 @@ BAZEL_MODULES="\
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
+  //871-cg-beans:module \
   //874-orchestration-delay:module \
   //876-orchestration-beans:module \
   //878-pipeline-service-utilities:module \
@@ -136,13 +138,14 @@ BAZEL_MODULES="\
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
-  //950-events-api/src/main/proto:all \
-  //950-events-api:module \
+  //953-events-api/src/main/proto:all \
+  //953-events-api:module \
   //950-events-framework:module \
   //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-log-client:module \
+  //950-telemetry:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
@@ -150,6 +153,7 @@ BAZEL_MODULES="\
   //953-git-sync-commons:module \
   //953-git-sync-commons/src/main/proto:all \
   //954-connector-beans:module \
+  //955-account-mgmt:module \
   //955-filters-sdk:module \
   //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \
@@ -169,6 +173,7 @@ BAZEL_MODULES="\
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
+  //970-telemetry-beans:module \
   //970-rbac-core:module \
   //980-commons:module \
   //990-commons-test:module \
@@ -357,12 +362,12 @@ build_bazel_application_module 925-access-control-service
 build_bazel_application_module 940-notification-client
 
 build_bazel_module 125-cd-nextgen
-build_bazel_module 130-resource-group
 build_bazel_module 136-git-sync-manager
 build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
 build_bazel_module 380-cg-graphql
 build_bazel_module 400-rest
+build_bazel_module 410-cg-rest
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons
@@ -374,6 +379,7 @@ build_bazel_module 490-ce-commons
 build_bazel_module 810-ng-triggers
 build_bazel_module 815-cg-triggers
 build_bazel_module 830-notification-service
+build_bazel_module 830-resource-group
 build_bazel_module 835-notification-senders
 build_bazel_module 850-execution-plan
 build_bazel_module 850-ng-pipeline-commons
@@ -383,6 +389,7 @@ build_bazel_module 870-cg-yaml-beans
 build_bazel_module 870-cg-orchestration
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
+build_bazel_module 871-cg-beans
 build_bazel_module 874-orchestration-delay
 build_bazel_module 876-orchestration-beans
 build_bazel_module 878-pipeline-service-utilities
@@ -413,7 +420,7 @@ build_bazel_module 950-command-library-common
 build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
-build_bazel_module 950-events-api
+build_bazel_module 953-events-api
 build_bazel_module 950-events-framework
 build_bazel_module 950-ng-audit-commons
 build_bazel_module 949-git-sync-sdk
@@ -450,7 +457,6 @@ build_bazel_tests 960-persistence
 build_bazel_tests 400-rest
 build_bazel_tests 220-graphql-test
 
-build_java_proto_module 950-events-api
 build_java_proto_module 960-notification-beans
 
 build_proto_module ciengine product/ci/engine/proto

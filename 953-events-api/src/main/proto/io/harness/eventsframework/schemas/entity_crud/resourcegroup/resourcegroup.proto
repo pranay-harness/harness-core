@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.eventsframework.entity_crud.resourcegroup;
+
+option java_multiple_files = true;
+option go_package = "953_events_api";
+
+message ResourceGroupEntityChangeDTO {
+  string accountIdentifier = 1;
+  string orgIdentifier = 2;
+  string projectIdentifier = 3;
+  string identifier = 4;
+}

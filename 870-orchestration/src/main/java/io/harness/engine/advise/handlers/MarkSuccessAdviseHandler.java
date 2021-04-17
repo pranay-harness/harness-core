@@ -1,5 +1,7 @@
 package io.harness.engine.advise.handlers;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.advise.AdviserResponseHandler;
@@ -13,7 +15,9 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.util.EnumSet;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class MarkSuccessAdviseHandler implements AdviserResponseHandler {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -21,14 +25,16 @@ public class MarkSuccessAdviseHandler implements AdviserResponseHandler {
 
   @Override
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
+    Status fromStatus = nodeExecution.getStatus();
     MarkSuccessAdvise markSuccessAdvise = adviserResponse.getMarkSuccessAdvise();
-    nodeExecutionService.updateStatus(nodeExecution.getUuid(), Status.SUCCEEDED);
+    nodeExecutionService.updateStatusWithOps(
+        nodeExecution.getUuid(), Status.SUCCEEDED, null, EnumSet.of(Status.FAILED, Status.EXPIRED));
     if (EmptyPredicate.isNotEmpty(markSuccessAdvise.getNextNodeId())) {
       PlanNodeProto nextNode = Preconditions.checkNotNull(planExecutionService.fetchExecutionNode(
           nodeExecution.getAmbiance().getPlanExecutionId(), markSuccessAdvise.getNextNodeId()));
       engine.triggerExecution(nodeExecution.getAmbiance(), nextNode);
     } else {
-      engine.endNodeExecution(nodeExecution.getUuid(), Status.SUCCEEDED, adviserResponse);
+      engine.queueAdvisingEvent(nodeExecution, fromStatus);
     }
   }
 }

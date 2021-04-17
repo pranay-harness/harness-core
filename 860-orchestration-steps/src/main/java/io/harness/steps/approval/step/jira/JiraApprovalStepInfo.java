@@ -10,15 +10,16 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.step.ApprovalBaseStepInfo;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Lists;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -77,7 +78,9 @@ public class JiraApprovalStepInfo extends ApprovalBaseStepInfo implements WithCo
   }
 
   @Override
-  public List<ParameterField<String>> extractConnectorRefs() {
-    return Lists.newArrayList(connectorRef);
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

@@ -72,6 +72,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
@@ -710,10 +711,9 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testGetTimeoutValue() {
-    K8sRollingStepParameters definedValue =
-        K8sRollingStepParameters.infoBuilder().timeout(ParameterField.createValueField("15m")).build();
-    K8sRollingStepParameters nullValue =
-        K8sRollingStepParameters.infoBuilder().timeout(ParameterField.ofNull()).build();
+    StepElementParameters definedValue =
+        StepElementParameters.builder().timeout(ParameterField.createValueField("15m")).build();
+    StepElementParameters nullValue = StepElementParameters.builder().timeout(ParameterField.ofNull()).build();
     assertThat(K8sStepHelper.getTimeoutValue(definedValue)).isEqualTo("15m");
     assertThat(K8sStepHelper.getTimeoutValue(nullValue)).isEqualTo("10m");
   }
@@ -722,8 +722,8 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testGetTimeoutInMin() {
-    K8sRollingStepParameters value =
-        K8sRollingStepParameters.infoBuilder().timeout(ParameterField.createValueField("15m")).build();
+    StepElementParameters value =
+        StepElementParameters.builder().timeout(ParameterField.createValueField("15m")).build();
     assertThat(K8sStepHelper.getTimeoutInMin(value)).isEqualTo(15);
   }
 
@@ -731,8 +731,8 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testGetTimeoutInMillis() {
-    K8sRollingStepParameters value =
-        K8sRollingStepParameters.infoBuilder().timeout(ParameterField.createValueField("15m")).build();
+    StepElementParameters value =
+        StepElementParameters.builder().timeout(ParameterField.createValueField("15m")).build();
     assertThat(K8sStepHelper.getTimeoutInMillis(value)).isEqualTo(900000);
   }
 }

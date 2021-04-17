@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.ccm.commons.dao.CEDataCleanupRequestDao;
+import io.harness.ccm.commons.entities.CEDataCleanupRequest;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.datahandler.models.FeatureFlagBO;
@@ -56,6 +58,8 @@ public class AdminAccountResource {
     this.adminUserService = adminUserService;
   }
 
+  @Inject CEDataCleanupRequestDao ceDataCleanupRequestDao;
+
   @GET
   @Path("summary")
   public RestResponse<List<AccountSummary>> getAccounts(
@@ -92,6 +96,21 @@ public class AdminAccountResource {
       log.info("Updating CE license.");
       return new RestResponse<>(adminAccountService.updateCeLicense(accountId, ceLicenseUpdateInfo.getCeLicenseInfo()));
     }
+  }
+
+  @POST
+  @Path("{accountId}/ceDataCleanUpRequest")
+  public RestResponse addDataCleanUpRequest(
+      @PathParam("accountId") @NotEmpty String accountId, @NotNull CEDataCleanupRequest ceDataCleanupRequest) {
+    ceDataCleanupRequest.setAccountId(accountId);
+    return new RestResponse<>(ceDataCleanupRequestDao.save(ceDataCleanupRequest));
+  }
+
+  @DELETE
+  @Path("{accountId}/ceDataCleanUpRequest/{id}")
+  public RestResponse removeDataCleanUpRequest(
+      @PathParam("accountId") @NotEmpty String accountId, @PathParam("id") @NotEmpty String ceDataCleanupRequestId) {
+    return new RestResponse<>(ceDataCleanupRequestDao.delete(ceDataCleanupRequestId));
   }
 
   @GET

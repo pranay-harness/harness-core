@@ -21,6 +21,7 @@ import io.harness.rule.Owner;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
+import java.util.EnumSet;
 import java.util.List;
 import org.assertj.core.util.Lists;
 import org.junit.After;
@@ -75,7 +76,8 @@ public class AddExecutableResponseEventHandlerTest {
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(request).build())
             .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)
             .build());
-    verify(nodeExecutionService).updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any());
+    verify(nodeExecutionService)
+        .updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any(), eq(EnumSet.noneOf(Status.class)));
   }
 
   @Test
@@ -98,6 +100,7 @@ public class AddExecutableResponseEventHandlerTest {
 
     verify(waitNotifyEngine).waitForAllOn(null, callback, callbackIds.toArray(new String[0]));
 
-    verify(nodeExecutionService).updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any());
+    verify(nodeExecutionService)
+        .updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any(), eq(EnumSet.noneOf(Status.class)));
   }
 }

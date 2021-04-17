@@ -4,6 +4,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PlanCreatorMergeService {
   private static final int MAX_DEPTH = 10;
 
@@ -53,18 +56,23 @@ public class PlanCreatorMergeService {
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
-    return createPlan(content, ExecutionMetadata.newBuilder().setExecutionUuid(generateUuid()).build());
+    return createPlan(content, ExecutionMetadata.newBuilder().setExecutionUuid(generateUuid()));
   }
 
-  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata metadata) throws IOException {
+  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata.Builder metadataBuilder)
+      throws IOException {
     log.info("Starting plan creation");
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     String processedYaml = YamlUtils.injectUuid(content);
+
+    metadataBuilder.setProcessedYaml(processedYaml);
+
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
-    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies, metadata);
+    PlanCreationBlobResponse finalResponse =
+        createPlanForDependenciesRecursive(services, dependencies, metadataBuilder.build());
     validatePlanCreationBlobResponse(finalResponse);
     log.info("Done with plan creation");
     return finalResponse;

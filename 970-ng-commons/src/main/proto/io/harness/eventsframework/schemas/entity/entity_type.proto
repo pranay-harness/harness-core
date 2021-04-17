@@ -23,4 +23,5 @@ enum EntityTypeProtoEnum {
   DEPLOYMENT_STEPS = 15;
   PIPELINE_STEPS = 16;
   APPROVAL_STAGE = 17;
+  TRIGGERS = 18;
 }

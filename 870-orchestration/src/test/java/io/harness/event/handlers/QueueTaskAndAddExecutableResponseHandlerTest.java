@@ -29,6 +29,7 @@ import io.harness.rule.Owner;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import org.assertj.core.util.Lists;
@@ -118,7 +119,8 @@ public class QueueTaskAndAddExecutableResponseHandlerTest extends OrchestrationT
                                                  .build())
                                          .buildPartial())
             .build());
-    verify(nodeExecutionService).updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any());
+    verify(nodeExecutionService)
+        .updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any(), eq(EnumSet.noneOf(Status.class)));
 
     verify(taskExecutorMap).get(queueTaskRequest.getTaskRequest().getTaskCategory());
     verify(waitNotifyEngine)
@@ -161,7 +163,8 @@ public class QueueTaskAndAddExecutableResponseHandlerTest extends OrchestrationT
 
     verify(waitNotifyEngine).waitForAllOn(null, callback, callbackIds.toArray(new String[0]));
 
-    verify(nodeExecutionService).updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any());
+    verify(nodeExecutionService)
+        .updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any(), eq(EnumSet.noneOf(Status.class)));
 
     verify(taskExecutorMap).get(queueTaskRequest.getTaskRequest().getTaskCategory());
     verify(waitNotifyEngine)

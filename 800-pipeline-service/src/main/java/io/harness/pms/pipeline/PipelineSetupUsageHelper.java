@@ -65,9 +65,8 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
    * @param pipelineId - pipelineIdentifier
    * @param pipelineYaml - merged pipeline yaml.
    * @param entityType - returns response of given entity type referred in the pipeline.
-   * @return
    */
-  public List<EntityDetail> getReferrencesOfPipeline(String accountIdentifier, String orgIdentifier,
+  public List<EntityDetail> getReferencesOfPipeline(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String pipelineId, String pipelineYaml, EntityType entityType) {
     Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
     try {
@@ -87,6 +86,9 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     for (EntitySetupUsageDTO referredUsage : allReferredUsages) {
       IdentifierRef ref = (IdentifierRef) referredUsage.getReferredEntity().getEntityRef();
       Map<String, String> metadata = ref.getMetadata();
+      if (metadata == null) {
+        continue;
+      }
       String fqn = metadata.get(PreFlightCheckMetadata.FQN);
 
       if (!metadata.containsKey(PreFlightCheckMetadata.EXPRESSION)) {

@@ -11,9 +11,11 @@ import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnresolvedExpressionsException;
+import io.harness.expression.functors.DateTimeFunctor;
 import io.harness.text.StringReplacer;
 import io.harness.text.resolver.ExpressionResolver;
 
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,6 +75,7 @@ public class EngineExpressionEvaluator {
     addToContext("regex", new RegexFunctor());
     addToContext("json", new JsonFunctor());
     addToContext("xml", new XmlFunctor());
+    addToContext("datetime", new DateTimeFunctor());
   }
 
   protected final boolean isInitialized() {
@@ -138,7 +141,7 @@ public class EngineExpressionEvaluator {
    */
   @NotEmpty
   protected List<String> fetchPrefixes() {
-    return Collections.singletonList("");
+    return ImmutableList.of("datetime", "");
   }
 
   /**
@@ -310,11 +313,7 @@ public class EngineExpressionEvaluator {
    * substitutions and prefixes. This variant is non-recursive.
    */
   public Object evaluateExpressionBlock(@NotNull String expressionBlock, @NotNull EngineJexlContext ctx, int depth) {
-    if (depth <= 0) {
-      throw new CriticalExpressionEvaluationException(
-          "Infinite loop or too deep indirection in expression interpretation", expressionBlock);
-    }
-
+    checkDepth(depth, expressionBlock);
     if (EmptyPredicate.isEmpty(expressionBlock)) {
       return expressionBlock;
     }

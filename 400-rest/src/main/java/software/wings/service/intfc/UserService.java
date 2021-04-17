@@ -27,6 +27,7 @@ import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.loginSettings.PasswordStrengthViolations;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
+import software.wings.resources.UserResource;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.authentication.AuthenticationMechanism;
@@ -422,10 +423,11 @@ public interface UserService extends OwnedByAccount {
   /**
    * Reset password boolean.
    *
-   * @param emailId the email id
+   *
+   * @param resetPasswordRequest
    * @return the boolean
    */
-  boolean resetPassword(String emailId);
+  boolean resetPassword(UserResource.ResetPasswordRequest resetPasswordRequest);
 
   /**
    * Update password boolean.

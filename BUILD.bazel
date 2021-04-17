@@ -55,7 +55,6 @@ java_library(
 modules = [
     "//120-ng-manager",
     "//125-cd-nextgen",
-    "//130-resource-group",
     "//136-git-sync-manager",
     "//190-deployment-functional-tests",
     "//200-functional-test",
@@ -84,6 +83,7 @@ modules = [
     "//460-capability",
     "//490-ce-commons",
     "//830-notification-service",
+    "//830-resource-group",
     "//850-execution-plan",
     "//850-ng-pipeline-commons",
     "//860-orchestration-steps",

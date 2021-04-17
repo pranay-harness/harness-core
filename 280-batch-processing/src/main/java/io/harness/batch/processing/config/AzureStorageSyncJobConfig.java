@@ -1,7 +1,6 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.reader.SettingAttributeReader;
 import io.harness.batch.processing.writer.AzureStorageSyncEventWriter;
 
@@ -36,9 +35,10 @@ public class AzureStorageSyncJobConfig {
         .build();
   }
 
+  // TODO: refactor to use tasklet, dummySettingAttributeReader is not required, like
+  // stepBuilderFactory.get("storageSyncStep").tasklet(storageSyncWriter()).build();
   @Bean
-  public Step storageSyncStep(EventReaderFactory mongoEventReader, StepBuilderFactory stepBuilderFactory,
-      SettingAttributeReader settingAttributeReader) {
+  public Step storageSyncStep(StepBuilderFactory stepBuilderFactory, SettingAttributeReader settingAttributeReader) {
     return stepBuilderFactory.get("storageSyncStep")
         .<SettingAttribute, SettingAttribute>chunk(BATCH_SIZE)
         .reader(settingAttributeReader)

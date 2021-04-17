@@ -2,9 +2,11 @@ package io.harness.cdng.pipeline.plancreators;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.yaml.core.StepGroupElement;
@@ -15,6 +17,7 @@ import com.google.inject.Singleton;
 import javax.annotation.Nonnull;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class PlanCreatorHelper {
   @Inject private EngineExpressionService engineExpressionService;
 
@@ -25,7 +28,7 @@ public class PlanCreatorHelper {
     String value = engineExpressionService.renderExpression(
         ambiance, format("<+%s.status>", rollbackNode.getDependentNodeIdentifier()));
 
-    return !ExpressionEvaluator.containsVariablePattern(value);
+    return !EngineExpressionEvaluator.hasVariables(value);
   }
 
   public static boolean isStepGroupWithRollbacks(@Nonnull ExecutionWrapper executionWrapper) {

@@ -15,6 +15,7 @@ yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServer.connectors[0]
 yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE gitSyncServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -162,6 +163,7 @@ if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
+
 if [[ "" != "$SHOULD_CONFIGURE_WITH_PMS" ]]; then
   yq write -i $CONFIG_FILE shouldConfigureWithPMS $SHOULD_CONFIGURE_WITH_PMS
 fi
@@ -173,6 +175,16 @@ fi
 if [[ "" != "$PMS_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
 fi
+
+
+if [[ "" != "$NG_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.target $NG_MANAGER_TARGET
+fi
+
+if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.authority $NG_MANAGER_AUTHORITY
+fi
+
 
 if [[ "" != "$HARNESS_IMAGE_USER_NAME" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImageUseName $HARNESS_IMAGE_USER_NAME
@@ -219,30 +231,16 @@ replace_key_value accessControlAdminClient.accessControlServiceConfig.baseUrl "$
 
 replace_key_value accessControlAdminClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
 
-replace_key_value resourceGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
-
-replace_key_value resourceGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
-
-replace_key_value resourceGroupConfig.pipeline-service.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
-
-replace_key_value resourceGroupConfig.pipeline-service.secret "$PIPELINE_SERVICE_SECRET"
-
-replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
-
-replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
-
 replace_key_value outboxPollConfig.initialDelayInSeconds "$OUTBOX_POLL_INITIAL_DELAY"
 
 replace_key_value outboxPollConfig.pollingIntervalInSeconds "$OUTBOX_POLL_INTERVAL"
 
 replace_key_value outboxPollConfig.maximumRetryAttemptsForAnEvent "$OUTBOX_MAX_RETRY_ATTEMPTS"
 
-replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
-
-replace_key_value resourceGroupClientConfig.secret "$NEXT_GEN_MANAGER_SECRET"
-
 replace_key_value notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
 
 replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
 
 replace_key_value accessControlAdminClient.mockAccessControlService "$MOCK_ACCESS_CONTROL_SERVICE"
+
+replace_key_value scmConnectionConfig.url "$SCM_SERVICE_URL"

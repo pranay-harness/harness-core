@@ -80,6 +80,7 @@ import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 import static software.wings.security.UserThreadLocal.userGuard;
 
+import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -121,6 +122,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
+import software.wings.service.impl.yaml.util.YamlWorkflowValidator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
@@ -1008,6 +1010,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     checkOnPhasesNamesWithDots(load);
     checkOnEmptyAmiFiltersNames(load);
     checkOnEmptyAmiTagNames(load);
+    YamlWorkflowValidator.validateWorkflowPreDeploymentSteps(load);
   }
 
   /**
@@ -1029,7 +1032,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       BaseYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
       yamlForFilePath = yamlHandler.toYaml(yamlHandler.get(accountId, yamlFilePath), applicationId);
     } catch (Exception e) {
-      log.error(String.format("Error while fetching yaml content for file path %s", yamlFilePath));
+      log.error(format("Error while fetching yaml content for file path %s", yamlFilePath));
     }
     return yamlForFilePath;
   }
@@ -1050,8 +1053,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                       List<ChangeContext> processedChangeList = processChangeSet(changeList);
                       return prepareSuccessfulYAMLOperationResponse(processedChangeList, changeList);
                     } catch (YamlProcessingException ex) {
-                      log.warn(String.format(
-                          "Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
+                      log.warn(format("Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
                       return prepareFailedYAMLOperationResponse(ex.getMessage(), ex.getFailedYamlFileChangeMap(),
                           ex.getChangeContextList(), ex.getChangeList());
                     }
@@ -1061,7 +1063,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }
       return null;
     } catch (Exception ex) {
-      log.warn(String.format("Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
+      log.warn(format("Unable to process uploaded zip file for account %s, error: %s", accountId, ex));
       return YamlOperationResponse.builder()
           .responseStatus(YamlOperationResponse.Status.FAILED)
           .errorMessage(ex.toString())
@@ -1090,7 +1092,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       List<ChangeContext> processedChangesWithContext = processChangeSet(changeList);
       return prepareSuccessfulYAMLOperationResponse(processedChangesWithContext, changeList);
     } catch (YamlProcessingException ex) {
-      log.warn(String.format("Error while deleting yaml file paths(s) for account %s, error: %s", accountId, ex));
+      log.warn(format("Error while deleting yaml file paths(s) for account %s, error: %s", accountId, ex));
       return prepareFailedYAMLOperationResponse(
           ex.getMessage(), ex.getFailedYamlFileChangeMap(), ex.getChangeContextList(), ex.getChangeList());
     }
@@ -1118,7 +1120,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             .build();
       }
     } catch (YamlProcessingException ex) {
-      log.warn(String.format("Unable to process yaml file for account %s, error: %s", accountId, ex));
+      log.warn(format("Unable to process yaml file for account %s, error: %s", accountId, ex));
       if (ex != null && !isEmpty(ex.getFailedYamlFileChangeMap())) {
         final Map.Entry<String, ChangeWithErrorMsg> entry =
             ex.getFailedYamlFileChangeMap().entrySet().iterator().next();

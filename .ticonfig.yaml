@@ -2,3 +2,5 @@ config:
   ignore:
     - "README.md"
     - ".ticonfig.yaml"
+    - "**/*.go"
+    - "**/Dockerfile*"

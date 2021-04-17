@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequestType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Map;
 import lombok.experimental.SuperBuilder;
 
 @JsonTypeName("APPDYNAMICS_FETCH_APPS")
@@ -20,5 +21,10 @@ public class AppDynamicsFetchAppRequest extends AppDynamicsDataCollectionRequest
   @Override
   public String getDSL() {
     return DSL;
+  }
+
+  @Override
+  public Map<String, Object> fetchDslEnvVariables() {
+    return AppDynamicsUtils.getCommonEnvVariables(getConnectorConfigDTO());
   }
 }

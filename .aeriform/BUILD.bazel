@@ -10,8 +10,6 @@ aeriform("//125-cd-nextgen:module")
 
 aeriform("//125-cd-nextgen:tests")
 
-aeriform("//130-resource-group:module")
-
 aeriform("//136-git-sync-manager:module")
 
 aeriform("//136-git-sync-manager:tests")
@@ -96,6 +94,8 @@ aeriform("//400-rest:supporter-test")
 
 aeriform("//400-rest:tests")
 
+aeriform("//410-cg-rest:module")
+
 aeriform("//420-delegate-agent:module")
 
 aeriform("//420-delegate-service:module")
@@ -148,6 +148,10 @@ aeriform("//830-notification-service:module")
 
 aeriform("//830-notification-service:tests")
 
+aeriform("//830-resource-group:module")
+
+aeriform("//830-resource-group:tests")
+
 aeriform("//835-notification-senders:module")
 
 aeriform("//850-execution-plan:module")
@@ -179,6 +183,8 @@ aeriform("//870-orchestration:tests")
 aeriform("//870-yaml-beans:module")
 
 aeriform("//870-yaml-beans:tests")
+
+aeriform("//871-cg-beans:module")
 
 aeriform("//874-orchestration-delay:module")
 
@@ -238,6 +244,10 @@ aeriform("//935-access-control-decision:module")
 
 aeriform("//935-access-control-decision:tests")
 
+aeriform("//940-cg-audit-service:module")
+
+aeriform("//940-cg-audit-service:tests")
+
 aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
@@ -286,8 +296,6 @@ aeriform("//950-delegate-tasks-beans:module")
 
 aeriform("//950-delegate-tasks-beans:tests")
 
-aeriform("//950-events-api:module")
-
 aeriform("//950-events-framework:module")
 
 aeriform("//950-events-framework:tests")
@@ -308,6 +316,10 @@ aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
 
+aeriform("//950-telemetry:module")
+
+aeriform("//950-telemetry:tests")
+
 aeriform("//950-timeout-engine:module")
 
 aeriform("//950-timeout-engine:tests")
@@ -324,9 +336,15 @@ aeriform("//952-scm-java-client:module")
 
 aeriform("//952-scm-java-client:tests")
 
+aeriform("//953-events-api:module")
+
+aeriform("//953-events-api:tests")
+
 aeriform("//953-git-sync-commons:module")
 
 aeriform("//954-connector-beans:module")
+
+aeriform("//955-account-mgmt:module")
 
 aeriform("//955-alert-beans:module")
 
@@ -385,6 +403,8 @@ aeriform("//970-ng-commons:module")
 aeriform("//970-ng-commons:tests")
 
 aeriform("//970-rbac-core:module")
+
+aeriform("//970-telemetry-beans:module")
 
 aeriform("//980-commons:module")
 

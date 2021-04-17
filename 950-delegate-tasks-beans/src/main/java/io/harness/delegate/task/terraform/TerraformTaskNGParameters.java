@@ -32,7 +32,7 @@ public class TerraformTaskNGParameters implements TaskParameters, ExecutionCapab
   @NonNull TFTaskType taskType;
   @NonNull String provisionerIdentifier;
   String workspace;
-  @NonNull GitFetchFilesConfig configFiles;
+  @NonNull GitFetchFilesConfig configFile;
   List<GitFetchFilesConfig> remoteVarfiles;
   @Expression(ALLOW_SECRETS) List<String> inlineVarFiles;
   @Expression(ALLOW_SECRETS) String backendConfig;

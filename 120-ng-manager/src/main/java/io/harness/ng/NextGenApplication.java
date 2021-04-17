@@ -45,6 +45,8 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
+import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
+import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -59,8 +61,6 @@ import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
-import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
-import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.UserPrincipalVerificationFilter;
@@ -222,7 +222,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerEtagFilter(environment, injector);
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
-    registerManagedBeans(environment, injector);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
     registerRequestContextFilter(environment);
@@ -232,8 +231,16 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerIterators(injector);
 
     intializeGitSync(injector, appConfig);
+    //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
+    blockingMigrations(injector, appConfig);
+    registerManagedBeans(environment, injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
+    //    This is is temporary one time blocking migration
+    injector.getInstance(DefaultResourceGroupCreationService.class).defaultResourceGroupCreationJob();
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {
@@ -246,8 +253,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .build());
     return GitSyncSdkConfiguration.builder()
         .gitSyncSortOrder(sortOrder)
-        .grpcClientConfig(config.getGrpcClientConfig())
-        .grpcServerConfig(config.getGrpcServerConfig())
+        .grpcClientConfig(config.getGitGrpcClientConfigs().get(Microservice.CORE))
+        .grpcServerConfig(config.getGitSyncGrpcServerConfig())
         .deployMode(GitSyncSdkConfiguration.DeployMode.IN_PROCESS)
         .microservice(Microservice.CORE)
         .scmConnectionConfig(config.getScmConnectionConfig())
@@ -272,7 +279,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public void registerIterators(Injector injector) {
-    injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
+    injector.getInstance(WebhookEventProcessingService.class).registerIterators();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -330,7 +337,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
-    environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
     environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);

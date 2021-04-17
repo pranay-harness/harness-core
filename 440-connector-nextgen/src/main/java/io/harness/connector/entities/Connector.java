@@ -77,6 +77,9 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   ConnectorActivityDetails activityDetails;
   Boolean deleted = Boolean.FALSE;
   String heartbeatPerpetualTaskId;
+  String objectIdOfYaml;
+  Boolean isFromDefaultBranch;
+  String yamlGitConfigId;
 
   @Override
   public String getAccountIdentifier() {
@@ -91,16 +94,6 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
         ConnectorKeys.connectivityDetails + "." + ConnectorConnectivityDetailsKeys.status;
     public static final String tagKey = ConnectorKeys.tags + "." + NGTagKeys.key;
     public static final String tagValue = ConnectorKeys.tags + "." + NGTagKeys.value;
-  }
-
-  @Override
-  public String getObjectIdOfYaml() {
-    return null;
-  }
-
-  @Override
-  public void setObjectIdOfYaml(String objectId) {
-    // todo(abhinav): add object id to pojo when it goes live
   }
 
   public static List<MongoIndex> mongoIndexes() {

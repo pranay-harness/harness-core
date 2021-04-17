@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NoopHostnameVerifier implements HostnameVerifier {
   @Override
   public boolean verify(String hostname, SSLSession session) {
-    log.info("Approving certificate for " + hostname);
+    log.info("Approving hostname " + hostname);
     return true;
   }
 }

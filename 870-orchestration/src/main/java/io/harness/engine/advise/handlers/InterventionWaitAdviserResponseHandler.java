@@ -13,6 +13,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.registries.timeout.TimeoutRegistry;
@@ -31,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -45,6 +47,7 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
     InterventionWaitAdvise interventionWaitAdvise = adviserResponse.getInterventionWaitAdvise();
 
+    timeoutEngine.deleteTimeouts(nodeExecution.getTimeoutInstanceIds());
     TimeoutCallback timeoutCallback =
         new InterventionWaitTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
     TimeoutObtainment timeoutObtainment =
@@ -60,9 +63,10 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
         (TimeoutParameters) kryoSerializer.asObject(timeoutObtainment.getParameters().toByteArray()));
     TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
 
-    nodeExecutionService.update(nodeExecution.getUuid(),
-        ops -> ops.set(NodeExecutionKeys.adviserTimeoutInstanceIds, Arrays.asList(instance.getUuid())));
-    nodeExecutionService.updateStatus(nodeExecution.getUuid(), INTERVENTION_WAITING);
+    nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), INTERVENTION_WAITING,
+        ops
+        -> ops.set(NodeExecutionKeys.adviserTimeoutInstanceIds, Arrays.asList(instance.getUuid())),
+        EnumSet.noneOf(Status.class));
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .eventType(OrchestrationEventType.INTERVENTION_WAIT_START)
                                .ambiance(nodeExecution.getAmbiance())

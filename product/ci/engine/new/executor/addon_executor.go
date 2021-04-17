@@ -9,6 +9,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/engine/new/executor/runtests"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
@@ -25,6 +26,12 @@ var (
 // ExecuteStepOnAddon executes customer provided step on addon
 func ExecuteStepOnAddon(ctx context.Context, step *pb.UnitStep, tmpFilePath string,
 	log *zap.SugaredLogger) (*output.StepOutput, error) {
+	// execute runtest step
+	if _, ok := step.GetStep().(*pb.UnitStep_RunTests); ok {
+		stepOutput, _, err := runtests.NewRunTestsStep(step, tmpFilePath, nil, log).Run(ctx)
+		return stepOutput, err
+	}
+
 	st := time.Now()
 	containerPort := step.GetContainerPort()
 	stepID := step.GetId()

@@ -124,9 +124,9 @@ public class StatusUtils {
       case EXPIRED:
         return FINALIZABLE_STATUSES;
       case SUCCEEDED:
-        return EnumSet.allOf(Status.class);
+        return EnumSet.of(INTERVENTION_WAITING, RUNNING);
       case IGNORE_FAILED:
-        return EnumSet.of(FAILED, INTERVENTION_WAITING);
+        return EnumSet.of(EXPIRED, FAILED, INTERVENTION_WAITING);
       default:
         throw new IllegalStateException("Unexpected value: " + status);
     }

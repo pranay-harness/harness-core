@@ -8,9 +8,9 @@ import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.serializer.morphia.AccessControlMigrationMorphiaRegistrar;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.MockRoleAssignmentMorphiaRegistrar;
-import io.harness.serializer.morphia.ResourceGroupSerializer;
 import io.harness.serializer.morphia.UserGroupMorphiaRegistrar;
 import io.harness.serializer.morphia.UserProfileMorphiaRegistrars;
+import io.harness.serializer.morphia.WebhookMorphiaRegistrars;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
@@ -35,8 +35,8 @@ public class NextGenRegistrars {
           .addAll(CDNGRegistrars.morphiaRegistrars)
           .add(UserGroupMorphiaRegistrar.class)
           .add(UserProfileMorphiaRegistrars.class)
+          .add(WebhookMorphiaRegistrars.class)
           .add(AccessControlMigrationMorphiaRegistrar.class)
-          .addAll(ResourceGroupSerializer.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .addAll(GitSyncRegistrars.morphiaRegistrars)

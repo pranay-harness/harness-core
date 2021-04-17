@@ -1,9 +1,13 @@
 package io.harness.steps.common.steps.stepgroup;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.steps.StepGroupElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.when.beans.StepWhenCondition;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import java.util.List;
@@ -17,12 +21,13 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @TypeAlias("stepGroupStepParameters")
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(PIPELINE)
 public class StepGroupStepParameters extends StepGroupElementConfig implements StepParameters {
   String childNodeID;
 
   @Builder(builderMethodName = "newBuilder")
   public StepGroupStepParameters(String uuid, String identifier, String name, ParameterField<String> skipCondition,
-      ParameterField<String> when, List<FailureStrategyConfig> failureStrategies, List<ExecutionWrapperConfig> steps,
+      StepWhenCondition when, List<FailureStrategyConfig> failureStrategies, List<ExecutionWrapperConfig> steps,
       List<ExecutionWrapperConfig> rollbackSteps, String childNodeID) {
     super(uuid, identifier, name, skipCondition, when, failureStrategies, steps, rollbackSteps);
     this.childNodeID = childNodeID;

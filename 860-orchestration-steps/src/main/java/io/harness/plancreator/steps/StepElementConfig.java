@@ -10,6 +10,7 @@ import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.when.beans.StepWhenCondition;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.timeout.Timeout;
@@ -37,9 +38,7 @@ public class StepElementConfig {
   List<FailureStrategyConfig> failureStrategies;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
-  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
-  @ApiModelProperty(hidden = true)
-  ParameterField<String> when;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) StepWhenCondition when;
 
   String type;
   @JsonProperty("spec")
@@ -53,7 +52,7 @@ public class StepElementConfig {
   @Builder
   public StepElementConfig(String uuid, String identifier, String name, String description,
       ParameterField<Timeout> timeout, List<FailureStrategyConfig> failureStrategies, String type,
-      StepSpecType stepSpecType, ParameterField<String> skipCondition, ParameterField<String> when,
+      StepSpecType stepSpecType, ParameterField<String> skipCondition, StepWhenCondition when,
       ParameterField<List<String>> delegateSelectors) {
     this.uuid = uuid;
     this.identifier = identifier;
