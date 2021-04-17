@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.ScopeHelper.getScope;
 
 import static io.fabric8.utils.Strings.nullIfEmpty;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -17,8 +18,6 @@ import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO.GitSyncFolderConfig
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 
 @OwnedBy(DX)
@@ -81,7 +80,7 @@ public class YamlGitConfigMapper {
     if (isEmpty(gitSyncFolderConfigDTOS)) {
       return null;
     }
-    return gitSyncFolderConfigDTOS.stream().map(YamlGitConfigMapper::getRootFolders).collect(Collectors.toList());
+    return gitSyncFolderConfigDTOS.stream().map(YamlGitConfigMapper::getRootFolders).collect(toList());
   }
 
   private static YamlGitConfigDTO.RootFolder getDefaultRootFolder(
@@ -89,9 +88,16 @@ public class YamlGitConfigMapper {
     if (isEmpty(gitSyncFolderConfigDTOS)) {
       return null;
     }
-    Optional<GitSyncFolderConfigDTO> gitSyncFolderDTO =
-        gitSyncFolderConfigDTOS.stream().filter(GitSyncFolderConfigDTO::getIsDefault).findFirst();
-    return gitSyncFolderDTO.map(YamlGitConfigMapper::getRootFolders).orElse(null);
+    List<GitSyncFolderConfigDTO> gitSyncFolderDTOList =
+        gitSyncFolderConfigDTOS.stream().filter(GitSyncFolderConfigDTO::getIsDefault).collect(toList());
+    if (gitSyncFolderDTOList.size() > 1) {
+      throw new InvalidRequestException("The repo config cannot have more than one default root folders");
+    }
+    if (isEmpty(gitSyncFolderDTOList)) {
+      return null;
+    }
+    GitSyncFolderConfigDTO gitSyncFolderDTO = gitSyncFolderDTOList.get(0);
+    return getRootFolders(gitSyncFolderDTO);
   }
 
   private static YamlGitConfigDTO.RootFolder getRootFolders(GitSyncFolderConfigDTO gitSyncFolderConfigDTO) {
@@ -134,7 +140,7 @@ public class YamlGitConfigMapper {
           }
           return gitSyncFolderDTOBuilder.build();
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @SneakyThrows
