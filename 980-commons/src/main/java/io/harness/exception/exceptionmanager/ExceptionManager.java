@@ -5,7 +5,7 @@ import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
-import io.harness.exception.DelegateErrorHandlerException;
+import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
@@ -60,7 +60,7 @@ public class ExceptionManager {
         if (exceptionHandler != null) {
           handledException = exceptionHandler.handleException(exception);
         } else {
-          throw new DelegateErrorHandlerException("Exception handler not registered for exception : " + exception);
+          throw new ExceptionHandlerNotFoundException("Exception handler not registered for exception", exception);
         }
         if (exception.getCause() != null) {
           WingsException cascadedException = handledException;
