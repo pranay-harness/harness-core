@@ -19,6 +19,7 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
@@ -34,9 +35,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -165,12 +168,23 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
           gitSyncConfigDTO.getOrganizationIdentifier(), gitSyncConfigDTO.getProjectIdentifier(),
           gitSyncConfigDTO.getIdentifier()));
     }
+    validateThatImmutableValuesAreNotChanged(gitSyncConfigDTO, existingYamlGitConfigDTO.get());
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, gitSyncConfigDTO.getAccountIdentifier());
     yamlGitConfigToBeSaved.setWebhookToken(existingYamlGitConfigDTO.get().getWebhookToken());
     yamlGitConfigToBeSaved.setUuid(existingYamlGitConfigDTO.get().getUuid());
     yamlGitConfigToBeSaved.setVersion(existingYamlGitConfigDTO.get().getVersion());
     YamlGitConfig yamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
     return YamlGitConfigMapper.toYamlGitConfigDTO(yamlGitConfig);
+  }
+
+  private void validateThatImmutableValuesAreNotChanged(
+      YamlGitConfigDTO gitSyncConfigDTO, YamlGitConfig existingYamlGitConfigDTO) {
+    if (!gitSyncConfigDTO.getRepo().equals(existingYamlGitConfigDTO.getRepo())) {
+      throw new InvalidRequestException("The repo url of an git config cannot be changed");
+    }
+    if (!gitSyncConfigDTO.getBranch().equals(existingYamlGitConfigDTO.getBranch())) {
+      throw new InvalidRequestException("The default branch of an git config cannot be changed");
+    }
   }
 
   private String getYamlGitConfigNotFoundMessage(
@@ -236,6 +250,21 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private void validateTheGitConfigInput(YamlGitConfigDTO ygs) {
     ensureFolderEndsWithDelimiter(ygs);
     validateFolderFollowsHarnessParadigm(ygs);
+    validateFolderPathIsUnique(ygs);
+  }
+
+  private void validateFolderPathIsUnique(YamlGitConfigDTO ygs) {
+    if (ygs.getRootFolders() == null) {
+      return;
+    }
+    Set<String> folderPaths = new HashSet();
+    for (YamlGitConfigDTO.RootFolder folder : ygs.getRootFolders()) {
+      if (folderPaths.contains(folder.getRootFolder())) {
+        throw new DuplicateFieldException(
+            String.format("A folder with name %s already exists in the list", folder.getRootFolder()));
+      }
+      folderPaths.add(folder.getRootFolder());
+    }
   }
 
   private void ensureFolderEndsWithDelimiter(YamlGitConfigDTO ygs) {
