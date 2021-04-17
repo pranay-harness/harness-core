@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
@@ -90,6 +91,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
         bind(NGSecretManagerService.class).toInstance(mock(NGSecretManagerService.class));
+        bind(AccessControlClientConfiguration.class).toInstance(mock(AccessControlClientConfiguration.class));
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
             .toInstance(mock(NoOpProducer.class));
