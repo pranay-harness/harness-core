@@ -49,7 +49,7 @@ RUN curl -O https://releases.hashicorp.com/terraform/0.12.11/terraform_0.12.11_l
     && mv terraform /usr/local/bin
 
 #Install terragrunt BT-310
-ARG TERRAGRUNT_VERSION=0.28.18
+ARG TERRAGRUNT_VERSION=v0.28.18
 ADD https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 /usr/local/bin/terragrunt
 RUN chmod +x /usr/local/bin/terragrunt
 
