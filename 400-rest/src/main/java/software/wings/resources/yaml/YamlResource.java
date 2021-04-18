@@ -52,8 +52,8 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -652,7 +652,7 @@ public class YamlResource {
   @Path("/directory")
   @Timed
   @ExceptionMetered
-  @ApiKeyAuthorized(permissionType = LOGGED_IN)
+  @ExternalFacingApiAuth
   public RestResponse<DirectoryNode> getDirectory(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
     return new RestResponse<>(yamlDirectoryService.getDirectory(accountId, appId));
@@ -1202,7 +1202,7 @@ public class YamlResource {
   @Path("/yaml-content")
   @Timed
   @ExceptionMetered
-  @ApiKeyAuthorized(permissionType = LOGGED_IN)
+  @ExternalFacingApiAuth
   public RestResponse<YamlPayload> getYamlForFilePath(@QueryParam("accountId") String accountId,
       @QueryParam("yamlFilePath") String yamlFilePath, @QueryParam("yamlSubType") String yamlSubType,
       @QueryParam("applicationId") String applicationId) {
@@ -1223,7 +1223,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
+  @ExternalFacingApiAuth
   public RestResponse<YamlOperationResponse> upsertYAMLEntities(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("file") InputStream uploadedInputStream) throws IOException {
     return new RestResponse<>(yamlService.upsertYAMLFilesAsZip(accountId,
@@ -1236,7 +1236,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
+  @ExternalFacingApiAuth
   public RestResponse<FileOperationStatus> upsertYAMLEntity(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("yamlFilePath") @NotEmpty String yamlFilePath, @FormDataParam("yamlContent") String yamlContent) {
     return new RestResponse<>(yamlService.upsertYAMLFile(accountId, yamlFilePath, yamlContent));
@@ -1247,7 +1247,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
+  @ExternalFacingApiAuth
   public RestResponse<YamlOperationResponse> deleteYAMLEntities(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("filePaths") @NotEmpty List<String> filePaths) {
     return new RestResponse<>(yamlService.deleteYAMLByPaths(accountId, filePaths));
