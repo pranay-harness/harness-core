@@ -6,7 +6,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SampleBean;
-import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
+import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 
 import com.google.inject.Singleton;
@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 @Singleton
 @OwnedBy(DX)
 public class SampleBeanEntityGitPersistenceHelperServiceImpl
-    implements EntityGitPersistenceHelperService<SampleBean, SampleBean> {
+    implements GitSdkEntityHandlerInterface<SampleBean, SampleBean> {
   @Override
   public Supplier<SampleBean> getYamlFromEntity(SampleBean entity) {
     return null;

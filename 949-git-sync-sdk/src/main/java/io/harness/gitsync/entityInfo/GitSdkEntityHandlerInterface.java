@@ -11,7 +11,7 @@ import io.harness.ng.core.EntityDetail;
 import java.util.function.Supplier;
 
 @OwnedBy(DX)
-public interface EntityGitPersistenceHelperService<B extends GitSyncableEntity, Y extends YamlDTO> {
+public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y extends YamlDTO> {
   Supplier<Y> getYamlFromEntity(B entity);
 
   EntityType getEntityType();

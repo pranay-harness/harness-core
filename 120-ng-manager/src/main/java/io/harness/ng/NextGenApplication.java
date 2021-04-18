@@ -24,6 +24,7 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkInitHelper;
@@ -193,7 +194,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
-
     if (appConfig.getShouldDeployWithGitSync()) {
       modules.add(GitSyncGrpcModule.getInstance());
       GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
@@ -204,13 +204,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         }
       });
     } else {
-      modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
+      modules.add(new SCMGrpcClientModule(appConfig.getGitSdkConfiguration().getScmConnectionConfig()));
     }
     Injector injector = Guice.createInjector(modules);
     if (appConfig.getShouldDeployWithGitSync()) {
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
     }
-
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
@@ -251,13 +250,15 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .entityClass(Connector.class)
                                           .entityHelperClass(ConnectorGitSyncHelper.class)
                                           .build());
+    final GitSdkConfiguration gitSdkConfiguration = config.getGitSdkConfiguration();
     return GitSyncSdkConfiguration.builder()
         .gitSyncSortOrder(sortOrder)
-        .grpcClientConfig(config.getGitGrpcClientConfigs().get(Microservice.CORE))
-        .grpcServerConfig(config.getGitSyncGrpcServerConfig())
+        .grpcClientConfig(gitSdkConfiguration.getGrpcClientConfig())
+        // In process server so server config not required.
+        //        .grpcServerConfig(config.getGitSyncGrpcServerConfig())
         .deployMode(GitSyncSdkConfiguration.DeployMode.IN_PROCESS)
         .microservice(Microservice.CORE)
-        .scmConnectionConfig(config.getScmConnectionConfig())
+        .scmConnectionConfig(gitSdkConfiguration.getScmConnectionConfig())
         .eventsRedisConfig(config.getEventsFrameworkConfiguration().getRedisConfig())
         .serviceHeader(NG_MANAGER)
         .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
@@ -270,7 +271,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
     if (nextGenConfiguration.getShouldDeployWithGitSync()) {
-      log.info("Initializing gRPC servers...");
+      log.info("Initializing gRPC server for git sync...");
       ServiceManager serviceManager =
           injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
       serviceManager.awaitHealthy();

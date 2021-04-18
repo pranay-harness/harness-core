@@ -4,11 +4,11 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.AccessControlClientConfiguration;
 import io.harness.Microservice;
-import io.harness.ScmConnectionConfig;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -81,8 +81,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("accessControlAdminClient")
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
-  @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
   @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("gitSdkConfiguration") private GitSdkConfiguration gitSdkConfiguration;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

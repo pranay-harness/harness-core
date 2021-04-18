@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.beans.YamlDTO;
-import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
+import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 
 import lombok.Builder;
@@ -16,5 +16,5 @@ import lombok.Value;
 public class GitSyncEntitiesConfiguration {
   Class<? extends GitSyncableEntity> entityClass;
   Class<? extends YamlDTO> yamlClass;
-  Class<? extends EntityGitPersistenceHelperService<? extends GitSyncableEntity, ? extends YamlDTO>> entityHelperClass;
+  Class<? extends GitSdkEntityHandlerInterface<? extends GitSyncableEntity, ? extends YamlDTO>> entityHelperClass;
 }

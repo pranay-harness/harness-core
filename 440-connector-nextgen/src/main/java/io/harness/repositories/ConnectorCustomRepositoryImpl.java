@@ -90,7 +90,7 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
 
   @Override
   public Connector save(Connector objectToSave, ConnectorDTO yaml) {
-    return gitAwarePersistence.save(objectToSave, yaml, Connector.class);
+    return gitAwarePersistence.save(objectToSave, yaml, ChangeType.ADD, Connector.class);
   }
 
   @Override

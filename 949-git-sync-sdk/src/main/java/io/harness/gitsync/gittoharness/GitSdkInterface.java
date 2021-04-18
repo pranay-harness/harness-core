@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.ChangeSet;
 
 @OwnedBy(DX)
-public interface ChangeSetHelperService {
+public interface GitSdkInterface {
   /**
    * Throws exception in case it is unable to process a changeset
    */

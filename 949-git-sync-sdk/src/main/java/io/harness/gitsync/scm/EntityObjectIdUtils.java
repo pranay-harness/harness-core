@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.common.helper.GitObjectIdHelper;
-import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
+import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.ng.core.utils.NGYamlUtils;
 
@@ -26,7 +26,7 @@ public class EntityObjectIdUtils {
   }
 
   public static String getObjectIdOfYaml(
-      GitSyncableEntity entity, EntityGitPersistenceHelperService gitPersistenceHelperService) {
+      GitSyncableEntity entity, GitSdkEntityHandlerInterface gitPersistenceHelperService) {
     final String yamlString = EntityToYamlStringUtils.getYamlString(entity, gitPersistenceHelperService);
     return GitObjectIdHelper.getObjectIdForString(yamlString);
   }
