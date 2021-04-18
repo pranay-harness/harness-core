@@ -33,6 +33,7 @@ public class IgnoreAdviser implements Adviser {
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     IgnoreAdviserParameters parameters = extractParameters(advisingEvent);
     Builder builder = NextStepAdvise.newBuilder();
+    // Change here
     if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
       builder.setNextNodeId(parameters.getNextNodeId());
     }

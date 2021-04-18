@@ -24,6 +24,7 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkInitHelper;
@@ -45,6 +46,8 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
+import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
+import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -59,8 +62,6 @@ import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
-import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
-import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.UserPrincipalVerificationFilter;
@@ -193,7 +194,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
-
     if (appConfig.getShouldDeployWithGitSync()) {
       modules.add(GitSyncGrpcModule.getInstance());
       GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
@@ -204,13 +204,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         }
       });
     } else {
-      modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
+      modules.add(new SCMGrpcClientModule(appConfig.getGitSdkConfiguration().getScmConnectionConfig()));
     }
     Injector injector = Guice.createInjector(modules);
     if (appConfig.getShouldDeployWithGitSync()) {
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
     }
-
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
@@ -222,7 +221,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerEtagFilter(environment, injector);
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
-    registerManagedBeans(environment, injector);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
     registerRequestContextFilter(environment);
@@ -232,8 +230,16 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerIterators(injector);
 
     intializeGitSync(injector, appConfig);
+    //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
+    blockingMigrations(injector, appConfig);
+    registerManagedBeans(environment, injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
+    //    This is is temporary one time blocking migration
+    injector.getInstance(DefaultResourceGroupCreationService.class).defaultResourceGroupCreationJob();
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {
@@ -244,13 +250,15 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .entityClass(Connector.class)
                                           .entityHelperClass(ConnectorGitSyncHelper.class)
                                           .build());
+    final GitSdkConfiguration gitSdkConfiguration = config.getGitSdkConfiguration();
     return GitSyncSdkConfiguration.builder()
         .gitSyncSortOrder(sortOrder)
-        .grpcClientConfig(config.getGrpcClientConfig())
-        .grpcServerConfig(config.getGrpcServerConfig())
+        .grpcClientConfig(gitSdkConfiguration.getGrpcClientConfig())
+        // In process server so server config not required.
+        //        .grpcServerConfig(config.getGitSyncGrpcServerConfig())
         .deployMode(GitSyncSdkConfiguration.DeployMode.IN_PROCESS)
         .microservice(Microservice.CORE)
-        .scmConnectionConfig(config.getScmConnectionConfig())
+        .scmConnectionConfig(gitSdkConfiguration.getScmConnectionConfig())
         .eventsRedisConfig(config.getEventsFrameworkConfiguration().getRedisConfig())
         .serviceHeader(NG_MANAGER)
         .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
@@ -263,7 +271,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
     if (nextGenConfiguration.getShouldDeployWithGitSync()) {
-      log.info("Initializing gRPC servers...");
+      log.info("Initializing gRPC server for git sync...");
       ServiceManager serviceManager =
           injector.getInstance(Key.get(ServiceManager.class, Names.named("git-sync"))).startAsync();
       serviceManager.awaitHealthy();
@@ -272,7 +280,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public void registerIterators(Injector injector) {
-    injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
+    injector.getInstance(WebhookEventProcessingService.class).registerIterators();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -330,7 +338,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
-    environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
     environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);

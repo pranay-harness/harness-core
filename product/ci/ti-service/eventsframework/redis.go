@@ -27,7 +27,10 @@ type RedisBroker struct {
 
 func New(endpoint, password string, log *zap.SugaredLogger) (*RedisBroker, error) {
 	// TODO: (vistaar) Configure with options using values suitable for prod and pass as env variables.
-	opt := redisqueue.RedisOptions{Addr: endpoint, Password: password}
+	opt := redisqueue.RedisOptions{Addr: endpoint}
+	if password != "" {
+		opt.Password = password
+	}
 	c1, err := redisqueue.NewConsumerWithOptions(&redisqueue.ConsumerOptions{
 		RedisOptions:      &opt,
 		VisibilityTimeout: 60 * time.Second,
@@ -88,7 +91,7 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 		}
 		switch x := dto.GetParsedResponse().Hook.(type) {
 		case *scmpb.ParseWebhookResponse_Push:
-			repo := dto.GetParsedResponse().GetPush().GetRepo().GetName()
+			repo := dto.GetParsedResponse().GetPush().GetRepo().GetLink()
 			p := dto.GetParsedResponse().GetPush().GetRef()
 			pList := strings.Split(p, "/")
 			branch := pList[len(pList)-1]

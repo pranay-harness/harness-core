@@ -11,6 +11,7 @@ import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -30,7 +31,7 @@ import io.harness.supplier.ThrowingSupplier;
 import com.google.inject.Inject;
 
 @OwnedBy(CDP)
-public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollbackStepParameters, K8sDeployResponse> {
+public class K8sRollingRollbackStep implements TaskExecutable<StepElementParameters, K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType()).build();
   public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
@@ -40,13 +41,13 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
-  public Class<K8sRollingRollbackStepParameters> getStepParametersClass() {
-    return K8sRollingRollbackStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 
   @Override
   public TaskRequest obtainTask(
-      Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
 
@@ -69,16 +70,16 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
             .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
             .timeoutIntervalInMin(
-                NGTimeConversionHelper.convertTimeStringToMinutes(stepParameters.getTimeout().getValue()))
+                NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepParameters, rollingRollbackDeployRequest, ambiance, infrastructure)
+    return k8sStepHelper.queueK8sTask(stepElementParameters, rollingRollbackDeployRequest, ambiance, infrastructure)
         .getTaskRequest();
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters,
+  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
       ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
     K8sDeployResponse executionResponse = responseSupplier.get();
     StepResponseBuilder stepResponseBuilder =

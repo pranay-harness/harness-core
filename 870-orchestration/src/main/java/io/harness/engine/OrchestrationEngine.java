@@ -83,6 +83,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -258,7 +259,9 @@ public class OrchestrationEngine {
       // Update Status
       Preconditions.checkNotNull(
           nodeExecutionService.updateStatusWithOps(AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.TIMED_WAITING,
-              ops -> ops.set(NodeExecutionKeys.initialWaitDuration, facilitatorResponse.getInitialWait())));
+              ops
+              -> ops.set(NodeExecutionKeys.initialWaitDuration, facilitatorResponse.getInitialWait()),
+              EnumSet.noneOf(Status.class)));
       String resumeId =
           delayEventHelper.delay(facilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
       waitNotifyEngine.waitForAllOn(publisherName,
@@ -326,7 +329,7 @@ public class OrchestrationEngine {
           ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
           ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
           setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
-        }));
+        }, EnumSet.noneOf(Status.class)));
   }
 
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
@@ -342,8 +345,8 @@ public class OrchestrationEngine {
   }
 
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
-    NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
-        nodeExecution.getUuid(), status, ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+    NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status,
+        ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()), EnumSet.noneOf(Status.class));
     if (updatedNodeExecution == null) {
       log.warn(
           "Cannot conclude node execution. Status update failed From :{}, To:{}", nodeExecution.getStatus(), status);
@@ -422,7 +425,8 @@ public class OrchestrationEngine {
 
       PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
       if (nodeExecution.getStatus() != RUNNING) {
-        nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatus(nodeExecutionId, RUNNING));
+        nodeExecution = Preconditions.checkNotNull(
+            nodeExecutionService.updateStatusWithOps(nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class)));
       }
 
       Map<String, byte[]> byteResponseMap = new HashMap<>();

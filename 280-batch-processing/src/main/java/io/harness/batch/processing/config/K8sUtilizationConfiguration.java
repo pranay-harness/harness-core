@@ -1,8 +1,9 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.reader.EventReaderFactory;
+import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.reader.K8sGranularUtilizationMetricsReader;
+import io.harness.batch.processing.reader.PublishedMessageBatchedReader;
 import io.harness.batch.processing.writer.K8sPVUtilizationAggregationTasklet;
 import io.harness.batch.processing.writer.K8sUtilizationMetricsWriter;
 import io.harness.batch.processing.writer.NodeUtilizationMetricsWriter;
@@ -34,8 +35,8 @@ public class K8sUtilizationConfiguration {
   private static final int BATCH_SIZE = 50;
   private static final int GRANULAR_BATCH_SIZE = 2000;
 
-  @Autowired @Qualifier("mongoEventReader") private EventReaderFactory eventReaderFactory;
   @Autowired private StepBuilderFactory stepBuilderFactory;
+  @Autowired private PublishedMessageDao publishedMessageDao;
 
   /*
    * ****************** PodUtilization ******************
@@ -47,7 +48,8 @@ public class K8sUtilizationConfiguration {
   public ItemReader<PublishedMessage> k8sPodUtilizationEventMessageReader(
       @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
       @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.POD_UTILIZATION, startDate, endDate);
+    return new PublishedMessageBatchedReader(
+        accountId, EventTypeConstants.POD_UTILIZATION, startDate, endDate, null, publishedMessageDao);
   }
 
   //  WRITER
@@ -76,8 +78,8 @@ public class K8sUtilizationConfiguration {
   public ItemReader<PublishedMessage> k8sNodeUtilizationEventMessageReader(
       @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
       @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(
-        accountId, EventTypeConstants.NODE_UTILIZATION, startDate, endDate, GRANULAR_BATCH_SIZE);
+    return new PublishedMessageBatchedReader(
+        accountId, EventTypeConstants.NODE_UTILIZATION, startDate, endDate, GRANULAR_BATCH_SIZE, publishedMessageDao);
   }
 
   //  WRITER
@@ -106,8 +108,8 @@ public class K8sUtilizationConfiguration {
   public ItemReader<PublishedMessage> k8sPVUtilizationEventMessageReader(
       @Value("#{jobParameters[accountId]}") String accountId, @Value("#{jobParameters[startDate]}") Long startDate,
       @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(
-        accountId, EventTypeConstants.PV_UTILIZATION, startDate, endDate, GRANULAR_BATCH_SIZE);
+    return new PublishedMessageBatchedReader(
+        accountId, EventTypeConstants.PV_UTILIZATION, startDate, endDate, GRANULAR_BATCH_SIZE, publishedMessageDao);
   }
 
   //  WRITER

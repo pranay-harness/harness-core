@@ -2,6 +2,7 @@ package io.harness.cdng.infra.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,8 +29,10 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
+import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.HashMap;
 import org.junit.Rule;
@@ -46,6 +49,16 @@ public class InfrastructureStepTest extends CategoryTest {
   @Mock EnvironmentService environmentService;
 
   @InjectMocks private InfrastructureStep infrastructureStep;
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testPrivelegaedAccessControlClient() throws NoSuchFieldException {
+    assertThat(ReflectionUtils.getFieldByName(InfrastructureStep.class, "accessControlClient")
+                   .getAnnotation(Named.class)
+                   .value())
+        .isEqualTo("PRIVILEGED");
+  }
 
   @Test
   @Owner(developers = VAIBHAV_SI)

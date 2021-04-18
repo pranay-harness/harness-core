@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.DelegateTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.manifests.request.ManifestCollectionParams;
@@ -39,6 +41,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import okhttp3.MediaType;
+import okhttp3.Protocol;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okio.Buffer;
@@ -53,6 +56,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.CDC)
 public class ManifestPerpetualTaskExecutorTest extends DelegateTestBase {
   private static final String APP_MANIFEST_ID = "APP_MANIFEST_ID";
   public static final String SERVICE_ID = "SERVICE_ID";
@@ -223,7 +227,13 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTestBase {
         .thenReturn(call);
     when(call.execute())
         .thenReturn(throwErrorWhilePublishing
-                ? Response.error(401, ResponseBody.create(MediaType.parse("text/plain"), "MSG"))
+                ? Response.error(ResponseBody.create(MediaType.parse("text/plain"), "MSG"),
+                    new okhttp3.Response.Builder()
+                        .code(401)
+                        .protocol(Protocol.HTTP_1_1)
+                        .message("")
+                        .request((new okhttp3.Request.Builder()).url("http://localhost/").build())
+                        .build())
                 : Response.success(new RestResponse<>()));
 
     // New build details: 3-510, unpublished: 4-510, toBeDeleted: 1-2

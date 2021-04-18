@@ -28,7 +28,7 @@ import lombok.experimental.UtilityClass;
 public class NGObjectMapperHelper {
   public static final ObjectMapper NG_DEFAULT_OBJECT_MAPPER = configureNGObjectMapper(Jackson.newObjectMapper());
 
-  public ObjectMapper configureNGObjectMapper(final ObjectMapper mapper) {
+  public static ObjectMapper configureNGObjectMapper(final ObjectMapper mapper) {
     final AnnotationAwareJsonSubtypeResolver subtypeResolver =
         AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
     mapper.setSubtypeResolver(subtypeResolver);
@@ -51,7 +51,7 @@ public class NGObjectMapperHelper {
     return mapper;
   }
 
-  public Object clone(Object object) {
+  public static Object clone(Object object) {
     try {
       return NG_DEFAULT_OBJECT_MAPPER.readValue(NG_DEFAULT_OBJECT_MAPPER.writeValueAsString(object), object.getClass());
     } catch (Exception exception) {

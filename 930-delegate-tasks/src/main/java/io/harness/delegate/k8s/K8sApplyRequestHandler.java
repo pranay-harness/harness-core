@@ -39,6 +39,7 @@ import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.nio.file.Paths;
 import java.util.List;
@@ -166,5 +167,10 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
       logCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
+  }
+
+  @VisibleForTesting
+  K8sApplyHandlerConfig getK8sApplyHandlerConfig() {
+    return k8sApplyHandlerConfig;
   }
 }

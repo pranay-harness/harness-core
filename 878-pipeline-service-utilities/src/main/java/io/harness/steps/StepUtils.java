@@ -9,7 +9,9 @@ import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.Capability;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskLogAbstractions;
@@ -34,6 +36,7 @@ import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
@@ -248,5 +251,15 @@ public class StepUtils {
             .findFirst();
 
     return optionalLevel.isPresent();
+  }
+
+  public static long getTimeoutMillis(ParameterField<String> timeout, String defaultTimeout) {
+    String timeoutString;
+    if (timeout == null || EmptyPredicate.isEmpty(timeout.getValue())) {
+      timeoutString = defaultTimeout;
+    } else {
+      timeoutString = timeout.getValue();
+    }
+    return NGTimeConversionHelper.convertTimeStringToMilliseconds(timeoutString);
   }
 }

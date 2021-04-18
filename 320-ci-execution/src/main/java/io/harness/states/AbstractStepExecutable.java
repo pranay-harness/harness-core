@@ -17,6 +17,7 @@ import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.PluginCompatibleStepSerializer;
 import io.harness.ci.serializer.PluginStepProtobufSerializer;
 import io.harness.ci.serializer.RunStepProtobufSerializer;
@@ -75,6 +76,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<StepElem
   @Inject private OutcomeService outcomeService;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
+  @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -223,6 +225,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<StepElem
                                                                 .ip(ip)
                                                                 .port(LITE_ENGINE_PORT)
                                                                 .serializedStep(executeStepRequest.toByteArray())
+                                                                .isLocal(ciExecutionServiceConfig.isLocal())
                                                                 .build()})
                                   .timeout(timeout)
                                   .build();

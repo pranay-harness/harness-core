@@ -28,12 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(DX)
 public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
   ChangeSetInterceptorService changeSetInterceptorService;
-  ChangeSetHelperService changeSetHelperService;
+  GitSdkInterface changeSetHelperService;
   Supplier<List<EntityType>> sortOrder;
 
   @Inject
   public GitToHarnessProcessorImpl(ChangeSetInterceptorService changeSetInterceptorService,
-      ChangeSetHelperService changeSetHelperService, @Named("GitSyncSortOrder") Supplier<List<EntityType>> sortOrder) {
+      GitSdkInterface changeSetHelperService, @Named("GitSyncSortOrder") Supplier<List<EntityType>> sortOrder) {
     this.changeSetInterceptorService = changeSetInterceptorService;
     this.changeSetHelperService = changeSetHelperService;
     this.sortOrder = sortOrder;

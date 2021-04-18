@@ -13,12 +13,20 @@ import io.harness.network.SafeHttpCall;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +36,26 @@ import lombok.extern.slf4j.Slf4j;
 public class DelegateInfoHelper {
   // Todo: Remove dependency of orchestrationVisualization from 120-ng-manager
   @Inject(optional = true) private DelegateSelectionLogHttpClient delegateSelectionLogHttpClient;
+
+  public LoadingCache<DelegateSelectionLogParamsKey, DelegateSelectionLogParams> taskIdToDelegateSelectionLogParams =
+      CacheBuilder.newBuilder()
+          .maximumSize(1000)
+          .expireAfterWrite(5, TimeUnit.MINUTES)
+          .build(new CacheLoader<DelegateSelectionLogParamsKey, DelegateSelectionLogParams>() {
+            @Override
+            public DelegateSelectionLogParams load(@NotNull DelegateSelectionLogParamsKey key) throws IOException {
+              return getDelegateSelectionLogParams(key.getAccountId(), key.getTaskId());
+            }
+          });
+
+  public DelegateSelectionLogParams getDelegateSelectionLogParams(String accountId, String taskId) {
+    try {
+      return SafeHttpCall.execute(delegateSelectionLogHttpClient.getDelegateInfo(accountId, taskId)).getResource();
+    } catch (Exception exception) {
+      log.error("Not able to talk to delegate service. Ignoring delegate Information");
+      return DelegateSelectionLogParams.builder().build();
+    }
+  }
 
   public List<GraphDelegateSelectionLogParams> getDelegateInformationForGivenTask(
       List<ExecutableResponse> executableResponses, ExecutionMode executionMode, String accountId) {
@@ -39,9 +67,8 @@ public class DelegateInfoHelper {
           try {
             TaskInfo taskInfo = TaskInfo.fromExecutableResponse(executableResponse);
             if (taskInfo.getTaskId() != null) {
-              DelegateSelectionLogParams resource =
-                  SafeHttpCall.execute(delegateSelectionLogHttpClient.getDelegateInfo(accountId, taskInfo.getTaskId()))
-                      .getResource();
+              DelegateSelectionLogParams resource = taskIdToDelegateSelectionLogParams.get(
+                  DelegateSelectionLogParamsKey.builder().accountId(accountId).taskId(taskInfo.getTaskId()).build());
               return GraphDelegateSelectionLogParams.builder()
                   .selectionLogParams(resource)
                   .taskId(taskInfo.getTaskId())
@@ -56,6 +83,13 @@ public class DelegateInfoHelper {
         })
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
+  }
+
+  @Data
+  @Builder
+  private static class DelegateSelectionLogParamsKey {
+    String accountId;
+    String taskId;
   }
 
   private static class TaskInfo {

@@ -18,12 +18,14 @@ import io.harness.audit.beans.Resource;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScope;
 import io.harness.audit.beans.ResourceScopeDTO;
+import io.harness.audit.beans.YamlDiffRecordDTO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import io.harness.audit.entities.YamlDiffRecord;
 import io.harness.audit.mapper.ResourceMapper;
 import io.harness.audit.mapper.ResourceScopeMapper;
 import io.harness.audit.repositories.AuditRepository;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
@@ -37,6 +39,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -49,6 +52,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @OwnedBy(PL)
 @Slf4j
 public class AuditServiceImpl implements AuditService {
+  private static final long MAXIMUM_ALLOWED_YAML_SIZE = 512L * 512;
   private final TransactionTemplate transactionTemplate;
 
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
@@ -69,6 +73,7 @@ public class AuditServiceImpl implements AuditService {
 
   @Override
   public Boolean create(AuditEventDTO auditEventDTO) {
+    validate(auditEventDTO);
     AuditEvent auditEvent = fromDTO(auditEventDTO);
     try {
       return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
@@ -88,17 +93,38 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
+  private void validate(AuditEventDTO auditEventDTO) {
+    if (auditEventDTO.getYamlDiffRecord() != null) {
+      YamlDiffRecordDTO yamlDiffRecordDTO = auditEventDTO.getYamlDiffRecord();
+      if (isNotEmpty(yamlDiffRecordDTO.getNewYaml())
+          && yamlDiffRecordDTO.getNewYaml().length() > MAXIMUM_ALLOWED_YAML_SIZE) {
+        throw new InvalidRequestException("New Yaml size exceeds the maximum allowed limit.");
+      }
+      if (isNotEmpty(yamlDiffRecordDTO.getOldYaml())
+          && yamlDiffRecordDTO.getOldYaml().length() > MAXIMUM_ALLOWED_YAML_SIZE) {
+        throw new InvalidRequestException("Old Yaml size exceeds the maximum allowed limit.");
+      }
+    }
+  }
+
   private void saveYamlDiff(AuditEventDTO auditEventDTO, String auditId) {
-    if (auditEventDTO.getYamlDiffRecordDTO() != null) {
+    if (auditEventDTO.getYamlDiffRecord() != null) {
       YamlDiffRecord yamlDiffRecord = YamlDiffRecord.builder()
                                           .auditId(auditId)
                                           .accountIdentifier(auditEventDTO.getResourceScope().getAccountIdentifier())
-                                          .oldYaml(auditEventDTO.getYamlDiffRecordDTO().getOldYaml())
-                                          .newYaml(auditEventDTO.getYamlDiffRecordDTO().getNewYaml())
+                                          .oldYaml(auditEventDTO.getYamlDiffRecord().getOldYaml())
+                                          .newYaml(auditEventDTO.getYamlDiffRecord().getNewYaml())
                                           .timestamp(Instant.ofEpochMilli(auditEventDTO.getTimestamp()))
                                           .build();
       auditYamlService.save(yamlDiffRecord);
     }
+  }
+
+  @Override
+  public Optional<AuditEvent> get(String accountIdentifier, String auditId) {
+    Criteria criteria =
+        Criteria.where(AuditEventKeys.id).is(auditId).and(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY).is(accountIdentifier);
+    return Optional.ofNullable(auditRepository.get(criteria));
   }
 
   @Override

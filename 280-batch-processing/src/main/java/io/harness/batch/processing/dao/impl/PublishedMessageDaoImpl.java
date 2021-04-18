@@ -8,6 +8,7 @@ import io.harness.event.grpc.PublishedMessage.PublishedMessageKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @Slf4j
+@Singleton
 public class PublishedMessageDaoImpl implements PublishedMessageDao {
   @Autowired @Inject private HPersistence hPersistence;
 

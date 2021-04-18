@@ -3,12 +3,14 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -52,6 +54,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "nodeExecutions", noClassnameStored = true)
 @Document("nodeExecutions")
 @TypeAlias("nodeExecution")
+@StoreIn(DbAliases.PMS)
 public final class NodeExecution implements PersistentEntity, UuidAware {
   // Immutable
   @Id @org.mongodb.morphia.annotations.Id String uuid;

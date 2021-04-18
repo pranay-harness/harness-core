@@ -13,7 +13,6 @@ import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
@@ -32,6 +31,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.steps.stepgroup.StepGroupStep;
 import io.harness.steps.common.steps.stepgroup.StepGroupStepParameters;
+import io.harness.when.utils.RunInfoUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -96,7 +96,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
         // We Should add default when condition as StageFailure if stepGroup is inside rollback
         .whenCondition(isStepGroupInsideRollback ? RunInfoUtils.getRunConditionForRollback(config.getWhen())
-                                                 : RunInfoUtils.getRunCondition(config.getWhen(), false))
+                                                 : RunInfoUtils.getRunCondition(config.getWhen()))
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))

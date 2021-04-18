@@ -15,7 +15,7 @@ import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.gitsync.beans.YamlDTO;
-import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
+import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.persistance.GitAwareRepository;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -68,11 +68,11 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
         getGitSyncSdkConfiguration().getGitSyncEntitiesConfiguration();
     gitSyncEntitiesConfiguration.forEach(gitSyncEntitiesConfig -> {
       final Class<? extends GitSyncableEntity> entityClass = gitSyncEntitiesConfig.getEntityClass();
-      Class<? extends EntityGitPersistenceHelperService<?, ?>> entityHelperClass =
+      Class<? extends GitSdkEntityHandlerInterface<?, ?>> entityHelperClass =
           gitSyncEntitiesConfig.getEntityHelperClass();
 
-      final MapBinder<String, EntityGitPersistenceHelperService> gitPersistenceHelperServiceMapBinder =
-          MapBinder.newMapBinder(binder(), String.class, EntityGitPersistenceHelperService.class);
+      final MapBinder<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMapBinder =
+          MapBinder.newMapBinder(binder(), String.class, GitSdkEntityHandlerInterface.class);
       gitPersistenceHelperServiceMapBinder.addBinding(entityClass.getCanonicalName()).to(entityHelperClass);
     });
   }

@@ -24,8 +24,8 @@ import lombok.NonNull;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public abstract class MarkStatusInterruptHandler implements InterruptHandler {
-  @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private InterruptService interruptService;
+  @Inject protected NodeExecutionService nodeExecutionService;
+  @Inject protected InterruptService interruptService;
   @Inject private OrchestrationEngine orchestrationEngine;
 
   @Override

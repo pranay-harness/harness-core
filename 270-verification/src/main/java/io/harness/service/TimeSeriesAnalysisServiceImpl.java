@@ -778,6 +778,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     metricTemplates.getMetricTemplates().forEach(
         (metricName, timeSeriesMetricDefinition)
             -> metricDefinitions.put(replaceUnicodeWithDot(metricName), timeSeriesMetricDefinition));
+    log.info("for state {} cvConfig {} metric definitions are ", stateExecutionId, cvConfigId, metricDefinitions);
     return metricDefinitions;
   }
 

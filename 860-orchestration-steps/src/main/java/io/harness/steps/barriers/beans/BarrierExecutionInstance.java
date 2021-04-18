@@ -2,12 +2,14 @@ package io.harness.steps.barriers.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier.State;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.steps.barriers.beans.BarrierPositionInfo.BarrierPosition.BarrierPositionKeys;
@@ -38,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "barrierExecutionInstances")
 @Document("barrierExecutionInstances")
 @TypeAlias("barrierExecutionInstance")
+@StoreIn(DbAliases.PMS)
 public final class BarrierExecutionInstance implements PersistentEntity, UuidAware, PersistentRegularIterable {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
 

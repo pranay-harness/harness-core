@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -32,6 +33,7 @@ public class DelegateBazelDependencyCheckTest extends CategoryTest {
   @Test
   @Owner(developers = BRIJESH)
   @Category({UnitTests.class})
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void testDependencyVersionsMatchInBazelWithRestCapsule() throws IOException {
     List<String> depsInMavenInstallJson = getDepsInMavenInstallJson();
     List<String> depsInRestCapsule = getDepsInRestCapsule();
@@ -65,7 +67,7 @@ public class DelegateBazelDependencyCheckTest extends CategoryTest {
       }
     }
 
-    assertThat(mismatchedVersions.stream().sorted()).hasSize(3);
+    assertThat(mismatchedVersions.stream().sorted()).hasSize(0);
   }
 
   List<String> getDepsInMavenInstallJson() throws IOException {

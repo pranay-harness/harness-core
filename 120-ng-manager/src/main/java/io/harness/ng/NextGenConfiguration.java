@@ -4,11 +4,11 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.AccessControlClientConfiguration;
 import io.harness.Microservice;
-import io.harness.ScmConnectionConfig;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -19,8 +19,8 @@ import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
-import io.harness.resourcegroup.ResourceGroupConfig;
 import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
+import io.harness.telemetry.segment.SegmentConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
@@ -40,7 +40,6 @@ import org.reflections.Reflections;
 public class NextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "ng-manager";
   public static final String BASE_PACKAGE = "io.harness.ng";
-  public static final String RESOURCEGROUP_PACKAGE = "io.harness.resourcegroup";
   public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
   public static final String GIT_SYNC_PACKAGE = "io.harness.gitsync";
   public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng";
@@ -72,7 +71,6 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
-  @JsonProperty("resourceGroupConfig") private ResourceGroupConfig resoureGroupConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
@@ -83,7 +81,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("accessControlAdminClient")
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
-  @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
+  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("gitSdkConfiguration") private GitSdkConfiguration gitSdkConfiguration;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
@@ -104,8 +103,8 @@ public class NextGenConfiguration extends Configuration {
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
-        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, RESOURCEGROUP_PACKAGE, SIGNUP_PACKAGE,
-        MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE);
+        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, SIGNUP_PACKAGE, MOCKSERVER_PACKAGE,
+        ACCOUNT_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

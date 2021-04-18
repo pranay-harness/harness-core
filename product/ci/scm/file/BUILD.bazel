@@ -20,7 +20,7 @@ go_test(
         "bitbucket_cloud_test.go",
         "file_test.go",
         "github_test.go",
-        "providers_test.go",
+        "gitlab_test.go",
     ],
     data = [
         "testdata/FileCreateSource.json",

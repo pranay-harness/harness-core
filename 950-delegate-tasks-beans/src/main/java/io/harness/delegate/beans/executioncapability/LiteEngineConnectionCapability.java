@@ -11,6 +11,7 @@ public class LiteEngineConnectionCapability implements ExecutionCapability {
 
   private String ip;
   private int port;
+  private boolean isLocal;
 
   @Override
   public EvaluationMode evaluationMode() {

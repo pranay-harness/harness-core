@@ -162,8 +162,8 @@ func (r *runTestsTask) createJavaAgentArg() (string, error) {
 		return "", err
 	}
 	data := fmt.Sprintf(`outDir: %s
-logLevel: 6
-logConsole: true
+logLevel: 0
+logConsole: false
 writeTo: COVERAGE_JSON
 instrPackages: %s`, dir, r.packages)
 	// Add test annotations if they were provided

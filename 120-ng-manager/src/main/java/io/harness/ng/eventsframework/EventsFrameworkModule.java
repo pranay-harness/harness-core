@@ -3,6 +3,8 @@ package io.harness.ng.eventsframework;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA_MAX_TOPIC_SIZE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
@@ -63,6 +65,9 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
+          .annotatedWith(Names.named(WEBHOOK_TRIGGER_EVENT_DATA))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -110,6 +115,10 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
               EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
+      bind(Producer.class)
+          .annotatedWith(Names.named(WEBHOOK_TRIGGER_EVENT_DATA))
+          .toInstance(RedisProducer.of(WEBHOOK_TRIGGER_EVENT_DATA, redisConfig,
+              WEBHOOK_TRIGGER_EVENT_DATA_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
     }
   }
 }

@@ -951,8 +951,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:8mLTxzQAld8cGUG045d/tWXrfOubqQpb+aTUC4uv2zk=",
-    version = "v1.13.0",
+    sum = "h1:L6g6wUzM6pV90S0VFQL/HjcTmW5JoaSGAX8VDiN76g4=",
+    version = "v1.13.1",
 )
 
 go_repository(
@@ -1462,10 +1462,10 @@ maven_install(
         "com.segment.backo:backo:1.0.0",
         "com.smoketurner:dropwizard-swagger:1.3.17-1",
         "com.splunk:splunk:1.6.3.0",
-        "com.squareup.okhttp3:logging-interceptor:3.9.1",
+        "com.squareup.okhttp3:logging-interceptor:3.14.3",
         "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-        "com.squareup.okhttp3:okhttp:3.9.0",
-        "com.squareup.okio:okio:1.13.0",
+        "com.squareup.okhttp3:okhttp:3.6.0",
+        "com.squareup.okio:okio:1.11.0",
         "com.squareup.retrofit2:adapter-rxjava:2.7.2",
         "com.squareup.retrofit2:converter-gson:2.3.0",
         "com.squareup.retrofit2:converter-jackson:2.2.0",
@@ -1963,6 +1963,7 @@ maven_install(
         "io.confluent:kafka-protobuf-serializer:5.5.1",
         "io.confluent:kafka-schema-registry-client:5.5.1",
         "io.confluent:kafka-schema-serializer:5.5.1",
+        "io.leangen.graphql:spqr:0.11.2",
         "org.apache.avro:avro:1.9.2",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.71",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.71",
@@ -2059,6 +2060,49 @@ maven_install(
         "com.squareup.okhttp3:okhttp:3.6.0",
         "org.apache.httpcomponents:httpmime:4.5.1",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+maven_install(
+    name = "batch",
+    artifacts = [
+        "com.squareup.okhttp3:okhttp:4.9.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+maven_install(
+    name = "ce_nextgen",
+    artifacts = [
+        "com.graphql-java:graphql-java:16.2",
+        "org.antlr:antlr4-runtime:4.8",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
