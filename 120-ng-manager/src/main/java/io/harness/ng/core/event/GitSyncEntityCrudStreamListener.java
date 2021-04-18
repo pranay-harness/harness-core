@@ -39,9 +39,7 @@ public class GitSyncEntityCrudStreamListener implements MessageListener {
 
         switch (action) {
           case UPDATE_ACTION:
-            if (handleUpdateAction(message)) {
-              return false;
-            }
+            return handleUpdateAction(message);
           default:
             return false;
         }
@@ -56,7 +54,7 @@ public class GitSyncEntityCrudStreamListener implements MessageListener {
       entityChangeDTO = EntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
       log.error("Invalid entity change dto.", e);
-      return true;
+      return false;
     }
     final IdentifierRef identifierRef =
         IdentifierRef.builder()
@@ -69,6 +67,6 @@ public class GitSyncEntityCrudStreamListener implements MessageListener {
                     : entityChangeDTO.getProjectIdentifier().getValue())
             .build();
     decryptedScmKeySource.removeKey(identifierRef);
-    return false;
+    return true;
   }
 }
