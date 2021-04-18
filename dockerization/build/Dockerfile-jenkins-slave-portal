@@ -1,5 +1,5 @@
 #used to create image jenkins-slave-portal-open-8u242:kubectl_with_gcc
-
+#test
 FROM base_jdk
 
 USER root
