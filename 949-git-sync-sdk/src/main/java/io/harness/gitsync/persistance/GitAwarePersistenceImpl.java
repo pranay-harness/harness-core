@@ -292,7 +292,12 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   }
 
   private boolean isGitSyncEnabled(String projectIdentifier, String orgIdentifier, String accountIdentifier) {
-    return entityKeySource.fetchKey(buildEntityScopeInfo(projectIdentifier, orgIdentifier, accountIdentifier));
+    try {
+      return entityKeySource.fetchKey(buildEntityScopeInfo(projectIdentifier, orgIdentifier, accountIdentifier));
+    } catch (Exception ex) {
+      log.error("Exception while communicating to the git sync service", ex);
+      return false;
+    }
   }
 
   EntityScopeInfo buildEntityScopeInfo(String projectIdentifier, String orgIdentifier, String accountId) {
@@ -300,7 +305,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     if (!isEmpty(projectIdentifier)) {
       entityScopeInfoBuilder.setProjectId(StringValue.of(projectIdentifier));
     }
-    if (!isEmpty(projectIdentifier)) {
+    if (!isEmpty(orgIdentifier)) {
       entityScopeInfoBuilder.setOrgId(StringValue.of(orgIdentifier));
     }
     return entityScopeInfoBuilder.build();
