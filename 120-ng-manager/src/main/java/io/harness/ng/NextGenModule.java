@@ -5,6 +5,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.GIT_SYNC_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
@@ -75,6 +76,7 @@ import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageLis
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageProcessor;
 import io.harness.ng.core.event.ConnectorEntityCRUDStreamListener;
 import io.harness.ng.core.event.ConnectorFeatureFlagStreamListener;
+import io.harness.ng.core.event.GitSyncEntityCrudStreamListener;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.ng.core.event.MessageProcessor;
 import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
@@ -454,6 +456,10 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
         .to(HarnessToGitPushMessageListener.class);
+
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(GIT_SYNC_ENTITY + ENTITY_CRUD))
+        .to(GitSyncEntityCrudStreamListener.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {

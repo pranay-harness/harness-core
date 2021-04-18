@@ -6,8 +6,6 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -17,41 +15,36 @@ import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
+import io.harness.gitsync.common.service.DecryptedScmKeySource;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
-import io.harness.tasks.DecryptGitApiAccessHelper;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import java.util.Optional;
 
 @Singleton
 @OwnedBy(DX)
 public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService {
-  private final ConnectorService connectorService;
-  private final DecryptGitApiAccessHelper decryptScmApiAccess;
   private final GitEntityService gitEntityService;
   private final YamlGitConfigService yamlGitConfigService;
   private final EntityDetailProtoToRestMapper entityDetailRestToProtoMapper;
   private final GitToHarnessProcessorService gitToHarnessProcessorService;
+  private final DecryptedScmKeySource decryptedScmKeySource;
 
   @Inject
-  public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
-      DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
-      YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
-      GitToHarnessProcessorService gitToHarnessProcessorService) {
-    this.connectorService = connectorService;
-    this.decryptScmApiAccess = decryptScmApiAccess;
+  public HarnessToGitHelperServiceImpl(GitEntityService gitEntityService, YamlGitConfigService yamlGitConfigService,
+      EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
+      GitToHarnessProcessorService gitToHarnessProcessorService, DecryptedScmKeySource decryptedScmKeySource) {
     this.gitEntityService = gitEntityService;
     this.yamlGitConfigService = yamlGitConfigService;
     this.entityDetailRestToProtoMapper = entityDetailRestToProtoMapper;
     this.gitToHarnessProcessorService = gitToHarnessProcessorService;
+    this.decryptedScmKeySource = decryptedScmKeySource;
   }
 
   @Override
@@ -83,13 +76,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     final String gitConnectorId = yamlGitConfig.getGitConnectorRef();
     final IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(gitConnectorId, accountId,
         yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier(), null);
-    final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(accountId,
-        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
-    return connectorResponseDTO
-        .map(connector
-            -> decryptScmApiAccess.decryptScmApiAccess((ScmConnector) connector.getConnector().getConnectorConfig(),
-                accountId, yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier()))
-        .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist."));
+    return decryptedScmKeySource.fetchKey(identifierRef);
   }
 
   @Override
