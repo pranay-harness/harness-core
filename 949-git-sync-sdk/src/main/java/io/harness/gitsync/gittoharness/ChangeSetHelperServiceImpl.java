@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 @OwnedBy(DX)
-public class ChangeSetHelperServiceImpl implements ChangeSetHelperService {
+public class ChangeSetHelperServiceImpl implements GitSdkInterface {
   @Override
   public void process(ChangeSet changeSet) {}
 }

@@ -8,7 +8,7 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.encryption.ScopeHelper;
-import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
+import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 
 import com.google.inject.Inject;
@@ -19,7 +19,7 @@ import lombok.AllArgsConstructor;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(HarnessTeam.DX)
-public class ConnectorGitSyncHelper implements EntityGitPersistenceHelperService<Connector, ConnectorDTO> {
+public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Connector, ConnectorDTO> {
   private final ConnectorMapper connectorMapper;
 
   @Override

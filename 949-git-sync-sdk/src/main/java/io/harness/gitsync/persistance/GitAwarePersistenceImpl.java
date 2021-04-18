@@ -13,10 +13,11 @@ import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.branching.EntityGitBranchMetadata;
 import io.harness.gitsync.branching.EntityGitBranchMetadata.EntityGitBranchMetadataKeys;
 import io.harness.gitsync.branching.GitBranchingHelper;
-import io.harness.gitsync.entityInfo.EntityGitPersistenceHelperService;
+import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
 import io.harness.gitsync.interceptor.GitSyncConstants;
+import io.harness.gitsync.persistance.GitSyncableEntity.GitSyncableEntityKeys;
 import io.harness.gitsync.scm.EntityToYamlStringUtils;
 import io.harness.gitsync.scm.SCMGitSyncHelper;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
@@ -48,7 +49,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private EntityKeySource entityKeySource;
   @Inject private GitBranchingHelper gitBranchingHelper;
-  @Inject private Map<String, EntityGitPersistenceHelperService> gitPersistenceHelperServiceMap;
+  @Inject private Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
   @Inject private SCMGitSyncHelper scmGitSyncHelper;
   @Inject private GitSyncMsvcHelper gitSyncMsvcHelper;
 
@@ -132,16 +133,16 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
       final EntityGitBranchMetadata entityGitBranchMetadata =
           getEntityGitBranchMetadata(entityDetail, scmPushResponse, objectIdOfYaml);
       // todo(abhinav): do not hardcode.
-      update.addToSet("objectIdOfYaml", objectIdOfYaml);
-      update.addToSet("isFromDefaultBranch", scmPushResponse.isPushToDefaultBranch());
-      update.addToSet("yamlGitConfigId", scmPushResponse.getYamlGitConfigId());
+      update.addToSet(GitSyncableEntityKeys.objectIdOfYaml, objectIdOfYaml);
+      update.addToSet(GitSyncableEntityKeys.isFromDefaultBranch, scmPushResponse.isPushToDefaultBranch());
+      update.addToSet(GitSyncableEntityKeys.yamlGitConfigRef, scmPushResponse.getYamlGitConfigId());
       final B modifiedObject =
           mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), entityClass);
       processGitBranchMetadata(modifiedObject, changeType, gitBranchInfo, entityDetail, scmPushResponse, objectIdOfYaml,
           entityGitBranchMetadata);
       gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse);
     } else {
-      update.addToSet("isDefault", true);
+      update.addToSet(GitSyncableEntityKeys.isFromDefaultBranch, true);
     }
     return mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), entityClass);
   }
@@ -167,13 +168,14 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
       if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
           || gitBranchInfo.getYamlGitConfigId().equals(GitSyncConstants.DEFAULT_BRANCH)
           || gitBranchInfo.getBranch().equals(GitSyncConstants.DEFAULT_BRANCH)) {
-        return new Criteria().andOperator(new Criteria().orOperator(
-            Criteria.where("isFromDefaultBranch").is(true), Criteria.where("isFromDefaultBranch").exists(false)));
+        return new Criteria().andOperator(
+            new Criteria().orOperator(Criteria.where(GitSyncableEntityKeys.isFromDefaultBranch).is(true),
+                Criteria.where(GitSyncableEntityKeys.isFromDefaultBranch).exists(false)));
       } else {
         objectId = gitBranchingHelper.getObjectIdForYamlGitConfigBranchAndScope(gitBranchInfo.getYamlGitConfigId(),
             gitBranchInfo.getBranch(), projectIdentifier, orgIdentifier, accountId, entityType);
         // todo(abhinav): find way to not hardcode objectId;
-        return new Criteria().and("objectId").is(objectId);
+        return new Criteria().and(GitSyncableEntityKeys.objectIdOfYaml).is(objectId);
       }
     }
     return new Criteria();
@@ -185,11 +187,6 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     final Supplier<Y> yamlFromEntity =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getYamlFromEntity(objectToSave);
     return save(objectToSave, yamlFromEntity.get(), changeType, entityClass);
-  }
-
-  @Override
-  public <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, Y yaml, Class<B> entityClass) {
-    return save(objectToSave, yaml, ChangeType.ADD, entityClass);
   }
 
   @Override
@@ -209,7 +206,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
 
       final String objectIdOfYaml = scmPushResponse.getObjectId();
       objectToSave.setObjectIdOfYaml(objectIdOfYaml);
-      objectToSave.setYamlGitConfigId(scmPushResponse.getYamlGitConfigId());
+      objectToSave.setYamlGitConfigRef(scmPushResponse.getYamlGitConfigId());
       objectToSave.setIsFromDefaultBranch(scmPushResponse.isPushToDefaultBranch());
 
       final EntityGitBranchMetadata entityGitBranchMetadata =
@@ -250,7 +247,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
       B objectToSave, String objectIdOfYaml, Class<B> entityClass) {
     // todo(abhinav): find way to not hardcode keys;
 
-    return mongoTemplate.findOne(query(Criteria.where("objectIdOfYaml")
+    return mongoTemplate.findOne(query(Criteria.where(GitSyncableEntityKeys.objectIdOfYaml)
                                            .is(objectIdOfYaml)
                                            .and("identifier")
                                            .is(objectToSave.getIdentifier())

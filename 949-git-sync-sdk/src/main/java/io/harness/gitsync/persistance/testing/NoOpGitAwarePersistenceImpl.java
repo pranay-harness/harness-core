@@ -33,11 +33,6 @@ public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
   }
 
   @Override
-  public <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, Y yaml, Class<B> entityClass) {
-    return mongoTemplate.save(objectToSave);
-  }
-
-  @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
       B objectToSave, ChangeType changeType, Class<B> entityClass) {
     return mongoTemplate.save(objectToSave);

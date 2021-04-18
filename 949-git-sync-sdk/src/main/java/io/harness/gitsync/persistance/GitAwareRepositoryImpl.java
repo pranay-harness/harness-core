@@ -29,7 +29,7 @@ public class GitAwareRepositoryImpl<T extends GitSyncableEntity, Y extends YamlD
   @Override
   public T save(T entity, Y yaml) {
     Assert.notNull(entity, "Entity must not be null!");
-    return gitAwarePersistence.save(entity, yaml, mongoEntityInformation.getJavaType());
+    return gitAwarePersistence.save(entity, yaml, ChangeType.ADD, mongoEntityInformation.getJavaType());
   }
 
   @Override

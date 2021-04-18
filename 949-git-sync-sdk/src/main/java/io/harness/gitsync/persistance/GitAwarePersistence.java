@@ -19,11 +19,6 @@ public interface GitAwarePersistence {
       B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass);
 
   /**
-   * Default save which will treat changeType as ADD on git.
-   */
-  <B extends GitSyncableEntity, Y extends YamlDTO> B save(B objectToSave, Y yaml, Class<B> entityClass);
-
-  /**
    * Count returns count with limit -1 and skip -1
    **/
   <B extends GitSyncableEntity, Y extends YamlDTO> Long count(@NotNull Criteria criteria, String projectIdentifier,

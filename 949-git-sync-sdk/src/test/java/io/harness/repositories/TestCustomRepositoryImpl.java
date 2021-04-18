@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SampleBean;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 
 import com.google.inject.Inject;
@@ -17,6 +18,6 @@ public class TestCustomRepositoryImpl implements TestCustomRepository {
 
   @Override
   public SampleBean save(SampleBean sampleBean) {
-    return mongoTemplate.save(sampleBean, sampleBean, SampleBean.class);
+    return mongoTemplate.save(sampleBean, sampleBean, ChangeType.ADD, SampleBean.class);
   }
 }

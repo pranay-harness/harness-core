@@ -185,6 +185,14 @@ if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.authority $NG_MANAGER_AUTHORITY
 fi
 
+if [[ "" != "$NG_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.grpcClientConfig.target $NG_MANAGER_TARGET
+fi
+
+if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.grpcClientConfig.authority $NG_MANAGER_AUTHORITY
+fi
+
 
 if [[ "" != "$HARNESS_IMAGE_USER_NAME" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImageUseName $HARNESS_IMAGE_USER_NAME
@@ -243,4 +251,4 @@ replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI
 
 replace_key_value accessControlAdminClient.mockAccessControlService "$MOCK_ACCESS_CONTROL_SERVICE"
 
-replace_key_value scmConnectionConfig.url "$SCM_SERVICE_URL"
+replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
