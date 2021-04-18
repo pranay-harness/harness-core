@@ -36,8 +36,9 @@ public class GitSyncEntityCrudStreamListener implements MessageListener {
 
         switch (action) {
           case UPDATE_ACTION:
-            if (handleUpdateAction(message))
+            if (handleUpdateAction(message)) {
               return false;
+            }
           default:
             return false;
         }
