@@ -30,6 +30,7 @@ public class QLNodeAndPodDetailsTableRow {
   String clusterId;
   String node;
   String nodePoolName;
+  String cloudProviderInstanceId;
   String podCapacity;
   double totalCost;
   double idleCost;
