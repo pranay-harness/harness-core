@@ -44,15 +44,14 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
 
   @Inject private final QueueController queueController;
 
-  public interface Handler<T> {
-    void handle(T entity);
-  }
+  public interface Handler<T> { void handle(T entity); }
 
   public enum SchedulingType { REGULAR, IRREGULAR, IRREGULAR_SKIP_MISSED }
 
   @Getter private final PersistenceProvider<T, F> persistenceProvider;
   private F filterExpander;
   private ProcessMode mode;
+  private boolean uninterrupted;
   private Class<T> clazz;
   private String fieldName;
   private Duration targetInterval;
@@ -96,7 +95,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
     long movingAverage = 0;
     long previous = 0;
     while (true) {
-      if (!shouldProcess()) {
+      if (!uninterrupted && !shouldProcess()) {
         if (mode == PUMP) {
           return;
         }

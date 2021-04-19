@@ -1,7 +1,10 @@
 package io.harness.cvng.core.resources;
 
+import io.harness.configManager.ConfigurationController;
+import io.harness.configuration.DeployMode;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
+import io.harness.version.RuntimeInfo;
 import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionPackage;
 
@@ -21,12 +24,19 @@ import javax.ws.rs.core.MediaType;
 @PublicApi
 public class VersionInfoResource {
   @Inject private VersionInfoManager versionInfoManager;
+  @Inject private ConfigurationController configurationController;
 
   @GET
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get version for CVNG service", nickname = "getCvVersion")
   public RestResponse<VersionPackage> get() {
-    return new RestResponse<>(VersionPackage.builder().versionInfo(versionInfoManager.getVersionInfo()).build());
+    return new RestResponse<>(VersionPackage.builder()
+                                  .versionInfo(versionInfoManager.getVersionInfo())
+                                  .runtimeInfo(RuntimeInfo.builder()
+                                                   .primary(configurationController.isPrimary())
+                                                   .primaryVersion(configurationController.getPrimaryVersion())
+                                                   .build())
+                                  .build());
   }
 }
