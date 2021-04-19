@@ -78,7 +78,8 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
       } catch (RedissonShutdownException e) {
         throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
       } catch (RedisException e) {
-        log.warn("Consumer " + getName() + " failed getPendingDetails", e);
+        log.warn("Consumer " + getName() + " failed getPendingEntries", e);
+        createConsumerGroupIfNotPresent(e);
         waitForRedisToComeUp();
       }
     }
@@ -107,7 +108,8 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
       } catch (RedissonShutdownException e) {
         throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
       } catch (RedisException e) {
-        log.warn("Consumer " + getName() + " failed getPendingDetails", e);
+        log.warn("Consumer " + getName() + " failed claimEntries", e);
+        createConsumerGroupIfNotPresent(e);
         waitForRedisToComeUp();
       }
     }
@@ -123,6 +125,7 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
         throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
       } catch (RedisException e) {
         log.warn("Consumer " + getName() + " failed getNewMessages", e);
+        createConsumerGroupIfNotPresent(e);
         waitForRedisToComeUp();
       }
     }
@@ -159,6 +162,14 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
         log.warn("Redis is not up for acknowledge", e);
         waitForRedisToComeUp();
       }
+    }
+  }
+
+  private void createConsumerGroupIfNotPresent(RedisException e) {
+    if (e.getMessage().matches("(.*)NOGROUP No such key(.*)or consumer group(.*)")) {
+      log.info("Key or consumer group not present, attempting to create consumer group {} for {}", getGroupName(),
+          getTopicName());
+      createConsumerGroup();
     }
   }
 

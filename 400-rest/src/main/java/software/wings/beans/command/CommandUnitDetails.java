@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING_ROUTES;
 import static software.wings.sm.states.EcsBGUpdateListnerState.ECS_UPDATE_LISTENER_COMMAND;
 import static software.wings.sm.states.EcsBGUpdateRoute53DNSWeightState.UPDATE_ROUTE_53_DNS_WEIGHTS;
@@ -30,10 +32,12 @@ import static software.wings.sm.states.pcf.PcfSetupState.PCF_SETUP_COMMAND;
 import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
 import static software.wings.sm.states.provision.ARMStateHelper.AZURE_ARM_COMMAND_UNIT_TYPE;
 import static software.wings.sm.states.provision.ARMStateHelper.AZURE_BLUEPRINT_COMMAND_UNIT_TYPE;
+import static software.wings.sm.states.provision.TerragruntProvisionState.TERRAGRUNT_PROVISION_COMMAND_UNIT_TYPE;
 import static software.wings.sm.states.spotinst.SpotInstDeployState.SPOTINST_DEPLOY_COMMAND;
 import static software.wings.sm.states.spotinst.SpotInstListenerUpdateState.SPOTINST_LISTENER_UPDATE_COMMAND;
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.Variable;
@@ -50,6 +54,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
+@OwnedBy(CDP)
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommandUnitDetails {
@@ -93,7 +98,8 @@ public class CommandUnitDetails {
     AZURE_APP_SERVICE_SLOT_SWAP(APP_SERVICE_SLOT_SWAP),
     CUSTOM_DEPLOYMENT_FETCH_INSTANCES(FETCH_INSTANCE_COMMAND_UNIT),
     AZURE_ARM_DEPLOYMENT(AZURE_ARM_COMMAND_UNIT_TYPE),
-    AZURE_BLUEPRINT_DEPLOYMENT(AZURE_BLUEPRINT_COMMAND_UNIT_TYPE);
+    AZURE_BLUEPRINT_DEPLOYMENT(AZURE_BLUEPRINT_COMMAND_UNIT_TYPE),
+    TERRAGRUNT_PROVISION(TERRAGRUNT_PROVISION_COMMAND_UNIT_TYPE);
 
     private String name;
 

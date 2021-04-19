@@ -95,6 +95,8 @@ public class ConnectorMapper {
         .lastModifiedAt(timeWhenConnectorIsLastUpdated)
         .harnessManaged(isHarnessManaged(connector))
         .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
+        .branch(connector.getBranch())
+        .repoIdentifier(connector.getYamlGitConfigRef())
         .build();
   }
 

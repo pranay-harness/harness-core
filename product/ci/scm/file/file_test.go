@@ -259,7 +259,8 @@ func TestFindFilesInBranch(t *testing.T) {
 	got, err := FindFilesInBranch(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
-	assert.Equal(t, len(got.File), 26, "one files")
+	assert.Equal(t, 26, len(got.File), "26 files")
+	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
 }
 
 func TestFindFilesInCommit(t *testing.T) {
@@ -290,6 +291,7 @@ func TestFindFilesInCommit(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, 26, len(got.File), "26 files")
+	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
 }
 
 func TestBatchFindFile(t *testing.T) {

@@ -232,7 +232,7 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class HelmDeployStateTest extends CategoryTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
   private static final String HELM_RELEASE_NAME_PREFIX = "helm-release-name-prefix";

@@ -1,7 +1,9 @@
 package io.harness.batch.processing.pricing.gcp.bigquery.impl;
 
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.billingAmountSum;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.computeProductFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.cost;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.count;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.effectiveCost;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.eksCpuInstanceType;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.eksMemoryInstanceType;
@@ -15,8 +17,11 @@ import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
+import io.harness.batch.processing.entities.ClusterDataDetails;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData;
 import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData.VMInstanceServiceBillingDataBuilder;
@@ -49,12 +54,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 @Service
 public class BigQueryHelperServiceImpl implements BigQueryHelperService {
   private BatchMainConfig mainConfig;
   private CloudBillingHelper cloudBillingHelper;
-
+  private int clusterDetailsCount;
+  private double billingSum;
   private static final String preAggregated = "preAggregated";
+  private static final String clusterData = "clusterData";
   private static final String countConst = "count";
   private static final String cloudProviderConst = "cloudProvider";
 
@@ -87,6 +95,50 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
         format(query, projectTableName, getResourceConditionWhereClause(resourceIds), startTime, endTime);
     log.info("EKS Fargate Billing Query: {}", formattedQuery);
     return queryEKSFargate(formattedQuery);
+  }
+
+  public ClusterDataDetails getClusterDataDetails(String accountId, Instant startTime) {
+    String query = BigQueryConstants.CLUSTER_DATA_QUERY;
+    String tableName = cloudBillingHelper.getCloudProviderTableName(
+        mainConfig.getBillingDataPipelineConfig().getGcpProjectId(), accountId, clusterData);
+    String formattedQuery = format(query, tableName, accountId, startTime.toEpochMilli());
+    log.info("BigQuery formatted query : " + formattedQuery);
+    BigQuery bigQueryService = getBigQueryService();
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(formattedQuery).build();
+    TableResult result = null;
+    try {
+      result = bigQueryService.query(queryConfig);
+      FieldList fields = getFieldList(result);
+      List<VMInstanceServiceBillingData> instanceServiceBillingDataList = new ArrayList<>();
+      Iterable<FieldValueList> fieldValueLists = getFieldValueLists(result);
+      clusterDetailsCount = 0;
+      billingSum = 0.0;
+      for (FieldValueList row : fieldValueLists) {
+        for (Field field : fields) {
+          switch (field.getName()) {
+            case count:
+              if (getDoubleValue(row, field) != null) {
+                clusterDetailsCount = getDoubleValue(row, field).intValue();
+              }
+              break;
+            case billingAmountSum:
+              if (getDoubleValue(row, field) != null) {
+                billingSum = getDoubleValue(row, field);
+              }
+              break;
+            default:
+              break;
+          }
+        }
+      }
+      return ClusterDataDetails.builder().entriesCount(clusterDetailsCount).billingAmountSum(billingSum).build();
+    } catch (InterruptedException e) {
+      log.error("Failed to get Billing Data. {}", e);
+      Thread.currentThread().interrupt();
+    } catch (Exception ex) {
+      log.error("Exception Failed to get Billing Data", ex);
+    }
+    return null;
   }
 
   private String getResourceConditionWhereClause(List<String> resourceIds) {

@@ -113,6 +113,38 @@ func TestListCommitsBitbucketCloud(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Greater(t, len(got.CommitIds), 1, "more than 1 commit")
+	assert.Equal(t, int32(2), got.Pagination.Next, "there is a next page")
+}
+
+func TestListCommitsPage2BitbucketCloud(t *testing.T) {
+	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+		t.Skip("Skipping, Acceptance test")
+	}
+	in := &pb.ListCommitsRequest{
+		Slug: "tphoney/scm-test",
+		Type: &pb.ListCommitsRequest_Branch{
+			Branch: "master",
+		},
+		Pagination: &pb.PageRequest{
+			Page: 2,
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_BitbucketCloud{
+				BitbucketCloud: &pb.BitbucketCloudProvider{
+					Username:    "tphoney",
+					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+				},
+			},
+			Debug: true,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := ListCommits(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Greater(t, len(got.CommitIds), 1, "more than 1 commit")
+	assert.Equal(t, int32(3), got.Pagination.Next, "there is a next page")
 }
 
 func TestListBranchesBitbucketCloud(t *testing.T) {
@@ -137,4 +169,5 @@ func TestListBranchesBitbucketCloud(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.GreaterOrEqual(t, len(got.Branches), 1, "status matches")
+	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
 }

@@ -3,6 +3,7 @@ package io.harness.serializer.morphia;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlGitConfig;
@@ -26,6 +27,7 @@ public class GitSyncMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(GitSyncError.class);
     set.add(GitFileActivity.class);
     set.add(GitFileLocation.class);
+    set.add(GitBranch.class);
   }
 
   @Override

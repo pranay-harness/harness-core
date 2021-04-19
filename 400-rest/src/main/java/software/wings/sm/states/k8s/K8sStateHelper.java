@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
@@ -79,7 +79,7 @@ import org.apache.commons.io.LineIterator;
 
 @Singleton
 @Slf4j
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
 public class K8sStateHelper {
   @Inject private transient ApplicationManifestService applicationManifestService;

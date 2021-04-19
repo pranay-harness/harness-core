@@ -198,6 +198,8 @@ import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.SpotInstHelperServiceDelegateImpl;
 import io.harness.terraform.TerraformClient;
 import io.harness.terraform.TerraformClientImpl;
+import io.harness.terragrunt.TerragruntClient;
+import io.harness.terragrunt.TerragruntClientImpl;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
@@ -261,6 +263,7 @@ import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.TerraformFetchTargetsTask;
 import software.wings.delegatetasks.TerraformInputVariablesObtainTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
+import software.wings.delegatetasks.TerragruntProvisionTask;
 import software.wings.delegatetasks.TriggerTask;
 import software.wings.delegatetasks.aws.AwsAmiAsyncTask;
 import software.wings.delegatetasks.aws.AwsAsgTask;
@@ -829,6 +832,7 @@ public class DelegateModule extends AbstractModule {
     bind(GitClientV2.class).to(GitClientV2Impl.class).asEagerSingleton();
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(HelmClient.class).to(HelmClientImpl.class);
+    bind(TerragruntClient.class).to(TerragruntClientImpl.class);
     bind(KustomizeClient.class).to(KustomizeClientImpl.class);
     bind(OpenShiftClient.class).to(OpenShiftClientImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceImpl.class);
@@ -1285,6 +1289,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK)
         .toInstance(TerraformInputVariablesObtainTask.class);
     mapBinder.addBinding(TaskType.TERRAFORM_FETCH_TARGETS_TASK).toInstance(TerraformFetchTargetsTask.class);
+    mapBinder.addBinding(TaskType.TERRAGRUNT_PROVISION_TASK).toInstance(TerragruntProvisionTask.class);
     mapBinder.addBinding(TaskType.KUBERNETES_SWAP_SERVICE_SELECTORS_TASK)
         .toInstance(KubernetesSwapServiceSelectorsTask.class);
     mapBinder.addBinding(TaskType.ECS_STEADY_STATE_CHECK_TASK).toInstance(EcsSteadyStateCheckTask.class);

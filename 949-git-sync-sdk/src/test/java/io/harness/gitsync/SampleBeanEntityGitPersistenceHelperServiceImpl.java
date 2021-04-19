@@ -6,6 +6,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SampleBean;
+import io.harness.common.EntityReference;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 
@@ -18,7 +19,7 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
     implements GitSdkEntityHandlerInterface<SampleBean, SampleBean> {
   @Override
   public Supplier<SampleBean> getYamlFromEntity(SampleBean entity) {
-    return null;
+    return () -> entity;
   }
 
   @Override
@@ -28,13 +29,14 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
 
   @Override
   public Supplier<SampleBean> getEntityFromYaml(SampleBean yaml) {
-    return null;
+    return () -> yaml;
   }
 
   @Override
   public EntityDetail getEntityDetail(SampleBean entity) {
     return EntityDetail.builder()
         .name(entity.getName())
+        .type(EntityType.CONNECTORS)
         .entityRef(IdentifierRef.builder()
                        .accountIdentifier(entity.getAccountIdentifier())
                        .identifier(entity.getIdentifier())
@@ -42,5 +44,20 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
                        .projectIdentifier(entity.getProjectIdentifier())
                        .build())
         .build();
+  }
+
+  @Override
+  public SampleBean save(SampleBean yaml, String accountIdentifier) {
+    return null;
+  }
+
+  @Override
+  public SampleBean update(SampleBean yaml, String accountIdentifier) {
+    return null;
+  }
+
+  @Override
+  public boolean delete(EntityReference entityReference) {
+    return false;
   }
 }

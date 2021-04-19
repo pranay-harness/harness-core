@@ -94,7 +94,7 @@ public class PipelineRbacServiceImplTest {
 
     List<AccessControlDTO> accessControlList = new ArrayList<>();
     accessControlList.add(AccessControlDTO.builder()
-                              .permission("core_connector_runtimeAccess")
+                              .permission("core_connector_access")
                               .resourceScope(ResourceScope.builder()
                                                  .accountIdentifier(accountIdentifier)
                                                  .orgIdentifier(orgIdentifier)
@@ -105,7 +105,7 @@ public class PipelineRbacServiceImplTest {
                               .permitted(true)
                               .build());
     accessControlList.add(AccessControlDTO.builder()
-                              .permission("core_connector_runtimeAccess")
+                              .permission("core_connector_access")
                               .resourceScope(ResourceScope.builder().accountIdentifier(accountIdentifier).build())
                               .resourceIdentifier("conn")
                               .resourceType("CONNECTOR")

@@ -1,8 +1,13 @@
 package io.harness.context;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 /**
  * Describes what type of element is being repeated on.
  */
+@OwnedBy(CDC)
 public enum ContextElementType {
   /**
    * Service context element type.
@@ -130,6 +135,8 @@ public enum ContextElementType {
   K8S,
 
   TERRAFORM_INHERIT_PLAN,
+
+  TERRAGRUNT_INHERIT_PLAN,
 
   AZURE_VMSS_SETUP,
 

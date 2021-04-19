@@ -18,6 +18,8 @@ import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
+import java.util.List;
+
 @OwnedBy(DX)
 public interface ScmClient {
   // It is assumed that ScmConnector is a decrypted connector.
@@ -47,4 +49,8 @@ public interface ScmClient {
   ListBranchesResponse listBranches(ScmConnector scmConnector);
 
   ListCommitsResponse listCommits(ScmConnector scmConnector, String branch);
+
+  FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch);
+
+  void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName);
 }

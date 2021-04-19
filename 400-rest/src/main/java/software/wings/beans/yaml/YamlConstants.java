@@ -1,11 +1,16 @@
 package software.wings.beans.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.common.collect.Lists;
 import java.util.List;
 
 /**
  * @author rktummala on 10/17/17
  */
+@OwnedBy(DX)
 public interface YamlConstants {
   String PATH_DELIMITER = "/";
   String ANY = ".[^/]*?";
@@ -96,6 +101,7 @@ public interface YamlConstants {
 
   String GIT_YAML_LOG_PREFIX = "GIT_YAML_LOG_ENTRY: ";
   String GIT_TERRAFORM_LOG_PREFIX = "GIT_TERRAFORM_LOG_ENTRY: ";
+  String GIT_TERRAGRUNT_LOG_PREFIX = "GIT_TERRAGRUNT_LOG_ENTRY: ";
   String GIT_TRIGGER_LOG_PREFIX = "GIT_TRIGGER_LOG_PREFIX: ";
   String GIT_DEFAULT_LOG_PREFIX = "GIT_DEFAULT_LOG_PREFIX: ";
   String GIT_HELM_LOG_PREFIX = "GIT_HELM_LOG_ENTRY: ";

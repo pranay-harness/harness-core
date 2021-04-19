@@ -9,6 +9,7 @@ import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
+import io.harness.batch.processing.support.ActiveInstanceIterator;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.entities.InstanceData;
@@ -88,8 +89,10 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
               lifecycle.getInstanceId(), InstanceDataKeys.instanceState, InstanceState.RUNNING.name(),
               InstanceDataKeys.usageStartTime, new BasicDBObject("$lte", instanceTime)));
 
-          BasicDBObject updateOperations = new BasicDBObject(ImmutableMap.of(InstanceDataKeys.usageStopTime,
-              instanceTime, InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
+          BasicDBObject updateOperations = new BasicDBObject(
+              ImmutableMap.of(InstanceDataKeys.usageStopTime, instanceTime, InstanceDataKeys.activeInstanceIterator,
+                  ActiveInstanceIterator.getActiveInstanceIteratorFromStopTime(instanceTime),
+                  InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
           updateOperations.append(
               InstanceDataKeys.ttl, new Date(instanceTime.plus(180, ChronoUnit.DAYS).toEpochMilli()));
 
@@ -135,6 +138,8 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
                 .append(InstanceDataKeys.clusterName, instanceInfo.getClusterName())
                 .append(InstanceDataKeys.instanceState, instanceInfo.getInstanceState().name())
                 .append(InstanceDataKeys.usageStartTime, instanceInfo.getUsageStartTime())
+                .append(InstanceDataKeys.activeInstanceIterator,
+                    ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(instanceInfo.getUsageStartTime()))
                 .append(InstanceDataKeys.createdAt, createdAt)
                 .append(InstanceDataKeys.lastUpdatedAt, createdAt);
 
@@ -223,8 +228,10 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
                 new BasicDBObject(
                     "$in", ImmutableList.of(InstanceState.RUNNING.name(), InstanceState.INITIALIZING.name())));
 
-            updateOperations = new BasicDBObject(ImmutableMap.of(
-                InstanceDataKeys.usageStopTime, instant, InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
+            updateOperations = new BasicDBObject(
+                ImmutableMap.of(InstanceDataKeys.usageStopTime, instant, InstanceDataKeys.activeInstanceIterator,
+                    ActiveInstanceIterator.getActiveInstanceIteratorFromStopTime(instant),
+                    InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
 
             if (ImmutableSet.of(InstanceType.K8S_POD, InstanceType.K8S_POD_FARGATE)
                     .contains(instanceEvent.getInstanceType())) {
@@ -243,8 +250,10 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
           case START:
             filter.append(InstanceDataKeys.instanceState, InstanceState.INITIALIZING.name());
 
-            updateOperations = new BasicDBObject(ImmutableMap.of(InstanceDataKeys.usageStartTime, instant,
-                InstanceDataKeys.instanceState, InstanceState.RUNNING.name()));
+            updateOperations = new BasicDBObject(
+                ImmutableMap.of(InstanceDataKeys.usageStartTime, instant, InstanceDataKeys.activeInstanceIterator,
+                    ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(instant),
+                    InstanceDataKeys.instanceState, InstanceState.RUNNING.name()));
 
             updateOperations.append(InstanceDataKeys.lastUpdatedAt, Instant.now().toEpochMilli());
             bulkWriteOperation.find(filter).update(new BasicDBObject("$set", updateOperations));

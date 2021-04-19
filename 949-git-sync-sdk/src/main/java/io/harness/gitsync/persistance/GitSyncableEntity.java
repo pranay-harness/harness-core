@@ -21,4 +21,5 @@ public abstract class GitSyncableEntity implements NGAccess {
   String objectIdOfYaml;
   Boolean isFromDefaultBranch;
   String yamlGitConfigRef;
+  transient String branch;
 }

@@ -1,6 +1,7 @@
 package io.harness.gitsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.EntityType;
@@ -20,6 +21,7 @@ import io.harness.gitsync.persistance.GitAwareRepository;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.grpc.client.GrpcClientConfig;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -30,9 +32,13 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.util.Types;
 import java.lang.reflect.ParameterizedType;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @OwnedBy(DX)
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
@@ -117,5 +123,23 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
   @Named("git-msvc")
   public AuthorizationServiceHeader getAuthorizationServiceHeader() {
     return getGitSyncSdkConfiguration().getServiceHeader();
+  }
+
+  @Provides
+  @Singleton
+  @Named("GitSyncEntityConfigurations")
+  public Map<EntityType, GitSyncEntitiesConfiguration> getGitSyncEntityConfigurations() {
+    if (isEmpty(gitSyncSdkConfiguration().getGitSyncEntitiesConfiguration())) {
+      return new HashMap<>();
+    }
+    return gitSyncSdkConfiguration().getGitSyncEntitiesConfiguration().stream().collect(
+        Collectors.toMap(GitSyncEntitiesConfiguration::getEntityType, Function.identity()));
+  }
+
+  @Provides
+  @Singleton
+  @Named("GitSyncObjectMapper")
+  public ObjectMapper getGitSyncObjectMapper() {
+    return getGitSyncSdkConfiguration().getObjectMapper();
   }
 }

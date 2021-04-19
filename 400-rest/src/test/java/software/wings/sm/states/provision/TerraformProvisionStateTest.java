@@ -144,7 +144,7 @@ import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private DelegateService delegateService;

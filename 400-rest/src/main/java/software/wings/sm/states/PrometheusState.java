@@ -49,7 +49,7 @@ import org.slf4j.Logger;
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 @FieldNameConstants(innerTypeName = "PrometheusStateKeys")
 public class PrometheusState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";

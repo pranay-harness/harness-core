@@ -23,6 +23,7 @@ import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.batch.processing.support.ActiveInstanceIterator;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
@@ -315,20 +316,23 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
               harnessServiceInfo = getHarnessServiceInfo(accountId, clusterName, serviceName);
             }
 
-            InstanceData instanceData = InstanceData.builder()
-                                            .accountId(accountId)
-                                            .instanceId(taskId)
-                                            .clusterName(clusterName)
-                                            .clusterId(clusterId)
-                                            .settingId(settingId)
-                                            .instanceType(instanceType)
-                                            .usageStartTime(task.getPullStartedAt().toInstant())
-                                            .instanceState(InstanceState.RUNNING)
-                                            .totalResource(resource)
-                                            .allocatableResource(resource)
-                                            .metaData(metaData)
-                                            .harnessServiceInfo(harnessServiceInfo)
-                                            .build();
+            Instant startInstant = task.getPullStartedAt().toInstant();
+            InstanceData instanceData =
+                InstanceData.builder()
+                    .accountId(accountId)
+                    .instanceId(taskId)
+                    .clusterName(clusterName)
+                    .clusterId(clusterId)
+                    .settingId(settingId)
+                    .instanceType(instanceType)
+                    .usageStartTime(startInstant)
+                    .activeInstanceIterator(ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(startInstant))
+                    .instanceState(InstanceState.RUNNING)
+                    .totalResource(resource)
+                    .allocatableResource(resource)
+                    .metaData(metaData)
+                    .harnessServiceInfo(harnessServiceInfo)
+                    .build();
 
             updateInstanceStopTimeForTask(instanceData, task);
             log.debug("Creating task {} ", taskId);
@@ -341,6 +345,8 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     if (null != task.getStoppedAt()) {
       Instant usageStopInstant = task.getStoppedAt().toInstant();
       instanceData.setUsageStopTime(usageStopInstant);
+      instanceData.setActiveInstanceIterator(
+          ActiveInstanceIterator.getActiveInstanceIteratorFromStopTime(usageStopInstant));
       instanceData.setInstanceState(InstanceState.STOPPED);
       instanceData.setTtl(new Date(usageStopInstant.plus(30, ChronoUnit.DAYS).toEpochMilli()));
       return true;
@@ -454,19 +460,23 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
                 InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
                 CloudProvider.AWS);
             if (null != totalResource) {
-              InstanceData instanceData = InstanceData.builder()
-                                              .accountId(accountId)
-                                              .instanceId(containerInstanceId)
-                                              .clusterName(getIdFromArn(clusterArn))
-                                              .clusterId(clusterId)
-                                              .settingId(settingId)
-                                              .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
-                                              .instanceState(InstanceState.RUNNING)
-                                              .usageStartTime(containerInstance.getRegisteredAt().toInstant())
-                                              .totalResource(totalResource)
-                                              .allocatableResource(resource)
-                                              .metaData(metaData)
-                                              .build();
+              Instant startInstant = containerInstance.getRegisteredAt().toInstant();
+              InstanceData instanceData =
+                  InstanceData.builder()
+                      .accountId(accountId)
+                      .instanceId(containerInstanceId)
+                      .clusterName(getIdFromArn(clusterArn))
+                      .clusterId(clusterId)
+                      .settingId(settingId)
+                      .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
+                      .instanceState(InstanceState.RUNNING)
+                      .usageStartTime(startInstant)
+                      .activeInstanceIterator(
+                          ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(startInstant))
+                      .totalResource(totalResource)
+                      .allocatableResource(resource)
+                      .metaData(metaData)
+                      .build();
               log.debug("Creating container instance {} ", containerInstanceId);
               instanceDataService.create(instanceData);
             }

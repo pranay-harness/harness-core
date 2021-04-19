@@ -53,6 +53,9 @@ public class SCMGitSyncHelper {
 
   private ScmPushResponse pushToGitBasedOnChangeType(
       String yaml, ChangeType changeType, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
+    if (infoForPush.isNewBranch()) {
+      createNewBranchInGit(infoForPush, gitBranchInfo);
+    }
     switch (changeType) {
       case ADD:
         final CreateFileResponse createFileResponse = doScmCreateFile(yaml, gitBranchInfo, infoForPush);
@@ -67,6 +70,7 @@ public class SCMGitSyncHelper {
             .orgIdentifier(infoForPush.getOrgIdentifier())
             .projectIdentifier(infoForPush.getProjectIdentifier())
             .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
+            .branch(infoForPush.getBranch())
             .build();
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
@@ -80,6 +84,7 @@ public class SCMGitSyncHelper {
             .filePath(infoForPush.getFilePath())
             .pushToDefaultBranch(infoForPush.isDefault())
             .yamlGitConfigId(infoForPush.getYamlGitConfigId())
+            .branch(infoForPush.getBranch())
             .build();
       case RENAME:
         throw new NotImplementedException("Not implemented");
@@ -97,10 +102,16 @@ public class SCMGitSyncHelper {
             .accountIdentifier(infoForPush.getAccountId())
             .orgIdentifier(infoForPush.getOrgIdentifier())
             .projectIdentifier(infoForPush.getProjectIdentifier())
+            .branch(infoForPush.getBranch())
             .build();
       default:
         throw new EnumConstantNotPresentException(changeType.getClass(), "Incorrect changeType");
     }
+  }
+
+  private void createNewBranchInGit(InfoForGitPush infoForPush, GitEntityInfo gitBranchInfo) {
+    scmClient.createNewBranch(
+        infoForPush.getScmConnector(), infoForPush.getBranch(), infoForPush.getDefaultBranchName());
   }
 
   private InfoForGitPush getInfoForPush(GitEntityInfo gitBranchInfo, EntityDetail entityDetail) {
@@ -129,6 +140,8 @@ public class SCMGitSyncHelper {
         .branch(gitBranchInfo.getBranch())
         .isDefault(pushInfo.getIsDefault())
         .yamlGitConfigId(pushInfo.getYamlGitConfigId())
+        .isNewBranch(gitBranchInfo.isNewBranch())
+        .defaultBranchName(pushInfo.getDefaultBranchName())
         .build();
   }
 

@@ -71,7 +71,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -157,14 +156,15 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     if (isEmpty(decryptableEntities)) {
       return;
     }
-    Set<SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
+    Map<String, SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
     NGAccess baseNGAccess = BaseNGAccess.builder()
                                 .accountIdentifier(accountIdentifier)
                                 .orgIdentifier(connectorDTO.getOrgIdentifier())
                                 .projectIdentifier(connectorDTO.getProjectIdentifier())
                                 .build();
     if (isNotEmpty(secrets)) {
-      secrets.forEach(secret -> secretRefInputValidationHelper.validateTheSecretInput(secret, baseNGAccess));
+      secrets.forEach(
+          (fieldName, secret) -> secretRefInputValidationHelper.validateTheSecretInput(secret, baseNGAccess));
     }
   }
 

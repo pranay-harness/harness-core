@@ -73,6 +73,7 @@ public class NodeAndPodDetailsDataFetcher
   private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
   private static final String NODE_POOL_NAME = "node_pool_name";
+  public static final String CLOUD_PROVIDER_INSTANCE_ID = "cloud_provider_instance_id";
   private static final String K8S_POD_CAPACITY = "pod_capacity";
   private static final String DEFAULT_STRING_VALUE = "-";
   private static final InstanceData DEFAULT_INSTANCE_DATA = InstanceData.builder().metaData(new HashMap<>()).build();
@@ -428,6 +429,7 @@ public class NodeAndPodDetailsDataFetcher
           .clusterName(costDataEntry.getClusterName())
           .clusterId(costDataEntry.getClusterId())
           .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, DEFAULT_STRING_VALUE))
+          .cloudProviderInstanceId(entry.getMetaData().getOrDefault(CLOUD_PROVIDER_INSTANCE_ID, DEFAULT_STRING_VALUE))
           .podCapacity(entry.getMetaData().getOrDefault(K8S_POD_CAPACITY, DEFAULT_STRING_VALUE))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())

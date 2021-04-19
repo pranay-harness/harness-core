@@ -28,7 +28,8 @@ public interface YamlGitConfigService {
 
   List<YamlGitConfigDTO> list(String projectIdentifier, String orgIdentifier, String accountId);
 
-  YamlGitConfigDTO updateDefault(String projectIdentifier, String orgId, String accountId, String Id, String folderId);
+  YamlGitConfigDTO updateDefault(
+      String projectIdentifier, String orgId, String accountId, String Id, String folderPath);
 
   @ValidationGroups(Create.class) YamlGitConfigDTO save(@Valid YamlGitConfigDTO yamlGitConfig);
 

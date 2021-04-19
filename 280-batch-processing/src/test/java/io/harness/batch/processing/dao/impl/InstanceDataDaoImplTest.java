@@ -7,7 +7,6 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 
 import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.ccm.InstanceEvent;
@@ -111,53 +110,6 @@ public class InstanceDataDaoImplTest extends BatchProcessingTestBase {
         instanceDataDao.fetchClusterActiveInstanceData(ACCOUNT_ID, CLUSTER_ID, getActiveInstanceState(), END_INSTANT);
     assertThat(instanceData).hasSize(1);
     assertThat(instanceData.get(0).getInstanceId()).isEqualTo(RUNNING_INSTANCE_ID);
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldUpsertInstanceInfo() {
-    InstanceData instanceData = instanceDataDao.upsert(instanceInfo());
-    verify(costEventService).updateDeploymentEvent(costEventDataArgumentCaptor.capture());
-    CostEventData costEventData = costEventDataArgumentCaptor.getValue();
-    assertThat(costEventData.getDeploymentId()).isEqualTo("deploymentSummaryId");
-    assertThat(costEventData.getClusterId()).isEqualTo(CLUSTER_ID);
-    assertThat(costEventData.getNamespace()).isEqualTo(InstanceMetaDataConstants.NAMESPACE);
-    assertThat(costEventData.getWorkloadName()).isEqualTo(InstanceMetaDataConstants.WORKLOAD_NAME);
-    assertThat(costEventData.getWorkloadType()).isEqualTo(InstanceMetaDataConstants.WORKLOAD_TYPE);
-    assertThat(costEventData.getSettingId()).isEqualTo(CLOUD_PROVIDER_ID);
-    assertThat(instanceData.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(instanceData.getHarnessServiceInfo()).isEqualTo(harnessServiceInfo());
-    assertThat(instanceData.getMetaData()).isEqualTo(metaData());
-    assertThat(instanceData.getTotalResource()).isEqualTo(resource());
-    assertThat(instanceData.getLabels()).isEqualTo(label());
-    assertThat(instanceData.getNamespaceLabels()).isEqualTo(NAMESPACE_LABELS);
-    assertThat(instanceData.getUsageStartTime().toEpochMilli()).isEqualTo(START_INSTANT.toEpochMilli());
-    assertThat(instanceData.getCloudProviderInstanceId()).isEqualTo(CLOUD_PROVIDER_INSTANCE_ID);
-    InstanceData duplicateInstanceData = instanceDataDao.upsert(instanceInfo());
-    assertThat(duplicateInstanceData).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldUpsertInstanceStartStopEvent() {
-    instanceDataDao.upsert(instanceInfo());
-    instanceDataDao.upsert(instanceEvent(START_INSTANT, EventType.START));
-    InstanceData updatedStartInstanceData = instanceDataDao.fetchInstanceData(ACCOUNT_ID, RUNNING_INSTANCE_ID);
-    assertThat(updatedStartInstanceData.getUsageStartTime()).isEqualTo(START_INSTANT);
-    assertThat(updatedStartInstanceData.getUsageStopTime()).isNull();
-    instanceDataDao.upsert(instanceEvent(END_INSTANT, EventType.STOP));
-    InstanceData updatedStopInstanceData = instanceDataDao.fetchInstanceData(ACCOUNT_ID, RUNNING_INSTANCE_ID);
-    assertThat(updatedStopInstanceData.getUsageStopTime()).isEqualTo(END_INSTANT);
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldReturnNullWhenUpsertInstanceEvent() {
-    InstanceData instanceData = instanceDataDao.upsert(instanceEvent(START_INSTANT, EventType.START));
-    assertThat(instanceData).isNull();
   }
 
   @Test
