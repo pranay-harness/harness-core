@@ -1,7 +1,6 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.EntityType;
@@ -83,6 +82,13 @@ public class GitEntityServiceImpl implements GitEntityService {
         .getByProjectIdAndOrganizationIdAndAccountIdAndGitSyncConfigIdentifierAndEntityTypeListAndBranch(
             projectIdentifier, organizationIdentifier, accountIdentifier, gitSyncConfigIdentifier, branch,
             entityTypeList, searchTerm, size);
+  }
+
+  @Override
+  public List<GitFileLocation> getDefaultEntities(
+      String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId) {
+    return gitFileLocationRepository.findByAccountIdAndOrganizationIdAndProjectIdAndGitSyncConfigIdAndIsDefault(
+        accountIdentifier, organizationIdentifier, projectIdentifier, yamlGitConfigId, true);
   }
 
   private GitSyncEntityListDTO buildGitSyncEntityListDTO(
@@ -219,8 +225,8 @@ public class GitEntityServiceImpl implements GitEntityService {
   }
 
   @Override
-  public boolean save(
-      String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String filePath, String commitId) {
+  public boolean save(String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String filePath,
+      String commitId, String branchName) {
     final Optional<GitFileLocation> gitFileLocation =
         gitFileLocationRepository.findByEntityGitPathAndGitSyncConfigIdAndAccountId(
             filePath, yamlGitConfig.getIdentifier(), accountId);
@@ -233,7 +239,7 @@ public class GitEntityServiceImpl implements GitEntityService {
                                              .organizationId(entityDetail.getEntityRef().getOrgIdentifier())
                                              .projectId(entityDetail.getEntityRef().getProjectIdentifier())
                                              .entityGitPath(filePath)
-                                             .branch(yamlGitConfig.getBranch())
+                                             .branch(branchName)
                                              .repo(yamlGitConfig.getRepo())
                                              .gitConnectorId(yamlGitConfig.getGitConnectorRef())
                                              .scope(yamlGitConfig.getScope())
@@ -241,7 +247,7 @@ public class GitEntityServiceImpl implements GitEntityService {
                                              .entityReference(entityDetail.getEntityRef())
                                              .lastCommitId(commitId)
                                              .gitSyncConfigId(yamlGitConfig.getIdentifier())
-                                             .isDefault(true)
+                                             .isDefault(branchName.equals(yamlGitConfig.getBranch()))
                                              .build();
     gitFileLocation.ifPresent(location -> fileLocation.setUuid(location.getUuid()));
     gitFileLocationRepository.save(fileLocation);

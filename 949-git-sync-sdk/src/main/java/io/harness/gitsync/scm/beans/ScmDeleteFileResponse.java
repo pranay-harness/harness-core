@@ -22,4 +22,5 @@ public class ScmDeleteFileResponse implements ScmPushResponse {
   String projectIdentifier;
   String orgIdentifier;
   String accountIdentifier;
+  String branch;
 }

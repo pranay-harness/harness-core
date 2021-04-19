@@ -77,8 +77,10 @@ import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TaskType;
+import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
+import software.wings.beans.TerragruntInfrastructureProvisioner;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
@@ -249,6 +251,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       validateShellScriptProvisioner((ShellScriptInfrastructureProvisioner) provisioner);
     } else if (provisioner instanceof ARMInfrastructureProvisioner) {
       validateARMProvisioner((ARMInfrastructureProvisioner) provisioner);
+    } else if (provisioner instanceof TerragruntInfrastructureProvisioner) {
+      validateTerragruntProvisioner((TerragruntInfrastructureProvisioner) provisioner);
     }
   }
 
@@ -318,12 +322,11 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   private void populateDerivedFields(InfrastructureProvisioner infrastructureProvisioner) {
-    if (infrastructureProvisioner instanceof TerraformInfrastructureProvisioner) {
-      TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
-          (TerraformInfrastructureProvisioner) infrastructureProvisioner;
-      terraformInfrastructureProvisioner.setTemplatized(isTemplatizedProvisioner(terraformInfrastructureProvisioner));
-      terraformInfrastructureProvisioner.setNormalizedPath(
-          FilenameUtils.normalize(terraformInfrastructureProvisioner.getPath()));
+    if (infrastructureProvisioner instanceof TerraGroupProvisioners) {
+      TerraGroupProvisioners terraGroupProvisioners = (TerraGroupProvisioners) infrastructureProvisioner;
+
+      terraGroupProvisioners.setTemplatized(isTemplatizedProvisioner(terraGroupProvisioners));
+      terraGroupProvisioners.setNormalizedPath(FilenameUtils.normalize(terraGroupProvisioners.getPath()));
     }
   }
 
@@ -388,17 +391,16 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .infrastructureProvisionerType(provisioner.getInfrastructureProvisionerType())
             .tagLinks(provisioner.getTagLinks());
 
-    if (provisioner instanceof TerraformInfrastructureProvisioner) {
-      final TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
-          (TerraformInfrastructureProvisioner) provisioner;
+    if (provisioner instanceof TerraGroupProvisioners) {
+      final TerraGroupProvisioners terraGroupInfrastructureProvisioner = (TerraGroupProvisioners) provisioner;
 
       final SettingAttribute settingAttribute =
-          idToSettingAttributeMapping.get(terraformInfrastructureProvisioner.getSourceRepoSettingId());
+          idToSettingAttributeMapping.get(terraGroupInfrastructureProvisioner.getSourceRepoSettingId());
 
       if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
         GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
         String repositoryUrl =
-            gitConfigHelperService.getRepositoryUrl(gitConfig, terraformInfrastructureProvisioner.getRepoName());
+            gitConfigHelperService.getRepositoryUrl(gitConfig, terraGroupInfrastructureProvisioner.getRepoName());
         detailsBuilder.repository(repositoryUrl);
       }
     } else if (provisioner instanceof CloudFormationInfrastructureProvisioner) {
@@ -472,9 +474,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     Set<String> settingAttributeIds = new HashSet<>();
     for (InfrastructureProvisioner infrastructureProvisioner : pageResponse.getResponse()) {
-      if (infrastructureProvisioner instanceof TerraformInfrastructureProvisioner) {
-        settingAttributeIds.add(
-            ((TerraformInfrastructureProvisioner) infrastructureProvisioner).getSourceRepoSettingId());
+      if (infrastructureProvisioner instanceof TerraGroupProvisioners) {
+        settingAttributeIds.add(((TerraGroupProvisioners) infrastructureProvisioner).getSourceRepoSettingId());
       } else if (infrastructureProvisioner instanceof ARMInfrastructureProvisioner
           && GIT == ((ARMInfrastructureProvisioner) infrastructureProvisioner).getSourceType()) {
         settingAttributeIds.add(
@@ -865,23 +866,16 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   }
 
   @Override
-  public boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner) {
+  public boolean isTemplatizedProvisioner(TerraGroupProvisioners infrastructureProvisioner) {
     return (isNotEmpty(infrastructureProvisioner.getSourceRepoBranch())
                && infrastructureProvisioner.getSourceRepoBranch().charAt(0) == '$')
         || (isNotEmpty(infrastructureProvisioner.getPath()) && infrastructureProvisioner.getPath().charAt(0) == '$');
   }
 
   private void validateTerraformProvisioner(TerraformInfrastructureProvisioner terraformProvisioner) {
-    validateBranchCommitId(terraformProvisioner.getSourceRepoBranch(), terraformProvisioner.getCommitId());
-    if (terraformProvisioner.getPath() == null) {
-      throw new InvalidRequestException("Provisioner path cannot be null");
-    } else if (isEmpty(terraformProvisioner.getSourceRepoSettingId())) {
-      throw new InvalidRequestException("Provisioner should have a source repo");
-    }
-    GitConfig gitConfig = gitUtilsManager.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
-    if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT && isEmpty(terraformProvisioner.getRepoName())) {
-      throw new InvalidRequestException("Repo name cannot be empty for account level git connector");
-    }
+    validateSourceRepoConfig(terraformProvisioner.getSourceRepoBranch(), terraformProvisioner.getCommitId(),
+        terraformProvisioner.getPath(), terraformProvisioner.getRepoName(),
+        terraformProvisioner.getSourceRepoSettingId());
 
     ensureNoDuplicateVars(terraformProvisioner.getBackendConfigs());
     ensureNoDuplicateVars(terraformProvisioner.getEnvironmentVariables());
@@ -891,6 +885,25 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     if (!areVariablesValid) {
       throw new InvalidRequestException("The following characters are not allowed in terraform "
           + "variable names: . and $");
+    }
+  }
+
+  private void validateTerragruntProvisioner(TerragruntInfrastructureProvisioner provisioner) {
+    validateSourceRepoConfig(provisioner.getSourceRepoBranch(), provisioner.getCommitId(), provisioner.getPath(),
+        provisioner.getRepoName(), provisioner.getSourceRepoSettingId());
+  }
+
+  private void validateSourceRepoConfig(
+      String sourceRepoBranch, String commitId, String path, String repoName, String sourceRepoSettingId) {
+    validateBranchCommitId(sourceRepoBranch, commitId);
+    if (path == null) {
+      throw new InvalidRequestException("Provisioner path cannot be null");
+    } else if (isEmpty(sourceRepoSettingId)) {
+      throw new InvalidRequestException("Provisioner should have a source repo");
+    }
+    GitConfig gitConfig = gitUtilsManager.getGitConfig(sourceRepoSettingId);
+    if (gitConfig.getUrlType() == GitConfig.UrlType.ACCOUNT && isEmpty(repoName)) {
+      throw new InvalidRequestException("Repo name cannot be empty for account level git connector");
     }
   }
 

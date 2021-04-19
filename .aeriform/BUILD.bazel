@@ -170,6 +170,8 @@ aeriform("//860-orchestration-visualization:module")
 
 aeriform("//860-orchestration-visualization:tests")
 
+aeriform("//861-cg-orchestration-states:module")
+
 aeriform("//870-cg-orchestration:module")
 
 aeriform("//870-cg-orchestration:tests")
@@ -361,6 +363,10 @@ aeriform("//955-outbox-sdk:tests")
 aeriform("//955-setup-usage-sdk:module")
 
 aeriform("//955-setup-usage-sdk:tests")
+
+aeriform("//959-psql-database-models:module")
+
+aeriform("//959-psql-database-models:tests")
 
 aeriform("//960-api-services:module")
 

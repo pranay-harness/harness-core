@@ -1,6 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.FdIndex;
@@ -29,15 +34,18 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
+@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._871_CG_BEANS)
 @JsonTypeInfo(use = Id.NAME, property = "infrastructureProvisionerType")
 @JsonSubTypes({
   @Type(value = TerraformInfrastructureProvisioner.class, name = "TERRAFORM")
   , @Type(value = ShellScriptInfrastructureProvisioner.class, name = "SHELL_SCRIPT"),
       @Type(value = CloudFormationInfrastructureProvisioner.class, name = "CLOUD_FORMATION"),
-      @Type(value = ARMInfrastructureProvisioner.class, name = "ARM")
+      @Type(value = ARMInfrastructureProvisioner.class, name = "ARM"),
+      @Type(value = TerragruntInfrastructureProvisioner.class, name = "TERRAGRUNT")
 })
 @Entity(value = "infrastructureProvisioner")
 @HarnessEntity(exportable = true)

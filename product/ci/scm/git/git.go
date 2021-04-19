@@ -108,19 +108,22 @@ func ListBranches(ctx context.Context, request *pb.ListBranchesRequest, log *zap
 		return nil, err
 	}
 
-	response, _, err := client.Git.ListBranches(ctx, request.GetSlug(), scm.ListOptions{})
+	branchesContent, response, err := client.Git.ListBranches(ctx, request.GetSlug(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
 		log.Errorw("ListBranches failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("ListBranches success", "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start))
 	var branches []string
-	for _, v := range response {
+	for _, v := range branchesContent {
 		branches = append(branches, v.Name)
 	}
 
 	out = &pb.ListBranchesResponse{
 		Branches: branches,
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
 	}
 	return out, nil
 }
@@ -141,19 +144,22 @@ func ListCommits(ctx context.Context, request *pb.ListCommitsRequest, log *zap.S
 		return nil, err
 	}
 
-	response, _, err := client.Git.ListCommits(ctx, request.GetSlug(), scm.CommitListOptions{Ref: ref})
+	commits, response, err := client.Git.ListCommits(ctx, request.GetSlug(), scm.CommitListOptions{Ref: ref, Page: int(request.GetPagination().GetPage())})
 	if err != nil {
 		log.Errorw("ListCommits failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("ListCommits success", "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
 	var commit_ids []string
-	for _, v := range response {
+	for _, v := range commits {
 		commit_ids = append(commit_ids, v.Sha)
 	}
 
 	out = &pb.ListCommitsResponse{
 		CommitIds: commit_ids,
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
 	}
 	return out, nil
 }

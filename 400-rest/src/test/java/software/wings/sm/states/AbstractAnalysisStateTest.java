@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -68,7 +67,7 @@ import org.mockito.Mockito;
  * Created by sriram_parthasarathy on 12/7/17.
  */
 @OwnedBy(CV)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Inject private HPersistence persistence;
   @Inject private WorkflowExecutionService workflowExecutionService;

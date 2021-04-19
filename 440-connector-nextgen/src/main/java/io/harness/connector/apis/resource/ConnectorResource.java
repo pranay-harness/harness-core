@@ -5,7 +5,6 @@ import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissi
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.EDIT_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.VIEW_CONNECTOR_PERMISSION;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
@@ -24,12 +23,14 @@ import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.accesscontrol.ResourceTypes;
+import io.harness.connector.helper.ConnectorRbacHelper;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
@@ -88,15 +89,17 @@ public class ConnectorResource {
   private final CEAwsSetupConfig ceAwsSetupConfig;
   private static final String CATEGORY_KEY = "category";
   private final AccessControlClient accessControlClient;
+  private ConnectorRbacHelper connectorRbacHelper;
 
   @Inject
   public ConnectorResource(@Named("connectorDecoratorService") ConnectorService connectorService,
       ConnectorHeartbeatService connectorHeartbeatService, CEAwsSetupConfig ceAwsSetupConfig,
-      AccessControlClient accessControlClient) {
+      AccessControlClient accessControlClient, ConnectorRbacHelper connectorRbacHelper) {
     this.connectorService = connectorService;
     this.connectorHeartbeatService = connectorHeartbeatService;
     this.ceAwsSetupConfig = ceAwsSetupConfig;
     this.accessControlClient = accessControlClient;
+    this.connectorRbacHelper = connectorRbacHelper;
   }
 
   @GET
@@ -235,6 +238,14 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
+    connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)
+        .map(connector
+            -> connectorRbacHelper.checkSecretRuntimeAccessWithConnectorDTO(
+                connector.getConnector(), accountIdentifier))
+        .orElseThrow(()
+                         -> new ConnectorNotFoundException(
+                             String.format("No connector found with identifier %s", connectorIdentifier), USER));
+
     return ResponseDTO.newResponse(
         connectorService.testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
   }

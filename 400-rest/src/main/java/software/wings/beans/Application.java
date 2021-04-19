@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
@@ -45,7 +45,7 @@ import org.mongodb.morphia.annotations.Transient;
  * @author Rishi
  */
 @OwnedBy(CDC)
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_871_CG_BEANS)
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")

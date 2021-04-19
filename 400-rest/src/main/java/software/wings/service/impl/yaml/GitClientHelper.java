@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_YAML_ERROR;
 import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
@@ -15,6 +16,7 @@ import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.codec.binary.Hex.encodeHexString;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitConnectionDelegateException;
@@ -51,6 +53,7 @@ import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.TransportException;
 import org.jetbrains.annotations.NotNull;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._960_API_SERVICES)

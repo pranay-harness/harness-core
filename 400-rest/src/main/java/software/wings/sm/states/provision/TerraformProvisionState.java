@@ -148,7 +148,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public abstract class TerraformProvisionState extends State {
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;

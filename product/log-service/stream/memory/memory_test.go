@@ -151,3 +151,25 @@ func TestStreamerInfo(t *testing.T) {
 		t.Errorf(diff)
 	}
 }
+
+func TestStreamKeyExists(t *testing.T) {
+	ctx := context.Background()
+	s := New()
+	key := "key"
+	err := s.Create(ctx, key)
+	if err != nil {
+		t.Error(err)
+	}
+	err = s.Exists(ctx, key)
+	if err != nil {
+		t.Error(err)
+	}
+	err = s.Delete(ctx, key)
+	if err != nil {
+		t.Error(err)
+	}
+	err = s.Exists(ctx, key)
+	if err == nil {
+		t.Error(err)
+	}
+}

@@ -29,6 +29,10 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.provision.TerraformConstants.INHERIT_APPROVED_PLAN;
 import static io.harness.provision.TerraformConstants.RUN_PLAN_ONLY_KEY;
+import static io.harness.provision.TerragruntConstants.PATH_TO_MODULE;
+import static io.harness.provision.TerragruntConstants.PROVISIONER_ID;
+import static io.harness.provision.TerragruntConstants.TIMEOUT_MILLIS;
+import static io.harness.provision.TerragruntConstants.WORKSPACE;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -71,6 +75,7 @@ import static software.wings.sm.StateType.PCF_RESIZE;
 import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
+import static software.wings.sm.StateType.TERRAGRUNT_ROLLBACK;
 import static software.wings.sm.StateType.values;
 import static software.wings.sm.StepType.ARM_CREATE_RESOURCE;
 import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
@@ -82,6 +87,8 @@ import static software.wings.sm.StepType.AZURE_WEBAPP_SLOT_SWAP;
 import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
+import static software.wings.sm.StepType.TERRAGRUNT_DESTROY;
+import static software.wings.sm.StepType.TERRAGRUNT_PROVISION;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
 import static java.lang.String.format;
@@ -1566,6 +1573,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (isARMProvisionState(preDeploymentSteps)) {
       return generateARMRollbackProvisioners(preDeploymentSteps, phaseStepType, phaseStepName);
     }
+    if (isTerragruntProvisionState(preDeploymentSteps)) {
+      return generateTerragruntRollbackProvisioners(preDeploymentSteps, phaseStepType, phaseStepName);
+    }
 
     List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
                                            .stream()
@@ -1605,6 +1615,99 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     rollbackProvisionerStep.setRollback(true);
     rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
     return rollbackProvisionerStep;
+  }
+
+  private PhaseStep generateTerragruntRollbackProvisioners(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
+    List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
+                                           .stream()
+                                           .filter(step -> StateType.TERRAGRUNT_PROVISION.name().equals(step.getType()))
+                                           .collect(Collectors.toList());
+
+    if (isEmpty(provisionerSteps)) {
+      return null;
+    }
+
+    List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
+    Map<String, String> provisionerIdWorkspaceMap = new HashMap<>();
+    Map<String, String> provisionerIdPathToModuleMap = new HashMap<>();
+
+    PhaseStep rollbackProvisionerStep = new PhaseStep(phaseStepType, phaseStepName);
+    rollbackProvisionerStep.setUuid(generateUuid());
+
+    provisionerSteps.forEach(step -> {
+      StateType stateType = getTerragruntRollbackStateIfRequired(step);
+      if (isTerragruntPlanState(step)) {
+        if (step.getProperties().get(WORKSPACE) != null) {
+          provisionerIdWorkspaceMap.put(
+              (String) step.getProperties().get(PROVISIONER_ID), (String) step.getProperties().get(WORKSPACE));
+        }
+        if (step.getProperties().get(PATH_TO_MODULE) != null) {
+          provisionerIdPathToModuleMap.put(
+              (String) step.getProperties().get(PROVISIONER_ID), (String) step.getProperties().get(PATH_TO_MODULE));
+        }
+      }
+
+      if (stateType != null) {
+        Map<String, Object> propertiesMap = new HashMap<>();
+        propertiesMap.put(PROVISIONER_ID, step.getProperties().get(PROVISIONER_ID));
+        propertiesMap.put(TIMEOUT_MILLIS, step.getProperties().get(TIMEOUT_MILLIS));
+        propertiesMap.put(WORKSPACE,
+            isTerragruntInheritState(step) ? provisionerIdWorkspaceMap.get(step.getProperties().get(PROVISIONER_ID))
+                                           : step.getProperties().get(WORKSPACE));
+
+        propertiesMap.put(PATH_TO_MODULE,
+            isTerragruntInheritState(step) ? provisionerIdPathToModuleMap.get(step.getProperties().get(PROVISIONER_ID))
+                                           : step.getProperties().get(PATH_TO_MODULE));
+
+        rollbackProvisionerNodes.add(GraphNode.builder()
+                                         .type(stateType.name())
+                                         .rollback(true)
+                                         .name("Rollback " + step.getName())
+                                         .properties(propertiesMap)
+                                         .build());
+      }
+    });
+    rollbackProvisionerStep.setRollback(true);
+    rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
+    return rollbackProvisionerStep;
+  }
+
+  StateType getTerragruntRollbackStateIfRequired(GraphNode step) {
+    if (step.getType().equals(StateType.TERRAGRUNT_PROVISION.name())) {
+      if (isTerragruntPlanState(step)) {
+        return null;
+      } else {
+        return TERRAGRUNT_ROLLBACK;
+      }
+    }
+    return null;
+  }
+
+  private boolean isTerragruntPlanState(GraphNode step) {
+    if (step.getType().equals(StateType.TERRAGRUNT_PROVISION.name())) {
+      Map<String, Object> properties = step.getProperties();
+      Object o = properties.get(RUN_PLAN_ONLY_KEY);
+      return (o instanceof Boolean) && ((Boolean) o);
+    }
+    return false;
+  }
+
+  private boolean isTerragruntInheritState(GraphNode step) {
+    if (step.getType().equals(StateType.TERRAGRUNT_PROVISION.name())) {
+      Map<String, Object> properties = step.getProperties();
+      Object o = properties.get(INHERIT_APPROVED_PLAN);
+      return (o instanceof Boolean) && ((Boolean) o);
+    }
+    return false;
+  }
+
+  private boolean isTerragruntProvisionState(PhaseStep preDeploymentSteps) {
+    List<GraphNode> graphNodes = preDeploymentSteps.getSteps()
+                                     .stream()
+                                     .filter(step -> StateType.TERRAGRUNT_PROVISION.name().equals(step.getType()))
+                                     .collect(toList());
+    return isNotEmpty(graphNodes);
   }
 
   private boolean isARMProvisionState(PhaseStep preDeploymentSteps) {
@@ -4077,6 +4180,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                         .build();
         if (!step.getType().equals(StateType.CVNG.name())
             || featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
+          if (shouldHideStep(step, accountId)) {
+            continue;
+          }
           steps.put(step.getType(), stepMeta);
         }
       }
@@ -4093,6 +4199,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     addServiceCommandsToWorkflowCategories(steps, fetchServiceCommandNames(workflowPhase, appId), categories);
 
     return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
+  }
+
+  private boolean shouldHideStep(StepType stepType, String accountId) {
+    List<StepType> terragruntSteps = asList(TERRAGRUNT_DESTROY, StepType.TERRAGRUNT_ROLLBACK, TERRAGRUNT_PROVISION);
+    return terragruntSteps.contains(stepType) && !featureFlagService.isEnabled(FeatureName.TERRAGRUNT, accountId);
   }
 
   private List<StepType> filterSelectNodesStep(List<StepType> stepTypesList, StepType filteredSelectNode) {

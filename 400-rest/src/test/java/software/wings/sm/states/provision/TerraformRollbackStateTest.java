@@ -86,7 +86,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock TerraformConfig configParameter;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) ExecutionContextImpl executionContext;

@@ -16,7 +16,9 @@ public class InfoForGitPush {
   String filePath;
   boolean isDefault;
   String branch;
+  boolean isNewBranch;
   String yamlGitConfigId;
+  String defaultBranchName;
   String accountId;
   String projectIdentifier;
   String orgIdentifier;

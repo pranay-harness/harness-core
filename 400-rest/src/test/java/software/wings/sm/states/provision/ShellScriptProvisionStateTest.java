@@ -263,4 +263,27 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
         (ShellScriptProvisionParameters) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
     assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList("primary"));
   }
+
+  @Test
+  @Owner(developers = PARDHA)
+  @Category(UnitTests.class)
+  public void shouldPopulateRenderedDelegateSelectorsFromExecutionContext() {
+    state.setDelegateSelectors(Collections.singletonList("${workflow.variables.abc}"));
+    ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    Answer<String> doReturnSameValue = invocation -> invocation.getArgumentAt(0, String.class);
+
+    when(activityService.save(any())).thenReturn(mock(Activity.class));
+    when(executionContext.getApp()).thenReturn(mock(Application.class));
+    when(executionContext.getEnv()).thenReturn(mock(Environment.class));
+    when(infrastructureProvisionerService.getShellScriptProvisioner(anyString(), anyString()))
+        .thenReturn(mock(ShellScriptInfrastructureProvisioner.class));
+    when(executionContext.renderExpression(anyString())).thenReturn(doReturnSameValue);
+    state.execute(executionContext);
+
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    ShellScriptProvisionParameters populatedParameters =
+        (ShellScriptProvisionParameters) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
+    assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList(doReturnSameValue));
+  }
 }

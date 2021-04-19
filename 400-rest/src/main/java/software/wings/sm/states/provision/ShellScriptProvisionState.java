@@ -79,7 +79,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDP)
 @Slf4j
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {
   private static final int TIMEOUT_IN_MINUTES = 20;
   private static final String COMMAND_UNIT = "Shell Script Provision";

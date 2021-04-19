@@ -54,7 +54,7 @@ import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class CloudFormationRollbackStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Rollback Stack";
 

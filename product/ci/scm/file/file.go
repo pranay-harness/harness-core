@@ -238,14 +238,17 @@ func FindFilesInBranch(ctx context.Context, fileRequest *pb.FindFilesInBranchReq
 		log.Errorw("FindFilesInBranch failure, bad ref/branch", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
-	response, _, err := client.Contents.List(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref, scm.ListOptions{})
+	files, response, err := client.Contents.List(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref, scm.ListOptions{Page: int(fileRequest.GetPagination().GetPage())})
 	if err != nil {
 		log.Errorw("FindFilesInBranch failure", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("FindFilesInBranch success", "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.FindFilesInBranchResponse{
-		File: convertContentList(response),
+		File: convertContentList(files),
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
 	}
 	return out, nil
 }
@@ -260,14 +263,17 @@ func FindFilesInCommit(ctx context.Context, fileRequest *pb.FindFilesInCommitReq
 		return nil, err
 	}
 	ref := fileRequest.GetRef()
-	response, _, err := client.Contents.List(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref, scm.ListOptions{})
+	files, response, err := client.Contents.List(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref, scm.ListOptions{Page: int(fileRequest.GetPagination().GetPage())})
 	if err != nil {
 		log.Errorw("FindFilesInCommit failure", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("FindFilesInCommit success", "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.FindFilesInCommitResponse{
-		File: convertContentList(response),
+		File: convertContentList(files),
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
 	}
 	return out, nil
 }

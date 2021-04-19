@@ -1,9 +1,12 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.support.BillingDataTableNameProvider;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.entities.ClusterDataDetails;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Singleton
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class BillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
@@ -59,6 +63,9 @@ public class BillingDataServiceImpl {
 
   static final String DELETE_EXISTING_BILLING_DATA =
       "DELETE FROM %s WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s';";
+
+  static final String RETRIEVE_BILLING_DATA =
+      "SELECT COUNT(*) as ENTRIESCOUNT, SUM(billingamount) as BILLINGAMOUNTSUM from BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME = '%s' ;";
 
   private static final String READER_QUERY =
       "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' OFFSET %s LIMIT %s;";
@@ -295,6 +302,31 @@ public class BillingDataServiceImpl {
         return instanceBillingDataList;
       } catch (SQLException e) {
         log.error("Error while fetching billing Data data : exception", e);
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return null;
+  }
+
+  public ClusterDataDetails getTimeScaleClusterData(String accountId, Instant startTime) {
+    ResultSet resultSet = null;
+    int retryCount = 0;
+    String query = String.format(RETRIEVE_BILLING_DATA, accountId, startTime.toString());
+    log.info("Timescale Formatted query : " + query);
+    while (retryCount < SELECT_MAX_RETRY_COUNT) {
+      retryCount++;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        while (resultSet.next()) {
+          return ClusterDataDetails.builder()
+              .entriesCount(resultSet.getInt("ENTRIESCOUNT"))
+              .billingAmountSum(resultSet.getDouble("BILLINGAMOUNTSUM"))
+              .build();
+        }
+      } catch (SQLException e) {
+        log.error("Error while fetching billing Data data : " + e);
       } finally {
         DBUtils.close(resultSet);
       }

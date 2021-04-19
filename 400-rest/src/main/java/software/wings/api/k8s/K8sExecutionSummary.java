@@ -1,6 +1,6 @@
 package software.wings.api.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_871_CG_BEANS)
 @OwnedBy(CDP)
 @EqualsAndHashCode(callSuper = true)
 public class K8sExecutionSummary extends StepExecutionSummary {
