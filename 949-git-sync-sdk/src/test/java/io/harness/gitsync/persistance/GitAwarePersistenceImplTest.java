@@ -71,7 +71,7 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
     initMocks(this);
     gitAwarePersistence = new GitAwarePersistenceImpl(mongoTemplate, entityKeySource,
         new GitBranchingHelper(mongoTemplate), gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper);
-    doNothing().when(gitSyncMsvcHelper).postPushInformationToGitMsvc(any(), any());
+    doNothing().when(gitSyncMsvcHelper).postPushInformationToGitMsvc(any(), any(), any());
   }
 
   @Test
