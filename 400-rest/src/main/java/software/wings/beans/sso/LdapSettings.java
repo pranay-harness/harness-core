@@ -3,7 +3,9 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretText;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -17,6 +19,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,10 +40,12 @@ import org.hibernate.validator.constraints.NotBlank;
  * @author Swapnil
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Data
-@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "LdapSettingsKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = true)
+@JsonTypeName("LDAP")
 public class LdapSettings extends SSOSettings implements ExecutionCapabilityDemander {
   @NotBlank String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;
@@ -113,6 +118,11 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
   @Override
   public SSOSettings getPublicSSOSettings() {
     return this;
+  }
+
+  @Override
+  public SSOType getType() {
+    return SSOType.LDAP;
   }
 
   @Override
