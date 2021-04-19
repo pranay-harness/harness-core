@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.beans.InfrastructureProvisionerType.TERRAFORM;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 
@@ -26,7 +28,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("TERRAFORM")
 @OwnedBy(CDP)
-public class TerraformInfrastructureProvisioner extends InfrastructureProvisioner {
+@TargetModule(HarnessModule._871_CG_BEANS)
+public class TerraformInfrastructureProvisioner extends InfrastructureProvisioner implements TerraGroupProvisioners {
   public static final String VARIABLE_KEY = "terraform";
   @NotEmpty private String sourceRepoSettingId;
 

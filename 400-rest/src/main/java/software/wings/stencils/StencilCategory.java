@@ -6,7 +6,9 @@ package software.wings.stencils;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.base.CaseFormat;
@@ -18,6 +20,7 @@ import lombok.Getter;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StencilCategory {
   BUILD(0),
@@ -43,7 +46,8 @@ public enum StencilCategory {
   STAGING_ORIGINAL_EXECUTION(101, true),
   AZURE_VMSS("Azure VMSS", 0),
   AZURE_WEBAPP("Azure WebApp", 0),
-  AZURE_ARM("Azure ARM", 0);
+  AZURE_ARM("Azure ARM", 0),
+  TERRAGRUNT_PROVISION("Terragrunt Provision", 0);
 
   @Getter boolean hidden;
 

@@ -15,5 +15,8 @@ public interface ProvisionerConstants {
   String PROVISION_CLOUD_FORMATION = "CloudFormation Create Stack";
   String ROLLBACK_CLOUD_FORMATION = "CloudFormation Rollback Stack";
   String ARM_ROLLBACK = "ARM Rollback";
+  String ROLLBACK_TERRAGRUNT_NAME = "Terragrunt Rollback";
+  String DESTROY_TERRAGRUNT_NAME = "Terragrunt Destroy";
+  String PROVISION_TERRAGRUNT_NAME = "Terragrunt Provision";
   String GENERIC_ROLLBACK_NAME_FORMAT = "Rollback %s";
 }

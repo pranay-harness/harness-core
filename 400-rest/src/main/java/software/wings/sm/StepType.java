@@ -237,6 +237,9 @@ import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
+import software.wings.sm.states.provision.TerragruntApplyState;
+import software.wings.sm.states.provision.TerragruntDestroyState;
+import software.wings.sm.states.provision.TerragruntRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
@@ -560,6 +563,20 @@ public enum StepType {
       asList(PhaseType.NON_ROLLBACK)),
   TERRAFORM_ROLLBACK(TerraformRollbackState.class, ROLLBACK_TERRAFORM_NAME, asList(INFRASTRUCTURE_PROVISIONER),
       singletonList(PRE_DEPLOYMENT),
+      Lists.newArrayList(
+          DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
+      asList(PhaseType.ROLLBACK)),
+  TERRAGRUNT_PROVISION(TerragruntApplyState.class, WorkflowServiceHelper.TERRAGRUNT_PROVISION,
+      asList(INFRASTRUCTURE_PROVISIONER), asList(PhaseStepType.values()), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK)),
+  TERRAGRUNT_DESTROY(TerragruntDestroyState.class, WorkflowServiceHelper.TERRAGRUNT_DESTROY,
+      asList(INFRASTRUCTURE_PROVISIONER),
+      asList(POST_DEPLOYMENT, WRAP_UP, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
+          DeploymentType.KUBERNETES, DeploymentType.CUSTOM),
+      asList(PhaseType.NON_ROLLBACK)),
+  TERRAGRUNT_ROLLBACK(TerragruntRollbackState.class, WorkflowServiceHelper.TERRAGRUNT_ROLLBACK,
+      asList(INFRASTRUCTURE_PROVISIONER), singletonList(PRE_DEPLOYMENT),
       Lists.newArrayList(
           DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
       asList(PhaseType.ROLLBACK)),
