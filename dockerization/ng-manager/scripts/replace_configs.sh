@@ -178,7 +178,7 @@ fi
 
 
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.target $NG_MANAGER_TARGET
+ yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.target $NG_MANAGER_TARGET
 fi
 
 if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then

@@ -53,6 +53,9 @@ public class SCMGitSyncHelper {
 
   private ScmPushResponse pushToGitBasedOnChangeType(
       String yaml, ChangeType changeType, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
+    if (infoForPush.isNewBranch()) {
+      createNewBranchInGit(infoForPush, gitBranchInfo);
+    }
     switch (changeType) {
       case ADD:
         final CreateFileResponse createFileResponse = doScmCreateFile(yaml, gitBranchInfo, infoForPush);
@@ -106,6 +109,11 @@ public class SCMGitSyncHelper {
     }
   }
 
+  private void createNewBranchInGit(InfoForGitPush infoForPush, GitEntityInfo gitBranchInfo) {
+    scmClient.createNewBranch(
+        infoForPush.getScmConnector(), infoForPush.getBranch(), infoForPush.getDefaultBranchName());
+  }
+
   private InfoForGitPush getInfoForPush(GitEntityInfo gitBranchInfo, EntityDetail entityDetail) {
     final InfoForPush pushInfo = harnessToGitPushInfoServiceBlockingStub.getConnectorInfo(
         FileInfo.newBuilder()
@@ -132,6 +140,8 @@ public class SCMGitSyncHelper {
         .branch(gitBranchInfo.getBranch())
         .isDefault(pushInfo.getIsDefault())
         .yamlGitConfigId(pushInfo.getYamlGitConfigId())
+        .isNewBranch(gitBranchInfo.isNewBranch())
+        .defaultBranchName(pushInfo.getDefaultBranchName())
         .build();
   }
 
