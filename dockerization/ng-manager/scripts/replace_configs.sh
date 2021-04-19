@@ -252,3 +252,5 @@ replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI
 replace_key_value accessControlAdminClient.mockAccessControlService "$MOCK_ACCESS_CONTROL_SERVICE"
 
 replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
+
+replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GROUP_BASE_URL"
