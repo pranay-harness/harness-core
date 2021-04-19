@@ -116,6 +116,9 @@ public class LiteEngineTaskStep implements TaskExecutable<StepElementParameters,
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       log.info(
           "LiteEngineTaskStep pod creation task executed successfully with response [{}]", k8sTaskExecutionResponse);
+      if (liteEnginePodDetailsOutcome == null) {
+        throw new CIStageExecutionException("Failed to get pod local ipAddress details");
+      }
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
           .stepOutcome(stepOutcome)
@@ -144,7 +147,7 @@ public class LiteEngineTaskStep implements TaskExecutable<StepElementParameters,
       String ip = ciK8sTaskResponse.getPodStatus().getIp();
       return LiteEnginePodDetailsOutcome.builder().ipAddress(ip).build();
     }
-    throw new CIStageExecutionException("Pod creation failed, make sure to have sufficient resources");
+    return null;
   }
 
   private DependencyOutcome getDependencyOutcome(
