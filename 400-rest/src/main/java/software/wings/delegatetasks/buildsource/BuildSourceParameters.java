@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.buildsource;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
@@ -9,6 +10,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -28,6 +30,7 @@ import lombok.Builder;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
@@ -72,10 +75,7 @@ public class BuildSourceParameters implements TaskParameters, ExecutionCapabilit
   private List<ExecutionCapability> getExecutionCapabilitiesFromArtifactStreamType(
       ExpressionEvaluator maskingEvaluator) {
     if (artifactStreamType.equals(GCR.name())) {
-      String gcrHostName = artifactStreamAttributes.getRegistryHostName();
-      return Collections.singletonList(
-          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-              getUrl(gcrHostName), maskingEvaluator));
+      return artifactStreamAttributes.fetchRequiredExecutionCapabilities(maskingEvaluator);
     } else if (artifactStreamType.equals(AZURE_ARTIFACTS.name())) {
       return settingValue.fetchRequiredExecutionCapabilities(maskingEvaluator);
     } else if (artifactStreamType.equals(ACR.name())) {
