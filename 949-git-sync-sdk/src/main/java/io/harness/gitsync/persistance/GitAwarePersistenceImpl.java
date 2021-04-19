@@ -2,6 +2,7 @@ package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT_BRANCH;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 
@@ -16,7 +17,6 @@ import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
-import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.persistance.GitSyncableEntity.GitSyncableEntityKeys;
 import io.harness.gitsync.scm.EntityToYamlStringUtils;
 import io.harness.gitsync.scm.SCMGitSyncHelper;
@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +80,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     Query query =
         new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
     final B object = mongoTemplate.findOne(query, entityClass);
+    setBranchInObject(object);
     return Optional.ofNullable(object);
   }
 
@@ -92,7 +94,8 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     Query query = new Query()
                       .addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])))
                       .with(pageable);
-    return mongoTemplate.find(query, entityClass);
+    final List<B> obj = mongoTemplate.find(query, entityClass);
+    return obj.stream().map(this::setBranchInObject).collect(Collectors.toList());
   }
 
   @Override
@@ -108,7 +111,8 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     if (object == null) {
       return null;
     }
-    return update(query, update, changeType, projectIdentifier, orgIdentifier, accountId, entityClass);
+    final B updatedObj = update(query, update, changeType, projectIdentifier, orgIdentifier, accountId, entityClass);
+    return setBranchInObject(updatedObj);
   }
 
   // In this method it is assumed that project id, org id and account id will not be updated for the entity and criteria
@@ -167,8 +171,8 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
       final GitEntityInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
       final List<String> objectId;
       if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
-          || gitBranchInfo.getYamlGitConfigId().equals(GitSyncConstants.DEFAULT_BRANCH)
-          || gitBranchInfo.getBranch().equals(GitSyncConstants.DEFAULT_BRANCH)) {
+          || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT_BRANCH)
+          || gitBranchInfo.getBranch().equals(DEFAULT_BRANCH)) {
         return new Criteria().andOperator(
             new Criteria().orOperator(Criteria.where(GitSyncableEntityKeys.isFromDefaultBranch).is(true),
                 Criteria.where(GitSyncableEntityKeys.isFromDefaultBranch).exists(false)));
@@ -221,7 +225,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     } else {
       savedObject = mongoTemplate.save(objectToSave);
     }
-    return savedObject;
+    return setBranchInObject(savedObject);
   }
 
   private <B extends GitSyncableEntity> void processGitBranchMetadata(B objectToSave, ChangeType changeType,
@@ -337,5 +341,17 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
 
   private <B extends GitSyncableEntity> EntityType getEntityType(Class<B> entityClass) {
     return gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getEntityType();
+  }
+
+  private <B extends GitSyncableEntity> B setBranchInObject(B object) {
+    // todo(abhinav): in list api when pipeline asks for connector from different branches something extra needs to be
+    // done.
+
+    final GitEntityInfo gitEntityInfo = GitSyncBranchThreadLocal.get();
+    if (object != null && gitEntityInfo != null && gitEntityInfo.getBranch() != null
+        && !gitEntityInfo.getBranch().equals(DEFAULT_BRANCH)) {
+      object.setBranch(gitEntityInfo.getBranch());
+    }
+    return object;
   }
 }

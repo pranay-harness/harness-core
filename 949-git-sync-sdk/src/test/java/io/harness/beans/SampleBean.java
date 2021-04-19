@@ -22,7 +22,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(HarnessTeam.DX)
 public class SampleBean extends GitSyncableEntity implements PersistentEntity, YamlDTO {
   String test1;
-  String branch;
   String name;
   String accountIdentifier;
   String projectIdentifier;
