@@ -45,6 +45,7 @@ import io.harness.ng.core.events.OrganizationRestoreEvent;
 import io.harness.ng.core.events.OrganizationUpdateEvent;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.rule.Owner;
 import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.UserPrincipal;
@@ -64,6 +65,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   private AuditClientService auditClientService;
   private NgUserService ngUserService;
   private OrganizationEventHandler organizationEventHandler;
+  private ResourceGroupClient resourceGroupClient;
 
   @Before
   public void setup() {
@@ -71,7 +73,8 @@ public class OrganizationEventHandlerTest extends CategoryTest {
     producer = mock(Producer.class);
     auditClientService = mock(AuditClientService.class);
     ngUserService = mock(NgUserService.class);
-    organizationEventHandler = spy(new OrganizationEventHandler(producer, auditClientService, ngUserService));
+    organizationEventHandler =
+        spy(new OrganizationEventHandler(producer, auditClientService, ngUserService, resourceGroupClient));
   }
 
   private OrganizationDTO getOrganizationDTO(String identifier) {
