@@ -32,9 +32,14 @@ import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.remote.client.NGRestUtils;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.UserPrincipal;
+import io.harness.utils.ScopeUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
@@ -42,24 +47,30 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
 public class OrganizationEventHandler implements OutboxEventHandler {
+  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
+  private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
+  private static final String DESCRIPTION_FORMAT = "All the resources in this %s are included in this resource group.";
   private static final String ORG_ADMIN_ROLE = "_organization_admin";
   private final ObjectMapper objectMapper;
   private final Producer eventProducer;
   private final AuditClientService auditClientService;
   private final NgUserService ngUserService;
+  private final ResourceGroupClient resourceGroupClient;
 
   @Inject
   public OrganizationEventHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      AuditClientService auditClientService, NgUserService ngUserService) {
+      AuditClientService auditClientService, NgUserService ngUserService, ResourceGroupClient resourceGroupClient) {
     this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
     this.ngUserService = ngUserService;
+    this.resourceGroupClient = resourceGroupClient;
   }
 
   public boolean handle(OutboxEvent outboxEvent) {
@@ -111,6 +122,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
   }
 
   private boolean setupOrgForUserAuthz(String accountIdentifier, String orgIdentifier, GlobalContext globalContext) {
+    createDefaultResourceGroup(accountIdentifier, orgIdentifier);
     if (!(globalContext.get(SOURCE_PRINCIPAL) instanceof SourcePrincipalContextData)) {
       return false;
     }
@@ -122,6 +134,36 @@ public class OrganizationEventHandler implements OutboxEventHandler {
           ORG_ADMIN_ROLE);
     }
     return true;
+  }
+
+  private void createDefaultResourceGroup(String accountIdentifier, String orgIdentifier) {
+    try {
+      ResourceGroupResponse resourceGroupResponse = NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(
+          DEFAULT_RESOURCE_GROUP_IDENTIFIER, accountIdentifier, orgIdentifier, null));
+      if (resourceGroupResponse != null) {
+        return;
+      }
+      ResourceGroupDTO resourceGroupDTO = getResourceGroupDTO(accountIdentifier, orgIdentifier);
+      NGRestUtils.getResponse(
+          resourceGroupClient.createManagedResourceGroup(accountIdentifier, orgIdentifier, null, resourceGroupDTO));
+    } catch (Exception e) {
+      log.error(
+          "Couldn't create default resource group for {}", ScopeUtils.toString(accountIdentifier, orgIdentifier, null));
+    }
+  }
+
+  private ResourceGroupDTO getResourceGroupDTO(String accountIdentifier, String orgIdentifier) {
+    return ResourceGroupDTO.builder()
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(null)
+        .name(DEFAULT_RESOURCE_GROUP_NAME)
+        .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+        .description(String.format(DESCRIPTION_FORMAT,
+            ScopeUtils.getMostSignificantScope(accountIdentifier, orgIdentifier, null).toString().toLowerCase()))
+        .resourceSelectors(Collections.emptyList())
+        .fullScopeSelected(true)
+        .build();
   }
 
   private boolean handleOrganizationUpdateEvent(OutboxEvent outboxEvent) throws IOException {
