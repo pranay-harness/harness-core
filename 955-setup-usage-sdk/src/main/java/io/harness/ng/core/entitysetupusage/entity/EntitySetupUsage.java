@@ -10,13 +10,10 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.EntityDetail.EntityDetailKeys;
 import io.harness.ng.core.NGAccountAccess;
-import io.harness.ng.core.entitysetupusage.dto.SecretReferredByConnectorSetupUsageDetail;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetail;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -72,11 +69,6 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   @FdIndex @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
   @NotNull EntityDetail referredByEntity;
-  @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = SecretReferredByConnectorSetupUsageDetail.class, name = "SECRET_REFERRED_BY_CONNECTOR")
-  })
   SetupUsageDetail detail;
   @FdIndex @NotBlank String referredEntityFQN;
   @NotBlank String referredEntityType;
