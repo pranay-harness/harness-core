@@ -2,9 +2,12 @@ package io.harness.expression;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.InvalidRequestException;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ImageSecretFunctor implements ExpressionFunctor {
   public static final String FUNCTOR_NAME = "imageSecret";
   private static final String REGISTRY_CREDENTIAL_TEMPLATE = "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
@@ -14,7 +17,7 @@ public class ImageSecretFunctor implements ExpressionFunctor {
         || ExpressionEvaluator.matchesVariablePattern(password)) {
       throw new InvalidRequestException("Arguments cannot be expression");
     }
-    return EncodingUtils.encodeBase64(
-        format(REGISTRY_CREDENTIAL_TEMPLATE, registryUrl, userName, password.replaceAll("\"", "\\\\\"")));
+    return EncodingUtils.encodeBase64(format(
+        REGISTRY_CREDENTIAL_TEMPLATE, registryUrl, userName, password.replaceAll("\n", "").replaceAll("\"", "\\\\\"")));
   }
 }
