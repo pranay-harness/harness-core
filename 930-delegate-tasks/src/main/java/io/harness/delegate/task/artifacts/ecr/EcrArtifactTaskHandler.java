@@ -1,9 +1,12 @@
 package io.harness.delegate.task.artifacts.ecr;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
 import static software.wings.helpers.ext.ecr.EcrService.MAX_NO_OF_TAGS_PER_IMAGE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.ecr.beans.EcrInternalConfig;
@@ -15,6 +18,7 @@ import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.mappers.EcrRequestResponseMapper;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.encryption.SecretRefHelper;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.helpers.ext.ecr.EcrService;
@@ -32,8 +36,10 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
+@OwnedBy(CDP)
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtifactDelegateRequest> {
@@ -132,9 +138,15 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
     if (attributesRequest.getAwsConnectorDTO() != null) {
       AwsCredentialDTO credential = attributesRequest.getAwsConnectorDTO().getCredential();
       AwsManualConfigSpecDTO awsManualConfigSpecDTO = (AwsManualConfigSpecDTO) credential.getConfig();
+      String accessKey = getSecretAsStringFromPlainTextOrSecretRef(
+          awsManualConfigSpecDTO.getAccessKey(), awsManualConfigSpecDTO.getAccessKeyRef());
+      if (accessKey == null) {
+        throw new InvalidArgumentsException(Pair.of("accessKey", "Missing or empty"));
+      }
+
       awsInternalConfig =
           AwsInternalConfig.builder()
-              .accessKey(awsManualConfigSpecDTO.getAccessKey().toCharArray())
+              .accessKey(accessKey.toCharArray())
               .secretKey(SecretRefHelper.getSecretConfigString(awsManualConfigSpecDTO.getSecretKeyRef()).toCharArray())
               .build();
     }
