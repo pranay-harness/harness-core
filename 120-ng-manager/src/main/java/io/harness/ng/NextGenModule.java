@@ -127,6 +127,7 @@ import io.harness.signup.SignupModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.telemetry.TelemetryModule;
 import io.harness.time.TimeModule;
+import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -297,8 +298,9 @@ public class NextGenModule extends AbstractModule {
     install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
     install(new CoreModule());
     install(AccessControlMigrationModule.getInstance());
-    install(new InviteModule(this.appConfig.getManagerClientConfig(),
+    install(UserClientModule.getInstance(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(new InviteModule(appConfig.getBaseUrls().getCurrentGenUiUrl()));
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
