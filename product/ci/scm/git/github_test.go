@@ -116,6 +116,38 @@ func TestListCommitsGithub(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Greater(t, len(got.CommitIds), 1, "more than 1 commit")
+	assert.Equal(t, int32(2), got.Pagination.Next, "there is a next page page")
+}
+
+func TestListCommitsPage2Github(t *testing.T) {
+	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+		t.Skip("Skipping, Acceptance test")
+	}
+	in := &pb.ListCommitsRequest{
+		Slug: "tphoney/scm-test",
+		Type: &pb.ListCommitsRequest_Branch{
+			Branch: "main",
+		},
+		Pagination: &pb.PageRequest{
+			Page: 2,
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+					},
+				},
+			},
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := ListCommits(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Greater(t, len(got.CommitIds), 1, "more than 1 commit")
+	assert.Equal(t, int32(3), got.Pagination.Next, "there is a next page page")
 }
 
 func TestListBranchesGithub(t *testing.T) {
@@ -140,4 +172,5 @@ func TestListBranchesGithub(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.GreaterOrEqual(t, len(got.Branches), 1, "status matches")
+	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
 }
