@@ -101,11 +101,7 @@ public class YamlGitConfigMapper {
   }
 
   private static YamlGitConfigDTO.RootFolder getRootFolders(GitSyncFolderConfigDTO gitSyncFolderConfigDTO) {
-    return YamlGitConfigDTO.RootFolder.builder()
-        .enabled(gitSyncFolderConfigDTO.getEnabled())
-        .identifier(gitSyncFolderConfigDTO.getIdentifier())
-        .rootFolder(gitSyncFolderConfigDTO.getRootFolder())
-        .build();
+    return YamlGitConfigDTO.RootFolder.builder().rootFolder(gitSyncFolderConfigDTO.getRootFolder()).build();
   }
 
   public static final GitSyncConfigDTO toSetupGitSyncDTO(YamlGitConfigDTO yamlGitConfig) {
@@ -130,11 +126,8 @@ public class YamlGitConfigMapper {
     }
     return rootFolders.stream()
         .map(rootFolder -> {
-          GitSyncFolderConfigDTOBuilder gitSyncFolderDTOBuilder = GitSyncFolderConfigDTO.builder()
-                                                                      .enabled(rootFolder.isEnabled())
-                                                                      .identifier(rootFolder.getIdentifier())
-                                                                      .isDefault(false)
-                                                                      .rootFolder(rootFolder.getRootFolder());
+          GitSyncFolderConfigDTOBuilder gitSyncFolderDTOBuilder =
+              GitSyncFolderConfigDTO.builder().isDefault(false).rootFolder(rootFolder.getRootFolder());
           if (rootFolder.equals(defaultRootFolder)) {
             gitSyncFolderDTOBuilder.isDefault(true);
           }
