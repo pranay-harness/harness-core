@@ -135,7 +135,7 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
             HeaderConfig.builder().key(X_HARNESS_TRIGGER_ID).values(Arrays.asList("customertriggerspec")).build());
 
     assertThat(WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(headerConfigList, webhookTriggerSpec))
-        .isTrue();
+        .isFalse();
   }
 
   private CustomWebhookTriggerSpec getCustomWebhookTriggerSpec() {
