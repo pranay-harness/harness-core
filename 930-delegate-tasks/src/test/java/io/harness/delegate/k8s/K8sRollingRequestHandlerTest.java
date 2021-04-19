@@ -2,12 +2,9 @@ package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.k8s.K8sTestHelper.deployment;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,9 +15,6 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
@@ -28,13 +22,14 @@ import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.k8s.exception.KubernetesExceptionHints;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
-import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -80,17 +75,17 @@ public class K8sRollingRequestHandlerTest extends CategoryTest {
     doReturn(true)
         .when(taskHelperBase)
         .fetchManifestFilesAndWriteToDirectory(
-            any(ManifestDelegateConfig.class), anyString(), any(LogCallback.class), anyLong(), anyString());
+            any(ManifestDelegateConfig.class), anyString(), any(LogCallback.class), anyLong(), anyString(), eq(false));
 
     doReturn(true)
         .when(taskHelperBase)
         .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
-            any(LogCallback.class), anyBoolean());
+            any(LogCallback.class), anyBoolean(), eq(false));
 
     doReturn(true)
         .when(taskHelperBase)
         .doStatusCheckForAllResources(any(Kubectl.class), anyListOf(KubernetesResourceId.class),
-            any(K8sDelegateTaskParams.class), anyString(), any(LogCallback.class), anyBoolean());
+            any(K8sDelegateTaskParams.class), anyString(), any(LogCallback.class), anyBoolean(), eq(false));
 
     doReturn(KubernetesConfig.builder().namespace("default").build())
         .when(containerDeploymentDelegateBaseHelper)
@@ -122,30 +117,46 @@ public class K8sRollingRequestHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testExecuteTaskInternalGetPodsFailed() throws Exception {
+  public void testExecuteExceptions() throws Exception {
     K8sRollingDeployRequest rollingDeployRequest = K8sRollingDeployRequest.builder().releaseName("releaseName").build();
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
-    InvalidRequestException thrownException = new InvalidRequestException("Failed to get pods");
 
     doReturn(singletonList(deployment()))
         .when(taskHelperBase)
         .readManifestAndOverrideLocalSecrets(anyListOf(FileData.class), eq(logCallback), anyBoolean());
 
-    doReturn(emptyList())
-        .when(baseHandler)
-        .getExistingPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString(),
-            any(LogCallback.class));
-    doThrow(thrownException)
-        .when(baseHandler)
-        .getPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString());
+    doReturn(false)
+        .when(taskHelperBase)
+        .doStatusCheckForAllResources(any(Kubectl.class), anyListOf(KubernetesResourceId.class),
+            any(K8sDelegateTaskParams.class), anyString(), any(LogCallback.class), anyBoolean(), eq(false));
 
     assertThatThrownBy(()
-                           -> rollingRequestHandler.executeTaskInternal(
+                           -> rollingRequestHandler.executeTask(
                                rollingDeployRequest, delegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
-        .isEqualTo(thrownException);
+        .hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_FAILED)
+        .getCause()
+        .hasMessageContaining(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED);
 
-    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
-    verify(kubernetesContainerService, times(2))
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), anyString(), anyString());
+    doReturn(false)
+        .when(taskHelperBase)
+        .applyManifests(any(Kubectl.class), anyListOf(KubernetesResource.class), any(K8sDelegateTaskParams.class),
+            any(LogCallback.class), anyBoolean(), eq(false));
+
+    assertThatThrownBy(()
+                           -> rollingRequestHandler.executeTask(
+                               rollingDeployRequest, delegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
+        .hasMessageContaining(KubernetesExceptionHints.APPLY_MANIFEST_FAILED)
+        .getCause()
+        .hasMessageContaining(KubernetesExceptionExplanation.APPLY_MANIFEST_FAILED);
+
+    doReturn(false)
+        .when(taskHelperBase)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(ManifestDelegateConfig.class), anyString(), any(LogCallback.class), anyLong(), anyString(), eq(false));
+
+    assertThatThrownBy(()
+                           -> rollingRequestHandler.executeTask(
+                               rollingDeployRequest, delegateTaskParams, logStreamingTaskClient, commandUnitsProgress))
+        .hasMessageContaining(KubernetesExceptionExplanation.FETCH_MANIFEST_FAILED);
   }
 }

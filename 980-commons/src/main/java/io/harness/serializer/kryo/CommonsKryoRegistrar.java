@@ -14,6 +14,8 @@ import io.harness.exception.HttpResponseException;
 import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.KryoHandlerNotFoundException;
+import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.VerificationOperationException;
@@ -57,6 +59,8 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ExceptionHandlerNotFoundException.class, 31014);
     kryo.register(ImageNotFoundException.class, 31015);
     kryo.register(ContextException.class, 31016);
+    kryo.register(KubernetesYamlException.class, 31017);
+    kryo.register(KubernetesTaskException.class, 31018);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);
