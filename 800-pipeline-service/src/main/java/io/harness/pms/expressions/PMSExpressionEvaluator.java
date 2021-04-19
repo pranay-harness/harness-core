@@ -47,12 +47,11 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
             .imagePullSecretUtils(imagePullSecretUtils)
             .pmsOutcomeService(getPmsOutcomeService())
             .ambiance(ambiance)
-            .build());
-    addToContext(ImagePullSecretFunctor.SIDECAR_IMAGE_PULL_SECRET,
-        SidecarImagePullSecretFunctor.builder()
-            .imagePullSecretUtils(imagePullSecretUtils)
-            .pmsOutcomeService(getPmsOutcomeService())
-            .ambiance(ambiance)
+            .sidecarImagePullSecretFunctor(SidecarImagePullSecretFunctor.builder()
+                                               .imagePullSecretUtils(imagePullSecretUtils)
+                                               .pmsOutcomeService(getPmsOutcomeService())
+                                               .ambiance(ambiance)
+                                               .build())
             .build());
     addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance));
 
