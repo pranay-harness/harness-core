@@ -22,15 +22,21 @@ import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.yaml.CdYamlSchemaService;
 import io.harness.cdng.yaml.CdYamlSchemaServiceImpl;
+import io.harness.configManager.ConfigurationController;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
+import io.harness.queue.QueueController;
 import io.harness.registrars.NGStageTypeToStageExecutionSummaryMapperRegistrar;
 import io.harness.registrars.StageTypeToStageExecutionMapperRegistrar;
+import io.harness.version.VersionInfoManager;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.commons.io.IOUtils;
 
 @OwnedBy(CDP)
 public class NGModule extends AbstractModule {
@@ -50,12 +56,22 @@ public class NGModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    try {
+      VersionInfoManager versionInfoManager = new VersionInfoManager(
+          IOUtils.toString(getClass().getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml"),
+              StandardCharsets.UTF_8));
+      bind(VersionInfoManager.class).toInstance(versionInfoManager);
+    } catch (IOException e) {
+      throw new IllegalStateException("Could not load versionInfo.yaml", e);
+    }
+
     install(NGCoreModule.getInstance());
     install(WalkTreeModule.getInstance());
     install(ExecutionPlanModule.getInstance());
     install(NGPipelineCommonsModule.getInstance(config));
     install(StageTypeToStageExecutionMapperRegistryModule.getInstance());
 
+    bind(QueueController.class).toInstance(new ConfigurationController());
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
