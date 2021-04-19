@@ -33,10 +33,10 @@ public class YamlGitConfigResourceTest extends GitSyncTestBase {
   private final String CONNECTOR_ID_1 = "CONNECTOR_ID_1";
   private final String REPO = "REPO";
   private final String BRANCH = "BRANCH";
-  private final String ROOT_FOLDER = "ROOT_FOLDER";
+  private final String ROOT_FOLDER = "ROOT_FOLDER/.harness/";
   private final String ROOT_FOLDER_ID = "ROOT_FOLDER_ID";
   private final String ROOT_FOLDER_1 = "ROOT_FOLDER_1";
-  private final String ROOT_FOLDER_ID_1 = "ROOT_FOLDER_ID_1";
+  private final String ROOT_FOLDER_ID_1 = "ROOT_FOLDER_ID_1/.harness/";
 
   @Before
   public void setup() {
@@ -47,12 +47,8 @@ public class YamlGitConfigResourceTest extends GitSyncTestBase {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void test_save() {
-    GitSyncFolderConfigDTO rootFolder = GitSyncFolderConfigDTO.builder()
-                                            .isDefault(true)
-                                            .rootFolder(ROOT_FOLDER)
-                                            .identifier(ROOT_FOLDER_ID)
-                                            .enabled(true)
-                                            .build();
+    GitSyncFolderConfigDTO rootFolder =
+        GitSyncFolderConfigDTO.builder().isDefault(true).rootFolder(ROOT_FOLDER).build();
     GitSyncConfigDTO gitSyncConfigDTO =
         buildGitSyncDTO(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
     GitSyncConfigDTO ret = yamlGitConfigResource.create(ACCOUNT_ID, gitSyncConfigDTO);
