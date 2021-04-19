@@ -10,6 +10,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -265,10 +266,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
 
   private List<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {
     if (isEmpty(delegateSelectors)) {
-      return Collections.emptyList();
+      return emptyList();
     }
-    List<String> renderedSelectors = delegateSelectors.stream().map(context::renderExpression).collect(toList());
-    List<String> trimmedSelectors = trimStrings(renderedSelectors);
-    return trimmedSelectors;
+    return trimStrings(delegateSelectors.stream().map(context::renderExpression).collect(toList()));
   }
 }
