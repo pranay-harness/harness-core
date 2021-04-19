@@ -193,8 +193,6 @@ public class WebhookTriggerFilterUtils {
       return true;
     }
 
-    boolean conditionsMatched = true;
-
     for (WebhookCondition webhookHeaderCondition : triggerSpec.getHeaderConditions()) {
       HeaderConfig header = headers.stream()
                                 .filter(headerConfig -> headerConfig.getKey().equals(webhookHeaderCondition.getKey()))
@@ -203,17 +201,19 @@ public class WebhookTriggerFilterUtils {
 
       if (header != null) {
         for (String value : header.getValues()) {
-          conditionsMatched = conditionsMatched
-              && ConditionEvaluator.evaluate(
-                  value, webhookHeaderCondition.getValue(), webhookHeaderCondition.getOperator());
-          if (!conditionsMatched) {
-            return conditionsMatched;
+          if (!ConditionEvaluator.evaluate(
+                  value, webhookHeaderCondition.getValue(), webhookHeaderCondition.getOperator())) {
+            return false;
           }
+        }
+      } else {
+        if (!webhookHeaderCondition.getOperator().contains("not")) {
+          return false;
         }
       }
     }
 
-    return conditionsMatched;
+    return true;
   }
 
   @VisibleForTesting
