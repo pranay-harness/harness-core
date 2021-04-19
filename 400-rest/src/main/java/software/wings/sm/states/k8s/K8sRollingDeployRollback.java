@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 
@@ -57,7 +57,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
 public class K8sRollingDeployRollback extends AbstractK8sState {
   @Inject private transient ConfigService configService;

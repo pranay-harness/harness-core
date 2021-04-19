@@ -108,7 +108,7 @@ import org.apache.commons.collections4.MapUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class PcfPluginState extends State {
   @Inject private transient DelegateService delegateService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;

@@ -1,6 +1,6 @@
 package software.wings.beans.appmanifest;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(CDP)
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_871_CG_BEANS)
 public class ApplicationManifestTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)

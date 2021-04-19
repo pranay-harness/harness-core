@@ -149,7 +149,7 @@ import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class PcfPluginStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
 

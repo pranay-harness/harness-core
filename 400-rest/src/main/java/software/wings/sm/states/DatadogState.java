@@ -80,7 +80,7 @@ import org.slf4j.Logger;
 @Slf4j
 @FieldNameConstants(innerTypeName = "DatadogStateKeys")
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class DatadogState extends AbstractMetricAnalysisState {
   @Inject @SchemaIgnore private transient DatadogService datadogService;
   private static final int DATA_COLLECTION_RATE_MINS = 5;

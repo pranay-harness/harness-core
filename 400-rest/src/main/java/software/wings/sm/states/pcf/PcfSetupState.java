@@ -113,7 +113,7 @@ import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class PcfSetupState extends State {
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;

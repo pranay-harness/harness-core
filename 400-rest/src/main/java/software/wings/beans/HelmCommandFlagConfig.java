@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static java.util.Collections.unmodifiableMap;
@@ -19,7 +19,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_871_CG_BEANS)
 public class HelmCommandFlagConfig {
   @NotNull private Map<HelmSubCommand, String> valueMap;
 

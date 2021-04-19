@@ -145,7 +145,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class KubernetesSetupTest extends WingsBaseTest {
   private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
   private static final String BASE_URL = "https://env.harness.io/";

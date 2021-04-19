@@ -92,7 +92,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String CREATE_STACK_COMMAND_UNIT = "Create Stack";
   private static final String FETCH_FILES_COMMAND_UNIT = "Fetch Files";

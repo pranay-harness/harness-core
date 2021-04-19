@@ -1,6 +1,6 @@
 package software.wings.beans.appmanifest;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotation.HarnessEntity;
@@ -38,7 +38,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
 @OwnedBy(CDP)
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_871_CG_BEANS)
 public class ApplicationManifest extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
