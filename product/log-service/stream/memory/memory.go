@@ -98,3 +98,13 @@ func (s *Streamer) Info(ctx context.Context) *stream.Info {
 	}
 	return info
 }
+
+func (s *Streamer) Exists(ctx context.Context, key string) error {
+	s.Lock()
+	_, ok := s.streams[key]
+	s.Unlock()
+	if !ok {
+		return stream.ErrNotFound
+	}
+	return nil
+}
