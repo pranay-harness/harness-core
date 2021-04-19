@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetail;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 
 import com.google.inject.Singleton;
@@ -15,6 +16,7 @@ public class EntitySetupUsageDTOtoEntity {
   public EntitySetupUsage toEntityReference(EntitySetupUsageDTO entitySetupUsageDTO) {
     EntityDetail referredEntity = entitySetupUsageDTO.getReferredEntity();
     EntityDetail referredByEntity = entitySetupUsageDTO.getReferredByEntity();
+    SetupUsageDetail setupUsageDetail = entitySetupUsageDTO.getDetail();
     return EntitySetupUsage.builder()
         .accountIdentifier(entitySetupUsageDTO.getAccountIdentifier())
         .referredByEntity(referredByEntity)
@@ -23,6 +25,7 @@ public class EntitySetupUsageDTOtoEntity {
         .referredEntityFQN(referredEntity.getEntityRef().getFullyQualifiedName())
         .referredEntityType(referredEntity.getType().toString())
         .referredEntity(referredEntity)
+        .detail(setupUsageDetail)
         .build();
   }
 }
