@@ -107,7 +107,7 @@ public class PipelineRbacHelperTest extends CategoryTest {
     PermissionCheckDTO permissionCheckDTO1 =
         pipelineRbacHelper.convertToPermissionCheckDTO(entityDetail1WithoutMetaData);
 
-    assertThat(permissionCheckDTO1.getPermission()).isEqualTo("core_connector_runtimeAccess");
+    assertThat(permissionCheckDTO1.getPermission()).isEqualTo("core_connector_access");
   }
 
   private List<EntityDetail> getEntityDetailsWithoutMetadata() {

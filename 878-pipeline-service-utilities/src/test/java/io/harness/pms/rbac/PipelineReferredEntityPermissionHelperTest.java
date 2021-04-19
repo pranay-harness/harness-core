@@ -22,7 +22,7 @@ public class PipelineReferredEntityPermissionHelperTest extends CategoryTest {
   public void testGetPermissionForGivenTypeWithoutNew() {
     EntityType entityType = EntityType.CONNECTORS;
     String permission = PipelineReferredEntityPermissionHelper.getPermissionForGivenType(entityType, false);
-    assertThat(permission).isEqualTo("core_connector_runtimeAccess");
+    assertThat(permission).isEqualTo("core_connector_access");
 
     entityType = EntityType.SECRETS;
     permission = PipelineReferredEntityPermissionHelper.getPermissionForGivenType(entityType, false);
