@@ -49,6 +49,7 @@ import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.REVOKED_TOKEN;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.filesystem.FileIo.acquireLock;
 import static io.harness.filesystem.FileIo.isLocked;
@@ -826,6 +827,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     } else if (StringUtils.contains(message, EXPIRED_TOKEN.name())) {
       log.warn("Delegate used expired token. It will be frozen and drained.");
       freeze();
+    } else if (StringUtils.contains(message, REVOKED_TOKEN.name())) {
+      log.warn("Delegate used revoked token. It will be frozen and drained.");
+      freeze();
     } else if (!StringUtils.equals(message, "X")) {
       log.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
@@ -928,7 +932,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                        String.format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
           initiateSelfDestruct();
         } else if (response.code() == EXPIRED_TOKEN.getStatus().getCode()) {
-          log.warn("Delegate was not authorized to invoke manager. New token should be generated.");
+          log.warn("Delegate used expired token. It will be frozen and drained.");
+          freeze();
+        } else if (response.code() == REVOKED_TOKEN.getStatus().getCode()) {
+          log.warn("Delegate used revoked token. It will be frozen and drained.");
+          freeze();
         }
         response.errorBody().close();
       }

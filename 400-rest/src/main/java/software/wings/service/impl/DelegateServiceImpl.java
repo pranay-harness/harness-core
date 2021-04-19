@@ -163,6 +163,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.ff.FeatureFlagService;
+import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -171,6 +172,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
 import io.harness.logging.Misc;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.Http;
 import io.harness.network.SafeHttpCall;
@@ -193,6 +195,7 @@ import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskResultsProvider;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 import io.harness.service.intfc.DelegateTaskService;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.stream.BoundedInputStream;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -431,6 +434,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private CapabilityService capabilityService;
   @Inject private DelegateInsightsService delegateInsightsService;
   @Inject private DelegateSetupService delegateSetupService;
+  @Inject private DelegateTokenService delegateTokenService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -1154,6 +1158,17 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateScripts getDelegateScripts(
       String accountId, String version, String managerHost, String verificationHost) throws IOException {
+    String delegateTokenName = EMPTY;
+    if (featureFlagService.isEnabled(FeatureName.USE_CUSTOM_DELEGATE_TOKENS, accountId)) {
+      DelegateTokenGlobalContextData delegateTokenGlobalContextData =
+          GlobalContextManager.get(DelegateTokenGlobalContextData.TOKEN_NAME);
+      if (delegateTokenGlobalContextData != null) {
+        delegateTokenName = delegateTokenGlobalContextData.getTokenName();
+      } else {
+        log.warn("DelegateTokenGlobalContextData was found null in getDelegateScripts()");
+      }
+    }
+
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
         ScriptRuntimeParamMapInquiry.builder()
             .accountId(accountId)
@@ -1161,6 +1176,7 @@ public class DelegateServiceImpl implements DelegateService {
             .managerHost(managerHost)
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .delegateTokenName(delegateTokenName)
             .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
@@ -1233,6 +1249,7 @@ public class DelegateServiceImpl implements DelegateService {
     private int delegateRam;
     private double delegateCpu;
     private String delegateNamespace;
+    private String delegateTokenName;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -1320,11 +1337,16 @@ public class DelegateServiceImpl implements DelegateService {
         delegateDockerImage = mainConfiguration.getPortal().getDelegateDockerImage();
       }
 
+      String accountSecret = account.getAccountKey();
+      if (isNotBlank(inquiry.getDelegateTokenName())) {
+        accountSecret = delegateTokenService.getTokenValue(inquiry.getAccountId(), inquiry.getDelegateTokenName());
+      }
+
       ImmutableMap.Builder<String, String> params =
           ImmutableMap.<String, String>builder()
               .put("delegateDockerImage", delegateDockerImage)
               .put("accountId", inquiry.getAccountId())
-              .put("accountSecret", account.getAccountKey())
+              .put("accountSecret", accountSecret)
               .put("hexkey", hexkey)
               .put(UPGRADE_VERSION, latestVersion)
               .put("managerHostAndPort", inquiry.getManagerHost())
