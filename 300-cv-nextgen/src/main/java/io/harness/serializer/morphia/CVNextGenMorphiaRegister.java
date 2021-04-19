@@ -2,6 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.configManager.Configuration;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
@@ -72,6 +73,7 @@ import java.util.Set;
 public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
+    set.add(Configuration.class);
     set.add(Activity.class);
     set.add(ActivitySource.class);
     set.add(AnalysisOrchestrator.class);

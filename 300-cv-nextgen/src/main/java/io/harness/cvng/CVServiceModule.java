@@ -2,6 +2,7 @@ package io.harness.cvng;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.configManager.ConfigurationController;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -187,17 +188,7 @@ public class CVServiceModule extends AbstractModule {
       VersionInfoManager versionInfoManager = new VersionInfoManager(
           IOUtils.toString(getClass().getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml"),
               StandardCharsets.UTF_8));
-      bind(QueueController.class).toInstance(new QueueController() {
-        @Override
-        public boolean isPrimary() {
-          return true;
-        }
-
-        @Override
-        public boolean isNotPrimary() {
-          return false;
-        }
-      });
+      bind(QueueController.class).toInstance(new ConfigurationController());
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
       bind(HPersistence.class).to(MongoPersistence.class);
       bind(TimeSeriesRecordService.class).to(TimeSeriesRecordServiceImpl.class);
