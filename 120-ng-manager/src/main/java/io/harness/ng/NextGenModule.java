@@ -56,6 +56,7 @@ import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
 import io.harness.ng.accesscontrol.user.UserService;
 import io.harness.ng.accesscontrol.user.UserServiceImpl;
+import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
@@ -274,6 +275,9 @@ public class NextGenModule extends AbstractModule {
         .toProvider(NGLogStreamingClientFactory.builder()
                         .logStreamingServiceBaseUrl(appConfig.getLogStreamingServiceConfig().getBaseUrl())
                         .build());
+
+    install(new AuthenticationSettingsModule(
+        this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ValidationModule(getValidatorFactory()));
     install(new AbstractMongoModule() {
       @Override
