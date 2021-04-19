@@ -1858,6 +1858,7 @@ maven_install(
         "org.joda:joda-convert:1.2",
         "org.jodd:jodd-bean:5.0.13",
         "org.jodd:jodd-core:5.0.13",
+        "org.jooq:jooq:3.14.8",
         "org.jooq:joor:0.9.5",
         "org.apache.maven:maven-plugin-api:3.6.3",
         "org.apache.maven.plugin-tools:maven-plugin-annotations:3.4",

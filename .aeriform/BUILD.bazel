@@ -362,6 +362,10 @@ aeriform("//955-setup-usage-sdk:module")
 
 aeriform("//955-setup-usage-sdk:tests")
 
+aeriform("//959-psql-database-models:module")
+
+aeriform("//959-psql-database-models:tests")
+
 aeriform("//960-api-services:module")
 
 aeriform("//960-api-services:tests")
