@@ -467,7 +467,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
     SyncTaskContextBuilder syncTaskContextBuilder =
-        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).appId(appId).timeout(120 * 1000);
+        SyncTaskContext.builder()
+            .accountId(settingAttribute.getAccountId())
+            .appId(isBlank(appId) || appId.equals(GLOBAL_APP_ID) ? SCOPE_WILDCARD : appId)
+            .timeout(120 * 1000);
     SyncTaskContext syncTaskContext = areDelegateSelectorsRequired(settingAttribute)
         ? appendDelegateSelector(settingAttribute, syncTaskContextBuilder)
         : syncTaskContextBuilder.build();
