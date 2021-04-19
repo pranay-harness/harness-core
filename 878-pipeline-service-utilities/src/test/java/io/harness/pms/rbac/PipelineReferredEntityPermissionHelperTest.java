@@ -26,15 +26,15 @@ public class PipelineReferredEntityPermissionHelperTest extends CategoryTest {
 
     entityType = EntityType.SECRETS;
     permission = PipelineReferredEntityPermissionHelper.getPermissionForGivenType(entityType, false);
-    assertThat(permission).isEqualTo("core_secret_runtimeAccess");
+    assertThat(permission).isEqualTo("core_secret_access");
 
     entityType = EntityType.SERVICE;
     permission = PipelineReferredEntityPermissionHelper.getPermissionForGivenType(entityType, false);
-    assertThat(permission).isEqualTo("core_service_runtimeAccess");
+    assertThat(permission).isEqualTo("core_service_access");
 
     entityType = EntityType.ENVIRONMENT;
     permission = PipelineReferredEntityPermissionHelper.getPermissionForGivenType(entityType, false);
-    assertThat(permission).isEqualTo("core_environment_runtimeAccess");
+    assertThat(permission).isEqualTo("core_environment_access");
   }
 
   @Test
