@@ -188,3 +188,6 @@ gitSdkConfiguration:
     authority: localhost
   scmConnectionConfig:
     url: localhost:8091
+
+baseUrls:
+  wingsui: http://localhost:8181/#/

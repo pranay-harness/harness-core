@@ -76,7 +76,7 @@ public class AccountResourceNG {
   @GET
   @Path("/baseUrl")
   public RestResponse<String> getBaseUrl(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId));
+    return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId, null));
   }
 
   @GET

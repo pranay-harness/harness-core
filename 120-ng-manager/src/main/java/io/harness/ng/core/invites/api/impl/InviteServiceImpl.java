@@ -83,7 +83,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.utils.URIBuilder;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -114,6 +113,7 @@ public class InviteServiceImpl implements InviteService {
   private final AccessControlAdminClient accessControlAdminClient;
   private final AccountClient accountClient;
   private final OutboxService outboxService;
+  private final String wingsuiUrl;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
@@ -124,7 +124,8 @@ public class InviteServiceImpl implements InviteService {
   public InviteServiceImpl(@Named("userVerificationSecret") String jwtPasswordSecret, MongoConfig mongoConfig,
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
       InviteRepository inviteRepository, NotificationClient notificationClient,
-      AccessControlAdminClient accessControlAdminClient, AccountClient accountClient, OutboxService outboxService) {
+      AccessControlAdminClient accessControlAdminClient, AccountClient accountClient, OutboxService outboxService,
+      @Named("wingsui") String wingsuiUrl) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
     this.ngUserService = ngUserService;
@@ -134,6 +135,7 @@ public class InviteServiceImpl implements InviteService {
     this.accessControlAdminClient = accessControlAdminClient;
     this.accountClient = accountClient;
     this.outboxService = outboxService;
+    this.wingsuiUrl = wingsuiUrl;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -166,19 +168,6 @@ public class InviteServiceImpl implements InviteService {
         roleBinding.setResourceGroupName(DEFAULT_RESOURCE_GROUP_NAME);
       }
     });
-  }
-
-  private static Pair<String, String> getResourceGroupIdentifier(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    String resourceGroupName;
-    if (projectIdentifier != null) {
-      resourceGroupName = projectIdentifier;
-    } else if (orgIdentifier != null) {
-      resourceGroupName = orgIdentifier;
-    } else {
-      resourceGroupName = accountIdentifier;
-    }
-    return Pair.of(String.format("_%s", resourceGroupName), resourceGroupName);
   }
 
   private boolean checkIfUserAlreadyAdded(Invite invite) {
@@ -418,11 +407,14 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private String getInvitationMailEmbedUrl(Invite invite) throws URISyntaxException {
-    String baseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(invite.getAccountIdentifier()));
+    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(invite.getAccountIdentifier()));
     AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
     String fragment = String.format(INVITE_URL, invite.getAccountIdentifier(), account.getName(),
         account.getCompanyName(), invite.getEmail(), invite.getInviteToken());
-    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    if (Objects.isNull(accountBaseUrl)) {
+      accountBaseUrl = wingsuiUrl;
+    }
+    URIBuilder uriBuilder = new URIBuilder(accountBaseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
   }

@@ -83,6 +83,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
   @JsonProperty("gitSdkConfiguration") private GitSdkConfiguration gitSdkConfiguration;
+  @JsonProperty("baseUrls") private BaseUrls baseUrls;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
