@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -152,7 +152,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
 public abstract class AbstractK8sState extends State implements K8sStateExecutor {
   @Inject private transient ApplicationManifestService applicationManifestService;
