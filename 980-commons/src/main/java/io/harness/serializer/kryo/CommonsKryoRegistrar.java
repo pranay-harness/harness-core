@@ -17,6 +17,8 @@ import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidTagException;
 import io.harness.exception.KryoHandlerNotFoundException;
+import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.SecretNotFoundException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
@@ -66,6 +68,8 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ContextException.class, 31019);
     kryo.register(InvalidTagException.class, 31020);
     kryo.register(SecretNotFoundException.class, 31021);
+    kryo.register(KubernetesYamlException.class, 31022);
+    kryo.register(KubernetesTaskException.class, 31023);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);

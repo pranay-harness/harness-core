@@ -733,6 +733,12 @@ public class K8sTaskHelperBase {
   public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess)
       throws Exception {
+    return applyManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, denoteOverallSuccess, true);
+  }
+
+  public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
+      boolean denoteOverallFailure) throws Exception {
     FileIo.writeUtf8StringToFile(
         k8sDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
 
@@ -747,7 +753,10 @@ public class K8sTaskHelperBase {
     final ApplyCommand applyCommand = overriddenClient.apply().filename("manifests.yaml").record(recordCommand);
     ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, applyCommand);
     if (result.getExitValue() != 0) {
-      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+      if (denoteOverallFailure) {
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+      }
+
       return false;
     }
 
@@ -1242,6 +1251,13 @@ public class K8sTaskHelperBase {
   public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
       K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, LogCallback executionLogCallback,
       boolean denoteOverallSuccess) throws Exception {
+    return doStatusCheckForAllResources(
+        client, resourceIds, k8sDelegateTaskParams, namespace, executionLogCallback, denoteOverallSuccess, true);
+  }
+
+  public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
+      K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, LogCallback executionLogCallback,
+      boolean denoteOverallSuccess, boolean denoteOverallFailure) throws Exception {
     if (isEmpty(resourceIds)) {
       return true;
     }
@@ -1320,7 +1336,9 @@ public class K8sTaskHelperBase {
       return success;
     } catch (Exception e) {
       log.error("Exception while doing statusCheck", e);
-      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+      if (denoteOverallFailure) {
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+      }
       return false;
     } finally {
       for (StartedProcess eventWatchProcess : eventWatchProcesses) {
@@ -1331,8 +1349,12 @@ public class K8sTaskHelperBase {
           executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
         }
       } else {
-        executionLogCallback.saveExecutionLog(
-            format("%nStatus check for resources in namespace [%s] failed.", namespace), INFO, FAILURE);
+        String errorMessage = format("%nStatus check for resources in namespace [%s] failed.", namespace);
+        if (denoteOverallFailure) {
+          executionLogCallback.saveExecutionLog(errorMessage, INFO, FAILURE);
+        } else {
+          executionLogCallback.saveExecutionLog(errorMessage, INFO);
+        }
       }
     }
   }
@@ -1958,17 +1980,24 @@ public class K8sTaskHelperBase {
 
   public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
       String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis, String accountId) {
+    return fetchManifestFilesAndWriteToDirectory(
+        manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, timeoutInMillis, accountId, true);
+  }
+
+  public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
+      String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis, String accountId,
+      boolean denoteOverallFailure) {
     StoreDelegateConfig storeDelegateConfig = manifestDelegateConfig.getStoreDelegateConfig();
     switch (storeDelegateConfig.getType()) {
       case GIT:
         return downloadManifestFilesFromGit(
-            storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
+            storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId, denoteOverallFailure);
 
       case HTTP_HELM:
       case S3_HELM:
       case GCS_HELM:
-        return downloadFilesFromChartRepo(
-            manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, timeoutInMillis);
+        return downloadFilesFromChartRepo(manifestDelegateConfig, manifestFilesDirectory, executionLogCallback,
+            timeoutInMillis, denoteOverallFailure);
 
       default:
         throw new UnsupportedOperationException(
@@ -1977,7 +2006,7 @@ public class K8sTaskHelperBase {
   }
 
   private boolean downloadManifestFilesFromGit(StoreDelegateConfig storeDelegateConfig, String manifestFilesDirectory,
-      LogCallback executionLogCallback, String accountId) {
+      LogCallback executionLogCallback, String accountId, boolean denoteOverallFailure) {
     if (!(storeDelegateConfig instanceof GitStoreDelegateConfig)) {
       throw new InvalidArgumentsException(Pair.of("storeDelegateConfig", "Must be instance of GitStoreDelegateConfig"));
     }
@@ -2007,8 +2036,11 @@ public class K8sTaskHelperBase {
       return true;
     } catch (Exception e) {
       String errorMsg = "Failed to download manifest files from git. ";
-      executionLogCallback.saveExecutionLog(
-          errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      if (denoteOverallFailure) {
+        executionLogCallback.saveExecutionLog(
+            errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      }
+
       throw new GitOperationException(errorMsg, e);
     }
   }
@@ -2033,7 +2065,7 @@ public class K8sTaskHelperBase {
   }
 
   private boolean downloadFilesFromChartRepo(ManifestDelegateConfig manifestDelegateConfig, String destinationDirectory,
-      LogCallback logCallback, long timeoutInMillis) {
+      LogCallback logCallback, long timeoutInMillis, boolean denoteOverallFailure) {
     if (!(manifestDelegateConfig instanceof HelmChartManifestDelegateConfig)) {
       throw new InvalidArgumentsException(
           Pair.of("manifestDelegateConfig", "Must be instance of HelmChartManifestDelegateConfig"));
@@ -2062,7 +2094,10 @@ public class K8sTaskHelperBase {
     } catch (Exception e) {
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());
-      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      if (denoteOverallFailure) {
+        logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      }
+
       throw new HelmClientException(errorMsg, e);
     }
 

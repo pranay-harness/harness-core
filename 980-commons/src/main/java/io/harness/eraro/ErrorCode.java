@@ -525,7 +525,8 @@ public enum ErrorCode {
   SCM_UNAUTHORIZED,
   DATA,
   CONTEXT,
-  PR_CREATION_ERROR;
+  PR_CREATION_ERROR,
+  KUBERNETES_TASK_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

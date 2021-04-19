@@ -27,6 +27,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.WingsException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -41,6 +42,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+
 @Slf4j
 @OwnedBy(CDP)
 public class K8sTaskNG extends AbstractDelegateRunnableTask {
@@ -89,6 +91,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                                     .toAbsolutePath()
                                     .toString();
 
+      K8sRequestHandler k8sRequestHandler = k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name());
       try {
         String kubeconfigFileContent = containerDeploymentDelegateBaseHelper.getKubeconfigFileContent(
             k8sDeployRequest.getK8sInfraDelegateConfig());
@@ -117,14 +120,29 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         // TODO: @anshul/vaibhav , fix this
         //        logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams, commandUnitsProgress);
 
-        K8sDeployResponse k8sDeployResponse = k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
-                                                  .executeTask(k8sDeployRequest, k8SDelegateTaskParams,
-                                                      getLogStreamingTaskClient(), commandUnitsProgress);
+        K8sDeployResponse k8sDeployResponse = k8sRequestHandler.executeTask(
+            k8sDeployRequest, k8SDelegateTaskParams, getLogStreamingTaskClient(), commandUnitsProgress);
 
         k8sDeployResponse.setCommandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
         return k8sDeployResponse;
+      } catch (WingsException ex) {
+        log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
+        if (k8sRequestHandler.isErrorFrameworkSupported()) {
+          k8sRequestHandler.handleTaskFailure(k8sDeployRequest, ex);
+          throw ex;
+        }
+
+        return K8sDeployResponse.builder()
+            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+            .errorMessage(ExceptionUtils.getMessage(ex))
+            .commandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
+            .build();
       } catch (Exception ex) {
         log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
+        if (k8sRequestHandler.isErrorFrameworkSupported()) {
+          k8sRequestHandler.handleTaskFailure(k8sDeployRequest, ex);
+        }
+
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
@@ -200,5 +218,10 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         throw new UnsupportedOperationException(
             String.format("Unsupported Manifest type: [%s]", manifestDelegateConfig.getManifestType().name()));
     }
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 }

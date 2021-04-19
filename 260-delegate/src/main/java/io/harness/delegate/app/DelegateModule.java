@@ -54,6 +54,7 @@ import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler
 import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.DockerServerExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.GcpClientExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.KubernetesApiExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SecretExceptionHandler;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
@@ -1499,5 +1500,7 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(DockerServerExceptionHandler.class));
     SecretExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(SecretExceptionHandler.class));
+    KubernetesApiExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(KubernetesApiExceptionHandler.class));
   }
 }
