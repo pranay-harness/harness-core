@@ -68,6 +68,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.stubbing.Answer;
 
 public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
@@ -272,13 +273,14 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     Answer<String> doReturnSameValue = invocation -> invocation.getArgumentAt(0, String.class);
+    String delegate = "primary";
 
     when(activityService.save(any())).thenReturn(mock(Activity.class));
     when(executionContext.getApp()).thenReturn(mock(Application.class));
     when(executionContext.getEnv()).thenReturn(mock(Environment.class));
     when(infrastructureProvisionerService.getShellScriptProvisioner(anyString(), anyString()))
         .thenReturn(mock(ShellScriptInfrastructureProvisioner.class));
-    when(executionContext.renderExpression(anyString())).thenReturn(doReturnSameValue);
+    when(executionContext.renderExpression(anyString())).thenReturn(delegate);
     state.execute(executionContext);
 
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
