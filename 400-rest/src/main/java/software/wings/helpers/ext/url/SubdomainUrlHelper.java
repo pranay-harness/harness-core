@@ -47,6 +47,15 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
     return portalUrl;
   }
 
+  @Override
+  public String getPortalBaseUrl(String accountId, String defaultBaseUrl) {
+    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
+    if (!subdomainUrl.isPresent()) {
+      return defaultBaseUrl;
+    }
+    return appendSeparatorToUrl(subdomainUrl.get());
+  }
+
   private String getPortalUrl(String accountId) {
     Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
     return subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getPortalUrl().trim();
