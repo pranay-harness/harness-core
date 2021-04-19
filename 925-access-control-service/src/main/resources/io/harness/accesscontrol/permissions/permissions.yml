@@ -69,7 +69,7 @@ permissions:
       - account
       - organization
       - project
-  - identifier: core_secret_runtimeAccess
+  - identifier: core_secret_access
     name: Runtime Access on a secret
     status: ACTIVE
     allowedScopeLevels:
@@ -145,7 +145,7 @@ permissions:
       - account
       - organization
       - project
-  - identifier: core_service_runtimeAccess
+  - identifier: core_service_access
     name: Runtime Access to Service
     status: ACTIVE
     allowedScopeLevels:
@@ -173,7 +173,7 @@ permissions:
       - account
       - organization
       - project
-  - identifier: core_environment_runtimeAccess
+  - identifier: core_environment_access
     name: Runtime Access to Environment
     status: ACTIVE
     allowedScopeLevels:

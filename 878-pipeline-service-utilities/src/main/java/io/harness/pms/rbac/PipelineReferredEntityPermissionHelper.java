@@ -21,7 +21,7 @@ public class PipelineReferredEntityPermissionHelper {
           EntityType.SERVICE, NGResourceType.SERVICE, EntityType.ENVIRONMENT, NGResourceType.ENVIRONMENT);
 
   public String getPermissionForGivenType(EntityType entityType, boolean isNew) {
-    String permission = "runtimeAccess";
+    String permission = "access";
     if (isNew) {
       permission = "edit";
     }
