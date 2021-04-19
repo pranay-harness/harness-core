@@ -318,6 +318,10 @@ public class WorkflowServiceHelper {
   public static final String TERRAFORM_PROVISION = "Terraform Provision";
   public static final String ARM_CREATE_RESOURCE = "ARM/Blueprint Create Resource";
   public static final String TERRAFORM_DESTROY = "Terraform Destroy";
+  public static final String TERRAGRUNT_PROVISION = "Terragrunt Provision";
+  public static final String TERRAGRUNT_DESTROY = "Terragrunt Destroy";
+  public static final String TERRAGRUNT_ROLLBACK = "Terragrunt Rollback";
+
   public static final String SERVICENOW = "ServiceNow";
   public static final String EMAIL = "Email";
   public static final String BARRIER = "Barrier";

@@ -28,11 +28,14 @@ import static software.wings.beans.PhaseStepType.SELECT_NODE;
 import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.common.ProvisionerConstants.DESTROY_TERRAGRUNT_NAME;
 import static software.wings.common.ProvisionerConstants.DE_PROVISION_CLOUD_FORMATION;
 import static software.wings.common.ProvisionerConstants.PROVISION_CLOUD_FORMATION;
 import static software.wings.common.ProvisionerConstants.PROVISION_SHELL_SCRIPT;
+import static software.wings.common.ProvisionerConstants.PROVISION_TERRAGRUNT_NAME;
 import static software.wings.common.ProvisionerConstants.ROLLBACK_CLOUD_FORMATION;
 import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAFORM_NAME;
+import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAGRUNT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ARTIFACT_COLLECTION_STEP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
@@ -219,6 +222,9 @@ import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
+import software.wings.sm.states.provision.TerragruntApplyState;
+import software.wings.sm.states.provision.TerragruntDestroyState;
+import software.wings.sm.states.provision.TerragruntRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
@@ -747,6 +753,16 @@ public enum StateType implements StateTypeDescriptor {
       ORCHESTRATION_STENCILS),
 
   TERRAFORM_APPLY(ApplyTerraformState.class, OTHERS, 5, "Terraform Apply", asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  TERRAGRUNT_PROVISION(TerragruntApplyState.class, PROVISIONERS, 0, PROVISION_TERRAGRUNT_NAME,
+      asList(InfrastructureMappingType.AWS_SSH), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
+      ORCHESTRATION_STENCILS),
+
+  TERRAGRUNT_DESTROY(TerragruntDestroyState.class, PROVISIONERS, 0, DESTROY_TERRAGRUNT_NAME,
+      asList(InfrastructureMappingType.AWS_SSH), asList(POST_DEPLOYMENT, WRAP_UP), ORCHESTRATION_STENCILS),
+
+  TERRAGRUNT_ROLLBACK(TerragruntRollbackState.class, PROVISIONERS, ROLLBACK_TERRAGRUNT_NAME,
+      singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   ARM_CREATE_RESOURCE(ARMProvisionState.class, PROVISIONERS, 0, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
       asList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.AZURE_VMSS,

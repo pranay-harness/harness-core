@@ -20,15 +20,17 @@ import software.wings.beans.NameValuePair;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
-@Builder(toBuilder = true)
+@SuperBuilder(toBuilder = true)
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "terraformConfig")
 @HarnessEntity(exportable = true)
