@@ -138,7 +138,8 @@ func TestListBranches(t *testing.T) {
 	got, err := ListBranches(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
-	assert.Equal(t, len(got.Branches), 1, "one branch")
+	assert.Equal(t, 1, len(got.Branches), "one branch")
+	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
 }
 
 func TestListCommits(t *testing.T) {
@@ -172,4 +173,5 @@ func TestListCommits(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, len(got.CommitIds), 1, "1 commit")
+	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
 }
