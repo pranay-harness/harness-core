@@ -1,16 +1,12 @@
 package io.harness.batch.processing.dao.impl;
 
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
-import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HPersistence.upsertReturnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.persistence.HQuery.excludeCount;
 
-import static java.util.Objects.isNull;
-
 import io.harness.batch.processing.ccm.InstanceEvent;
-import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
@@ -56,162 +52,16 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   @Override
   public boolean updateInstanceStopTime(InstanceData instanceData, Instant stopTime) {
     instanceData.setUsageStopTime(stopTime);
+    instanceData.setActiveInstanceIterator(stopTime);
     instanceData.setInstanceState(InstanceState.STOPPED);
     instanceData.setTtl(new Date(stopTime.plus(30, ChronoUnit.DAYS).toEpochMilli()));
     return hPersistence.save(instanceData) != null;
-  }
-
-  @Override
-  public InstanceData upsert(InstanceEvent instanceEvent) {
-    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
-                                    .filter(InstanceDataKeys.accountId, instanceEvent.getAccountId())
-                                    .filter(InstanceDataKeys.clusterId, instanceEvent.getClusterId())
-                                    .filter(InstanceDataKeys.instanceId, instanceEvent.getInstanceId());
-    InstanceData instanceData = query.get();
-    return updateInstanceLifecycleData(instanceEvent, instanceData);
-  }
-
-  private InstanceData updateInstanceLifecycleData(InstanceEvent instanceEvent, InstanceData instanceData) {
-    if (null != instanceData) {
-      UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
-      Instant instant = instanceEvent.getTimestamp();
-      boolean updateRequired = false;
-      switch (instanceEvent.getType()) {
-        case STOP:
-          if (null == instanceData.getUsageStopTime()) {
-            updateOperations.set(InstanceDataKeys.usageStopTime, instant);
-            updateOperations.set(InstanceDataKeys.instanceState, InstanceState.STOPPED);
-            updateRequired = true;
-          }
-          break;
-        case START:
-          if (null == instanceData.getUsageStartTime()) {
-            updateOperations.set(InstanceDataKeys.usageStartTime, instant);
-            updateOperations.set(InstanceDataKeys.instanceState, InstanceState.RUNNING);
-            updateRequired = true;
-          }
-          break;
-        default:
-          break;
-      }
-      if (updateRequired) {
-        Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
-                                        .filter(InstanceDataKeys.accountId, instanceEvent.getAccountId())
-                                        .filter(InstanceDataKeys.clusterId, instanceEvent.getClusterId())
-                                        .filter(InstanceDataKeys.instanceId, instanceEvent.getInstanceId());
-        return hPersistence.upsert(query, updateOperations, upsertReturnOldOptions);
-      } else {
-        return instanceData;
-      }
-    } else {
-      log.debug("Instance Event received before info event {}", instanceEvent.getInstanceId());
-    }
-    return null;
-  }
-
-  @Override
-  public void upsert(List<InstanceEvent> instanceEvents) {
-    Map<String, List<InstanceData>> instanceDataMap = getInstanceData(instanceEvents);
-    instanceEvents.forEach(instanceEvent -> {
-      if (null != instanceDataMap.get(instanceEvent.getInstanceId())) {
-        List<InstanceData> instanceDataList = instanceDataMap.get(instanceEvent.getInstanceId());
-        instanceDataList.stream()
-            .filter(instanceData -> instanceData.getClusterId().equals(instanceEvent.getClusterId()))
-            .forEach(instanceData -> updateInstanceLifecycleData(instanceEvent, instanceData));
-      } else {
-        updateInstanceLifecycleData(instanceEvent, null);
-      }
-    });
   }
 
   private Map<String, List<InstanceData>> getInstanceData(List<InstanceEvent> instanceEvents) {
     Set<String> instanceIds = instanceEvents.stream().map(InstanceEvent::getInstanceId).collect(Collectors.toSet());
     List<InstanceData> instanceData = fetchInstanceData(instanceIds);
     return instanceData.stream().collect(Collectors.groupingBy(InstanceData::getInstanceId));
-  }
-
-  @Override
-  public InstanceData upsert(InstanceInfo instanceInfo) {
-    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
-                                    .filter(InstanceDataKeys.accountId, instanceInfo.getAccountId())
-                                    .filter(InstanceDataKeys.clusterId, instanceInfo.getClusterId())
-                                    .filter(InstanceDataKeys.instanceId, instanceInfo.getInstanceId());
-    InstanceData instanceData = query.get();
-    if (null == instanceData) {
-      UpdateOperations<InstanceData> updateOperations =
-          hPersistence.createUpdateOperations(InstanceData.class)
-              .set(InstanceDataKeys.accountId, instanceInfo.getAccountId())
-              .set(InstanceDataKeys.settingId, instanceInfo.getSettingId())
-              .set(InstanceDataKeys.instanceId, instanceInfo.getInstanceId())
-              .set(InstanceDataKeys.instanceName, instanceInfo.getInstanceName())
-              .set(InstanceDataKeys.instanceType, instanceInfo.getInstanceType())
-              .set(InstanceDataKeys.clusterId, instanceInfo.getClusterId())
-              .set(InstanceDataKeys.clusterName, instanceInfo.getClusterName())
-              .set(InstanceDataKeys.instanceState, instanceInfo.getInstanceState())
-              .set(InstanceDataKeys.usageStartTime, instanceInfo.getUsageStartTime());
-
-      if (!isNull(instanceInfo.getResource())) {
-        updateOperations.set(InstanceDataKeys.totalResource, instanceInfo.getResource());
-      }
-
-      if (!isNull(instanceInfo.getCloudProviderInstanceId())) {
-        updateOperations.set(InstanceDataKeys.cloudProviderInstanceId, instanceInfo.getCloudProviderInstanceId());
-      }
-
-      if (!isNull(instanceInfo.getResourceLimit())) {
-        updateOperations.set(InstanceDataKeys.limitResource, instanceInfo.getResourceLimit());
-      }
-
-      if (!isNull(instanceInfo.getAllocatableResource())) {
-        updateOperations.set(InstanceDataKeys.allocatableResource, instanceInfo.getAllocatableResource());
-      }
-
-      if (!isNull(instanceInfo.getStorageResource())) {
-        updateOperations.set(InstanceDataKeys.storageResource, instanceInfo.getStorageResource());
-      }
-
-      if (!isNull(instanceInfo.getLabels())) {
-        updateOperations.set(InstanceDataKeys.labels, instanceInfo.getLabels());
-      }
-
-      if (!isNull(instanceInfo.getNamespaceLabels()) && !instanceInfo.getNamespaceLabels().isEmpty()) {
-        updateOperations.set(InstanceDataKeys.namespaceLabels, instanceInfo.getNamespaceLabels());
-      }
-
-      if (instanceInfo.getMetaData() != null) {
-        updateOperations.set(InstanceDataKeys.metaData, instanceInfo.getMetaData());
-      }
-
-      if (instanceInfo.getHarnessServiceInfo() != null) {
-        updateOperations.set(InstanceDataKeys.harnessServiceInfo, instanceInfo.getHarnessServiceInfo());
-      }
-
-      InstanceData savedInstanceData = hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
-
-      if (savedInstanceData.getHarnessServiceInfo() != null
-          && !InstanceMetaDataConstants.SLOW_ACCOUNT.equals(instanceInfo.getAccountId())) {
-        try {
-          updateDeploymentEvent(savedInstanceData);
-        } catch (Exception e) {
-          log.error("Exception while updating deployment event ", e);
-        }
-      }
-      return savedInstanceData;
-
-    } else {
-      log.trace("Instance data found {} ", instanceData);
-      Map<String, String> oldInstanceMetaData = instanceData.getMetaData();
-      Map<String, String> newInstanceMetaData = instanceInfo.getMetaData();
-
-      if (false
-          && InstanceMetaDataUtils.carryUpdatedMapKeyFromTo(newInstanceMetaData,
-              oldInstanceMetaData)) { // carry updated (key,value) from newInstanceMetaData to oldInstanceMetaData
-        UpdateOperations<InstanceData> updateOperations = hPersistence.createUpdateOperations(InstanceData.class);
-        updateOperations.set(InstanceDataKeys.metaData, oldInstanceMetaData);
-        return hPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
-      }
-    }
-    return instanceData;
   }
 
   @Override
