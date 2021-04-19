@@ -240,7 +240,6 @@ gitGrpcClientConfigs:
     target: localhost:13001
     authority: localhost
 
-
 gitSdkConfiguration:
   grpcServerConfig:
     # For ng it will be in process server so this isn't required.

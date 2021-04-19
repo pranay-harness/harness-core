@@ -6,6 +6,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SampleBean;
+import io.harness.common.EntityReference;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 
@@ -43,5 +44,20 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
                        .projectIdentifier(entity.getProjectIdentifier())
                        .build())
         .build();
+  }
+
+  @Override
+  public SampleBean save(SampleBean yaml, String accountIdentifier) {
+    return null;
+  }
+
+  @Override
+  public SampleBean update(SampleBean yaml, String accountIdentifier) {
+    return null;
+  }
+
+  @Override
+  public boolean delete(EntityReference entityReference) {
+    return false;
   }
 }
