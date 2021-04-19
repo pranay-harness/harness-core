@@ -18,7 +18,7 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
     implements GitSdkEntityHandlerInterface<SampleBean, SampleBean> {
   @Override
   public Supplier<SampleBean> getYamlFromEntity(SampleBean entity) {
-    return null;
+    return () -> entity;
   }
 
   @Override
@@ -28,13 +28,14 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
 
   @Override
   public Supplier<SampleBean> getEntityFromYaml(SampleBean yaml) {
-    return null;
+    return () -> yaml;
   }
 
   @Override
   public EntityDetail getEntityDetail(SampleBean entity) {
     return EntityDetail.builder()
         .name(entity.getName())
+        .type(EntityType.CONNECTORS)
         .entityRef(IdentifierRef.builder()
                        .accountIdentifier(entity.getAccountIdentifier())
                        .identifier(entity.getIdentifier())

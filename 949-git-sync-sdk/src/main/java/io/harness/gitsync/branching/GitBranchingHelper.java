@@ -15,6 +15,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -40,7 +42,7 @@ public class GitBranchingHelper {
                             .is(branch);
     final List<EntityGitBranchMetadata> entityGitBranchMetadata =
         mongoTemplate.find(query(criteria), EntityGitBranchMetadata.class);
-    return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getBranch).collect(Collectors.toList());
+    return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getObjectId).collect(Collectors.toList());
   }
 
   public List<String> getObjectIdForDefaultBranchAndScope(
@@ -57,7 +59,7 @@ public class GitBranchingHelper {
                             .is(true);
     final List<EntityGitBranchMetadata> entityGitBranchMetadata =
         mongoTemplate.find(query(criteria), EntityGitBranchMetadata.class);
-    return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getBranch).collect(Collectors.toList());
+    return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getObjectId).collect(Collectors.toList());
   }
 
   public List<String> getObjectIdForYamlGitConfigBranchAndFqn(
@@ -72,7 +74,7 @@ public class GitBranchingHelper {
                             .is(branch);
     final List<EntityGitBranchMetadata> entityGitBranchMetadata =
         mongoTemplate.find(query(criteria), EntityGitBranchMetadata.class);
-    return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getBranch).collect(Collectors.toList());
+    return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getObjectId).collect(Collectors.toList());
   }
 
   public List<String> getObjectIdForDefaultBranchAndFqn(String fqn, EntityType entityType) {
@@ -84,11 +86,15 @@ public class GitBranchingHelper {
                             .is(true);
     final List<EntityGitBranchMetadata> entityGitBranchMetadata =
         mongoTemplate.find(query(criteria), EntityGitBranchMetadata.class);
-    return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getBranch).collect(Collectors.toList());
+    return entityGitBranchMetadata.stream().map(EntityGitBranchMetadata::getObjectId).collect(Collectors.toList());
   }
 
   public boolean save(EntityGitBranchMetadata entityGitBranchMetadata) {
     mongoTemplate.save(entityGitBranchMetadata);
     return true;
+  }
+
+  public EntityGitBranchMetadata findAndModify(Query query, Update update) {
+    return mongoTemplate.findAndModify(query, update, EntityGitBranchMetadata.class);
   }
 }
