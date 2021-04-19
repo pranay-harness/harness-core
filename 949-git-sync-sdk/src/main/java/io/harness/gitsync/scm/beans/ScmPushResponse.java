@@ -19,4 +19,6 @@ public interface ScmPushResponse {
   String getYamlGitConfigId();
 
   String getObjectId();
+
+  String getBranch();
 }

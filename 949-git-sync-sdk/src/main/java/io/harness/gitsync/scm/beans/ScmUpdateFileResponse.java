@@ -22,4 +22,5 @@ public class ScmUpdateFileResponse implements ScmPushResponse {
   String projectIdentifier;
   String orgIdentifier;
   String accountIdentifier;
+  String branch;
 }

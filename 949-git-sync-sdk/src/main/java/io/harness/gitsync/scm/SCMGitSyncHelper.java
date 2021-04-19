@@ -67,6 +67,7 @@ public class SCMGitSyncHelper {
             .orgIdentifier(infoForPush.getOrgIdentifier())
             .projectIdentifier(infoForPush.getProjectIdentifier())
             .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
+            .branch(infoForPush.getBranch())
             .build();
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
@@ -80,6 +81,7 @@ public class SCMGitSyncHelper {
             .filePath(infoForPush.getFilePath())
             .pushToDefaultBranch(infoForPush.isDefault())
             .yamlGitConfigId(infoForPush.getYamlGitConfigId())
+            .branch(infoForPush.getBranch())
             .build();
       case RENAME:
         throw new NotImplementedException("Not implemented");
@@ -97,6 +99,7 @@ public class SCMGitSyncHelper {
             .accountIdentifier(infoForPush.getAccountId())
             .orgIdentifier(infoForPush.getOrgIdentifier())
             .projectIdentifier(infoForPush.getProjectIdentifier())
+            .branch(infoForPush.getBranch())
             .build();
       default:
         throw new EnumConstantNotPresentException(changeType.getClass(), "Incorrect changeType");
