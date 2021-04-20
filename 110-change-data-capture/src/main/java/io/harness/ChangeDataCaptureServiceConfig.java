@@ -26,6 +26,7 @@ public class ChangeDataCaptureServiceConfig extends Configuration {
   @JsonProperty("cdc-mongo") private MongoConfig cdcMongo = MongoConfig.builder().build();
   @JsonProperty("pms-harness") private MongoConfig pmsMongo = MongoConfig.builder().build();
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
+  @JsonProperty("mongotags") private MongoTagsConfig mongoTagsConfig = MongoTagsConfig.builder().build();
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(RESOURCE_PACKAGE);
