@@ -30,7 +30,7 @@
                 <table border="0" cellpadding="0" cellspacing="0" align="center" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; display: block; border-spacing: 0; padding: 0; width: inherit; min-width: 580px;max-width: 580px; border-collapse: collapse;" bgcolor="#222222" class="wrapper">
                     <tr>
                         <td align="left" valign="middle" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; width: 87.5%; padding-top: 0px; border-collapse: collapse; font-family: 'sans-serif', Tahoma, Verdana, Segoe, sans-serif;font-size: 36px;letter-spacing: 1px; color: #00ade4; line-height: 50px; font-weight: Light 300;" width="87.5%">
-                                Your Continuous Efficiency
+                                Your Cloud Cost Management
                                 <br>
                                 Weekly Report
                             </td>
@@ -137,7 +137,7 @@
                     <tr>
                         <td align="center" valign="top" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; font-size: 11px; font-weight: 400; line-height: 150%; padding-bottom: 20px; color: #999999; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; border-collapse: collapse;" class="footer" width="87.5%">
                             If you would like to be unsubscribed from future emails regarding
-                            <br> Harness Continuous Efficiency, please <a target="_blank" href="${UNSUBSCRIBE_URL}" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; color: #00ade4; text-decoration: none;">click here</a>.
+                            <br> Harness Cloud Cost Management, please <a target="_blank" href="${UNSUBSCRIBE_URL}" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; color: #00ade4; text-decoration: none;">click here</a>.
                          </td>
                      </tr>
                 </table>

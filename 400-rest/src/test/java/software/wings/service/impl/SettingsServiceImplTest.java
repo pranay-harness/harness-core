@@ -229,7 +229,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> settingsService.validateAndUpdateCEDetails(attribute, true))
-        .withMessage("Cannot enable continuous efficiency for more than 1 AWS cloud account");
+        .withMessage("Cannot enable Cloud Cost Management for more than 1 AWS cloud account");
   }
 
   @Test
@@ -248,7 +248,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> settingsService.validateAndUpdateCEDetails(attribute, true))
-        .withMessage("Cannot enable continuous efficiency for more than 1 GCP cloud account");
+        .withMessage("Cannot enable Cloud Cost Management for more than 1 GCP cloud account");
   }
 
   @Test

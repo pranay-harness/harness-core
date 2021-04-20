@@ -901,7 +901,7 @@ public class SettingsServiceImpl implements SettingsService {
         log.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
             settingAttribute.getValue().getType(), settingAttribute.getAccountId());
         throw new InvalidRequestException(String.format(
-            "Cannot enable continuous efficiency for more than %d cloud accounts", maxCloudAccountsAllowed));
+            "Cannot enable Cloud Cost Management for more than %d cloud accounts", maxCloudAccountsAllowed));
       }
 
       if (settingAttribute.getValue() instanceof CEAwsConfig) {
@@ -909,7 +909,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isAwsConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because AWS connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 AWS cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 AWS cloud account");
         }
 
         // Extract AWS Master AccountId
@@ -936,7 +936,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isGCPConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because GCP connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 GCP cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 GCP cloud account");
         }
       }
 
@@ -946,7 +946,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isAzureConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because Azure connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 Azure cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 Azure cloud account");
         }
         CEAzureConfig azureConfig = (CEAzureConfig) settingAttribute.getValue();
         azureCEConfigValidationService.verifyCrossAccountAttributes(azureConfig);
