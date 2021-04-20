@@ -1,7 +1,6 @@
 package io.harness.batch.processing.dao.impl;
 
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
-import static io.harness.persistence.HPersistence.upsertReturnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.persistence.HQuery.excludeCount;
@@ -11,6 +10,7 @@ import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.batch.processing.pricing.data.CloudProvider;
+import io.harness.batch.processing.support.ActiveInstanceIterator;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.InstanceState;
@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -104,19 +103,10 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   }
 
   @Override
-  public boolean updateInstanceState(
-      InstanceData instanceData, Instant instant, String instantField, InstanceState instanceState) {
-    UpdateOperations<InstanceData> instanceDataUpdateOperations =
-        hPersistence.createUpdateOperations(InstanceData.class)
-            .set(instantField, instant)
-            .set(InstanceDataKeys.instanceState, instanceState);
-
-    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
-                                    .filter(InstanceDataKeys.accountId, instanceData.getAccountId())
-                                    .filter(InstanceDataKeys.clusterId, instanceData.getClusterId())
-                                    .filter(InstanceDataKeys.instanceId, instanceData.getInstanceId());
-
-    return hPersistence.upsert(query, instanceDataUpdateOperations, upsertReturnOldOptions) != null;
+  public void updateInstanceActiveIterationTime(InstanceData instanceData) {
+    instanceData.setActiveInstanceIterator(
+        ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(instanceData.getUsageStartTime()));
+    hPersistence.save(instanceData);
   }
 
   @Override

@@ -21,7 +21,6 @@ import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
@@ -123,20 +122,6 @@ public class InstanceDataDaoImplTest extends BatchProcessingTestBase {
 
     assertThat(instanceDataLists.size()).isEqualTo(1);
     assertThat(instanceDataLists.get(0).getInstanceId()).isEqualTo(RUNNING_INSTANCE_ID);
-  }
-
-  @Test
-  @Owner(developers = HITESH)
-  @Category(UnitTests.class)
-  public void shouldUpdateInstanceState() {
-    instanceDataDao.create(instanceData(RUNNING_INSTANCE_ID, InstanceState.RUNNING));
-    InstanceData instanceData = instanceDataDao.fetchInstanceData(ACCOUNT_ID, RUNNING_INSTANCE_ID);
-    boolean instanceUpdated = instanceDataDao.updateInstanceState(
-        instanceData, END_INSTANT, InstanceDataKeys.usageStopTime, InstanceState.STOPPED);
-    assertThat(instanceUpdated).isTrue();
-    InstanceData updatedInstanceData = instanceDataDao.fetchInstanceData(ACCOUNT_ID, RUNNING_INSTANCE_ID);
-    assertThat(updatedInstanceData.getInstanceState()).isEqualTo(InstanceState.STOPPED);
-    assertThat(updatedInstanceData.getUsageStopTime()).isEqualTo(END_INSTANT);
   }
 
   @Test

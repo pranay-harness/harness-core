@@ -13,8 +13,6 @@ import java.util.Set;
 public interface InstanceDataService {
   boolean create(InstanceData instanceData);
 
-  boolean updateInstanceState(InstanceData instanceData, Instant instant, InstanceState instanceState);
-
   InstanceData fetchActiveInstanceData(
       String accountId, String clusterId, String instanceId, List<InstanceState> instanceState);
 
