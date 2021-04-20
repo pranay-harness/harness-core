@@ -1,5 +1,6 @@
 package io.harness.workers.background.critical.iterator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionInterruptType.MARK_EXPIRED;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
@@ -10,6 +11,9 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
@@ -49,6 +53,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecution> {
   @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
@@ -117,8 +123,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
                                      .executionUuid(stateExecutionInstance.getExecutionUuid())
                                      .stateExecutionInstanceId(stateExecutionInstance.getUuid())
                                      .build();
-          }
-          if (stateExecutionInstance.isWaitingForManualIntervention()) {
+          } else if (stateExecutionInstance.isWaitingForManualIntervention()) {
             executionInterrupt =
                 anExecutionInterrupt()
                     .executionInterruptType(stateExecutionInstance.getActionAfterManualInterventionTimeout())
