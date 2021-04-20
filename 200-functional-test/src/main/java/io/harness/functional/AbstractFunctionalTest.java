@@ -140,7 +140,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
       commandLibraryServiceExecutor.ensureCommandLibraryService(
           AbstractFunctionalTest.class, FunctionalTestRule.alpn, FunctionalTestRule.alpnJar);
     }
-    log.info("Basic setup completed");
+    log.info("Basic setup completed.");
   }
 
   @AfterClass
