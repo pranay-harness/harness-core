@@ -40,16 +40,17 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = JiraIssueDeserializer.class)
 public class JiraIssueNG {
-  @NotNull String url;
+  String url;
+  @NotNull String restUrl;
   @NotNull String id;
   @NotNull String key;
   @NotNull Map<String, Object> fields = new HashMap<>();
 
   public JiraIssueNG(JsonNode node) {
-    this.url = JsonNodeUtils.mustGetString(node, "self");
+    this.restUrl = JsonNodeUtils.mustGetString(node, "self");
     this.id = JsonNodeUtils.mustGetString(node, "id");
     this.key = JsonNodeUtils.mustGetString(node, "key");
-    this.fields.put("url", this.url);
+    this.fields.put("restUrl", this.restUrl);
     this.fields.put("id", this.id);
     this.fields.put("key", this.key);
 
@@ -59,6 +60,11 @@ public class JiraIssueNG {
 
     Set<String> fieldKeys = Sets.intersection(Sets.intersection(names.keySet(), schema.keySet()), fieldValues.keySet());
     fieldKeys.forEach(key -> addKey(key, names.get(key), schema.get(key), fieldValues.get(key)));
+  }
+
+  public void updateJiraBaseUrl(String baseUrl) {
+    this.url = JiraIssueUtilsNG.prepareIssueUrl(baseUrl, this.key);
+    this.fields.put("url", this.url);
   }
 
   private void addKey(String key, JsonNode nameNode, JsonNode schemaNode, JsonNode valueNode) {

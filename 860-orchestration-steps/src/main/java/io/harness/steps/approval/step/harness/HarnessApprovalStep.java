@@ -3,6 +3,7 @@ package io.harness.steps.approval.step.harness;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -23,7 +24,7 @@ import com.google.inject.Inject;
 import java.util.Map;
 
 @OwnedBy(CDC)
-public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepParameters> {
+public class HarnessApprovalStep implements AsyncExecutable<StepElementParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(StepSpecTypeConstants.HARNESS_APPROVAL).build();
 
@@ -31,13 +32,8 @@ public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepP
   @Inject private ApprovalNotificationHandler approvalNotificationHandler;
 
   @Override
-  public Class<HarnessApprovalStepParameters> getStepParametersClass() {
-    return HarnessApprovalStepParameters.class;
-  }
-
-  @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, HarnessApprovalStepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
     HarnessApprovalInstance approvalInstance = HarnessApprovalInstance.fromStepParameters(ambiance, stepParameters);
     approvalInstance = (HarnessApprovalInstance) approvalInstanceService.save(approvalInstance);
     approvalNotificationHandler.sendNotification(approvalInstance, ambiance);
@@ -50,7 +46,7 @@ public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepP
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, HarnessApprovalStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, StepElementParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     HarnessApprovalResponseData responseData = (HarnessApprovalResponseData) responseDataMap.values().iterator().next();
     HarnessApprovalInstance instance =
         (HarnessApprovalInstance) approvalInstanceService.get(responseData.getApprovalInstanceId());
@@ -63,7 +59,12 @@ public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepP
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, HarnessApprovalStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, StepElementParameters stepParameters, AsyncExecutableResponse executableResponse) {
     approvalInstanceService.expireByNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+  }
+
+  @Override
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 }

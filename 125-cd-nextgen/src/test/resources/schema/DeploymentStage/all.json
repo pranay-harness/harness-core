@@ -1141,13 +1141,7 @@
                 "$ref": "#/definitions/JiraField"
               }
             },
-            "identifier": {
-              "type": "string"
-            },
             "issueType": {
-              "type": "string"
-            },
-            "name": {
               "type": "string"
             },
             "projectKey": {
@@ -1194,13 +1188,7 @@
                 "$ref": "#/definitions/JiraField"
               }
             },
-            "identifier": {
-              "type": "string"
-            },
             "issueKey": {
-              "type": "string"
-            },
-            "name": {
               "type": "string"
             },
             "transitionTo": {

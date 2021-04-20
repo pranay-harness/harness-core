@@ -103,7 +103,11 @@ public class JiraClient {
    * @return the issue with the given key
    */
   public JiraIssueNG getIssue(@NotBlank String issueKey) {
-    return executeCall(restClient.getIssue(issueKey, "names,schema"), "fetching issue");
+    JiraIssueNG issue = executeCall(restClient.getIssue(issueKey, "names,schema"), "fetching issue");
+    if (issue != null) {
+      issue.updateJiraBaseUrl(config.getJiraUrl());
+    }
+    return issue;
   }
 
   /**

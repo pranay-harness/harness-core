@@ -1,13 +1,12 @@
-package io.harness.steps.jira.update;
+package io.harness.steps.approval.step.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.jira.update.beans.TransitionTo;
+import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
 
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,15 +18,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TypeAlias("jiraUpdateStepParameters")
-public class JiraUpdateStepParameters implements StepParameters {
-  String name;
-  String identifier;
-  ParameterField<String> timeout;
-
+@TypeAlias("jiraApprovalSpecParameters")
+public class JiraApprovalSpecParameters implements SpecParameters {
   @NotNull ParameterField<String> connectorRef;
   @NotNull ParameterField<String> issueKey;
-
-  TransitionTo transitionTo;
-  Map<String, ParameterField<String>> fields;
+  @NotNull CriteriaSpecWrapper approvalCriteria;
+  @NotNull CriteriaSpecWrapper rejectionCriteria;
 }

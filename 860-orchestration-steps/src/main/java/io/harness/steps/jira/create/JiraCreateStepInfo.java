@@ -5,18 +5,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.filters.WithConnectorRef;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.jira.beans.JiraField;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
@@ -37,9 +34,6 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.JIRA_CREATE)
 @TypeAlias("jiraCreateStepInfo")
 public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
-
   @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
   @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> projectKey;
   @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueType;
@@ -57,11 +51,8 @@ public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
   }
 
   @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
-    return JiraCreateStepParameters.builder()
-        .name(name)
-        .identifier(identifier)
-        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
+  public SpecParameters getSpecParameters() {
+    return JiraCreateSpecParameters.builder()
         .connectorRef(connectorRef)
         .projectKey(projectKey)
         .issueType(issueType)
