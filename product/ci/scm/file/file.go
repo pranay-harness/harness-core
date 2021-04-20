@@ -33,11 +33,12 @@ func FindFile(ctx context.Context, fileRequest *pb.GetFileRequest, log *zap.Suga
 		log.Errorw("Findfile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
-	log.Infow("Findfile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "commit id", response.Sha, "blob id", response.BlobID, "elapsed_time_ms", utils.TimeSince(start))
+	log.Infow("Findfile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "commit id",
+		response.Sha, "blob id", response.BlobID, "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.FileContent{
 		Content:  string(response.Data),
-		CommitId: string(response.Sha),
-		BlobId:   string(response.BlobID),
+		CommitId: response.Sha,
+		BlobId:   response.BlobID,
 		Path:     fileRequest.Path,
 	}
 	return out, nil
@@ -51,7 +52,8 @@ func BatchFindFile(ctx context.Context, fileRequests *pb.GetBatchFileRequest, lo
 	for _, request := range fileRequests.FindRequest {
 		file, err := FindFile(ctx, request, log)
 		if err != nil {
-			log.Errorw("BatchFindFile failure. Unable to get this file", "provider", request.GetProvider(), "slug", request.GetSlug(), "path", request.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+			log.Errorw("BatchFindFile failure. Unable to get this file", "provider", request.GetProvider(), "slug", request.GetSlug(), "path", request.GetPath(),
+				"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 			return nil, err
 		}
 		store = append(store, file)
@@ -124,15 +126,16 @@ func UpdateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 	}
 	response, err := client.Contents.Update(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), inputParams)
 	if err != nil {
-		log.Errorw("UpdateFile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", fileRequest.GetBranch(), "sha", inputParams.Sha, "branch", inputParams.Branch, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("UpdateFile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", fileRequest.GetBranch(), "sha", inputParams.Sha, "branch", inputParams.Branch,
+			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
-	log.Infow("UpdateFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", fileRequest.GetBranch(), "sha", inputParams.Sha, "branch", inputParams.Branch, "elapsed_time_ms", utils.TimeSince(start))
+	log.Infow("UpdateFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", fileRequest.GetBranch(), "sha", inputParams.Sha, "branch", inputParams.Branch,
+		"elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.UpdateFileResponse{
 		Status: int32(response.Status),
 	}
 	return out, nil
-
 }
 
 // PushFile creates a file if it does not exist, otherwise it updates it.
@@ -163,18 +166,20 @@ func PushFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap.S
 		default:
 			fileRequest.CommitId = file.Sha
 		}
-		updateResponse, err := UpdateFile(ctx, fileRequest, log)
-		if err != nil {
-			log.Errorw("PushFile failure, UpdateFile failed", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-			return nil, err
+		updateResponse, updateErr := UpdateFile(ctx, fileRequest, log)
+		if updateErr != nil {
+			log.Errorw("PushFile failure, UpdateFile failed", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(),
+				"elapsed_time_ms", utils.TimeSince(start), zap.Error(updateErr))
+			return nil, updateErr
 		}
 		out.Status = updateResponse.Status
 	} else {
 		log.Infow("PushFile calling CreateFile", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath())
-		createResponse, err := CreateFile(ctx, fileRequest, log)
-		if err != nil {
-			log.Errorw("PushFile failure, CreateFile failed", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-			return nil, err
+		createResponse, createErr := CreateFile(ctx, fileRequest, log)
+		if createErr != nil {
+			log.Errorw("PushFile failure, CreateFile failed", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(),
+				"elapsed_time_ms", utils.TimeSince(start), zap.Error(createErr))
+			return nil, createErr
 		}
 		out.Status = createResponse.Status
 	}
@@ -185,8 +190,8 @@ func PushFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap.S
 	}
 	log.Infow("UpsertFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start))
 	out.Path = fileRequest.GetPath()
-	out.CommitId = string(file.Sha)
-	out.BlobId = string(file.BlobID)
+	out.CommitId = file.Sha
+	out.BlobId = file.BlobID
 	out.Content = string(file.Data)
 
 	return out, nil

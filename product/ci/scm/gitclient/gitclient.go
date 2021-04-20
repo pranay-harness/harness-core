@@ -44,7 +44,7 @@ func giteaTransport(token string, skip bool) http.RoundTripper {
 	}
 }
 
-func bitbucketCloudTransport(username string, password string, skip bool) http.RoundTripper {
+func bitbucketCloudTransport(username, password string, skip bool) http.RoundTripper {
 	return &transport.BasicAuth{
 		Base:     defaultTransport(skip),
 		Username: username,
@@ -58,12 +58,12 @@ func defaultTransport(skip bool) http.RoundTripper {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: skip,
+			InsecureSkipVerify: skip, //nolint:gosec //TLS skip is set in the grpc request.
 		},
 	}
 }
 
-func GetValidRef(p pb.Provider, inputRef string, inputBranch string) (string, error) {
+func GetValidRef(p pb.Provider, inputRef, inputBranch string) (string, error) {
 	if inputRef != "" {
 		return inputRef, nil
 	} else if inputBranch != "" {
@@ -125,12 +125,11 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 		if p.Endpoint == "" {
 			log.Error("getGitClient failure Gitea, endpoint is empty")
 			return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Must provide an endpoint for %s", p.String()))
-		} else {
-			client, err = gitea.New(p.Endpoint)
-			if err != nil {
-				log.Errorw("GetGitClient failure Gitea", "endpoint", p.Endpoint, zap.Error(err))
-				return nil, err
-			}
+		}
+		client, err = gitea.New(p.Endpoint)
+		if err != nil {
+			log.Errorw("GetGitClient failure Gitea", "endpoint", p.Endpoint, zap.Error(err))
+			return nil, err
 		}
 		client.Client = &http.Client{
 			Transport: giteaTransport(p.GetGitea().GetAccessToken(), p.GetSkipVerify()),

@@ -30,7 +30,8 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 
 	_, response, err := client.PullRequests.Create(ctx, request.GetSlug(), &inputParams)
 	if err != nil {
-		log.Errorw("CreatePR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("CreatePR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(),
+			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("CreatePR success", "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(), "elapsed_time_ms", utils.TimeSince(start))
@@ -150,13 +151,13 @@ func ListCommits(ctx context.Context, request *pb.ListCommitsRequest, log *zap.S
 		return nil, err
 	}
 	log.Infow("ListCommits success", "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
-	var commit_ids []string
+	var commitIDs []string
 	for _, v := range commits {
-		commit_ids = append(commit_ids, v.Sha)
+		commitIDs = append(commitIDs, v.Sha)
 	}
 
 	out = &pb.ListCommitsResponse{
-		CommitIds: commit_ids,
+		CommitIds: commitIDs,
 		Pagination: &pb.PageResponse{
 			Next: int32(response.Page.Next),
 		},
