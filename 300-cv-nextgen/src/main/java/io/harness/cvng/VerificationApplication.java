@@ -6,6 +6,7 @@ import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 
 import static com.google.inject.matcher.Matchers.not;
@@ -22,6 +23,7 @@ import io.harness.cvng.activity.jobs.ActivityStatusJob;
 import io.harness.cvng.activity.jobs.K8ActivityCollectionHandler;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.cdng.jobs.CVNGStepTaskHandler;
 import io.harness.cvng.cdng.services.impl.CVNGFilterCreationResponseMerger;
 import io.harness.cvng.cdng.services.impl.CVNGModuleInfoProvider;
 import io.harness.cvng.cdng.services.impl.CVNGPipelineServiceInfoProvider;
@@ -85,10 +87,12 @@ import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.QueuePublisher;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -96,6 +100,9 @@ import io.harness.serializer.CVNGStepRegistrar;
 import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
+import io.harness.waiter.NotifyEvent;
+import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.codahale.metrics.MetricRegistry;
@@ -107,6 +114,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -123,6 +131,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -289,6 +298,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
     registerRecoverNextTaskHandlerIterator(injector);
+    injector.getInstance(CVNGStepTaskHandler.class).registerIterator();
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
@@ -297,7 +307,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerActivityIterator(injector);
     registerVerificationJobInstanceTimeoutIterator(injector);
     registerPipelineSDK(configuration, injector);
-
+    registerWaitEnginePublishers(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
 
@@ -314,6 +324,16 @@ public class VerificationApplication extends Application<VerificationConfigurati
     if (appConfig.getShouldConfigureWithPMS()) {
       queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
     }
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
+  }
+
+  private void registerWaitEnginePublishers(Injector injector) {
+    final QueuePublisher<NotifyEvent> publisher =
+        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+    final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+        injector.getInstance(NotifyQueuePublisherRegister.class);
+    notifyQueuePublisherRegister.register(
+        NG_ORCHESTRATION, payload -> publisher.send(Arrays.asList(NG_ORCHESTRATION), payload));
   }
 
   public void registerPipelineSDK(VerificationConfiguration configuration, Injector injector) {
@@ -346,7 +366,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
         .engineSteps(CVNGStepRegistrar.getEngineSteps())
-        .engineAdvisers(new HashMap<>())
+        .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
         .engineFacilitators(new HashMap<>())
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)

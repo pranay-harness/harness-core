@@ -38,7 +38,8 @@ import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobType;
-import io.harness.cvng.cdng.services.impl.CVNGAsyncWaitEngine;
+import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
+import io.harness.cvng.cdng.services.impl.CVNGStepTaskServiceImpl;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
@@ -134,11 +135,15 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
+import io.harness.waiter.AsyncWaitEngineImpl;
+import io.harness.waiter.WaitNotifyEngine;
+import io.harness.waiter.WaiterModule;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -176,6 +181,7 @@ public class CVServiceModule extends AbstractModule {
    */
   @Override
   protected void configure() {
+    install(WaiterModule.getInstance());
     bind(ExecutorService.class)
         .toInstance(ThreadPool.create(1, 20, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder()
@@ -312,7 +318,6 @@ public class CVServiceModule extends AbstractModule {
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
 
       bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
-      bind(AsyncWaitEngine.class).to(CVNGAsyncWaitEngine.class);
       MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
           MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
       dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
@@ -332,6 +337,7 @@ public class CVServiceModule extends AbstractModule {
       // if something goes wrong in feature flags stream
       // We are dependent on source of truth (Manager) for this.
       bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
+      bind(CVNGStepTaskService.class).to(CVNGStepTaskServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
@@ -350,6 +356,12 @@ public class CVServiceModule extends AbstractModule {
     bind(MonitoringSourceImportStatusCreator.class)
         .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
         .to(NewRelicService.class);
+  }
+
+  @Provides
+  @Singleton
+  public AsyncWaitEngine asyncWaitEngine(WaitNotifyEngine waitNotifyEngine) {
+    return new AsyncWaitEngineImpl(waitNotifyEngine, NgOrchestrationNotifyEventListener.NG_ORCHESTRATION);
   }
 
   @Provides

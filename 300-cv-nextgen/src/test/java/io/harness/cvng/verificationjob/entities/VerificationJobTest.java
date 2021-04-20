@@ -34,12 +34,9 @@ import org.junit.experimental.categories.Category;
 public class VerificationJobTest extends CategoryTest {
   private String accountId;
 
-  private String portalUrl;
-
   @Before
   public void setup() {
     this.accountId = generateUuid();
-    portalUrl = "https://app.harness.io/";
   }
 
   @Test
@@ -124,6 +121,8 @@ public class VerificationJobTest extends CategoryTest {
   @Category({UnitTests.class})
   public void testResolveCommonJobRuntimeParams_validArgs() {
     VerificationJob verificationJob = createVerificationJob();
+    verificationJob.setServiceIdentifier("<+input>", true);
+    verificationJob.setEnvIdentifier("<+input>", true);
     assertThat(verificationJob.getServiceIdentifier()).isNotEqualTo("cvngService");
     assertThat(verificationJob.getEnvIdentifier()).isNotEqualTo("production");
     assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(5);
@@ -135,7 +134,7 @@ public class VerificationJobTest extends CategoryTest {
     verificationJob = verificationJob.resolveVerificationJob(runtimeParams);
     assertThat(verificationJob.getServiceIdentifier()).isEqualTo("cvngService");
     assertThat(verificationJob.getEnvIdentifier()).isEqualTo("production");
-    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(30);
+    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(5);
   }
 
   @Test
@@ -143,6 +142,8 @@ public class VerificationJobTest extends CategoryTest {
   @Category({UnitTests.class})
   public void testResolveCommonJobRuntimeParams_onlyServiceAndEnvOverride() {
     VerificationJob verificationJob = createVerificationJob();
+    verificationJob.setServiceIdentifier("<+input>", true);
+    verificationJob.setEnvIdentifier("<+input>", true);
     assertThat(verificationJob.getServiceIdentifier()).isNotEqualTo("cvngService");
     assertThat(verificationJob.getEnvIdentifier()).isNotEqualTo("production");
     assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(5);
@@ -160,11 +161,27 @@ public class VerificationJobTest extends CategoryTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category({UnitTests.class})
-  public void testResolveCommonJobRuntimeParams_onlyDurationOverride() {
+  public void testResolveCommonJobRuntimeParams_duationOverrideWithoutRuntimeParam() {
     VerificationJob verificationJob = createVerificationJob();
     assertThat(verificationJob.getServiceIdentifier()).isNotEqualTo("cvngService");
     assertThat(verificationJob.getEnvIdentifier()).isNotEqualTo("production");
     assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(5);
+
+    Map<String, String> runtimeParams = new HashMap<>();
+    runtimeParams.put(DURATION_KEY, "30m");
+
+    VerificationJob resolvedVerificationJob = verificationJob.resolveVerificationJob(runtimeParams);
+    assertThat(resolvedVerificationJob.getServiceIdentifier()).isEqualTo(verificationJob.getServiceIdentifier());
+    assertThat(resolvedVerificationJob.getEnvIdentifier()).isEqualTo(verificationJob.getEnvIdentifier());
+    assertThat(resolvedVerificationJob.getDuration().toMinutes()).isEqualTo(5);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category({UnitTests.class})
+  public void testResolveCommonJobRuntimeParams_duationOverrideWithRuntimeParam() {
+    VerificationJob verificationJob = createVerificationJob();
+    verificationJob.setDuration("<+input>", true);
 
     Map<String, String> runtimeParams = new HashMap<>();
     runtimeParams.put(DURATION_KEY, "30m");

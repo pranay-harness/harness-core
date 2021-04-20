@@ -85,7 +85,9 @@ public abstract class CanaryBlueGreenVerificationJob extends VerificationJob {
     runtimeParameters.keySet().forEach(key -> {
       switch (key) {
         case SENSITIVITY_KEY:
-          this.setSensitivity(runtimeParameters.get(key), false);
+          if (sensitivity.isRuntimeParam()) {
+            this.setSensitivity(runtimeParameters.get(key), false);
+          }
           break;
         default:
           break;
