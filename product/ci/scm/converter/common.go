@@ -29,18 +29,20 @@ func convertAction(a scm.Action) pb.Action {
 		return pb.Action_SYNC
 	case scm.ActionMerge:
 		return pb.Action_MERGE
+	case scm.ActionEdit, scm.ActionUnknown:
+		return pb.Action_UNKNOWN
 	default:
 		return pb.Action_UNKNOWN
 	}
 }
 
 // convertUser converts scm.User to protobuf object
-func convertUser(u scm.User) (*pb.User, error) {
-	createTs, err := ptypes.TimestampProto(u.Created)
+func convertUser(u *scm.User) (*pb.User, error) {
+	createTS, err := ptypes.TimestampProto(u.Created)
 	if err != nil {
 		return nil, err
 	}
-	updateTs, err := ptypes.TimestampProto(u.Updated)
+	updateTS, err := ptypes.TimestampProto(u.Updated)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +51,8 @@ func convertUser(u scm.User) (*pb.User, error) {
 		Name:    u.Name,
 		Email:   u.Email,
 		Avatar:  u.Avatar,
-		Created: createTs,
-		Updated: updateTs,
+		Created: createTS,
+		Updated: updateTS,
 	}, nil
 }
 
@@ -84,12 +86,12 @@ func convertLabel(l scm.Label) *pb.Label {
 }
 
 // convertRepo converts scm.Repository to protobuf object
-func convertRepo(r scm.Repository) (*pb.Repository, error) {
-	createTs, err := ptypes.TimestampProto(r.Created)
+func convertRepo(r *scm.Repository) (*pb.Repository, error) {
+	createTS, err := ptypes.TimestampProto(r.Created)
 	if err != nil {
 		return nil, err
 	}
-	updateTs, err := ptypes.TimestampProto(r.Updated)
+	updateTS, err := ptypes.TimestampProto(r.Updated)
 	if err != nil {
 		return nil, err
 	}
@@ -104,13 +106,13 @@ func convertRepo(r scm.Repository) (*pb.Repository, error) {
 		Clone:     r.Clone,
 		CloneSsh:  r.CloneSSH,
 		Link:      r.Link,
-		Created:   createTs,
-		Updated:   updateTs,
+		Created:   createTS,
+		Updated:   updateTS,
 	}, nil
 }
 
 // convertSignature converts scm.Signature to protobuf object
-func convertSignature(s scm.Signature) (*pb.Signature, error) {
+func convertSignature(s *scm.Signature) (*pb.Signature, error) {
 	date, err := ptypes.TimestampProto(s.Date)
 	if err != nil {
 		return nil, err
@@ -126,12 +128,12 @@ func convertSignature(s scm.Signature) (*pb.Signature, error) {
 }
 
 // convertCommit converts scm.Commit to protobuf object
-func convertCommit(c scm.Commit) (*pb.Commit, error) {
-	author, err := convertSignature(c.Author)
+func convertCommit(c *scm.Commit) (*pb.Commit, error) {
+	author, err := convertSignature(&c.Author)
 	if err != nil {
 		return nil, err
 	}
-	committer, err := convertSignature(c.Committer)
+	committer, err := convertSignature(&c.Committer)
 	if err != nil {
 		return nil, err
 	}
