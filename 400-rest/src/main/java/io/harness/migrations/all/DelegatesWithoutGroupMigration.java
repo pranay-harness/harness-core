@@ -39,7 +39,7 @@ public class DelegatesWithoutGroupMigration implements Migration {
       for (Delegate delegate : delegatesWithoutGroup) {
         log.debug("Delegate with ID {} has no delegate group assigned.", delegate.getUuid());
         DelegateGroup delegateGroup =
-            delegateService.upsertDelegateGroup(delegate.getDelegateGroupName(), delegate.getAccountId());
+            delegateService.upsertDelegateGroup(delegate.getDelegateGroupName(), delegate.getAccountId(), null);
 
         log.debug("Assigning group with name: {} and id: {} for account: {} to delegate: {}", delegateGroup.getName(),
             delegateGroup.getUuid(), delegateGroup.getAccountId(), delegate.getUuid());

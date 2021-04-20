@@ -117,6 +117,8 @@ import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
+import io.harness.delegate.beans.K8sConfigDetails;
+import io.harness.delegate.beans.K8sPermissionType;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -2143,14 +2145,62 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testValidateKubernetesYamlShouldGenerateSessionId() {
+  public void testValidateKubernetesYamlWithoutOrWithInvalidK8sConfig() {
     String accountId = generateUuid();
+
+    // K8sConfig is null
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
                                             .delegateConfigurationId("delConfigId")
                                             .name("name")
                                             .size(DelegateSize.LARGE)
                                             .description("desc")
                                             .build();
+
+    assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("K8s permission type must be provided.");
+
+    // K8sConfig does not have permission set
+    DelegateSetupDetails setupDetails2 = DelegateSetupDetails.builder()
+                                             .delegateConfigurationId("delConfigId")
+                                             .name("name")
+                                             .size(DelegateSize.LARGE)
+                                             .description("desc")
+                                             .k8sConfigDetails(K8sConfigDetails.builder().build())
+                                             .build();
+
+    assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails2))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("K8s permission type must be provided.");
+
+    // K8sConfig does not have namespace set for namespace admin permission
+    DelegateSetupDetails setupDetails3 =
+        DelegateSetupDetails.builder()
+            .delegateConfigurationId("delConfigId")
+            .name("name")
+            .size(DelegateSize.LARGE)
+            .description("desc")
+            .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN).build())
+            .build();
+
+    assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails3))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("K8s namespace must be provided for this type of permission.");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateKubernetesYamlShouldGenerateSessionId() {
+    String accountId = generateUuid();
+    DelegateSetupDetails setupDetails =
+        DelegateSetupDetails.builder()
+            .delegateConfigurationId("delConfigId")
+            .name("name")
+            .size(DelegateSize.LARGE)
+            .description("desc")
+            .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
+            .build();
 
     DelegateSetupDetails validatedSetupDetails = delegateService.validateKubernetesYaml(accountId, setupDetails);
     assertThat(validatedSetupDetails).isEqualToIgnoringGivenFields(setupDetails, "sessionIdentifier");
@@ -2160,7 +2210,91 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void shouldGenerateKubernetesYaml() throws IOException, TemplateException {
+  public void shouldGenerateKubernetesClusterAdminYaml() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    DelegateSetupDetails setupDetails =
+        DelegateSetupDetails.builder()
+            .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
+            .delegateConfigurationId("delConfigId")
+            .name("harness-delegate")
+            .size(DelegateSize.LARGE)
+            .description("desc")
+            .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
+            .build();
+
+    persistence.save(
+        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+
+    File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
+        "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
+
+    File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
+    uncompressGzipFile(gzipFile, tarFile);
+    try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
+      assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
+
+      TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateNgClusterAdmin.yaml")))
+                         .replaceAll("8888", "" + port));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGenerateKubernetesClusterViewerYaml() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    DelegateSetupDetails setupDetails =
+        DelegateSetupDetails.builder()
+            .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
+            .delegateConfigurationId("delConfigId")
+            .name("harness-delegate")
+            .size(DelegateSize.LARGE)
+            .description("desc")
+            .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_VIEWER).build())
+            .build();
+
+    persistence.save(
+        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+
+    File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
+        "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
+
+    File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
+    uncompressGzipFile(gzipFile, tarFile);
+    try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
+      assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
+
+      TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateNgClusterViewer.yaml")))
+                         .replaceAll("8888", "" + port));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGenerateKubernetesNamespaceAdminYaml() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
@@ -2169,6 +2303,10 @@ public class DelegateServiceTest extends WingsBaseTest {
                                             .name("harness-delegate")
                                             .size(DelegateSize.LARGE)
                                             .description("desc")
+                                            .k8sConfigDetails(K8sConfigDetails.builder()
+                                                                  .k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN)
+                                                                  .namespace("test-namespace")
+                                                                  .build())
                                             .build();
 
     persistence.save(
@@ -2187,10 +2325,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams
-                  .toString(new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateNg.yaml")))
-                  .replaceAll("8888", "" + port));
+          .isEqualTo(CharStreams
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateNgNamespaceAdmin.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -2203,12 +2341,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGenerateKubernetesYamlWithoutDescription() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
-                                            .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
-                                            .delegateConfigurationId("delConfigId")
-                                            .name("harness-delegate")
-                                            .size(DelegateSize.LARGE)
-                                            .build();
+    DelegateSetupDetails setupDetails =
+        DelegateSetupDetails.builder()
+            .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
+            .delegateConfigurationId("delConfigId")
+            .name("harness-delegate")
+            .size(DelegateSize.LARGE)
+            .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
+            .build();
 
     persistence.save(
         DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());

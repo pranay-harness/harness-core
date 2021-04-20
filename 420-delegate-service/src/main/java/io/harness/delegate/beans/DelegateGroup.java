@@ -30,6 +30,8 @@ public class DelegateGroup implements PersistentEntity, UuidAware {
 
   @NotEmpty private String accountId;
 
+  private K8sConfigDetails k8sConfigDetails;
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
