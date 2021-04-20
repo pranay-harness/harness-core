@@ -17,6 +17,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StartTrialRequestDTO {
-  @NotNull String accountIdentifier;
   @NotNull ModuleType moduleType;
 }

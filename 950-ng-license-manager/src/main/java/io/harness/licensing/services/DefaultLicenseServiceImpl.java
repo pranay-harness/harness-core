@@ -112,16 +112,16 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   }
 
   @Override
-  public ModuleLicenseDTO startTrialLicense(StartTrialRequestDTO startTrialRequestDTO) {
-    ModuleLicenseDTO trialLicense = licenseInterface.createTrialLicense(Edition.ENTERPRISE,
-        startTrialRequestDTO.getAccountIdentifier(), LicenseType.TRIAL, startTrialRequestDTO.getModuleType());
+  public ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialRequestDTO startTrialRequestDTO) {
+    ModuleLicenseDTO trialLicense = licenseInterface.createTrialLicense(
+        Edition.ENTERPRISE, accountIdentifier, LicenseType.TRIAL, startTrialRequestDTO.getModuleType());
     ModuleLicense savedEntity;
     try {
       savedEntity = licenseRepository.save(licenseObjectMapper.toEntity(trialLicense));
       // Send telemetry
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Trial license for moduleType [%s] already exists in account [%s]",
-          startTrialRequestDTO.getModuleType(), startTrialRequestDTO.getAccountIdentifier()));
+          startTrialRequestDTO.getModuleType(), accountIdentifier));
     }
     return licenseObjectMapper.toDTO(savedEntity);
   }

@@ -4,5 +4,5 @@ import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialRequestDTO;
 
 public interface LicenseService extends LicenseCrudService {
-  ModuleLicenseDTO startTrialLicense(StartTrialRequestDTO startTrialRequestDTO);
+  ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialRequestDTO startTrialRequestDTO);
 }

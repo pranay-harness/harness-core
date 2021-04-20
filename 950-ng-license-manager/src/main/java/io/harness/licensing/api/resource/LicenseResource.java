@@ -106,7 +106,8 @@ public class LicenseResource {
   @Path("trial")
   @ApiOperation(value = "Starts Trail License For A Module", nickname = "startTrialLicense")
   public ResponseDTO<ModuleLicenseDTO> startTrialLicense(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Valid @Body StartTrialRequestDTO startTrialRequestDTO) {
-    return ResponseDTO.newResponse(licenseService.startTrialLicense(startTrialRequestDTO));
+    return ResponseDTO.newResponse(licenseService.startTrialLicense(accountIdentifier, startTrialRequestDTO));
   }
 }
