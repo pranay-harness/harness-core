@@ -1964,7 +1964,6 @@ maven_install(
         "io.confluent:kafka-protobuf-serializer:5.5.1",
         "io.confluent:kafka-schema-registry-client:5.5.1",
         "io.confluent:kafka-schema-serializer:5.5.1",
-        "io.leangen.graphql:spqr:0.11.2",
         "org.apache.avro:avro:1.9.2",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.71",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.71",
@@ -2104,6 +2103,8 @@ maven_install(
     artifacts = [
         "com.graphql-java:graphql-java:16.2",
         "org.antlr:antlr4-runtime:4.8",
+        "com.fasterxml.jackson.core:jackson-databind:2.12.1",
+        "io.leangen.graphql:spqr:0.11.2",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

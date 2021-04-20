@@ -6,6 +6,8 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 shared_dependencies = [
     "@ce_nextgen//:com_graphql_java_graphql_java",
     "@ce_nextgen//:org_antlr_antlr4_runtime",
+    "@ce_nextgen//:com_fasterxml_jackson_core_jackson_databind",
+    "@ce_nextgen//:io_leangen_graphql_spqr",
 ] + [
     "//490-ce-commons:module",
     "//930-ng-core-clients:module",
@@ -17,7 +19,6 @@ shared_dependencies = [
     "@maven//:io_swagger_swagger_annotations",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:io_dropwizard_dropwizard_core",
-    "@maven//:io_leangen_graphql_spqr",
     "@maven//:ru_vyarus_guice_validator",
     "//:lombok",
 ]
