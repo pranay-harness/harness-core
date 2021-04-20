@@ -140,7 +140,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
                                .build());
   }
 
-  public Ambiance buildFromPlanExecution(PlanExecution planExecution) {
+  private Ambiance buildFromPlanExecution(PlanExecution planExecution) {
     return Ambiance.newBuilder()
         .setPlanExecutionId(planExecution.getUuid())
         .putAllSetupAbstractions(

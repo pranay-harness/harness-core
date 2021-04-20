@@ -69,6 +69,15 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   }
 
   @Override
+  public HarnessApprovalInstance getHarnessApprovalInstance(@NotNull String approvalInstanceId) {
+    ApprovalInstance instance = get(approvalInstanceId);
+    if (instance == null || instance.getType() != ApprovalType.HARNESS_APPROVAL) {
+      throw new InvalidRequestException(String.format("Invalid harness approval instance id: %s", approvalInstanceId));
+    }
+    return (HarnessApprovalInstance) instance;
+  }
+
+  @Override
   public void delete(@NotNull String approvalInstanceId) {
     approvalInstanceRepository.deleteById(approvalInstanceId);
   }
@@ -135,12 +144,7 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   }
 
   private HarnessApprovalInstance fetchWaitingHarnessApproval(String approvalInstanceId) {
-    ApprovalInstance tmpInstance = get(approvalInstanceId);
-    if (tmpInstance == null || tmpInstance.getType() != ApprovalType.HARNESS_APPROVAL) {
-      throw new InvalidRequestException(String.format("Invalid harness approval instance id: %s", approvalInstanceId));
-    }
-
-    HarnessApprovalInstance instance = (HarnessApprovalInstance) tmpInstance;
+    HarnessApprovalInstance instance = getHarnessApprovalInstance(approvalInstanceId);
     if (instance.getStatus() == ApprovalStatus.EXPIRED) {
       throw new InvalidRequestException("Harness approval instance has already expired");
     }
