@@ -39,8 +39,8 @@ public class TerraformTaskNG extends AbstractDelegateRunnableTask {
     TerraformTaskNGParameters taskParameters = (TerraformTaskNGParameters) parameters;
     CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
 
-    LogCallback logCallback =
-        getLogCallback(getLogStreamingTaskClient(), TerraformCommandUnit.Apply.name(), true, commandUnitsProgress);
+    LogCallback logCallback = getLogCallback(
+        getLogStreamingTaskClient(), taskParameters.getTaskType().getDisplayName(), true, commandUnitsProgress);
 
     if (!tfTaskTypeToHandlerMap.containsKey(taskParameters.getTaskType())) {
       throw new UnexpectedTypeException(

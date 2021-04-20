@@ -3,6 +3,8 @@ package io.harness.delegate.task.terraform.handlers;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
+import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
+import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.provision.TerraformConstants.RESOURCE_READY_WAIT_TIME_SECONDS;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
@@ -28,6 +30,7 @@ import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TerraformCommandExecutionException;
 import io.harness.git.GitClientHelper;
 import io.harness.git.GitClientV2;
@@ -87,14 +90,18 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
           CommandExecutionStatus.RUNNING);
     }
 
-    GitBaseRequest gitBaseRequestForConfigFile =
-        getGitBaseRequestForConfigFile(taskParameters.getAccountId(), confileFileGitStore, configFileGitConfigDTO);
-
+    GitBaseRequest gitBaseRequestForConfigFile;
     try {
       secretDecryptionService.decrypt(
           configFileGitConfigDTO.getGitAuth(), confileFileGitStore.getEncryptedDataDetails());
+
+      // This needs to happen after decrypting secret
+      gitBaseRequestForConfigFile =
+          getGitBaseRequestForConfigFile(taskParameters.getAccountId(), confileFileGitStore, configFileGitConfigDTO);
+
       gitClient.ensureRepoLocallyClonedAndUpdated(gitBaseRequestForConfigFile);
     } catch (RuntimeException ex) {
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
       log.error("Exception in processing git operation", ex);
       return TerraformTaskNGResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -102,8 +109,8 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
           .build();
     }
 
-    String baseDir =
-        terraformBaseHelper.resolveBaseDir(taskParameters.getAccountId(), taskParameters.getProvisionerIdentifier());
+    String baseDir = terraformBaseHelper.resolveBaseDir(
+        taskParameters.getAccountId(), taskParameters.getEntityId().replace("/", "_"));
     String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
     String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
 
@@ -117,6 +124,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
     } catch (Exception ex) {
       log.error("Exception in copying files to provisioner specific directory", ex);
       FileUtils.deleteQuietly(new File(baseDir));
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
       return TerraformTaskNGResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(ex))
@@ -138,7 +146,8 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
     }
 
     File tfOutputsFile =
-        Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, taskParameters.getProvisionerIdentifier()))
+        Paths
+            .get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, taskParameters.getEntityId().replace("/", "_")))
             .toFile();
 
     try (PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
@@ -172,7 +181,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
                                             .withAccountId(taskParameters.getAccountId())
                                             .withDelegateId(delegateId)
                                             .withTaskId(taskId)
-                                            .withEntityId(taskParameters.getProvisionerIdentifier())
+                                            .withEntityId(taskParameters.getEntityId())
                                             .withBucket(FileBucket.TERRAFORM_STATE)
                                             .withFileName(TERRAFORM_STATE_FILE_NAME)
                                             .build();
@@ -199,12 +208,14 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
     } catch (TerraformCommandExecutionException terraformCommandExecutionException) {
       log.warn("Failed to execute TerraformApplyStep", terraformCommandExecutionException);
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
       return TerraformTaskNGResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(terraformCommandExecutionException))
           .build();
     } catch (Exception exception) {
       log.warn("Exception Occurred", exception);
+      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
       return TerraformTaskNGResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(ExceptionUtils.getMessage(exception))
@@ -214,8 +225,15 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
   private GitBaseRequest getGitBaseRequestForConfigFile(
       String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfigDTO configFileGitConfigDTO) {
-    SshSessionConfig sshSessionConfig = sshSessionConfigMapper.getSSHSessionConfig(
-        confileFileGitStore.getSshKeySpecDTO(), confileFileGitStore.getEncryptedDataDetails());
+    SshSessionConfig sshSessionConfig = null;
+    if (configFileGitConfigDTO.getGitAuthType() == SSH) {
+      if (confileFileGitStore.getSshKeySpecDTO() == null) {
+        throw new InvalidRequestException(
+            format("SSHKeySpecDTO is null for connector %s", confileFileGitStore.getConnectorName()));
+      }
+      sshSessionConfig = sshSessionConfigMapper.getSSHSessionConfig(
+          confileFileGitStore.getSshKeySpecDTO(), confileFileGitStore.getEncryptedDataDetails());
+    }
 
     return GitBaseRequest.builder()
         .branch(confileFileGitStore.getBranch())
@@ -256,7 +274,9 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
     // Config File
     commitIdForConfigFilesMap.put(configFileIdentifier, getLatestCommitSHAFromLocalRepo(gitBaseRequestForConfigFile));
     // Add remote var files
-    addVarFilescommitIdstoMap(accountId, varFilesgitFetchFilesConfigList, commitIdForConfigFilesMap);
+    if (isNotEmpty(varFilesgitFetchFilesConfigList)) {
+      addVarFilescommitIdstoMap(accountId, varFilesgitFetchFilesConfigList, commitIdForConfigFilesMap);
+    }
     return commitIdForConfigFilesMap;
   }
 

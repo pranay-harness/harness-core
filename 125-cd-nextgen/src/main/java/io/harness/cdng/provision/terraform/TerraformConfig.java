@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -43,6 +44,7 @@ public class TerraformConfig implements PersistentEntity {
         .build();
   }
 
+  @Id @org.mongodb.morphia.annotations.Id private String uuid;
   String accountId;
   String orgId;
   String projectId;

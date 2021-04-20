@@ -2,10 +2,9 @@ provisioner:
   steps:
     - step:
         type: TerraformApply
-        name:
-        identifier:
-        timeout: 10
-        delegateSelectors:
+        name: Terraform Apply
+        identifier: terraformApply
+        timeout: 10m
         spec:
           provisionerIdentifier:
           configuration:

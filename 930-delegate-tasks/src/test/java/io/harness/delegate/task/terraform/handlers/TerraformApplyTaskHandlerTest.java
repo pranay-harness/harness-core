@@ -103,7 +103,7 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
     return TerraformTaskNGParameters.builder()
         .accountId("accountId")
         .taskType(TFTaskType.APPLY)
-        .provisionerIdentifier("provisionerIdentifier")
+        .entityId("provisionerIdentifier")
         .encryptedTfPlan(encryptedPlanContent)
         .remoteVarfiles(new ArrayList<>())
         .configFile(
