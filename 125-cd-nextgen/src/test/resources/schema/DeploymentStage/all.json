@@ -2707,6 +2707,9 @@
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
             },
+            "metadata": {
+              "type": "string"
+            },
             "provisionerIdentifier": {
               "type": "string"
             }
@@ -2800,9 +2803,9 @@
         "type": {
           "type": "string",
           "enum": [
-            "INLINE",
-            "INHERIT_FROM_PLAN",
-            "INHERIT_FROM_APPLY"
+            "Inline",
+            "InheritFromPlan",
+            "InheritFromApply"
           ]
         }
       },

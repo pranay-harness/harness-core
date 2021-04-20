@@ -255,7 +255,7 @@ public class StepUtils {
 
   public static long getTimeoutMillis(ParameterField<String> timeout, String defaultTimeout) {
     String timeoutString;
-    if (timeout == null || EmptyPredicate.isEmpty(timeout.getValue())) {
+    if (ParameterField.isNull(timeout) || EmptyPredicate.isEmpty(timeout.getValue())) {
       timeoutString = defaultTimeout;
     } else {
       timeoutString = timeout.getValue();
