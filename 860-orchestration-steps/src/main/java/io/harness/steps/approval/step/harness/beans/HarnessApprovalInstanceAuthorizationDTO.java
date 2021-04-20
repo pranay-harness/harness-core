@@ -17,4 +17,5 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("HarnessApprovalInstanceAuthorization")
 public class HarnessApprovalInstanceAuthorizationDTO {
   boolean authorized;
+  String reason;
 }
