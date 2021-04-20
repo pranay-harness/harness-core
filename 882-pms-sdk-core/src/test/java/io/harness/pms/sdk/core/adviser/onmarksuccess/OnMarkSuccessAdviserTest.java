@@ -77,7 +77,7 @@ public class OnMarkSuccessAdviserTest extends PmsSdkCoreTestBase {
     AdvisingEvent advisingEvent =
         AdvisingEvent.builder()
             .nodeExecution(nodeExecutionProto)
-            .toStatus(Status.ABORTED)
+            .toStatus(Status.FAILED)
             .adviserParameters(kryoSerializer.asBytes(OnMarkSuccessAdviserParameters.builder().build()))
             .build();
     boolean canAdvise = onMarkSuccessAdviser.canAdvise(advisingEvent);

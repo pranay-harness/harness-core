@@ -2,6 +2,7 @@ package io.harness.plancreator.steps.common;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -28,6 +29,13 @@ public class StepParametersUtils {
     stepBuilder.type(stepElementConfig.getType());
     stepBuilder.uuid(stepElementConfig.getUuid());
 
+    return stepBuilder;
+  }
+
+  public StepElementParametersBuilder getStepParameters(
+      StepElementConfig stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
+    StepElementParametersBuilder stepBuilder = getStepParameters(stepElementConfig);
+    stepBuilder.rollbackParameters(failRollbackParameters);
     return stepBuilder;
   }
 

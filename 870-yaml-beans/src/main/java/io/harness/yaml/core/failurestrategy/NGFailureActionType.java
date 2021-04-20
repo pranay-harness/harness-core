@@ -1,5 +1,6 @@
 package io.harness.yaml.core.failurestrategy;
 
+import io.harness.beans.rollback.NGFailureActionTypeConstants;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.sdk.core.adviser.fail.OnFailAdviser;
 import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviser;

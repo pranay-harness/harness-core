@@ -1,6 +1,6 @@
 package io.harness.yaml.core.failurestrategy.manualintervention;
 
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.MANUAL_INTERVENTION;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.MANUAL_INTERVENTION;
 
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;

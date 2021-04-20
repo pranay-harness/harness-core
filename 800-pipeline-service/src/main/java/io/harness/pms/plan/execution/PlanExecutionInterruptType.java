@@ -43,7 +43,7 @@ public enum PlanExecutionInterruptType {
 
   private String description;
   private InterruptType executionInterruptType;
-  private String displayName;
+  private String displayName; // DO NOT CHANGE THESE, AS THEY ARE SAME AS FailureTypes.
 
   PlanExecutionInterruptType(String description, InterruptType executionInterruptType, String displayName) {
     this.description = description;

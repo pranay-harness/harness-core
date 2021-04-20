@@ -6,6 +6,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.failure.FailureType;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -46,10 +47,14 @@ public class EngineExceptionUtils {
     return wingsFailureType;
   }
 
-  private static io.harness.exception.FailureType mapToWingsFailureType(FailureType oFailureType) {
+  @VisibleForTesting
+  static io.harness.exception.FailureType mapToWingsFailureType(FailureType oFailureType) {
     switch (oFailureType) {
       case TIMEOUT_FAILURE:
         return io.harness.exception.FailureType.EXPIRED;
+      case UNRECOGNIZED:
+      case UNKNOWN_FAILURE:
+      case SKIPPING_FAILURE:
       case APPLICATION_FAILURE:
         return io.harness.exception.FailureType.APPLICATION_ERROR;
       case CONNECTIVITY_FAILURE:
