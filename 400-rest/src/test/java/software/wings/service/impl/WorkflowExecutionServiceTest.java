@@ -22,6 +22,7 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.User.Builder.anUser;
@@ -68,6 +69,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -79,6 +81,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -96,6 +99,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.DeploymentType;
+import software.wings.api.EnvStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.Account;
@@ -108,6 +112,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.Service;
@@ -142,6 +147,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.utils.JsonUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -150,6 +156,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import com.mongodb.WriteResult;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1170,7 +1177,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     Pipeline pipeline = JsonUtils.readResourceFile("pipeline/k8s_two_stage_pipeline_without_vars.json", Pipeline.class);
     Workflow workflow = JsonUtils.readResourceFile("workflows/k8s_workflow.json", Workflow.class);
     Artifact artifact = JsonUtils.readResourceFile("artifacts/artifacts.json", Artifact.class);
-    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .uuid("D7fBZxZyQniDAhWTHdnYHQ")
                                                         .appId("nCLN8c84SqWPr44sqg65JQ")
                                                         .status(ExecutionStatus.PAUSED)
@@ -1407,6 +1414,33 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         workflowExecution.getPipelineExecution().getPipelineStageExecutions().get(0).getWorkflowExecutions().get(1);
     assertThat(failedExecution.getFailureDetails()).isEqualTo("failureDetails");
     assertThat(successfulExecution.getFailureDetails()).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotPopulateTriggeredByForEnvLoopState() {
+    ForkStateExecutionData forkStateExecutionData = new ForkStateExecutionData();
+    forkStateExecutionData.setForkStateNames(Collections.singletonList("stage_1"));
+    EnvStateExecutionData envStateExecutionData =
+        anEnvStateExecutionData().withStatus(FAILED).withWorkflowExecutionId(WORKFLOW_EXECUTION_ID).build();
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance().addStateExecutionData(envStateExecutionData).build();
+
+    doReturn(WorkflowExecution.builder()
+                 .status(FAILED)
+                 .triggeredBy(EmbeddedUser.builder().name("admin").email("admin@harness.io").build())
+                 .build())
+        .when(workflowExecutionServiceSpy)
+        .getExecutionDetailsWithoutGraph(APP_ID, WORKFLOW_EXECUTION_ID);
+    List<PipelineStageExecution> stageExecutionList = new ArrayList<>();
+    workflowExecutionServiceSpy.handleEnvLoopStateExecutionData(APP_ID,
+        ImmutableMap.of("stage_1", stateExecutionInstance), stageExecutionList, forkStateExecutionData,
+        mock(PipelineStageElement.class), null);
+    assertThat(stageExecutionList).hasSize(1);
+    assertThat(stageExecutionList.get(0).getStatus()).isEqualTo(FAILED);
+    assertThat(stageExecutionList.get(0).getTriggeredBy().getEmail()).isEqualTo("admin@harness.io");
+    assertThat(stageExecutionList.get(0).getTriggeredBy().getName()).isEqualTo("admin");
   }
 
   private WorkflowExecution getFailedOrchestrationWorkflowExecution() {
