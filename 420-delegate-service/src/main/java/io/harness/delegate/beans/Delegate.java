@@ -48,7 +48,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   // Will be used for NG to hold delegate size details
   private DelegateSizeDetails sizeDetails;
   // Will be used for NG to hold information about delegate if it is owned at Org / Project
-  private List<DelegateOwner> owners;
+  private DelegateEntityOwner owner;
 
   @Default private DelegateInstanceStatus status = DelegateInstanceStatus.ENABLED;
   private String description;

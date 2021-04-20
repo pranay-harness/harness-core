@@ -5,10 +5,9 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@FieldNameConstants(innerTypeName = "DelegateOwnerKeys")
+@FieldNameConstants(innerTypeName = "DelegateEntityOwnerKeys")
 @Data
 @Builder
-public class DelegateOwner {
-  @NotEmpty private String entityType;
-  @NotEmpty private String entityId;
+public class DelegateEntityOwner {
+  @NotEmpty private String identifier;
 }
