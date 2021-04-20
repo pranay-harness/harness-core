@@ -7,8 +7,11 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
+import io.harness.exception.HttpResponseException;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -21,6 +24,7 @@ import org.junit.experimental.categories.Category;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.CDC)
 public class SafeHttpCallTest extends CategoryTest {
   @Test(expected = GeneralException.class)
   @Owner(developers = GARVIT)
@@ -42,7 +46,7 @@ public class SafeHttpCallTest extends CategoryTest {
     assertThat(retVal).isEqualTo(msg);
   }
 
-  @Test(expected = GeneralException.class)
+  @Test(expected = HttpResponseException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testUnsuccessfulExecuteWithExceptions() throws IOException {
@@ -65,7 +69,7 @@ public class SafeHttpCallTest extends CategoryTest {
     SafeHttpCall.validateResponse(Response.success("hello"));
   }
 
-  @Test(expected = GeneralException.class)
+  @Test(expected = HttpResponseException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testValidateUnsuccessfulResponse() {
@@ -86,7 +90,7 @@ public class SafeHttpCallTest extends CategoryTest {
     SafeHttpCall.validateRawResponse(prepareRawResponse(200));
   }
 
-  @Test(expected = GeneralException.class)
+  @Test(expected = HttpResponseException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testValidateUnsuccessfulRawResponse() {
