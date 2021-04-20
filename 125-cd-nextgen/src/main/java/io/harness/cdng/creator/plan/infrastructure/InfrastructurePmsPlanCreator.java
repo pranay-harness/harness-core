@@ -10,10 +10,12 @@ import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
+import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
@@ -44,6 +46,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -153,6 +156,7 @@ public class InfrastructurePmsPlanCreator {
     if (!isProvisionerConfigured(actualInfraConfig)) {
       return new LinkedHashMap<>();
     }
+    validateProvisionerConfig(actualInfraConfig.getInfrastructureDefinition().getProvisioner());
 
     YamlField infraDefField = infraField.getNode().getField(YamlTypes.INFRASTRUCTURE_DEF);
     YamlField provisionerYamlField = infraDefField.getNode().getField(YAMLFieldNameConstants.PROVISIONER);
@@ -181,6 +185,12 @@ public class InfrastructurePmsPlanCreator {
         PlanCreationResponse.builder().node(provisionerPlanNode.getUuid(), provisionerPlanNode).build());
 
     return responseMap;
+  }
+
+  private static void validateProvisionerConfig(@NotNull ExecutionElementConfig provisioner) {
+    if (EmptyPredicate.isEmpty(provisioner.getSteps())) {
+      throw new InvalidRequestException("Steps under Provisioner Section can't be empty");
+    }
   }
 
   public boolean isProvisionerConfigured(PipelineInfrastructure actualInfraConfig) {

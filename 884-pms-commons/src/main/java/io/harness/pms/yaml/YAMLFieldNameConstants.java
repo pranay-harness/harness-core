@@ -38,7 +38,6 @@ public class YAMLFieldNameConstants {
   public final String OUTPUT = "output";
   public final String ENVIRONMENT = "environment";
   public final String PROVISIONER = "provisioner";
-  public final String PIPELINE_INFRASTRUCTURE = "infrastructure";
   public final String CONNECTOR_REF = "connectorRef";
   public final String USE_ROLLBACK_STRATEGY = "useRollbackStrategy";
   public final String PIPELINE_GROUP = "PIPELINE";
