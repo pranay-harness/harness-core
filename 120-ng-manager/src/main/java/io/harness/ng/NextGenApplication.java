@@ -20,6 +20,7 @@ import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.cdng.orchestration.NgStepRegistrar;
+import io.harness.configManager.ConfigChangeJob;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
@@ -285,6 +286,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerIterators(Injector injector) {
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+    injector.getInstance(ConfigChangeJob.class).registerExecutors();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

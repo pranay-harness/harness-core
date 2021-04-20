@@ -14,6 +14,7 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.configManager.ConfigChangeJob;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
@@ -289,6 +290,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
     registerRecoverNextTaskHandlerIterator(injector);
+    injector.getInstance(ConfigChangeJob.class).registerExecutors();
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);

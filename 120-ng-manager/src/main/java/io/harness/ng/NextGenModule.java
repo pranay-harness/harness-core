@@ -31,6 +31,7 @@ import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
+import io.harness.configManager.ConfigurationController;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -378,17 +379,7 @@ public class NextGenModule extends AbstractModule {
     install(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
+        bind(QueueController.class).to(ConfigurationController.class);
       }
     });
 

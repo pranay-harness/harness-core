@@ -13,6 +13,8 @@ import io.harness.ci.app.InspectCommand;
 import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
+import io.harness.configManager.ConfigChangeJob;
+import io.harness.configManager.ConfigurationController;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -237,17 +239,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
+        bind(QueueController.class).to(ConfigurationController.class);
       }
     });
 
@@ -342,6 +334,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+    injector.getInstance(ConfigChangeJob.class).registerExecutors();
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
