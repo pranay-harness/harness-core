@@ -253,13 +253,19 @@ public abstract class VerificationJob
       runtimeParameters.keySet().forEach(key -> {
         switch (key) {
           case SERVICE_IDENTIFIER_KEY:
-            this.setServiceIdentifier(runtimeParameters.get(key), false);
+            if (serviceIdentifier.isRuntimeParam()) {
+              this.setServiceIdentifier(runtimeParameters.get(key), false);
+            }
             break;
           case ENV_IDENTIFIER_KEY:
-            this.setEnvIdentifier(runtimeParameters.get(key), false);
+            if (envIdentifier.isRuntimeParam()) {
+              this.setEnvIdentifier(runtimeParameters.get(key), false);
+            }
             break;
           case DURATION_KEY:
-            this.setDuration(runtimeParameters.get(key), false);
+            if (duration.isRuntimeParam()) {
+              this.setDuration(runtimeParameters.get(key), false);
+            }
             break;
           default:
             break;

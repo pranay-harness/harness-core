@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.cdng.beans.CVStepInfoBase;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.CVNGKryoRegistrar;
 import io.harness.serializer.morphia.CVNextGenMorphiaRegister;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
@@ -23,6 +24,8 @@ public class CvNextGenRegistrars {
           .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .add(CVNGKryoRegistrar.class)
+          .add(PipelineServiceUtilKryoRegistrar.class)
+          .add(PmsContractsKryoRegistrar.class)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
           .build();
 
