@@ -62,6 +62,10 @@ eventsConfig:
     useScriptCache: true
     userName: ${EVENTS_CONFIG_REDIS_USERNAME:-""}
     password: ${EVENTS_CONFIG_REDIS_PASSWORD:-""}
+    sslConfig:
+      enabled: ${EVENTS_CONFIG_REDIS_SSL_ENABLED:-false}
+      CATrustStorePath: ${EVENTS_CONFIG_REDIS_SSL_CA_TRUST_STORE_PATH:-""}
+      CATrustStorePassword: ${EVENTS_CONFIG_REDIS_SSL_CA_TRUST_STORE_PASSWORD:-""}
   enabled: true
 
 redisLockConfig:

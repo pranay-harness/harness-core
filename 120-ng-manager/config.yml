@@ -137,6 +137,10 @@ eventsFramework:
     useScriptCache: true
     userName: ""
     password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
 
 redisLockConfig:
   sentinel: false

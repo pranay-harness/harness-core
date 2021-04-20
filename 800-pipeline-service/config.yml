@@ -88,6 +88,10 @@ eventsFramework:
     useScriptCache: true
     userName: ""
     password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
 
 managerClientConfig:
   baseUrl: http://localhost:3457/api/
