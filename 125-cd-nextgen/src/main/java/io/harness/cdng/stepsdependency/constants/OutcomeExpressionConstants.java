@@ -10,7 +10,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class OutcomeExpressionConstants {
   public final String SERVICE = "service";
-  public final String INFRASTRUCTURE = "infrastructure";
+  public final String INFRASTRUCTURE = "infra";
   public final String ARTIFACTS = "ARTIFACTS";
   public final String K8S_ROLL_OUT = "rollingOutcome";
   public final String K8S_BLUE_GREEN_OUTCOME = "k8sBlueGreenOutcome";
@@ -18,7 +18,7 @@ public class OutcomeExpressionConstants {
   public final String K8S_CANARY_OUTCOME = "k8sCanaryOutcome";
   public final String K8S_CANARY_DELETE_OUTCOME = "k8sCanaryDeleteOutcome";
   public final String K8S_BG_SWAP_SERVICES_OUTCOME = "k8sBGSwapServicesOutcome";
-  public final String ENVIRONMENT = "environment";
+  public final String ENVIRONMENT = "env";
   public final String OUTPUT = "output";
   public final String TERRAFORM_OUTPUT = "terraform";
 }

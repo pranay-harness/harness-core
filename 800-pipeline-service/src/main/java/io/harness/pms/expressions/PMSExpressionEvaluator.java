@@ -57,7 +57,6 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
 
     addStaticAlias("artifact", "service.artifacts.primary.output");
     addStaticAlias("serviceVariables", "service.variables.output");
-    addStaticAlias("env", "infrastructureSection.environment");
     addStaticAlias(OrchestrationConstants.STAGE_SUCCESS, "<+stage.currentStatus> == \"SUCCEEDED\"");
     addStaticAlias(OrchestrationConstants.STAGE_FAILURE,
         "<+stage.currentStatus> == \"FAILED\" || <+stage.currentStatus> == \"ERRORED\" || <+stage.currentStatus> == \"EXPIRED\"");

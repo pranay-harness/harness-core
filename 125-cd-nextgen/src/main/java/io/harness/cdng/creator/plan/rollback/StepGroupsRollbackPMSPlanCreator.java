@@ -45,13 +45,11 @@ public class StepGroupsRollbackPMSPlanCreator {
           stepGroupResponses.merge(stepGroupRollbackPlan);
           if (EmptyPredicate.isNotEmpty(stepGroupRollbackPlan.getNodes())) {
             YamlField rollbackStepsNode = yamlField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
-            RollbackNode rollbackNode =
-                RollbackNode.builder()
-                    .nodeId(rollbackStepsNode.getNode().getUuid())
-                    .dependentNodeIdentifier(PlanCreatorConstants.STAGES_NODE_IDENTIFIER + "."
-                        + stageNode.getIdentifier() + "." + PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER + "."
-                        + yamlField.getNode().getIdentifier())
-                    .build();
+            RollbackNode rollbackNode = RollbackNode.builder()
+                                            .nodeId(rollbackStepsNode.getNode().getUuid())
+                                            .dependentNodeIdentifier(YamlUtils.getQualifiedNameTillGivenField(
+                                                yamlField.getNode(), YAMLFieldNameConstants.STAGES))
+                                            .build();
             sectionOptionalChildChainStepParametersBuilder.childNode(rollbackNode);
           }
         } else if (yamlField.getName().equals(YAMLFieldNameConstants.PARALLEL)) {
@@ -59,14 +57,10 @@ public class StepGroupsRollbackPMSPlanCreator {
               ParallelStepGroupRollbackPMSPlanCreator.createParallelStepGroupRollbackPlan(yamlField);
           stepGroupResponses.merge(parallelStepGroupRollbackPlan);
           if (EmptyPredicate.isNotEmpty(parallelStepGroupRollbackPlan.getNodes())) {
-            RollbackNode rollbackNode =
-                RollbackNode.builder()
-                    .nodeId(yamlField.getNode().getUuid() + "_rollback")
-                    .dependentNodeIdentifier(PlanCreatorConstants.STAGES_NODE_IDENTIFIER + "."
-                        + stageNode.getIdentifier() + "." + PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER + "."
-                        + yamlField.getNode().getIdentifier())
-                    .shouldAlwaysRun(true)
-                    .build();
+            RollbackNode rollbackNode = RollbackNode.builder()
+                                            .nodeId(yamlField.getNode().getUuid() + "_rollback")
+                                            .shouldAlwaysRun(true)
+                                            .build();
             sectionOptionalChildChainStepParametersBuilder.childNode(rollbackNode);
           }
         }

@@ -48,7 +48,6 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.steps.StepOutcomeGroup;
@@ -97,16 +96,15 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
     if (pipelineInfrastructure.getUseFromStage() != null
         && pipelineInfrastructure.getUseFromStage().getOverrides() != null
         && pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition() != null) {
-      infraOverrides =
-          pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition().getInfrastructure();
+      infraOverrides = pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition().getSpec();
     }
 
-    Infrastructure infrastructure = pipelineInfrastructure.getInfrastructureDefinition().getInfrastructure();
+    Infrastructure infrastructure = pipelineInfrastructure.getInfrastructureDefinition().getSpec();
     Infrastructure finalInfrastructure =
         infraOverrides != null ? infrastructure.applyOverrides(infraOverrides) : infrastructure;
     validateInfrastructure(finalInfrastructure);
     EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.ENVIRONMENT));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.ENVIRONMENT));
     InfrastructureOutcome infrastructureOutcome =
         InfrastructureMapper.toOutcome(finalInfrastructure, environmentOutcome);
     ngManagerLogCallback.saveExecutionLog(
