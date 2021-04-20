@@ -1,10 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Activity.Type.Command;
@@ -17,6 +20,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -24,6 +30,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
@@ -48,6 +55,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 
 import com.github.reinert.jjschema.Attributes;
@@ -57,6 +65,8 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EcsBGUpdateRoute53DNSWeightState extends State {
   public static final String UPDATE_ROUTE_53_DNS_WEIGHTS = "Update Route 53 DNS Weights";
   private static final int MIN_WEIGHT = 0;
@@ -72,6 +82,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
   @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject protected EcsStateHelper ecsStateHelper;
 
   public EcsBGUpdateRoute53DNSWeightState(String name) {
@@ -109,10 +120,15 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     if (stateExecutionData != null) {
       stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
     }
-    return ExecutionResponse.builder()
-        .errorMessage(executionResponse.getErrorMessage())
-        .executionStatus(executionStatus)
-        .build();
+
+    ExecutionResponseBuilder builder =
+        ExecutionResponse.builder().errorMessage(executionResponse.getErrorMessage()).executionStatus(executionStatus);
+    if (null != executionResponse.getEcsCommandResponse()
+        && executionResponse.getEcsCommandResponse().isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+
+    return builder.build();
   }
 
   @Override
@@ -167,6 +183,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
             .oldServiceDiscoveryArn(containerServiceElement.getEcsBGSetupData().getOldServiceDiscoveryArn())
             .newServiceDiscoveryArn(containerServiceElement.getEcsBGSetupData().getNewServiceDiscoveryArn())
             .timeout(containerServiceElement.getServiceSteadyStateTimeout())
+            .timeoutErrorSupported(featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, application.getAccountId()))
             .build();
 
     EcsRoute53WeightUpdateStateExecutionData executionData =
