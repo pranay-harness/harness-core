@@ -29,10 +29,10 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
         break;
       case UPDATE:
         dbOperation(updateSQL(tableName, getColumnValueMapping(changeEvent, fields),
-            Collections.singletonMap("UUID", changeEvent.getUuid())));
+            Collections.singletonMap("id", changeEvent.getUuid())));
         break;
       case DELETE:
-        dbOperation(deleteSQL(tableName, Collections.singletonMap("UUID", changeEvent.getUuid())));
+        dbOperation(deleteSQL(tableName, Collections.singletonMap("id", changeEvent.getUuid())));
         break;
       default:
         log.info("Change Event Type not Handled: {}", changeEvent.getChangeType());

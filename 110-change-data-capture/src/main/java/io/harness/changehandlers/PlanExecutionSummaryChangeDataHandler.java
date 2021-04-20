@@ -24,12 +24,29 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     DBObject dbObject = changeEvent.getFullDocument();
 
     columnValueMapping.put("id", changeEvent.getUuid());
-    columnValueMapping.put("accountId", dbObject.get("accountId").toString());
-    columnValueMapping.put("orgIdentifier", dbObject.get("orgIdentifier").toString());
-    columnValueMapping.put("projectIdentifier", dbObject.get("projectIdentifier").toString());
-    columnValueMapping.put("pipelineIdentifier", dbObject.get("pipelineIdentifier").toString());
-    columnValueMapping.put("name", dbObject.get("name").toString());
-    columnValueMapping.put("status", dbObject.get("status").toString());
+
+    if (dbObject == null) {
+      return columnValueMapping;
+    }
+
+    if (dbObject.get("accountId") != null) {
+      columnValueMapping.put("accountId", dbObject.get("accountId").toString());
+    }
+    if (dbObject.get("orgIdentifier") != null) {
+      columnValueMapping.put("orgIdentifier", dbObject.get("orgIdentifier").toString());
+    }
+    if (dbObject.get("projectIdentifier") != null) {
+      columnValueMapping.put("projectIdentifier", dbObject.get("projectIdentifier").toString());
+    }
+    if (dbObject.get("pipelineIdentifier") != null) {
+      columnValueMapping.put("pipelineIdentifier", dbObject.get("pipelineIdentifier").toString());
+    }
+    if (dbObject.get("name") != null) {
+      columnValueMapping.put("name", dbObject.get("name").toString());
+    }
+    if (dbObject.get("status") != null) {
+      columnValueMapping.put("status", dbObject.get("status").toString());
+    }
 
     // if moduleInfo is not null
     if (dbObject.get("moduleInfo") != null) {
@@ -50,7 +67,9 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
             columnValueMapping.put("moduleInfo_branch_name", branch.get("name").toString());
           }
           DBObject author = (DBObject) (ciExecutionInfo.get("author"));
-          columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
+          if (ciExecutionInfo.get("event") != null) {
+            columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
+          }
           if (author != null) {
             columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
           }
@@ -59,8 +78,9 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     }
     columnValueMapping.put(
         "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
-    columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
-
+    if (dbObject.get("endTs") != null) {
+      columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
+    }
     return columnValueMapping;
   }
 }

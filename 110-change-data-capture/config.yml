@@ -6,6 +6,10 @@ xxxxxxxx
     - type: http
       port: 8191
 
+mongotags:
+  tagKey: none
+  tagValue: none
+
 harness-mongo:
   uri: mongodb://localhost:30001/harness
   connectTimeout: 30000
