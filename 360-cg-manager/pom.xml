@@ -25,7 +25,7 @@
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
-                <configuration>
+                <primaryVersion>
                     <appClass>software.wings.app.WingsApplication</appClass>
                     <type>fat</type>
                     <manifest>
@@ -47,7 +47,7 @@
                         </entry>
                     </manifest>
                     <execPluginConfig>root</execPluginConfig>
-                </configuration>
+                </primaryVersion>
                 <executions>
                     <execution>
                         <goals>
@@ -60,13 +60,13 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
-                <configuration>
+                <primaryVersion>
                     <mainClass>software.wings.app.WingsApplication</mainClass>
                     <arguments>
                         <argument>server</argument>
                         <argument>./config.yml</argument>
                     </arguments>
-                </configuration>
+                </primaryVersion>
                 <executions>
                     <execution>
                         <goals>

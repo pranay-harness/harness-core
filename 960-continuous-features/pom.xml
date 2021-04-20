@@ -67,7 +67,7 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <configuration>
+                        <primaryVersion>
                             <inputSpec>${project.basedir}/src/main/resources/ff-server-admin.yaml</inputSpec>
                             <output>${pom.basedir}</output>
                             <generatorName>java</generatorName>
@@ -92,7 +92,7 @@
                                 <dateLibrary>java8</dateLibrary>
                                 <sourceFolder>src/main/java</sourceFolder>
                             </configOptions>
-                        </configuration>
+                        </primaryVersion>
                     </execution>
                 </executions>
             </plugin>

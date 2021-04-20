@@ -1060,11 +1060,11 @@
                             <goal>add-test-source</goal>
                         </goals>
                         <phase>generate-test-sources</phase>
-                        <configuration>
+                        <primaryVersion>
                             <sources>
                                 <source>src/supporter-test/java</source>
                             </sources>
-                        </configuration>
+                        </primaryVersion>
                     </execution>
                     <execution>
                         <id>add-supporter-test-resource</id>
@@ -1072,14 +1072,14 @@
                             <goal>add-test-resource</goal>
                         </goals>
                         <phase>generate-resources</phase>
-                        <configuration>
+                        <primaryVersion>
                             <resources>
                                 <resource>
                                     <directory>src/supporter-test/resources</directory>
                                     <targetPath />
                                 </resource>
                             </resources>
-                        </configuration>
+                        </primaryVersion>
                     </execution>
                 </executions>
             </plugin>
@@ -1107,7 +1107,7 @@
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
-                <configuration>
+                <primaryVersion>
                     <appClass>software.wings.app.WingsApplication</appClass>
                     <type>fat</type>
                     <manifest>
@@ -1129,7 +1129,7 @@
                         </entry>
                     </manifest>
                     <execPluginConfig>root</execPluginConfig>
-                </configuration>
+                </primaryVersion>
                 <executions>
                     <execution>
                         <goals>
@@ -1142,13 +1142,13 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
-                <configuration>
+                <primaryVersion>
                     <mainClass>software.wings.app.WingsApplication</mainClass>
                     <arguments>
                         <argument>server</argument>
                         <argument>./config.yml</argument>
                     </arguments>
-                </configuration>
+                </primaryVersion>
                 <executions>
                     <execution>
                         <goals>
@@ -1165,18 +1165,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.9.1</version>
-                <configuration>
+                <primaryVersion>
                     <aggregate>true</aggregate>
                     <failOnError>false</failOnError>
-                </configuration>
+                </primaryVersion>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
                 <version>2.9</version>
-                <configuration>
+                <primaryVersion>
                     <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
-                </configuration>
+                </primaryVersion>
             </plugin>
         </plugins>
     </reporting>

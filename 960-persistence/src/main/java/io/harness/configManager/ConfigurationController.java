@@ -1,7 +1,6 @@
 package io.harness.configManager;
 
-import static io.harness.configManager.Configuration.Builder.aConfiguration;
-import static io.harness.configManager.Configuration.MATCH_ALL_VERSION;
+import static io.harness.configManager.PrimaryVersion.MATCH_ALL_VERSION;
 
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -9,7 +8,6 @@ import io.harness.version.VersionInfoManager;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.dropwizard.lifecycle.Managed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -44,18 +42,15 @@ public class ConfigurationController implements QueueController {
   }
 
   public void run() {
-    Configuration configuration = persistence.createQuery(Configuration.class).get();
-    if (configuration == null) {
-      configuration = aConfiguration().withPrimaryVersion(MATCH_ALL_VERSION).build();
-      persistence.save(configuration);
+    PrimaryVersion primaryVersion = persistence.createQuery(PrimaryVersion.class).get();
+
+    if (!StringUtils.equals(this.primaryVersion.get(), primaryVersion.getPrimaryVersion())) {
+      log.info("Changing primary version from {} to {}", this.primaryVersion.get(), primaryVersion.getPrimaryVersion());
+      this.primaryVersion.set(primaryVersion.getPrimaryVersion());
     }
 
-    if (!StringUtils.equals(primaryVersion.get(), configuration.getPrimaryVersion())) {
-      primaryVersion.set(configuration.getPrimaryVersion());
-    }
-
-    boolean isPrimary = StringUtils.equals(MATCH_ALL_VERSION, configuration.getPrimaryVersion())
-        || StringUtils.equals(versionInfoManager.getVersionInfo().getVersion(), configuration.getPrimaryVersion());
+    boolean isPrimary = StringUtils.equals(MATCH_ALL_VERSION, primaryVersion.getPrimaryVersion())
+        || StringUtils.equals(versionInfoManager.getVersionInfo().getVersion(), primaryVersion.getPrimaryVersion());
     primary.set(isPrimary);
   }
 }

@@ -2,6 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.cache.CacheEntity;
 import io.harness.cache.SpringCacheEntity;
+import io.harness.configManager.PrimaryVersion;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.iterator.PersistentCronIterable;
 import io.harness.iterator.PersistentFibonacciIterable;
@@ -34,6 +35,7 @@ import java.util.Set;
 public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
+    set.add(PrimaryVersion.class);
     set.add(AccountAccess.class);
     set.add(AccountDataRetentionEntity.class);
     set.add(CacheEntity.class);

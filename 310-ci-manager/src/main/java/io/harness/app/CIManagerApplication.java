@@ -12,6 +12,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
+import io.harness.configManager.ConfigChangeIterator;
+import io.harness.configManager.ConfigurationController;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -236,17 +238,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
+        bind(QueueController.class).to(ConfigurationController.class);
       }
     });
 
@@ -262,6 +254,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerExecutionPlanCreators(injector);
     registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
+    injector.getInstance(ConfigChangeIterator.class).registerIterators();
     registerYamlSdk(injector);
     scheduleJobs(injector);
     log.info("Starting app done");

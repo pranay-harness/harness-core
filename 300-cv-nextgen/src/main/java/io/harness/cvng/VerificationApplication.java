@@ -295,7 +295,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerHealthChecks(environment, injector);
     createConsumerThreadsToListenToEvents(injector);
     registerCVNGSchemaMigrationIterator(injector);
-    injector.getInstance(ConfigChangeIterator.class).registerIterator(injector, hPersistence);
+    injector.getInstance(ConfigChangeIterator.class).registerIterators();
     registerActivityIterator(injector);
     registerVerificationJobInstanceTimeoutIterator(injector);
     registerPipelineSDK(configuration, injector);

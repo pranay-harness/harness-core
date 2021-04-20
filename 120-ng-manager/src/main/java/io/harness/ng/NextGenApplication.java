@@ -282,8 +282,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerIterators(Injector injector) {
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
-    injector.getInstance(ConfigChangeIterator.class)
-        .registerIterator(injector, injector.getInstance(HPersistence.class));
+    injector.getInstance(ConfigChangeIterator.class).registerIterators();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

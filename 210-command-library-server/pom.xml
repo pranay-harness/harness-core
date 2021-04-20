@@ -99,7 +99,7 @@
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
-                <configuration>
+                <primaryVersion>
                     <appClass>io.harness.commandlibrary.server.app.CommandLibraryServerApplication</appClass>
                     <type>fat</type>
                     <manifest>
@@ -121,7 +121,7 @@
                         </entry>
                     </manifest>
                     <execPluginConfig>root</execPluginConfig>
-                </configuration>
+                </primaryVersion>
                 <executions>
                     <execution>
                         <goals>
@@ -134,13 +134,13 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.6.0</version>
-                <configuration>
+                <primaryVersion>
                     <mainClass>io.harness.commandlibrary.server.app.CommandLibraryServerApplication</mainClass>
                     <arguments>
                         <argument>server</argument>
                         <argument>./command-library-server-config.yml</argument>
                     </arguments>
-                </configuration>
+                </primaryVersion>
                 <executions>
                     <execution>
                         <goals>

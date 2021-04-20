@@ -21,7 +21,7 @@ import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStepParameters;
-import io.harness.configManager.Configuration;
+import io.harness.configManager.PrimaryVersion;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -30,7 +30,6 @@ import java.util.Set;
 public class NGMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(Configuration.class);
     set.add(InfraMapping.class);
     set.add(K8sDirectInfraMapping.class);
     set.add(K8sGcpInfraMapping.class);

@@ -80,7 +80,7 @@
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
-                <configuration>
+                <primaryVersion>
                     <appClass>io.harness.event.app.EventServiceApplication</appClass>
                     <type>fat</type>
                     <manifest>
@@ -98,7 +98,7 @@
                         </entry>
                     </manifest>
                     <execPluginConfig>root</execPluginConfig>
-                </configuration>
+                </primaryVersion>
                 <executions>
                     <execution>
                         <goals>

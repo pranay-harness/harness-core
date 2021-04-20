@@ -256,11 +256,11 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
                 <version>1.4</version>
-                <configuration>
+                <primaryVersion>
                     <buildNumberPropertyName>gitCommitId</buildNumberPropertyName>
                     <scmBranchPropertyName>gitBranch</scmBranchPropertyName>
                     <shortRevisionLength>7</shortRevisionLength>
-                </configuration>
+                </primaryVersion>
                 <executions>
                     <execution>
                         <id>validate</id>
