@@ -13,6 +13,7 @@ import io.harness.cvng.client.NextGenClient;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl.EntityKey;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
@@ -48,13 +49,15 @@ public class NextGenServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetEnvironment() throws IOException {
-    Call<ResponseDTO<EnvironmentResponseDTO>> call = Mockito.mock(Call.class);
+    Call<ResponseDTO<EnvironmentResponse>> call = Mockito.mock(Call.class);
     when(call.clone()).thenReturn(call);
     String envIdentifier = generateUuid();
     when(nextGenClient.getEnvironment(envIdentifier, accountId, orgIdentifier, projectIdentifier)).thenReturn(call);
     when(call.execute())
-        .thenReturn(Response.success(
-            ResponseDTO.newResponse(EnvironmentResponseDTO.builder().identifier(envIdentifier).name("env").build())));
+        .thenReturn(Response.success(ResponseDTO.newResponse(
+            EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().identifier(envIdentifier).name("env").build())
+                .build())));
     EnvironmentResponseDTO environment =
         nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, envIdentifier);
     assertThat(environment).isNotNull();
@@ -63,7 +66,7 @@ public class NextGenServiceImplTest extends CvNextGenTestBase {
 
     final String newEnvIdentifier = generateUuid();
     when(nextGenClient.getEnvironment(newEnvIdentifier, accountId, orgIdentifier, projectIdentifier)).thenReturn(call);
-    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(null)));
+    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(EnvironmentResponse.builder().build())));
     assertThatThrownBy(
         () -> nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, newEnvIdentifier))
         .isInstanceOf(CacheLoader.InvalidCacheLoadException.class)
