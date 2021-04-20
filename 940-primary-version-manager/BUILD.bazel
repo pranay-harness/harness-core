@@ -1,0 +1,48 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//953-events-api:module",
+        "//960-continuous-features:module",
+        "//960-persistence:module",
+        "@maven//:com_esotericsoftware_kryo",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_mongodb_mongo_java_driver",
+        "@maven//:org_mongodb_morphia_morphia",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+run_tests()
+
+checkstyle()
+
+pmd()

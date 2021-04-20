@@ -1,17 +1,20 @@
-package io.harness.configManager;
+package io.harness.controller;
 
-import static io.harness.configManager.PrimaryVersion.Builder.aConfiguration;
+import static io.harness.beans.PrimaryVersion.Builder.aConfiguration;
 import static io.harness.configManager.PrimaryVersion.MATCH_ALL_VERSION;
 
+import io.harness.beans.PrimaryVersion;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class ConfigChangeJob {
-  @Inject private ConfigurationController configurationController;
+@Singleton
+public class PrimaryVersionChangeScheduler {
+  @Inject private PrimaryVersionController configurationController;
   @Inject private HPersistence hPersistence;
 
   public void registerExecutors() {

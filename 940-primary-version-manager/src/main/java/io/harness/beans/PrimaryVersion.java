@@ -1,4 +1,4 @@
-package io.harness.configManager;
+package io.harness.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
@@ -31,8 +31,8 @@ public class PrimaryVersion implements PersistentEntity, UuidAware, CreatedAtAwa
 
     private Builder() {}
 
-    public static Builder aConfiguration() {
-      return new Builder();
+    public static PrimaryVersion.Builder aConfiguration() {
+      return new PrimaryVersion.Builder();
     }
 
     public Builder withPrimaryVersion(String primaryVersion) {

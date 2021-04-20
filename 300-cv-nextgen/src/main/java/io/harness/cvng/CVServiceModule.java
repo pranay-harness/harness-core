@@ -2,7 +2,8 @@ package io.harness.cvng;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.configManager.ConfigurationController;
+import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.controller.PrimaryVersionController;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -184,148 +185,139 @@ public class CVServiceModule extends AbstractModule {
                 .setPriority(Thread.MIN_PRIORITY)
                 .setUncaughtExceptionHandler((t, e) -> log.error("error while processing task", e))
                 .build()));
-    try {
-      VersionInfoManager versionInfoManager = new VersionInfoManager(
-          IOUtils.toString(getClass().getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml"),
-              StandardCharsets.UTF_8));
-      bind(QueueController.class).to(ConfigurationController.class);
-      bind(VersionInfoManager.class).toInstance(versionInfoManager);
-      bind(HPersistence.class).to(MongoPersistence.class);
-      bind(TimeSeriesRecordService.class).to(TimeSeriesRecordServiceImpl.class);
-      bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
-      bind(AnalysisStateMachineService.class).to(AnalysisStateMachineServiceImpl.class);
-      bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
-      bind(TrendAnalysisService.class).to(TrendAnalysisServiceImpl.class);
-      bind(LearningEngineTaskService.class).to(LearningEngineTaskServiceImpl.class);
-      bind(LogClusterService.class).to(LogClusterServiceImpl.class);
-      bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
-      bind(DataCollectionTaskService.class).to(DataCollectionTaskServiceImpl.class);
-      bind(VerificationManagerService.class).to(VerificationManagerServiceImpl.class);
-      bind(Clock.class).toInstance(Clock.systemUTC());
-      bind(DSConfigService.class).to(DSConfigServiceImpl.class);
-      bind(MetricPackService.class).to(MetricPackServiceImpl.class);
-      bind(HeatMapService.class).to(HeatMapServiceImpl.class);
-      bind(DSConfigService.class).to(DSConfigServiceImpl.class);
-      bind(MetricPackService.class).to(MetricPackServiceImpl.class);
-      bind(SplunkService.class).to(SplunkServiceImpl.class);
-      bind(CVConfigService.class).to(CVConfigServiceImpl.class);
-      bind(DeletedCVConfigService.class).to(DeletedCVConfigServiceImpl.class);
-      bind(VerificationJobUpdatableEntity.class)
-          .annotatedWith(Names.named(VerificationJobType.HEALTH.name()))
-          .to(HealthVerificationUpdatableEntity.class);
-      bind(VerificationJobUpdatableEntity.class)
-          .annotatedWith(Names.named(VerificationJobType.TEST.name()))
-          .to(TestVerificationUpdatableEntity.class);
-      bind(VerificationJobUpdatableEntity.class)
-          .annotatedWith(Names.named(VerificationJobType.BLUE_GREEN.name()))
-          .to(BlueGreenVerificationUpdatableEntity.class);
-      bind(VerificationJobUpdatableEntity.class)
-          .annotatedWith(Names.named(VerificationJobType.CANARY.name()))
-          .to(CanaryVerificationUpdatableEntity.class);
-      bind(CVConfigTransformer.class)
-          .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
-          .to(AppDynamicsCVConfigTransformer.class);
-      bind(CVConfigTransformer.class)
-          .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
-          .to(NewRelicCVConfigTransformer.class);
-      bind(CVConfigTransformer.class)
-          .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
-          .to(SplunkCVConfigTransformer.class);
-      bind(CVConfigTransformer.class)
-          .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
-          .to(StackdriverCVConfigTransformer.class);
-      bind(DataCollectionInfoMapper.class)
-          .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
-          .to(AppDynamicsDataCollectionInfoMapper.class);
-      bind(DataCollectionInfoMapper.class)
-          .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
-          .to(SplunkDataCollectionInfoMapper.class);
-      bind(DataCollectionInfoMapper.class)
-          .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
-          .to(StackdriverDataCollectionInfoMapper.class);
-      bind(DataCollectionInfoMapper.class)
-          .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
-          .to(NewRelicDataCollectionInfoMapper.class);
+    install(PrimaryVersionManagerModule.getInstance());
+    bind(HPersistence.class).to(MongoPersistence.class);
+    bind(TimeSeriesRecordService.class).to(TimeSeriesRecordServiceImpl.class);
+    bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
+    bind(AnalysisStateMachineService.class).to(AnalysisStateMachineServiceImpl.class);
+    bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
+    bind(TrendAnalysisService.class).to(TrendAnalysisServiceImpl.class);
+    bind(LearningEngineTaskService.class).to(LearningEngineTaskServiceImpl.class);
+    bind(LogClusterService.class).to(LogClusterServiceImpl.class);
+    bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
+    bind(DataCollectionTaskService.class).to(DataCollectionTaskServiceImpl.class);
+    bind(VerificationManagerService.class).to(VerificationManagerServiceImpl.class);
+    bind(Clock.class).toInstance(Clock.systemUTC());
+    bind(DSConfigService.class).to(DSConfigServiceImpl.class);
+    bind(MetricPackService.class).to(MetricPackServiceImpl.class);
+    bind(HeatMapService.class).to(HeatMapServiceImpl.class);
+    bind(DSConfigService.class).to(DSConfigServiceImpl.class);
+    bind(MetricPackService.class).to(MetricPackServiceImpl.class);
+    bind(SplunkService.class).to(SplunkServiceImpl.class);
+    bind(CVConfigService.class).to(CVConfigServiceImpl.class);
+    bind(DeletedCVConfigService.class).to(DeletedCVConfigServiceImpl.class);
+    bind(VerificationJobUpdatableEntity.class)
+        .annotatedWith(Names.named(VerificationJobType.HEALTH.name()))
+        .to(HealthVerificationUpdatableEntity.class);
+    bind(VerificationJobUpdatableEntity.class)
+        .annotatedWith(Names.named(VerificationJobType.TEST.name()))
+        .to(TestVerificationUpdatableEntity.class);
+    bind(VerificationJobUpdatableEntity.class)
+        .annotatedWith(Names.named(VerificationJobType.BLUE_GREEN.name()))
+        .to(BlueGreenVerificationUpdatableEntity.class);
+    bind(VerificationJobUpdatableEntity.class)
+        .annotatedWith(Names.named(VerificationJobType.CANARY.name()))
+        .to(CanaryVerificationUpdatableEntity.class);
+    bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
+        .to(AppDynamicsCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+        .to(NewRelicCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
+        .to(SplunkCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
+        .to(StackdriverCVConfigTransformer.class);
+    bind(DataCollectionInfoMapper.class)
+        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
+        .to(AppDynamicsDataCollectionInfoMapper.class);
+    bind(DataCollectionInfoMapper.class)
+        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
+        .to(SplunkDataCollectionInfoMapper.class);
+    bind(DataCollectionInfoMapper.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
+        .to(StackdriverDataCollectionInfoMapper.class);
+    bind(DataCollectionInfoMapper.class)
+        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+        .to(NewRelicDataCollectionInfoMapper.class);
 
-      bind(MetricPackService.class).to(MetricPackServiceImpl.class);
-      bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
-      bind(VerificationJobService.class).to(VerificationJobServiceImpl.class);
-      bind(LogRecordService.class).to(LogRecordServiceImpl.class);
-      bind(VerificationJobInstanceService.class).to(VerificationJobInstanceServiceImpl.class);
-      bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
-      bind(TimeSeriesDashboardService.class).to(TimeSeriesDashboardServiceImpl.class);
-      bind(ActivityService.class).to(ActivityServiceImpl.class);
-      bind(AlertRuleService.class).to(AlertRuleServiceImpl.class);
-      bind(LogDashboardService.class).to(LogDashboardServiceImpl.class);
-      bind(WebhookService.class).to(WebhookServiceImpl.class);
-      bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
-      bind(NextGenService.class).to(NextGenServiceImpl.class);
-      bind(HostRecordService.class).to(HostRecordServiceImpl.class);
-      bind(KubernetesActivitySourceService.class).to(KubernetesActivitySourceServiceImpl.class);
-      bind(DeploymentLogAnalysisService.class).to(DeploymentLogAnalysisServiceImpl.class);
-      bind(VerificationJobInstanceAnalysisService.class).to(VerificationJobInstanceAnalysisServiceImpl.class);
-      bind(HealthVerificationService.class).to(HealthVerificationServiceImpl.class);
-      bind(HealthVerificationHeatMapService.class).to(HealthVerificationHeatMapServiceImpl.class);
-      bind(AnalysisService.class).to(AnalysisServiceImpl.class);
-      bind(OnboardingService.class).to(OnboardingServiceImpl.class);
-      bind(CVSetupService.class).to(CVSetupServiceImpl.class);
-      bindTheMonitoringSourceImportStatusCreators();
-      bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
-      bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
-      bind(StackdriverService.class).to(StackdriverServiceImpl.class);
-      bind(CVEventService.class).to(CVEventServiceImpl.class);
-      bind(RedisConfig.class)
-          .annotatedWith(Names.named("lock"))
-          .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
-      bind(ConsumerMessageProcessor.class)
-          .annotatedWith(Names.named(EventsFrameworkMetadataConstants.PROJECT_ENTITY))
-          .to(ProjectChangeEventMessageProcessor.class);
-      bind(ConsumerMessageProcessor.class)
-          .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY))
-          .to(OrganizationChangeEventMessageProcessor.class);
-      bind(ConsumerMessageProcessor.class)
-          .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY))
-          .to(AccountChangeEventMessageProcessor.class);
-      bind(ConsumerMessageProcessor.class)
-          .annotatedWith(Names.named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY))
-          .to(ConnectorChangeEventMessageProcessor.class);
-      bind(AlertRuleAnomalyService.class).to(AlertRuleAnomalyServiceImpl.class);
-      bind(NewRelicService.class).to(NewRelicServiceImpl.class);
-      bind(String.class)
-          .annotatedWith(Names.named("portalUrl"))
-          .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")
-                  ? verificationConfiguration.getPortalUrl()
-                  : verificationConfiguration.getPortalUrl() + "/");
-      bind(CVNGLogService.class).to(CVNGLogServiceImpl.class);
-      bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
-      bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
-      bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
-      bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
+    bind(MetricPackService.class).to(MetricPackServiceImpl.class);
+    bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
+    bind(VerificationJobService.class).to(VerificationJobServiceImpl.class);
+    bind(LogRecordService.class).to(LogRecordServiceImpl.class);
+    bind(VerificationJobInstanceService.class).to(VerificationJobInstanceServiceImpl.class);
+    bind(VerificationTaskService.class).to(VerificationTaskServiceImpl.class);
+    bind(TimeSeriesDashboardService.class).to(TimeSeriesDashboardServiceImpl.class);
+    bind(ActivityService.class).to(ActivityServiceImpl.class);
+    bind(AlertRuleService.class).to(AlertRuleServiceImpl.class);
+    bind(LogDashboardService.class).to(LogDashboardServiceImpl.class);
+    bind(WebhookService.class).to(WebhookServiceImpl.class);
+    bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
+    bind(NextGenService.class).to(NextGenServiceImpl.class);
+    bind(HostRecordService.class).to(HostRecordServiceImpl.class);
+    bind(KubernetesActivitySourceService.class).to(KubernetesActivitySourceServiceImpl.class);
+    bind(DeploymentLogAnalysisService.class).to(DeploymentLogAnalysisServiceImpl.class);
+    bind(VerificationJobInstanceAnalysisService.class).to(VerificationJobInstanceAnalysisServiceImpl.class);
+    bind(HealthVerificationService.class).to(HealthVerificationServiceImpl.class);
+    bind(HealthVerificationHeatMapService.class).to(HealthVerificationHeatMapServiceImpl.class);
+    bind(AnalysisService.class).to(AnalysisServiceImpl.class);
+    bind(OnboardingService.class).to(OnboardingServiceImpl.class);
+    bind(CVSetupService.class).to(CVSetupServiceImpl.class);
+    bindTheMonitoringSourceImportStatusCreators();
+    bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(StackdriverService.class).to(StackdriverServiceImpl.class);
+    bind(CVEventService.class).to(CVEventServiceImpl.class);
+    bind(RedisConfig.class)
+        .annotatedWith(Names.named("lock"))
+        .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.PROJECT_ENTITY))
+        .to(ProjectChangeEventMessageProcessor.class);
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY))
+        .to(OrganizationChangeEventMessageProcessor.class);
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY))
+        .to(AccountChangeEventMessageProcessor.class);
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY))
+        .to(ConnectorChangeEventMessageProcessor.class);
+    bind(AlertRuleAnomalyService.class).to(AlertRuleAnomalyServiceImpl.class);
+    bind(NewRelicService.class).to(NewRelicServiceImpl.class);
+    bind(String.class)
+        .annotatedWith(Names.named("portalUrl"))
+        .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")
+                ? verificationConfiguration.getPortalUrl()
+                : verificationConfiguration.getPortalUrl() + "/");
+    bind(CVNGLogService.class).to(CVNGLogServiceImpl.class);
+    bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
+    bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
+    bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
+    bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
 
-      bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
-      bind(AsyncWaitEngine.class).to(CVNGAsyncWaitEngine.class);
-      MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
-          MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
-      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
-      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
-      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
-      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.KUBERNETES).to(KubernetesActivitySourceService.class);
+    bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
+    bind(AsyncWaitEngine.class).to(CVNGAsyncWaitEngine.class);
+    MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
+    dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.KUBERNETES).to(KubernetesActivitySourceService.class);
 
-      MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
-          MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
-      dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
-          .to(AppDynamicsCVConfigUpdatableEntity.class);
-      dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.NEW_RELIC).to(NewRelicCVConfigUpdatableEntity.class);
-      dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER)
-          .to(StackDriverCVConfigUpdatableEntity.class);
-      dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
-      // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
-      // if something goes wrong in feature flags stream
-      // We are dependent on source of truth (Manager) for this.
-      bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
-    } catch (IOException e) {
-      throw new IllegalStateException("Could not load versionInfo.yaml", e);
-    }
+    MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
+        MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
+        .to(AppDynamicsCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.NEW_RELIC).to(NewRelicCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackDriverCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
+    // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
+    // if something goes wrong in feature flags stream
+    // We are dependent on source of truth (Manager) for this.
+    bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

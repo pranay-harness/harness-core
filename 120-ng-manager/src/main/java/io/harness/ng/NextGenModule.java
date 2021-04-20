@@ -23,6 +23,7 @@ import io.harness.accesscontrol.AccessControlAdminClientModule;
 import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -126,6 +127,7 @@ import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.signup.SignupModule;
@@ -344,7 +346,10 @@ public class NextGenModule extends AbstractModule {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(NextGenRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(NextGenRegistrars.kryoRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.kryoRegistrars)
+            .build();
       }
 
       @Provides
@@ -352,6 +357,7 @@ public class NextGenModule extends AbstractModule {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NextGenRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -376,13 +382,7 @@ public class NextGenModule extends AbstractModule {
         return ImmutableList.<YamlSchemaRootClass>builder().addAll(NextGenRegistrars.yamlSchemaRegistrars).build();
       }
     });
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).to(ConfigurationController.class);
-      }
-    });
-
+    install(PrimaryVersionManagerModule.getInstance());
     install(OrchestrationModule.getInstance(getOrchestrationConfig()));
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());

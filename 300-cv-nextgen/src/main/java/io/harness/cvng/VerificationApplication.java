@@ -15,6 +15,7 @@ import static java.time.Duration.ofSeconds;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.configManager.ConfigChangeJob;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
@@ -93,10 +94,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.serializer.CVNGStepRegistrar;
-import io.harness.serializer.CvNextGenRegistrars;
-import io.harness.serializer.JsonSubtypeResolver;
-import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.*;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.codahale.metrics.MetricRegistry;
@@ -204,6 +202,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(CvNextGenRegistrars.kryoRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -212,6 +211,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CvNextGenRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -290,7 +290,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
     registerRecoverNextTaskHandlerIterator(injector);
-    injector.getInstance(ConfigChangeJob.class).registerExecutors();
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);

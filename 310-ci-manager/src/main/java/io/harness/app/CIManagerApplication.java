@@ -15,6 +15,7 @@ import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
 import io.harness.configManager.ConfigChangeJob;
 import io.harness.configManager.ConfigurationController;
+import io.harness.controller.PrimaryVersionController;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -45,13 +46,10 @@ import io.harness.registrars.ExecutionRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.serializer.*;
 import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.CiExecutionRegistrars;
-import io.harness.serializer.ConnectorNextGenRegistrars;
-import io.harness.serializer.KryoModule;
-import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
-import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
@@ -170,6 +168,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .addAll(CiBeansRegistrars.kryoRegistrars)
             .addAll(CiExecutionRegistrars.kryoRegistrars)
             .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -178,6 +177,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CiExecutionRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -239,7 +239,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(QueueController.class).to(ConfigurationController.class);
+        bind(QueueController.class).to(PrimaryVersionController.class);
       }
     });
 

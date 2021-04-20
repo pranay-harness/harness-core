@@ -1,6 +1,6 @@
 package io.harness.cvng.core.resources;
 
-import io.harness.configManager.ConfigurationController;
+import io.harness.controller.PrimaryVersionController;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
 import io.harness.version.RuntimeInfo;
@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType;
 @PublicApi
 public class VersionInfoResource {
   @Inject private VersionInfoManager versionInfoManager;
-  @Inject private ConfigurationController configurationController;
+  @Inject private PrimaryVersionController primaryVersionController;
 
   @GET
   @Timed
@@ -33,8 +33,8 @@ public class VersionInfoResource {
     return new RestResponse<>(VersionPackage.builder()
                                   .versionInfo(versionInfoManager.getVersionInfo())
                                   .runtimeInfo(RuntimeInfo.builder()
-                                                   .primaryVersion(configurationController.getPrimaryVersion())
-                                                   .primary(configurationController.isPrimary())
+                                                   .primaryVersion(primaryVersionController.getPrimaryVersion())
+                                                   .primary(primaryVersionController.isPrimary())
                                                    .build())
                                   .build());
   }
