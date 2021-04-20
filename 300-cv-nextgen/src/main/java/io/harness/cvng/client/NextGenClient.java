@@ -7,6 +7,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
@@ -32,9 +33,9 @@ public interface NextGenClient {
       @Query("accountIdentifier") String accountIdentifier, @Query("orgIdentifier") @NotNull String orgIdentifier,
       @Query("projectIdentifier") @NotNull String projectIdentifier);
 
-  @GET("environments/{environmentIdentifier}")
-  Call<ResponseDTO<EnvironmentResponseDTO>> getEnvironment(@Path("environmentIdentifier") String environmentIdentifier,
-      @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
+  @GET("environmentsV2/{environmentIdentifier}")
+  Call<ResponseDTO<EnvironmentResponse>> getEnvironment(@Path("environmentIdentifier") String environmentIdentifier,
+      @Query("accountIdentifier") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
 
   @GET("services/{serviceIdentifier}")
