@@ -2,7 +2,7 @@ package io.harness.pms.event.webhookevent;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
@@ -29,8 +29,8 @@ public class WebhookEventStreamConsumer implements Runnable {
   private final List<MessageListener> messageListenersList;
 
   @Inject
-  public WebhookEventStreamConsumer(@Named(WEBHOOK_TRIGGER_EVENT_DATA) Consumer redisConsumer,
-      @Named(WEBHOOK_TRIGGER_EVENT_DATA) MessageListener webhookEventListener) {
+  public WebhookEventStreamConsumer(@Named(WEBHOOK_EVENTS_STREAM) Consumer redisConsumer,
+      @Named(WEBHOOK_EVENTS_STREAM) MessageListener webhookEventListener) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(webhookEventListener);

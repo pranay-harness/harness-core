@@ -58,11 +58,10 @@ public class EventsFrameworkModule extends AbstractModule {
               redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA))
-          .toInstance(
-              RedisConsumer.of(EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA, PIPELINE_SERVICE.getServiceId(),
-                  redisConfig, EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA_MAX_PROCESSING_TIME,
-                  EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA__BATCH_SIZE));
+          .annotatedWith(Names.named(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM, PIPELINE_SERVICE.getServiceId(),
+              redisConfig, EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_BATCH_SIZE));
     }
   }
 }

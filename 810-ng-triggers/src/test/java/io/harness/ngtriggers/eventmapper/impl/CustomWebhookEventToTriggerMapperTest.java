@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HeaderConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
@@ -78,7 +79,8 @@ public class CustomWebhookEventToTriggerMapperTest extends CategoryTest {
     when(ngTriggerService.findTriggersForCustomWehbook(event, false, true)).thenReturn(ngTriggerEntityList);
     doReturn(ngTriggerConfig).when(ngTriggerElementMapper).toTriggerConfig(ngTriggerCustomYaml);
     WebhookEventMappingResponse webhookEventMappingResponse =
-        customWebhookEventToTriggerMapper.mapWebhookEventToTriggers(event);
+        customWebhookEventToTriggerMapper.mapWebhookEventToTriggers(
+            TriggerMappingRequestData.builder().triggerWebhookEvent(event).build());
     assertThat(webhookEventMappingResponse).isNotNull();
     assertThat(webhookEventMappingResponse.getTriggers().size()).isEqualTo(1);
     assertThat(webhookEventMappingResponse.isCustomTrigger()).isTrue();

@@ -2,6 +2,7 @@ package io.harness.ngtriggers.eventmapper.impl;
 
 import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PUSH;
 
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
@@ -30,18 +31,25 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
   private final TriggerFilterStore triggerFilterHelper;
   private final WebhookEventPublisher webhookEventPublisher;
 
-  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerWebhookEvent triggerWebhookEvent) {
+  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerMappingRequestData mappingRequestData) {
+    TriggerWebhookEvent triggerWebhookEvent = mappingRequestData.getTriggerWebhookEvent();
     String projectFqn = getProjectFqn(triggerWebhookEvent);
 
     // 1. Parse Payload
-    ParsePayloadResponse parsePayloadResponse = convertWebhookResponse(triggerWebhookEvent);
-    if (parsePayloadResponse.isExceptionOccured()) {
-      return WebhookEventMappingResponse.builder()
-          .webhookEventResponse(WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
-          .build();
-    }
+    WebhookPayloadData webhookPayloadData = null;
+    if (mappingRequestData.getWebhookDTO() == null) {
+      ParsePayloadResponse parsePayloadResponse = convertWebhookResponse(triggerWebhookEvent);
+      if (parsePayloadResponse.isExceptionOccured()) {
+        return WebhookEventMappingResponse.builder()
+            .webhookEventResponse(WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
+            .build();
+      }
 
-    WebhookPayloadData webhookPayloadData = parsePayloadResponse.getWebhookPayloadData();
+      webhookPayloadData = parsePayloadResponse.getWebhookPayloadData();
+    } else {
+      webhookPayloadData = webhookEventPayloadParser.convertWebhookResponse(
+          mappingRequestData.getWebhookDTO().getParsedResponse(), triggerWebhookEvent);
+    }
 
     publishPushEvent(webhookPayloadData);
 

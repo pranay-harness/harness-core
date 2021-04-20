@@ -4,7 +4,7 @@ import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
@@ -70,7 +70,9 @@ import io.harness.pms.resourceconstraints.service.PMSResourceConstraintService;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
+import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
+import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImplV2;
 import io.harness.project.ProjectClientModule;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
@@ -220,6 +222,8 @@ public class PipelineServiceModule extends AbstractModule {
         .annotatedWith(Names.named("progressUpdateServiceExecutor"))
         .toInstance(new ManagedScheduledExecutorService("ProgressUpdateServiceExecutor-Thread"));
     bind(TriggerWebhookExecutionService.class).to(TriggerWebhookExecutionServiceImpl.class);
+    bind(TriggerWebhookExecutionServiceV2.class).to(TriggerWebhookExecutionServiceImplV2.class);
+
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);
     filterPropertiesMapper.addBinding(FilterType.PIPELINESETUP.toString()).to(PipelineFilterPropertiesMapper.class);
@@ -244,9 +248,7 @@ public class PipelineServiceModule extends AbstractModule {
         .annotatedWith(Names.named(PIPELINE_ENTITY + ENTITY_CRUD))
         .to(PipelineEntityCRUDStreamListener.class);
 
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(WEBHOOK_TRIGGER_EVENT_DATA))
-        .to(WebhookEventStreamListener.class);
+    bind(MessageListener.class).annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM)).to(WebhookEventStreamListener.class);
   }
 
   @Provides
