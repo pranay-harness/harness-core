@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.context.ContextElementType.INSTANCE;
 import static io.harness.context.ContextElementType.STANDARD;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -36,6 +38,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -44,6 +49,7 @@ import io.harness.container.ContainerInfo;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
@@ -81,6 +87,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private SecretManager mockSecretManager;
@@ -89,6 +97,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @Mock private DelegateService mockDelegateService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private ContainerDeploymentManagerHelper mockContainerDeploymentManagerHelper;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private EcsSteadyStateCheck check = new EcsSteadyStateCheck("stateName");
 
@@ -119,6 +128,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
             .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
             .withDeploymentType("ECS")
             .build();
+    doReturn(false).when(featureFlagService).isEnabled(TIMEOUT_FAILURE_SUPPORT, app.getAccountId());
     doReturn(containerInfrastructureMapping).when(mockInfrastructureMappingService).get(anyString(), anyString());
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);
