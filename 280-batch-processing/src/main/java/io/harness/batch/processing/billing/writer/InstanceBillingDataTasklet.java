@@ -181,6 +181,12 @@ public class InstanceBillingDataTasklet implements Tasklet {
       Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
     log.info("Instance data list new {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
+    instanceDataLists.forEach(instanceData -> {
+      if (null == instanceData.getActiveInstanceIterator() && null == instanceData.getUsageStopTime()) {
+        instanceDataDao.updateInstanceActiveIterationTime(instanceData);
+      }
+    });
+
     Map<String, List<InstanceData>> instanceDataGroupedCluster =
         instanceDataLists.stream()
             .filter(this::validInstanceForBilling)
