@@ -64,6 +64,14 @@ func HandleClose(logStream stream.Stream, store store.Store) http.HandlerFunc {
 
 		snapshot := r.FormValue(snapshotParam)
 		if snapshot == "true" {
+			if err := logStream.Exists(ctx, key); err != nil {
+				WriteInternalError(w, err)
+				logger.FromRequest(r).
+					WithError(err).
+					WithField("key", key).
+					Errorln("api: key does not exist")
+				return
+			}
 			pr, pw := io.Pipe()
 			defer pr.Close()
 			br := bufio.NewReader(pr)

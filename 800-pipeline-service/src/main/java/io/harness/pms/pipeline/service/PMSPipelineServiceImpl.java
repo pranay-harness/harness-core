@@ -232,7 +232,11 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       populateFilter(criteria, filterProperties);
     }
     if (EmptyPredicate.isNotEmpty(module)) {
-      criteria.and(String.format("filters.%s", module)).exists(true);
+      // Check for pipeline with no filters also - empty pipeline or pipelines with only approval stage
+      // criteria = { "$or": [ { "filters": {} } , { "filters.MODULE": { $exists: true } } ] }
+      Criteria moduleCriteria = new Criteria().orOperator(where(PipelineEntityKeys.filters).is(new Document()),
+          where(String.format("%s.%s", PipelineEntityKeys.filters, module)).exists(true));
+      criteria.andOperator(moduleCriteria);
     }
 
     if (EmptyPredicate.isNotEmpty(searchTerm)) {

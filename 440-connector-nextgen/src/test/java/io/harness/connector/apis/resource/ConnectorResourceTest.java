@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -23,6 +24,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.CatalogueHelper;
+import io.harness.connector.helper.ConnectorRbacHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -49,6 +51,8 @@ import org.springframework.data.domain.Page;
 @OwnedBy(HarnessTeam.DX)
 public class ConnectorResourceTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
+  @Mock private AccessControlClient accessControlClient;
+  @Mock private ConnectorRbacHelper connectorRbacHelper;
   @InjectMocks private ConnectorResource connectorResource;
   ConnectorResponseDTO connectorResponse;
   ConnectorInfoDTO connectorInfo;
@@ -166,6 +170,7 @@ public class ConnectorResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testConnectionResourceTest() {
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(connectorResponse));
     ResponseDTO<ConnectorValidationResult> validationResult = connectorResource.testConnection(
         "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
     Mockito.verify(connectorService, times(1)).testConnection(any(), any(), any(), any());

@@ -216,7 +216,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(environment.getTags().get("envRegion")).isEqualTo("us-east1");
 
     K8SDirectInfrastructure infraDefinition =
-        (K8SDirectInfrastructure) infrastructure.getInfrastructureDefinition().getInfrastructure();
+        (K8SDirectInfrastructure) infrastructure.getInfrastructureDefinition().getSpec();
     assertThat(infraDefinition.getNamespace()).isInstanceOf(ParameterField.class);
     assertThat(infraDefinition.getNamespace().isExpression()).isTrue();
     assertThat(infraDefinition.getNamespace().getExpressionValue()).isEqualTo("<+input>");

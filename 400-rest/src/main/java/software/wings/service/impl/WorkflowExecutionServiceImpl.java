@@ -839,7 +839,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private void handleEnvLoopStateExecutionData(String appId,
+  @VisibleForTesting
+  void handleEnvLoopStateExecutionData(String appId,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
       List<PipelineStageExecution> stageExecutionDataList, ForkStateExecutionData envStateExecutionData,
       PipelineStageElement pipelineStageElement, String stateExecutionInstanceId) {
@@ -872,6 +873,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
             stageExecution.setWorkflowExecutions(asList(workflowExecution2));
             stageExecution.setStatus(workflowExecution2.getStatus());
+            stageExecution.setTriggeredBy(workflowExecution2.getTriggeredBy());
           }
           stageExecution.setMessage(envStateExecutionDataLooped.getErrorMsg());
         }

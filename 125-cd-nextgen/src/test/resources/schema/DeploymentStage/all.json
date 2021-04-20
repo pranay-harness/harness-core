@@ -1141,13 +1141,7 @@
                 "$ref": "#/definitions/JiraField"
               }
             },
-            "identifier": {
-              "type": "string"
-            },
             "issueType": {
-              "type": "string"
-            },
-            "name": {
               "type": "string"
             },
             "projectKey": {
@@ -1194,13 +1188,7 @@
                 "$ref": "#/definitions/JiraField"
               }
             },
-            "identifier": {
-              "type": "string"
-            },
             "issueKey": {
-              "type": "string"
-            },
-            "name": {
               "type": "string"
             },
             "transitionTo": {
@@ -2719,6 +2707,9 @@
             "configuration": {
               "$ref": "#/definitions/TerrformStepConfiguration"
             },
+            "metadata": {
+              "type": "string"
+            },
             "provisionerIdentifier": {
               "type": "string"
             }
@@ -2812,9 +2803,9 @@
         "type": {
           "type": "string",
           "enum": [
-            "INLINE",
-            "INHERIT_FROM_PLAN",
-            "INHERIT_FROM_APPLY"
+            "Inline",
+            "InheritFromPlan",
+            "InheritFromApply"
           ]
         }
       },

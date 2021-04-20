@@ -15,7 +15,9 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -52,6 +54,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;

@@ -1,5 +1,9 @@
 package io.harness.batch.processing.pricing.gcp.bigquery;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CE)
 public class BigQueryConstants {
   private BigQueryConstants() {}
 
@@ -10,6 +14,10 @@ public class BigQueryConstants {
       + "( '%s' )  AND "
       + "usagestartdate  >= '%s' AND usagestartdate < '%s' "
       + "GROUP BY  resourceid, servicecode, productfamily; ";
+
+  public static final String CLUSTER_DATA_QUERY = "SELECT count(*) AS count,  sum(billingamount) AS billingamountsum"
+      + " FROM  `%s`  "
+      + "WHERE accountid = '%s' and starttime = %s ; ";
 
   public static final String EKS_FARGATE_BILLING_QUERY = "SELECT SUM(blendedcost) as cost, resourceid, usagetype  "
       + "FROM `%s` "
@@ -29,6 +37,8 @@ public class BigQueryConstants {
   public static final String cost = "cost";
   public static final String effectiveCost = "effectivecost";
   public static final String resourceId = "resourceid";
+  public static final String count = "count";
+  public static final String billingAmountSum = "billingamountsum";
   public static final String serviceCode = "servicecode";
   public static final String productFamily = "productfamily";
   public static final String usageType = "usagetype";

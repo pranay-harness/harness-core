@@ -11,6 +11,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.UnexpectedException;
+import io.harness.tasks.DecryptGitApiAccessHelper;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
@@ -24,13 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GitSyncConnectorHelper {
   ConnectorService connectorService;
+  DecryptGitApiAccessHelper decryptGitApiAccessHelper;
 
   @Inject
-  public GitSyncConnectorHelper(@Named("connectorDecoratorService") ConnectorService connectorService) {
+  public GitSyncConnectorHelper(@Named("connectorDecoratorService") ConnectorService connectorService,
+      DecryptGitApiAccessHelper decryptGitApiAccessHelper) {
     this.connectorService = connectorService;
+    this.decryptGitApiAccessHelper = decryptGitApiAccessHelper;
   }
 
-  public ScmConnector getConnectorAssociatedWithGitSyncConfig(YamlGitConfigDTO gitSyncConfigDTO, String accountId) {
+  public ScmConnector getDecryptedConnector(YamlGitConfigDTO gitSyncConfigDTO, String accountId) {
     final String connectorRef = gitSyncConfigDTO.getGitConnectorRef();
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
         connectorRef, accountId, gitSyncConfigDTO.getOrganizationIdentifier(), gitSyncConfigDTO.getProjectIdentifier());
@@ -40,7 +44,9 @@ public class GitSyncConnectorHelper {
       ConnectorInfoDTO connector = connectorDTO.get().getConnector();
       ConnectorConfigDTO connectorConfig = connector.getConnectorConfig();
       if (connectorConfig instanceof ScmConnector) {
-        return (ScmConnector) connector.getConnectorConfig();
+        ScmConnector gitConnectorConfig = (ScmConnector) connector.getConnectorConfig();
+        return decryptGitApiAccessHelper.decryptScmApiAccess(gitConnectorConfig, accountId,
+            gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier());
       }
       throw new UnexpectedException(
           String.format("The connector with thhe  id %s, accountId %s, orgId %s, projectId %s is not a scm connector",

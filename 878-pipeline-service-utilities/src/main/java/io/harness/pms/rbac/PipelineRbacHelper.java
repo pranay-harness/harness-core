@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Helper class to perform validation checks on EntityDetail object. It constructs the runtimeAccess permission on its
+ * Helper class to perform validation checks on EntityDetail object. It constructs the access permission on its
  * own for the given referredEntity
  */
 @Singleton

@@ -118,6 +118,39 @@ func TestListCommitsGitlab(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Greater(t, len(got.CommitIds), 1, "more than 1 commit")
+	assert.Equal(t, int32(2), got.Pagination.Next, "there is a next page")
+}
+
+func TestListCommitsPage2Gitlab(t *testing.T) {
+	if os.Getenv("GITLAB_ACCESS_TOKEN") == "" {
+		t.Skip("Skipping, Acceptance test")
+	}
+	in := &pb.ListCommitsRequest{
+		Slug: "tphoney/test_repo",
+		Type: &pb.ListCommitsRequest_Branch{
+			Branch: "master",
+		},
+		Pagination: &pb.PageRequest{
+			Page: 2,
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Gitlab{
+				Gitlab: &pb.GitlabProvider{
+					Provider: &pb.GitlabProvider_AccessToken{
+						AccessToken: os.Getenv("GITLAB_ACCESS_TOKEN"),
+					},
+				},
+			},
+			Debug: true,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := ListCommits(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Greater(t, len(got.CommitIds), 1, "more than 1 commit")
+	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
 }
 
 func TestListBranchesGitlab(t *testing.T) {
@@ -143,4 +176,5 @@ func TestListBranchesGitlab(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.GreaterOrEqual(t, len(got.Branches), 1, "status matches")
+	assert.Equal(t, int32(2), got.Pagination.Next, "there is a next page")
 }

@@ -108,7 +108,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   @Override
   public YamlGitConfigDTO updateDefault(
-      String projectIdentifier, String orgIdentifier, String accountId, String identifier, String folderIdentifier) {
+      String projectIdentifier, String orgIdentifier, String accountId, String identifier, String folderPath) {
     Optional<YamlGitConfig> yamlGitConfigOptional =
         getYamlGitConfigEntity(accountId, orgIdentifier, projectIdentifier, identifier);
     if (!yamlGitConfigOptional.isPresent()) {
@@ -119,12 +119,12 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     List<YamlGitConfigDTO.RootFolder> rootFolders = yamlGitConfig.getRootFolders();
     YamlGitConfigDTO.RootFolder newDefaultRootFolder = null;
     for (YamlGitConfigDTO.RootFolder folder : rootFolders) {
-      if (folder.getIdentifier().equals(folderIdentifier)) {
+      if (folder.getRootFolder().equals(folderPath)) {
         newDefaultRootFolder = folder;
       }
     }
     if (newDefaultRootFolder == null) {
-      throw new InvalidRequestException("No folder exists with the identifier " + folderIdentifier);
+      throw new InvalidRequestException("No folder exists with the path " + folderPath);
     }
     yamlGitConfig.setDefaultRootFolder(newDefaultRootFolder);
     YamlGitConfig updatedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfig);
@@ -271,11 +271,11 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     if (ygs.getRootFolders() == null) {
       return;
     }
-    ygs.getRootFolders().forEach(folder -> {
-      if (!folder.getRootFolder().endsWith(PATH_DELIMITER)) {
-        folder.getRootFolder().concat(PATH_DELIMITER);
-      }
-    });
+    final Optional<YamlGitConfigDTO.RootFolder> rootFolder =
+        ygs.getRootFolders().stream().filter(config -> !config.getRootFolder().endsWith(PATH_DELIMITER)).findFirst();
+    if (rootFolder.isPresent()) {
+      throw new InvalidRequestException("The folder should end with /");
+    }
   }
 
   private void validateFolderFollowsHarnessParadigm(YamlGitConfigDTO ygs) {
@@ -286,10 +286,10 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         ygs.getRootFolders()
             .stream()
             .filter(
-                config -> config.getRootFolder().endsWith(PATH_DELIMITER + HARNESS_FOLDER_EXTENSION + PATH_DELIMITER))
+                config -> !config.getRootFolder().endsWith(PATH_DELIMITER + HARNESS_FOLDER_EXTENSION + PATH_DELIMITER))
             .findFirst();
     if (rootFolder.isPresent()) {
-      throw new InvalidRequestException("Incorrect root folder configuration.");
+      throw new InvalidRequestException("The folder should end with .harness/");
     }
   }
 

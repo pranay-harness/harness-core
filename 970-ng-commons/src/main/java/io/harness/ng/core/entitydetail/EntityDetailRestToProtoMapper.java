@@ -1,6 +1,7 @@
 package io.harness.ng.core.entitydetail;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -37,13 +38,18 @@ public class EntityDetailRestToProtoMapper {
   }
 
   private IdentifierRefProtoDTO createIdentifierRef(IdentifierRef identifierRef) {
-    return IdentifierRefProtoDTO.newBuilder()
-        .setAccountIdentifier(StringValue.newBuilder().setValue(identifierRef.getAccountIdentifier()).build())
-        .setOrgIdentifier(StringValue.of(nullIfEmpty(identifierRef.getOrgIdentifier())))
-        .setProjectIdentifier(StringValue.of(nullIfEmpty(identifierRef.getProjectIdentifier())))
-        .setScope(mapToScopeProtoEnum(identifierRef.getScope()))
-        .setIdentifier(StringValue.of(identifierRef.getIdentifier()))
-        .build();
+    IdentifierRefProtoDTO.Builder builder =
+        IdentifierRefProtoDTO.newBuilder()
+            .setAccountIdentifier(StringValue.newBuilder().setValue(identifierRef.getAccountIdentifier()).build())
+            .setScope(mapToScopeProtoEnum(identifierRef.getScope()))
+            .setIdentifier(StringValue.of(identifierRef.getIdentifier()));
+    if (isNotEmpty(identifierRef.getOrgIdentifier())) {
+      builder.setOrgIdentifier(StringValue.of(nullIfEmpty(identifierRef.getOrgIdentifier())));
+    }
+    if (isNotEmpty(identifierRef.getProjectIdentifier())) {
+      builder.setProjectIdentifier(StringValue.of(nullIfEmpty(identifierRef.getProjectIdentifier())));
+    }
+    return builder.build();
   }
 
   private ScopeProtoEnum mapToScopeProtoEnum(Scope scope) {

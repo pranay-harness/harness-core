@@ -12,6 +12,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static java.lang.Boolean.TRUE;
 
 import io.harness.AccessControlClientModule;
+import io.harness.Microservice;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -28,6 +29,8 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
 import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
+import io.harness.cdng.fileservice.FileServiceClient;
+import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -42,6 +45,7 @@ import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -56,6 +60,7 @@ import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
 import io.harness.ng.accesscontrol.user.UserService;
 import io.harness.ng.accesscontrol.user.UserServiceImpl;
+import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
@@ -116,14 +121,17 @@ import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
+import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.signup.SignupModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.telemetry.TelemetryModule;
 import io.harness.time.TimeModule;
+import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -137,6 +145,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
@@ -203,6 +212,13 @@ public class NextGenModule extends AbstractModule {
   }
 
   @Provides
+  private FileServiceClientFactory fileServiceClientFactory(KryoConverterFactory kryoConverterFactory) {
+    return new FileServiceClientFactory(appConfig.getManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), new ServiceTokenGenerator(),
+        kryoConverterFactory, NG_MANAGER.getServiceId());
+  }
+
+  @Provides
   @Singleton
   DistributedLockImplementation distributedLockImplementation() {
     return MONGO;
@@ -244,6 +260,13 @@ public class NextGenModule extends AbstractModule {
     return appConfig.getOutboxPollConfig();
   }
 
+  @Provides
+  @Singleton
+  @Named("GitSyncGrpcClientConfigs")
+  public Map<Microservice, GrpcClientConfig> grpcClientConfigs() {
+    return appConfig.getGitGrpcClientConfigs();
+  }
+
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
@@ -270,10 +293,14 @@ public class NextGenModule extends AbstractModule {
          return appConfig.getSecondaryMongoConfig();
        }
      });*/
+    bind(FileServiceClient.class).toProvider(FileServiceClientFactory.class).in(Scopes.SINGLETON);
     bind(LogStreamingServiceRestClient.class)
         .toProvider(NGLogStreamingClientFactory.builder()
                         .logStreamingServiceBaseUrl(appConfig.getLogStreamingServiceConfig().getBaseUrl())
                         .build());
+
+    install(new AuthenticationSettingsModule(
+        this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ValidationModule(getValidatorFactory()));
     install(new AbstractMongoModule() {
       @Override
@@ -284,8 +311,9 @@ public class NextGenModule extends AbstractModule {
     install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
     install(new CoreModule());
     install(AccessControlMigrationModule.getInstance());
-    install(new InviteModule(this.appConfig.getManagerClientConfig(),
+    install(UserClientModule.getInstance(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(new InviteModule(appConfig.getBaseUrls().getCurrentGenUiUrl()));
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));

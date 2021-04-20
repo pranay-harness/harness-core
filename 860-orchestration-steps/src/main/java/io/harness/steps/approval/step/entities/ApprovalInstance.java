@@ -14,10 +14,10 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.approval.step.ApprovalStepParameters;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.beans.ApprovalType;
 import io.harness.timeout.TimeoutParameters;
@@ -98,7 +98,7 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
     return logContext;
   }
 
-  protected void updateFromStepParameters(Ambiance ambiance, ApprovalStepParameters stepParameters) {
+  protected void updateFromStepParameters(Ambiance ambiance, StepElementParameters stepParameters) {
     if (stepParameters == null) {
       return;
     }
@@ -106,7 +106,7 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
     setId(generateUuid());
     setAmbiance(ambiance);
     setNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    setType(stepParameters.getApprovalType());
+    setType(ApprovalType.fromName(stepParameters.getType()));
     setStatus(ApprovalStatus.WAITING);
     setDeadline(calculateDeadline(stepParameters.getTimeout()));
   }

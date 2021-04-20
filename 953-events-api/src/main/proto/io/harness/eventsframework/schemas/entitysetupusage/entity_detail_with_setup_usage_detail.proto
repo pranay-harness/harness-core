@@ -1,0 +1,19 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entitysetupusage;
+
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+
+option java_multiple_files = true;
+option go_package = "953_events_api";
+
+message EntityDetailWithSetupUsageDetailProtoDTO {
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredEntity = 1;
+  string type = 2;
+  oneof setupUsageDetail {
+    SecretReferredByConnectorSetupUsageDetailProtoDTO secretConnectorDetail = 3;
+  }
+
+  message SecretReferredByConnectorSetupUsageDetailProtoDTO {
+    string fieldName = 1;
+  }
+}

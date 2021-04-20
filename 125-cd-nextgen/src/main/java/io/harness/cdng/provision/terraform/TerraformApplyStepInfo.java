@@ -11,6 +11,8 @@ import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.walktree.beans.LevelNode;
+import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,14 +26,16 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(HarnessTeam.CDP)
+@TypeAlias("terraformApplyStepInfo")
 @JsonTypeName(StepSpecTypeConstants.TERRAFORM_APPLY)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implements CDStepInfo {
+public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implements CDStepInfo, Visitable {
   @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
@@ -95,5 +99,10 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
     }
 
     return builder.build();
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(StepSpecTypeConstants.TERRAFORM_APPLY).isPartOfFQN(false).build();
   }
 }

@@ -29,8 +29,8 @@ public class ResourceGroupMapper {
         .tags(convertToList(resourceGroupDTO.getTags()))
         .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
         .description(resourceGroupDTO.getDescription())
-        .resourceSelectors(resourceGroupDTO.getResourceSelectors().isEmpty() ? new ArrayList<>()
-                                                                             : resourceGroupDTO.getResourceSelectors())
+        .resourceSelectors(resourceGroupDTO.getResourceSelectors() == null ? new ArrayList<>()
+                                                                           : resourceGroupDTO.getResourceSelectors())
         .build();
   }
 

@@ -746,6 +746,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         && preDeploymentSteps.getSteps().stream().anyMatch(step
             -> step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
                 || step.getType().equals(StateType.TERRAFORM_PROVISION.getType())
+                || step.getType().equals(StateType.TERRAGRUNT_PROVISION.getType())
                 || step.getType().equals(StateType.ARM_CREATE_RESOURCE.getType()))) {
       return anExecutionEventAdvice()
           .withNextStateName(ROLLBACK_PROVISIONERS)

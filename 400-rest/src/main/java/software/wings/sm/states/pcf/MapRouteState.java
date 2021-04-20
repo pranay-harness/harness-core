@@ -59,7 +59,7 @@ import java.util.Map;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class MapRouteState extends State {
   public static final String PCF_APP_NAME = "pcfAppName";
   public static final String INFRA_ROUTE = "infra.route";

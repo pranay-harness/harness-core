@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletRequest;
 public interface SubdomainUrlHelperIntfc {
   String getPortalBaseUrl(String accountId);
 
+  String getPortalBaseUrl(String accountId, String defaultBaseUrl);
+
   String getApiBaseUrl(String accountId);
 
   String getManagerUrl(HttpServletRequest request, String accountId);

@@ -111,7 +111,7 @@ public class SettingGenerator {
   private static final String HELM_S3 = "HELM S3";
   private static final String REGION_US_EAST_1 = "us-east-1";
   private static final String HARNESS_ADMIN = "harnessadmin";
-  private static final String OPENSHIFT_TEST_CLUSTER_MASTER_URL = "https://34.66.254.71:8443";
+  private static final String OPENSHIFT_TEST_CLUSTER_MASTER_URL = "https://35.209.119.47:8443";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;

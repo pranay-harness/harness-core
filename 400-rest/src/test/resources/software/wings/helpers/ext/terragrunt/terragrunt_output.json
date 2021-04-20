@@ -1,0 +1,14 @@
+{
+  "region": {
+    "sensitive": false,
+    "type": "string",
+    "value": "us-east-1"
+  },
+  "security_group": {
+    "sensitive": false,
+    "type": "list",
+    "value": [
+      "terraform-20180412230644525100000002"
+    ]
+  }
+}

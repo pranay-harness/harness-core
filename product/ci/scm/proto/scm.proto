@@ -238,6 +238,14 @@ message Provider {
   bool debug = 9;
 }
 
+message PageResponse {
+  int32 next = 1;
+}
+
+message PageRequest {
+  int32 page = 1;
+}
+
 message GetFileRequest {
   string slug = 1;
   string path = 2;
@@ -309,14 +317,26 @@ message FindFilesInBranchRequest {
   string slug = 1;
   string branch = 2;
   string path = 3;
-  Provider provider = 4;
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message FindFilesInBranchResponse {
+  repeated FileChange file = 1;
+  PageResponse pagination = 2;
 }
 
 message FindFilesInCommitRequest {
   string slug = 1;
   string ref = 2;
   string path = 3;
-  Provider provider = 4;
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message FindFilesInCommitResponse {
+  repeated FileChange file = 1;
+  PageResponse pagination = 2;
 }
 
 enum ContentType {
@@ -348,14 +368,6 @@ message IsLatestFileRequest {
 
 message IsLatestFileResponse {
   bool latest = 1;
-}
-
-message FindFilesInBranchResponse {
-  repeated FileChange file = 1;
-}
-
-message FindFilesInCommitResponse {
-  repeated FileChange file = 1;
 }
 
 message CreatePRRequest {
@@ -394,11 +406,13 @@ message GetLatestCommitResponse {
 
 message ListBranchesRequest {
   string slug = 1;
-  Provider provider = 2;
+  PageRequest pagination = 2;
+  Provider provider = 3;
 }
 
 message ListBranchesResponse {
   repeated string branches = 1;
+  PageResponse pagination = 2;
 }
 
 message ListCommitsRequest {
@@ -407,11 +421,13 @@ message ListCommitsRequest {
     string branch = 2;
     string ref = 3;
   }
-  Provider provider = 4;
+  PageRequest pagination = 4;
+  Provider provider = 5;
 }
 
 message ListCommitsResponse {
   repeated string commit_ids = 1;
+  PageResponse pagination = 2;
 }
 
 service SCM {

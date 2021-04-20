@@ -1,9 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskGroup;
 
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public enum TaskType {
   BATCH_CAPABILITY_CHECK(TaskGroup.BATCH_CAPABILITY_CHECK),
@@ -230,6 +234,7 @@ public enum TaskType {
   TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM),
   TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK(TaskGroup.TERRAFORM),
   TERRAFORM_FETCH_TARGETS_TASK(TaskGroup.TERRAFORM),
+  TERRAGRUNT_PROVISION_TASK(TaskGroup.TERRAGRUNT),
   KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(TaskGroup.K8S),
   ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER),
   AWS_ECR_TASK(TaskGroup.AWS),
@@ -300,7 +305,7 @@ public enum TaskType {
   NG_AWS_CODE_COMMIT_TASK(TaskGroup.AWS),
   HTTP_HELM_CONNECTIVITY_TASK(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
   NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG),
-  TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG);
+  TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG, "Terraform Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;

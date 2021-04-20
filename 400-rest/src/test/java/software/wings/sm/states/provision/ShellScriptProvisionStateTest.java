@@ -246,8 +246,9 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = PARDHA)
   @Category(UnitTests.class)
-  public void shouldPopulateDelegateSelectorsFromExecutionContext() {
-    state.setDelegateSelectors(Collections.singletonList("primary"));
+  public void shouldPopulateRenderedDelegateSelectorsFromExecutionContext() {
+    final String runTimeValueAbc = "runTimeValueAbc";
+    state.setDelegateSelectors(Collections.singletonList("${workflow.variables.abc}"));
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
@@ -256,11 +257,12 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     when(executionContext.getEnv()).thenReturn(mock(Environment.class));
     when(infrastructureProvisionerService.getShellScriptProvisioner(anyString(), anyString()))
         .thenReturn(mock(ShellScriptInfrastructureProvisioner.class));
+    when(executionContext.renderExpression(anyString())).thenReturn(runTimeValueAbc);
     state.execute(executionContext);
 
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     ShellScriptProvisionParameters populatedParameters =
         (ShellScriptProvisionParameters) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
-    assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList("primary"));
+    assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList(runTimeValueAbc));
   }
 }

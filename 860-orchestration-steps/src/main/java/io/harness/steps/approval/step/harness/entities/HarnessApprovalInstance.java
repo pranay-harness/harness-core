@@ -6,10 +6,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
-import io.harness.steps.approval.step.harness.HarnessApprovalStepParameters;
+import io.harness.steps.approval.step.harness.HarnessApprovalSpecParameters;
 import io.harness.steps.approval.step.harness.beans.ApproverInput;
 import io.harness.steps.approval.step.harness.beans.ApproverInputInfoDTO;
 import io.harness.steps.approval.step.harness.beans.ApproversDTO;
@@ -114,22 +115,22 @@ public class HarnessApprovalInstance extends ApprovalInstance {
         .build();
   }
 
-  public static HarnessApprovalInstance fromStepParameters(
-      Ambiance ambiance, HarnessApprovalStepParameters stepParameters) {
+  public static HarnessApprovalInstance fromStepParameters(Ambiance ambiance, StepElementParameters stepParameters) {
     if (stepParameters == null) {
       return null;
     }
 
+    HarnessApprovalSpecParameters specParameters = (HarnessApprovalSpecParameters) stepParameters.getSpec();
     HarnessApprovalInstance instance =
         HarnessApprovalInstance.builder()
-            .approvalMessage((String) stepParameters.getApprovalMessage().fetchFinalValue())
+            .approvalMessage((String) specParameters.getApprovalMessage().fetchFinalValue())
             .includePipelineExecutionHistory(
-                (boolean) stepParameters.getIncludePipelineExecutionHistory().fetchFinalValue())
+                (boolean) specParameters.getIncludePipelineExecutionHistory().fetchFinalValue())
             .approvalActivities(new ArrayList<>())
-            .approvers(ApproversDTO.fromApprovers(stepParameters.getApprovers()))
-            .approverInputs(stepParameters.getApproverInputs() == null
+            .approvers(ApproversDTO.fromApprovers(specParameters.getApprovers()))
+            .approverInputs(specParameters.getApproverInputs() == null
                     ? null
-                    : stepParameters.getApproverInputs()
+                    : specParameters.getApproverInputs()
                           .stream()
                           .map(ApproverInputInfoDTO::fromApproverInputInfo)
                           .collect(Collectors.toList()))

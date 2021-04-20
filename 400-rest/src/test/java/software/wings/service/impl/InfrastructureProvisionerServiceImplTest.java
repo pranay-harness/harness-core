@@ -83,6 +83,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
+import software.wings.beans.TerragruntInfrastructureProvisioner;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -311,6 +312,33 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void shouldValidateTerragruntProvisioner() {
+    TerragruntInfrastructureProvisioner terragruntProvisioner = TerragruntInfrastructureProvisioner.builder()
+                                                                    .accountId(ACCOUNT_ID)
+                                                                    .appId(APP_ID)
+                                                                    .name("terragrunt-test")
+                                                                    .sourceRepoBranch("master")
+                                                                    .path("module/terragrunt.hcl")
+                                                                    .sourceRepoSettingId(SETTING_ID)
+                                                                    .build();
+    InfrastructureProvisionerServiceImpl provisionerService = infrastructureProvisionerServiceImpl;
+    doReturn(GitConfig.builder().build()).when(gitUtilsManager).getGitConfig(SETTING_ID);
+
+    provisionerService.validateProvisioner(terragruntProvisioner);
+
+    shouldValidateTerragruntRepoBranchAndCommitId(terragruntProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terragruntProvisioner);
+
+    shouldValidateTerragruntPath(terragruntProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terragruntProvisioner);
+
+    shouldValidateTerragruntSourceRepo(terragruntProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terragruntProvisioner);
+  }
+
+  @Test
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void shouldValidateCloudFormationInfrastructureProvisioner() {
@@ -402,12 +430,31 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     terraformProvisioner.setSourceRepoSettingId(SETTING_ID);
   }
 
+  private void shouldValidateTerragruntSourceRepo(TerragruntInfrastructureProvisioner terragruntProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terragruntProvisioner.setSourceRepoSettingId("");
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setSourceRepoSettingId(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setSourceRepoSettingId(SETTING_ID);
+  }
+
   private void shouldValidatePath(TerraformInfrastructureProvisioner terraformProvisioner,
       InfrastructureProvisionerServiceImpl provisionerService) {
     terraformProvisioner.setPath(null);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setPath("module/main.tf");
+  }
+
+  private void shouldValidateTerragruntPath(TerragruntInfrastructureProvisioner terragruntProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terragruntProvisioner.setPath(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setPath("module/terragrunt.hcl");
   }
 
   private void shouldValidateRepoBranchAndCommitId(TerraformInfrastructureProvisioner terraformProvisioner,
@@ -421,6 +468,19 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setSourceRepoBranch("master");
+  }
+
+  private void shouldValidateTerragruntRepoBranchAndCommitId(TerragruntInfrastructureProvisioner terragruntProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terragruntProvisioner.setSourceRepoBranch("");
+    terragruntProvisioner.setCommitId("");
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setSourceRepoBranch(null);
+    terragruntProvisioner.setCommitId(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setSourceRepoBranch("master");
   }
 
   @Test
@@ -586,6 +646,11 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
             .withValue(GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl("http://a.com/b/z").build())
             .build());
 
+    idToSettingAttributeMapping.put("settingId4",
+        aSettingAttribute()
+            .withValue(GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl("http://a.com/b/z").build())
+            .build());
+
     InfrastructureProvisionerDetails details1 = ipService.details(
         TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").repoName("c").build(),
         idToSettingAttributeMapping);
@@ -598,9 +663,19 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
         ipService.details(TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId3").build(),
             idToSettingAttributeMapping);
 
+    InfrastructureProvisionerDetails details4 =
+        ipService.details(TerragruntInfrastructureProvisioner.builder().sourceRepoSettingId("settingId4").build(),
+            idToSettingAttributeMapping);
+
+    InfrastructureProvisionerDetails details5 = ipService.details(
+        TerragruntInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").repoName("e").build(),
+        idToSettingAttributeMapping);
+
     assertThat(details1.getRepository()).isEqualTo("http://a.com/b/c");
     assertThat(details2.getRepository()).isEqualTo("http://a.com/b/d");
     assertThat(details3.getRepository()).isEqualTo("http://a.com/b/z");
+    assertThat(details4.getRepository()).isEqualTo("http://a.com/b/z");
+    assertThat(details5.getRepository()).isEqualTo("http://a.com/b/e");
   }
 
   @Test

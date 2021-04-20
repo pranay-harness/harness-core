@@ -47,18 +47,16 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
             .imagePullSecretUtils(imagePullSecretUtils)
             .pmsOutcomeService(getPmsOutcomeService())
             .ambiance(ambiance)
-            .build());
-    addToContext(ImagePullSecretFunctor.SIDECAR_IMAGE_PULL_SECRET,
-        SidecarImagePullSecretFunctor.builder()
-            .imagePullSecretUtils(imagePullSecretUtils)
-            .pmsOutcomeService(getPmsOutcomeService())
-            .ambiance(ambiance)
+            .sidecarImagePullSecretFunctor(SidecarImagePullSecretFunctor.builder()
+                                               .imagePullSecretUtils(imagePullSecretUtils)
+                                               .pmsOutcomeService(getPmsOutcomeService())
+                                               .ambiance(ambiance)
+                                               .build())
             .build());
     addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance));
 
     addStaticAlias("artifact", "service.artifacts.primary.output");
     addStaticAlias("serviceVariables", "service.variables.output");
-    addStaticAlias("env", "infrastructureSection.environment");
     addStaticAlias(OrchestrationConstants.STAGE_SUCCESS, "<+stage.currentStatus> == \"SUCCEEDED\"");
     addStaticAlias(OrchestrationConstants.STAGE_FAILURE,
         "<+stage.currentStatus> == \"FAILED\" || <+stage.currentStatus> == \"ERRORED\" || <+stage.currentStatus> == \"EXPIRED\"");

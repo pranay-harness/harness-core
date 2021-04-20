@@ -6,6 +6,7 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.GeneralException;
+import io.harness.exception.HttpResponseException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.network.SafeHttpCall;
@@ -86,7 +87,7 @@ public class JiraClient {
   }
 
   /**
-   * Get an issue by issue key.
+   * Get an issue by issue key. If issue key is invalid, null is returned.
    *
    * There is special handling for these fields:
    * - project: returns 3 field - "Project Key", "Project Name", "__project" (whole object for internal use)
@@ -103,7 +104,22 @@ public class JiraClient {
    * @return the issue with the given key
    */
   public JiraIssueNG getIssue(@NotBlank String issueKey) {
-    return executeCall(restClient.getIssue(issueKey, "names,schema"), "fetching issue");
+    return getIssue(issueKey, false);
+  }
+
+  private JiraIssueNG getIssue(@NotBlank String issueKey, boolean throwOnInvalidKey) {
+    try {
+      JiraIssueNG issue = executeCall(restClient.getIssue(issueKey, "names,schema"), "fetching issue");
+      if (issue != null) {
+        issue.updateJiraBaseUrl(config.getJiraUrl());
+      }
+      return issue;
+    } catch (HttpResponseException ex) {
+      if (!throwOnInvalidKey && ex.getStatusCode() == 404) {
+        return null;
+      }
+      throw ex;
+    }
   }
 
   /**
@@ -221,7 +237,7 @@ public class JiraClient {
 
     JiraCreateIssueRequestNG createIssueRequest = new JiraCreateIssueRequestNG(project, issueType, fields);
     JiraIssueNG issue = executeCall(restClient.createIssue(createIssueRequest), "creating issue");
-    return getIssue(issue.getKey());
+    return getIssue(issue.getKey(), true);
   }
 
   /**
@@ -251,7 +267,7 @@ public class JiraClient {
     String transitionId = findIssueTransition(issueKey, transitionToStatus, transitionName);
     JiraUpdateIssueRequestNG updateIssueRequest = new JiraUpdateIssueRequestNG(updateMetadata, transitionId, fields);
     executeCall(restClient.updateIssue(issueKey, updateIssueRequest), "updating issue");
-    return getIssue(issueKey);
+    return getIssue(issueKey, true);
   }
 
   private String findIssueTransition(@NotBlank String issueKey, String transitionToStatus, String transitionName) {

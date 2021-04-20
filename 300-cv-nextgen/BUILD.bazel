@@ -15,6 +15,7 @@ shared_dependencies = [
     "//440-connector-nextgen:module",
     "//876-orchestration-beans:module",
     "//879-pms-sdk:module",
+    "//950-wait-engine:module",
     "//940-notification-client:module",
     "//940-secret-manager-client:module",
     "//953-events-api:module",

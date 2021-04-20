@@ -30,6 +30,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 @Singleton
 @OwnedBy(DX)
@@ -40,18 +41,20 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final YamlGitConfigService yamlGitConfigService;
   private final EntityDetailProtoToRestMapper entityDetailRestToProtoMapper;
   private final GitToHarnessProcessorService gitToHarnessProcessorService;
+  private final ExecutorService executorService;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
-      GitToHarnessProcessorService gitToHarnessProcessorService) {
+      GitToHarnessProcessorService gitToHarnessProcessorService, ExecutorService executorService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
     this.yamlGitConfigService = yamlGitConfigService;
     this.entityDetailRestToProtoMapper = entityDetailRestToProtoMapper;
     this.gitToHarnessProcessorService = gitToHarnessProcessorService;
+    this.executorService = executorService;
   }
 
   @Override
@@ -76,6 +79,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         .accountId(accountId)
         .orgIdentifier(entityReference.getOrgIdentifier())
         .projectIdentifier(entityReference.getProjectIdentifier())
+        .defaultBranchName(yamlGitConfig.getBranch())
         .build();
   }
 
@@ -101,7 +105,14 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(entityRef.getProjectIdentifier(),
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
     gitEntityService.save(pushInfo.getAccountId(), entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail),
-        yamlGitConfigDTO, pushInfo.getFilePath(), pushInfo.getCommitId());
+        yamlGitConfigDTO, pushInfo.getFilePath(), pushInfo.getCommitId(), pushInfo.getBranchName());
+    if (pushInfo.getIsNewBranch()) {
+      executorService.submit(
+          ()
+              -> processFilesInBranch(entityRef.getAccountIdentifier(), yamlGitConfigDTO.getIdentifier(),
+                  yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+                  pushInfo.getBranchName(), yamlGitConfigDTO.getBranch(), pushInfo.getFilePath()));
+    }
     // todo(abhinav): record git commit and git file activity.
   }
 
@@ -112,10 +123,11 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   }
 
   @Override
-  public void onBranchCreationReadFilesAndProcessThem(
-      String accountId, String gitSyncConfigId, String projectIdentifier, String orgIdentifier, String branch) {
+  public void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
+      String orgIdentifier, String branch, String defaultBranch, String filePathToBeExcluded) {
     final YamlGitConfigDTO yamlGitConfigDTO =
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
-    gitToHarnessProcessorService.readFilesFromBranchAndProcess(yamlGitConfigDTO, branch, accountId);
+    gitToHarnessProcessorService.readFilesFromBranchAndProcess(
+        yamlGitConfigDTO, branch, accountId, defaultBranch, filePathToBeExcluded);
   }
 }

@@ -69,15 +69,15 @@ permissions:
       - account
       - organization
       - project
-  - identifier: core_secret_runtimeAccess
+  - identifier: core_secret_access
     name: Runtime Access on a secret
     status: ACTIVE
     allowedScopeLevels:
       - account
       - organization
       - project
-  - identifier: core_connector_create
-    name: Create Connector
+  - identifier: core_connector_access
+    name: Access a Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
@@ -91,7 +91,7 @@ permissions:
       - organization
       - project
   - identifier: core_connector_edit
-    name: Edit Connector
+    name: Create or Edit a Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
@@ -99,13 +99,6 @@ permissions:
       - project
   - identifier: core_connector_delete
     name: Delete Connector
-    status: ACTIVE
-    allowedScopeLevels:
-      - account
-      - organization
-      - project
-  - identifier: core_connector_runtimeAccess
-    name: Runtime Access to Connector
     status: ACTIVE
     allowedScopeLevels:
       - account
@@ -152,7 +145,7 @@ permissions:
       - account
       - organization
       - project
-  - identifier: core_service_runtimeAccess
+  - identifier: core_service_access
     name: Runtime Access to Service
     status: ACTIVE
     allowedScopeLevels:
@@ -180,7 +173,7 @@ permissions:
       - account
       - organization
       - project
-  - identifier: core_environment_runtimeAccess
+  - identifier: core_environment_access
     name: Runtime Access to Environment
     status: ACTIVE
     allowedScopeLevels:

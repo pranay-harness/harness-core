@@ -1,7 +1,5 @@
 package io.harness.batch.processing.dao.intfc;
 
-import io.harness.batch.processing.ccm.InstanceEvent;
-import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
@@ -16,23 +14,16 @@ public interface InstanceDataDao {
 
   boolean updateInstanceStopTime(InstanceData instanceData, Instant stopTime);
 
-  InstanceData upsert(InstanceEvent instanceEvent);
-
-  void upsert(List<InstanceEvent> instanceEvents);
-
-  InstanceData upsert(InstanceInfo instanceInfo);
-
   InstanceData fetchInstanceData(String instanceId);
 
   List<InstanceData> fetchInstanceData(Set<String> instanceIds);
-
-  boolean updateInstanceState(
-      InstanceData instanceData, Instant instant, String instantField, InstanceState instanceState);
 
   InstanceData fetchActiveInstanceData(
       String accountId, String clusterId, String instanceId, List<InstanceState> instanceState);
 
   List<InstanceData> fetchActivePVList(String accountId, Instant startTime, Instant endTime);
+
+  void updateInstanceActiveIterationTime(InstanceData instanceData);
 
   InstanceData fetchInstanceData(String accountId, String instanceId);
 

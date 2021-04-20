@@ -1,5 +1,6 @@
 package io.harness.ng;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -9,7 +10,5 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BaseUrls {
-  String ngManager;
-  String ui;
-  String ngUi;
+  @JsonProperty("currentGenUiUrl") String currentGenUiUrl;
 }

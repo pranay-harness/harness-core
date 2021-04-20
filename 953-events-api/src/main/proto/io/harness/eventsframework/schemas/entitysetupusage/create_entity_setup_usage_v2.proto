@@ -2,6 +2,7 @@ syntax = "proto3";
 package io.harness.eventsframework.schemas.entitysetupusage;
 
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+import "953-events-api/src/main/proto/io/harness/eventsframework/schemas/entitysetupusage/entity_detail_with_setup_usage_detail.proto";
 
 option java_multiple_files = true;
 option go_package = "953_events_api";
@@ -12,4 +13,6 @@ message EntitySetupUsageCreateV2DTO {
   io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredByEntity = 3;
   int64 createdAt = 4;
   bool deleteOldReferredByRecords = 5;
+  repeated io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO
+      referredEntityWithSetupUsageDetail = 6;
 }

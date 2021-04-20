@@ -1,5 +1,7 @@
 package io.harness.pms.expressions.functors;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
@@ -11,16 +13,19 @@ import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.CDC)
 @Value
 @Builder
 public class ImagePullSecretFunctor implements ExpressionFunctor {
-  public static String IMAGE_PULL_SECRET = "imagePullSecret";
-  public static String SIDECAR_IMAGE_PULL_SECRET = "sidecarImagePullSecret";
-  String PRIMARY_ARTIFACT = "primary";
+  public static final String IMAGE_PULL_SECRET = "imagePullSecret";
+
+  private static final String PRIMARY_ARTIFACT = "primary";
+  private static final String SIDECAR_ARTIFACTS = "sidecars";
 
   ImagePullSecretUtils imagePullSecretUtils;
   PmsOutcomeService pmsOutcomeService;
   Ambiance ambiance;
+  SidecarImagePullSecretFunctor sidecarImagePullSecretFunctor;
 
   public Object get(String artifactIdentifier) {
     if (artifactIdentifier.equals(PRIMARY_ARTIFACT)) {
@@ -30,8 +35,10 @@ public class ImagePullSecretFunctor implements ExpressionFunctor {
         return null;
       }
       return imagePullSecretUtils.getImagePullSecret(artifact, ambiance);
+    } else if (artifactIdentifier.equals(SIDECAR_ARTIFACTS)) {
+      return sidecarImagePullSecretFunctor;
     } else {
-      return SIDECAR_IMAGE_PULL_SECRET;
+      return null;
     }
   }
 }

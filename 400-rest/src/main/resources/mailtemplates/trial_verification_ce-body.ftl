@@ -87,7 +87,7 @@
             <br>
             <br>
             There&apos;s one more step to begin your <br>
-            Continuous Efficiency trial.
+            Cloud Cost Management trial.
             <br>
             <br>
             To login, click:

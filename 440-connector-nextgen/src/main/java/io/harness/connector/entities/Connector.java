@@ -31,6 +31,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
@@ -38,7 +39,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Persistent;
@@ -46,6 +46,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -53,8 +54,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("connectors")
 @Persistent
 @OwnedBy(HarnessTeam.DX)
-public abstract class Connector implements PersistentEntity, NGAccountAccess, GitSyncableEntity {
-  @Id @org.mongodb.morphia.annotations.Id String id;
+public abstract class Connector extends GitSyncableEntity implements PersistentEntity, NGAccountAccess {
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
   @NotEmpty io.harness.encryption.Scope scope;
@@ -77,9 +77,6 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   ConnectorActivityDetails activityDetails;
   Boolean deleted = Boolean.FALSE;
   String heartbeatPerpetualTaskId;
-  String objectIdOfYaml;
-  Boolean isFromDefaultBranch;
-  String yamlGitConfigId;
 
   @Override
   public String getAccountIdentifier() {

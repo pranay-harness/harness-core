@@ -10,6 +10,7 @@ import io.harness.redis.RedisConfig;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -64,7 +65,7 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
 
   private void moveMessageToDeadLetterQueue(
       StreamMessageId messageId, String groupName, Map<StreamMessageId, Map<String, String>> messages) {
-    Map<String, String> messageData = messages.get(messageId);
+    Map<String, String> messageData = messages.getOrDefault(messageId, new HashMap<>());
     messageData.put("prevMessageId", messageId.toString());
     deadLetterQueue.addAll(messageData, RedisUtils.MAX_DEAD_LETTER_QUEUE_SIZE, false);
     stream.ack(groupName, messageId);
@@ -78,7 +79,8 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
       } catch (RedissonShutdownException e) {
         throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
       } catch (RedisException e) {
-        log.warn("Consumer " + getName() + " failed getPendingDetails", e);
+        log.warn("Consumer " + getName() + " failed getPendingEntries", e);
+        createConsumerGroupIfNotPresent(e);
         waitForRedisToComeUp();
       }
     }
@@ -91,14 +93,10 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
         if (pendingEntries.isEmpty()) {
           return Collections.emptyList();
         } else {
-          StreamMessageId[] messageIds =
-              pendingEntries.stream().map(PendingEntry::getId).toArray(StreamMessageId[] ::new);
-          Map<StreamMessageId, Map<String, String>> messages =
-              stream.claim(groupName, getName(), maxProcessingTime.toMillis(), TimeUnit.MILLISECONDS, messageIds);
-
+          Map<StreamMessageId, Map<String, String>> messages = executeClaimCommand(pendingEntries);
           for (PendingEntry entry : pendingEntries) {
             StreamMessageId messageId = entry.getId();
-            if (messages.containsKey(messageId) && entry.getLastTimeDelivered() >= RedisUtils.UNACKED_RETRY_COUNT) {
+            if (entry.getLastTimeDelivered() >= RedisUtils.UNACKED_RETRY_COUNT) {
               moveMessageToDeadLetterQueue(messageId, groupName, messages);
             }
           }
@@ -107,10 +105,25 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
       } catch (RedissonShutdownException e) {
         throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
       } catch (RedisException e) {
-        log.warn("Consumer " + getName() + " failed getPendingDetails", e);
+        log.warn("Consumer " + getName() + " failed claimEntries", e);
+        createConsumerGroupIfNotPresent(e);
         waitForRedisToComeUp();
       }
     }
+  }
+
+  private Map<StreamMessageId, Map<String, String>> executeClaimCommand(List<PendingEntry> pendingEntries) {
+    StreamMessageId[] messageIds = pendingEntries.stream().map(PendingEntry::getId).toArray(StreamMessageId[] ::new);
+    Map<StreamMessageId, Map<String, String>> messages = Collections.emptyMap();
+    try {
+      messages =
+          stream.claim(getGroupName(), getName(), maxProcessingTime.toMillis(), TimeUnit.MILLISECONDS, messageIds);
+    } catch (RedisException e) {
+      if (e.getMessage().matches("(.*)Unexpected exception while processing command(.*)")) {
+        log.warn("Claim called with messageIds which were not present - {}", messageIds);
+      }
+    }
+    return messages;
   }
 
   private List<Message> getNewMessages(Duration maxWaitTime) throws ConsumerShutdownException {
@@ -123,6 +136,7 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
         throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
       } catch (RedisException e) {
         log.warn("Consumer " + getName() + " failed getNewMessages", e);
+        createConsumerGroupIfNotPresent(e);
         waitForRedisToComeUp();
       }
     }
@@ -159,6 +173,14 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
         log.warn("Redis is not up for acknowledge", e);
         waitForRedisToComeUp();
       }
+    }
+  }
+
+  private void createConsumerGroupIfNotPresent(RedisException e) {
+    if (e.getMessage().matches("(.*)NOGROUP No such key(.*)or consumer group(.*)")) {
+      log.info("Key or consumer group not present, attempting to create consumer group {} for {}", getGroupName(),
+          getTopicName());
+      createConsumerGroup();
     }
   }
 

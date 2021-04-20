@@ -178,7 +178,7 @@ import org.mockito.Mockito;
  * Created by anubhaw on 11/3/16.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class ApprovalStateTest extends WingsBaseTest {
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams()

@@ -10,6 +10,7 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.EntityDetail.EntityDetailKeys;
 import io.harness.ng.core.NGAccountAccess;
+import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetail;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -68,6 +69,7 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   @FdIndex @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
   @NotNull EntityDetail referredByEntity;
+  SetupUsageDetail detail;
   @FdIndex @NotBlank String referredEntityFQN;
   @NotBlank String referredEntityType;
   @FdIndex @NotBlank String referredByEntityFQN;

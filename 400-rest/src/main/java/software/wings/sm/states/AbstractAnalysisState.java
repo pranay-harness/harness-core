@@ -101,7 +101,7 @@ import org.slf4j.Logger;
  */
 @OwnedBy(CV)
 @FieldNameConstants(innerTypeName = "AbstractAnalysisStateKeys")
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public abstract class AbstractAnalysisState extends State {
   private static final SecureRandom random = new SecureRandom();
   // only use it in the new instance API.

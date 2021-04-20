@@ -140,6 +140,10 @@ import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionDat
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
+import software.wings.api.terragrunt.TerragruntApplyMarkerParam;
+import software.wings.api.terragrunt.TerragruntExecutionData;
+import software.wings.api.terragrunt.TerragruntOutputVariables;
+import software.wings.api.terragrunt.TerragruntProvisionInheritPlanElement;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
@@ -314,6 +318,7 @@ import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.delegation.TerragruntProvisionParameters;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
@@ -1745,6 +1750,13 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ARMPreExistingTemplate.class, 8122);
     kryo.register(ARMStateExecutionData.class, 8123);
     kryo.register(AccountPreferences.class, 8124);
+    kryo.register(TerragruntProvisionParameters.TerragruntCommand.class, 8502);
+    kryo.register(TerragruntProvisionParameters.TerragruntCommandUnit.class, 8503);
+    kryo.register(TerragruntProvisionParameters.class, 8504);
+    kryo.register(TerragruntProvisionInheritPlanElement.class, 8505);
+    kryo.register(TerragruntApplyMarkerParam.class, 8506);
+    kryo.register(TerragruntExecutionData.class, 8507);
+    kryo.register(TerragruntOutputVariables.class, 8508);
     kryo.register(ApiException.class, 8125);
   }
 }

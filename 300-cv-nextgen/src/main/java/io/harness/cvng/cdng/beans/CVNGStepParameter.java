@@ -19,4 +19,5 @@ public class CVNGStepParameter implements StepParameters {
   String verificationJobIdentifier;
   ParameterField<String> serviceIdentifier;
   ParameterField<String> envIdentifier;
+  ParameterField<String> deploymentTag;
 }

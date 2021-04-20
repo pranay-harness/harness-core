@@ -30,7 +30,7 @@ public class InfrastructureDef implements Visitable {
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
-  Infrastructure infrastructure;
+  Infrastructure spec;
 
   @JsonProperty("provisioner") @Nullable ExecutionElementConfig provisioner;
 
@@ -39,16 +39,16 @@ public class InfrastructureDef implements Visitable {
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
-  public InfrastructureDef(String type, Infrastructure infrastructure, ExecutionElementConfig provisioner) {
+  public InfrastructureDef(String type, Infrastructure spec, ExecutionElementConfig provisioner) {
     this.type = type;
-    this.infrastructure = infrastructure;
+    this.spec = spec;
     this.provisioner = provisioner;
   }
 
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("infrastructure", infrastructure);
+    children.add("spec", spec);
     children.add("provisioner", provisioner);
     return children;
   }
