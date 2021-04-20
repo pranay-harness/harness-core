@@ -211,7 +211,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
         AuditEntry.builder()
             .action(Action.DELETE)
             .module(ModuleType.CORE)
-            .newYaml(getYamlString(
+            .oldYaml(getYamlString(
                 OrganizationRequest.builder().organization(organizationDeleteEvent.getOrganization()).build()))
             .timestamp(outboxEvent.getCreatedAt())
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))

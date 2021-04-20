@@ -194,7 +194,7 @@ public class ProjectEventHandlerTest extends CategoryTest {
                                   .createdAt(Long.parseLong(randomNumeric(5)))
                                   .build();
 
-    String newYaml = getYamlString(ProjectRequest.builder().project(projectDTO).build());
+    String oldYaml = getYamlString(ProjectRequest.builder().project(projectDTO).build());
 
     final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
     final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
@@ -206,8 +206,8 @@ public class ProjectEventHandlerTest extends CategoryTest {
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertAuditEntry(accountIdentifier, orgIdentifier, identifier, auditEntry, outboxEvent);
     assertEquals(Action.DELETE, auditEntry.getAction());
-    assertNull(auditEntry.getOldYaml());
-    assertEquals(newYaml, auditEntry.getNewYaml());
+    assertNull(auditEntry.getNewYaml());
+    assertEquals(oldYaml, auditEntry.getOldYaml());
   }
 
   @Test

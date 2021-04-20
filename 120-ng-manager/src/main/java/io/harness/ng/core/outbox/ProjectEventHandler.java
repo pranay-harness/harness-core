@@ -217,7 +217,7 @@ public class ProjectEventHandler implements OutboxEventHandler {
         AuditEntry.builder()
             .action(Action.DELETE)
             .module(ModuleType.CORE)
-            .newYaml(getYamlString(ProjectRequest.builder().project(projectDeleteEvent.getProject()).build()))
+            .oldYaml(getYamlString(ProjectRequest.builder().project(projectDeleteEvent.getProject()).build()))
             .timestamp(outboxEvent.getCreatedAt())
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))

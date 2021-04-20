@@ -228,7 +228,7 @@ public class ResourceGroupEventHandlerTest extends CategoryTest {
                                   .createdAt(Long.parseLong(randomNumeric(5)))
                                   .build();
 
-    String newYaml = getYamlString(ResourceGroupRequest.builder().resourceGroup(resourceGroupDTO).build());
+    String oldYaml = getYamlString(ResourceGroupRequest.builder().resourceGroup(resourceGroupDTO).build());
 
     final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
     final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
@@ -259,7 +259,7 @@ public class ResourceGroupEventHandlerTest extends CategoryTest {
     assertEquals(ModuleType.CORE, auditEntry.getModule());
     assertEquals(outboxEvent.getCreatedAt().longValue(), auditEntry.getTimestamp());
     assertNull(auditEntry.getEnvironment());
-    assertNull(auditEntry.getOldYaml());
-    assertEquals(newYaml, auditEntry.getNewYaml());
+    assertNull(auditEntry.getNewYaml());
+    assertEquals(oldYaml, auditEntry.getOldYaml());
   }
 }
