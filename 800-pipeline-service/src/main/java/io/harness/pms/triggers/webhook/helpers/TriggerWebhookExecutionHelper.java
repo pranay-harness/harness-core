@@ -8,6 +8,7 @@ import static io.harness.pms.contracts.triggers.Type.GIT;
 
 import io.harness.execution.PlanExecution;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult.WebhookEventProcessingResultBuilder;
@@ -21,8 +22,6 @@ import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload.Builder;
-import io.harness.pms.pipeline.service.PMSPipelineService;
-import io.harness.pms.plan.execution.PipelineExecuteHelper;
 import io.harness.pms.triggers.TriggerExecutionHelper;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
@@ -35,15 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class TriggerWebhookExecutionHelper {
-  private final PipelineExecuteHelper pipelineExecuteHelper;
   private final WebhookEventMapperHelper webhookEventMapperHelper;
-  private final PMSPipelineService pmsPipelineService;
   private final TriggerExecutionHelper triggerExecutionHelper;
 
-  public WebhookEventProcessingResult handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
+  public WebhookEventProcessingResult handleTriggerWebhookEvent(TriggerMappingRequestData mappingRequestData) {
     WebhookEventMappingResponse webhookEventMappingResponse =
-        webhookEventMapperHelper.mapWebhookEventToTriggers(triggerWebhookEvent);
+        webhookEventMapperHelper.mapWebhookEventToTriggers(mappingRequestData);
 
+    TriggerWebhookEvent triggerWebhookEvent = mappingRequestData.getTriggerWebhookEvent();
     WebhookEventProcessingResultBuilder resultBuilder = WebhookEventProcessingResult.builder();
     List<WebhookEventResponse> eventResponses = new ArrayList<>();
     if (!webhookEventMappingResponse.isFailedToFindTrigger()) {

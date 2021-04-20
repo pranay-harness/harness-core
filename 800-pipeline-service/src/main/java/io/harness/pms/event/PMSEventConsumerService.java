@@ -3,8 +3,8 @@ package io.harness.pms.event;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME;
-import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA;
-import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_TRIGGER_EVENT_DATA_MAX_PROCESSING_TIME;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.event.entitycrud.PMSEntityCRUDStreamConsumer;
@@ -33,7 +33,7 @@ public class PMSEventConsumerService implements Managed {
     entityCRUDConsumerService.execute(entityCRUDStreamConsumer);
 
     webhookEventConsumerService =
-        Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(WEBHOOK_TRIGGER_EVENT_DATA).build());
+        Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(WEBHOOK_EVENTS_STREAM).build());
     webhookEventConsumerService.execute(webhookEventStreamConsumer);
   }
 
@@ -44,6 +44,6 @@ public class PMSEventConsumerService implements Managed {
 
     webhookEventConsumerService.shutdown();
     webhookEventConsumerService.awaitTermination(
-        WEBHOOK_TRIGGER_EVENT_DATA_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
+        WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
   }
 }

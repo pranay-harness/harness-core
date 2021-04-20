@@ -6,6 +6,8 @@ import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType.AWS_CODECOMMIT;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType.BITBUCKET;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType.GITHUB;
@@ -22,25 +24,32 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HeaderConfig;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.webhookpayloads.webhookdata.EventHeader;
 import io.harness.eventsframework.webhookpayloads.webhookdata.GitDetails;
 import io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
+import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType;
 import io.harness.ng.webhook.entities.WebhookEvent;
 import io.harness.ng.webhook.entities.WebhookEvent.WebhookEventBuilder;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.HttpHeaders;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
+@Singleton
 @OwnedBy(PIPELINE)
 public class WebhookHelper {
+  @Inject @Named(WEBHOOK_EVENTS_STREAM) private Producer webhookEventProducer;
+  @Inject @Named(GIT_PUSH_EVENT_STREAM) private Producer gitPushEventProducer;
+
   public WebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String payload, HttpHeaders httpHeaders) {
     List<HeaderConfig> headerConfigs = new ArrayList<>();
     httpHeaders.getRequestHeaders().forEach(
@@ -67,7 +76,6 @@ public class WebhookHelper {
     WebhookDTO.Builder builder = WebhookDTO.newBuilder()
                                      .setJsonPayload(event.getPayload())
                                      .addAllHeaders(generateEventHeaders(event))
-                                     .setParsedResponse(parseWebhookResponse)
                                      .setAccountId(event.getAccountId())
                                      .setEventId(event.getUuid())
                                      .setTime(event.getCreatedAt());
@@ -75,8 +83,11 @@ public class WebhookHelper {
     if (parseWebhookResponse == null) {
       builder.setWebhookTriggerType(CUSTOM);
     } else {
-      builder.setWebhookTriggerType(GIT);
-      builder.setGitDetails(generateGitDetails(parseWebhookResponse, sourceRepoType));
+      GitDetails gitDetails = generateGitDetails(parseWebhookResponse, sourceRepoType);
+      builder.setParsedResponse(parseWebhookResponse)
+          .setWebhookTriggerType(GIT)
+          .setWebhookEventType(gitDetails.getEvent())
+          .setGitDetails(gitDetails);
     }
 
     return builder.build();
@@ -119,5 +130,20 @@ public class WebhookHelper {
     }
 
     return sourceRepoType;
+  }
+
+  public List<Producer> getProducerListForEvent(WebhookDTO webhookDTO) {
+    List<Producer> producers = new ArrayList<>();
+    producers.add(webhookEventProducer);
+
+    if (webhookDTO.hasParsedResponse() && webhookDTO.hasGitDetails()) {
+      if (WebhookEventType.PUSH == webhookDTO.getGitDetails().getEvent()) {
+        producers.add(gitPushEventProducer);
+      }
+
+      // Here we can add more logic if need to add more event topics.
+    }
+
+    return producers;
   }
 }

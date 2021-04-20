@@ -201,7 +201,7 @@ public class NGTriggerElementMapper {
         .build();
   }
 
-  public TriggerWebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String orgIdentifier,
+  public TriggerWebhookEventBuilder toNGTriggerWebhookEvent(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String payload, List<HeaderConfig> headerConfigs) {
     WebhookSourceRepo webhookSourceRepo;
     Map<String, List<String>> headers =
@@ -243,7 +243,7 @@ public class NGTriggerElementMapper {
       triggerWebhookEventBuilder.triggerIdentifier(customTriggerIdentifier.getValues().get(0));
     }
 
-    return triggerWebhookEventBuilder.build();
+    return triggerWebhookEventBuilder;
   }
 
   public NGTriggerDetailsResponseDTO toNGTriggerDetailsResponseDTO(
