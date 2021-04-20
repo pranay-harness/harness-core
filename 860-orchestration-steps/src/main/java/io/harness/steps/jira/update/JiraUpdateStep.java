@@ -7,6 +7,7 @@ import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.JiraTaskNGParameters.JiraTaskNGParametersBuilder;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.jira.JiraActionNG;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
@@ -22,40 +23,41 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
-public class JiraUpdateStep implements TaskExecutable<JiraUpdateStepParameters, JiraTaskNGResponse> {
+public class JiraUpdateStep implements TaskExecutable<StepElementParameters, JiraTaskNGResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_UPDATE).build();
 
   @Inject private JiraStepHelperService jiraStepHelperService;
 
   @Override
   public TaskRequest obtainTask(
-      Ambiance ambiance, JiraUpdateStepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
+    JiraUpdateSpecParameters specParameters = (JiraUpdateSpecParameters) stepParameters.getSpec();
     JiraTaskNGParametersBuilder paramsBuilder =
         JiraTaskNGParameters.builder()
             .action(JiraActionNG.UPDATE_ISSUE)
-            .issueKey(stepParameters.getIssueKey().getValue())
-            .transitionToStatus(stepParameters.getTransitionTo() == null
+            .issueKey(specParameters.getIssueKey().getValue())
+            .transitionToStatus(specParameters.getTransitionTo() == null
                     ? null
-                    : (String) stepParameters.getTransitionTo().getStatus().fetchFinalValue())
-            .transitionName(stepParameters.getTransitionTo() == null
+                    : (String) specParameters.getTransitionTo().getStatus().fetchFinalValue())
+            .transitionName(specParameters.getTransitionTo() == null
                     ? null
-                    : (String) stepParameters.getTransitionTo().getTransitionName().fetchFinalValue())
-            .fields(stepParameters.getFields() == null
+                    : (String) specParameters.getTransitionTo().getTransitionName().fetchFinalValue())
+            .fields(specParameters.getFields() == null
                     ? null
-                    : stepParameters.getFields().entrySet().stream().collect(
+                    : specParameters.getFields().entrySet().stream().collect(
                         Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue().fetchFinalValue())));
     return jiraStepHelperService.prepareTaskRequest(paramsBuilder, ambiance,
-        stepParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Update Issue");
+        specParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Update Issue");
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, JiraUpdateStepParameters stepParameters,
+  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<JiraTaskNGResponse> responseSupplier) throws Exception {
     return jiraStepHelperService.prepareStepResponse(responseSupplier);
   }
 
   @Override
-  public Class<JiraUpdateStepParameters> getStepParametersClass() {
-    return JiraUpdateStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 }

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -26,14 +27,14 @@ import java.util.Collections;
 import java.util.Map;
 
 @OwnedBy(CDC)
-public class JiraApprovalStep implements AsyncExecutable<JiraApprovalStepParameters> {
+public class JiraApprovalStep implements AsyncExecutable<StepElementParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_APPROVAL).build();
 
   @Inject private ApprovalInstanceService approvalInstanceService;
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, JiraApprovalStepParameters stepParameters, StepInputPackage inputPackage) {
+      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
     JiraApprovalInstance approvalInstance = JiraApprovalInstance.fromStepParameters(ambiance, stepParameters);
     approvalInstance = (JiraApprovalInstance) approvalInstanceService.save(approvalInstance);
     return AsyncExecutableResponse.newBuilder()
@@ -46,7 +47,7 @@ public class JiraApprovalStep implements AsyncExecutable<JiraApprovalStepParamet
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, JiraApprovalStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, StepElementParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     JiraApprovalResponseData jiraApprovalResponseData =
         (JiraApprovalResponseData) responseDataMap.values().iterator().next();
     JiraApprovalInstance instance =
@@ -60,12 +61,12 @@ public class JiraApprovalStep implements AsyncExecutable<JiraApprovalStepParamet
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, JiraApprovalStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, StepElementParameters stepParameters, AsyncExecutableResponse executableResponse) {
     approvalInstanceService.expireByNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
   }
 
   @Override
-  public Class<JiraApprovalStepParameters> getStepParametersClass() {
-    return JiraApprovalStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 }

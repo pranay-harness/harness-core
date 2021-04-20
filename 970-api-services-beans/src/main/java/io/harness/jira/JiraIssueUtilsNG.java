@@ -9,6 +9,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.common.base.Splitter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +41,15 @@ public class JiraIssueUtilsNG {
       }
     }
     return values;
+  }
+
+  public String prepareIssueUrl(String baseUrl, String key) {
+    try {
+      URL issueUrl = new URL(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "browse/" + key);
+      return issueUrl.toString();
+    } catch (MalformedURLException e) {
+      throw new InvalidRequestException(String.format("Invalid jira base url: %s", baseUrl));
+    }
   }
 
   public void updateFieldValues(

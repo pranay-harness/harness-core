@@ -6,10 +6,11 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
-import io.harness.steps.approval.step.jira.JiraApprovalStepParameters;
+import io.harness.steps.approval.step.jira.JiraApprovalSpecParameters;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapperDTO;
 
 import javax.validation.constraints.NotNull;
@@ -36,13 +37,14 @@ public class JiraApprovalInstance extends ApprovalInstance {
   @NotNull CriteriaSpecWrapperDTO approvalCriteria;
   @NotNull CriteriaSpecWrapperDTO rejectionCriteria;
 
-  public static JiraApprovalInstance fromStepParameters(Ambiance ambiance, JiraApprovalStepParameters stepParameters) {
+  public static JiraApprovalInstance fromStepParameters(Ambiance ambiance, StepElementParameters stepParameters) {
     if (stepParameters == null) {
       return null;
     }
 
-    String issueKey = stepParameters.getIssueKey().getValue();
-    String connectorRef = stepParameters.getConnectorRef().getValue();
+    JiraApprovalSpecParameters specParameters = (JiraApprovalSpecParameters) stepParameters.getSpec();
+    String issueKey = specParameters.getIssueKey().getValue();
+    String connectorRef = specParameters.getConnectorRef().getValue();
 
     if (isBlank(issueKey)) {
       throw new InvalidRequestException("issueKey can't be empty");
@@ -55,8 +57,8 @@ public class JiraApprovalInstance extends ApprovalInstance {
         JiraApprovalInstance.builder()
             .connectorRef(connectorRef)
             .issueKey(issueKey)
-            .approvalCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(stepParameters.getApprovalCriteria()))
-            .rejectionCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(stepParameters.getRejectionCriteria()))
+            .approvalCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getApprovalCriteria()))
+            .rejectionCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getRejectionCriteria()))
             .build();
     instance.updateFromStepParameters(ambiance, stepParameters);
     return instance;
