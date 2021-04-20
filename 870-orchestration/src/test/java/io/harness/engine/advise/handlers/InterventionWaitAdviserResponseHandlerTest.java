@@ -106,7 +106,5 @@ public class InterventionWaitAdviserResponseHandlerTest extends OrchestrationTes
 
     TimeoutTracker tracker = optionalTimeout.get().getTracker();
     assertThat(tracker.getDimension()).isEqualTo(AbsoluteTimeoutTrackerFactory.DIMENSION);
-
-    PlanExecution planExecution = planExecutionService.get(PLAN_EXECUTION_ID);
   }
 }

@@ -8,10 +8,10 @@ import io.harness.delegate.task.jira.JiraTaskNGParameters.JiraTaskNGParametersBu
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.jira.JiraActionNG;
 import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
-public class JiraCreateStep implements TaskExecutable<StepElementParameters, JiraTaskNGResponse> {
+public class JiraCreateStep extends TaskExecutableWithRollback<JiraTaskNGResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_CREATE).build();
 
   @Inject private JiraStepHelperService jiraStepHelperService;

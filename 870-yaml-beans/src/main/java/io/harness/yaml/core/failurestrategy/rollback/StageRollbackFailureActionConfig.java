@@ -1,6 +1,6 @@
 package io.harness.yaml.core.failurestrategy.rollback;
 
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.STAGE_ROLLBACK;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.STAGE_ROLLBACK;
 
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;

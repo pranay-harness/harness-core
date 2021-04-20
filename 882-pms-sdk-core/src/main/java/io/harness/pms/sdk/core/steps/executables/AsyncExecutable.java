@@ -28,8 +28,14 @@ import java.util.Map;
  *
  */
 @OwnedBy(CDC)
-public interface AsyncExecutable<T extends StepParameters> extends Step<T>, Abortable<T, AsyncExecutableResponse> {
+public interface AsyncExecutable<T extends StepParameters>
+    extends Step<T>, Abortable<T, AsyncExecutableResponse>, Failable<T> {
   AsyncExecutableResponse executeAsync(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   StepResponse handleAsyncResponse(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
+
+  @Override
+  default void handleFailure(Ambiance ambiance, T stepParameters, Map<String, String> metadata) {
+    // NOOP : By default this is noop as task failure is handled by the PMS but you are free to override it
+  }
 }

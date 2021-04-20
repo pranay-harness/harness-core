@@ -14,12 +14,12 @@ import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepResponse> {
+public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).build();
 
   @Inject private KryoSerializer kryoSerializer;

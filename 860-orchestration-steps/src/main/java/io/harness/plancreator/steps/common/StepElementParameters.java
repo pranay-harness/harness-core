@@ -2,6 +2,7 @@ package io.harness.plancreator.steps.common;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -33,6 +34,9 @@ public class StepElementParameters implements StepParameters {
   SpecParameters spec;
 
   ParameterField<List<String>> delegateSelectors;
+
+  // Only for rollback failures
+  OnFailRollbackParameters rollbackParameters;
 
   @Override
   public String toViewJson() {

@@ -13,11 +13,11 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -30,7 +30,7 @@ import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
-public class K8sDeleteStep implements TaskChainExecutable<StepElementParameters>, K8sStepExecutor {
+public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getYamlType()).build();
   public static final String K8S_DELETE_COMMAND_NAME = "Delete";

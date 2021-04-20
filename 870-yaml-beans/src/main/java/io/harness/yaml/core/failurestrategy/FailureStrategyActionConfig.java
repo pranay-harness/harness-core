@@ -1,12 +1,12 @@
 package io.harness.yaml.core.failurestrategy;
 
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.ABORT;
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.IGNORE;
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.MANUAL_INTERVENTION;
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.MARK_AS_SUCCESS;
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.RETRY;
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.STAGE_ROLLBACK;
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.STEP_GROUP_ROLLBACK;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.ABORT;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.IGNORE;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.MANUAL_INTERVENTION;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.MARK_AS_SUCCESS;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.RETRY;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.STAGE_ROLLBACK;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.STEP_GROUP_ROLLBACK;
 
 import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
