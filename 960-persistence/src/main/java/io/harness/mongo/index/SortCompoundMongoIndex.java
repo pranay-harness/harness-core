@@ -28,11 +28,12 @@ public class SortCompoundMongoIndex implements MongoIndex {
   Collation collation;
   @Singular private List<String> fields;
   @Singular private List<String> sortFields;
+  @Singular private List<String> rangeFields;
 
   @Override
   public IndexCreatorBuilder createBuilder(String id) {
     Preconditions.checkState(isNotEmpty(name), name);
-    Preconditions.checkState(!sortFields.isEmpty(), name);
+    Preconditions.checkState(!sortFields.isEmpty() || !rangeFields.isEmpty(), name);
     Preconditions.checkState(!fields.isEmpty(), name);
 
     checks(logger);
@@ -48,15 +49,31 @@ public class SortCompoundMongoIndex implements MongoIndex {
       options.put("collation", basicDBObject);
     }
 
-    for (String field : getSortFields()) {
-      if (field.equals(id)) {
-        throw new IndexManagerInspectException("There is no point of having collection key in a composite index."
-            + "\nIf in the query there is a unique value it will always fetch exactly one item");
+    if (isNotEmpty(getSortFields())) {
+      for (String field : getSortFields()) {
+        if (field.equals(id)) {
+          throw new IndexManagerInspectException("There is no point of having collection key in a composite index."
+              + "\nIf in the query there is a unique value it will always fetch exactly one item");
+        }
+        if (field.charAt(0) != '-') {
+          keys.append(field, IndexType.ASC.toIndexValue());
+        } else {
+          keys.append(field.substring(1), IndexType.DESC.toIndexValue());
+        }
       }
-      if (field.charAt(0) != '-') {
-        keys.append(field, IndexType.ASC.toIndexValue());
-      } else {
-        keys.append(field.substring(1), IndexType.DESC.toIndexValue());
+    }
+
+    if (isNotEmpty(getRangeFields())) {
+      for (String field : getRangeFields()) {
+        if (field.equals(id)) {
+          throw new IndexManagerInspectException("There is no point of having collection key in a composite index."
+              + "\nIf in the query there is a unique value it will always fetch exactly one item");
+        }
+        if (field.charAt(0) != '-') {
+          keys.append(field, IndexType.ASC.toIndexValue());
+        } else {
+          keys.append(field.substring(1), IndexType.DESC.toIndexValue());
+        }
       }
     }
     return IndexCreator.builder().keys(keys).options(options);
@@ -69,6 +86,14 @@ public class SortCompoundMongoIndex implements MongoIndex {
 
     public SortCompoundMongoIndexBuilder descSortField(String sortField) {
       return sortField("-" + sortField);
+    }
+
+    public SortCompoundMongoIndexBuilder ascRangeField(String rangeField) {
+      return rangeField(rangeField);
+    }
+
+    public SortCompoundMongoIndexBuilder descRangeField(String rangeField) {
+      return rangeField("-" + rangeField);
     }
   }
 }
