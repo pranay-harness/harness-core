@@ -1,1 +1,1 @@
-Activate your Harness Continuous Efficiency account
+Activate your Harness Cloud Cost Management account

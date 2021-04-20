@@ -1,5 +1,5 @@
 extend type Query {
-  # Beta: Continuous Efficiency export data apis
+  # Beta: Cloud Cost Management export data apis
   ceClusterBillingData(
     limit: Int
     offset: Int

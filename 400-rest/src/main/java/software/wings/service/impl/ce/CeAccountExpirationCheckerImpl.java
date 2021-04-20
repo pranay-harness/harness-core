@@ -36,7 +36,7 @@ public class CeAccountExpirationCheckerImpl implements CeAccountExpirationChecke
   @Override
   public void checkIsCeEnabled(String accountId) {
     if (!accountIdToIsCeEnabled.get(accountId)) {
-      throw new InvalidRequestException("Continuous Efficiency is not enabled on account: " + accountId);
+      throw new InvalidRequestException("Cloud Cost Management is not enabled on account: " + accountId);
     }
   }
 
