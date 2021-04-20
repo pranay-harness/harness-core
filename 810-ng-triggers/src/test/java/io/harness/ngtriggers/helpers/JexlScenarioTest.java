@@ -8,8 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.utils.WebhookTriggerFilterUtils;
 import io.harness.rule.Owner;
 
@@ -45,21 +43,24 @@ public class JexlScenarioTest extends CategoryTest {
   @Owner(developers = MATT)
   @Category(UnitTests.class)
   public void testSimplePayload() {
-    WebhookPayloadData webhookPayloadData =
-        WebhookPayloadData.builder().originalEvent(TriggerWebhookEvent.builder().payload(smallPayload).build()).build();
-    assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
-                   webhookPayloadData, "<+eventPayload.arr.contains(\"abc\")>"))
+    assertThat(
+        WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(smallPayload, "<+eventPayload.arr.contains(\"abc\")>"))
         .isTrue();
   }
 
   @Test
   @Owner(developers = MATT)
   @Category(UnitTests.class)
+  public void testSimpleNegative() {
+    assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(smallPayload, "false")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MATT)
+  @Category(UnitTests.class)
   public void testJexlAnd() {
-    WebhookPayloadData webhookPayloadData =
-        WebhookPayloadData.builder().originalEvent(TriggerWebhookEvent.builder().payload(bigPayload).build()).build();
     assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
-                   webhookPayloadData, "eventPayload.Type == \"Notification\" && eventPayload.SignatureVersion == 1"))
+                   bigPayload, "eventPayload.Type == \"Notification\" && eventPayload.SignatureVersion == 1"))
         .isTrue();
   }
 
@@ -67,10 +68,8 @@ public class JexlScenarioTest extends CategoryTest {
   @Owner(developers = MATT)
   @Category(UnitTests.class)
   public void testJexlOr() {
-    WebhookPayloadData webhookPayloadData =
-        WebhookPayloadData.builder().originalEvent(TriggerWebhookEvent.builder().payload(bigPayload).build()).build();
     assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
-                   webhookPayloadData, "eventPayload.Subject.contains(\"GIT\") || eventPayload.SignatureVersion == 1"))
+                   bigPayload, "eventPayload.Subject.contains(\"GIT\") || eventPayload.SignatureVersion == 1"))
         .isTrue();
   }
 
@@ -78,10 +77,8 @@ public class JexlScenarioTest extends CategoryTest {
   @Owner(developers = MATT)
   @Category(UnitTests.class)
   public void testJexlArithmetic() {
-    WebhookPayloadData webhookPayloadData =
-        WebhookPayloadData.builder().originalEvent(TriggerWebhookEvent.builder().payload(bigPayload).build()).build();
     assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
-                   webhookPayloadData, "size(eventPayload.Signature) + size(eventPayload.MessageId) > 300"))
+                   bigPayload, "size(eventPayload.Signature) + size(eventPayload.MessageId) > 300"))
         .isTrue();
   }
 
@@ -89,10 +86,8 @@ public class JexlScenarioTest extends CategoryTest {
   @Owner(developers = MATT)
   @Category(UnitTests.class)
   public void testJexlParens() {
-    WebhookPayloadData webhookPayloadData =
-        WebhookPayloadData.builder().originalEvent(TriggerWebhookEvent.builder().payload(bigPayload).build()).build();
     assertThat(
-        WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(webhookPayloadData,
+        WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(bigPayload,
             "(size(eventPayload.Signature) + size(eventPayload.MessageId) > 300) && (eventPayload.Subject.contains(\"GIT\") || eventPayload.SignatureVersion == 1)"))
         .isTrue();
   }

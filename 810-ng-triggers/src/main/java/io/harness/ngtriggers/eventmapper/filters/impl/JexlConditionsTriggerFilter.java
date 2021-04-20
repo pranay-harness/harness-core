@@ -1,16 +1,17 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
 import io.harness.ngtriggers.beans.source.NGTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class JexlConditionsTriggerFilter implements TriggerFilter {
   private NGTriggerElementMapper ngTriggerElementMapper;
 
@@ -51,11 +53,11 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
     }
 
     if (isEmpty(matchedTriggers)) {
-      log.info("No trigger matched payload after condition evaluation:");
+      log.info("No trigger matched payload after jexl condition evaluation:");
       mappingResponseBuilder.failedToFindTrigger(true)
-          .webhookEventResponse(WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS,
+          .webhookEventResponse(WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS,
               filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null,
-              "No Trigger matched conditions for payload event for Project: " + filterRequestData.getProjectFqn(),
+              "No Trigger matched jexl conditions for payload event for Project: " + filterRequestData.getProjectFqn(),
               null))
           .build();
     } else {
@@ -71,7 +73,8 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
       return false;
     }
 
-    // WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
-    return WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(filterRequestData.getWebhookPayloadData(), EMPTY);
+    WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
+    return WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
+        filterRequestData.getWebhookPayloadData().getOriginalEvent().getPayload(), triggerSpec.getJexlCondition());
   }
 }

@@ -75,8 +75,9 @@ public class CustomWebhookEventToTriggerMapper implements WebhookEventToTriggerM
       WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
 
       if (WebhookTriggerFilterUtils.checkIfCustomPayloadConditionsMatch(triggerWebhookEvent.getPayload(), triggerSpec)
-          && WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(
-              triggerWebhookEvent.getHeaders(), triggerSpec)) {
+          && WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(triggerWebhookEvent.getHeaders(), triggerSpec)
+          && WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
+              triggerWebhookEvent.getPayload(), triggerSpec.getJexlCondition())) {
         triggerDetailEligible.add(triggerDetails);
       }
     }
