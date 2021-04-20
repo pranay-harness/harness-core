@@ -123,7 +123,7 @@ public class ResourceGroupEventHandler implements OutboxEventHandler {
         AuditEntry.builder()
             .action(Action.DELETE)
             .module(ModuleType.CORE)
-            .newYaml(getYamlString(
+            .oldYaml(getYamlString(
                 ResourceGroupRequest.builder().resourceGroup(resourceGroupDeleteEvent.getResourceGroup()).build()))
             .timestamp(outboxEvent.getCreatedAt())
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))

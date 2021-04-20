@@ -94,7 +94,7 @@ public class SecretEventHandler implements OutboxEventHandler {
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(Action.DELETE)
                                 .module(ModuleType.CORE)
-                                .newYaml(NGYamlUtils.getYamlString(
+                                .oldYaml(NGYamlUtils.getYamlString(
                                     SecretRequestWrapper.builder().secret(secretDeleteEvent.getSecret()).build()))
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
