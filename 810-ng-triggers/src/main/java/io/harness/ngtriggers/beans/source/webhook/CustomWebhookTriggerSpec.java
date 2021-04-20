@@ -16,6 +16,7 @@ import lombok.Data;
 @OwnedBy(PIPELINE)
 public class CustomWebhookTriggerSpec implements WebhookTriggerSpec {
   List<WebhookCondition> payloadConditions;
+  String jexlCondition;
   List<WebhookCondition> headerConditions;
 
   public void setRepoSpec(RepoSpec repoUrl) {}

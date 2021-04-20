@@ -43,7 +43,7 @@ message RetryAdvise {
 message InterventionWaitAdvise {
   google.protobuf.Duration timeout = 1;
   io.harness.pms.contracts.commons.RepairActionCode repairActionCode = 2;
-  string nextNodeId = 3;
+  map<string, string> metadata = 3;
 }
 
 message EndPlanAdvise {

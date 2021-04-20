@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -8,7 +9,9 @@ import static io.harness.logging.LogLevel.ERROR;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -29,6 +32,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsBlueGreenRoute53SetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
@@ -82,6 +86,20 @@ public class EcsBlueGreenRoute53SetupCommandHandler extends EcsCommandTaskHandle
                                   .setupData(commandExecutionDataBuilder.build())
                                   .commandExecutionStatus(SUCCESS)
                                   .build())
+          .build();
+    } catch (TimeoutException ex) {
+      String errorMessage = getMessage(ex);
+      executionLogCallback.saveExecutionLog(errorMessage, ERROR);
+      EcsBGRoute53ServiceSetupResponse response =
+          EcsBGRoute53ServiceSetupResponse.builder().commandExecutionStatus(FAILURE).build();
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        response.setTimeoutFailure(true);
+      }
+
+      return EcsCommandExecutionResponse.builder()
+          .commandExecutionStatus(FAILURE)
+          .errorMessage(errorMessage)
+          .ecsCommandResponse(response)
           .build();
     } catch (Exception ex) {
       String errorMessage = getMessage(ex);

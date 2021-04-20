@@ -1,13 +1,16 @@
 package io.harness.ngtriggers.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.EventActionTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GitWebhookTriggerRepoFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GithubIssueCommentTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.JexlConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.PayloadConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.ProjectTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.SourceRepoTypeTriggerFilter;
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class TriggerFilterStore {
   private final GitWebhookTriggerRepoFilter gitWebhookTriggerRepoFilter;
   private final ProjectTriggerFilter projectTriggerFilter;
@@ -29,10 +33,11 @@ public class TriggerFilterStore {
   private final EventActionTriggerFilter eventActionTriggerFilter;
   private final PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
   private final GithubIssueCommentTriggerFilter githubIssueCommentTriggerFilter;
+  private final JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
 
   public List<TriggerFilter> getWebhookTriggerFilters(WebhookPayloadData webhookPayloadData) {
     if (CUSTOM.name().equals(webhookPayloadData.getOriginalEvent().getSourceRepoType())) {
-      return Arrays.asList(projectTriggerFilter, payloadConditionsTriggerFilter);
+      return Arrays.asList(projectTriggerFilter, payloadConditionsTriggerFilter, jexlConditionsTriggerFilter);
     }
 
     // When it github and comment on a pr event
@@ -50,7 +55,7 @@ public class TriggerFilterStore {
 
   List<TriggerFilter> getWebhookGitTriggerFiltersDefaultList() {
     return Arrays.asList(projectTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-        payloadConditionsTriggerFilter, gitWebhookTriggerRepoFilter);
+        payloadConditionsTriggerFilter, gitWebhookTriggerRepoFilter, jexlConditionsTriggerFilter);
   }
 
   List<TriggerFilter> getTriggerFiltersGithubIssueCommentList() {

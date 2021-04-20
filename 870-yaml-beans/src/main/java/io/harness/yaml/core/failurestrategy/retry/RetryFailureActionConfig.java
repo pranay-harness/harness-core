@@ -1,6 +1,6 @@
 package io.harness.yaml.core.failurestrategy.retry;
 
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.RETRY;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.RETRY;
 
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;

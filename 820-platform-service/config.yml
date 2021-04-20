@@ -139,6 +139,10 @@ resourceGroupServiceConfig:
     useScriptCache: true
     userName: ""
     password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
   accessControlAdminClient:
     accessControlServiceConfig:
       baseUrl: http://localhost:9006/api/

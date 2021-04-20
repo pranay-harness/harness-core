@@ -42,7 +42,8 @@ public class EcsSwapRoutesCommandTaskHelper {
   @Inject private EcsContainerService ecsContainerService;
 
   public void upsizeOlderService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
-      String cluster, int count, String serviceName, ExecutionLogCallback executionLogCallback, int timeout) {
+      String cluster, int count, String serviceName, ExecutionLogCallback executionLogCallback, int timeout,
+      boolean timeoutErrorSupported) {
     if (isEmpty(serviceName)) {
       executionLogCallback.saveExecutionLog("No service needs to be upsized");
       return;

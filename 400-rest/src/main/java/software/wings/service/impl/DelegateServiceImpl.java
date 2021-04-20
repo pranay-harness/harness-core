@@ -22,6 +22,7 @@ import static io.harness.delegate.beans.DelegateType.ECS;
 import static io.harness.delegate.beans.DelegateType.HELM_DELEGATE;
 import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
+import static io.harness.delegate.beans.K8sPermissionType.NAMESPACE_ADMIN;
 import static io.harness.delegate.beans.executioncapability.ExecutionCapability.EvaluationMode;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
@@ -128,6 +129,7 @@ import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
+import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -261,7 +263,6 @@ import com.github.zafarkhaja.semver.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -308,6 +309,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
@@ -352,6 +354,9 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String HARNESS_ECS_DELEGATE = "Harness-ECS-Delegate";
   private static final String DELIMITER = "_";
   private static final int MAX_RETRIES = 2;
+  public static final String NG_CLUSTER_ADMIN_YAML = "-ng-cluster-admin.yaml.ftl";
+  public static final String NG_CLUSTER_VIEWER_YAML = "-ng-cluster-viewer.yaml.ftl";
+  public static final String NG_NAMESPACE_ADMIN_YAML = "-ng-namespace-admin.yaml.ftl";
 
   public static final String HARNESS_DELEGATE_VALUES_YAML = HARNESS_DELEGATE + "-values";
   private static final String YAML = ".yaml";
@@ -719,7 +724,8 @@ public class DelegateServiceImpl implements DelegateService {
                                             .findFirst()
                                             .orElse(null);
 
-      DelegateGroup delegateGroup = upsertDelegateGroup(delegateSetupDetails.getName(), accountId);
+      DelegateGroup delegateGroup =
+          upsertDelegateGroup(delegateSetupDetails.getName(), accountId, delegateSetupDetails.getK8sConfigDetails());
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
           ScriptRuntimeParamMapInquiry.builder()
@@ -741,11 +747,13 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
               .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
               .delegateGroupId(delegateGroup.getUuid())
+              .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
-      saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + "-ng.yaml.ftl");
+      String templateName = obtainK8sTemplateNameFromConfig(delegateSetupDetails.getK8sConfigDetails());
+      saveProcessedTemplate(scriptParams, yaml, templateName);
       yaml = new File(yaml.getAbsolutePath());
 
       if (fileFormat != null && fileFormat.equals(MediaType.TEXT_PLAIN_TYPE)) {
@@ -772,6 +780,22 @@ public class DelegateServiceImpl implements DelegateService {
     return gzipKubernetesDelegateFile;
   }
 
+  private String obtainK8sTemplateNameFromConfig(K8sConfigDetails k8sConfigDetails) {
+    if (k8sConfigDetails == null || k8sConfigDetails.getK8sPermissionType() == null) {
+      return HARNESS_DELEGATE + NG_CLUSTER_ADMIN_YAML;
+    }
+
+    switch (k8sConfigDetails.getK8sPermissionType()) {
+      case CLUSTER_VIEWER:
+        return HARNESS_DELEGATE + NG_CLUSTER_VIEWER_YAML;
+      case NAMESPACE_ADMIN:
+        return HARNESS_DELEGATE + NG_NAMESPACE_ADMIN_YAML;
+      case CLUSTER_ADMIN:
+      default:
+        return HARNESS_DELEGATE + NG_CLUSTER_ADMIN_YAML;
+    }
+  }
+
   private void validateSetupDetails(DelegateSetupDetails delegateSetupDetails) {
     if (isBlank(delegateSetupDetails.getDelegateConfigurationId())) {
       throw new InvalidRequestException("Delegate Configuration must be provided.", USER);
@@ -783,6 +807,13 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (delegateSetupDetails.getSize() == null) {
       throw new InvalidRequestException("Delegate Size must be provided.", USER);
+    }
+
+    K8sConfigDetails k8sConfigDetails = delegateSetupDetails.getK8sConfigDetails();
+    if (k8sConfigDetails == null || k8sConfigDetails.getK8sPermissionType() == null) {
+      throw new InvalidRequestException("K8s permission type must be provided.", USER);
+    } else if (k8sConfigDetails.getK8sPermissionType() == NAMESPACE_ADMIN && isBlank(k8sConfigDetails.getNamespace())) {
+      throw new InvalidRequestException("K8s namespace must be provided for this type of permission.", USER);
     }
   }
 
@@ -1327,6 +1358,7 @@ public class DelegateServiceImpl implements DelegateService {
     private int delegateReplicas;
     private int delegateRam;
     private double delegateCpu;
+    private String delegateNamespace;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -1514,6 +1546,12 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateGroupId", inquiry.getDelegateGroupId());
       } else {
         params.put("delegateGroupId", "");
+      }
+
+      if (isNotBlank(inquiry.getDelegateNamespace())) {
+        params.put("delegateNamespace", inquiry.getDelegateNamespace());
+      } else {
+        params.put("delegateNamespace", HARNESS_DELEGATE);
       }
 
       return params.build();
@@ -1915,7 +1953,7 @@ public class DelegateServiceImpl implements DelegateService {
         version = EMPTY_VERSION;
       }
 
-      DelegateGroup delegateGroup = upsertDelegateGroup(delegateGroupName, accountId);
+      DelegateGroup delegateGroup = upsertDelegateGroup(delegateGroupName, accountId, null);
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
           ScriptRuntimeParamMapInquiry.builder()
@@ -2225,7 +2263,7 @@ public class DelegateServiceImpl implements DelegateService {
     String delegateGroupId = delegateParams.getDelegateGroupId();
     if (isBlank(delegateGroupId) && isNotBlank(delegateParams.getDelegateGroupName())) {
       DelegateGroup delegateGroup =
-          upsertDelegateGroup(delegateParams.getDelegateGroupName(), delegateParams.getAccountId());
+          upsertDelegateGroup(delegateParams.getDelegateGroupName(), delegateParams.getAccountId(), null);
       delegateGroupId = delegateGroup.getUuid();
     }
 
@@ -4002,7 +4040,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateGroup upsertDelegateGroup(String name, String accountId) {
+  public DelegateGroup upsertDelegateGroup(String name, String accountId, K8sConfigDetails k8sConfigDetails) {
     Query<DelegateGroup> query = this.persistence.createQuery(DelegateGroup.class)
                                      .filter(DelegateGroupKeys.name, name)
                                      .filter(DelegateGroupKeys.accountId, accountId);
@@ -4010,6 +4048,10 @@ public class DelegateServiceImpl implements DelegateService {
                                                            .setOnInsert(DelegateGroupKeys.uuid, generateUuid())
                                                            .set(DelegateGroupKeys.name, name)
                                                            .set(DelegateGroupKeys.accountId, accountId);
+
+    if (k8sConfigDetails != null) {
+      updateOperations.set(DelegateGroupKeys.k8sConfigDetails, k8sConfigDetails);
+    }
 
     return persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
   }

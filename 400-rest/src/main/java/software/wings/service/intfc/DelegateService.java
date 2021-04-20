@@ -28,6 +28,7 @@ import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
@@ -202,5 +203,5 @@ public interface DelegateService extends OwnedByAccount {
 
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 
-  DelegateGroup upsertDelegateGroup(String name, String accountId);
+  DelegateGroup upsertDelegateGroup(String name, String accountId, K8sConfigDetails k8sConfigDetails);
 }

@@ -46,6 +46,8 @@ import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
+import io.harness.delegate.beans.K8sConfigDetails;
+import io.harness.delegate.beans.K8sPermissionType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -901,12 +903,16 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = NICOLAS)
   @Category(UnitTests.class)
   public void testUpsertDelegateGroup_noExistingGroup() {
-    DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID);
+    K8sConfigDetails k8sConfigDetails =
+        K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN).namespace("namespace").build();
+    DelegateGroup returnedDelegateGroup =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, k8sConfigDetails);
 
     assertThat(returnedDelegateGroup).isNotNull();
     assertThat(returnedDelegateGroup.getUuid()).isNotEmpty();
     assertThat(returnedDelegateGroup.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(returnedDelegateGroup.getName()).isEqualTo(TEST_DELEGATE_GROUP_NAME);
+    assertThat(returnedDelegateGroup.getK8sConfigDetails()).isEqualTo(k8sConfigDetails);
   }
 
   @Test
@@ -915,13 +921,17 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void testAddDelegateToGroup_existingGroup() {
     DelegateGroup delegateGroup = setUpDefaultDelegateGroupForTests();
 
-    DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID);
+    K8sConfigDetails k8sConfigDetails =
+        K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build();
+    DelegateGroup returnedDelegateGroup =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, k8sConfigDetails);
 
     assertThat(returnedDelegateGroup).isNotNull();
     assertThat(returnedDelegateGroup.getUuid()).isNotEmpty();
     assertThat(returnedDelegateGroup.getUuid()).isEqualTo(delegateGroup.getUuid());
     assertThat(returnedDelegateGroup.getAccountId()).isEqualTo(delegateGroup.getAccountId());
     assertThat(returnedDelegateGroup.getName()).isEqualTo(delegateGroup.getName());
+    assertThat(returnedDelegateGroup.getK8sConfigDetails()).isEqualTo(k8sConfigDetails);
   }
 
   private List<String> setUpDelegatesForInitializationTest() {

@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck //only used in test
+	"github.com/golang/protobuf/proto"  //nolint:staticcheck //only used in test
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"

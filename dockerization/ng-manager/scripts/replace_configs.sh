@@ -182,6 +182,10 @@ if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
 fi
 
+if [[ "" != "$SCM_SERVICE_URI" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URI"
+fi
+
 if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASEURL"
 fi

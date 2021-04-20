@@ -8,6 +8,7 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
@@ -36,7 +37,8 @@ public class CustomWebhookEventToTriggerMapper implements WebhookEventToTriggerM
   private final NGTriggerService ngTriggerService;
   private final NGTriggerElementMapper ngTriggerElementMapper;
 
-  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerWebhookEvent triggerWebhookEvent) {
+  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerMappingRequestData mappingRequestData) {
+    TriggerWebhookEvent triggerWebhookEvent = mappingRequestData.getTriggerWebhookEvent();
     String projectId = new StringBuilder(triggerWebhookEvent.getAccountId())
                            .append('/')
                            .append(triggerWebhookEvent.getOrgIdentifier())
@@ -75,8 +77,9 @@ public class CustomWebhookEventToTriggerMapper implements WebhookEventToTriggerM
       WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
 
       if (WebhookTriggerFilterUtils.checkIfCustomPayloadConditionsMatch(triggerWebhookEvent.getPayload(), triggerSpec)
-          && WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(
-              triggerWebhookEvent.getHeaders(), triggerSpec)) {
+          && WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(triggerWebhookEvent.getHeaders(), triggerSpec)
+          && WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
+              triggerWebhookEvent.getPayload(), triggerSpec.getJexlCondition())) {
         triggerDetailEligible.add(triggerDetails);
       }
     }

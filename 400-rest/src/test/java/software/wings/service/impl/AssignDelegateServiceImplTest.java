@@ -57,13 +57,13 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
-import io.harness.beans.shared.tasks.Cd2SetupFields;
+import io.harness.beans.shared.tasks.NgSetupFields;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateActivity;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
-import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
@@ -1953,47 +1953,38 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     // Test matching mustExecuteOnDelegateId
     when(delegateCache.get(accountId, delegateId, false)).thenReturn(delegate);
 
-    DelegateOwner projectOwner =
-        DelegateOwner.builder().entityType(Cd2SetupFields.PROJECT_ID_FIELD).entityId("p1").build();
-    DelegateOwner orgOwner = DelegateOwner.builder().entityType(Cd2SetupFields.ORG_ID_FIELD).entityId("o1").build();
-
-    List<DelegateOwner> orgOwners = asList(orgOwner);
-    List<DelegateOwner> orgProjectOwners = asList(projectOwner, orgOwner);
-    List<DelegateOwner> noOwners = asList();
+    DelegateEntityOwner orgOwner = DelegateEntityOwner.builder().identifier("o1").build();
+    DelegateEntityOwner projectOwner = DelegateEntityOwner.builder().identifier("o1/p1").build();
 
     Map<String, String> noSetupAbstractions = ImmutableMap.of();
-    Map<String, String> orgSetupAbstractions = ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o1");
-    Map<String, String> projectSetupAbstractions = ImmutableMap.of(Cd2SetupFields.PROJECT_ID_FIELD, "p1");
-    Map<String, String> orgProjectSetupAbstractions =
-        ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o1", Cd2SetupFields.PROJECT_ID_FIELD, "p1");
+    Map<String, String> orgSetupAbstractions = ImmutableMap.of(NgSetupFields.OWNER, "o1");
+    Map<String, String> projectSetupAbstractions = ImmutableMap.of(NgSetupFields.OWNER, "o1/p1");
 
-    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, noSetupAbstractions, true);
-    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, orgSetupAbstractions, true);
-    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, projectSetupAbstractions, true);
-    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, orgProjectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, null, null, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, null, noSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, null, orgSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, null, projectSetupAbstractions, false);
 
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, noSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, orgSetupAbstractions, true);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, projectSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, orgProjectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, null, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, noSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, orgSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, projectSetupAbstractions, false);
 
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, noSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, orgSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, projectSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, orgProjectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, null, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, noSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, orgSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, projectSetupAbstractions, true);
 
     // testing above valid scenarios with wrong values of project / org
-    Map<String, String> invalidOrgSetupAbstractions = ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o2");
-    Map<String, String> invalidOrgProjectSetupAbstractions =
-        ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o2", Cd2SetupFields.PROJECT_ID_FIELD, "p2");
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, invalidOrgSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, invalidOrgProjectSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, invalidOrgProjectSetupAbstractions, false);
+    Map<String, String> invalidOrgSetupAbstractions = ImmutableMap.of(NgSetupFields.OWNER, "o2");
+    Map<String, String> invalidProjectSetupAbstractions = ImmutableMap.of(NgSetupFields.OWNER, "o2/p2");
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, invalidOrgSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, invalidProjectSetupAbstractions, false);
   }
 
   private void canAssignOwnerAssert(DelegateTask delegateTask, BatchDelegateSelectionLog batch, Delegate delegate,
-      List<DelegateOwner> delegateOwners, Map<String, String> setupAbstractions, boolean canAssign) {
-    delegate.setOwners(delegateOwners);
+      DelegateEntityOwner delegateEntityOwner, Map<String, String> setupAbstractions, boolean canAssign) {
+    delegate.setOwner(delegateEntityOwner);
     delegateTask.setSetupAbstractions(setupAbstractions);
     assertThat(assignDelegateService.canAssign(batch, delegate.getUuid(), delegateTask)).isEqualTo(canAssign);
   }

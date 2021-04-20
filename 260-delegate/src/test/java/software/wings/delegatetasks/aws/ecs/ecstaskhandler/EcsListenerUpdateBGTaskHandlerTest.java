@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.IVAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,10 +12,13 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -34,6 +39,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
   @Mock private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
@@ -67,7 +73,8 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
-        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+        .upsizeOlderService(
+            any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt(), anyBoolean());
     doNothing()
         .when(awsElbHelperServiceDelegate)
         .swapListenersForEcsBG(any(), anyList(), anyBoolean(), anyString(), anyString(), anyString(), anyString(),
@@ -97,7 +104,8 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
-        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+        .upsizeOlderService(
+            any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt(), anyBoolean());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
         .updateServiceTags(any(), anyList(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
@@ -165,7 +173,8 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
-        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+        .upsizeOlderService(
+            any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt(), anyBoolean());
     doReturn(describeListenersResult)
         .when(awsElbHelperServiceDelegate)
         .describeListenerResult(any(), anyList(), anyString(), anyString());
@@ -185,5 +194,36 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
     assertThat(ecsCommandExecutionResponse).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testDownsizeOldService_Timeout() {
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString());
+    doNothing()
+        .when(awsElbHelperServiceDelegate)
+        .swapListenersForEcsBG(any(), anyList(), anyBoolean(), anyString(), anyString(), anyString(), anyString(),
+            anyString(), anyString(), anyString(), any());
+    doNothing()
+        .when(ecsSwapRoutesCommandTaskHelper)
+        .updateServiceTags(any(), anyList(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
+    doThrow(new TimeoutException("", "", null))
+        .when(ecsSwapRoutesCommandTaskHelper)
+        .downsizeOlderService(any(), anyList(), anyString(), anyString(), anyString(), any(), any());
+
+    EcsBGListenerUpdateRequest ecsBGListenerUpdateRequest = EcsBGListenerUpdateRequest.builder()
+                                                                .rollback(false)
+                                                                .isUseSpecificListenerRuleArn(true)
+                                                                .downsizeOldService(true)
+                                                                .timeoutErrorSupported(true)
+                                                                .build();
+    EcsCommandExecutionResponse ecsCommandExecutionResponse = ecsListenerUpdateBGTaskHandler.executeTaskInternal(
+        ecsBGListenerUpdateRequest, Collections.emptyList(), executionLogCallback);
+
+    assertThat(ecsCommandExecutionResponse).isNotNull();
+    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
+    assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(ecsCommandExecutionResponse.getEcsCommandResponse().isTimeoutFailure()).isTrue();
   }
 }

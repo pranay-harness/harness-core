@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -216,7 +217,8 @@ public abstract class ContainerServiceSetup extends State {
       }
 
       CommandExecutionContext commandExecutionContext =
-          aCommandExecutionContext()
+          aCommandExecutionContext(
+              featureFlagService.isEnabled(FeatureName.WINRM_CAPABILITY_DEPRECATE_FOR_HTTP, app.getAccountId()))
               .accountId(app.getAccountId())
               .appId(app.getUuid())
               .envId(env.getUuid())

@@ -1,6 +1,6 @@
 package io.harness.yaml.core.failurestrategy.ignore;
 
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.IGNORE;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.IGNORE;
 
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;

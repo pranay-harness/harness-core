@@ -22,7 +22,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.DelegateOwner;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
@@ -1136,11 +1136,10 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
     String accountId = generateUuid();
     String delegateId = generateUuid();
-    DelegateOwner owner = DelegateOwner.builder().entityType("projectId").entityId("p1").build();
+    DelegateEntityOwner owner = DelegateEntityOwner.builder().identifier("orgId/projectId").build();
     delegateSelectionLogsService.logOwnerRuleNotMatched(batch, accountId, delegateId, owner);
     assertThat(batch.getDelegateSelectionLogs()).hasSize(1);
-    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Not matched owner entityType projectId, id p1");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("No matching owner: orgId/projectId");
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo("TARGETED_OWNER_MATCHED_GROUP_ID");
   }

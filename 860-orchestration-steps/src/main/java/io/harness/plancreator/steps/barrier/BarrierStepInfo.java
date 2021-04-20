@@ -2,6 +2,7 @@ package io.harness.plancreator.steps.barrier;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
@@ -52,7 +53,8 @@ public class BarrierStepInfo implements PMSStepInfo {
   }
 
   @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
+  public StepParameters getStepParametersInfo(
+      StepElementConfig stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
     return BarrierStepParameters.builder().identifier(identifier).build();
   }
 }

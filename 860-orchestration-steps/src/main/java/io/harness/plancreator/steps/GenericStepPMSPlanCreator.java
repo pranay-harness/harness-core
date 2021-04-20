@@ -111,7 +111,10 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
     if (stepElement.getStepSpecType() instanceof WithStepElementParameters) {
       stepElement.setTimeout(TimeoutUtils.getTimeout(stepElement.getTimeout()));
-      stepParameters = ((WithStepElementParameters) stepElement.getStepSpecType()).getStepParametersInfo(stepElement);
+      stepParameters =
+          ((WithStepElementParameters) stepElement.getStepSpecType())
+              .getStepParametersInfo(stepElement,
+                  getRollbackParameters(ctx.getCurrentField(), Collections.emptySet(), RollbackStrategy.UNKNOWN));
     }
 
     PlanNode stepPlanNode =

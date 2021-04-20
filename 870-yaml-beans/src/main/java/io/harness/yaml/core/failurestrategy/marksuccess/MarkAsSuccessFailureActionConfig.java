@@ -1,6 +1,6 @@
 package io.harness.yaml.core.failurestrategy.marksuccess;
 
-import static io.harness.yaml.core.failurestrategy.NGFailureActionTypeConstants.MARK_AS_SUCCESS;
+import static io.harness.beans.rollback.NGFailureActionTypeConstants.MARK_AS_SUCCESS;
 
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;

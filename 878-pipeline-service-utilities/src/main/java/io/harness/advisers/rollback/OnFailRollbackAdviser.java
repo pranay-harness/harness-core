@@ -5,8 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.advisers.CommonAdviserTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.NextStepAdvise;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -41,7 +43,10 @@ public class OnFailRollbackAdviser implements Adviser {
           YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY, OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(),
           YAMLFieldNameConstants.PIPELINE_GROUP);
     }
-    return null;
+    return AdviserResponse.newBuilder()
+        .setNextStepAdvise(NextStepAdvise.newBuilder().build())
+        .setType(AdviseType.NEXT_STEP)
+        .build();
   }
 
   @Override

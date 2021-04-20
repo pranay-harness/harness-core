@@ -27,6 +27,7 @@ trigger:
           - key: ${pull_request.number}
             operator: regex
             value: ^pr-[0-9a-f]{7}$
+        jexlCondition: true
         pathFilters:
           - path1
           - path2

@@ -16,7 +16,11 @@ const (
 	port            = 8091
 )
 
-var scmServer = grpc.NewSCMServer
+var (
+	scmServer     = grpc.NewSCMServer
+	Version       = "0.0.0"
+	BuildCommitID = "NA"
+)
 
 var args struct {
 	Verbose    bool   `arg:"--verbose" help:"enable verbose logging mode"`
@@ -37,10 +41,6 @@ func parseArgs() {
 	arg.MustParse(&args)
 }
 
-func init() {
-	//TODO: perform any initialization
-}
-
 func main() {
 	parseArgs()
 
@@ -50,7 +50,7 @@ func main() {
 			"application_name", applicationName)
 	logger := logBuilder.MustBuild().Sugar()
 
-	logger.Infow("Starting CI GRPC scm server", "port", args.Port, "unixSocket", args.UnixSocket)
+	logger.Infow("Starting CI GRPC scm server", "version", Version, "buildCommitID", BuildCommitID, "port", args.Port, "unixSocket", args.UnixSocket)
 	s, err := scmServer(args.Port, args.UnixSocket, logger)
 	if err != nil {
 		logger.Fatalw("error while running CI GRPC scm server", "port", args.Port, "unixSocket", args.UnixSocket, zap.Error(err))
@@ -58,5 +58,4 @@ func main() {
 	// Wait for stop signal and shutdown the server upon receiving it in a separate goroutine
 	go s.Stop()
 	s.Start()
-
 }

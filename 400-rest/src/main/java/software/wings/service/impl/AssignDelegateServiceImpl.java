@@ -24,11 +24,12 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FeatureName;
+import io.harness.beans.shared.tasks.NgSetupFields;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
-import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
@@ -213,22 +214,29 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   private boolean canAssignOwner(
       BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
-    boolean canAssign = true;
-    List<DelegateOwner> owners = delegate.getOwners();
+    DelegateEntityOwner delegateOwner = delegate.getOwner();
 
-    if (isNotEmpty(owners)) {
-      if (isEmpty(taskSetupAbstractions)) {
-        canAssign = false;
-      } else {
-        for (DelegateOwner owner : owners) {
-          canAssign = owner.getEntityId().equals(taskSetupAbstractions.get(owner.getEntityType()));
-          if (!canAssign) {
-            delegateSelectionLogsService.logOwnerRuleNotMatched(
-                batch, delegate.getAccountId(), delegate.getUuid(), owner);
-            break;
-          }
-        }
-      }
+    // Account level delegate and task. This is equivalent to CG behavior.
+    if (delegateOwner == null
+        && (isEmpty(taskSetupAbstractions) || taskSetupAbstractions.get(NgSetupFields.OWNER) == null)) {
+      return true;
+    }
+
+    // Account level delegate and task with an owner defined
+    if (delegateOwner == null) {
+      return false;
+    }
+
+    // Account level task and delegate with an owner defined
+    if (isEmpty(taskSetupAbstractions) || taskSetupAbstractions.get(NgSetupFields.OWNER) == null) {
+      return false;
+    }
+
+    // Delegate and task having owners that have to be matched
+    boolean canAssign = delegateOwner.getIdentifier().equals(taskSetupAbstractions.get(NgSetupFields.OWNER));
+    if (!canAssign) {
+      delegateSelectionLogsService.logOwnerRuleNotMatched(
+          batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
     }
 
     return canAssign;

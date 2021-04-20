@@ -2,9 +2,7 @@ package io.harness.cdng.creator.plan.stage;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
-import io.harness.advisers.nextstep.NextStepAdviserParameters;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
@@ -15,34 +13,25 @@ import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.stages.GenericStagePlanCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.plancreator.steps.common.StageElementParameters.StageElementParametersBuilder;
 import io.harness.plancreator.steps.common.StepParametersUtils;
-import io.harness.pms.contracts.advisers.AdviserObtainment;
-import io.harness.pms.contracts.advisers.AdviserType;
-import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.execution.utils.SkipInfoUtils;
-import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
-import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.StepOutcomeGroup;
-import io.harness.when.utils.RunInfoUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -51,8 +40,25 @@ import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(CDC)
-public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElementConfig> {
+public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
   @Inject private KryoSerializer kryoSerializer;
+
+  @Override
+  public Set<String> getSupportedStageTypes() {
+    return Collections.singleton("Deployment");
+  }
+
+  @Override
+  public StepType getStepType(StageElementConfig stageElementConfig) {
+    return DeploymentStageStep.STEP_TYPE;
+  }
+
+  @Override
+  public StepParameters getStepParameters(StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
+    StageElementParametersBuilder stageParameters = StepParametersUtils.getStageParameters(stageElementConfig);
+    stageParameters.spec(DeploymentStageStepParameters.getStepParameters(childrenNodeIds.get(0)));
+    return stageParameters.build();
+  }
 
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
@@ -139,55 +145,6 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
       resourceUnit = infrastructureKey.asText();
     }
     return resourceUnit;
-  }
-
-  @Override
-  public PlanNode createPlanForParentNode(
-      PlanCreationContext ctx, StageElementConfig config, List<String> childrenNodeIds) {
-    StageElementParametersBuilder stageParameters = StepParametersUtils.getStageParameters(config);
-    stageParameters.spec(DeploymentStageStepParameters.getStepParameters(childrenNodeIds.get(0)));
-    return PlanNode.builder()
-        .uuid(config.getUuid())
-        .name(config.getName())
-        .identifier(config.getIdentifier())
-        .group(StepOutcomeGroup.STAGE.name())
-        .stepParameters(stageParameters.build())
-        .stepType(DeploymentStageStep.STEP_TYPE)
-        .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen()))
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
-        .build();
-  }
-
-  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
-    List<AdviserObtainment> adviserObtainments = new ArrayList<>();
-    if (currentField != null && currentField.getNode() != null) {
-      if (currentField.checkIfParentIsParallel(STAGES)) {
-        return adviserObtainments;
-      }
-      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
-          currentField.getName(), Arrays.asList(YAMLFieldNameConstants.STAGE, YAMLFieldNameConstants.PARALLEL));
-      if (siblingField != null && siblingField.getNode().getUuid() != null) {
-        adviserObtainments.add(
-            AdviserObtainment.newBuilder()
-                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.NEXT_STEP.name()).build())
-                .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                    NextStepAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
-                .build());
-      }
-    }
-    return adviserObtainments;
-  }
-
-  @Override
-  public Class<StageElementConfig> getFieldClass() {
-    return StageElementConfig.class;
-  }
-
-  @Override
-  public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("Deployment"));
   }
 
   private void validateFailureStrategy(StageElementConfig stageElementConfig) {

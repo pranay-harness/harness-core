@@ -5,13 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.plancreator.steps.common.rollback.AsyncExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.Map;
 
 @OwnedBy(CDC)
-public class JiraApprovalStep implements AsyncExecutable<StepElementParameters> {
+public class JiraApprovalStep extends AsyncExecutableWithRollback {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_APPROVAL).build();
 
   @Inject private ApprovalInstanceService approvalInstanceService;

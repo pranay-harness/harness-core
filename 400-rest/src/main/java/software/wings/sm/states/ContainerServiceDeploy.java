@@ -17,6 +17,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
@@ -202,7 +203,8 @@ public abstract class ContainerServiceDeploy extends State {
           K8sStateHelper.fetchDelegateSelectorsFromK8sCloudProvider(contextData.settingAttribute.getValue());
 
       CommandExecutionContext commandExecutionContext =
-          aCommandExecutionContext()
+          aCommandExecutionContext(featureFlagService.isEnabled(
+                                       FeatureName.WINRM_CAPABILITY_DEPRECATE_FOR_HTTP, contextData.app.getAccountId()))
               .accountId(contextData.app.getAccountId())
               .appId(contextData.app.getUuid())
               .envId(contextData.env.getUuid())

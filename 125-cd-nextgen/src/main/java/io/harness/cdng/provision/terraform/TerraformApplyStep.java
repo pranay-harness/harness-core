@@ -24,11 +24,11 @@ import io.harness.logging.UnitProgress;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDP)
 @Slf4j
-public class TerraformApplyStep implements TaskExecutable<StepElementParameters, TerraformTaskNGResponse> {
+public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTaskNGResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.TERRAFORM_APPLY.getYamlType()).build();
 

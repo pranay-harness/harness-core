@@ -14,8 +14,10 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -30,6 +32,7 @@ import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -42,6 +45,7 @@ import software.wings.settings.SettingValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -94,6 +98,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
   private boolean
       disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+  private boolean replaceWinrmCapabilityWithHttp; // WINRM_CAPABILITY_DEPRECATE_FOR_HTTP
   private boolean winrmCopyConfigOptimize;
   private List<String> delegateSelectors;
 
@@ -105,7 +110,9 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private String artifactFileName;
   private SSHVaultConfig sshVaultConfig;
 
-  public CommandExecutionContext() {}
+  public CommandExecutionContext(boolean replaceWinrmCapabilityWithHttp) {
+    this.replaceWinrmCapabilityWithHttp = replaceWinrmCapabilityWithHttp;
+  }
 
   /**
    * Instantiates a new Command execution context.
@@ -234,17 +241,29 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
 
         return capabilities;
       case WINRM:
-        capabilities.add(WinrmHostValidationCapability.builder()
-                             .validationInfo(BasicValidationInfo.builder()
-                                                 .accountId(accountId)
-                                                 .appId(appId)
-                                                 .activityId(activityId)
-                                                 .executeOnDelegate(executeOnDelegate)
-                                                 .publicDns(host == null ? null : host.getPublicDns())
-                                                 .build())
-                             .winRmConnectionAttributes(winrmConnectionAttributes)
-                             .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
-                             .build());
+        if (!replaceWinrmCapabilityWithHttp) {
+          capabilities.add(WinrmHostValidationCapability.builder()
+                               .validationInfo(BasicValidationInfo.builder()
+                                                   .accountId(accountId)
+                                                   .appId(appId)
+                                                   .activityId(activityId)
+                                                   .executeOnDelegate(executeOnDelegate)
+                                                   .publicDns(host == null ? null : host.getPublicDns())
+                                                   .build())
+                               .winRmConnectionAttributes(winrmConnectionAttributes)
+                               .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
+                               .build());
+
+        } else if (!executeOnDelegate) {
+          capabilities.add(HttpConnectionExecutionCapability.builder()
+                               .host(host.getPublicDns())
+                               .port(winrmConnectionAttributes.getPort())
+                               .build());
+          if (winrmConnectionAttributes.getAuthenticationScheme() == AuthenticationScheme.KERBEROS) {
+            capabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
+                "kinit", Arrays.asList("/bin/sh", "-c", "kinit --help")));
+          }
+        }
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(
               SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
@@ -325,6 +344,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
     private boolean
         disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+    private boolean replaceWinrmCapabilityWithHttp;
     private boolean winrmCopyConfigOptimize;
     private List<String> delegateSelectors;
 
@@ -336,10 +356,12 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private String artifactFileName;
     private SSHVaultConfig sshVaultConfig;
 
-    private Builder() {}
+    private Builder(boolean replaceWinrmCapabilityWithHttp) {
+      this.replaceWinrmCapabilityWithHttp = replaceWinrmCapabilityWithHttp;
+    }
 
-    public static Builder aCommandExecutionContext() {
-      return new Builder();
+    public static Builder aCommandExecutionContext(boolean replaceWinrmCapabilityWithHttp) {
+      return new Builder(replaceWinrmCapabilityWithHttp);
     }
 
     public Builder accountId(String accountId) {
@@ -574,7 +596,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     }
 
     public Builder but() {
-      return aCommandExecutionContext()
+      return aCommandExecutionContext(replaceWinrmCapabilityWithHttp)
           .accountId(accountId)
           .envId(envId)
           .host(host)
@@ -623,7 +645,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     }
 
     public CommandExecutionContext build() {
-      CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
+      CommandExecutionContext commandExecutionContext = new CommandExecutionContext(replaceWinrmCapabilityWithHttp);
       commandExecutionContext.setAccountId(accountId);
       commandExecutionContext.setEnvId(envId);
       commandExecutionContext.setHost(host);

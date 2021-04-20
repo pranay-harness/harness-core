@@ -43,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class NgWebhookResource {
   private WebhookService webhookService;
+  private WebhookHelper webhookHelper;
 
   @POST
   @ApiOperation(value = "accept webhook event", nickname = "webhookEndpoint")
@@ -50,7 +51,7 @@ public class NgWebhookResource {
   public ResponseDTO<String> processWebhookEvent(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @NotNull String eventPayload,
       @Context HttpHeaders httpHeaders) {
-    WebhookEvent eventEntity = WebhookHelper.toNGTriggerWebhookEvent(accountIdentifier, eventPayload, httpHeaders);
+    WebhookEvent eventEntity = webhookHelper.toNGTriggerWebhookEvent(accountIdentifier, eventPayload, httpHeaders);
     if (eventEntity != null) {
       WebhookEvent newEvent = webhookService.addEventToQueue(eventEntity);
       return ResponseDTO.newResponse(newEvent.getUuid());

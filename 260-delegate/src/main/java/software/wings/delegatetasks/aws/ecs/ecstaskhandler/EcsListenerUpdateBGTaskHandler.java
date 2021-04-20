@@ -1,12 +1,17 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.LogLevel.ERROR;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -25,9 +30,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
   @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
   @Inject private AwsHelperService awsHelperService;
@@ -47,41 +55,57 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
           .build();
     }
 
-    EcsBGListenerUpdateRequest request = (EcsBGListenerUpdateRequest) ecsCommandRequest;
-    if (request.isRollback()) {
-      ecsSwapRoutesCommandTaskHelper.upsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
-          request.getRegion(), request.getCluster(), request.getServiceCountDownsized(),
-          request.getServiceNameDownsized(), executionLogCallback, request.getServiceSteadyStateTimeout());
+    try {
+      EcsBGListenerUpdateRequest request = (EcsBGListenerUpdateRequest) ecsCommandRequest;
+      if (request.isRollback()) {
+        ecsSwapRoutesCommandTaskHelper.upsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
+            request.getRegion(), request.getCluster(), request.getServiceCountDownsized(),
+            request.getServiceNameDownsized(), executionLogCallback, request.getServiceSteadyStateTimeout(),
+            request.isTimeoutErrorSupported());
+      }
+
+      if (isUpdateRequired(request, encryptedDataDetails, executionLogCallback)) {
+        logListenerUpdateDetails(request, executionLogCallback);
+        awsElbHelperServiceDelegate.swapListenersForEcsBG(request.getAwsConfig(), encryptedDataDetails,
+            request.isUseSpecificListenerRuleArn(), request.getProdListenerArn(), request.getStageListenerArn(),
+            request.getProdListenerRuleArn(), request.getStageListenerRuleArn(), request.getTargetGroupForNewService(),
+            request.getTargetGroupForExistingService(), request.getRegion(), executionLogCallback);
+        executionLogCallback.saveExecutionLog("Successfully update Prod and Stage Listeners");
+      } else {
+        executionLogCallback.saveExecutionLog(format("Not swapping target groups, prod: [%s], stage: [%s]",
+            request.getTargetGroupForExistingService(), request.getTargetGroupForNewService()));
+      }
+
+      ecsSwapRoutesCommandTaskHelper.updateServiceTags(request.getAwsConfig(), encryptedDataDetails,
+          request.getRegion(), request.getCluster(), request.getServiceName(), request.getServiceNameDownsized(),
+          request.isRollback(), executionLogCallback);
+
+      if (!request.isRollback() && request.isDownsizeOldService()) {
+        ecsSwapRoutesCommandTaskHelper.downsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
+            request.getRegion(), request.getCluster(), request.getServiceNameDownsized(), executionLogCallback,
+            request.getServiceSteadyStateTimeout());
+      }
+
+      CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
+      ecsCommandResponse.setCommandExecutionStatus(commandExecutionStatus);
+      return EcsCommandExecutionResponse.builder()
+          .commandExecutionStatus(commandExecutionStatus)
+          .ecsCommandResponse(ecsCommandResponse)
+          .build();
+    } catch (TimeoutException ex) {
+      log.error(ex.getMessage());
+      log.error(ExceptionUtils.getMessage(ex), ex);
+      executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR);
+      ecsCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+      ecsCommandResponse.setOutput(ex.getMessage());
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        ecsCommandResponse.setTimeoutFailure(true);
+      }
+      return EcsCommandExecutionResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+          .ecsCommandResponse(ecsCommandResponse)
+          .build();
     }
-
-    if (isUpdateRequired(request, encryptedDataDetails, executionLogCallback)) {
-      logListenerUpdateDetails(request, executionLogCallback);
-      awsElbHelperServiceDelegate.swapListenersForEcsBG(request.getAwsConfig(), encryptedDataDetails,
-          request.isUseSpecificListenerRuleArn(), request.getProdListenerArn(), request.getStageListenerArn(),
-          request.getProdListenerRuleArn(), request.getStageListenerRuleArn(), request.getTargetGroupForNewService(),
-          request.getTargetGroupForExistingService(), request.getRegion(), executionLogCallback);
-      executionLogCallback.saveExecutionLog("Successfully update Prod and Stage Listeners");
-    } else {
-      executionLogCallback.saveExecutionLog(format("Not swapping target groups, prod: [%s], stage: [%s]",
-          request.getTargetGroupForExistingService(), request.getTargetGroupForNewService()));
-    }
-
-    ecsSwapRoutesCommandTaskHelper.updateServiceTags(request.getAwsConfig(), encryptedDataDetails, request.getRegion(),
-        request.getCluster(), request.getServiceName(), request.getServiceNameDownsized(), request.isRollback(),
-        executionLogCallback);
-
-    if (!request.isRollback() && request.isDownsizeOldService()) {
-      ecsSwapRoutesCommandTaskHelper.downsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
-          request.getRegion(), request.getCluster(), request.getServiceNameDownsized(), executionLogCallback,
-          request.getServiceSteadyStateTimeout());
-    }
-
-    CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.SUCCESS;
-    ecsCommandResponse.setCommandExecutionStatus(commandExecutionStatus);
-    return EcsCommandExecutionResponse.builder()
-        .commandExecutionStatus(commandExecutionStatus)
-        .ecsCommandResponse(ecsCommandResponse)
-        .build();
   }
 
   private void logListenerUpdateDetails(EcsBGListenerUpdateRequest request, ExecutionLogCallback executionLogCallback) {

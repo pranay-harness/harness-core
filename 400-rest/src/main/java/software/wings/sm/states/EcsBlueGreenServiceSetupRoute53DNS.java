@@ -1,10 +1,13 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -17,6 +20,9 @@ import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -70,6 +76,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
@@ -89,6 +96,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EcsBlueGreenServiceSetupRoute53DNS extends State {
   public static final String ECS_SERVICE_SETUP_COMMAND_ROUTE53 = "ECS Service Setup Route 53";
 
@@ -199,6 +208,8 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
             .activityId(activityId)
             .safeDisplayServiceVariables(variables.getSafeDisplayServiceVariables())
             .serviceVariables(variables.getServiceVariables())
+            .timeoutErrorSupported(
+                featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, ecsSetUpDataBag.getApplication().getAccountId()))
             .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
@@ -408,10 +419,15 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
             .build());
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder()
-        .stateExecutionData(context.getStateExecutionData())
-        .executionStatus(executionStatus)
-        .build();
+    ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                           .stateExecutionData(context.getStateExecutionData())
+                                           .executionStatus(executionStatus);
+
+    if (ecsServiceSetupResponse.isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+
+    return builder.build();
   }
 
   @Override

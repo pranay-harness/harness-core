@@ -2,6 +2,7 @@ package io.harness.pms.sdk.core.interrupt;
 
 import static io.harness.govern.Switch.noop;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse.ResponseCase;
@@ -61,7 +62,8 @@ public class InterruptEventListener extends QueueListener<InterruptEvent> {
       }
       pmsInterruptService.handleFailure(event.getNotifyId());
     } catch (Exception ex) {
-      // Ignore
+      throw new InvalidRequestException("Handling failure at sdk failed with exception - " + ex.getMessage()
+          + " with interrupt event - " + event.toString());
     }
   }
 

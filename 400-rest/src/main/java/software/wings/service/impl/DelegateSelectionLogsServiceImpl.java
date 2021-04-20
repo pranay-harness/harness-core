@@ -12,7 +12,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.DelegateOwner;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
@@ -271,7 +271,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public void logOwnerRuleNotMatched(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateOwner owner) {
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateEntityOwner owner) {
     if (batch == null || owner == null) {
       return;
     }
@@ -282,7 +282,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
     batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
-                     .message("Not matched owner entityType " + owner.getEntityType() + ", id " + owner.getEntityId())
+                     .message("No matching owner: " + owner.getIdentifier())
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(TARGETED_OWNER_NOT_MATCHED_GROUP_ID)
                      .build());

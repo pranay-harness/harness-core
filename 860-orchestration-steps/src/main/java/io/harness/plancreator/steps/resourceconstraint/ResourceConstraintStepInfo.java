@@ -1,5 +1,6 @@
 package io.harness.plancreator.steps.resourceconstraint;
 
+import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -50,7 +51,8 @@ public class ResourceConstraintStepInfo implements PMSStepInfo {
   }
 
   @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
+  public StepParameters getStepParametersInfo(
+      StepElementConfig stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
     return ResourceRestraintStepParameters.builder()
         .name(name)
         .resourceUnit(resourceUnit)

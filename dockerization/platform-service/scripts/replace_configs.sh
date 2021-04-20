@@ -222,3 +222,9 @@ replace_key_value resourceGroupServiceConfig.resourceClients.manager.baseUrl "$M
 replace_key_value resourceGroupServiceConfig.resourceClients.manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
 replace_key_value resourceGroupServiceConfig.mongo.uri "${RESOURCE_GROUP_MONGO_URI//\\&/&}"
+
+replace_key_value resourceGroupServiceConfig.redis.sslConfig.enabled "$EVENTS_FRAMEWORK_REDIS_SSL_ENABLED"
+
+replace_key_value resourceGroupServiceConfig.redis.sslConfig.CATrustStorePath "$EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH"
+
+replace_key_value resourceGroupServiceConfig.redis.sslConfig.CATrustStorePassword "$EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD"

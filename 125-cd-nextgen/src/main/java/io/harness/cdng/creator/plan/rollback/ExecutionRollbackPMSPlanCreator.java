@@ -68,7 +68,7 @@ public class ExecutionRollbackPMSPlanCreator {
     PlanNode deploymentStageRollbackNode =
         PlanNode.builder()
             .uuid(executionStepsField.getNode().getUuid() + OrchestrationConstants.ROLLBACK_EXECUTION_NODE_ID_SUFFIX)
-            .name(OrchestrationConstants.ROLLBACK_NODE_NAME)
+            .name(OrchestrationConstants.EXECUTION_NODE_NAME + " " + OrchestrationConstants.ROLLBACK_NODE_NAME)
             .identifier(YAMLFieldNameConstants.ROLLBACK_STEPS)
             .stepType(RollbackOptionalChildChainStep.STEP_TYPE)
             .stepParameters(stepParametersBuilder.build())

@@ -13,17 +13,17 @@ import (
 )
 
 func TestServerFailToListen(t *testing.T) {
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err := NewSCMServer(65536, "", log.Sugar())
+	lg, _ := logs.GetObservedLogger(zap.InfoLevel)
+	_, err := NewSCMServer(65536, "", lg.Sugar())
 	assert.Error(t, err)
 }
 
 func TestStopNilServer(t *testing.T) {
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	lg, _ := logs.GetObservedLogger(zap.InfoLevel)
 	stopCh := make(chan bool, 1)
 	s := &scmServer{
 		port:   65534,
-		log:    log.Sugar(),
+		log:    lg.Sugar(),
 		stopCh: stopCh,
 	}
 	stopCh <- true
@@ -31,12 +31,12 @@ func TestStopNilServer(t *testing.T) {
 }
 
 func TestStopRunningServer(t *testing.T) {
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	lg, _ := logs.GetObservedLogger(zap.InfoLevel)
 	stopCh := make(chan bool, 1)
 	s := &scmServer{
 		port:       65533,
 		grpcServer: grpc.NewServer(),
-		log:        log.Sugar(),
+		log:        lg.Sugar(),
 		stopCh:     stopCh,
 	}
 	stopCh <- true
@@ -45,8 +45,8 @@ func TestStopRunningServer(t *testing.T) {
 
 func TestNewSCMServer(t *testing.T) {
 	port := uint(5000)
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err := NewSCMServer(port, "", log.Sugar())
+	lg, _ := logs.GetObservedLogger(zap.InfoLevel)
+	_, err := NewSCMServer(port, "", lg.Sugar())
 	assert.Nil(t, err)
 }
 
@@ -58,8 +58,8 @@ func TestNewSCMServerFailSocket(t *testing.T) {
 	}
 	os.Remove(file.Name())
 	// use that tempfile name for the socket then remove it.
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err = NewSCMServer(8080, file.Name(), log.Sugar())
+	lg, _ := logs.GetObservedLogger(zap.InfoLevel)
+	_, err = NewSCMServer(8080, file.Name(), lg.Sugar())
 	assert.Nil(t, err)
 
 	os.Remove(file.Name())

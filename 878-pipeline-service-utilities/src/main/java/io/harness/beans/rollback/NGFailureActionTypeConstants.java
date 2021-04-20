@@ -1,4 +1,4 @@
-package io.harness.yaml.core.failurestrategy;
+package io.harness.beans.rollback;
 
 public interface NGFailureActionTypeConstants {
   String IGNORE = "Ignore";
