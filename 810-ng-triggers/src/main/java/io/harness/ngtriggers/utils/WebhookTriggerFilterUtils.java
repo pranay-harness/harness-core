@@ -134,13 +134,12 @@ public class WebhookTriggerFilterUtils {
     return allConditionsMatched;
   }
 
-  public boolean checkIfJexlConditionsMatch(WebhookPayloadData webhookPayloadData, String jexlExpression) {
+  public boolean checkIfJexlConditionsMatch(String payload, String jexlExpression) {
     if (isBlank(jexlExpression)) {
       return true;
     }
 
-    TriggerExpressionEvaluator triggerExpressionEvaluator =
-        generatorPMSExpressionEvaluator(webhookPayloadData.getOriginalEvent().getPayload());
+    TriggerExpressionEvaluator triggerExpressionEvaluator = generatorPMSExpressionEvaluator(payload);
     Object result = triggerExpressionEvaluator.evaluateExpression(jexlExpression);
     if (result != null && Boolean.class.isAssignableFrom(result.getClass())) {
       return (Boolean) result;
@@ -212,7 +211,6 @@ public class WebhookTriggerFilterUtils {
         }
       }
     }
-
     return true;
   }
 

@@ -19,6 +19,7 @@ import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.EventActionTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GitWebhookTriggerRepoFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GithubIssueCommentTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.JexlConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.PayloadConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.ProjectTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.SourceRepoTypeTriggerFilter;
@@ -48,6 +49,7 @@ public class TriggerFilterHelperTest extends CategoryTest {
   @Mock EventActionTriggerFilter eventActionTriggerFilter;
   @Mock PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
   @Mock GithubIssueCommentTriggerFilter githubIssueCommentTriggerFilter;
+  @Mock JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
   @Inject @InjectMocks TriggerFilterStore triggerFilterStore;
 
   @Before
@@ -65,10 +67,12 @@ public class TriggerFilterHelperTest extends CategoryTest {
     List<TriggerFilter> webhookTriggerFilters = triggerFilterStore.getWebhookTriggerFilters(
         webhookPayloadDataBuilder.originalEvent(originalEventBuilder.build()).build());
     assertThat(webhookTriggerFilters).isNotNull();
-    assertThat(webhookTriggerFilters).containsExactlyInAnyOrder(projectTriggerFilter, payloadConditionsTriggerFilter);
+    assertThat(webhookTriggerFilters)
+        .containsExactlyInAnyOrder(projectTriggerFilter, payloadConditionsTriggerFilter, jexlConditionsTriggerFilter);
 
-    TriggerFilter[] triggerFiltersDefaultGit = new TriggerFilter[] {projectTriggerFilter, sourceRepoTypeTriggerFilter,
-        eventActionTriggerFilter, payloadConditionsTriggerFilter, gitWebhookTriggerRepoFilter};
+    TriggerFilter[] triggerFiltersDefaultGit =
+        new TriggerFilter[] {projectTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
+            payloadConditionsTriggerFilter, gitWebhookTriggerRepoFilter, jexlConditionsTriggerFilter};
 
     webhookTriggerFilters = triggerFilterStore.getWebhookTriggerFilters(
         webhookPayloadDataBuilder.parseWebhookResponse(ParseWebhookResponse.newBuilder().build())
