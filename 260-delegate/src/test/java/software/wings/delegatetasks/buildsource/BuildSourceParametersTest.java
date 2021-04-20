@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.buildsource;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static software.wings.beans.StringValue.Builder.aStringValue;
@@ -8,7 +10,8 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -29,7 +32,8 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class BuildSourceParametersTest extends WingsBaseTest {
   private static final String DOCKER_URL = "https://registry.hub.docker.com/v2/";
   private static final String JENKINS_URL = "https://jenkins.wings.software";
@@ -160,6 +164,27 @@ public class BuildSourceParametersTest extends WingsBaseTest {
     HttpConnectionExecutionCapability connectionExecutionCapability =
         (HttpConnectionExecutionCapability) capabilityList.get(0);
     assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo("https://gcr.io");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldFetchRequiredExecutionCapabilitiesGCRWithEnhancedExecCapabilities() {
+    BuildSourceParameters buildSourceParameters =
+        sourceParametersBuilder.settingValue(aStringValue().withValue("value").build())
+            .artifactStreamType(ArtifactStreamType.GCR.name())
+            .artifactStreamAttributes(ArtifactStreamAttributes.builder()
+                                          .registryHostName("gcr.io")
+                                          .enhancedGcrConnectivityCheckEnabled(true)
+                                          .imageName("image")
+                                          .build())
+            .build();
+    List<ExecutionCapability> capabilityList = buildSourceParameters.fetchRequiredExecutionCapabilities(null);
+    assertThat(capabilityList).hasSize(1);
+    assertThat(capabilityList.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
+    HttpConnectionExecutionCapability connectionExecutionCapability =
+        (HttpConnectionExecutionCapability) capabilityList.get(0);
+    assertThat(connectionExecutionCapability.fetchCapabilityBasis()).isEqualTo("https://gcr.io/v2/image/tags/list");
   }
 
   @Test

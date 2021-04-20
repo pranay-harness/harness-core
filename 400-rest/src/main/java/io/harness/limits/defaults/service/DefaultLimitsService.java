@@ -1,8 +1,12 @@
 package io.harness.limits.defaults.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.ActionType;
 import io.harness.limits.lib.Limit;
 
+@OwnedBy(PL)
 public interface DefaultLimitsService {
   // GraphQL external/internal API call's default rate limit constants.
   int GRAPHQL_EXTERNAL_RATE_LIMIT_ACCOUNT_DEFAULT = 30;

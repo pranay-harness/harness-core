@@ -23,4 +23,6 @@ public class ConnectorResponseDTO {
   ConnectorConnectivityDetails status;
   ConnectorActivityDetails activityDetails;
   boolean harnessManaged;
+  String branch;
+  String repoIdentifier;
 }

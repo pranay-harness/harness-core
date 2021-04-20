@@ -1,14 +1,17 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HARSH;
@@ -100,6 +103,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStepAndWinRmDeployment;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStepWithInfraDefinitionId;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithPhaseSteps;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenHelmWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBuildWorkflow;
@@ -190,6 +194,8 @@ import static software.wings.sm.StepType.NEW_RELIC_DEPLOYMENT_MARKER;
 import static software.wings.sm.StepType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StepType.SERVICENOW_CREATE_UPDATE;
 import static software.wings.sm.StepType.TERRAFORM_APPLY;
+import static software.wings.sm.StepType.TERRAGRUNT_DESTROY;
+import static software.wings.sm.StepType.TERRAGRUNT_PROVISION;
 import static software.wings.sm.states.AwsCodeDeployState.ARTIFACT_S3_BUCKET_EXPRESSION;
 import static software.wings.sm.states.AwsCodeDeployState.ARTIFACT_S3_KEY_EXPRESSION;
 import static software.wings.stencils.WorkflowStepType.APM;
@@ -233,6 +239,7 @@ import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -253,8 +260,12 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -336,6 +347,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.workflow.StepSkipStrategy;
+import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
@@ -345,12 +357,14 @@ import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
@@ -398,6 +412,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -408,6 +423,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 /**
@@ -415,7 +431,9 @@ import org.mongodb.morphia.query.UpdateOperations;
  *
  * @author Rishi
  */
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
+@OwnedBy(CDC)
 @Listeners(GeneralNotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
   private static final String CLONE = " - (clone)";
@@ -445,6 +463,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private PersonalizationService personalizationService;
+  @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private HarnessTagService harnessTagService;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
   @InjectMocks @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
@@ -512,6 +532,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(userGroupService.getDefaultUserGroup(Mockito.anyString()))
         .thenReturn(UserGroup.builder().uuid("some-user-group-id").build());
     when(featureFlagService.isEnabled(eq(FeatureName.DEFAULT_ARTIFACT), any())).thenReturn(true);
+    when(featureFlagService.isEnabled(eq(FeatureName.TERRAGRUNT), any())).thenReturn(true);
     Role role = aRole()
                     .withRoleType(RoleType.ACCOUNT_ADMIN)
                     .withUuid(ROLE_ID)
@@ -4333,11 +4354,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   private void validateCommonCategories(WorkflowCategorySteps workflowCategorySteps) {
-    validateCommonCategories(workflowCategorySteps, false, false);
+    validateCommonCategories(workflowCategorySteps, false, false, false);
   }
 
-  private void validateCommonCategories(
-      WorkflowCategorySteps workflowCategorySteps, boolean isK8sPhaseStep, boolean isHelmPhaseStep) {
+  private void validateCommonCategories(WorkflowCategorySteps workflowCategorySteps, boolean isK8sPhaseStep,
+      boolean isHelmPhaseStep, boolean isRollback) {
     assertThat(workflowCategorySteps.getCategories())
         .extracting(
             WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName, WorkflowCategoryStepsMeta::getStepIds)
@@ -4368,7 +4389,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
               WorkflowCategoryStepsMeta::getStepIds)
           .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
               WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(),
-              java.util.Arrays.asList(TERRAFORM_APPLY.name())));
+              java.util.Arrays.asList(TERRAFORM_APPLY.name(), TERRAGRUNT_PROVISION.name())));
     } else if (isK8sPhaseStep) {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
@@ -4381,7 +4402,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
               WorkflowCategoryStepsMeta::getStepIds)
           .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
               WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(),
-              asList(TERRAFORM_APPLY.name(), StepType.TERRAFORM_DESTROY.name())));
+              asList(TERRAFORM_APPLY.name(), StepType.TERRAFORM_DESTROY.name(), TERRAGRUNT_PROVISION.name(),
+                  TERRAGRUNT_DESTROY.name())));
     } else {
       assertThat(workflowCategorySteps.getCategories())
           .extracting(WorkflowCategoryStepsMeta::getId, WorkflowCategoryStepsMeta::getName,
@@ -4393,8 +4415,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
               WorkflowCategoryStepsMeta::getStepIds)
           .contains(tuple(WorkflowStepType.INFRASTRUCTURE_PROVISIONER.name(),
               WorkflowStepType.INFRASTRUCTURE_PROVISIONER.getDisplayName(),
-              asList(
-                  CLOUD_FORMATION_CREATE_STACK.name(), CLOUD_FORMATION_DELETE_STACK.name(), TERRAFORM_APPLY.name())));
+              isRollback ? asList(
+                  CLOUD_FORMATION_CREATE_STACK.name(), CLOUD_FORMATION_DELETE_STACK.name(), TERRAFORM_APPLY.name())
+                         : asList(CLOUD_FORMATION_CREATE_STACK.name(), CLOUD_FORMATION_DELETE_STACK.name(),
+                             TERRAFORM_APPLY.name(), TERRAGRUNT_PROVISION.name())));
     }
   }
 
@@ -4477,7 +4501,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(tuple(WorkflowStepType.HELM.name(), WorkflowStepType.HELM.getDisplayName(),
             java.util.Arrays.asList(HELM_DEPLOY.name())));
 
-    validateCommonCategories(workflowCategorySteps, false, true);
+    validateCommonCategories(workflowCategorySteps, false, true, false);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
@@ -4504,7 +4528,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(tuple(WorkflowStepType.KUBERNETES.name(), WorkflowStepType.KUBERNETES.getDisplayName(),
             asList(K8S_CANARY_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name(), KUBERNETES_SWAP_SERVICE_SELECTORS.name(),
                 K8S_TRAFFIC_SPLIT.name(), K8S_SCALE.name(), K8S_DELETE.name(), K8S_APPLY.name())));
-    validateCommonCategories(workflowCategorySteps, true, false);
+    validateCommonCategories(workflowCategorySteps, true, false, false);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
@@ -4584,7 +4608,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(tuple(WorkflowStepType.KUBERNETES.name(), WorkflowStepType.KUBERNETES.getDisplayName(),
             asList(K8S_BLUE_GREEN_DEPLOY.name(), KUBERNETES_SWAP_SERVICE_SELECTORS.name(), K8S_TRAFFIC_SPLIT.name(),
                 K8S_SCALE.name(), K8S_DELETE.name(), K8S_APPLY.name())));
-    validateCommonCategories(workflowCategorySteps, true, false);
+    validateCommonCategories(workflowCategorySteps, true, false, false);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
@@ -4610,7 +4634,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(tuple(AWS_AMI.name(), AWS_AMI.getDisplayName(),
             java.util.Arrays.asList(StepType.AWS_AMI_SERVICE_ROLLBACK.name())));
 
-    validateCommonCategories(workflowCategorySteps);
+    validateCommonCategories(workflowCategorySteps, false, false, true);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
@@ -4653,7 +4677,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                 StepType.AWS_AMI_ROLLBACK_SWITCH_ROUTES.name(),
                 StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES.name())));
 
-    validateCommonCategories(workflowCategorySteps);
+    validateCommonCategories(workflowCategorySteps, false, false, true);
 
     assertThat(workflowCategorySteps.getCategories())
         .extracting(WorkflowCategoryStepsMeta::getId)
@@ -5042,5 +5066,55 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotNull()
         .size()
         .isEqualTo(workflowPhase2.getPhaseSteps().get(0).getStepSkipStrategies().size());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void shouldFailOnNegativeWaitIntervalOnUpdatingWorkflow() {
+    Workflow workflow = constructBasicWorkflowWithPhaseSteps();
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+
+    BasicOrchestrationWorkflow basicOrchestrationWorkflow =
+        (BasicOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+
+    Map<String, WorkflowPhase> workflowPhaseIdMap = basicOrchestrationWorkflow.getWorkflowPhaseIdMap();
+    List<String> workflowPhaseIds = basicOrchestrationWorkflow.getWorkflowPhaseIds();
+    assertThat(workflowPhaseIdMap).isNotEmpty().size().isGreaterThan(0);
+    assertThat(workflowPhaseIds).isNotEmpty().size().isGreaterThan(0);
+    WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseIds.get(0));
+
+    assertThat(workflowPhase.getPhaseSteps()).isNotEmpty().size().isGreaterThan(0);
+    PhaseStep phaseStep = workflowPhase.getPhaseSteps().get(0);
+    assertThat(phaseStep).isNotNull();
+
+    phaseStep.setWaitInterval(-1);
+
+    assertThatThrownBy(
+        () -> workflowService.updateWorkflowPhase(savedWorkflow.getAppId(), savedWorkflow.getUuid(), workflowPhase))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testPruneByApplication() throws IllegalAccessException {
+    WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+    FieldUtils.writeField(workflowService, "wingsPersistence", wingsPersistence, true);
+
+    Query query = mock(Query.class);
+    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(query);
+    when(wingsPersistence.createQuery(StateMachine.class)).thenReturn(query);
+    when(wingsPersistence.delete(eq(Workflow.class), anyString(), anyString())).thenReturn(true);
+    when(query.filter(anyString(), anyString())).thenReturn(query);
+    when(query.project(anyString(), anyBoolean())).thenReturn(query);
+    Workflow workflow = aWorkflow().uuid(UUID).accountId(ACCOUNT_ID).appId(APP_ID).build();
+    when(query.asList()).thenReturn(Collections.singletonList(workflow));
+    workflowService.pruneByApplication(APP_ID);
+    verify(auditServiceHelper).reportDeleteForAuditing(APP_ID, workflow);
+    verify(harnessTagService).pruneTagLinks(ACCOUNT_ID, UUID);
+    verify(wingsPersistence).delete(eq(Workflow.class), anyString(), anyString());
+    verify(wingsPersistence).delete(any(Query.class));
+    verify(wingsPersistence).createQuery(StateMachine.class);
   }
 }

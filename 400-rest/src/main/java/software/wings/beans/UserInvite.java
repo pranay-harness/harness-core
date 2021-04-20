@@ -9,8 +9,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.validation.Update;
 
@@ -19,6 +19,7 @@ import software.wings.beans.utm.UtmInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -35,10 +36,18 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(PL)
 @Entity(value = "userInvites", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@CdIndex(name = "accountId_email_1", fields = { @Field("accountId")
-                                                , @Field("email") })
 @FieldNameConstants(innerTypeName = "UserInviteKeys")
 public class UserInvite extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_email_1")
+                 .field(UserInviteKeys.accountId)
+                 .field(UserInviteKeys.email)
+                 .build())
+        .build();
+  }
+
   public static final String UUID_KEY = "uuid";
 
   private String accountId;

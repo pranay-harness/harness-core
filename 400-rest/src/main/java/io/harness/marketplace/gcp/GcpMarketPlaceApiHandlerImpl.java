@@ -1,20 +1,27 @@
 package io.harness.marketplace.gcp;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessModule._940_MARKETPLACE_INTEGRATIONS;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.marketplace.gcp.GcpMarketPlaceConstants.TOKEN_AUDIENCE;
 import static io.harness.marketplace.gcp.GcpMarketPlaceConstants.TOKEN_ISSUER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
+import io.harness.event.handler.impl.segment.SegmentHandler.Keys;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.exception.FailureType;
 import io.harness.exception.GeneralException;
+import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.marketplace.gcp.signup.GcpMarketplaceSignUpHandler;
 import io.harness.marketplace.gcp.signup.annotations.NewSignUp;
 
 import software.wings.app.MainConfiguration;
+import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.service.intfc.signup.SignupException;
 
@@ -39,17 +46,33 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
+import org.assertj.core.util.VisibleForTesting;
+import org.mongodb.morphia.query.UpdateOperations;
 
-@OwnedBy(PL)
+@OwnedBy(GTM)
+@TargetModule(_940_MARKETPLACE_INTEGRATIONS)
 @Slf4j
 @Singleton
 public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
   @Inject private MainConfiguration configuration;
   @Inject private AuthenticationUtils authenticationUtils;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private GcpProcurementService gcpProcurementService;
+  @Inject private SegmentHelper segmentHelper;
   @Inject @NewSignUp private GcpMarketplaceSignUpHandler newUserSignUpHandler;
+  private static String SYSTEM = "system";
+  private static String GCP_BILLING_REQUEST_RECEIVED = "Gcp Billing Request received";
+  private static String GCP_BILLING_SUCCESS = "Gcp Billing Success";
+  private static String GCP_BILLING_FAILURE = "Gcp Billing Failure";
+  /*
+   This dummy account id has to be added to the GCPMarketplaceCustomer to support billing only flows.
+   */
+  private static String DUMMY_HARNESS_ACCOUNT_ID = "HarnessGcpDummyAccount";
 
   @Override
   public Response signUp(final String token) {
@@ -59,6 +82,52 @@ public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
     }
     verifyGcpMarketplaceToken(token);
     return redirectTo(newUserSignUpHandler.signUp(token));
+  }
+
+  @Override
+  public Response registerBillingOnlyTransaction(String gcpAccountId) {
+    if (DeployMode.isOnPrem(configuration.getDeployMode().name())) {
+      log.error("GCP MarketPlace billing is disabled in On-Prem");
+      return redirectToErrorPage();
+    }
+    String decryptedGcpAccountId = verifyGcpMarketplaceToken(gcpAccountId);
+    Map<String, String> properties = new HashMap<String, String>() {
+      { put("gcpAccountId", decryptedGcpAccountId); }
+    };
+    Map<String, Boolean> integrations = new HashMap<String, Boolean>() {
+      { put(Keys.SALESFORCE, Boolean.TRUE); }
+    };
+
+    try {
+      log.info("Registering Billing Transaction: {}", decryptedGcpAccountId);
+      segmentHelper.reportTrackEvent(SYSTEM, GCP_BILLING_REQUEST_RECEIVED, properties, integrations);
+      GCPMarketplaceCustomer gcpMarketplaceCustomer = getExistingCustomer(decryptedGcpAccountId);
+      if (gcpMarketplaceCustomer == null) {
+        wingsPersistence.save(GCPMarketplaceCustomer.builder()
+                                  .gcpAccountId(decryptedGcpAccountId)
+                                  .harnessAccountId(DUMMY_HARNESS_ACCOUNT_ID)
+                                  .build());
+      } else {
+        UpdateOperations<GCPMarketplaceCustomer> updateOperations =
+            wingsPersistence.createUpdateOperations(GCPMarketplaceCustomer.class);
+        updateOperations.set("harnessAccountId", DUMMY_HARNESS_ACCOUNT_ID);
+        wingsPersistence.update(gcpMarketplaceCustomer, updateOperations);
+      }
+
+      gcpProcurementService.approveAccount(decryptedGcpAccountId);
+      segmentHelper.reportTrackEvent(SYSTEM, GCP_BILLING_SUCCESS, properties, integrations);
+      log.info("Registered Billing Transaction: {} successfully", decryptedGcpAccountId);
+      return Response.ok().build();
+    } catch (Exception ex) {
+      log.error("Error while registering Billing Transaction: {}, the error is: {}", decryptedGcpAccountId,
+          ex.getMessage(), ex);
+      segmentHelper.reportTrackEvent(SYSTEM, GCP_BILLING_FAILURE, properties, integrations);
+      return Response.serverError().build();
+    }
+  }
+
+  private GCPMarketplaceCustomer getExistingCustomer(String gcpAccountId) {
+    return wingsPersistence.createQuery(GCPMarketplaceCustomer.class).filter("gcpAccountId", gcpAccountId).get();
   }
 
   private static Response redirectTo(URI uri) {
@@ -76,7 +145,8 @@ public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
     }
   }
 
-  private void verifyGcpMarketplaceToken(String token) {
+  @VisibleForTesting
+  public String verifyGcpMarketplaceToken(String token) {
     DecodedJWT jwt = JWT.decode(token);
     log.info("GCP Marketplace registration request. gcpAccountId: {}", jwt.getSubject());
     try {
@@ -105,7 +175,7 @@ public class GcpMarketPlaceApiHandlerImpl implements GcpMarketPlaceApiHandler {
 
       // Verify token
       verifier.verify(token);
-
+      return jwt.getSubject();
     } catch (Exception e) {
       throw new GeneralException("Failed to verify GCP Marketplace token", e);
     }

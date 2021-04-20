@@ -1,7 +1,9 @@
 package io.harness.limits.checker;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.mongo.MongoError;
 import io.harness.limits.Action;
 import io.harness.limits.Counter;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * MongoDB backed implementation of static limit checker
  */
+@OwnedBy(PL)
 @ParametersAreNonnullByDefault
 @Slf4j
 public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement {

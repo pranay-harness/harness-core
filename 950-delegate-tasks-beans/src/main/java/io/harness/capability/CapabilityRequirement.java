@@ -1,6 +1,6 @@
 package io.harness.capability;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @FieldNameConstants(innerTypeName = "CapabilityRequirementKeys")
 @Entity(value = "capabilityRequirement", noClassnameStored = true)
-@TargetModule(Module._460_CAPABILITY)
+@TargetModule(HarnessModule._460_CAPABILITY)
 public final class CapabilityRequirement implements PersistentEntity {
   // the account root for the capability requirement
   @FdIndex private String accountId;

@@ -1,11 +1,17 @@
 package io.harness.pms.serializer.jackson;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.UnitProgress;
+import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
@@ -14,9 +20,12 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.serializer.json.ExecutableResponseSerializer;
 import io.harness.serializer.json.ExecutionErrorInfoSerializer;
 import io.harness.serializer.json.ExecutionMetadataSerializer;
+import io.harness.serializer.json.ExecutionPrincipalInfoSerializer;
 import io.harness.serializer.json.ExecutionTriggerInfoSerializer;
 import io.harness.serializer.json.FailureInfoSerializer;
+import io.harness.serializer.json.InterruptConfigSerializer;
 import io.harness.serializer.json.LayoutNodeInfoSerializer;
+import io.harness.serializer.json.NodeRunInfoSerializer;
 import io.harness.serializer.json.SkipInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.serializer.json.TriggeredBySerializer;
@@ -25,6 +34,7 @@ import io.harness.serializer.json.YamlPropertiesSerializer;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+@OwnedBy(PIPELINE)
 public class PmsBeansJacksonModule extends SimpleModule {
   public PmsBeansJacksonModule() {
     addSerializer(StepType.class, new StepTypeSerializer());
@@ -38,5 +48,8 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(ExecutableResponse.class, new ExecutableResponseSerializer());
     addSerializer(SkipInfo.class, new SkipInfoSerializer());
     addSerializer(UnitProgress.class, new UnitProgressSerializer());
+    addSerializer(InterruptConfig.class, new InterruptConfigSerializer());
+    addSerializer(NodeRunInfo.class, new NodeRunInfoSerializer());
+    addSerializer(ExecutionPrincipalInfo.class, new ExecutionPrincipalInfoSerializer());
   }
 }

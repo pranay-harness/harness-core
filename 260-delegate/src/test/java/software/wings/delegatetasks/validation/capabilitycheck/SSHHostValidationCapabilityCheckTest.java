@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -14,7 +15,8 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
@@ -45,7 +47,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class SSHHostValidationCapabilityCheckTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private FeatureFlagService featureFlagService;

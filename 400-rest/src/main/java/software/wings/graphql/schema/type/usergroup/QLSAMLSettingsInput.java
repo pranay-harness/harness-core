@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.usergroup;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.PermissionAttribute;
@@ -14,7 +14,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLSAMLSettingsKeys")
 @Scope(PermissionAttribute.ResourceType.USER)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLSAMLSettingsInput {
   String ssoProviderId;
   String groupName;

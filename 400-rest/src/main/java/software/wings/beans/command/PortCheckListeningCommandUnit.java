@@ -47,7 +47,7 @@ public class PortCheckListeningCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("PORT_CHECK_LISTENING")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     public Yaml() {
       super(CommandUnitType.PORT_CHECK_LISTENING.name());
     }

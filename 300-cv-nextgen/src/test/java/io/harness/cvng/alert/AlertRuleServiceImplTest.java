@@ -35,7 +35,7 @@ import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.activity.ActivityType;
-import io.harness.ng.core.dto.NotificationSettingType;
+import io.harness.notification.NotificationSettingType;
 import io.harness.notification.channeldetails.SlackChannel;
 import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.persistence.HPersistence;

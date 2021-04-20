@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.security.UserGroup;
@@ -19,8 +22,9 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(DX)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class AddAppPermissionDataFetcher
     extends BaseMutatorDataFetcher<QLAddAppPermissionInput, QLAddAppPermissionPayload> {
   @Inject UserGroupService userGroupService;
@@ -50,7 +54,8 @@ public class AddAppPermissionDataFetcher
     userGroupPermissionValidator.validateAppPermission(accountId, Collections.singletonList(appPermission));
     UserGroup updatedUserGroup =
         userGroupPermissionsController.addAppPermissionToUserGroupObject(userGroup, appPermission);
-
+    log.info("Testing: Setting app permissions {} of user group {} for account {} from graphql",
+        updatedUserGroup.getAppPermissions(), userGroup.getUuid(), userGroup.getAccountId());
     // Updating this new permissions
     UserGroup savedUserGroup = userGroupService.updatePermissions(updatedUserGroup);
     return populateAddAppPermissionPayload(savedUserGroup, input.getClientMutationId());

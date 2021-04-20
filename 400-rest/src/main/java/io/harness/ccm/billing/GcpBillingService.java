@@ -1,5 +1,11 @@
 package io.harness.ccm.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import java.math.BigDecimal;
@@ -7,6 +13,8 @@ import java.util.Date;
 import java.util.List;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
+@OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public interface GcpBillingService {
   BigDecimal getTotalCost(List<Condition> conditions);
   SimpleRegression getSimpleRegression(List<Condition> conditions, Date startDate, Date endDate);

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -7,7 +8,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CommandExecutionException;
@@ -30,6 +32,7 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.service.impl.AwsHelperService;
 
+import com.amazonaws.services.ecs.model.Container;
 import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.RunTaskRequest;
@@ -46,9 +49,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsDeployCommandTaskHelper ecsDeployCommandTaskHelper;
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
@@ -106,19 +110,29 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
       }
 
       ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
+    } catch (TimeoutException ex) {
+      prepareFailureResponse(executionLogCallback, ecsRunTaskDeployResponse, ex);
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        ecsRunTaskDeployResponse.setTimeoutFailure(true);
+      }
     } catch (Exception ex) {
-      log.error("Completed operation with errors");
-      log.error(ExceptionUtils.getMessage(ex), ex);
-      Misc.logAllMessages(ex, executionLogCallback);
-
-      ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      ecsRunTaskDeployResponse.setOutput(ExceptionUtils.getMessage(ex));
+      prepareFailureResponse(executionLogCallback, ecsRunTaskDeployResponse, ex);
     }
 
     return EcsCommandExecutionResponse.builder()
         .commandExecutionStatus(ecsRunTaskDeployResponse.getCommandExecutionStatus())
         .ecsCommandResponse(ecsRunTaskDeployResponse)
         .build();
+  }
+
+  private void prepareFailureResponse(
+      ExecutionLogCallback executionLogCallback, EcsRunTaskDeployResponse ecsRunTaskDeployResponse, Exception ex) {
+    log.error("Completed operation with errors");
+    log.error(ExceptionUtils.getMessage(ex), ex);
+    Misc.logAllMessages(ex, executionLogCallback);
+
+    ecsRunTaskDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    ecsRunTaskDeployResponse.setOutput(ExceptionUtils.getMessage(ex));
   }
 
   private void executeTaskDefinitionsParseAsRegisterTaskDefinitionRequest(
@@ -266,19 +280,18 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
 
           List<Task> tasksWithFailedContainers =
               tasks.stream()
-                  .filter(task
-                      -> task.getContainers().stream().anyMatch(
-                          container -> container.getExitCode() != null && container.getExitCode() != 0))
+                  .filter(
+                      task -> task.getContainers().stream().anyMatch(container -> isEcsTaskContainerFailed(container)))
                   .collect(Collectors.toList());
           if (EmptyPredicate.isNotEmpty(tasksWithFailedContainers)) {
-            String errorMsg = tasksWithFailedContainers.stream()
-                                  .flatMap(task
-                                      -> task.getContainers().stream().filter(
-                                          container -> container.getExitCode() != null && container.getExitCode() != 0))
-                                  .map(container
-                                      -> container.getTaskArn() + " => " + container.getContainerArn()
-                                          + " => exit code : " + container.getExitCode())
-                                  .collect(Collectors.joining("\n"));
+            String errorMsg =
+                tasksWithFailedContainers.stream()
+                    .flatMap(
+                        task -> task.getContainers().stream().filter(container -> isEcsTaskContainerFailed(container)))
+                    .map(container
+                        -> container.getTaskArn() + " => " + container.getContainerArn()
+                            + " => exit code : " + container.getExitCode())
+                    .collect(Collectors.joining("\n"));
             executionLogCallback.saveExecutionLog(
                 "Containers in some tasks failed and are showing non zero exit code\n" + errorMsg, LogLevel.ERROR,
                 CommandExecutionStatus.FAILURE);
@@ -316,5 +329,11 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
     }
     executionLogCallback.saveExecutionLog(
         "All Tasks completed successfully.", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  public boolean isEcsTaskContainerFailed(Container container) {
+    return (container.getExitCode() != null && container.getExitCode() != 0)
+        || (container.getLastStatus() != null && container.getLastStatus().equals("STOPPED")
+            && container.getExitCode() == null);
   }
 }

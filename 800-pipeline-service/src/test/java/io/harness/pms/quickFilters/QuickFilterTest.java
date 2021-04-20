@@ -1,0 +1,94 @@
+package io.harness.pms.quickFilters;
+
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
+import io.harness.filter.service.FilterService;
+import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.helpers.TriggeredByHelper;
+import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
+import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
+import io.harness.rule.Owner;
+
+import java.util.Collections;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.mongodb.core.query.Criteria;
+
+public class QuickFilterTest extends CategoryTest {
+  @Mock private TriggeredByHelper triggeredByHelper;
+  @Mock private FilterService filterService;
+
+  @InjectMocks private PMSExecutionServiceImpl pmsExecutionServiceImpl;
+
+  @Before
+  public void init() {
+    MockitoAnnotations.initMocks(this);
+    when(triggeredByHelper.getFromSecurityContext()).thenReturn(TriggeredBy.newBuilder().build());
+  }
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testformCriteriaQuickFilters() {
+    // testing pipelineIdentifier,status and myDeployements values
+    Criteria form = pmsExecutionServiceImpl.formCriteria(
+        "acc", "org", "pro", "pip", null, null, "mod", "sear", ExecutionStatus.FAILED, true);
+
+    // status
+    assertThat(form.getCriteriaObject().get("status").toString().contentEquals(ExecutionStatus.FAILED.name()))
+        .isEqualTo(true);
+
+    // myDeployments
+    assertThat(form.getCriteriaObject().containsKey("executionTriggerInfo")).isEqualTo(true);
+
+    // pipelineIdentifier
+    assertThat(form.getCriteriaObject().get("pipelineIdentifier").toString().contentEquals("pip")).isEqualTo(true);
+
+    // making myDeployments = false
+    Criteria allDeploymentsform = pmsExecutionServiceImpl.formCriteria(
+        "acc", "org", "pro", "pip", null, null, "mod", "sear", ExecutionStatus.FAILED, false);
+    // allDeployment -> myDeployments = false
+    assertThat(allDeploymentsform.getCriteriaObject().containsKey("executionTriggerInfo")).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testformCriteriaFilterProperties() {
+    // making a filterProperties object with a status value
+    Criteria form = pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", null,
+        PipelineExecutionFilterPropertiesDTO.builder()
+            .status(Collections.singletonList(ExecutionStatus.ABORTED))
+            .build(),
+        "mod", "sear", null, true);
+    assertThat(form.getCriteriaObject().get("status")).isNotNull();
+
+    // filterProperties and filterIdentifier as not null
+    assertThatThrownBy(()
+                           -> pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", "filterIdentifierDummy",
+                               PipelineExecutionFilterPropertiesDTO.builder()
+                                   .status(Collections.singletonList(ExecutionStatus.ABORTED))
+                                   .build(),
+                               "mod", "sear", null, true))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // giving random name to filterIdentifier and fitlerProperties as null
+    String randomFilterIdentifier = RandomStringUtils.randomAlphabetic(10);
+    assertThatThrownBy(()
+                           -> pmsExecutionServiceImpl.formCriteria(
+                               "acc", "org", "pro", "pip", randomFilterIdentifier, null, "mod", "sear", null, true))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+}

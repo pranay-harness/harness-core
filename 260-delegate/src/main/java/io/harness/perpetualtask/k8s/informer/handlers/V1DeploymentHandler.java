@@ -2,7 +2,7 @@ package io.harness.perpetualtask.k8s.informer.handlers;
 
 import static io.harness.perpetualtask.k8s.informer.handlers.support.WorkloadSpecUtils.makeContainerSpecs;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -13,7 +13,7 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import java.util.List;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class V1DeploymentHandler extends BaseHandler<V1Deployment> {
   public V1DeploymentHandler(EventPublisher eventPublisher, ClusterDetails clusterDetails) {
     super(eventPublisher, clusterDetails);

@@ -18,6 +18,7 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.intfc.ContainerService;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,10 +45,15 @@ public class GcpInfrastructureProviderTest extends CategoryTest {
   @Category(UnitTests.class)
   public void listClusterNames() {
     SettingAttribute settingAttribute =
-        aSettingAttribute().withValue(GcpConfig.builder().useDelegate(false).build()).build();
+        aSettingAttribute().withValue(GcpConfig.builder().useDelegateSelectors(false).build()).build();
 
     SettingAttribute settingAttributeDelegateBased =
-        aSettingAttribute().withValue(GcpConfig.builder().useDelegate(true).delegateSelector("abc").build()).build();
+        aSettingAttribute()
+            .withValue(GcpConfig.builder()
+                           .useDelegateSelectors(true)
+                           .delegateSelectors(Collections.singletonList("abc"))
+                           .build())
+            .build();
 
     gcpInfrastructureProvider.listClusterNames(settingAttribute, null);
     assertThatExceptionOfType(InvalidRequestException.class)

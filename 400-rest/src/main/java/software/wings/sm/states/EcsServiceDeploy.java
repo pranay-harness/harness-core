@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.FeatureName.ECS_AUTOSCALAR_REDESIGN;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -143,6 +144,8 @@ public class EcsServiceDeploy extends State {
                                           .cluster(deployDataBag.getEcsInfrastructureMapping().getClusterName())
                                           .awsConfig(deployDataBag.getAwsConfig())
                                           .ecsResizeParams(resizeParams)
+                                          .timeoutErrorSupported(featureFlagService.isEnabled(
+                                              TIMEOUT_FAILURE_SUPPORT, deployDataBag.getApp().getAccountId()))
                                           .build();
 
     ecsStateHelper.createSweepingOutputForRollback(deployDataBag, activity, delegateService, resizeParams, context);

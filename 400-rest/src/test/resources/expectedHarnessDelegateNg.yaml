@@ -104,6 +104,8 @@ spec:
           value: KUBERNETES
         - name: DELEGATE_NAME
           value: harness-delegate
+        - name: DELEGATE_GROUP_ID
+          value: delegateGroupId1
         - name: DELEGATE_DESCRIPTION
           value: "desc"
         - name: DELEGATE_PROFILE
@@ -153,6 +155,10 @@ spec:
         - name: HELM_PATH
           value: ""
         - name: KUSTOMIZE_PATH
+          value: ""
+        - name: OC_PATH
+          value: ""
+        - name: KUBECTL_PATH
           value: ""
         - name: ENABlE_CE
           value: "false"

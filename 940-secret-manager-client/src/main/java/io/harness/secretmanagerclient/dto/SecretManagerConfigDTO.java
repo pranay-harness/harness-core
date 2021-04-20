@@ -1,7 +1,10 @@
 package io.harness.secretmanagerclient.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptionType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @SuperBuilder

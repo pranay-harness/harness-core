@@ -10,6 +10,9 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Use this interface whn you want to perform synchronous requests.
  *
@@ -21,4 +24,12 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 public interface SyncExecutable<T extends StepParameters> extends Step<T> {
   StepResponse executeSync(
       Ambiance ambiance, T stepParameters, StepInputPackage inputPackage, PassThroughData passThroughData);
+
+  default List<String> getLogKeys(Ambiance ambiance) {
+    return new ArrayList<>();
+  }
+
+  default List<String> getCommandUnits(Ambiance ambiance) {
+    return new ArrayList<>();
+  }
 }

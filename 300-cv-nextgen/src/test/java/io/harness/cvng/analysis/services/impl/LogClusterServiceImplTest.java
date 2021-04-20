@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
@@ -32,7 +33,6 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
-import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -42,8 +42,10 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,18 +70,18 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
   @Inject VerificationJobService verificationJobService;
   @Inject VerificationJobInstanceService verificationJobInstanceService;
   private String verificationJobIdentifier;
-  private long deploymentStartTimeMs;
   private Instant now;
   private String projectIdentifier;
   private String orgIdentifier;
+  private BuilderFactory builderFactory;
 
   @Before
   public void setup() {
     CVConfig cvConfig = createCVConfig();
     cvConfigService.save(cvConfig);
     verificationJobIdentifier = generateUuid();
-    deploymentStartTimeMs = Instant.parse("2020-07-27T10:44:06.000Z").toEpochMilli();
     now = Instant.parse("2020-07-27T10:44:11.000Z");
+    builderFactory = BuilderFactory.builder().clock(Clock.fixed(now, ZoneOffset.UTC)).build();
     serviceGuardVerificationTaskId =
         verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
     cvConfigId = cvConfig.getUuid();
@@ -139,9 +141,8 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     String accountId = generateUuid();
     VerificationJobDTO verificationJob = newCanaryVerificationJob();
     verificationJobService.upsert(accountId, verificationJob);
-    VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, orgIdentifier, projectIdentifier, verificationJobInstanceDTO);
+    VerificationJobInstance verificationJobInstance = newVerificationJobInstanceDTO();
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
     String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     AnalysisInput input =
         AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(start).endTime(end).build();
@@ -165,9 +166,8 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     verificationJob.setAccountId(accountId);
     verificationJob.setUuid(verificationJobIdentifier);
     hPersistence.save(verificationJob);
-    VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, orgIdentifier, projectIdentifier, verificationJobInstanceDTO);
+    VerificationJobInstance verificationJobInstance = newVerificationJobInstanceDTO();
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
     VerificationJobInstance instance = hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);
     instance.setResolvedJob(verificationJob);
     hPersistence.save(instance);
@@ -185,7 +185,7 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     LogClusterLearningEngineTask logCanaryAnalysisLearningEngineTask = (LogClusterLearningEngineTask) tasks.get(0);
     assertThat(logCanaryAnalysisLearningEngineTask.getTestDataUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-cluster/test-data?verificationTaskId=" + verificationTaskId
-            + "&startTime=1595845740000&endTime=1595847540000&clusterLevel=L2");
+            + "&startTime=1595845620000&endTime=1595847540000&clusterLevel=L2");
     assertThat(logCanaryAnalysisLearningEngineTask.getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
 
@@ -201,9 +201,8 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     verificationJob.setAccountId(accountId);
     verificationJob.setUuid(verificationJobIdentifier);
     hPersistence.save(verificationJob);
-    VerificationJobInstanceDTO verificationJobInstanceDTO = newVerificationJobInstanceDTO();
-    String verificationJobInstanceId =
-        verificationJobInstanceService.create(accountId, orgIdentifier, projectIdentifier, verificationJobInstanceDTO);
+    VerificationJobInstance verificationJobInstance = newVerificationJobInstanceDTO();
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
     VerificationJobInstance instance = hPersistence.get(VerificationJobInstance.class, verificationJobInstanceId);
     instance.setResolvedJob(verificationJob);
     hPersistence.save(instance);
@@ -219,9 +218,7 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
                                          .asList();
     assertThat(tasks.size()).isEqualTo(1);
     LogClusterLearningEngineTask testLogClusterLearningEngineTask = (LogClusterLearningEngineTask) tasks.get(0);
-    assertThat(testLogClusterLearningEngineTask.getTestDataUrl())
-        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-cluster/l1-test-verification-test-data?verificationTaskId="
-            + verificationTaskId + "&startTime=1595846760000&endTime=1595847540000");
+    assertThat(testLogClusterLearningEngineTask.getTestDataUrl()).isNull();
     assertThat(testLogClusterLearningEngineTask.getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
   @Test
@@ -440,12 +437,7 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     return testVerificationJob;
   }
 
-  private VerificationJobInstanceDTO newVerificationJobInstanceDTO() {
-    return VerificationJobInstanceDTO.builder()
-        .verificationJobIdentifier(verificationJobIdentifier)
-        .deploymentStartTimeMs(deploymentStartTimeMs)
-        .verificationTaskStartTimeMs(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis())
-        .dataCollectionDelayMs(Duration.ofMinutes(5).toMillis())
-        .build();
+  private VerificationJobInstance newVerificationJobInstanceDTO() {
+    return builderFactory.verificationJobInstanceBuilder().build();
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -26,6 +27,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -121,6 +123,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     ArgumentCaptor<EcsServiceDeployRequest> captor = ArgumentCaptor.forClass(EcsServiceDeployRequest.class);
     verify(mockEcsStateHelper).createAndQueueDelegateTaskForEcsServiceDeploy(any(), captor.capture(), any(), any());
     verify(mockEcsStateHelper).createSweepingOutputForRollback(any(), any(), any(), any(), any());
+    verify(mockFeatureFlagService).isEnabled(eq(TIMEOUT_FAILURE_SUPPORT), any());
     EcsServiceDeployRequest request = captor.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getEcsResizeParams()).isNotNull();

@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.mutation.secrets.input;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.secrets.QLSecretType;
@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLDeleteSecretInputKeys")
 @Scope(PermissionAttribute.ResourceType.SETTING)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLDeleteSecretInput {
   String clientMutationId;
   String secretId;

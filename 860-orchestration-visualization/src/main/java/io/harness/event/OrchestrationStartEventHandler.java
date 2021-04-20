@@ -25,8 +25,14 @@ public class OrchestrationStartEventHandler implements SyncOrchestrationEventHan
   @Inject PlanExecutionService planExecutionService;
   @Inject GraphGenerationService graphGenerationService;
 
-  @Override
   public void handleEvent(OrchestrationEvent event) {
+    OrchestrationGraph orchestrationGraph = handleEventFromLog(event);
+    if (orchestrationGraph != null) {
+      graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
+    }
+  }
+
+  public OrchestrationGraph handleEventFromLog(OrchestrationEvent event) {
     Ambiance ambiance = event.getAmbiance();
     try {
       PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
@@ -34,22 +40,21 @@ public class OrchestrationStartEventHandler implements SyncOrchestrationEventHan
       log.info("Starting Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
           planExecution.getStatus());
 
-      OrchestrationGraph graphInternal = OrchestrationGraph.builder()
-                                             .cacheKey(planExecution.getUuid())
-                                             .cacheParams(null)
-                                             .cacheContextOrder(System.currentTimeMillis())
-                                             .adjacencyList(OrchestrationAdjacencyListInternal.builder()
-                                                                .graphVertexMap(new HashMap<>())
-                                                                .adjacencyMap(new HashMap<>())
-                                                                .build())
-                                             .planExecutionId(planExecution.getUuid())
-                                             .rootNodeIds(new ArrayList<>())
-                                             .startTs(planExecution.getStartTs())
-                                             .endTs(planExecution.getEndTs())
-                                             .status(planExecution.getStatus())
-                                             .build();
+      return OrchestrationGraph.builder()
+          .cacheKey(planExecution.getUuid())
+          .cacheParams(null)
+          .cacheContextOrder(System.currentTimeMillis())
+          .adjacencyList(OrchestrationAdjacencyListInternal.builder()
+                             .graphVertexMap(new HashMap<>())
+                             .adjacencyMap(new HashMap<>())
+                             .build())
+          .planExecutionId(planExecution.getUuid())
+          .rootNodeIds(new ArrayList<>())
+          .startTs(planExecution.getStartTs())
+          .endTs(planExecution.getEndTs())
+          .status(planExecution.getStatus())
+          .build();
 
-      graphGenerationService.cacheOrchestrationGraph(graphInternal);
     } catch (Exception e) {
       log.error("[{}] event failed for plan [{}]", event.getEventType(), ambiance.getPlanExecutionId(), e);
       throw e;

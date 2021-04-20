@@ -2,9 +2,6 @@ package io.harness.mongo.index;
 
 import static org.atmosphere.annotation.AnnotationUtil.logger;
 
-import io.harness.mongo.Collation;
-import io.harness.mongo.CollationLocale;
-import io.harness.mongo.CollationStrength;
 import io.harness.mongo.IndexCreator;
 import io.harness.mongo.IndexCreator.IndexCreatorBuilder;
 import io.harness.serializer.JsonUtils;
@@ -23,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CompoundMongoIndex implements MongoIndex {
   String name;
   boolean unique;
+  boolean sparse;
   Collation collation;
   @Singular private List<String> fields;
 
@@ -41,12 +39,5 @@ public class CompoundMongoIndex implements MongoIndex {
       options.put("collation", basicDBObject);
     }
     return IndexCreator.builder().keys(keys).options(options);
-  }
-
-  @Value
-  @Builder
-  public static class Collation {
-    CollationLocale locale;
-    CollationStrength strength;
   }
 }

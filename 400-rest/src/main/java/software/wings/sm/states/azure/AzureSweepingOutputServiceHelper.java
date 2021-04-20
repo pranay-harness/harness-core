@@ -9,13 +9,13 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;

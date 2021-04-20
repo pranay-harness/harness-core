@@ -81,8 +81,8 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, proj
 			stmt := fmt.Sprintf(
 				`
 					INSERT INTO %s
-					(time, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
-					class_name, duration_ms, status, message, type, description, stdout, stderr)
+					(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
+					class_name, duration_ms, result, message, type, description, stdout, stderr)
 					VALUES %s`, table, strings.Join(valueStrings, ","))
 			_, err := tdb.Conn.Exec(stmt, valueArgs...)
 			if err != nil {
@@ -100,8 +100,8 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, proj
 		stmt := fmt.Sprintf(
 			`
 				INSERT INTO %s
-				(time, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
-				class_name, duration_ms, status, message, type, description, stdout, stderr)
+				(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
+				class_name, duration_ms, result, message, type, description, stdout, stderr)
 				VALUES %s`, table, strings.Join(valueStrings, ","))
 		_, err := tdb.Conn.Exec(stmt, valueArgs...)
 		if err != nil {
@@ -116,7 +116,7 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, proj
 func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, projectId, pipelineId,
 	buildId, report string) (types.SummaryResponse, error) {
 	query := fmt.Sprintf(`
-		SELECT duration_ms, status, name FROM %s WHERE account_id = $1
+		SELECT duration_ms, result, name FROM %s WHERE account_id = $1
 		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6;`, table)
 
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId, report)
@@ -163,10 +163,10 @@ func (tdb *TimeScaleDb) GetTestCases(
 	// default order is to display failed and errored tests first
 	failureOrder := `
 	CASE
-		WHEN status = 'failed' THEN 1
-		WHEN status = 'error' THEN 2
-		WHEN status = 'skipped' THEN 3
-		WHEN status = 'passed' THEN 4
+		WHEN result = 'failed' THEN 1
+		WHEN result = 'error' THEN 2
+		WHEN result = 'skipped' THEN 3
+		WHEN result = 'passed' THEN 4
 		ELSE 5
 	END`
 	if offset == "" {
@@ -195,10 +195,10 @@ func (tdb *TimeScaleDb) GetTestCases(
 	}
 	query := fmt.Sprintf(
 		`
-		SELECT name, suite_name, class_name, duration_ms, status, message,
+		SELECT name, suite_name, class_name, duration_ms, result, message,
 		description, type, stdout, stderr, COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND status IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND result IN (%s)
 		ORDER BY %s %s, %s %s
 		LIMIT $8 OFFSET $9;`, table, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, report, suiteName, limit, offset)
@@ -287,13 +287,13 @@ func (tdb *TimeScaleDb) GetTestSuites(
 	query := fmt.Sprintf(
 		`
 		SELECT suite_name, SUM(duration_ms) AS duration_ms, COUNT(*) AS total_tests,
-		SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) AS skipped_tests,
-		SUM(CASE WHEN status = 'passed' THEN 1 ELSE 0 END) AS passed_tests,
-		SUM(CASE WHEN status = 'failed' OR status = 'error' THEN 1 ELSE 0 END) AS failed_tests,
-		SUM(CASE WHEN status = 'failed' OR status = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
+		SUM(CASE WHEN result = 'skipped' THEN 1 ELSE 0 END) AS skipped_tests,
+		SUM(CASE WHEN result = 'passed' THEN 1 ELSE 0 END) AS passed_tests,
+		SUM(CASE WHEN result = 'failed' OR result = 'error' THEN 1 ELSE 0 END) AS failed_tests,
+		SUM(CASE WHEN result = 'failed' OR result = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
 		COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND status IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND result IN (%s)
 		GROUP BY suite_name
 		ORDER BY %s %s, %s %s
 		LIMIT $7 OFFSET $8;`, table, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
@@ -330,4 +330,152 @@ func (tdb *TimeScaleDb) GetTestSuites(
 
 	metadata := types.ResponseMetadata{TotalItems: total, PageSize: pageSize, PageItemCount: len(testSuites), TotalPages: numPages}
 	return types.TestSuites{Metadata: metadata, Suites: testSuites}, nil
+}
+
+// WriteSelectedTests write selected test information corresponding to a PR to the database
+func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	buildId, stageId, stepId string, s types.SelectTestsResp) error {
+	entries := 12
+	valueArgs := make([]interface{}, 0, entries)
+	valueArgs = append(valueArgs, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId,
+		s.TotalTests, s.SelectedTests, s.SrcCodeTests, s.NewTests, s.UpdatedTests)
+	stmt := fmt.Sprintf(
+		`
+					INSERT INTO %s
+					(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id,
+					test_count, test_selected, source_code_test, new_test, updated_test)
+					VALUES %s`, table, constructPsqlInsertStmt(1, entries))
+	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
+	if err != nil {
+		tdb.Log.Errorw("could not write test data to database", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// GetSelectionOverview provides high level stats for test selection
+func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	buildId string) (types.SelectionOverview, error) {
+	var ztotal, zsrc, znew, zupd zero.Int
+	query := fmt.Sprintf(
+		`
+		SELECT test_count, source_code_test, new_test, updated_test
+		FROM %s
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5`, table)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId)
+	if err != nil {
+		tdb.Log.Errorw("could not query database for selection overview", zap.Error(err))
+		return types.SelectionOverview{}, err
+	}
+	res := types.SelectionOverview{}
+	for rows.Next() {
+		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd)
+		if err != nil {
+			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
+			return types.SelectionOverview{}, err
+		}
+		res.Total = int(ztotal.ValueOrZero())
+		res.Selected.New = int(znew.ValueOrZero())
+		res.Selected.Upd = int(zupd.ValueOrZero())
+		res.Selected.Src = int(zsrc.ValueOrZero())
+		res.Skipped = res.Total - res.Selected.New - res.Selected.Upd - res.Selected.Src
+		return res, nil
+	}
+	if rows.Err() != nil {
+		return res, rows.Err()
+	}
+
+	return res, nil
+}
+
+// WriteDiffFiles writes the changed files in a PR along with their status (modified/added/deleted)
+func (tdb *TimeScaleDb) WriteDiffFiles(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	buildId, stageId, stepId string, diff types.DiffInfo) error {
+	entries := 10
+	i := 1
+	valueStrings := make([]string, 0, len(diff.Files))
+	valueArgs := make([]interface{}, 0, len(diff.Files)*entries)
+	for _, f := range diff.Files {
+		valueStrings = append(valueStrings, constructPsqlInsertStmt(i, i+entries-1))
+		valueArgs = append(valueArgs, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId, diff.Sha, f.Name, f.Status)
+		i = i + entries
+	}
+	stmt := fmt.Sprintf(
+		`
+					INSERT INTO %s
+					(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, sha, file_path, status)
+					VALUES %s`, table, strings.Join(valueStrings, ","))
+	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
+	if err != nil {
+		tdb.Log.Errorw("could not write file information to database", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+// GetDiffFiles returns the modified files in a PR corresponding to a list of commits in a
+// pull request. It returning information about the latest commit corresponding to the commits
+// present in sha.
+func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, table, accountID string, sha []string) (types.DiffInfo, error) {
+	res := types.DiffInfo{}
+	files := []types.File{}
+	var shaIn string
+	// Construct 'IN' clause list from string list
+	for idx, s := range sha {
+		shaIn += fmt.Sprintf("'%s'", s)
+		if idx != len(sha)-1 {
+			shaIn = shaIn + ","
+		}
+	}
+	// First query to get the latest commit out of the commits in []sha
+	query := fmt.Sprintf(
+		`
+		SELECT sha, MAX(created_at) AS ct
+		FROM %s
+		WHERE account_id = $1 AND sha IN (%s)
+		GROUP BY sha
+		ORDER BY ct desc`, table, shaIn)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID)
+	if err != nil {
+		tdb.Log.Errorw("could not get latest commit ID in list", zap.Error(err))
+		return res, err
+	}
+	var lastSha string
+	for rows.Next() {
+		var t time.Time
+		err = rows.Scan(&lastSha, &t)
+		if err != nil {
+			tdb.Log.Errorw("could not get last commit ID", zap.Error(err))
+			return res, err
+		}
+		break
+	}
+	if rows.Err() != nil {
+		return res, rows.Err()
+	}
+	query = fmt.Sprintf(
+		`
+		SELECT file_path, status
+		FROM %s
+		WHERE account_id = $1 AND sha = $2`, table)
+	rows, err = tdb.Conn.QueryContext(ctx, query, accountID, lastSha)
+	if err != nil {
+		tdb.Log.Errorw("could not query database for diff files", zap.Error(err))
+		return res, err
+	}
+	for rows.Next() {
+		f := types.File{}
+		err = rows.Scan(&f.Name, &f.Status)
+		if err != nil {
+			tdb.Log.Errorw("could not read diff files from db", zap.Error(err))
+			return res, err
+		}
+		files = append(files, f)
+	}
+	if rows.Err() != nil {
+		return res, rows.Err()
+	}
+	res.Sha = lastSha
+	res.Files = files
+	return res, nil
 }

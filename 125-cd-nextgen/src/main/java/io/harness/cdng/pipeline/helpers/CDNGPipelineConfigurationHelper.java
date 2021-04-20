@@ -1,6 +1,10 @@
 package io.harness.cdng.pipeline.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStrategyType;
+import io.harness.cdng.infra.beans.ProvisionerType;
 import io.harness.cdng.pipeline.NGStepType;
 import io.harness.cdng.pipeline.StepCategory;
 import io.harness.cdng.pipeline.StepData;
@@ -21,6 +25,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDP)
 public class CDNGPipelineConfigurationHelper {
   @VisibleForTesting static String LIBRARY = "Library";
 
@@ -52,6 +57,16 @@ public class CDNGPipelineConfigurationHelper {
     }
   }
 
+  public String getProvisionerExecutionStrategyYaml(ProvisionerType type) throws IOException {
+    if (!ProvisionerType.isSupported(type)) {
+      throw new GeneralException(String.format("Provisioner Type: [%s] is not supported", type.getDisplayName()));
+    }
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    return Resources.toString(Objects.requireNonNull(classLoader.getResource(String.format(
+                                  "provisionerStrategyYaml/%s.yaml", type.getDisplayName().toLowerCase()))),
+        StandardCharsets.UTF_8);
+  }
+
   public List<ServiceDefinitionType> getServiceDefinitionTypes() {
     return Arrays.asList(ServiceDefinitionType.values());
   }
@@ -71,6 +86,15 @@ public class CDNGPipelineConfigurationHelper {
             .collect(Collectors.toList());
     StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
     for (NGStepType stepType : filteredNGStepTypes) {
+      addToTopLevel(stepCategory, stepType);
+    }
+    return stepCategory;
+  }
+
+  public StepCategory getStepsForProvisioners() {
+    List<NGStepType> steps = ProvisionerType.getSupportedSteps();
+    StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
+    for (NGStepType stepType : steps) {
       addToTopLevel(stepCategory, stepType);
     }
     return stepCategory;

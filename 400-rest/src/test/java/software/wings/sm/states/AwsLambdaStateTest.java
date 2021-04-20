@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
@@ -36,13 +37,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -88,6 +90,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class AwsLambdaStateTest extends CategoryTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
@@ -197,7 +200,7 @@ public class AwsLambdaStateTest extends CategoryTest {
     when(((DeploymentExecutionContext) mockContext).getDefaultArtifactForService(SERVICE_ID))
         .thenReturn(anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(mockDockerArtifactStream);
-    when(mockDockerArtifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(mockDockerArtifactStream.fetchArtifactStreamAttributes(any())).thenReturn(artifactStreamAttributes);
     when(mockDockerArtifactStream.getArtifactStreamType()).thenReturn(ArtifactStreamType.AMAZON_S3.name());
     when(mockDockerArtifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, null))

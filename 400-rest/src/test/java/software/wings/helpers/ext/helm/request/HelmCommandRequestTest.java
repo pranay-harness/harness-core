@@ -1,9 +1,12 @@
 package software.wings.helpers.ext.helm.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -21,6 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class HelmCommandRequestTest extends WingsBaseTest {
   @Mock private ContainerServiceParams containerServiceParams;
 

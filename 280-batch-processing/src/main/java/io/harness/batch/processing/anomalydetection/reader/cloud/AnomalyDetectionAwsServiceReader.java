@@ -20,6 +20,7 @@ import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class AnomalyDetectionAwsServiceReader extends AnomalyDetectionCloudReade
     List<CloudBillingGroupBy> groupByList = new ArrayList<>();
     List<CloudBillingAggregate> aggregationList = new ArrayList<>();
     List<CloudBillingSortCriteria> sortCriteriaList = new ArrayList<>();
+    List<DbColumn> notNullColumns = new ArrayList<>();
 
     CloudQueryMetaData queryMetaData = CloudQueryMetaData.builder()
                                            .accountId(accountId)
@@ -44,6 +46,7 @@ public class AnomalyDetectionAwsServiceReader extends AnomalyDetectionCloudReade
                                            .filterList(filterList)
                                            .groupByList(groupByList)
                                            .sortCriteriaList(sortCriteriaList)
+                                           .notNullColumns(notNullColumns)
                                            .build();
 
     timeSeriesMetaData = TimeSeriesMetaData.builder()
@@ -92,6 +95,7 @@ public class AnomalyDetectionAwsServiceReader extends AnomalyDetectionCloudReade
                             .columnName(CloudBillingAggregate.AWS_BLENDED_COST)
                             .operationType(QLCCMAggregateOperation.SUM)
                             .build());
+    notNullColumns.add(PreAggregatedTableSchema.awsBlendedCost);
 
     // sort Critera
     sortCriteriaList.add(CloudBillingSortCriteria.builder()

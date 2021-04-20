@@ -28,7 +28,7 @@ public interface PMSPipelineService {
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);
 
-  StepCategory getSteps(String module, String category);
+  StepCategory getSteps(String module, String category, String accountId);
 
   Optional<PipelineEntity> incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);

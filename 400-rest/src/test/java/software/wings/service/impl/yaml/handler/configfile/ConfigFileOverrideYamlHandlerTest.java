@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -153,7 +154,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
 
     configFileOverrideYamlHandler.delete(changeContext);
     verify(environmentService, times(1)).getEnvironmentByName(APP_ID, ENV_NAME);
-    verify(configService, never()).delete(anyString(), anyString(), any(), anyString());
+    verify(configService, never()).delete(anyString(), anyString(), any(), anyString(), anyBoolean());
   }
 
   @Test
@@ -163,13 +164,14 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
     String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML);
     ChangeContext<ConfigFile.OverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAService);
+    changeContext.getChange().setSyncFromGit(true);
     getApplication();
     getEnvironment();
     getServiceAndServiceTemplateId();
 
     configFileOverrideYamlHandler.delete(changeContext);
     verify(configService, times(1))
-        .delete(eq(APP_ID), eq(SERVICE_TEMPLATE_ID), eq(EntityType.SERVICE_TEMPLATE), anyString());
+        .delete(eq(APP_ID), eq(SERVICE_TEMPLATE_ID), eq(EntityType.SERVICE_TEMPLATE), anyString(), eq(true));
   }
 
   @Test
@@ -183,7 +185,8 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
     getEnvironment();
 
     configFileOverrideYamlHandler.delete(changeContext);
-    verify(configService, times(1)).delete(anyString(), anyString(), eq(EntityType.ENVIRONMENT), anyString());
+    verify(configService, times(1))
+        .delete(anyString(), anyString(), eq(EntityType.ENVIRONMENT), anyString(), anyBoolean());
   }
 
   @Test
@@ -213,6 +216,31 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testUpsertFromYamlForEncryptedOverridesForAllService() throws IOException {
     testUpsertFromYaml(ENCRYPTED_OVERRIDE_YAML, null, yamlFilePathForAllServices, configFilePathForAllServices);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnUpsertFromYaml() throws IOException {
+    String yamlFilePath = yamlFilePathForAService;
+    String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML);
+    ChangeContext<ConfigFile.OverrideYaml> changeContext = getOverrideYamlChangeContext(yamlString, yamlFilePath);
+    changeContext.getChange().setSyncFromGit(true);
+    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    boolean isEncrypted = yaml.isEncrypted();
+
+    List<ChangeContext> changeSetContext =
+        getChangeSetContexts(CONFIG_FILE, configFilePathForAService, changeContext, isEncrypted);
+
+    String serviceName = mockServicesSetup(yamlFilePathForAService, yaml);
+    ConfigFile savedConfigFile = testSaveFromYaml(changeContext, isEncrypted, changeSetContext, serviceName);
+    assertThat(savedConfigFile.isSyncFromGit()).isTrue();
+
+    savedConfigFile.setFileUuid(FILE_ID);
+    when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(savedConfigFile);
+    ConfigFile updatedConfigFile =
+        testUpdateFromYaml(changeContext, isEncrypted, changeSetContext, serviceName, savedConfigFile);
+    assertThat(updatedConfigFile.isSyncFromGit()).isTrue();
   }
 
   @Test(expected = InvalidRequestException.class)

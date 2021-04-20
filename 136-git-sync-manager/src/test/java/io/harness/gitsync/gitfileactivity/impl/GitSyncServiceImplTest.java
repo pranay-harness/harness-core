@@ -1,5 +1,6 @@
 package io.harness.gitsync.gitfileactivity.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.core.beans.GitCommit.Status.COMPLETED;
 import static io.harness.gitsync.core.beans.GitCommit.Status.QUEUED;
 import static io.harness.rule.OwnerRule.ABHINAV;
@@ -8,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
@@ -33,6 +35,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(DX)
 public class GitSyncServiceImplTest extends GitSyncTestBase {
   @Inject @Spy private GitSyncServiceImpl gitSyncService;
   @Inject GitFileActivityRepository gitFileActivityRepository;
@@ -64,7 +67,7 @@ public class GitSyncServiceImplTest extends GitSyncTestBase {
                                                                                 .changeFromAnotherCommit(Boolean.TRUE)
                                                                                 .build()),
             Status.SUCCESS, false, false, accountId, commitId, commitMessage,
-            YamlGitConfigDTO.builder().branch(branchName).repo(repo).gitConnectorId(gitConnectorId).build());
+            YamlGitConfigDTO.builder().branch(branchName).repo(repo).gitConnectorRef(gitConnectorId).build());
 
     GitFileActivity fileActivity = gitFileActivities.iterator().next();
 

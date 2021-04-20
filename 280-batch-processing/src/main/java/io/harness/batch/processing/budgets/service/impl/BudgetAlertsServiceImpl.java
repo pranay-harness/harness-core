@@ -1,6 +1,7 @@
 package io.harness.batch.processing.budgets.service.impl;
 
 import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
+import static io.harness.ccm.budget.AlertThresholdBase.FORECASTED_COST;
 import static io.harness.ccm.commons.Constants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -103,47 +104,58 @@ public class BudgetAlertsServiceImpl {
 
     String cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(
         mainConfiguration.getBillingDataPipelineConfig().getGcpProjectId(), budget.getAccountId(), unified);
-    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
-    for (int i = 0; i < alertThresholds.length; i++) {
-      double actualCost = budgetUtils.getActualCost(budget, cloudProviderTable);
+    // For sending alerts based on actual cost
+    AlertThreshold[] alertsBasedOnActualCost =
+        budgetUtils.getSortedAlertThresholds(ACTUAL_COST, budget.getAlertThresholds());
+    double actualCost = budgetUtils.getActualCost(budget, cloudProviderTable);
+    checkAlertThresholdsAndSendAlerts(budget, alertsBasedOnActualCost, slackWebhook, emailAddresses, actualCost);
+
+    // For sending alerts based on forecast cost
+    AlertThreshold[] alertsBasedOnForecastCost =
+        budgetUtils.getSortedAlertThresholds(FORECASTED_COST, budget.getAlertThresholds());
+    double forecastCost = budgetUtils.getForecastCost(budget, cloudProviderTable);
+    checkAlertThresholdsAndSendAlerts(budget, alertsBasedOnForecastCost, slackWebhook, emailAddresses, forecastCost);
+  }
+
+  private void checkAlertThresholdsAndSendAlerts(Budget budget, AlertThreshold[] alertThresholds,
+      CESlackWebhook slackWebhook, List<String> emailAddresses, double cost) {
+    for (AlertThreshold alertThreshold : alertThresholds) {
       BudgetAlertsData data = BudgetAlertsData.builder()
                                   .accountId(budget.getAccountId())
-                                  .actualCost(actualCost)
+                                  .actualCost(cost)
                                   .budgetedCost(budget.getBudgetAmount())
                                   .budgetId(budget.getUuid())
-                                  .alertThreshold(alertThresholds[i].getPercentage())
+                                  .alertThreshold(alertThreshold.getPercentage())
+                                  .alertBasedOn(alertThreshold.getBasedOn())
                                   .time(System.currentTimeMillis())
                                   .build();
 
       if (budgetUtils.isAlertSentInCurrentMonth(
               budgetTimescaleQueryHelper.getLastAlertTimestamp(data, budget.getAccountId()))) {
-        continue;
+        break;
       }
       String costType = ACTUAL_COST_BUDGET;
-      double currentCost;
       try {
-        if (alertThresholds[i].getBasedOn() == ACTUAL_COST) {
-          currentCost = actualCost;
-        } else {
-          currentCost = budgetUtils.getForecastCost(budget, cloudProviderTable);
+        if (alertThreshold.getBasedOn() == FORECASTED_COST) {
           costType = FORECASTED_COST_BUDGET;
         }
-        log.info("{} has been spent under the budget with id={} ", currentCost, budget.getUuid());
+        log.info("{} has been spent under the budget with id={} ", cost, budget.getUuid());
       } catch (Exception e) {
         log.error(e.getMessage());
         break;
       }
 
-      if (exceedsThreshold(currentCost, getThresholdAmount(budget, alertThresholds[i]))) {
+      if (exceedsThreshold(cost, getThresholdAmount(budget, alertThreshold))) {
         try {
-          sendBudgetAlertViaSlack(budget, alertThresholds[i], slackWebhook);
+          sendBudgetAlertViaSlack(budget, alertThreshold, slackWebhook);
         } catch (Exception e) {
           log.error("Notification via slack not send : ", e);
         }
-        sendBudgetAlertMail(budget.getAccountId(), emailAddresses, budget.getUuid(), budget.getName(),
-            alertThresholds[i], currentCost, costType);
+        sendBudgetAlertMail(
+            budget.getAccountId(), emailAddresses, budget.getUuid(), budget.getName(), alertThreshold, cost, costType);
         // insert in timescale table
         budgetTimescaleQueryHelper.insertAlertEntryInTable(data, budget.getAccountId());
+        break;
       }
     }
   }

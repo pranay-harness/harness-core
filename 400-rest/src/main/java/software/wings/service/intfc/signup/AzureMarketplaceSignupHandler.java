@@ -1,10 +1,12 @@
 package software.wings.service.intfc.signup;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.event.handler.impl.EventPublishHelper;
 
 import software.wings.beans.User;
@@ -22,7 +24,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 
-@OwnedBy(PL)
+@OwnedBy(GTM)
+@TargetModule(_950_NG_SIGNUP)
 @Slf4j
 public class AzureMarketplaceSignupHandler implements SignupHandler {
   private static final String EMAIL = "email";
@@ -45,6 +48,11 @@ public class AzureMarketplaceSignupHandler implements SignupHandler {
     User user = userService.completePaidSignupAndSignIn(userInvite);
     azureMarketplaceIntegrationService.activateSubscription(userInvite, user);
     return user;
+  }
+
+  @Override
+  public User completeSignup(String token) {
+    throw new UnsupportedOperationException("Operation not supported");
   }
 
   @Override

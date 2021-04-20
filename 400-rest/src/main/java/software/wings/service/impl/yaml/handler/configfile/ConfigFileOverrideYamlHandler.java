@@ -9,8 +9,8 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import static com.google.common.base.Charsets.UTF_8;
 
-import io.harness.beans.ChecksumType;
 import io.harness.beans.EncryptedData;
+import io.harness.delegate.beans.ChecksumType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.stream.BoundedInputStream;
 
@@ -61,16 +61,17 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     OverrideYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
     String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
+    boolean syncFromGit = changeContext.getChange().isSyncFromGit();
     if (GLOBAL_SERVICE_NAME_FOR_YAML.equals(serviceName)) {
       configService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(),
-          EntityType.ENVIRONMENT, targetFilePath);
+          EntityType.ENVIRONMENT, targetFilePath, syncFromGit);
     } else {
       Service service = yamlHelper.getServiceByName(optionalApplication.get().getAppId(), serviceName);
       notNullCheck("Service " + serviceName + " associated with file override might be deleted.", service);
       String serviceTemplateId = yamlHelper.getServiceTemplateId(
           optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(), service.getName());
-      configService.delete(
-          optionalApplication.get().getUuid(), serviceTemplateId, EntityType.SERVICE_TEMPLATE, targetFilePath);
+      configService.delete(optionalApplication.get().getUuid(), serviceTemplateId, EntityType.SERVICE_TEMPLATE,
+          targetFilePath, syncFromGit);
     }
   }
 

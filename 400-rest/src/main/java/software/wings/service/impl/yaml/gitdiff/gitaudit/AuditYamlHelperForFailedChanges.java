@@ -13,6 +13,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 
 import software.wings.audit.EntityAuditRecord;
@@ -95,7 +96,7 @@ public class AuditYamlHelperForFailedChanges {
       return null;
     }
     @Override
-    public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
+    public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
       return null;
     }
     @Override

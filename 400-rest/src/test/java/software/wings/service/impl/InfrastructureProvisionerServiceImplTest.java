@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -43,6 +44,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -55,6 +59,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
@@ -78,6 +83,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
+import software.wings.beans.TerragruntInfrastructureProvisioner;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -94,6 +100,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -110,6 +117,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
@@ -121,6 +129,8 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock WingsPersistence mockWingsPersistence;
   @Mock ExecutionContext executionContext;
@@ -139,6 +149,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock GitConfigHelperService gitConfigHelperService;
   @Mock DelegateService delegateService;
   @Mock WorkflowExecutionService workflowExecutionService;
+  @Mock SecretManager secretManager;
   @Inject @InjectMocks InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject @InjectMocks InfrastructureProvisionerServiceImpl infrastructureProvisionerServiceImpl;
   @Inject private HPersistence persistence;
@@ -301,6 +312,33 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void shouldValidateTerragruntProvisioner() {
+    TerragruntInfrastructureProvisioner terragruntProvisioner = TerragruntInfrastructureProvisioner.builder()
+                                                                    .accountId(ACCOUNT_ID)
+                                                                    .appId(APP_ID)
+                                                                    .name("terragrunt-test")
+                                                                    .sourceRepoBranch("master")
+                                                                    .path("module/terragrunt.hcl")
+                                                                    .sourceRepoSettingId(SETTING_ID)
+                                                                    .build();
+    InfrastructureProvisionerServiceImpl provisionerService = infrastructureProvisionerServiceImpl;
+    doReturn(GitConfig.builder().build()).when(gitUtilsManager).getGitConfig(SETTING_ID);
+
+    provisionerService.validateProvisioner(terragruntProvisioner);
+
+    shouldValidateTerragruntRepoBranchAndCommitId(terragruntProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terragruntProvisioner);
+
+    shouldValidateTerragruntPath(terragruntProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terragruntProvisioner);
+
+    shouldValidateTerragruntSourceRepo(terragruntProvisioner, provisionerService);
+    provisionerService.validateProvisioner(terragruntProvisioner);
+  }
+
+  @Test
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void shouldValidateCloudFormationInfrastructureProvisioner() {
@@ -392,12 +430,31 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     terraformProvisioner.setSourceRepoSettingId(SETTING_ID);
   }
 
+  private void shouldValidateTerragruntSourceRepo(TerragruntInfrastructureProvisioner terragruntProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terragruntProvisioner.setSourceRepoSettingId("");
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setSourceRepoSettingId(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setSourceRepoSettingId(SETTING_ID);
+  }
+
   private void shouldValidatePath(TerraformInfrastructureProvisioner terraformProvisioner,
       InfrastructureProvisionerServiceImpl provisionerService) {
     terraformProvisioner.setPath(null);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> provisionerService.validateProvisioner(terraformProvisioner));
     terraformProvisioner.setPath("module/main.tf");
+  }
+
+  private void shouldValidateTerragruntPath(TerragruntInfrastructureProvisioner terragruntProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terragruntProvisioner.setPath(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setPath("module/terragrunt.hcl");
   }
 
   private void shouldValidateRepoBranchAndCommitId(TerraformInfrastructureProvisioner terraformProvisioner,
@@ -413,6 +470,19 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     terraformProvisioner.setSourceRepoBranch("master");
   }
 
+  private void shouldValidateTerragruntRepoBranchAndCommitId(TerragruntInfrastructureProvisioner terragruntProvisioner,
+      InfrastructureProvisionerServiceImpl provisionerService) {
+    terragruntProvisioner.setSourceRepoBranch("");
+    terragruntProvisioner.setCommitId("");
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setSourceRepoBranch(null);
+    terragruntProvisioner.setCommitId(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> provisionerService.validateProvisioner(terragruntProvisioner));
+    terragruntProvisioner.setSourceRepoBranch("master");
+  }
+
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
@@ -423,13 +493,13 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(workflowVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(workflowVariable, contextMap)).thenReturn(null);
+    when(evaluator.substitute(workflowVariable, contextMap)).thenReturn(null);
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
         .getPropertyNameEvaluatedMap(
             properties, contextMap, true, TerraformInfrastructureProvisioner.INFRASTRUCTURE_PROVISIONER_TYPE_KEY);
 
-    verify(evaluator, times(1)).evaluate(workflowVariable, contextMap);
+    verify(evaluator, times(1)).substitute(workflowVariable, contextMap);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -442,7 +512,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(provisionerVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn(null);
+    when(evaluator.substitute(provisionerVariable, contextMap)).thenReturn(null);
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
         .getPropertyNameEvaluatedMap(properties, contextMap, true, TerraformInfrastructureProvisioner.VARIABLE_KEY);
@@ -576,6 +646,11 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
             .withValue(GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl("http://a.com/b/z").build())
             .build());
 
+    idToSettingAttributeMapping.put("settingId4",
+        aSettingAttribute()
+            .withValue(GitConfig.builder().urlType(GitConfig.UrlType.REPO).repoUrl("http://a.com/b/z").build())
+            .build());
+
     InfrastructureProvisionerDetails details1 = ipService.details(
         TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").repoName("c").build(),
         idToSettingAttributeMapping);
@@ -588,9 +663,19 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
         ipService.details(TerraformInfrastructureProvisioner.builder().sourceRepoSettingId("settingId3").build(),
             idToSettingAttributeMapping);
 
+    InfrastructureProvisionerDetails details4 =
+        ipService.details(TerragruntInfrastructureProvisioner.builder().sourceRepoSettingId("settingId4").build(),
+            idToSettingAttributeMapping);
+
+    InfrastructureProvisionerDetails details5 = ipService.details(
+        TerragruntInfrastructureProvisioner.builder().sourceRepoSettingId("settingId").repoName("e").build(),
+        idToSettingAttributeMapping);
+
     assertThat(details1.getRepository()).isEqualTo("http://a.com/b/c");
     assertThat(details2.getRepository()).isEqualTo("http://a.com/b/d");
     assertThat(details3.getRepository()).isEqualTo("http://a.com/b/z");
+    assertThat(details4.getRepository()).isEqualTo("http://a.com/b/z");
+    assertThat(details5.getRepository()).isEqualTo("http://a.com/b/e");
   }
 
   @Test
@@ -810,7 +895,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     properties.add(NameValuePair.builder().value(provisionerVariable).build());
     ManagerExpressionEvaluator evaluator = mock(ManagerExpressionEvaluator.class);
     Reflect.on(infrastructureProvisionerService).set("evaluator", evaluator);
-    when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn("VAL");
+    when(evaluator.substitute(provisionerVariable, contextMap)).thenReturn("VAL");
 
     Map<String, Object> resolveExpressions = infrastructureProvisionerService.resolveExpressions(
         infrastructureDefinition, contextMap, ShellScriptInfrastructureProvisioner.builder().build());
@@ -936,5 +1021,26 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> infrastructureProvisionerServiceImpl.validateProvisioner(shellScriptInfrastructureProvisioner))
         .hasMessage("Script Body can not be empty");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testExtractEncryptedTextVariablesUpdateSecretsRunTimeusage() {
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("access_token").value("access-token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("region").value("us-east-1").valueType("TEXT").build());
+
+    Optional<EncryptedDataDetail> encryptedDataDetailOptional =
+        Optional.of(EncryptedDataDetail.builder().fieldName("fieldName").build());
+    doReturn(encryptedDataDetailOptional).when(secretManager).encryptedDataDetails(any(), any(), any(), any());
+
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
+    Map<String, EncryptedDataDetail> encryptedTextVariables =
+        infrastructureProvisionerService.extractEncryptedTextVariables(
+            nameValuePairList, APP_ID, WORKFLOW_EXECUTION_ID);
+    verify(secretManager, times(1)).encryptedDataDetails(any(), any(), any(), any());
+    assertThat(encryptedTextVariables.size()).isOne();
+    assertThat(encryptedTextVariables.get("access_token").getFieldName()).isEqualTo("fieldName");
   }
 }

@@ -3,10 +3,7 @@ package io.harness.ngpipeline.pipeline.beans.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
@@ -39,14 +36,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "PipelineNGKeys")
-@NgUniqueIndex(name = "unique_accountIdentifier_organizationIdentifier_projectIdentifier_pipelineIdentifier",
-    fields =
-    {
-      @Field(NgPipelineEntity.PipelineNGKeys.accountId)
-      , @Field(NgPipelineEntity.PipelineNGKeys.orgIdentifier),
-          @Field(NgPipelineEntity.PipelineNGKeys.projectIdentifier), @Field(NgPipelineEntity.PipelineNGKeys.identifier)
-    })
-@CdIndex(name = "accountIdentifierIndex", fields = { @Field(NgPipelineEntity.PipelineNGKeys.accountId) })
 @Entity(value = "pipelinesNG", noClassnameStored = true)
 @Document("pipelinesNG")
 @TypeAlias("pipelinesNG")

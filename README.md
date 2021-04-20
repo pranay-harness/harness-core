@@ -57,12 +57,10 @@ buf check lint
 Create a file `.bazelrc` in your portal repo root with the following content
 ```
 import bazelrc.local
-build --define=ABSOLUTE_JAVABASE=<Java home path>
 ```
 Here is a sample `.bazelrc`
 ```
 import bazelrc.local
-build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
 ```
 
 If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
@@ -490,12 +488,31 @@ bazel run //commons/go/lib/logs:go_default_test # an example
 BUILD.bazel files contain build rules. If you've added/removed packages or modified dependencies in the source code, or added new rules manually,
 then you should run `gazelle` to update and format your BUILD.bazel files.
 This tool will add any missing rules, update dependencies and format all BUILD.bazel files that you've touched.
-Run:
+Run in the root of the portal repository:
+
 ```lang=bash
 gazelle
 ```
-The above comand creates or updates `BUILD.bazel`
 
+The above comand creates or updates `BUILD.bazel` files where needed. If the above command fails, it is likely due to using an incorrect version of gazelle. Currently we are using version `0.21`.
+
+##### Building your own Gazelle
+
+The rough overview is here, if you want more complete instructions go to the bazelbuild github page `https://github.com/bazelbuild/bazel-gazelle`.
+
+```lang=bash
+git clone git@github.com:bazelbuild/bazel-gazelle.git
+cd bazel-gazelle
+git reset origin/release-0.21 --hard
+cd cmd/gazelle
+baselisk build gazelle
+$(bazelisk info bazel-bin)/cmd/gazelle/gazelle_/gazelle 
+# it expands out to something like below, giving the 0.21 binary
+/home/tp/.cache/bazel/_bazel_tp/46ccc68b31f8c833946cfcd24410eb45/execroot/bazel_gazelle/bazel-out/k8-fastbuild/bin/cmd/gazelle/gazelle_/gazelle
+``` 
+
+#### Using gazelle to fix dependencies.
+This can now be used in `portal` to fix dependencies.
 
 We need to update the dependencies in `portal/WORKSPACE`. Run the following for your new/updated `go.mod`
 ```lang=bash

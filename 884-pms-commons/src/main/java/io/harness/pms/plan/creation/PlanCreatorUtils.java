@@ -1,5 +1,7 @@
 package io.harness.pms.plan.creation;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -11,10 +13,13 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class PlanCreatorUtils {
   public final String ANY_TYPE = "__any__";
@@ -126,5 +131,50 @@ public class PlanCreatorUtils {
       }
     });
     return stepGroupFields;
+  }
+
+  public List<YamlField> getStepYamlFields(List<YamlNode> stepYamlNodes) {
+    List<YamlField> stepFields = new LinkedList<>();
+
+    stepYamlNodes.forEach(yamlNode -> {
+      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
+      if (stepField != null) {
+        stepFields.add(stepField);
+      } else if (stepGroupField != null) {
+        stepFields.add(stepGroupField);
+      } else if (parallelStepField != null) {
+        stepFields.add(parallelStepField);
+      }
+    });
+    return stepFields;
+  }
+
+  public List<YamlField> getDependencyNodeIdsForParallelNode(YamlField parallelYamlField) {
+    List<YamlField> childYamlFields = getStageChildFields(parallelYamlField);
+    if (childYamlFields.isEmpty()) {
+      List<YamlNode> yamlNodes = Optional.of(parallelYamlField.getNode().asArray()).orElse(Collections.emptyList());
+
+      yamlNodes.forEach(yamlNode -> {
+        YamlField stageField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+        YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+        if (stageField != null) {
+          childYamlFields.add(stageField);
+        } else if (stepGroupField != null) {
+          childYamlFields.add(stepGroupField);
+        }
+      });
+    }
+    return childYamlFields;
+  }
+
+  public List<YamlField> getStageChildFields(YamlField parallelYamlField) {
+    return Optional.of(parallelYamlField.getNode().asArray())
+        .orElse(Collections.emptyList())
+        .stream()
+        .map(el -> el.getField(YAMLFieldNameConstants.STAGE))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 }

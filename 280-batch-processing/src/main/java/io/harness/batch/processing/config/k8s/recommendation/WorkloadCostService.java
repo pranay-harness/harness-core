@@ -5,6 +5,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import io.harness.timescaledb.TimeScaleDBService;
 
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
+
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -13,8 +15,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import lombok.Builder;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Service;
@@ -32,22 +32,15 @@ public class WorkloadCostService {
    */
   @VisibleForTesting
   static final String LAST_AVAILABLE_DAY_COST = "SELECT SUM(CPUBILLINGAMOUNT), SUM(MEMORYBILLINGAMOUNT)"
-      + "FROM BILLING_DATA WHERE INSTANCETYPE = 'K8S_POD' AND ACCOUNTID = ? AND CLUSTERID = ? AND NAMESPACE = ? "
+      + "FROM BILLING_DATA WHERE INSTANCETYPE IN ('K8S_POD', 'K8S_POD_FARGATE') AND ACCOUNTID = ? AND CLUSTERID = ? AND NAMESPACE = ? "
       + "AND WORKLOADTYPE = ? AND WORKLOADNAME = ? AND STARTTIME = "
-      + "(SELECT MAX(STARTTIME) FROM BILLING_DATA WHERE INSTANCETYPE = 'K8S_POD' AND ACCOUNTID = ? AND CLUSTERID = ? "
+      + "(SELECT MAX(STARTTIME) FROM BILLING_DATA WHERE INSTANCETYPE IN ('K8S_POD', 'K8S_POD_FARGATE') AND ACCOUNTID = ? AND CLUSTERID = ? "
       + "AND NAMESPACE = ? AND WORKLOADTYPE = ? AND WORKLOADNAME = ? AND STARTTIME >= ?)";
 
   private final TimeScaleDBService timeScaleDBService;
 
   public WorkloadCostService(TimeScaleDBService timeScaleDBService) {
     this.timeScaleDBService = timeScaleDBService;
-  }
-
-  @Value
-  @Builder
-  static class Cost {
-    BigDecimal cpu;
-    BigDecimal memory;
   }
 
   private boolean isTruncatedToDay(Instant instant) {

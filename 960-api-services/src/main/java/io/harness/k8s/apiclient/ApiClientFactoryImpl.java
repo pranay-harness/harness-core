@@ -57,7 +57,11 @@ public class ApiClientFactoryImpl implements ApiClientFactory {
     }
     ApiClient apiClient = clientBuilder.build();
     // don't timeout on client-side
-    OkHttpClient httpClient = apiClient.getHttpClient().newBuilder().readTimeout(0, TimeUnit.SECONDS).build();
+    OkHttpClient httpClient = apiClient.getHttpClient()
+                                  .newBuilder()
+                                  .readTimeout(0, TimeUnit.SECONDS)
+                                  .connectTimeout(0, TimeUnit.SECONDS)
+                                  .build();
     apiClient.setHttpClient(httpClient);
     return apiClient;
   }

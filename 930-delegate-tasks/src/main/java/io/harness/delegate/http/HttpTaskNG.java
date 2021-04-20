@@ -7,6 +7,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
+import io.harness.http.HttpHeaderConfig;
 import io.harness.http.HttpService;
 import io.harness.http.beans.HttpInternalConfig;
 import io.harness.http.beans.HttpInternalResponse;
@@ -14,6 +15,7 @@ import io.harness.http.beans.HttpInternalResponse;
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -35,7 +37,10 @@ public class HttpTaskNG extends AbstractDelegateRunnableTask {
                                    .method(httpTaskParametersNg.getMethod())
                                    .body(httpTaskParametersNg.getBody())
                                    .header(null)
-                                   .requestHeaders(httpTaskParametersNg.getRequestHeader())
+                                   .requestHeaders(httpTaskParametersNg.getRequestHeader() == null
+                                           ? null
+                                           : httpTaskParametersNg.getRequestHeader().stream().collect(
+                                               Collectors.toMap(HttpHeaderConfig::getKey, HttpHeaderConfig::getValue)))
                                    .socketTimeoutMillis(httpTaskParametersNg.getSocketTimeoutMillis())
                                    .url(httpTaskParametersNg.getUrl())
                                    .useProxy(true)

@@ -2,6 +2,8 @@ package io.harness.util;
 
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.PRWebhookEvent;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class WebhookTriggerProcessorUtils {
   public WebhookExecutionSource convertWebhookResponse(ParsedPayload parseWebhookResponse) {
     if (parseWebhookResponse.hasPr()) {

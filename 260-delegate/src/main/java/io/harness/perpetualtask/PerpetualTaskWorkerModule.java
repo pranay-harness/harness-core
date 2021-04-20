@@ -1,6 +1,6 @@
 package io.harness.perpetualtask;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceBlockingStub;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
@@ -45,7 +45,7 @@ import io.grpc.Channel;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PerpetualTaskWorkerModule extends AbstractModule {
   @Override
   protected void configure() {

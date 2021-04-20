@@ -253,7 +253,7 @@ public class AccessManagementUtils {
     log.info("Creating SAML config without permission");
     String filePath = System.getProperty("user.dir");
     filePath = filePath + "/"
-        + "src/test/resources/secrets/"
+        + "200-functional-test/src/test/resources/secrets/"
         + "SAML_SSO_Provider.xml";
     assertThat(SSORestUtils.addSAMLSettings(account.getUuid(), roBearerToken, "SAML", filePath) == statusCodeExpected)
         .isTrue();

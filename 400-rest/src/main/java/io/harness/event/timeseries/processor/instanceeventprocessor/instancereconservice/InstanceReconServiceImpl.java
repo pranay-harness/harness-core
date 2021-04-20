@@ -6,11 +6,11 @@ import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceEven
 import io.harness.event.timeseries.processor.utils.DateUtils;
 import io.harness.exception.InstanceAggregationException;
 import io.harness.exception.InstanceMigrationException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
+import software.wings.utils.FFUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,7 +33,7 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private DataFetcherUtils utils;
   @Inject private InstanceEventAggregator instanceEventAggregator;
-  @Inject private FeatureFlagService featureFlagService;
+  @Inject private FFUtils ffUtils;
 
   /**
    * Do data migration of existing instance stats data into aggregated form
@@ -113,8 +113,8 @@ public class InstanceReconServiceImpl implements IInstanceReconService {
         log.info("INSTANCE_DATA_MIGRATION_SUCCESS for account : {}", accountId);
         try {
           // Disable data migration for the account
-          featureFlagService.updateFeatureFlagForAccount(
-              FeatureName.CUSTOM_DASHBOARD_ENABLE_CRON_INSTANCE_DATA_MIGRATION.toString(), accountId, false);
+          ffUtils.updateFeatureFlagForAccount(
+              FeatureName.CUSTOM_DASHBOARD_ENABLE_CRON_INSTANCE_DATA_MIGRATION, accountId, false);
           log.info("Instance data migration cron feature flag disabled for account : {}", accountId);
         } catch (Exception exception) {
           String errorLog =

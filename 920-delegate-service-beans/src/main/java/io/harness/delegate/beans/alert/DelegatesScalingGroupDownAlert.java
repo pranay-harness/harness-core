@@ -3,7 +3,7 @@ package io.harness.delegate.beans.alert;
 import static java.lang.String.format;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.Builder;
@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Builder
-@TargetModule(Module._480_ALERT_BEANS)
+@TargetModule(HarnessModule._955_ALERT_BEANS)
 public class DelegatesScalingGroupDownAlert implements AlertData {
   private String groupName;
   private String accountId;

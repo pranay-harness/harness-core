@@ -42,6 +42,11 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -58,7 +63,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.Misc;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.time.Timestamp;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -130,6 +134,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -232,6 +237,8 @@ import org.mongodb.morphia.query.Sort;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthService authService;
@@ -257,6 +264,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private MLServiceUtils mlServiceUtils;
   @Inject private DatadogService datadogService;
   @Inject private EnvironmentService environmentService;
+  @Inject private AccountService accountService;
 
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
@@ -2022,6 +2030,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
             .initialDelaySeconds(0)
+            .validateCert(accountService.isCertValidationRequired(config.getAccountId()))
             .build();
 
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
@@ -2082,6 +2091,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
             .initialDelaySeconds(0)
+            .validateCert(accountService.isCertValidationRequired(config.getAccountId()))
             .build();
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
         waitId, new Object[] {dataCollectionInfo}, config.getEnvId(), config.getUuid(),
@@ -2120,6 +2130,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .dataCollectionFrequency(1)
             .dataCollectionTotalTime(timeDuration)
             .initialDelaySeconds(0)
+            .validateCert(accountService.isCertValidationRequired(config.getAccountId()))
             .build();
 
     return createDelegateTask(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK, config.getAccountId(), config.getAppId(),
@@ -2660,17 +2671,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
         (VerificationStateAnalysisExecutionData) stateExecutionMap.get(stateExecutionInstance.getDisplayName());
+    AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
+                                          .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
+                                          .get();
+    stateAnalysisExecutionData.setBaselineExecutionId(
+        analysisContext == null ? null : analysisContext.getPrevWorkflowExecutionId());
     if (ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus())) {
       stateAnalysisExecutionData.setProgressPercentage(100);
       stateAnalysisExecutionData.setRemainingMinutes(0);
-    } else {
-      AnalysisContext analysisContext = wingsPersistence.createQuery(AnalysisContext.class, excludeAuthority)
-                                            .filter(AnalysisContextKeys.stateExecutionId, stateExecutionId)
-                                            .get();
-      if (analysisContext != null) {
-        setProgress(stateAnalysisExecutionData, analysisContext);
-        setRemainingTime(stateAnalysisExecutionData, analysisContext);
-      }
+    } else if (analysisContext != null) {
+      setProgress(stateAnalysisExecutionData, analysisContext);
+      setRemainingTime(stateAnalysisExecutionData, analysisContext);
     }
     return stateAnalysisExecutionData;
   }

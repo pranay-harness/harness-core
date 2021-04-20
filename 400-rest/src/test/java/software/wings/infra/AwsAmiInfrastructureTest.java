@@ -1,5 +1,6 @@
 package software.wings.infra;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
@@ -13,6 +14,7 @@ import static software.wings.infra.InfraDefinitionTestConstants.TARGET_GROUP_ARN
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -24,6 +26,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class AwsAmiInfrastructureTest extends CategoryTest {
   private final AwsAmiInfrastructure awsAmiInfrastructure =
       AwsAmiInfrastructure.builder()

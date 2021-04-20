@@ -1,11 +1,13 @@
 package io.harness.ng.core.exceptionmappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
@@ -20,6 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class WingsExceptionMapperV2 implements ExceptionMapper<WingsException> {
   @Context private ResourceInfo resourceInfo;
@@ -31,6 +34,7 @@ public class WingsExceptionMapperV2 implements ExceptionMapper<WingsException> {
     List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(exception, REST_API);
     ErrorCode errorCode = exception.getCode() != null ? exception.getCode() : ErrorCode.UNKNOWN_ERROR;
     ErrorDTO errorBody = ErrorDTO.newError(Status.ERROR, errorCode, null);
+    errorBody.setResponseMessages(responseMessages);
 
     if (!responseMessages.isEmpty()) {
       errorBody.setMessage(responseMessages.get(0).getMessage());

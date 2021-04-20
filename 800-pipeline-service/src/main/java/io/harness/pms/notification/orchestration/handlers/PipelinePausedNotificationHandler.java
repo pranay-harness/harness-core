@@ -1,7 +1,7 @@
 package io.harness.pms.notification.orchestration.handlers;
 
+import io.harness.notification.PipelineEventType;
 import io.harness.pms.notification.NotificationHelper;
-import io.harness.pms.notification.PipelineEventType;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
@@ -12,7 +12,11 @@ public class PipelinePausedNotificationHandler implements AsyncOrchestrationEven
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    notificationHelper.sendNotification(
-        event.getNodeExecutionProto().getAmbiance(), PipelineEventType.PIPELINE_PAUSED, null);
+    if (event.getNodeExecutionProto() != null) {
+      notificationHelper.sendNotification(
+          event.getNodeExecutionProto().getAmbiance(), PipelineEventType.PIPELINE_PAUSED, null);
+    } else {
+      notificationHelper.sendNotification(event.getAmbiance(), PipelineEventType.PIPELINE_PAUSED, null);
+    }
   }
 }

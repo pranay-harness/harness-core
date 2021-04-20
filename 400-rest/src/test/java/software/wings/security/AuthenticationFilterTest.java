@@ -1,6 +1,8 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -17,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
@@ -27,8 +30,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
@@ -45,6 +50,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.ExternalApiRateLimitingService;
 import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.UserService;
+import software.wings.utils.DummyTestResource;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -65,6 +71,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 public class AuthenticationFilterTest extends CategoryTest {
   @Mock ResourceInfo resourceInfo = mock(ResourceInfo.class);
   @Mock MainConfiguration configuration = mock(MainConfiguration.class);
@@ -93,6 +100,7 @@ public class AuthenticationFilterTest extends CategoryTest {
     PortalConfig portalConfig = mock(PortalConfig.class);
     when(configuration.getPortal()).thenReturn(portalConfig);
     doReturn(false).when(authenticationFilter).isScimAPI();
+    doReturn(false).when(authenticationFilter).isApiKeyAuthorizationAPI();
   }
 
   @Test
@@ -262,6 +270,73 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testApiKeyAuthorizedAuthentication() throws IOException {
+    String apiKey = "ApiKey";
+    when(context.getHeaderString(API_KEY_HEADER)).thenReturn(apiKey);
+    doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
+    doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
+    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+    doReturn(false).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(rateLimitingService).rateLimitRequest(anyString());
+    doReturn(true).when(authenticationFilter).isApiKeyAuthorizationAPI();
+
+    UriInfo uriInfo = mock(UriInfo.class);
+    MultivaluedHashMap<String, String> queryParams = new MultivaluedHashMap<>();
+    queryParams.put("accountId", Arrays.asList(ACCOUNT_ID));
+    when(uriInfo.getQueryParameters()).thenReturn(queryParams);
+    when(uriInfo.getPathParameters()).thenReturn(new MultivaluedHashMap<>());
+    when(uriInfo.getAbsolutePath()).thenReturn(URI.create("/abc/def"));
+    when(context.getUriInfo()).thenReturn(uriInfo);
+
+    authenticationFilter.filter(context);
+    verify(apiKeyService).validate(eq(apiKey), eq(ACCOUNT_ID));
+    assertThat(context.getSecurityContext().isSecure()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testApiKeyAuthorizedAuthenticationWithoutApiKey() {
+    doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
+    doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
+    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+    doReturn(false).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(rateLimitingService).rateLimitRequest(anyString());
+    doReturn(true).when(authenticationFilter).isApiKeyAuthorizationAPI();
+
+    on(authenticationFilter).set("resourceInfo", resourceInfo);
+    when(resourceInfo.getResourceMethod()).thenReturn(getCgMockResourceMethod());
+    when(resourceInfo.getResourceClass()).thenReturn(getCgMockResourceClass());
+
+    assertThatThrownBy(() -> authenticationFilter.filter(context))
+        .isInstanceOf(AccessDeniedException.class)
+        .hasMessage("Api Key cannot be empty");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testApiKeyAuthorizedAuthenticationWithoutApiKeyAndAllowEmptyApiKey() throws IOException {
+    doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
+    doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
+    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+    doReturn(false).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(rateLimitingService).rateLimitRequest(anyString());
+    doReturn(true).when(authenticationFilter).isApiKeyAuthorizationAPI();
+
+    on(authenticationFilter).set("resourceInfo", resourceInfo);
+    when(resourceInfo.getResourceMethod()).thenReturn(getResourceMethodWithAllowEmptyApiKey());
+    when(resourceInfo.getResourceClass()).thenReturn(getResourceClassWithAllowEmptyApiKey());
+
+    authenticationFilter.filter(context);
+  }
+
+  @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testInvalidBearerTokenPresent() throws IOException {
@@ -366,6 +441,32 @@ public class AuthenticationFilterTest extends CategoryTest {
     Class mockClass = SecretsResourceNG.class;
     try {
       return mockClass.getMethod("get", String.class, String.class, String.class, String.class);
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private Class getCgMockResourceClass() {
+    return AccountResource.class;
+  }
+
+  private Method getCgMockResourceMethod() {
+    Class mockClass = AccountResource.class;
+    try {
+      return mockClass.getMethod("getAccount", String.class);
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  private Class getResourceClassWithAllowEmptyApiKey() {
+    return DummyTestResource.class;
+  }
+
+  private Method getResourceMethodWithAllowEmptyApiKey() {
+    Class mockClass = DummyTestResource.class;
+    try {
+      return mockClass.getMethod("testApiKeyAuthorizationAnnotationWithAllowEmptyApiKey");
     } catch (NoSuchMethodException e) {
       return null;
     }

@@ -10,13 +10,13 @@ import io.harness.exception.WingsException;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
+import software.wings.verification.apm.APMCVConfigurationYaml;
 import software.wings.verification.apm.APMCVServiceConfiguration;
-import software.wings.verification.apm.APMCVServiceConfiguration.APMCVConfigurationYaml;
 
 import java.util.List;
 
 public class APMCVConfigurationYamlHandler
-    extends CVConfigurationYamlHandler<APMCVServiceConfiguration.APMCVConfigurationYaml, APMCVServiceConfiguration> {
+    extends CVConfigurationYamlHandler<APMCVConfigurationYaml, APMCVServiceConfiguration> {
   @Override
   public APMCVConfigurationYaml toYaml(APMCVServiceConfiguration bean, String appId) {
     APMCVConfigurationYaml yaml = APMCVConfigurationYaml.builder().build();

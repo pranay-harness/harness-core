@@ -1,5 +1,8 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.pms.yaml.ParameterField;
@@ -11,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Data;
 
+@OwnedBy(CDP)
 @Data
 @JsonTypeName("ManifestPath")
 public class DeleteManifestPathSpec implements DeleteResourcesBaseSpec {

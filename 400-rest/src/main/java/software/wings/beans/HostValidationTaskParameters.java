@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ConnectivityCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -20,7 +20,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class HostValidationTaskParameters implements ExecutionCapabilityDemander {
   List<String> hostNames;
   SettingAttribute connectionSetting;

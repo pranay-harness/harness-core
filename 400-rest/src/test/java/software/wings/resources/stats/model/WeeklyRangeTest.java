@@ -6,7 +6,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
@@ -24,7 +24,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@TargetModule(Module._980_COMMONS)
+@TargetModule(HarnessModule._980_COMMONS)
 public class WeeklyRangeTest extends CategoryTest {
   private String accountId = "some-account-uuid-" + RandomStringUtils.randomAlphanumeric(5);
 

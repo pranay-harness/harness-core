@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.USE_CREDENTIALS_AUTH_NEXUS_2;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -48,14 +49,20 @@ import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SecretMetadata;
+import io.harness.beans.SecretState;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.ccm.license.CeLicenseInfo;
-import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.CEInfraSetupHandlerFactory;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
@@ -83,9 +90,11 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.Base;
 import software.wings.beans.CustomArtifactServerConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
@@ -112,7 +121,7 @@ import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
-import software.wings.beans.ce.CEMetadataRecord;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -163,6 +172,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -190,6 +200,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Slf4j
 @ValidateOnExecution
 @Singleton
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._445_CG_CONNECTORS)
 public class SettingsServiceImpl implements SettingsService {
   public static final String TRIAL_LIMIT_EXCEEDED =
       "Please contact sales to enable CE on more than 2 Kubernetes clusters.";
@@ -248,11 +260,14 @@ public class SettingsServiceImpl implements SettingsService {
   public PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest) {
     try {
+      long timestamp = System.currentTimeMillis();
       PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, req);
+      log.info("Time taken in DB Query for while fetching settings:  {}", System.currentTimeMillis() - timestamp);
 
+      timestamp = System.currentTimeMillis();
       List<SettingAttribute> filteredSettingAttributes =
           getFilteredSettingAttributes(pageResponse.getResponse(), appIdFromRequest, envIdFromRequest);
-
+      log.info("Total time taken in filtering setting records:  {}.", System.currentTimeMillis() - timestamp);
       return aPageResponse()
           .withResponse(filteredSettingAttributes)
           .withTotal(filteredSettingAttributes.size())
@@ -377,13 +392,42 @@ public class SettingsServiceImpl implements SettingsService {
     return newSettingAttributes;
   }
 
+  /**
+   * Extracts all secret Ids and there state referenced by collection of SettingAttribute. This function helps to
+   * optimize RBAC rule evaluations by batching DB accesses.
+   * @param settingAttributes
+   * @return
+   */
+  Map<String, SecretState> extractAllSecretIdsWithState(Collection<SettingAttribute> settingAttributes,
+      String accountId, String appIdFromRequest, String envIdFromRequest) {
+    if (isEmpty(settingAttributes)) {
+      return Collections.emptyMap();
+    }
+    Set<String> allSecrets = new HashSet<>(settingAttributes.size() + 1);
+    // Collect all secrets in a single collection so that they can be filtered in batch fashion.
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttribute);
+      if (!isEmpty(usedSecretIds)) {
+        allSecrets.addAll(usedSecretIds);
+      }
+    }
+
+    List<SecretMetadata> secretMetadataList =
+        secretManager.filterSecretIdsByReadPermission(allSecrets, accountId, appIdFromRequest, envIdFromRequest);
+    if (!isEmpty(secretMetadataList)) {
+      return secretMetadataList.stream().collect(
+          Collectors.toMap(SecretMetadata::getSecretId, SecretMetadata::getSecretState));
+    }
+
+    return Collections.emptyMap();
+  }
+
   @Override
   public List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest) {
     if (inputSettingAttributes == null) {
       return Collections.emptyList();
     }
-
     if (isEmpty(inputSettingAttributes)) {
       return inputSettingAttributes;
     }
@@ -401,20 +445,22 @@ public class SettingsServiceImpl implements SettingsService {
 
     Set<SettingAttribute> helmRepoSettingAttributes = new HashSet<>();
     boolean isAccountAdmin;
-
+    Map<String, SecretState> secretIdsStateMap =
+        extractAllSecretIdsWithState(inputSettingAttributes, accountId, appIdFromRequest, envIdFromRequest);
     for (SettingAttribute settingAttribute : inputSettingAttributes) {
       PermissionAttribute.PermissionType permissionType = settingServiceHelper.getPermissionType(settingAttribute);
       isAccountAdmin = userService.hasPermission(accountId, permissionType);
-      if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
+      boolean isRefereincing = isSettingAttributeReferencingCloudProvider(settingAttribute);
+      if (isRefereincing) {
         helmRepoSettingAttributes.add(settingAttribute);
       } else {
         if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
-                restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute, settingAttribute)) {
+                restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute, settingAttribute,
+                secretIdsStateMap)) {
           filteredSettingAttributes.add(settingAttribute);
         }
       }
     }
-
     getFilteredHelmRepoSettingAttributes(appIdFromRequest, envIdFromRequest, accountId, filteredSettingAttributes,
         appEnvMapFromUserPermissions, restrictionsFromUserPermissions, appIdEnvMap, helmRepoSettingAttributes);
 
@@ -463,7 +509,8 @@ public class SettingsServiceImpl implements SettingsService {
         settingAttributes.forEach(
             settingAttribute -> { cloudProvidersMap.put(settingAttribute.getUuid(), settingAttribute); });
       }
-
+      Map<String, SecretState> secretIdsStateMap =
+          extractAllSecretIdsWithState(cloudProvidersMap.values(), accountId, appIdFromRequest, envIdFromRequest);
       helmRepoSettingAttributes.forEach(settingAttribute -> {
         PermissionAttribute.PermissionType permissionType = settingServiceHelper.getPermissionType(settingAttribute);
         boolean isAccountAdmin = userService.hasPermission(accountId, permissionType);
@@ -471,7 +518,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isNotBlank(cloudProviderId) && cloudProvidersMap.containsKey(cloudProviderId)
             && isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
                 restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
-                cloudProvidersMap.get(cloudProviderId))) {
+                cloudProvidersMap.get(cloudProviderId), secretIdsStateMap)) {
           filteredSettingAttributes.add(settingAttribute);
         }
       });
@@ -482,13 +529,16 @@ public class SettingsServiceImpl implements SettingsService {
   public boolean isFilteredSettingAttribute(String appIdFromRequest, String envIdFromRequest, String accountId,
       Map<String, Set<String>> appEnvMapFromUserPermissions, UsageRestrictions restrictionsFromUserPermissions,
       boolean isAccountAdmin, Map<String, List<Base>> appIdEnvMap, SettingAttribute settingAttribute,
-      SettingAttribute settingAttributeWithUsageRestrictions) {
+      SettingAttribute settingAttributeWithUsageRestrictions, Map<String, SecretState> secretIdsStateMap) {
     if (settingServiceHelper.hasReferencedSecrets(settingAttributeWithUsageRestrictions)) {
       // Try to get any secret references if possible.
       Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttributeWithUsageRestrictions);
       if (isNotEmpty(usedSecretIds)) {
-        // Runtime check using intersection of usage scopes of secretIds.
-        return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest);
+        // Returning false only on SecretState.CANNOT_READ. Which means SecretState.CAN_READ, SecretState.NOT_FOUND
+        // are both allowed. This allows settings with mis matching/deleted secret Ids, this is done to
+        return usedSecretIds.stream()
+            .filter(secretIdsStateMap::containsKey)
+            .noneMatch(secretId -> secretIdsStateMap.get(secretId) == SecretState.CANNOT_READ);
       }
     }
 
@@ -503,7 +553,6 @@ public class SettingsServiceImpl implements SettingsService {
       }
       return true;
     }
-
     return false;
   }
 
@@ -558,8 +607,10 @@ public class SettingsServiceImpl implements SettingsService {
       if (variable.getValue() instanceof CustomArtifactServerConfig) {
         ((CustomArtifactServerConfig) variable.getValue()).setAccountId(variable.getAccountId());
       }
-    }
-    if (null != variable.getValue()) {
+      if (variable.getValue() instanceof HostConnectionAttributes
+          && null == ((HostConnectionAttributes) variable.getValue()).getSshPort()) {
+        ((HostConnectionAttributes) variable.getValue()).setSshPort(22);
+      }
       variable.setCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
     }
   }
@@ -635,6 +686,39 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public boolean isSettingValueGcp(SettingAttribute settingAttribute) {
     return settingAttribute.getValue() instanceof GcpConfig;
+  }
+
+  @Override
+  public boolean hasDelegateSelectorProperty(SettingAttribute settingAttribute) {
+    return settingAttribute.getValue() instanceof GcpConfig || settingAttribute.getValue() instanceof DockerConfig
+        || settingAttribute.getValue() instanceof AwsConfig || settingAttribute.getValue() instanceof NexusConfig
+        || settingAttribute.getValue() instanceof ArtifactoryConfig;
+  }
+
+  @Override
+  public List<String> getDelegateSelectors(SettingAttribute settingAttribute) {
+    List<String> selectors = new ArrayList<>();
+    if (!hasDelegateSelectorProperty(settingAttribute)) {
+      return selectors;
+    }
+    if (settingAttribute.getValue() instanceof GcpConfig
+        && ((GcpConfig) settingAttribute.getValue()).isUseDelegateSelectors()) {
+      selectors = ((GcpConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof DockerConfig) {
+      selectors = ((DockerConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof NexusConfig) {
+      selectors = ((NexusConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof ArtifactoryConfig) {
+      selectors = ((ArtifactoryConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof AwsConfig) {
+      selectors = Collections.singletonList(((AwsConfig) settingAttribute.getValue()).getTag());
+    }
+    return isEmpty(selectors) ? new ArrayList<>()
+                              : selectors.stream().filter(StringUtils::isNotBlank).distinct().collect(toList());
   }
 
   @Override
@@ -732,8 +816,6 @@ public class SettingsServiceImpl implements SettingsService {
     settingServiceHelper.updateReferencedSecrets(settingAttribute);
     if (settingAttribute.getValue() instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) settingAttribute.getValue()).cloudCostEnabled()) {
-      ceMetadataRecordDao.upsert(
-          CEMetadataRecord.builder().accountId(settingAttribute.getAccountId()).clusterDataConfigured(true).build());
       checkCeTrialLimit(settingAttribute);
     }
     settingValidationService.validate(settingAttribute);
@@ -819,7 +901,7 @@ public class SettingsServiceImpl implements SettingsService {
         log.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
             settingAttribute.getValue().getType(), settingAttribute.getAccountId());
         throw new InvalidRequestException(String.format(
-            "Cannot enable continuous efficiency for more than %d cloud accounts", maxCloudAccountsAllowed));
+            "Cannot enable Cloud Cost Management for more than %d cloud accounts", maxCloudAccountsAllowed));
       }
 
       if (settingAttribute.getValue() instanceof CEAwsConfig) {
@@ -827,7 +909,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isAwsConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because AWS connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 AWS cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 AWS cloud account");
         }
 
         // Extract AWS Master AccountId
@@ -854,7 +936,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isGCPConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because GCP connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 GCP cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 GCP cloud account");
         }
       }
 
@@ -864,7 +946,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isAzureConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because Azure connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 Azure cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 Azure cloud account");
         }
         CEAzureConfig azureConfig = (CEAzureConfig) settingAttribute.getValue();
         azureCEConfigValidationService.verifyCrossAccountAttributes(azureConfig);
@@ -1020,6 +1102,10 @@ public class SettingsServiceImpl implements SettingsService {
     if (isOpenSSHKeyUsed(settingAttribute)) {
       restrictOpenSSHKey(settingAttribute);
     }
+    if (settingAttribute.getValue() instanceof HostConnectionAttributes
+        && null == ((HostConnectionAttributes) settingAttribute.getValue()).getSshPort()) {
+      ((HostConnectionAttributes) settingAttribute.getValue()).setSshPort(22);
+    }
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
     SettingAttribute prevSettingAttribute = existingSetting;
     if (settingAttribute.getValue() instanceof CEAwsConfig) {
@@ -1027,11 +1113,8 @@ public class SettingsServiceImpl implements SettingsService {
     }
     if (settingAttribute.getValue() instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) settingAttribute.getValue()).cloudCostEnabled()) {
-      ceMetadataRecordDao.upsert(
-          CEMetadataRecord.builder().accountId(settingAttribute.getAccountId()).clusterDataConfigured(true).build());
       checkCeTrialLimit(settingAttribute);
     }
-
     notNullCheck("Setting Attribute was deleted", existingSetting, USER);
     notNullCheck("SettingValue not associated", settingAttribute.getValue(), USER);
     equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());

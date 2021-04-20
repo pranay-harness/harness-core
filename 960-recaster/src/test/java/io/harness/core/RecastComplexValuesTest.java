@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.RecasterTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.exceptions.MapKeyContainsDotException;
 import io.harness.exceptions.RecasterException;
 import io.harness.rule.Owner;
 
@@ -59,6 +60,20 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   private static class DummyEnum {
     private List<Type> types;
     private enum Type { SUPER_DUMMY }
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithSimpleMap() {
+    final Map<String, String> map = new HashMap<>();
+    map.put("key.param", "value");
+
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    assertThatThrownBy(() -> recast.toDocument(map))
+        .isInstanceOf(MapKeyContainsDotException.class)
+        .hasMessageContaining("Map key should not contain dots inside");
   }
 
   @Test
@@ -789,6 +804,32 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  public void shouldTestRecasterParameterizedFieldAsListOf() {
+    DummyWithInnerClass.User user = new DummyWithInnerClass.User("name", 23);
+    DummyParameterized<List<DummyWithInnerClass.User>> parameterized =
+        DummyParameterized.<List<DummyWithInnerClass.User>>builder()
+            .expression(Collections.singletonList(user))
+            .build();
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    Document document = recast.toDocument(parameterized);
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(RECAST_KEY)).isEqualTo(DummyParameterized.class.getName());
+    assertThat(document.get("expression"))
+        .isEqualTo(ImmutableList.of(new Document()
+                                        .append(RECAST_KEY, DummyWithInnerClass.User.class.getName())
+                                        .append("name", "name")
+                                        .append("age", 23)));
+
+    DummyParameterized<List<DummyWithInnerClass.User>> recasted =
+        recast.fromDocument(document, DummyParameterized.class);
+    assertThat(recasted).isNotNull();
+    assertThat(recasted).isEqualTo(parameterized);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
   public void shouldTestRecasterParameterizedFieldAsMap() {
     DummyParameterized<Map<String, String>> parameterized =
         DummyParameterized.<Map<String, String>>builder().expression(Collections.singletonMap("key", "value")).build();
@@ -844,7 +885,7 @@ public class RecastComplexValuesTest extends RecasterTestBase {
                        .append("name", "name")
                        .append("age", 23));
 
-    DummyParameterized<Boolean> recasted = recast.fromDocument(document, DummyParameterized.class);
+    DummyParameterized<DummyWithInnerClass.User> recasted = recast.fromDocument(document, DummyParameterized.class);
     assertThat(recasted).isNotNull();
     assertThat(recasted).isEqualTo(parameterized);
   }

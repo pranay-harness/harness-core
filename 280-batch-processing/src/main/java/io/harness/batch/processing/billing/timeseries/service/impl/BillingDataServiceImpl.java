@@ -1,9 +1,12 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.support.BillingDataTableNameProvider;
 import io.harness.batch.processing.ccm.ActualIdleCostWriterData;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.entities.ClusterDataDetails;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.exception.InvalidRequestException;
@@ -28,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Singleton
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class BillingDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
@@ -49,19 +53,26 @@ public class BillingDataServiceImpl {
       "INSERT INTO %s (MEMORYACTUALIDLECOST, CPUACTUALIDLECOST, STARTTIME, ENDTIME, BILLINGAMOUNT, ACTUALIDLECOST, UNALLOCATEDCOST, SYSTEMCOST, STORAGEACTUALIDLECOST, STORAGEUNALLOCATEDCOST, STORAGEUTILIZATIONVALUE, STORAGEREQUEST, STORAGECOST, MEMORYUNALLOCATEDCOST, CPUUNALLOCATEDCOST, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID) ";
 
   static final String PREAGG_QUERY_SUFFIX =
-      "SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, sum(SYSTEMCOST) as SYSTEMCOST, SUM(STORAGEACTUALIDLECOST) as STORAGEACTUALIDLECOST, SUM(STORAGEUNALLOCATEDCOST) as STORAGEUNALLOCATEDCOST, MAX(STORAGEUTILIZATIONVALUE) as STORAGEUTILIZATIONVALUE, MAX(STORAGEREQUEST) as STORAGEREQUEST, SUM(STORAGECOST) as STORAGECOST, SUM(MEMORYUNALLOCATEDCOST) as MEMORYUNALLOCATEDCOST, SUM(CPUUNALLOCATEDCOST) as CPUUNALLOCATEDCOST, SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME from %s where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?) group by ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME ";
+      "SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, sum(SYSTEMCOST) as SYSTEMCOST, SUM(STORAGEACTUALIDLECOST) as STORAGEACTUALIDLECOST, SUM(STORAGEUNALLOCATEDCOST) as STORAGEUNALLOCATEDCOST, MAX(STORAGEUTILIZATIONVALUE) as STORAGEUTILIZATIONVALUE, MAX(STORAGEREQUEST) as STORAGEREQUEST, SUM(STORAGECOST) as STORAGECOST, SUM(MEMORYUNALLOCATEDCOST) as MEMORYUNALLOCATEDCOST, SUM(CPUUNALLOCATEDCOST) as CPUUNALLOCATEDCOST, SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME from %s where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?) group by ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME ";
 
   static final String PREAGG_QUERY_SUFFIX_WITH_ID =
       "SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, sum(SYSTEMCOST) as SYSTEMCOST, SUM(STORAGEACTUALIDLECOST) as STORAGEACTUALIDLECOST, SUM(STORAGEUNALLOCATEDCOST) as STORAGEUNALLOCATEDCOST, MAX(STORAGEUTILIZATIONVALUE) as STORAGEUTILIZATIONVALUE, MAX(STORAGEREQUEST) as STORAGEREQUEST, SUM(STORAGECOST) as STORAGECOST, SUM(MEMORYUNALLOCATEDCOST) as MEMORYUNALLOCATEDCOST, SUM(CPUUNALLOCATEDCOST) as CPUUNALLOCATEDCOST, SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID from %s where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?) group by ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID ";
 
   static final String DELETE_EXISTING_PREAGG =
-      "DELETE FROM %s WHERE ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?, ?) ;";
+      "DELETE FROM %s WHERE ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?, ?, ?) ;";
+
+  static final String DELETE_EXISTING_BILLING_DATA =
+      "DELETE FROM %s WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s';";
+
+  static final String RETRIEVE_BILLING_DATA =
+      "SELECT COUNT(*) as ENTRIESCOUNT, SUM(billingamount) as BILLINGAMOUNTSUM from BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME = '%s' ;";
 
   private static final String READER_QUERY =
       "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' OFFSET %s LIMIT %s;";
 
-  private static final List<InstanceType> PREAGG_INSTANCES = ImmutableList.of(InstanceType.K8S_POD,
-      InstanceType.ECS_CONTAINER_INSTANCE, InstanceType.ECS_TASK_EC2, InstanceType.ECS_TASK_FARGATE);
+  private static final List<InstanceType> PREAGG_INSTANCES =
+      ImmutableList.of(InstanceType.K8S_POD, InstanceType.ECS_CONTAINER_INSTANCE, InstanceType.ECS_TASK_EC2,
+          InstanceType.ECS_TASK_FARGATE, InstanceType.K8S_POD_FARGATE);
 
   private static final List<InstanceType> PREAGG_INSTANCES_WITH_ID =
       ImmutableList.of(InstanceType.K8S_NODE, InstanceType.K8S_PV);
@@ -298,6 +309,31 @@ public class BillingDataServiceImpl {
     return null;
   }
 
+  public ClusterDataDetails getTimeScaleClusterData(String accountId, Instant startTime) {
+    ResultSet resultSet = null;
+    int retryCount = 0;
+    String query = String.format(RETRIEVE_BILLING_DATA, accountId, startTime.toString());
+    log.info("Timescale Formatted query : " + query);
+    while (retryCount < SELECT_MAX_RETRY_COUNT) {
+      retryCount++;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           Statement statement = connection.createStatement()) {
+        resultSet = statement.executeQuery(query);
+        while (resultSet.next()) {
+          return ClusterDataDetails.builder()
+              .entriesCount(resultSet.getInt("ENTRIESCOUNT"))
+              .billingAmountSum(resultSet.getDouble("BILLINGAMOUNTSUM"))
+              .build();
+        }
+      } catch (SQLException e) {
+        log.error("Error while fetching billing Data data : " + e);
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return null;
+  }
+
   private int updateAggregationStatement(
       PreparedStatement statement, String accountId, Instant startTime, Instant endTime) throws SQLException {
     int i = 0;
@@ -305,6 +341,31 @@ public class BillingDataServiceImpl {
     statement.setTimestamp(++i, new Timestamp(startTime.toEpochMilli()), utils.getDefaultCalendar());
     statement.setTimestamp(++i, new Timestamp(endTime.toEpochMilli()), utils.getDefaultCalendar());
     return i;
+  }
+
+  public boolean cleanBillingData(
+      @NotNull String accountId, @NotNull Instant startTime, @NotNull Instant endTime, BatchJobType batchJobType) {
+    boolean successfulUpdate = false;
+    if (timeScaleDBService.isValid()) {
+      int retryCount = 0;
+      while (!successfulUpdate && retryCount < MAX_RETRY_COUNT) {
+        try (Connection dbConnection = timeScaleDBService.getDBConnection();
+             PreparedStatement statement = dbConnection.prepareStatement(
+                 String.format(DELETE_EXISTING_BILLING_DATA, BillingDataTableNameProvider.getTableName(batchJobType),
+                     accountId, startTime.toString(), endTime.toString()))) {
+          log.info("Deleting existing billing data: {} ", statement);
+          statement.execute();
+          successfulUpdate = true;
+        } catch (SQLException e) {
+          log.error("Failed to delete existing billing data for account:{}, retryCount=[{}], Exception: ", accountId,
+              retryCount, e);
+          retryCount++;
+        }
+      }
+    } else {
+      log.warn("Couldnt delete existing billing data in same time period");
+    }
+    return successfulUpdate;
   }
 
   public boolean cleanPreAggBillingData(

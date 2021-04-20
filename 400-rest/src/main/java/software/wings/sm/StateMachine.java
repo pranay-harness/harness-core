@@ -26,9 +26,9 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -53,6 +53,7 @@ import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -81,12 +82,20 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Data
 @Entity(value = "stateMachines", noClassnameStored = true)
-@CdIndex(name = "appId_origin", fields = { @Field("appId")
-                                           , @Field("originId"), @Field("originVersion") })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "StateMachineKeys")
 @Slf4j
 public class StateMachine implements PersistentEntity, UuidAware, CreatedAtAware, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("appId_origin")
+                 .field(StateMachineKeys.appId)
+                 .field(StateMachineKeys.originId)
+                 .field(StateMachineKeys.originVersion)
+                 .build())
+        .build();
+  }
   public static final String MAPPING_ERROR_MESSAGE_PREFIX = "Error mapping properties for state: ";
   public static final String MAPPING_ERROR_MESSAGE_SUFFIX = "[%s] of type: [%s]";
   public static final String MAPPING_ERROR_MESSAGE = MAPPING_ERROR_MESSAGE_PREFIX + MAPPING_ERROR_MESSAGE_SUFFIX;

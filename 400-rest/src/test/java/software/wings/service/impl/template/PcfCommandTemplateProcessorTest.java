@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.AADITI;
 
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -57,6 +59,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDP)
 public class PcfCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   @Mock private WorkflowService workflowService;
   @Mock private MorphiaIterator<Workflow, Workflow> workflowIterator;

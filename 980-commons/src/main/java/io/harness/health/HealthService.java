@@ -26,7 +26,7 @@ public class HealthService extends HealthCheck {
   ExecutorService executorService;
 
   @Inject
-  HealthService(ExecutorService executorService) {
+  public HealthService(ExecutorService executorService) {
     initial = true;
     timeLimiter = new SimpleTimeLimiter(executorService);
     this.executorService = executorService;

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -24,6 +25,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -193,6 +195,7 @@ public class EcsServiceRollbackTest extends WingsBaseTest {
     doReturn(false).when(mockFeatureFlagService).isEnabled(any(), anyString());
     ExecutionResponse response = ecsServiceRollback.execute(mockContext);
     assertThat(ecsServiceRollback.isRollbackAllPhases()).isTrue();
+    verify(mockFeatureFlagService).isEnabled(eq(TIMEOUT_FAILURE_SUPPORT), any());
   }
 
   @Test

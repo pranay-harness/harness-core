@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.Map;
  * @author Rishi
  */
 @OwnedBy(CDC)
-public class StateMachineResumeCallback implements NotifyCallback {
+public class StateMachineResumeCallback implements OldNotifyCallback {
   @Inject private StateMachineExecutor stateMachineExecutor;
 
   private String appId;

@@ -140,8 +140,8 @@ public class NexusBuildServiceTest extends WingsBaseTest {
              nexusConfig, null, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME, null, null, false))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("3.0").build(), aBuildDetails().withNumber("2.1.2").build()));
-    List<BuildDetails> buildDetails =
-        nexusBuildService.getBuilds("nexus", nexusArtifactStream.fetchArtifactStreamAttributes(), nexusConfig, null);
+    List<BuildDetails> buildDetails = nexusBuildService.getBuilds(
+        "nexus", nexusArtifactStream.fetchArtifactStreamAttributes(null), nexusConfig, null);
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).containsExactly("3.0", "2.1.2");
   }
 

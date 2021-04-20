@@ -1,7 +1,10 @@
 package io.harness.gitsync.common.dtos;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.Trimmed;
 
@@ -18,6 +21,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
+@OwnedBy(DX)
 public class GitSyncFolderConfigDTO {
   @Trimmed @NotEmpty private String rootFolder;
   private Boolean isDefault;

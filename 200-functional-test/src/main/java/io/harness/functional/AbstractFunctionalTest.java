@@ -93,7 +93,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   protected static String bearerToken;
   protected static User adminUser;
-
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
 
@@ -132,7 +131,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Getter static Account account;
 
   @Before
-  public void testSetup() throws IOException {
+  public void testSetup() throws IOException, InterruptedException {
     account = accountSetupService.ensureAccount();
     adminUser = Setup.loginUser(ADMIN_USER, "admin");
     bearerToken = adminUser.getToken();
@@ -141,7 +140,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
       commandLibraryServiceExecutor.ensureCommandLibraryService(
           AbstractFunctionalTest.class, FunctionalTestRule.alpn, FunctionalTestRule.alpnJar);
     }
-    log.info("Basic setup completed");
+    log.info("Basic setup completed.");
   }
 
   @AfterClass

@@ -1,7 +1,13 @@
 package software.wings.service.intfc.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.config.GcpBillingAccount;
 
 import software.wings.api.DeploymentSummary;
@@ -11,7 +17,6 @@ import software.wings.beans.ResourceLookup;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.settings.SettingVariableTypes;
@@ -21,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public interface CloudToHarnessMappingService {
   Optional<HarnessServiceInfo> getHarnessServiceInfo(DeploymentSummary deploymentSummary);
 

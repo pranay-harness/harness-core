@@ -14,7 +14,7 @@ public interface AwsSecretsManagerService {
 
   boolean deleteAwsSecretsManagerConfig(String accountId, String configId);
 
-  void validateSecretsManagerConfig(AwsSecretsManagerConfig secretsManagerConfig);
+  void validateSecretsManagerConfig(String accountId, AwsSecretsManagerConfig secretsManagerConfig);
 
   void decryptAsmConfigSecrets(String accountId, AwsSecretsManagerConfig secretsManagerConfig, boolean maskSecret);
 }

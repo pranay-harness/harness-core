@@ -5,7 +5,7 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Maximum;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.payloads.EcsUtilization;
 import io.harness.event.payloads.EcsUtilization.Builder;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @ParametersAreNonnullByDefault
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class EcsMetricClient {
   private static final String CPU_UTILIZATION = "CPUUtilization";
   private static final String MEMORY_UTILIZATION = "MemoryUtilization";

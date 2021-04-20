@@ -18,7 +18,10 @@ import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.EcrBuildService;
+import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.ArtifactConfigMapper;
+import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 import software.wings.utils.ArtifactType;
 
 import com.google.inject.Inject;
@@ -37,28 +40,39 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   @Inject private EcrService ecrService;
   @Inject private EncryptionService encryptionService;
   @Inject private AwsHelperService awsHelperService;
+  @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ECR.name());
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+
     return wrapNewBuildsWithLabels(
-        ecrService.getBuilds(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
-            artifactStreamAttributes.getImageName(), 50),
+        ecrService
+            .getBuilds(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),
+                ecrServiceDelegate.getEcrImageUrl(awsConfig, encryptionDetails, artifactStreamAttributes.getRegion(),
+                    artifactStreamAttributes.getImageName()),
+                artifactStreamAttributes.getRegion(), artifactStreamAttributes.getImageName(), 50)
+            .stream()
+            .map(ArtifactConfigMapper::toBuildDetails)
+            .collect(Collectors.toList()),
         artifactStreamAttributes, awsConfig);
   }
 
   @Override
   public List<JobDetails> getJobs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    List<String> regions = ecrService.listRegions(awsConfig, encryptionDetails);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    List<String> regions = ecrService.listRegions(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig));
     return wrapJobNameWithJobDetails(regions);
   }
 
   @Override
   public List<String> getArtifactPaths(
       String region, String groupId, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return ecrService.listEcrRegistry(awsConfig, encryptionDetails, region);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    return ecrService.listEcrRegistry(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), region);
   }
 
   @Override
@@ -93,8 +107,9 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   @Override
   public boolean validateArtifactSource(AwsConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    return ecrService.verifyRepository(
-        config, encryptionDetails, artifactStreamAttributes.getRegion(), artifactStreamAttributes.getImageName());
+    encryptionService.decrypt(config, encryptionDetails, false);
+    return ecrService.verifyRepository(AwsConfigToInternalMapper.toAwsInternalConfig(config),
+        artifactStreamAttributes.getRegion(), artifactStreamAttributes.getImageName());
   }
 
   @Override
@@ -117,6 +132,8 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   @Override
   public List<Map<String, String>> getLabels(ArtifactStreamAttributes artifactStreamAttributes, List<String> buildNos,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return ecrService.getLabels(awsConfig, encryptionDetails, artifactStreamAttributes, buildNos);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    return ecrService.getLabels(AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig),
+        artifactStreamAttributes.getImageName(), artifactStreamAttributes.getRegion(), buildNos);
   }
 }

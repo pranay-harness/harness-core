@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.informer;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.perpetualtask.k8s.informer.handlers.V1DaemonSetHandler;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class SharedInformerFactoryFactory {
   private final EventPublisher eventPublisher;
 

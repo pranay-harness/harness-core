@@ -1,20 +1,28 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
@@ -23,6 +31,8 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -40,10 +50,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public class K8sRollingBaseHandlerTest extends CategoryTest {
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @InjectMocks private K8sRollingBaseHandler k8sRollingBaseHandler;
 
+  @Mock private LogCallback logCallback;
   private KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
 
   @Before
@@ -178,5 +190,40 @@ public class K8sRollingBaseHandlerTest extends CategoryTest {
     k8sRollingBaseHandler.getPods(3000L, managedWorkload, kubernetesConfig, "releaseName");
 
     verify(k8sTaskHelperBase, times(1)).getPodDetails(kubernetesConfig, "default", "releaseName", 3000L);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetExistingPods() throws Exception {
+    KubernetesResourceId sample = KubernetesResourceId.builder().namespace("default").build();
+    List<KubernetesResource> managedWorkload = Arrays.asList(KubernetesResource.builder().resourceId(sample).build(),
+        KubernetesResource.builder().resourceId(sample).build());
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+
+    k8sRollingBaseHandler.getExistingPods(3000L, managedWorkload, kubernetesConfig, "releaseName", logCallback);
+
+    verify(k8sTaskHelperBase, times(1)).getPodDetails(kubernetesConfig, "default", "releaseName", 3000L);
+    verify(logCallback, times(1)).saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetExistingPodsFailed() throws Exception {
+    KubernetesResourceId sample = KubernetesResourceId.builder().namespace("default").build();
+    List<KubernetesResource> managedWorkload = Arrays.asList(KubernetesResource.builder().resourceId(sample).build(),
+        KubernetesResource.builder().resourceId(sample).build());
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    InvalidRequestException thrownException = new InvalidRequestException("Failed to get pods");
+
+    doThrow(thrownException).when(k8sTaskHelperBase).getPodDetails(kubernetesConfig, "default", "releaseName", 3000L);
+
+    assertThatThrownBy(()
+                           -> k8sRollingBaseHandler.getExistingPods(
+                               3000L, managedWorkload, kubernetesConfig, "releaseName", logCallback))
+        .isEqualTo(thrownException);
+
+    verify(logCallback, times(1)).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
   }
 }

@@ -18,6 +18,10 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SecretManagerConfig;
@@ -30,7 +34,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
-import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
+import io.harness.globalcontex.EntityOperationIdentifier.EntityOperation;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.manage.GlobalContextManager;
@@ -77,6 +81,7 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -93,6 +98,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._940_CG_AUDIT_SERVICE)
 public class EntityHelper {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlHelper yamlHelper;
@@ -116,7 +123,7 @@ public class EntityHelper {
     String entityName = EMPTY;
     String entityId = entity.getUuid();
     String entityType = EMPTY;
-    String appId = EMPTY;
+    String appId = "__GLOBAL_APP_ID__";
     String appName = EMPTY;
     String affectedResourceId = EMPTY;
     String affectedResourceName = EMPTY;
@@ -651,7 +658,7 @@ public class EntityHelper {
                                                         .entityId(affectedResourceId)
                                                         .entityName(affectedResourceName)
                                                         .entityType(entityType.name())
-                                                        .operation(entityOperation.CREATE)
+                                                        .operation(EntityOperation.CREATE)
                                                         .build();
     if (auditGlobalContextData.getEntityOperationIdentifierSet().contains(operationIdentifier)) {
       return Type.CREATE.name();
@@ -825,6 +832,8 @@ public class EntityHelper {
       } else if (entity instanceof Template) {
         Template template = (Template) entity;
         finalYaml = format("%s/%s%s", yamlPrefix, template.getName(), YAML_EXTENSION);
+      } else if (entity instanceof GovernanceConfig) {
+        finalYaml = format("%s/%s%s", yamlPrefix, YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER, YAML_EXTENSION);
       } else {
         finalYaml = yamlPrefix;
       }

@@ -1,6 +1,7 @@
 package io.harness.ng.core.event;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
@@ -8,6 +9,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
@@ -25,6 +27,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class EntityCRUDStreamConsumer implements Runnable {
@@ -59,7 +62,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
     } catch (Exception ex) {
       log.error("Entity crud stream consumer unexpectedly stopped", ex);
     }
-    SecurityContextBuilder.unsetContext();
+    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void pollAndProcessMessages() throws ConsumerShutdownException {

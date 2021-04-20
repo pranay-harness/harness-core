@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.equalCheck;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifacts.gcr.service.GcrApiService;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +28,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by brett on 8/2/17
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
@@ -54,7 +58,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
           gcrApiService
               .getBuilds(GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
                              gcpHelperService.getBasicAuthHeader(
-                                 gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate())),
+                                 gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors())),
                   artifactStreamAttributes.getImageName(), 50)
               .stream()
               .map(ArtifactConfigMapper::toBuildDetails)
@@ -63,7 +67,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
     } catch (IOException e) {
       log.error("", e);
     }
-    return null;
+    return new ArrayList<>();
   }
 
   @Override
@@ -110,7 +114,8 @@ public class GcrBuildServiceImpl implements GcrBuildService {
       encryptionService.decrypt(config, encryptionDetails, false);
       return gcrApiService.verifyImageName(
           GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
-              gcpHelperService.getBasicAuthHeader(config.getServiceAccountKeyFileContent(), config.isUseDelegate())),
+              gcpHelperService.getBasicAuthHeader(
+                  config.getServiceAccountKeyFileContent(), config.isUseDelegateSelectors())),
           artifactStreamAttributes.getImageName());
     } catch (IOException e) {
       log.error("Could not verify Artifact source", e);

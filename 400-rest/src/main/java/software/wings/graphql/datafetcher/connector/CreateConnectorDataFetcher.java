@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.ConstraintViolationHandlerUtils;
@@ -11,6 +11,7 @@ import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.types.Connector;
 import software.wings.graphql.datafetcher.connector.types.ConnectorFactory;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.connector.input.QLConnectorInput;
 import software.wings.graphql.schema.mutation.connector.payload.QLCreateConnectorPayload;
 import software.wings.graphql.schema.mutation.connector.payload.QLCreateConnectorPayload.QLCreateConnectorPayloadBuilder;
@@ -26,12 +27,13 @@ import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CreateConnectorDataFetcher extends BaseMutatorDataFetcher<QLConnectorInput, QLCreateConnectorPayload> {
   @Inject private SettingsService settingsService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private ConnectorsController connectorsController;
   @Inject private SecretManager secretManager;
+  @Inject private UsageScopeController usageScopeController;
 
   public CreateConnectorDataFetcher() {
     super(QLConnectorInput.class, QLCreateConnectorPayload.class);
@@ -49,8 +51,8 @@ public class CreateConnectorDataFetcher extends BaseMutatorDataFetcher<QLConnect
       throw new InvalidRequestException("Invalid connector type provided");
     }
 
-    Connector connector =
-        ConnectorFactory.getConnector(input.getConnectorType(), connectorsController, secretManager, settingsService);
+    Connector connector = ConnectorFactory.getConnector(
+        input.getConnectorType(), connectorsController, secretManager, settingsService, usageScopeController);
     connector.checkInputExists(input);
     connector.checkSecrets(input, accountId);
     SettingAttribute settingAttribute = connector.getSettingAttribute(input, accountId);

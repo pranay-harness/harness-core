@@ -2,10 +2,12 @@ package software.wings.resources.secretsmanagement;
 
 import static io.harness.NGConstants.FILE_KEY;
 import static io.harness.NGConstants.FILE_METADATA_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.toDTO;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
@@ -34,6 +36,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
+@OwnedBy(PL)
 @Api(value = "secret-files", hidden = true)
 @Path("/ng/secret-files")
 @NextGenManagerAuth

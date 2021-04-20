@@ -6,7 +6,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -26,7 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PcfValidationCommandTaskHandlerTest extends WingsBaseTest {
   @Mock private PcfDeploymentManager pcfDeploymentManager;
   @Mock private EncryptionService encryptionService;

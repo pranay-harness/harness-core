@@ -78,6 +78,42 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
   }
 
   @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldEvaluateSingleExpression() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("'hello' == 'hello'")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":\"VALUE\"}}")
+                            .setIsSkipCondition(true)
+                            .build())
+
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("true");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldNotEvaluateSingleExpression() {
+    ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
+        ExpressionRequest.newBuilder()
+            .addQueries(ExpressionQuery.newBuilder()
+                            .setJexl("'hello' == 'hello'")
+                            .setJsonContext("{\"VAR1\":{\"VAR2\":\"VALUE\"}}")
+                            .setIsSkipCondition(false)
+                            .build())
+
+            .build());
+    assertThat(expressionResponse).isNotNull();
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("'hello' == 'hello'");
+    assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
+  }
+
+  @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldEvaluateDoublyNestedVariable() {
@@ -199,7 +235,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("VAR1.VAR2")
+                            .setJexl("<+VAR1.VAR2>")
                             .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
                             .build())
             .build());
@@ -211,11 +247,11 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldEvaluatenBooleanObject1() {
+  public void shouldEvaluateBooleanObject1() {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("2==2")
+                            .setJexl("<+2==2>")
                             .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
                             .build())
             .build());
@@ -227,7 +263,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldEvaluatenBooleanObject() {
+  public void shouldEvaluateBooleanObject() {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()

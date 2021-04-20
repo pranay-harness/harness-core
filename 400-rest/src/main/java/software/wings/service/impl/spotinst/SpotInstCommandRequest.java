@@ -1,5 +1,8 @@
 package software.wings.service.impl.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -20,6 +23,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class SpotInstCommandRequest implements TaskParameters, ExecutionCapabilityDemander {
   private AwsConfig awsConfig;
   private SpotInstConfig spotInstConfig;

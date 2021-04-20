@@ -23,6 +23,7 @@ import com.auth0.jwt.interfaces.Claim;
 import java.io.UnsupportedEncodingException;
 import java.security.interfaces.RSAKey;
 import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import lombok.experimental.UtilityClass;
@@ -69,11 +70,16 @@ public class JWTTokenServiceUtils {
   }
 
   public String extractToken(ContainerRequestContext requestContext, String prefix) {
-    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
-      throw new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_ADMIN);
+    return extractToken(HttpHeaders.AUTHORIZATION, requestContext, prefix)
+        .orElseThrow(() -> new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_ADMIN));
+  }
+
+  public Optional<String> extractToken(String headerName, ContainerRequestContext requestContext, String prefix) {
+    String headerValue = requestContext.getHeaderString(headerName);
+    if (headerValue == null || !headerValue.startsWith(prefix)) {
+      return Optional.empty();
     }
-    return authorizationHeader.substring(prefix.length()).trim();
+    return Optional.of(headerValue.substring(prefix.length()).trim());
   }
 
   public String extractSecret(Map<String, String> serviceToSecretMapping, String source) {
@@ -87,15 +93,20 @@ public class JWTTokenServiceUtils {
   }
 
   public String extractSource(ContainerRequestContext requestContext) {
-    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null) {
-      throw new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_SRE);
+    return extractSource(HttpHeaders.AUTHORIZATION, requestContext)
+        .orElseThrow(() -> new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_SRE));
+  }
+
+  public Optional<String> extractSource(String headerName, ContainerRequestContext requestContext) {
+    String headerValue = requestContext.getHeaderString(headerName);
+    if (headerValue == null) {
+      return Optional.empty();
     }
 
-    String[] sourceAndToken = authorizationHeader.trim().split(SPACE, 2);
+    String[] sourceAndToken = headerValue.trim().split(SPACE, 2);
     if (sourceAndToken.length < 2) {
-      throw new InvalidRequestException("Invalid token", INVALID_TOKEN, USER_SRE);
+      return Optional.empty();
     }
-    return sourceAndToken[0].trim();
+    return Optional.of(sourceAndToken[0].trim());
   }
 }

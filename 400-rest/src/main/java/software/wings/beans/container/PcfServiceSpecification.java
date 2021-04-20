@@ -1,8 +1,11 @@
 package software.wings.beans.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.DeploymentSpecification;
@@ -21,6 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "PcfServiceSpecificationKeys")
 @Entity("pcfServiceSpecification")
 @HarnessEntity(exportable = true)
+@OwnedBy(CDP)
 public class PcfServiceSpecification extends DeploymentSpecification implements AccountAccess {
   @NotNull private String serviceId;
   @NotNull private String manifestYaml;

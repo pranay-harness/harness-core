@@ -1,5 +1,7 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.ccm.commons.beans.InstanceType;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Service
 @Singleton
 @Slf4j
@@ -33,7 +36,7 @@ public class K8sUtilizationGranularDataServiceImpl {
   private static final int MAX_RETRY_COUNT = 2;
   private static final int BATCH_SIZE = 500;
   static final String INSERT_STATEMENT =
-      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, MAXCPU, MAXMEMORY,  INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID, SETTINGID, STORAGEREQUESTVALUE, STORAGEUSAGEVALUE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
+      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, MAXCPU, MAXMEMORY,  INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID, SETTINGID, STORAGEREQUESTVALUE, STORAGEUSAGEVALUE, ACTUALINSTANCEID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
   static final String SELECT_DISTINCT_INSTANCEID =
       "SELECT DISTINCT INSTANCEID FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s'";
   static final String UTILIZATION_DATA_QUERY =
@@ -118,6 +121,7 @@ public class K8sUtilizationGranularDataServiceImpl {
     statement.setString(11, k8sGranularUtilizationData.getSettingId());
     statement.setDouble(12, k8sGranularUtilizationData.getStorageRequestValue());
     statement.setDouble(13, k8sGranularUtilizationData.getStorageUsageValue());
+    statement.setString(14, k8sGranularUtilizationData.getActualInstanceId());
   }
 
   public List<String> getDistinctInstantIds(String accountId, long startDate, long endDate) {

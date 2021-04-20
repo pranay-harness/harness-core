@@ -76,8 +76,8 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
     List<BuildDetails> buildDetails = Lists.newArrayList(
         Builder.aBuildDetails().withNumber("10").withRevision("10").withArtifactPath("artifact1").build());
     when(amazonS3Service.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
-    List<BuildDetails> builds =
-        amazonS3BuildService.getBuilds(APP_ID, amazonS3ArtifactStream.fetchArtifactStreamAttributes(), awsConfig, null);
+    List<BuildDetails> builds = amazonS3BuildService.getBuilds(
+        APP_ID, amazonS3ArtifactStream.fetchArtifactStreamAttributes(null), awsConfig, null);
     assertThat(builds).hasSize(1).extracting(BuildDetails::getNumber).containsExactly("10");
     assertThat(builds).extracting(BuildDetails::getArtifactPath).containsExactly("artifact1");
   }
@@ -98,7 +98,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
             .build());
     when(amazonS3Service.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
     List<BuildDetails> builds = amazonS3BuildService.getBuilds(
-        APP_ID, amazonS3ArtifactStream2.fetchArtifactStreamAttributes(), awsConfig, null);
+        APP_ID, amazonS3ArtifactStream2.fetchArtifactStreamAttributes(null), awsConfig, null);
     assertThat(builds)
         .hasSize(2)
         .extracting(BuildDetails::getNumber)
@@ -129,7 +129,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
             .build());
     when(amazonS3Service.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
     List<BuildDetails> builds = amazonS3BuildService.getBuilds(
-        APP_ID, amazonS3ArtifactStream3.fetchArtifactStreamAttributes(), awsConfig, null);
+        APP_ID, amazonS3ArtifactStream3.fetchArtifactStreamAttributes(null), awsConfig, null);
     assertThat(builds)
         .hasSize(3)
         .extracting(BuildDetails::getNumber)

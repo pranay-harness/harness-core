@@ -1,6 +1,9 @@
 package io.harness.ccm.billing.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -20,6 +23,7 @@ import org.mongodb.morphia.annotations.Id;
 @StoreIn("events")
 @Entity(value = "cloudBillingTransferRuns", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "CloudBillingTransferRunKeys")
+@OwnedBy(CE)
 public final class CloudBillingTransferRun implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
   @Id String uuid;
   private String accountId;

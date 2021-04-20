@@ -130,4 +130,45 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     assertThat(outcome).isInstanceOf(DummyOrchestrationOutcome.class);
     assertThat(((DummyOrchestrationOutcome) outcome).getTest()).isEqualTo("test");
   }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldResolveOptional() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome";
+
+    String outcomeJson =
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build());
+    pmsOutcomeService.consume(ambiance, outcomeName, outcomeJson, null, false);
+
+    // Resolve with producer id
+    OptionalOutcome optionalOutcome = pmsOutcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
+    assertThat(optionalOutcome).isNotNull();
+    assertThat(optionalOutcome.getOutcome()).isEqualTo(outcomeJson);
+    assertThat(optionalOutcome.isFound()).isTrue();
+
+    // Resolve with scope
+    optionalOutcome = pmsOutcomeService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName));
+    assertThat(optionalOutcome).isNotNull();
+    assertThat(optionalOutcome.getOutcome()).isEqualTo(outcomeJson);
+    assertThat(optionalOutcome.isFound()).isTrue();
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldResolveInternalWhenOutcomeIsNotFound() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome";
+
+    OptionalOutcome optionalOutcome = pmsOutcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
+    assertThat(optionalOutcome).isNotNull();
+    assertThat(optionalOutcome.getOutcome()).isNull();
+    assertThat(optionalOutcome.isFound()).isEqualTo(false);
+  }
 }

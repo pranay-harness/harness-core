@@ -1,7 +1,10 @@
 package software.wings.service.impl.template;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -29,6 +32,8 @@ import static org.joor.Reflect.on;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -61,6 +66,8 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
   private static final String MY_STOP = "MyStop";
   private static final String STANDALONE_EXEC = "Standalone Exec";
@@ -270,6 +277,66 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTestHelper {
 
     verify(serviceResourceService)
         .updateCommand(serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand, true);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotUpdateServiceCommandName_onUpdateCommandsLinked() {
+    Template template = getSshCommandTemplate();
+    template.setName("Changed Template Name");
+
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    assertThat(savedTemplate.getAppId()).isNotNull().isEqualTo(GLOBAL_APP_ID);
+    assertThat(savedTemplate.getVersion()).isEqualTo(1);
+
+    savedTemplate.setDescription(TEMPLATE_DESC_CHANGED);
+
+    savedTemplate.setVariables(asList(aVariable().name("MyVar").value("MyValue").build(),
+        aVariable().name("MySecondVar").value("MySecondValue").build()));
+
+    on(sshCommandTemplateProcessor).set("wingsPersistence", wingsPersistence);
+    on(sshCommandTemplateProcessor).set("serviceResourceService", serviceResourceService);
+
+    when(wingsPersistence.createQuery(ServiceCommand.class, excludeAuthority)).thenReturn(query);
+    when(wingsPersistence.createQuery(Workflow.class, excludeAuthority)).thenReturn(workflowQuery);
+
+    Command command =
+        aCommand()
+            .withName("START")
+            .addCommandUnits(
+                anExecCommandUnit().withCommandPath("/home/xxx/tomcat").withCommandString("bin/startup.sh").build())
+            .build();
+
+    ServiceCommand serviceCommand = aServiceCommand()
+                                        .withServiceId(SERVICE_ID)
+                                        .withUuid(SERVICE_COMMAND_ID)
+                                        .withDefaultVersion(1)
+                                        .withAppId(APP_ID)
+                                        .withName("START")
+                                        .withCommand(command)
+                                        .withTemplateUuid(savedTemplate.getUuid())
+                                        .withTemplateVersion(LATEST_TAG)
+                                        .build();
+
+    when(query.filter(TEMPLATE_UUID_KEY, savedTemplate.getUuid())).thenReturn(query);
+    when(query.fetch()).thenReturn(serviceCommandIterator);
+
+    when(serviceCommandIterator.getCursor()).thenReturn(dbCursor);
+    when(serviceCommandIterator.hasNext()).thenReturn(true).thenReturn(false);
+    when(serviceCommandIterator.next()).thenReturn(serviceCommand);
+
+    when(workflowQuery.filter(WorkflowKeys.linkedTemplateUuids, savedTemplate.getUuid())).thenReturn(workflowQuery);
+    when(workflowQuery.fetch()).thenReturn(workflowIterator);
+    when(workflowIterator.getCursor()).thenReturn(dbCursor);
+    when(workflowIterator.hasNext()).thenReturn(false);
+
+    templateService.updateLinkedEntities(savedTemplate);
+
+    verify(serviceResourceService)
+        .updateCommand(serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand, true);
+    assertThat(serviceCommand.getName()).isEqualTo("START");
   }
 
   @Test(expected = WingsException.class)

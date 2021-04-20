@@ -8,11 +8,9 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.Utils;
-import software.wings.yaml.setting.VerificationProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -26,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -132,23 +129,5 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         Utils.appendPathToBaseUrl(url, validationUrl), maskingEvaluator));
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class DatadogYaml extends VerificationProviderYaml {
-    private String url;
-    private String apiKey;
-    private String applicationKey;
-
-    @Builder
-    public DatadogYaml(String type, String harnessApiVersion, String url, String apiKey, String applicationKey,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.url = url;
-      this.apiKey = apiKey;
-      this.applicationKey = applicationKey;
-    }
   }
 }

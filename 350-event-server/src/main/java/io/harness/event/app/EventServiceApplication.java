@@ -68,7 +68,10 @@ public class EventServiceApplication {
 
     log.info("Starting event service application...");
 
-    File configFile = new File(args[1]);
+    File configFile = new File(args[0]);
+    if (args.length == 2) {
+      configFile = new File(args[1]);
+    }
     EventServiceConfig config =
         new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), EventServiceConfig.class);
     new EventServiceApplication(config).run();

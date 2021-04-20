@@ -1,12 +1,16 @@
 package software.wings.delegatetasks.validation.capabilities;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -18,7 +22,8 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class WinrmHostValidationCapability implements ExecutionCapability {
   @NotNull BasicValidationInfo validationInfo;
   @NotNull private WinRmConnectionAttributes winRmConnectionAttributes;
@@ -37,7 +42,11 @@ public class WinrmHostValidationCapability implements ExecutionCapability {
     if (validationInfo.isExecuteOnDelegate()) {
       return "localhost";
     }
-    return validationInfo.getPublicDns();
+    final StringBuilder basisBuilder = new StringBuilder().append(validationInfo.getPublicDns());
+    if (AuthenticationScheme.KERBEROS == winRmConnectionAttributes.getAuthenticationScheme()) {
+      return basisBuilder.append(":kerberos").toString();
+    }
+    return basisBuilder.toString();
   }
 
   @Override

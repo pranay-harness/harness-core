@@ -1,5 +1,6 @@
 package io.harness.batch.processing.writer;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.batch.processing.ccm.UtilizationInstanceType.K8S_POD;
 import static io.harness.rule.OwnerRule.ROHIT;
 
@@ -7,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.integration.EcsEventGenerator;
@@ -30,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(CE)
 public class PodUtilizationMetricsWriterTest extends CategoryTest implements EcsEventGenerator {
   @InjectMocks private PodUtilizationMetricsWriter podUtilizationMetricsWriter;
   @Mock private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
@@ -37,6 +40,7 @@ public class PodUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();
   private final String INSTANCEID = "INSTANCEID" + this.getClass().getSimpleName();
   private final String INSTANCETYPE = K8S_POD;
+  private final String NAMESPACE = "NAMESPACE";
   private final String SETTINGID = "SETTINGID" + this.getClass().getSimpleName();
   private final String CLUSTERID = "CLUSTERID" + this.getClass().getSimpleName();
   private final long START_TIME_STAMP = 1000000000L;
@@ -72,6 +76,7 @@ public class PodUtilizationMetricsWriterTest extends CategoryTest implements Ecs
   PublishedMessage getPodUtilizationMetricsMessages() {
     PodMetric podMetric = PodMetric.newBuilder()
                               .setName(INSTANCEID)
+                              .setNamespace(NAMESPACE)
                               .setCloudProviderId(SETTINGID)
                               .setClusterId(CLUSTERID)
                               .setTimestamp(Timestamp.newBuilder().setSeconds(END_TIME_STAMP).build())

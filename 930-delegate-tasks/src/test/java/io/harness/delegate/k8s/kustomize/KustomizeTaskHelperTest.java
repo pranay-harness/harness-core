@@ -54,6 +54,7 @@ public class KustomizeTaskHelperTest extends CategoryTest {
     shouldHandleIOException();
     shouldHandleInterrupedException();
     shouldHandleClientBuildFailure();
+    testClientBuildFailureWithNoOutput();
   }
 
   private void shouldHandleClientBuildFailure() throws InterruptedException, IOException, TimeoutException {
@@ -64,7 +65,17 @@ public class KustomizeTaskHelperTest extends CategoryTest {
 
     assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, null, RANDOM, logCallback))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining(RANDOM);
+        .hasMessage("Kustomize build failed. Msg: " + RANDOM);
+  }
+
+  private void testClientBuildFailureWithNoOutput() throws InterruptedException, IOException, TimeoutException {
+    final String RANDOM = "RANDOM";
+    CliResponse cliResponse = CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+    doReturn(cliResponse).when(kustomizeClient).build(RANDOM, RANDOM, RANDOM, logCallback);
+
+    assertThatThrownBy(() -> kustomizeTaskHelper.build(RANDOM, RANDOM, null, RANDOM, logCallback))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Kustomize build failed.");
   }
 
   private void shouldHandleInterrupedException() throws InterruptedException, IOException, TimeoutException {

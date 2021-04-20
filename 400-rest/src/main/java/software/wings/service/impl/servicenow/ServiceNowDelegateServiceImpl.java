@@ -33,9 +33,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.WordUtils;
@@ -417,7 +419,15 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     return new Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(converterFactory)
-        .client(Http.getOkHttpClient(baseUrl, config.isCertValidationRequired()))
+        .client(getHttpClientWithIncreasedTimeout(baseUrl, config.isCertValidationRequired()))
+        .build();
+  }
+
+  public static OkHttpClient getHttpClientWithIncreasedTimeout(String baseUrl, boolean certValidationRequired) {
+    return Http.getOkHttpClient(baseUrl, certValidationRequired)
+        .newBuilder()
+        .connectTimeout(45, TimeUnit.SECONDS)
+        .readTimeout(45, TimeUnit.SECONDS)
         .build();
   }
 

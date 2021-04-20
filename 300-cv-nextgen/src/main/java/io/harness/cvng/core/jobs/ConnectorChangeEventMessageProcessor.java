@@ -3,13 +3,11 @@ package io.harness.cvng.core.jobs;
 import io.harness.beans.IdentifierRef;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
-import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -28,11 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProcessor {
   @Inject private CVConfigService cvConfigService;
-  @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Override
   public void processMessage(Message message) {
     Preconditions.checkState(validateMessage(message), "Invalid message received by Connector Change Event Processor");
@@ -64,22 +61,14 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
 
     log.info("IdentifierRef {}", identifierRef.getScope().getYamlRepresentation() + "," + identifierRef);
 
-    List<CVConfig> cvConfigsWithConnector =
-        cvConfigService.findByConnectorIdentifier(connectorEntityChangeDTO.getAccountIdentifier().getValue(),
-            connectorEntityChangeDTO.getOrgIdentifier().getValue(),
-            connectorEntityChangeDTO.getProjectIdentifier().getValue(),
-            connectorEntityChangeDTO.getIdentifier().getValue(), identifierRef.getScope());
-    cvConfigsWithConnector.forEach(
-        cvConfig -> verificationJobInstanceService.resetVerificationJobPerpetualTasks(cvConfig));
-
     List<MonitoringSourcePerpetualTask> monitoringSourcePerpetualTasks =
-        monitoringTaskPerpetualTaskService.listByConnectorIdentifier(
+        monitoringSourcePerpetualTaskService.listByConnectorIdentifier(
             connectorEntityChangeDTO.getAccountIdentifier().getValue(),
             connectorEntityChangeDTO.getOrgIdentifier().getValue(),
             connectorEntityChangeDTO.getProjectIdentifier().getValue(),
             connectorEntityChangeDTO.getIdentifier().getValue(), identifierRef.getScope());
     monitoringSourcePerpetualTasks.forEach(monitoringSourcePerpetualTask
-        -> monitoringTaskPerpetualTaskService.resetLiveMonitoringPerpetualTask(monitoringSourcePerpetualTask));
+        -> monitoringSourcePerpetualTaskService.resetLiveMonitoringPerpetualTask(monitoringSourcePerpetualTask));
 
     List<KubernetesActivitySource> kubernetesActivitySourcesWithConnector =
         kubernetesActivitySourceService.findByConnectorIdentifier(

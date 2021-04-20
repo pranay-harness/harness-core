@@ -22,6 +22,7 @@ import io.harness.gcp.client.GcpClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
@@ -29,13 +30,14 @@ import java.util.Optional;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+
 @NoArgsConstructor
 @Slf4j
 public class GcpValidationTaskHandler implements TaskHandler, ConnectorValidationHandler {
   @Inject private GcpClient gcpClient;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private NGErrorHelper ngErrorHelper;
-  @Inject GcpRequestMapper gcpRequestMapper;
+  @Inject private GcpRequestMapper gcpRequestMapper;
 
   @Override
   public GcpResponse executeRequest(GcpRequest gcpRequest) {
@@ -56,8 +58,8 @@ public class GcpValidationTaskHandler implements TaskHandler, ConnectorValidatio
     return gcpValidationTaskResponse.getConnectorValidationResult();
   }
 
-  private GcpValidationTaskResponse validateInternal(
-      GcpRequest gcpRequest, List<EncryptedDataDetail> encryptionDetails) {
+  @VisibleForTesting
+  GcpValidationTaskResponse validateInternal(GcpRequest gcpRequest, List<EncryptedDataDetail> encryptionDetails) {
     try {
       if (isNotEmpty(gcpRequest.getDelegateSelectors())) {
         gcpClient.validateDefaultCredentials();

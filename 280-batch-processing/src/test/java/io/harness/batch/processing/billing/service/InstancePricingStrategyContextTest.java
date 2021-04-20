@@ -40,7 +40,8 @@ public class InstancePricingStrategyContextTest extends CategoryTest {
     instancePricingStrategyContext = new InstancePricingStrategyContext(
         new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, instanceResourceService,
             ecsFargateInstancePricingStrategy, customBillingMetaDataService, pricingProfileService),
-        new EcsFargateInstancePricingStrategy(vmPricingService), new StoragePricingStrategy());
+        new EcsFargateInstancePricingStrategy(vmPricingService, customBillingMetaDataService, awsCustomBillingService),
+        new StoragePricingStrategy());
   }
 
   @Test

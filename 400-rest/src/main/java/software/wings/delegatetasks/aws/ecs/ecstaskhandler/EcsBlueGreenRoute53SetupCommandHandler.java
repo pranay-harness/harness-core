@@ -7,7 +7,7 @@ import static io.harness.logging.LogLevel.ERROR;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -29,7 +29,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsBlueGreenRoute53SetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsSetupCommandTaskHelper ecsSetupCommandTaskHelper;
 

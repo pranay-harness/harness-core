@@ -1,11 +1,13 @@
 package io.harness.pms.pipeline;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -23,9 +25,11 @@ import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Builder.Default;
-import lombok.Data;
+import lombok.Setter;
 import lombok.Singular;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -35,7 +39,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Data
+@Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "PipelineEntityKeys")
@@ -43,6 +47,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("pipelinesPMS")
 @TypeAlias("pipelinesPMS")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.PMS)
 public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -54,30 +59,29 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
                  .field(PipelineEntityKeys.projectIdentifier)
                  .field(PipelineEntityKeys.identifier)
                  .build())
-        .add(CompoundMongoIndex.builder().name("accountIdIndex").field(PipelineEntityKeys.accountId).build())
         .build();
   }
 
-  @Id @org.mongodb.morphia.annotations.Id String uuid;
+  @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String yaml;
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;
   @NotEmpty String identifier;
   @Trimmed @NotEmpty String projectIdentifier;
-  private int stageCount;
-  @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
-  @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
+  @Setter @NonFinal int stageCount;
+  @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
+  @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
   @Default Boolean deleted = Boolean.FALSE;
 
   @EntityName String name;
   @Size(max = 1024) String description;
   @Singular @Size(max = 128) List<NGTag> tags;
 
-  @Version Long version;
+  @Setter @NonFinal @Version Long version;
   @Default Map<String, org.bson.Document> filters = new HashMap<>();
   ExecutionSummaryInfo executionSummaryInfo;
   int runSequence;
-  @Singular List<String> stageNames;
+  @Setter @NonFinal @Singular List<String> stageNames;
 
   @Override
   public String getAccountId() {

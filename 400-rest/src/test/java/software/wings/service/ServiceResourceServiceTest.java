@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -22,6 +23,7 @@ import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
@@ -34,6 +36,8 @@ import static software.wings.beans.CommandCategory.Type.VERIFICATIONS;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.LambdaSpecification.DefaultSpecification;
+import static software.wings.beans.LambdaSpecification.LambdaSpecificationKeys;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -56,6 +60,11 @@ import static software.wings.beans.command.CommandUnitType.values;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.beans.container.ContainerTask.ContainerTaskKeys;
+import static software.wings.beans.container.HelmChartSpecification.HelmChartSpecificationKeys;
+import static software.wings.beans.container.HelmChartSpecification.builder;
+import static software.wings.beans.container.PcfServiceSpecification.PcfServiceSpecificationKeys;
+import static software.wings.beans.container.UserDataSpecification.UserDataSpecificationKeys;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.security.UserThreadLocal.userGuard;
@@ -109,6 +118,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -173,6 +185,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.command.SshCommandTemplate;
@@ -248,6 +261,8 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@OwnedBy(CDC)
 @Slf4j
 public class ServiceResourceServiceTest extends WingsBaseTest {
   private static final Command.Builder commandBuilder = aCommand().withName("START").addCommandUnits(
@@ -503,6 +518,54 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList()).build());
 
+    Query pcfQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(PcfServiceSpecification.class)).thenReturn(pcfQuery);
+    when(pcfQuery.filter(anyString(), anyString())).thenReturn(pcfQuery);
+    when(mockQuery.filter(eq(PcfServiceSpecificationKeys.serviceId), anyString())).thenReturn(pcfQuery);
+    PcfServiceSpecification pcfServiceSpecification = PcfServiceSpecification.builder().build();
+    pcfServiceSpecification.setUuid(UUID);
+    when(pcfQuery.get()).thenReturn(pcfServiceSpecification);
+
+    Query containerQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(ContainerTask.class)).thenReturn(containerQuery);
+    when(containerQuery.filter(anyString(), anyString())).thenReturn(containerQuery);
+    when(mockQuery.filter(eq(ContainerTaskKeys.deploymentType), eq(KUBERNETES.name()))).thenReturn(containerQuery);
+    ContainerTask k8sTask = new KubernetesContainerTask();
+    k8sTask.setUuid(UUID);
+    when(containerQuery.get()).thenReturn(null).thenReturn(k8sTask);
+
+    Query helmQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(HelmChartSpecification.class)).thenReturn(helmQuery);
+    when(helmQuery.filter(anyString(), anyString())).thenReturn(helmQuery);
+    when(mockQuery.filter(eq(HelmChartSpecificationKeys.serviceId), anyString())).thenReturn(helmQuery);
+    HelmChartSpecification chartSpecification = HelmChartSpecification.builder().build();
+    chartSpecification.setUuid(UUID);
+    when(helmQuery.get()).thenReturn(chartSpecification);
+
+    Query userDataQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(UserDataSpecification.class)).thenReturn(userDataQuery);
+    when(userDataQuery.filter(anyString(), anyString())).thenReturn(userDataQuery);
+    when(mockQuery.filter(eq(UserDataSpecificationKeys.serviceId), anyString())).thenReturn(userDataQuery);
+    UserDataSpecification userDataSpecification = UserDataSpecification.builder().build();
+    userDataSpecification.setUuid(UUID);
+    when(userDataQuery.get()).thenReturn(userDataSpecification);
+
+    Query ecsQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(EcsServiceSpecification.class)).thenReturn(ecsQuery);
+    when(ecsQuery.filter(anyString(), anyString())).thenReturn(ecsQuery);
+    when(mockQuery.filter(eq(EcsServiceSpecificationKeys.serviceId), anyString())).thenReturn(ecsQuery);
+    EcsServiceSpecification ecsSpec = EcsServiceSpecification.builder().build();
+    ecsSpec.setUuid(UUID);
+    when(ecsQuery.get()).thenReturn(ecsSpec);
+
+    Query lambdaQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(LambdaSpecification.class)).thenReturn(lambdaQuery);
+    when(lambdaQuery.filter(anyString(), anyString())).thenReturn(lambdaQuery);
+    when(mockQuery.filter(eq(LambdaSpecificationKeys.serviceId), anyString())).thenReturn(lambdaQuery);
+    LambdaSpecification lambdaSpec = LambdaSpecification.builder().build();
+    lambdaSpec.setUuid(UUID);
+    when(lambdaQuery.get()).thenReturn(lambdaSpec);
+
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
     srs.delete(APP_ID, SERVICE_ID);
@@ -512,6 +575,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
     inOrder.verify(mockWingsPersistence).delete(Service.class, SERVICE_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
+    verify(mockWingsPersistence).delete(ContainerTask.class, APP_ID, UUID);
   }
 
   @Test
@@ -1019,12 +1083,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   public HelmChartSpecification getHelmChartSpecification() {
-    HelmChartSpecification specification = HelmChartSpecification.builder()
-                                               .chartName("chartName")
-                                               .chartUrl("chartUrl")
-                                               .chartVersion("v1")
-                                               .serviceId(SERVICE_ID)
-                                               .build();
+    HelmChartSpecification specification =
+        builder().chartName("chartName").chartUrl("chartUrl").chartVersion("v1").serviceId(SERVICE_ID).build();
     specification.setAccountId(ACCOUNT_ID);
     specification.setAppId(APP_ID);
     return specification;
@@ -2327,8 +2387,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     lambdaSpecification.setDefaults(null);
     verifyLambdaSpec(lambdaSpecification, "Defaults must exist in Lambda Specification");
 
-    LambdaSpecification.DefaultSpecification defaultSpecification =
-        LambdaSpecification.DefaultSpecification.builder().build();
+    DefaultSpecification defaultSpecification = DefaultSpecification.builder().build();
     lambdaSpecification.setDefaults(defaultSpecification);
 
     defaultSpecification.setRuntime(null);
@@ -2411,8 +2470,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                       .build();
     LambdaSpecification lambdaSpecification =
         LambdaSpecification.builder()
-            .defaults(
-                LambdaSpecification.DefaultSpecification.builder().timeout(1).memorySize(2).runtime("runTime").build())
+            .defaults(DefaultSpecification.builder().timeout(1).memorySize(2).runtime("runTime").build())
             .serviceId("TestServiceID")
             .functions(asList(functionSpecification, functionSpecification))
             .build();
@@ -2434,8 +2492,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     lambdaSpecification =
         LambdaSpecification.builder()
             .serviceId("TestServiceID")
-            .defaults(
-                LambdaSpecification.DefaultSpecification.builder().timeout(1).memorySize(2).runtime("runTime").build())
+            .defaults(DefaultSpecification.builder().timeout(1).memorySize(2).runtime("runTime").build())
             .functions(asList(functionSpecification, functionSpecification2))
             .build();
     lambdaSpecification.setAppId("TestAppID");
@@ -3099,11 +3156,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   private LambdaSpecification createLambdaSpecification() {
     return LambdaSpecification.builder()
         .serviceId(SERVICE_ID)
-        .defaults(LambdaSpecification.DefaultSpecification.builder()
-                      .timeout(1)
-                      .memorySize(123)
-                      .runtime("default-runtTime")
-                      .build())
+        .defaults(DefaultSpecification.builder().timeout(1).memorySize(123).runtime("default-runtTime").build())
         .functions(asList(FunctionSpecification.builder()
                               .handler("handler")
                               .functionName("functionName")

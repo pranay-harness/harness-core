@@ -1,5 +1,6 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
@@ -7,6 +8,7 @@ import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import static software.wings.resources.secretsmanagement.EncryptedDataMapper.fromDTO;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -32,6 +34,7 @@ import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

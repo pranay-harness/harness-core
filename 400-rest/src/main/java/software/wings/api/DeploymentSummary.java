@@ -2,12 +2,10 @@ package software.wings.api;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 
-import software.wings.api.DeploymentSummary.DeploymentSummaryKeys;
 import software.wings.beans.Base;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsAmiDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeployDeploymentKey;
@@ -20,6 +18,8 @@ import software.wings.beans.infrastructure.instance.key.deployment.K8sDeployment
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.SpotinstAmiDeploymentKey;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,56 +31,57 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "deploymentSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
-@CdIndex(name = "accountId_containerDeploymentInfo",
-    fields =
-    {
-      @Field(DeploymentSummaryKeys.accountId)
-      , @Field(DeploymentSummaryKeys.CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES),
-          @Field(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES),
-          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-    })
-@CdIndex(name = "containerSvcName_inframappingId_createdAt",
-    fields =
-    {
-      @Field(DeploymentSummaryKeys.CONTAINER_KEY_SERVICE_NAME)
-      , @Field(DeploymentSummaryKeys.infraMappingId),
-          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-    })
-@CdIndex(name = "accountId_k8sDeploymentInfo",
-    fields =
-    {
-      @Field(DeploymentSummaryKeys.accountId)
-      , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO),
-          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-    })
-@CdIndex(name = "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber",
-    fields =
-    {
-      @Field(DeploymentSummaryKeys.infraMappingId)
-      , @Field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_KEY),
-          @Field(DeploymentSummaryKeys.RELEASE_NUMBER_K8S_DEPLOYMENT_KEY),
-          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-    })
-@CdIndex(name = "accountId_createdAtAsc",
-    fields =
-    { @Field(DeploymentSummaryKeys.accountId)
-      , @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.ASC) })
-@CdIndex(name = "accountId_infraMappingId_createdAtDesc",
-    fields =
-    {
-      @Field(DeploymentSummaryKeys.accountId)
-      , @Field(DeploymentSummaryKeys.infraMappingId),
-          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-    })
-@CdIndex(name = "inframappingId_containerlabelsAndVersion",
-    fields =
-    {
-      @Field(DeploymentSummaryKeys.infraMappingId)
-      , @Field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS), @Field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION),
-          @Field(value = DeploymentSummaryKeys.CREATED_AT, type = IndexType.DESC)
-    })
 @FieldNameConstants(innerTypeName = "DeploymentSummaryKeys")
 public class DeploymentSummary extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_containerDeploymentInfo")
+                 .field(DeploymentSummaryKeys.accountId)
+                 .field(DeploymentSummaryKeys.CLUSTER_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES)
+                 .field(DeploymentSummaryKeys.CONTAINER_SVC_NAME_CONTAINER_DEPLOYMENT_INFO_WITH_NAMES)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("containerSvcName_inframappingId_createdAt")
+                 .field(DeploymentSummaryKeys.CONTAINER_KEY_SERVICE_NAME)
+                 .field(DeploymentSummaryKeys.infraMappingId)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_k8sDeploymentInfo")
+                 .field(DeploymentSummaryKeys.accountId)
+                 .field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_INFO)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("infraMappingId_k8sDeploymentKeyReleaseNameAndNumber")
+                 .field(DeploymentSummaryKeys.infraMappingId)
+                 .field(DeploymentSummaryKeys.RELEASE_NAME_K8S_DEPLOYMENT_KEY)
+                 .field(DeploymentSummaryKeys.RELEASE_NUMBER_K8S_DEPLOYMENT_KEY)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_createdAtAsc")
+                 .field(DeploymentSummaryKeys.accountId)
+                 .ascSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_infraMappingId_createdAtDesc")
+                 .field(DeploymentSummaryKeys.accountId)
+                 .field(DeploymentSummaryKeys.infraMappingId)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("inframappingId_containerlabelsAndVersion")
+                 .field(DeploymentSummaryKeys.infraMappingId)
+                 .field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS)
+                 .field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .build();
+  }
+
   private String accountId;
   @FdIndex private String infraMappingId;
   private String workflowId;

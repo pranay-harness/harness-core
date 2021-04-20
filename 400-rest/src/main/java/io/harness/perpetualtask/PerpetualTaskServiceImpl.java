@@ -3,7 +3,7 @@ package io.harness.perpetualtask;
 import static io.harness.delegate.message.ManagerMessageConstants.UPDATE_PERPETUAL_TASK;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
@@ -13,6 +13,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.observer.Subject;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
+import io.harness.service.intfc.PerpetualTaskStateObserver;
 
 import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.impl.DelegateObserver;
@@ -39,7 +40,7 @@ import org.eclipse.jetty.util.ConcurrentHashSet;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateObserver {
   private Set<Pair<String, String>> broadcastAggregateSet = new ConcurrentHashSet<>();
 
@@ -56,12 +57,16 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   }
 
   @Getter private Subject<PerpetualTaskCrudObserver> perpetualTaskCrudSubject = new Subject<>();
+  @Getter private Subject<PerpetualTaskStateObserver> perpetualTaskStateObserverSubject = new Subject<>();
 
   @Override
   public void appointDelegate(String accountId, String taskId, String delegateId, long lastContextUpdated) {
     perpetualTaskRecordDao.appointDelegate(taskId, delegateId, lastContextUpdated);
 
     broadcastAggregateSet.add(Pair.of(accountId, delegateId));
+
+    perpetualTaskStateObserverSubject.fireInform(
+        PerpetualTaskStateObxxxxxxxx:onPerpetualTaskAssigned, accountId, taskId, delegateId);
   }
 
   public void broadcastToDelegate() {

@@ -1,7 +1,10 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping.Yaml;
@@ -15,6 +18,7 @@ import java.util.List;
  * @author rktummala on 10/22/17
  */
 @Singleton
+@OwnedBy(CDP)
 public class AwsLambdaInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsLambdaInfraStructureMapping> {
   @Override

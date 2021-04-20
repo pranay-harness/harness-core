@@ -11,6 +11,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.DelegateTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.datacollection.entity.CallDetails;
@@ -28,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.CV)
 public class ThirdPartyCallHandlerTest extends DelegateTestBase {
   private DelegateLogService delegateLogService = mock(DelegateLogService.class);
   private String accountId;
@@ -56,13 +59,14 @@ public class ThirdPartyCallHandlerTest extends DelegateTestBase {
     when(call.request()).thenReturn(request);
     String responseStr = "This is test response";
     Response<String> response = Response.success(responseStr);
-    CallDetails callDetails = CallDetails.builder().request(call).response(response).build();
+    CallDetails callDetails =
+        CallDetails.builder().request(call).response(response).requestTime(startTime).responseTime(endTime).build();
     thirdPartyCallHandler.accept(callDetails);
     verify(delegateLogService, times(1)).save(accountIdCaptor.capture(), apiCallLogCaptor.capture());
     assertThat(accountIdCaptor.getValue()).isEqualTo(accountId);
     assertThat(apiCallLogCaptor.getValue().getAccountId()).isEqualTo(accountId);
-    assertThat(apiCallLogCaptor.getValue().getStartTime()).isEqualTo(startTime);
-    assertThat(apiCallLogCaptor.getValue().getEndTime()).isEqualTo(endTime);
+    assertThat(apiCallLogCaptor.getValue().getStartTime()).isEqualTo(startTime.toEpochMilli());
+    assertThat(apiCallLogCaptor.getValue().getEndTime()).isEqualTo(endTime.toEpochMilli());
   }
 
   @Test

@@ -1,5 +1,8 @@
 package io.harness.repositories.ng.core.custom;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.models.Secret;
 
 import com.google.inject.Inject;
@@ -13,6 +16,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
+@OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 public class SecretRepositoryCustomImpl implements SecretRepositoryCustom {

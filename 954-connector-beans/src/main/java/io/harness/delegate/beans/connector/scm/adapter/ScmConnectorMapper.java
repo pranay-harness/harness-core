@@ -13,7 +13,6 @@ public class ScmConnectorMapper {
   public static GitConfigDTO toGitConfigDTO(ScmConnector scmConnector) {
     if (scmConnector instanceof GithubConnectorDTO) {
       return GithubToGitMapper.mapToGitConfigDTO((GithubConnectorDTO) scmConnector);
-
     } else if (scmConnector instanceof GitlabConnectorDTO) {
       return GitlabToGitMapper.mapToGitConfigDTO((GitlabConnectorDTO) scmConnector);
     } else if (scmConnector instanceof BitbucketConnectorDTO) {

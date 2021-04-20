@@ -5,22 +5,25 @@ import static io.harness.pms.contracts.execution.Status.PAUSED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.interrupts.InterruptService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
+import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 
 @OwnedBy(CDC)
 public class ResumeStepStatusUpdate implements StepStatusUpdate {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private InterruptService interruptService;
 
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
@@ -42,7 +45,7 @@ public class ResumeStepStatusUpdate implements StepStatusUpdate {
     if (parent.getStatus() != PAUSED) {
       return true;
     }
-
+    Interrupt interrupt = interruptService.get(interruptId);
     nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), RUNNING,
         ops
         -> ops.addToSet(NodeExecutionKeys.interruptHistories,
@@ -50,7 +53,9 @@ public class ResumeStepStatusUpdate implements StepStatusUpdate {
                 .interruptId(interruptId)
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(InterruptType.RESUME_ALL)
-                .build()));
+                .interruptConfig(interrupt.getInterruptConfig())
+                .build()),
+        EnumSet.noneOf(Status.class));
     return resumeParents(nodeExecution.getParentId(), interruptId);
   }
 }

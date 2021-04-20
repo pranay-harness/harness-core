@@ -4,13 +4,13 @@ import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.service.intfc.AccountExpiryService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.CEMetadataRecord.CEMetadataRecordBuilder;
 import io.harness.ccm.license.CeLicenseInfo;
 
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEGcpConfig;
-import software.wings.beans.ce.CEMetadataRecord;
-import software.wings.beans.ce.CEMetadataRecord.CEMetadataRecordBuilder;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;

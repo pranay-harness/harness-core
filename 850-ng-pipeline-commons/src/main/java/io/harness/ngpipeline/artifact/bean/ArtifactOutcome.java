@@ -10,7 +10,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactType")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = DockerArtifactOutcome.class, name = "Dockerhub")
-  , @JsonSubTypes.Type(value = GcrArtifactOutcome.class, name = "Gcr")
+  , @JsonSubTypes.Type(value = GcrArtifactOutcome.class, name = "Gcr"),
+      @JsonSubTypes.Type(value = EcrArtifactOutcome.class, name = "Ecr")
 })
 public interface ArtifactOutcome extends Outcome, WithIdentifier, WithArtifactSummary {
   boolean isPrimaryArtifact();

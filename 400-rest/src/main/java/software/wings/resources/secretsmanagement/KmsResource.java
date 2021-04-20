@@ -1,10 +1,16 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
+import io.harness.beans.FeatureName;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.SecretManagementException;
+import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
@@ -39,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 public class KmsResource {
   @Inject private KmsService kmsService;
   @Inject private AccountPermissionUtils accountPermissionUtils;
+  @Inject private FeatureFlagService featureFlagService;
 
   @POST
   @Path("/save-global-kms")
@@ -48,6 +55,7 @@ public class KmsResource {
       @QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       log.info("Adding Global KMS Secret Manager");
+      checkFeatureFlag(accountId, kmsConfig);
       RestResponse<String> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to save global KMS");
       if (response == null) {
         response = new RestResponse<>(kmsService.saveGlobalKmsConfig(accountId, kmsConfig));
@@ -61,6 +69,7 @@ public class KmsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> saveKmsConfig(@QueryParam("accountId") final String accountId, KmsConfig kmsConfig) {
+    checkFeatureFlag(accountId, kmsConfig);
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       log.info("Adding KMS Secret Manager");
       return new RestResponse<>(kmsService.saveKmsConfig(accountId, kmsConfig));
@@ -88,6 +97,21 @@ public class KmsResource {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       log.info("Deleting KMS Secret Manager");
       return new RestResponse<>(kmsService.deleteKmsConfig(accountId, kmsConfigId));
+    }
+  }
+
+  private void checkFeatureFlag(String accountId, KmsConfig kmsConfig) {
+    // check if feature is not enabled
+    if (!featureFlagService.isEnabled(FeatureName.AWS_SM_ASSUME_IAM_ROLE, accountId)) {
+      // none of the below values should be set if Feature is not enabled
+      boolean usingAssumeRoleFeatures = kmsConfig.isAssumeIamRoleOnDelegate() || kmsConfig.isAssumeStsRoleOnDelegate()
+          || isNotEmpty(kmsConfig.getDelegateSelectors()) || isNotEmpty(kmsConfig.getRoleArn())
+          || isNotEmpty(kmsConfig.getExternalName());
+      if (usingAssumeRoleFeatures) {
+        throw new SecretManagementException(ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR,
+            "Feature flag " + FeatureName.AWS_SM_ASSUME_IAM_ROLE + " is not enabled for account:" + accountId,
+            WingsException.USER_ADMIN);
+      }
     }
   }
 }

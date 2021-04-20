@@ -10,7 +10,7 @@ import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdvi
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviserParameters;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
-import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -27,7 +27,6 @@ public class PmsSdkCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(StatusNotifyResponseData.class, 2502);
     kryo.register(DefaultFacilitatorParams.class, 2515);
     kryo.register(StepOutcome.class, 2521);
-    kryo.register(SweepingOutput.class, 3101);
     kryo.register(PassThroughData.class, 2535);
     kryo.register(StepResponseNotifyData.class, 2519);
 
@@ -41,5 +40,6 @@ public class PmsSdkCoreKryoRegistrar implements KryoRegistrar {
 
     // New classes here
     kryo.register(PlanNode.class, 88201);
+    kryo.register(ExecutionSweepingOutput.class, 88202);
   }
 }

@@ -8,6 +8,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 
@@ -69,7 +70,7 @@ public class CustomArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .accountId(getAccountId())

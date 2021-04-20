@@ -21,9 +21,6 @@ public interface YamlChangeSetRepository
   Optional<YamlChangeSet> findFirstByAccountIdAndQueueKeyAndStatusOrderByCreatedAt(
       String accountId, String queueKey, Status status);
 
-  Optional<YamlChangeSet> findFirstAccountIdAndQueueKeyAndStatusAndGitToHarnessOrderByCreatedAt(
-      String accountId, String queueKey, Status status, boolean gitToHarness);
-
   List<YamlChangeSet> findByAccountIdAndStatusAndLastUpdatedAtLessThan(
       List<String> accountIds, Status status, Long lastUpdatedCutOff);
 }

@@ -25,7 +25,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.datadog.DatadogLogCVConfiguration;
-import software.wings.verification.datadog.DatadogLogCVConfiguration.DatadogLogCVConfigurationYaml;
+import software.wings.verification.datadog.DatadogLogCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
 

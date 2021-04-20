@@ -1,5 +1,6 @@
 package io.harness.gitsync.gitfileactivity.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -10,6 +11,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.previousOperation;
 import static org.springframework.data.mongodb.core.aggregation.Fields.UNDERSCORE_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
@@ -17,7 +19,6 @@ import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
-import io.harness.gitsync.core.impl.YamlSuccessfulChangeServiceImpl;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityBuilder;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityKeys;
@@ -52,10 +53,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncServiceImpl implements GitSyncService {
   @Inject private GitFileActivitySummaryRepository gitFileActivitySummaryRepository;
   @Inject private GitFileActivityRepository gitFileActivityRepository;
-  @Inject private YamlSuccessfulChangeServiceImpl yamlSuccessfulChangeService;
 
   @Override
   public List<GitFileActivity> saveAll(List<GitFileActivity> gitFileActivities) {
@@ -222,13 +223,6 @@ public class GitSyncServiceImpl implements GitSyncService {
         updateStatusOfGitFileActivity(
             change.getProcessingCommitId(), singletonList(change.getFilePath()), Status.SUCCESS, null, accountId);
       }
-
-      try {
-        yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing(
-            change, accountId, yamlGitConfig.getOrganizationId(), yamlGitConfig.getProjectId());
-      } catch (Exception e) {
-        log.error(format("error while updating successful change for file [%s]", change.getFilePath()), e);
-      }
     }
   }
 
@@ -313,7 +307,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .commitMessage(commitMessageToPersist)
         .processingCommitMessage(processingCommitMessage)
         .changeType(change.getChangeType())
-        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .gitConnectorId(yamlGitConfig.getGitConnectorRef())
         .repo(yamlGitConfig.getRepo())
         .rootFolder(GitFileLocationHelper.getRootPathSafely(change.getFilePath()))
         .branchName(yamlGitConfig.getBranch())

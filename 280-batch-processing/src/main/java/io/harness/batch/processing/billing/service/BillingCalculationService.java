@@ -4,6 +4,8 @@ import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.PricingSource;
@@ -13,18 +15,23 @@ import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.StorageResource;
 import io.harness.ccm.commons.entities.InstanceData;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Service
 @Slf4j
 public class BillingCalculationService {
   private final InstancePricingStrategyContext instancePricingStrategyContext;
+
+  private final AtomicInteger atomicTripper = new AtomicInteger(0);
 
   @Autowired
   public BillingCalculationService(InstancePricingStrategyContext instancePricingStrategyContext) {
@@ -95,8 +102,8 @@ public class BillingCalculationService {
       networkCost = pricingData.getNetworkCost();
     }
 
-    BillingAmountBreakup billingAmountForResource =
-        getBillingAmountBreakupForResource(instanceData, billingAmount, cpuUnit, memoryMb, storageMb);
+    BillingAmountBreakup billingAmountForResource = getBillingAmountBreakupForResource(
+        instanceData, billingAmount, cpuUnit, memoryMb, storageMb, instanceActiveSeconds, pricingData);
     IdleCostData idleCostData = getIdleCostForResource(billingAmountForResource, utilizationData, instanceData);
     SystemCostData systemCostData = getSystemCostForResource(billingAmountForResource, instanceData);
 
@@ -106,7 +113,8 @@ public class BillingCalculationService {
   }
 
   BillingAmountBreakup getBillingAmountBreakupForResource(InstanceData instanceData, BigDecimal billingAmount,
-      double instanceCpu, double instanceMemory, double instanceStorage) {
+      double instanceCpu, double instanceMemory, double instanceStorage, double instanceActiveSeconds,
+      PricingData pricingData) {
     if (K8S_PV.equals(instanceData.getInstanceType())) {
       return BillingAmountBreakup.builder()
           .billingAmount(billingAmount)
@@ -130,10 +138,18 @@ public class BillingCalculationService {
           .storageBillingAmount(BigDecimal.ZERO)
           .build();
     }
+
+    BigDecimal cpuBillingAmount = billingAmount.multiply(BigDecimal.valueOf(0.5));
+    BigDecimal memoryBillingAmount = billingAmount.multiply(BigDecimal.valueOf(0.5));
+    if (pricingData.getCpuPricePerHour() > 0.0 && pricingData.getMemoryPricePerHour() > 0.0) {
+      cpuBillingAmount = BigDecimal.valueOf((pricingData.getCpuPricePerHour() * instanceActiveSeconds) / 3600);
+      memoryBillingAmount = BigDecimal.valueOf((pricingData.getMemoryPricePerHour() * instanceActiveSeconds) / 3600);
+    }
+
     return BillingAmountBreakup.builder()
         .billingAmount(billingAmount)
-        .cpuBillingAmount(billingAmount.multiply(BigDecimal.valueOf(0.5)))
-        .memoryBillingAmount(billingAmount.multiply(BigDecimal.valueOf(0.5)))
+        .cpuBillingAmount(cpuBillingAmount)
+        .memoryBillingAmount(memoryBillingAmount)
         .storageBillingAmount(BigDecimal.ZERO)
         .build();
   }
@@ -162,7 +178,8 @@ public class BillingCalculationService {
     return new SystemCostData(systemCost, cpuSystemCost, memorySystemCost);
   }
 
-  IdleCostData getIdleCostForResource(
+  @VisibleForTesting
+  public IdleCostData getIdleCostForResource(
       BillingAmountBreakup billingDataForResource, UtilizationData utilizationData, InstanceData instanceData) {
     if (instanceData.getInstanceType() == InstanceType.ECS_TASK_FARGATE || utilizationData == null) {
       return new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
@@ -185,14 +202,26 @@ public class BillingCalculationService {
     StorageResource storageResource = instanceData.getStorageResource();
     if (instanceData.getInstanceType() == K8S_PV) {
       // in one cases (with NFS PV), the PV.Capacity is much less than claimed PVC.Request
-      if (storageUsage <= storageRequest && storageRequest <= storageResource.getCapacity()) {
+      if (storageUsage <= storageRequest && storageRequest <= storageResource.getCapacity()
+          && storageResource.getCapacity() > 0) {
         storageIdleCost = BigDecimal.valueOf(billingDataForResource.getStorageBillingAmount().doubleValue()
             * (storageRequest - storageUsage) / storageResource.getCapacity());
-
+      } else if (storageResource.getCapacity() == 0) {
+        // this is an edge case will rarely happen,
+        // 0 occurence between 25th March'21 to 1st April'21 (7 days) across all accounts.
+        log.warn("storageResource.getCapacity() == 0 for InstanceData; AccountId: {}, InstanceId:{}",
+            instanceData.getAccountId(), instanceData.getInstanceId());
       } else {
-        log.error("inconsistent PV storage value data; Usage:{}, Request:{}, InstanceData:{}",
-            utilizationData.getAvgStorageUsageValue(), utilizationData.getAvgStorageRequestValue(),
-            instanceData.toString());
+        // using atomicTripper to reduce the verbosity
+        if (atomicTripper.getAndIncrement() % 1000 == 0) {
+          // Usage:45053.375, Request:256000.0, storageResource=StorageResource(capacity=65536.0),
+          // instanceId=7b89e3c2-e1bb-4ed8-8bf1-4461977eb239, The PV configuration applied says 64GB of Capacity
+          // But from Pod stats client we see that the request is 250 GB ( = 256000.0 / 1024.0) This
+          // inconsistency is unknown. "But is very frequent" in NFS and some non-GCP based PV's
+          log.warn("THIS IS HARMLESS, Inconsistent PV storage value data; Usage:{}, Request:{}, InstanceData:{}",
+              utilizationData.getAvgStorageUsageValue(), utilizationData.getAvgStorageRequestValue(),
+              instanceData.toString());
+        }
       }
     }
 

@@ -1,19 +1,13 @@
 package io.harness.delegate.task.gcp.request;
 
-import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
-import io.harness.delegate.task.TaskParameters;
-import io.harness.security.encryption.EncryptedDataDetail;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import java.util.List;
-import java.util.Set;
-import lombok.Builder;
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
 
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class GcpValidationRequest extends GcpRequest implements TaskParameters {
-  @Builder
-  public GcpValidationRequest(Set<String> delegateSelectors, List<EncryptedDataDetail> encryptedDataDetailList,
-      GcpManualDetailsDTO gcpManualDetailsDTO) {
-    super(delegateSelectors, RequestType.VALIDATE, encryptedDataDetailList, gcpManualDetailsDTO);
-  }
-}
+@OwnedBy(CDP)
+public class GcpValidationRequest extends GcpRequest {}

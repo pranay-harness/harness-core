@@ -84,8 +84,6 @@ public abstract class CVConfig
   @NotNull private String identifier;
   @NotNull private String monitoringSourceName;
 
-  @FdIndex private Long analysisOrchestrationIteration;
-
   @FdIndex private Long createNextTaskIteration;
 
   @Override
@@ -94,14 +92,12 @@ public abstract class CVConfig
       this.dataCollectionTaskIteration = nextIteration;
       return;
     }
-    if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
-      this.analysisOrchestrationIteration = nextIteration;
-      return;
-    }
+
     if (fieldName.equals(CVConfigKeys.createNextTaskIteration)) {
       this.createNextTaskIteration = nextIteration;
       return;
     }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -110,12 +106,11 @@ public abstract class CVConfig
     if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
     }
-    if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
-      return analysisOrchestrationIteration;
-    }
+
     if (fieldName.equals(CVConfigKeys.createNextTaskIteration)) {
       return createNextTaskIteration;
     }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 

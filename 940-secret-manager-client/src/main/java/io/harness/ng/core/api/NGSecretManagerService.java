@@ -1,5 +1,8 @@
 package io.harness.ng.core.api;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
@@ -8,6 +11,7 @@ import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 
 import java.util.List;
 
+@OwnedBy(PL)
 public interface NGSecretManagerService {
   SecretManagerConfigDTO createSecretManager(SecretManagerConfigDTO secretManagerConfigDTO);
 

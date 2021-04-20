@@ -1,5 +1,8 @@
 package io.harness.ng.core;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.api.NGSecretFileService;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -20,6 +23,7 @@ import io.harness.ng.core.api.impl.SecretTextServiceImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+@OwnedBy(PL)
 public class SecretManagementModule extends AbstractModule {
   public static final String SSH_SECRET_SERVICE = "sshSecretService";
   public static final String SECRET_TEXT_SERVICE = "secretTextService";

@@ -1,8 +1,11 @@
 package io.harness.yaml.core;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -19,7 +22,6 @@ import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.intfc.StageType;
 import io.harness.yaml.core.intfc.WithIdentifier;
-import io.harness.yaml.core.intfc.WithSkipCondition;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -37,7 +39,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("stage")
 @SimpleVisitorHelper(helperClass = StageElementHelper.class)
 @TypeAlias("io.harness.yaml.core.stageElement")
-public class StageElement implements StageElementWrapper, WithIdentifier, Visitable, WithSkipCondition {
+@OwnedBy(PIPELINE)
+public class StageElement implements StageElementWrapper, WithIdentifier, Visitable {
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;

@@ -14,6 +14,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.EncryptionHelper;
@@ -36,6 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.DX)
 public class GitConnectorValidatorTest extends CategoryTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   @Mock DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -70,7 +73,6 @@ public class GitConnectorValidatorTest extends CategoryTest {
             .connectorValidationResult(ConnectorValidationResult.builder().status(FAILURE).build())
             .build();
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
-    doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
     when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
     ConnectorValidationResult connectorValidationResult =
         gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null, null);
@@ -97,7 +99,6 @@ public class GitConnectorValidatorTest extends CategoryTest {
         GitCommandExecutionResponse.builder()
             .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
             .build();
-    doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
     when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
 
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());

@@ -18,7 +18,6 @@ import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
-import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
@@ -47,7 +46,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class HealthVerificationHeatMapServiceImpl implements HealthVerificationHeatMapService {
   @Inject private HPersistence hPersistence;
-  @Inject private CVConfigService cvConfigService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private ActivityService activityService;
@@ -106,12 +104,6 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
             .filter(HealthVerificationHeatMapKeys.healthVerificationPeriod, healthVerificationPeriod)
             .filter(HealthVerificationHeatMapKeys.aggregationLevel, AggregationLevel.ACTIVITY)
             .asList();
-    if (isEmpty(heatMaps)) {
-      Arrays.asList(CVMonitoringCategory.values())
-          .forEach(category -> categoryRisks.add(CategoryRisk.builder().category(category).risk(-1.0).build()));
-      return categoryRisks;
-    }
-
     heatMaps.forEach(heatMap -> {
       Double risk = heatMap.getRiskScore() * 100;
       categoryRisks.add(
@@ -122,6 +114,40 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
     Arrays.asList(CVMonitoringCategory.values()).forEach(category -> {
       if (!scoreMap.containsKey(category)) {
         categoryRisks.add(CategoryRisk.builder().category(category).risk(-1.0).build());
+      }
+    });
+
+    return categoryRisks;
+  }
+
+  @Override
+  public Set<CategoryRisk> getVerificationJobInstanceAggregatedRisk(
+      String accountId, String verificationJobInstanceId, HealthVerificationPeriod healthVerificationPeriod) {
+    Preconditions.checkNotNull(
+        verificationJobInstanceId, "verificationJobInstanceId is null when trying to get aggregated risk");
+    Map<CVMonitoringCategory, Integer> scoreMap = new HashMap<>();
+    Set<CategoryRisk> categoryRisks = new HashSet<>();
+    Set<String> verificationTaskIds =
+        verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
+    List<HealthVerificationHeatMap> heatMaps =
+        hPersistence.createQuery(HealthVerificationHeatMap.class, excludeAuthority)
+            .field(HealthVerificationHeatMapKeys.aggregationId)
+            .in(verificationTaskIds)
+            .filter(HealthVerificationHeatMapKeys.healthVerificationPeriod, healthVerificationPeriod)
+            .filter(HealthVerificationHeatMapKeys.aggregationLevel, AggregationLevel.VERIFICATION_TASK)
+            .asList();
+    heatMaps.forEach(heatMap -> {
+      Double risk = heatMap.getRiskScore() * 100;
+      scoreMap.put(heatMap.getCategory(),
+          Math.max(scoreMap.getOrDefault(heatMap.getCategory(), Integer.MIN_VALUE), risk.intValue()));
+    });
+
+    Arrays.asList(CVMonitoringCategory.values()).forEach(category -> {
+      if (!scoreMap.containsKey(category)) {
+        categoryRisks.add(CategoryRisk.builder().category(category).risk(-1.0).build());
+      } else {
+        categoryRisks.add(
+            CategoryRisk.builder().category(category).risk(Double.valueOf(scoreMap.get(category))).build());
       }
     });
 

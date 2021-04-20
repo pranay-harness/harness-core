@@ -12,6 +12,7 @@ import io.harness.shell.ScriptType;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
@@ -25,6 +26,7 @@ import software.wings.beans.command.InitSshCommandUnitV2;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -46,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutorService {
   @Inject private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
   @Inject private EncryptionService encryptionService;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceCommandExecutorService#execute(software.wings.beans.ServiceInstance,
@@ -159,6 +162,11 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     if (context.getHostConnectionAttributes() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getHostConnectionAttributes().getValue(),
           context.getHostConnectionCredentials(), false);
+      if ((context.getHostConnectionAttributes().getValue() instanceof HostConnectionAttributes)
+          && ((HostConnectionAttributes) context.getHostConnectionAttributes().getValue()).isVaultSSH()) {
+        secretManagementDelegateService.signPublicKey(
+            (HostConnectionAttributes) context.getHostConnectionAttributes().getValue(), context.getSshVaultConfig());
+      }
     }
     if (context.getBastionConnectionAttributes() != null) {
       encryptionService.decrypt((EncryptableSetting) context.getBastionConnectionAttributes().getValue(),

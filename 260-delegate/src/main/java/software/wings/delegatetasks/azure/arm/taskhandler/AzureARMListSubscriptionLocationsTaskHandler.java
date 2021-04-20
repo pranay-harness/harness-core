@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.azure.arm.taskhandler;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.model.AzureConfig;
@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureARMListSubscriptionLocationsTaskHandler extends AbstractAzureARMTaskHandler {
   @Inject private AzureManagementClient azureManagementClient;
 

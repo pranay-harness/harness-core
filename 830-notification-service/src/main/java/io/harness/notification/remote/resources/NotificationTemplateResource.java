@@ -1,14 +1,15 @@
 package io.harness.notification.remote.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.notification.remote.mappers.TemplateMapper.toDTO;
 
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.entities.NotificationTemplate;
 import io.harness.notification.remote.dto.TemplateDTO;
 import io.harness.notification.service.api.NotificationTemplateService;
@@ -37,6 +38,7 @@ import javax.ws.rs.core.MediaType;
 import lombok.AllArgsConstructor;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
+@OwnedBy(PL)
 @Api("templates")
 @Path("templates")
 @Produces({"application/json", "application/yaml"})
@@ -47,7 +49,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-@NotificationMicroserviceAuth
 public class NotificationTemplateResource {
   private final NotificationTemplateService templateService;
   private static final long MAX_FILE_SIZE = 5 * 1024 * 1024L;

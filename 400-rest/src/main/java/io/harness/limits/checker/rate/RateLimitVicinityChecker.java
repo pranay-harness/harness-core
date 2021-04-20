@@ -1,11 +1,15 @@
 package io.harness.limits.checker.rate;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.impl.model.RateLimit;
 
 /**
  * Checks if a particular action is close to hitting the rate limit.
  * Useful for warnings before actually blocking some action.
  */
+@OwnedBy(PL)
 public interface RateLimitVicinityChecker {
   /**
    * Checks if certain percent of limit has been crossed.

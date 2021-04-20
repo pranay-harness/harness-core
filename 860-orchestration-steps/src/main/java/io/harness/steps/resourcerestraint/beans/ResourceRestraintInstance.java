@@ -2,10 +2,12 @@ package io.harness.steps.resourcerestraint.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 
@@ -28,6 +30,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "resourceRestraintInstances")
 @Document("resourceRestraintInstances")
 @TypeAlias("resourceRestraintInstance")
+@StoreIn(DbAliases.PMS)
 public class ResourceRestraintInstance implements PersistentEntity, UuidAccess, PersistentRegularIterable {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String claimant;

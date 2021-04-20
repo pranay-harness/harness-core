@@ -2,6 +2,8 @@ package io.harness.states;
 
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStageStepParametersPMS> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("IntegrationStageStepPMS").build();
 

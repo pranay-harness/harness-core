@@ -2,7 +2,7 @@ package software.wings.graphql.schema.type.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -14,7 +14,7 @@ import java.util.List;
 
 @OwnedBy(CDC)
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public interface QLTriggerAction extends QLObject {
   List<QLTriggerVariableValue> getVariables();
   List<QLArtifactSelection> getArtifactSelections();

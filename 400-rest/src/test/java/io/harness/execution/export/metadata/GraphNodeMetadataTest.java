@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.execution.export.metadata.MetadataTestUtils.SimpleVisitor;
 import io.harness.rule.Owner;
 
 import software.wings.api.ExecutionDataValue;

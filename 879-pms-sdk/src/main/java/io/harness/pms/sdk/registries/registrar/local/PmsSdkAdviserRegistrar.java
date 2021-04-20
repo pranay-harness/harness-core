@@ -11,7 +11,6 @@ import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviser;
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviser;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviser;
-import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
 
 import java.util.HashMap;
@@ -32,7 +31,6 @@ public class PmsSdkAdviserRegistrar {
     engineAdvisers.put(OnAbortAdviser.ADVISER_TYPE, OnAbortAdviser.class);
     engineAdvisers.put(OnMarkSuccessAdviser.ADVISER_TYPE, OnMarkSuccessAdviser.class);
     engineAdvisers.put(RetryAdviser.ADVISER_TYPE, RetryAdviser.class);
-    engineAdvisers.put(RollbackCustomAdviser.ADVISER_TYPE, RollbackCustomAdviser.class);
 
     return engineAdvisers;
   }

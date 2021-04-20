@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "url": "/nexus/service/rest/v1/search?repository=maven-releases&maven.groupId=mygroup&maven.artifactId=myartifact&maven.classifier=source"
+    "url": "/nexus/service/rest/v1/search?sort=version&direction=desc&repository=maven-releases&maven.groupId=mygroup&maven.artifactId=myartifact&maven.classifier=source"
   },
   "response": {
     "status": 200,

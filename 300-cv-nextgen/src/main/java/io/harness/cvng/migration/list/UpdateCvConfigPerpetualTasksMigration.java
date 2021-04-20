@@ -12,8 +12,9 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
-import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
-import io.harness.cvng.migration.CNVGMigration;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
+import io.harness.cvng.migration.CVNGMigration;
+import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -27,10 +28,10 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UpdateCvConfigPerpetualTasksMigration implements CNVGMigration {
+public class UpdateCvConfigPerpetualTasksMigration implements CVNGMigration {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
-  @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
 
   @Override
   public void migrate() {
@@ -59,7 +60,7 @@ public class UpdateCvConfigPerpetualTasksMigration implements CNVGMigration {
                              .monitoringSourceIdentifier(cvConfig.getIdentifier())
                              .connectorIdentifier(cvConfig.getConnectorIdentifier())
                              .build());
-        String dataCollectionWorkerId = monitoringTaskPerpetualTaskService.getDataCollectionWorkerId(
+        String dataCollectionWorkerId = monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(
             cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(),
             cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier());
         hPersistence.update(hPersistence.createQuery(DataCollectionTask.class, excludeAuthority)
@@ -75,10 +76,19 @@ public class UpdateCvConfigPerpetualTasksMigration implements CNVGMigration {
     });
 
     cvConfigKeys.forEach(cvConfigKey
-        -> monitoringTaskPerpetualTaskService.createTask(cvConfigKey.getAccountId(), cvConfigKey.getOrgIdentifier(),
+        -> monitoringSourcePerpetualTaskService.createTask(cvConfigKey.getAccountId(), cvConfigKey.getOrgIdentifier(),
             cvConfigKey.getProjectIdentifier(), cvConfigKey.getConnectorIdentifier(),
             cvConfigKey.getMonitoringSourceIdentifier()));
     log.info("migration done");
+  }
+  @Override
+  public ChecklistItem whatHappensOnRollback() {
+    return ChecklistItem.NA;
+  }
+
+  @Override
+  public ChecklistItem whatHappensIfOldVersionIteratorPicksMigratedEntity() {
+    return ChecklistItem.NA;
   }
 
   @Value

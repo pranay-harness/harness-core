@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.k8s.response;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.K8sPod;
 
@@ -12,7 +12,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class K8sCanaryDeployResponse implements K8sTaskResponse {
   Integer releaseNumber;
   List<K8sPod> k8sPodList;

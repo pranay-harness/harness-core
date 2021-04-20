@@ -2,7 +2,9 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.util.Collections.singletonList;
@@ -12,6 +14,7 @@ import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
@@ -40,6 +43,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
@@ -63,6 +67,7 @@ public class EcsSetupRollback extends State {
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public EcsSetupRollback(String name) {
     super(name, StateType.ECS_SERVICE_SETUP_ROLLBACK.name());
@@ -124,6 +129,8 @@ public class EcsSetupRollback extends State {
                                          .appId(dataBag.getApplication().getUuid())
                                          .commandName(ECS_DAEMON_SERVICE_ROLLBACK_COMMAND)
                                          .activityId(activity.getUuid())
+                                         .timeoutErrorSupported(featureFlagService.isEnabled(
+                                             TIMEOUT_FAILURE_SUPPORT, dataBag.getApplication().getAccountId()))
                                          .build();
 
     String delegateTaskId =
@@ -174,12 +181,16 @@ public class EcsSetupRollback extends State {
 
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder()
-        .stateExecutionData(executionData)
-        .executionStatus(executionStatus)
-        .contextElement(containerServiceElement)
-        .notifyElement(containerServiceElement)
-        .build();
+
+    ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                           .stateExecutionData(executionData)
+                                           .executionStatus(executionStatus)
+                                           .contextElement(containerServiceElement)
+                                           .notifyElement(containerServiceElement);
+    if (ecsServiceSetupResponse.isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+    return builder.build();
   }
 
   private ContainerServiceElement buildContainerServiceElement(

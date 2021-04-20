@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
@@ -17,7 +17,7 @@ import software.wings.service.intfc.UserGroupService;
 
 import com.google.inject.Inject;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UserGroupDataFetcher extends AbstractObjectDataFetcher<QLUserGroup, QLUserGroupQueryParameters> {
   @Inject UserGroupService userGroupService;
   @Inject UserGroupController userGroupController;

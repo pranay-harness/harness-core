@@ -8,7 +8,9 @@ public enum ViewsMetaDataFields {
   START_TIME_MAX("startTime", "startTime_MAX"),
   COST("cost", "cost"),
   LABEL_KEY("labels.key", "labels_key"),
-  LABEL_VALUE("labels.value", "labels_value");
+  LABEL_VALUE("labels.value", "labels_value"),
+  LABEL_KEY_UN_NESTED("labelsUnnested.key", "labels_key"),
+  LABEL_VALUE_UN_NESTED("labelsUnnested.value", "labels_value");
 
   private String fieldName;
   private String alias;

@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,13 +12,18 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SecretChangeLog;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.helpers.ext.cyberark.CyberArkReadResponse;
 import io.harness.helpers.ext.cyberark.CyberArkRestClient;
 import io.harness.helpers.ext.cyberark.CyberArkRestClientFactory;
+import io.harness.helpers.ext.vault.SSHVaultAuthResponse;
+import io.harness.helpers.ext.vault.SSHVaultAuthResult;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
+import io.harness.helpers.ext.vault.SignedSSHVaultRequest;
+import io.harness.helpers.ext.vault.SignedSSHVaultResponse;
 import io.harness.helpers.ext.vault.SysMount;
 import io.harness.helpers.ext.vault.SysMountsResponse;
 import io.harness.helpers.ext.vault.VaultAppRoleLoginRequest;
@@ -29,7 +35,10 @@ import io.harness.helpers.ext.vault.VaultSecretMetadata.VersionMetadata;
 import io.harness.helpers.ext.vault.VaultSysAuthRestClient;
 import io.harness.security.encryption.EncryptedRecord;
 
+import software.wings.beans.BaseVaultConfig;
 import software.wings.beans.CyberArkConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 
@@ -47,7 +56,80 @@ import retrofit2.Response;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(_890_SM_CORE)
 public class SecretManagementDelegateServiceImpl implements SecretManagementDelegateService {
+  @Override
+  public void signPublicKey(HostConnectionAttributes hostConnectionAttributes, SSHVaultConfig sshVaultConfig) {
+    try {
+      if (sshVaultConfig == null) {
+        sshVaultConfig = hostConnectionAttributes.getSshVaultConfig();
+      }
+      if (sshVaultConfig == null) {
+        throw new SecretManagementDelegateException(
+            VAULT_OPERATION_ERROR, "SSH Vault config while fetching signed public key is null", USER);
+      }
+      String vaultToken = sshVaultConfig.getAuthToken();
+      if (isEmpty(vaultToken)) {
+        VaultAppRoleLoginResult loginResult = appRoleLogin(sshVaultConfig);
+        if (loginResult != null) {
+          vaultToken = loginResult.getClientToken();
+          sshVaultConfig.setAuthToken(vaultToken);
+        }
+      }
+      VaultSysAuthRestClient restClient =
+          VaultRestClientFactory
+              .getVaultRetrofit(sshVaultConfig.getVaultUrl(), sshVaultConfig.isCertValidationRequired())
+              .create(VaultSysAuthRestClient.class);
+
+      SignedSSHVaultRequest signedSSHVaultRequest =
+          SignedSSHVaultRequest.builder().publicKey(hostConnectionAttributes.getPublicKey()).build();
+
+      Response<SignedSSHVaultResponse> response =
+          restClient
+              .fetchSignedPublicKey(sshVaultConfig.getSecretEngineName(), hostConnectionAttributes.getRole(),
+                  sshVaultConfig.getAuthToken(), signedSSHVaultRequest)
+              .execute();
+      if (response.isSuccessful() && response.body().getSignedSSHVaultResult() != null) {
+        hostConnectionAttributes.setSignedPublicKey(response.body().getSignedSSHVaultResult().getSignedPublicKey());
+      } else {
+        String message = String.format("Failed to sign public key with SSH secret engine for %s with url %s",
+            sshVaultConfig.getSecretEngineName(), sshVaultConfig.getVaultUrl());
+        log.error(message);
+        throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
+      }
+    } catch (IOException ioe) {
+      String message = String.format(
+          "Failed to sign public key with SSH secret engine %s , due to unexpected network error. Please try again.",
+          sshVaultConfig.getSecretEngineName());
+      log.error(message, ioe);
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
+    }
+  }
+
+  @Override
+  public SSHVaultAuthResult validateSSHVault(SSHVaultConfig vaultConfig) {
+    try {
+      VaultSysAuthRestClient restClient =
+          VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
+              .create(VaultSysAuthRestClient.class);
+      Response<SSHVaultAuthResponse> response =
+          restClient.fetchAuthPublicKey(vaultConfig.getSecretEngineName(), vaultConfig.getAuthToken()).execute();
+      SSHVaultAuthResult result;
+      if (response.isSuccessful()) {
+        result = response.body().getSshVaultAuthResult();
+      } else {
+        String message = "Failed to perform Config CA check for SSH secret engine " + vaultConfig.getName() + " at "
+            + vaultConfig.getVaultUrl();
+        throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
+      }
+      return result;
+    } catch (IOException e) {
+      String message = "Failed to perform Config CA check for SSH secret engine " + vaultConfig.getName() + " at "
+          + vaultConfig.getVaultUrl();
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
+    }
+  }
+
   @Override
   public List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedRecord encryptedData, VaultConfig vaultConfig) {
     List<SecretChangeLog> secretChangeLogs = new ArrayList<>();
@@ -56,9 +138,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     String encryptedDataId = encryptedData.getUuid();
 
     try {
-      VaultSecretMetadata secretMetadata = VaultRestClientFactory.create(vaultConfig)
-                                               .readSecretMetadata(vaultConfig.getAuthToken(),
-                                                   vaultConfig.getSecretEngineName(), encryptedData.getPath());
+      VaultSecretMetadata secretMetadata =
+          VaultRestClientFactory.create(vaultConfig)
+              .readSecretMetadata(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+                  vaultConfig.getSecretEngineName(), encryptedData.getPath());
       if (secretMetadata != null && isNotEmpty(secretMetadata.getVersions())) {
         for (Entry<Integer, VersionMetadata> entry : secretMetadata.getVersions().entrySet()) {
           int version = entry.getKey();
@@ -99,12 +182,18 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public boolean renewVaultToken(VaultConfig vaultConfig) {
+  public boolean renewVaultToken(BaseVaultConfig baseVaultConfig) {
     int failedAttempts = 0;
     while (true) {
       try {
-        log.info("renewing token for vault {}", vaultConfig);
-        boolean isSuccessful = VaultRestClientFactory.create(vaultConfig).renewToken(vaultConfig.getAuthToken());
+        log.info("renewing token for vault {}", baseVaultConfig);
+        VaultSysAuthRestClient restClient =
+            VaultRestClientFactory
+                .getVaultRetrofit(baseVaultConfig.getVaultUrl(), baseVaultConfig.isCertValidationRequired())
+                .create(VaultSysAuthRestClient.class);
+        boolean isSuccessful = restClient.renewToken(baseVaultConfig.getAuthToken(), baseVaultConfig.getNamespace())
+                                   .execute()
+                                   .isSuccessful();
         if (isSuccessful) {
           return true;
         } else {
@@ -125,7 +214,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig) {
+  public List<SecretEngineSummary> listSecretEngines(BaseVaultConfig vaultConfig) {
     List<SecretEngineSummary> secretEngineSummaries = new ArrayList<>();
     try {
       String vaultToken = vaultConfig.getAuthToken();
@@ -140,7 +229,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       VaultSysAuthRestClient restClient =
           VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
               .create(VaultSysAuthRestClient.class);
-      Response<SysMountsResponse> response = restClient.getAllMounts(vaultConfig.getAuthToken()).execute();
+      Response<SysMountsResponse> response =
+          restClient.getAllMounts(vaultConfig.getAuthToken(), vaultConfig.getNamespace()).execute();
       if (response.isSuccessful()) {
         Map<String, SysMount> sysMountMap = response.body().getData();
         log.info("Found Vault sys mount points: {}", sysMountMap.keySet());
@@ -182,7 +272,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig) {
+  public VaultAppRoleLoginResult appRoleLogin(BaseVaultConfig vaultConfig) {
     try {
       VaultSysAuthRestClient restClient =
           VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
@@ -192,7 +282,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
                                                   .roleId(vaultConfig.getAppRoleId())
                                                   .secretId(vaultConfig.getSecretId())
                                                   .build();
-      Response<VaultAppRoleLoginResponse> response = restClient.appRoleLogin(loginRequest).execute();
+      Response<VaultAppRoleLoginResponse> response =
+          restClient.appRoleLogin(vaultConfig.getNamespace(), loginRequest).execute();
 
       VaultAppRoleLoginResult result = null;
       if (response.isSuccessful()) {

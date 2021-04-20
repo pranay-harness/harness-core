@@ -1,6 +1,6 @@
 package software.wings.service.intfc.compliance;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.governance.DeploymentFreezeInfo;
 import io.harness.governance.GovernanceFreezeConfig;
@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * @author rktummala on 02/04/19
  */
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public interface GovernanceConfigService extends OwnedByAccount {
   GovernanceConfig get(String accountId);
 

@@ -2,12 +2,15 @@ package io.harness.connector.mappers;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.DelegateSelectable;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.localconnector.LocalConnector;
@@ -27,11 +30,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@OwnedBy(HarnessTeam.DX)
 public class ConnectorMapper {
   KubernetesDTOToEntity kubernetesDTOToEntity;
   KubernetesEntityToDTO kubernetesEntityToDTO;
@@ -60,6 +65,10 @@ public class ConnectorMapper {
     connector.setDescription(connectorInfo.getDescription());
     connector.setType(connectorInfo.getConnectorType());
     connector.setCategories(Arrays.asList(ConnectorRegistryFactory.getConnectorCategory(connector.getType())));
+    if (connectorInfo.getConnectorConfig() instanceof DelegateSelectable) {
+      Set<String> delegateSelectors = ((DelegateSelectable) connectorInfo.getConnectorConfig()).getDelegateSelectors();
+      connector.setDelegateSelectors(delegateSelectors);
+    }
     return connector;
   }
 
@@ -76,18 +85,7 @@ public class ConnectorMapper {
   }
 
   public ConnectorResponseDTO writeDTO(Connector connector) {
-    ConnectorConfigDTO connectorConfigDTO = createConnectorConfigDTO(connector);
-    ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder()
-                                         .name(connector.getName())
-                                         .identifier(connector.getIdentifier())
-                                         .description(connector.getDescription())
-                                         .orgIdentifier(connector.getOrgIdentifier())
-                                         .projectIdentifier(connector.getProjectIdentifier())
-                                         .connectorConfig(connectorConfigDTO)
-                                         .connectorType(connector.getType())
-                                         .tags(TagMapper.convertToMap(connector.getTags()))
-                                         .connectorType(connector.getType())
-                                         .build();
+    ConnectorInfoDTO connectorInfo = getConnectorInfoDTO(connector);
     Long timeWhenConnectorIsLastUpdated =
         getTimeWhenTheConnectorWasUpdated(connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt());
     return ConnectorResponseDTO.builder()
@@ -97,6 +95,23 @@ public class ConnectorMapper {
         .lastModifiedAt(timeWhenConnectorIsLastUpdated)
         .harnessManaged(isHarnessManaged(connector))
         .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
+        .branch(connector.getBranch())
+        .repoIdentifier(connector.getYamlGitConfigRef())
+        .build();
+  }
+
+  public ConnectorInfoDTO getConnectorInfoDTO(Connector connector) {
+    ConnectorConfigDTO connectorConfigDTO = createConnectorConfigDTO(connector);
+    return ConnectorInfoDTO.builder()
+        .name(connector.getName())
+        .identifier(connector.getIdentifier())
+        .description(connector.getDescription())
+        .orgIdentifier(connector.getOrgIdentifier())
+        .projectIdentifier(connector.getProjectIdentifier())
+        .connectorConfig(connectorConfigDTO)
+        .connectorType(connector.getType())
+        .tags(TagMapper.convertToMap(connector.getTags()))
+        .connectorType(connector.getType())
         .build();
   }
 
@@ -141,6 +156,11 @@ public class ConnectorMapper {
   private ConnectorConfigDTO createConnectorConfigDTO(Connector connector) {
     ConnectorEntityToDTOMapper connectorEntityToDTOMapper =
         connectorEntityToDTOMapperMap.get(connector.getType().toString());
-    return connectorEntityToDTOMapper.createConnectorDTO(connector);
+    ConnectorConfigDTO connectorDTO = connectorEntityToDTOMapper.createConnectorDTO(connector);
+    if (connectorDTO instanceof DelegateSelectable) {
+      Set<String> delegateSelectors = connector.getDelegateSelectors();
+      ((DelegateSelectable) connectorDTO).setDelegateSelectors(delegateSelectors);
+    }
+    return connectorDTO;
   }
 }

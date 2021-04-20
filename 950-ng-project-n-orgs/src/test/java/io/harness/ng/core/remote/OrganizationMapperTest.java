@@ -24,11 +24,7 @@ public class OrganizationMapperTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    organizationDTO = OrganizationDTO.builder()
-                          .accountIdentifier(randomAlphabetic(10))
-                          .identifier(randomAlphabetic(10))
-                          .name(randomAlphabetic(10))
-                          .build();
+    organizationDTO = OrganizationDTO.builder().identifier(randomAlphabetic(10)).name(randomAlphabetic(10)).build();
     organization = Organization.builder()
                        .accountIdentifier(randomAlphabetic(10))
                        .identifier(randomAlphabetic(10))
@@ -45,7 +41,6 @@ public class OrganizationMapperTest extends CategoryTest {
   public void testToOrganization() {
     Organization fromDTO = OrganizationMapper.toOrganization(organizationDTO);
     assertNotNull(fromDTO);
-    assertEquals(organizationDTO.getAccountIdentifier(), fromDTO.getAccountIdentifier());
     assertEquals(organizationDTO.getIdentifier(), fromDTO.getIdentifier());
     assertEquals(organizationDTO.getName(), fromDTO.getName());
     assertNotNull(fromDTO.getTags());
@@ -57,7 +52,6 @@ public class OrganizationMapperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testWriteDTO() {
     OrganizationDTO fromOrganization = OrganizationMapper.writeDto(organization);
-    assertEquals(organization.getAccountIdentifier(), fromOrganization.getAccountIdentifier());
     assertEquals(organization.getIdentifier(), fromOrganization.getIdentifier());
     assertEquals(organization.getName(), fromOrganization.getName());
     assertEquals(organization.getDescription(), fromOrganization.getDescription());

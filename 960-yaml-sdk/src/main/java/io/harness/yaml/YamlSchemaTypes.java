@@ -1,5 +1,8 @@
 package io.harness.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.yaml.schema.beans.SupportedPossibleFieldTypes;
 
 import java.lang.annotation.ElementType;
@@ -9,6 +12,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
+@OwnedBy(DX)
 public @interface YamlSchemaTypes {
   SupportedPossibleFieldTypes[] value();
 

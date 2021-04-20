@@ -1,10 +1,13 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Collections.emptyMap;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
@@ -22,6 +25,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.simpleframework.xml.Transient;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CDP)
 public class PcfRollbackState extends PcfDeployState {
   @Inject @Transient private SweepingOutputService sweepingOutputService;
   @Inject @Transient private PcfStateHelper pcfStateHelper;
@@ -146,17 +151,23 @@ public class PcfRollbackState extends PcfDeployState {
   }
 
   @Override
-  public Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+  public Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
     return -1;
   }
 
   @Override
-  public Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+  public Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
     return -1;
   }
 
   @Override
   public Map<String, String> validateFields() {
     return emptyMap();
+  }
+
+  @Override
+  @SchemaIgnore
+  public boolean isUseAppResizeV2() {
+    return super.isUseAppResizeV2();
   }
 }

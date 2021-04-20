@@ -33,6 +33,7 @@ public class CloudQueryMetaData {
   List<CloudBillingGroupBy> groupByList;
   List<CloudBillingAggregate> aggregationList;
   List<CloudBillingSortCriteria> sortCriteriaList;
+  List<DbColumn> notNullColumns;
 
   public String getAggerateColumnName() {
     CloudBillingAggregate aggregate = aggregationList.get(0);
@@ -45,6 +46,10 @@ public class CloudQueryMetaData {
     metaQuery.setIsDistinct(true);
 
     metaQuery.addCustomColumns(getHashColumn(groupByList, true));
+
+    for (DbColumn column : notNullColumns) {
+      metaQuery.addCondition(UnaryCondition.isNotNull(column));
+    }
 
     for (CloudBillingAggregate aggregateColumn : aggregationList) {
       metaQuery.addCustomColumns(aggregateColumn.toFunctionCall());
@@ -74,19 +79,23 @@ public class CloudQueryMetaData {
   }
 
   public String getQuery() {
-    return formQuery(filterList, groupByList, aggregationList, sortCriteriaList, new ArrayList<>());
+    return formQuery(filterList, groupByList, aggregationList, sortCriteriaList, new ArrayList<>(), notNullColumns);
   }
 
   public String getQuery(List<String> hashCodes) {
-    return formQuery(filterList, groupByList, aggregationList, sortCriteriaList, hashCodes);
+    return formQuery(filterList, groupByList, aggregationList, sortCriteriaList, hashCodes, notNullColumns);
   }
 
   private String formQuery(List<CloudBillingFilter> filterList, List<CloudBillingGroupBy> groupByList,
       List<CloudBillingAggregate> aggregationList, List<CloudBillingSortCriteria> sortCriteriaList,
-      List<String> hashCodes) {
+      List<String> hashCodes, List<DbColumn> notNullColumns) {
     SelectQuery query = new SelectQuery();
 
     query.addCustomColumns(getHashColumn(groupByList, true));
+
+    for (DbColumn column : notNullColumns) {
+      query.addCondition(UnaryCondition.isNotNull(column));
+    }
 
     for (CloudBillingAggregate aggregateColumn : aggregationList) {
       query.addCustomColumns(aggregateColumn.toFunctionCall());

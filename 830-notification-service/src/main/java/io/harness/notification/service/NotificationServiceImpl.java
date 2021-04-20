@@ -1,7 +1,10 @@
 package io.harness.notification.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.entities.Notification;
@@ -23,6 +26,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PL)
 public class NotificationServiceImpl implements NotificationService {
   private final ChannelService channelService;
   private final NotificationRepository notificationRepository;
@@ -35,8 +39,8 @@ public class NotificationServiceImpl implements NotificationService {
     log.info("Received Message in group 'notification_microservice_v1': {}", notificationRequest.getId());
     Optional<Notification> previousNotification = notificationRepository.findDistinctById(notificationRequest.getId());
     if (previousNotification.isPresent()) {
-      log.info("Duplicate notification request recieved {}", notificationRequest.getId());
-      return !NotificationProcessingResponse.isNotificationResquestFailed(
+      log.info("Duplicate notification request received {}", notificationRequest.getId());
+      return !NotificationProcessingResponse.isNotificationRequestFailed(
           previousNotification.get().getProcessingResponses());
     }
 
@@ -56,12 +60,14 @@ public class NotificationServiceImpl implements NotificationService {
     } catch (NotificationException e) {
       log.error("Could not send notification.", e);
     }
-    notification.setProcessingResponses(processingResponse.getResult());
-    notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
-        || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
+    if (Objects.nonNull(processingResponse)) {
+      notification.setProcessingResponses(processingResponse.getResult());
+      notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
+          || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
+    }
     notification.setRetries(1);
     notificationRepository.save(notification);
-    return !NotificationProcessingResponse.isNotificationResquestFailed(processingResponse);
+    return !NotificationProcessingResponse.isNotificationRequestFailed(processingResponse);
   }
 
   @Override
@@ -80,9 +86,11 @@ public class NotificationServiceImpl implements NotificationService {
     } catch (NotificationException e) {
       log.error("Could not send notification.", e);
     }
-    notification.setProcessingResponses(processingResponse.getResult());
-    notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
-        || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
+    if (Objects.nonNull(processingResponse)) {
+      notification.setProcessingResponses(processingResponse.getResult());
+      notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
+          || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
+    }
     notification.setRetries(notification.getRetries() + 1);
     notificationRepository.save(notification);
   }

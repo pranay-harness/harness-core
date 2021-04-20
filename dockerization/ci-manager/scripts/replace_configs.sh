@@ -34,12 +34,49 @@ if [[ "" != "$NG_MANAGER_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_URL"
 fi
 
-if [[ "" != "$ADDON_IMAGE_TAG" ]]; then
-  yq write -i $CONFIG_FILE ciExecutionServiceConfig.addonImageTag "$ADDON_IMAGE_TAG"
+if [[ "" != "$ADDON_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.addonImage "$ADDON_IMAGE"
 fi
-if [[ "" != "$LE_IMAGE_TAG" ]]; then
-  yq write -i $CONFIG_FILE ciExecutionServiceConfig.liteEngineImageTag "$LE_IMAGE_TAG"
+if [[ "" != "$LE_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.liteEngineImage "$LE_IMAGE"
 fi
+
+if [[ "" != "$GIT_CLONE_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.gitCloneConfig.image "$GIT_CLONE_IMAGE"
+fi
+
+if [[ "" != "$DOCKER_PUSH_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.buildAndPushDockerRegistryConfig.image "$DOCKER_PUSH_IMAGE"
+fi
+
+if [[ "" != "$ECR_PUSH_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.buildAndPushECRConfig.image "$ECR_PUSH_IMAGE"
+fi
+
+if [[ "" != "$GCR_PUSH_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.buildAndPushGCRConfig.image "$GCR_PUSH_IMAGE"
+fi
+
+if [[ "" != "$GCS_UPLOAD_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.gcsUploadConfig.image "$GCS_UPLOAD_IMAGE"
+fi
+
+if [[ "" != "$S3_UPLOAD_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.s3UploadConfig.image "$S3_UPLOAD_IMAGE"
+fi
+
+if [[ "" != "$ARTIFACTORY_UPLOAD_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.artifactoryUploadConfig.image "$ARTIFACTORY_UPLOAD_IMAGE"
+fi
+
+if [[ "" != "$GCS_CACHE_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.cacheGCSConfig.image "$GCS_CACHE_IMAGE"
+fi
+
+if [[ "" != "$S3_CACHE_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.cacheS3Config.image "$S3_CACHE_IMAGE"
+fi
+
 if [[ "" != "$DEFAULT_MEMORY_LIMIT" ]]; then
   yq write -i $CONFIG_FILE ciExecutionServiceConfig.defaultMemoryLimit "$DEFAULT_MEMORY_LIMIT"
 fi
@@ -140,3 +177,17 @@ fi
 if [[ "" != "$API_URL" ]]; then
   yq write -i $CONFIG_FILE apiUrl "$API_URL"
 fi
+
+if [[ "" != "$TIMESCALE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbPassword "$TIMESCALE_PASSWORD"
+fi
+
+if [[ "" != "$TIMESCALE_URI" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbUrl "$TIMESCALE_URI"
+fi
+
+if [[ "" != "$TIMESCALEDB_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbUsername "$TIMESCALEDB_USERNAME"
+fi
+
+

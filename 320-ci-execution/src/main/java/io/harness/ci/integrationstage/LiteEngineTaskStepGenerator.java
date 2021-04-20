@@ -1,5 +1,7 @@
 package io.harness.ci.integrationstage;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
@@ -14,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class LiteEngineTaskStepGenerator {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
   private static final String SEPARATOR = "-";

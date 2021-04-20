@@ -1,6 +1,7 @@
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
+import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_ENGINE_TASK_METRIC;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -12,6 +13,7 @@ import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKe
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.exceptions.ServiceGuardAnalysisException;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
@@ -34,6 +36,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class LearningEngineTaskServiceImpl implements LearningEngineTaskService {
   @Inject private HPersistence hPersistence;
+  @Inject private MetricService metricService;
 
   @Override
   public LearningEngineTask getNextAnalysisTask() {
@@ -46,6 +49,7 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
         hPersistence.createQuery(LearningEngineTask.class)
             .filter(LearningEngineTaskKeys.taskStatus, ExecutionStatus.QUEUED)
             .order(Sort.ascending(LearningEngineTaskKeys.taskPriority));
+    // TODO: add ordering based on createdAt.
 
     if (isNotEmpty(taskType)) {
       learningEngineTaskQuery.field(LearningEngineTaskKeys.analysisType).in(taskType);
@@ -145,6 +149,16 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
     updateOperations.set(LearningEngineTaskKeys.taskStatus, ExecutionStatus.FAILED);
     hPersistence.update(hPersistence.createQuery(LearningEngineTask.class).filter(LearningEngineTaskKeys.uuid, taskId),
         updateOperations);
+  }
+
+  @Override
+  public void recordMetrics() {
+    List<LearningEngineTask> queuedTasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
+                                               .filter(LearningEngineTaskKeys.taskStatus, ExecutionStatus.QUEUED)
+                                               .project(LearningEngineTaskKeys.accountId, true)
+                                               .asList();
+    log.info("Recording LE Metrics. Queued Tasks size : {}", queuedTasks.size());
+    metricService.recordMetric(LEARNING_ENGINE_TASK_METRIC, queuedTasks.size());
   }
 
   private boolean hasTaskTimedOut(LearningEngineTask task) {

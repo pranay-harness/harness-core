@@ -8,5 +8,5 @@ $basicAuthValue = "Basic $encodedCreds"
 $Headers = @{
     Authorization = $basicAuthValue
 }
-
+$ProgressPreference = 'SilentlyContinue'
 Invoke-WebRequest -Uri $srcPath -Headers $Headers -OutFile $destFile

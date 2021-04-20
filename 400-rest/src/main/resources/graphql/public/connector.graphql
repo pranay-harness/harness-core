@@ -123,6 +123,7 @@ type DockerConnector implements Connector {
   id: String
   name: String
   description: String
+  delegateSelectors: [String]
   createdAt: DateTime
   createdBy: User
 }
@@ -189,6 +190,7 @@ type GitConnector implements Connector {
   webhookUrl: String
   generateWebhookUrl: Boolean
   customCommitDetails: CustomCommitDetails
+  usageScope: UsageScope
 }
 type JenkinsConnector implements Connector {
   id: String

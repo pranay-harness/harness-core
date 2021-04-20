@@ -6,7 +6,7 @@ import static software.wings.beans.servicenow.ServiceNowFields.CHANGE_REQUEST_NU
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.serializer.JsonUtils;
 
@@ -20,7 +20,7 @@ import software.wings.yaml.workflow.StepYaml;
 import java.util.Arrays;
 import java.util.Map;
 
-@TargetModule(Module._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_YAML_BEANS)
 public class ServiceNowStepCompletionYamlValidator implements StepCompletionYamlValidator {
   private static final String SERVICE_NOW_ACTION = "action";
 

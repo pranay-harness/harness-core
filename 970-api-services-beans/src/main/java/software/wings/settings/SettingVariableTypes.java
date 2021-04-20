@@ -239,6 +239,8 @@ public enum SettingVariableTypes {
 
   VAULT,
 
+  VAULT_SSH,
+
   AWS_SECRETS_MANAGER,
 
   CYBERARK,
@@ -263,11 +265,11 @@ public enum SettingVariableTypes {
 
   CUSTOM("Custom Artifact Source"),
 
-  CE_AWS("Continuous Efficiency AWS"),
+  CE_AWS("Cloud Cost Management AWS"),
 
-  CE_GCP("Continuous Efficiency GCP"),
+  CE_GCP("Cloud Cost Management GCP"),
 
-  CE_AZURE("Continuous Efficiency AZURE"),
+  CE_AZURE("Cloud Cost Management AZURE"),
 
   AZURE_VAULT("Azure Vault Secrets Manager"),
 

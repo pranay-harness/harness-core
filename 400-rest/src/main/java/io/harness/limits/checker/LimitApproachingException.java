@@ -1,12 +1,16 @@
 package io.harness.limits.checker;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static org.slf4j.helpers.MessageFormatter.arrayFormat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.lib.Limit;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+@OwnedBy(PL)
 @Value
 @EqualsAndHashCode(callSuper = false)
 public class LimitApproachingException extends RuntimeException {

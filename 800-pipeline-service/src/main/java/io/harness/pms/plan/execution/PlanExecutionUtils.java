@@ -5,6 +5,7 @@ import io.harness.plan.Plan;
 import io.harness.plan.Plan.PlanBuilder;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlUtils;
 
 import java.util.ArrayList;
@@ -32,7 +33,8 @@ public class PlanExecutionUtils {
   public String getFQNUsingLevels(List<LevelDTO> levels) {
     List<String> fqnList = new ArrayList<>();
     for (LevelDTO level : levels) {
-      if (!YamlUtils.shouldNotIncludeInQualifiedName(level.getIdentifier())) {
+      if (!YamlUtils.shouldNotIncludeInQualifiedName(level.getIdentifier())
+          && !level.getIdentifier().equals(YAMLFieldNameConstants.PARALLEL + level.getSetupId())) {
         fqnList.add(level.getIdentifier());
       }
     }

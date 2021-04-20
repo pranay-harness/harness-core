@@ -23,6 +23,14 @@ public class CmdUtils {
     return value;
   }
 
+  public static String escapeLineBreakChars(String value) {
+    return value.replace("\r", "`r").replace("\n", "`n");
+  }
+
+  public static String escapeWordBreakChars(String value) {
+    return value.replace(" ", "` ");
+  }
+
   private static boolean isValidEnvValue(String value) {
     /*
     Rules:

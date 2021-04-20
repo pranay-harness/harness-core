@@ -1,9 +1,11 @@
 package software.wings.common;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.api.AwsLambdaContextElement.AWS_LAMBDA_REQUEST_PARAM;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 
 import software.wings.api.AwsLambdaContextElement;
@@ -17,6 +19,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsLambdaFunctionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.

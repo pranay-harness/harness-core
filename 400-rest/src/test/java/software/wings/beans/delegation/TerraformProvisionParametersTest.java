@@ -1,7 +1,10 @@
 package software.wings.beans.delegation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class TerraformProvisionParametersTest extends WingsBaseTest {
   @Test
   @Owner(developers = OwnerRule.YOGESH)

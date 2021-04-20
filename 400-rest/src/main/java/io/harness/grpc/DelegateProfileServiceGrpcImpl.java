@@ -3,10 +3,13 @@ package io.harness.grpc;
 import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
+import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
@@ -38,7 +41,9 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesRequest;
 import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
+import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.paging.PageRequestGrpc;
+import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
@@ -59,15 +64,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBase {
   private DelegateProfileService delegateProfileService;
   private UserService userService;
+  private KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateProfileServiceGrpcImpl(DelegateProfileService delegateProfileService, UserService userService) {
+  public DelegateProfileServiceGrpcImpl(
+      DelegateProfileService delegateProfileService, UserService userService, KryoSerializer kryoSerializer) {
     this.delegateProfileService = delegateProfileService;
     this.userService = userService;
+    this.kryoSerializer = kryoSerializer;
   }
 
   @Override
@@ -123,7 +132,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
   @Override
   public void updateProfile(UpdateProfileRequest request, StreamObserver<UpdateProfileResponse> responseObserver) {
-    try {
+    try (GlobalContextGuard guard = initGlobalContextGuard(kryoSerializer, request.getVirtualStack())) {
       DelegateProfile delegateProfile = delegateProfileService.update(convert(request.getProfile()));
 
       if (delegateProfile != null) {
@@ -295,7 +304,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
                                                         .startupScript(delegateProfileGrpc.getStartupScript());
 
-    if (delegateProfileGrpc.hasCreatedBy()) {
+    if (delegateProfileGrpc.hasCreatedBy() && isNotEmpty(delegateProfileGrpc.getCreatedBy().getUuid())) {
       delegateProfileBuilder.createdBy(EmbeddedUser.builder()
                                            .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
                                            .name(delegateProfileGrpc.getCreatedBy().getName())
@@ -303,7 +312,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                            .build());
     }
 
-    if (delegateProfileGrpc.hasLastUpdatedBy()) {
+    if (delegateProfileGrpc.hasLastUpdatedBy() && isNotEmpty(delegateProfileGrpc.getLastUpdatedBy().getUuid())) {
       User user = userService.getUserFromCacheOrDB(delegateProfileGrpc.getLastUpdatedBy().getUuid());
       UserThreadLocal.set(user);
     }

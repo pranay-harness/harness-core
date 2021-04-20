@@ -59,7 +59,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -76,7 +78,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.EntityOperationIdentifier;
-import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
+import io.harness.globalcontex.EntityOperationIdentifier.EntityOperation;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -253,6 +255,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
   private static final String IISWEBSITE_KEYWORD = "iiswebsite";
   private static final String IISAPP_KEYWORD = "iisapp";
@@ -567,7 +570,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                                                           .entityId(savedService.getUuid())
                                                                           .entityType(EntityType.SERVICE.name())
                                                                           .entityName(savedService.getName())
-                                                                          .operation(entityOperation.CREATE)
+                                                                          .operation(EntityOperation.CREATE)
                                                                           .build());
   }
 
@@ -576,7 +579,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                                                           .entityId(savedService.getUuid())
                                                                           .entityType(EntityType.SERVICE.name())
                                                                           .entityName(savedService.getName())
-                                                                          .operation(entityOperation.DELETE)
+                                                                          .operation(EntityOperation.DELETE)
                                                                           .build());
   }
 
@@ -850,6 +853,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
     }
 
+    commands = overrideDefaultCommandsByDeploymentType(service, commands);
+
     // Default Commands are pushed to yaml only if it matches both the conditions
     // 1) pushToYaml is true 2) commands are not internal. (Check hasInternalCommands()).
     boolean shouldPushCommandsToYaml = pushToYaml && !hasInternalCommands(service);
@@ -868,6 +873,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return serviceToReturn;
+  }
+
+  private List<Command> overrideDefaultCommandsByDeploymentType(Service service, List<Command> commands) {
+    DeploymentType deploymentType = service.getDeploymentType();
+    if (DeploymentType.AZURE_WEBAPP == deploymentType || DeploymentType.AZURE_VMSS == deploymentType) {
+      commands = Collections.emptyList();
+    }
+    return commands;
   }
 
   /**

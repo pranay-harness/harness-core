@@ -134,10 +134,20 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
       assertThat(updatedInputSet.getYaml()).isEqualTo(updateInputSetEntity.getYaml());
       assertThat(updatedInputSet.getVersion()).isEqualTo(1L);
 
-      updateInputSetEntity.setAccountId("newAccountID");
-      assertThatThrownBy(() -> pmsInputSetService.update(updateInputSetEntity))
+      InputSetEntity incorrectInputSetEntity = InputSetEntity.builder()
+                                                   .identifier(entity.getIdentifier())
+                                                   .name(NAME)
+                                                   .description(DESCRIPTION)
+                                                   .yaml(YAML)
+                                                   .inputSetEntityType(entity.getInputSetEntityType())
+                                                   .accountId("newAccountID")
+                                                   .orgIdentifier(ORG_IDENTIFIER)
+                                                   .projectIdentifier(PROJ_IDENTIFIER)
+                                                   .pipelineIdentifier(PIPELINE_IDENTIFIER)
+                                                   .inputSetReferences(entity.getInputSetReferences())
+                                                   .build();
+      assertThatThrownBy(() -> pmsInputSetService.update(incorrectInputSetEntity))
           .isInstanceOf(InvalidRequestException.class);
-      updateInputSetEntity.setAccountId(ACCOUNT_ID);
 
       boolean delete = pmsInputSetService.delete(
           ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, entity.getIdentifier(), 1L);

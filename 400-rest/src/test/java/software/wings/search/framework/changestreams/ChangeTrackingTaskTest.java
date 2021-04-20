@@ -13,6 +13,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.mongo.changestreams.ChangeStreamSubscriber;
+import io.harness.mongo.changestreams.ChangeTrackingTask;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -66,7 +68,7 @@ public class ChangeTrackingTaskTest extends WingsBaseTest {
         "{ \"_data\" : { \"$binary\" : \"gl2kjvIAAAAGRjxfaWQAPEEwckctZFoyVDhTMk1ySzcxZlpOZGcAAFoQBJxC1VIDm0XTvvbRGu0X6pUE\", \"$type\" : \"00\" } }";
 
     ChangeTrackingTask changeTrackingTask =
-        new ChangeTrackingTask(changeStreamSubscriber, collection, null, latch, token);
+        new ChangeTrackingTask(changeStreamSubscriber, collection, null, latch, token, null);
 
     mockChangeTrackingTaskDependencies(changeStreamSubscriber, collection, latch, changeStreamIterable, testLatch);
 

@@ -28,7 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.yaml.core.variables.SecretNGVariable")
 public class SecretNGVariable implements NGVariable {
   String name;
-  @Builder.Default NGVariableType type = NGVariableType.SECRET;
+  @ApiModelProperty(allowableValues = NGVariableConstants.SECRET_TYPE) NGVariableType type = NGVariableType.SECRET;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<SecretRefData> value;
 
   String description;
@@ -41,5 +41,10 @@ public class SecretNGVariable implements NGVariable {
     return LevelNode.builder()
         .qualifierName(LevelNodeQualifierName.NG_VARIABLES + LevelNodeQualifierName.PATH_CONNECTOR + name)
         .build();
+  }
+
+  @Override
+  public ParameterField<?> getCurrentValue() {
+    return value;
   }
 }

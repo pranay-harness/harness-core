@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
@@ -16,21 +18,20 @@ import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
-import java.util.Map;
+import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
   @InjectMocks private K8sDeleteStep deleteStep;
 
@@ -48,11 +49,12 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
                                  .spec(spec)
                                  .type(io.harness.delegate.task.k8s.DeleteResourcesType.ResourceName)
                                  .build())
-            .timeout(ParameterField.createValueField("10m"))
             .build();
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     doReturn("test-delete-resource-name-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    K8sDeleteRequest deleteRequest = executeTask(stepParameters, K8sDeleteRequest.class);
+    K8sDeleteRequest deleteRequest = executeTask(stepElementParameters, K8sDeleteRequest.class);
     assertThat(deleteRequest).isNotNull();
     assertThat(deleteRequest.getCommandName()).isEqualTo(K8S_DELETE_COMMAND_NAME);
     assertThat(deleteRequest.getTaskType()).isEqualTo(K8sTaskType.DELETE);
@@ -79,12 +81,13 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
                                  .spec(spec)
                                  .type(io.harness.delegate.task.k8s.DeleteResourcesType.ManifestPath)
                                  .build())
-            .timeout(ParameterField.createValueField("10m"))
             .build();
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     doReturn("test-delete-manifest-file-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
 
-    K8sDeleteRequest deleteRequest = executeTask(stepParameters, K8sDeleteRequest.class);
+    K8sDeleteRequest deleteRequest = executeTask(stepElementParameters, K8sDeleteRequest.class);
     assertThat(deleteRequest).isNotNull();
     assertThat(deleteRequest.getCommandName()).isEqualTo(K8S_DELETE_COMMAND_NAME);
     assertThat(deleteRequest.getTaskType()).isEqualTo(K8sTaskType.DELETE);
@@ -106,12 +109,13 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     final K8sDeleteStepParameters stepParameters =
         K8sDeleteStepParameters.infoBuilder()
             .deleteResources(DeleteResourcesWrapper.builder().spec(spec).type(DeleteResourcesType.ReleaseName).build())
-            .timeout(ParameterField.createValueField("10m"))
             .build();
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     doReturn("test-delete-release-name-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
 
-    K8sDeleteRequest deleteRequest = executeTask(stepParameters, K8sDeleteRequest.class);
+    K8sDeleteRequest deleteRequest = executeTask(stepElementParameters, K8sDeleteRequest.class);
     assertThat(deleteRequest).isNotNull();
     assertThat(deleteRequest.getCommandName()).isEqualTo(K8S_DELETE_COMMAND_NAME);
     assertThat(deleteRequest.getTaskType()).isEqualTo(K8sTaskType.DELETE);
@@ -123,39 +127,42 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(deleteRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testHandleTaskResultSucceeded() {
     K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(SUCCESS)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 
-    StepResponse response = deleteStep.finalizeExecution(ambiance, stepParameters, null, responseDataMap);
+    K8sDeployResponse k8sDeployResponse = K8sDeployResponse.builder()
+                                              .commandExecutionStatus(SUCCESS)
+                                              .commandUnitsProgress(UnitProgressData.builder().build())
+                                              .build();
+
+    StepResponse response =
+        deleteStep.finalizeExecution(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testHandleTaskResultFailed() {
-    K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder()
-                                                 .rollbackInfo(RollbackInfo.builder().identifier("rollback").build())
-                                                 .build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .errorMessage("Execution failed.")
-            .commandExecutionStatus(FAILURE)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder().build();
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 
-    StepResponse response = deleteStep.finalizeExecution(ambiance, stepParameters, null, responseDataMap);
+    K8sDeployResponse k8sDeployResponse = K8sDeployResponse.builder()
+                                              .errorMessage("Execution failed.")
+                                              .commandExecutionStatus(FAILURE)
+                                              .commandUnitsProgress(UnitProgressData.builder().build())
+                                              .build();
+
+    StepResponse response =
+        deleteStep.finalizeExecution(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
-    assertThat(response.getStepOutcomes()).isNotNull();
   }
 
   @Test
@@ -163,19 +170,21 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testValidateK8sDeleteStepParams() {
     K8sDeleteStepParameters deleteStepParameters = K8sDeleteStepParameters.infoBuilder().build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(deleteStepParameters).build();
+
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    assertThatThrownBy(() -> deleteStep.startChainLink(ambiance, deleteStepParameters, stepInputPackage))
+    assertThatThrownBy(() -> deleteStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("DeleteResources is mandatory");
 
     deleteStepParameters.setDeleteResources(DeleteResourcesWrapper.builder().build());
-    assertThatThrownBy(() -> deleteStep.startChainLink(ambiance, deleteStepParameters, stepInputPackage))
+    assertThatThrownBy(() -> deleteStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("DeleteResources type is mandatory");
 
     deleteStepParameters.setDeleteResources(
         DeleteResourcesWrapper.builder().type(io.harness.delegate.task.k8s.DeleteResourcesType.ManifestPath).build());
-    assertThatThrownBy(() -> deleteStep.startChainLink(ambiance, deleteStepParameters, stepInputPackage))
+    assertThatThrownBy(() -> deleteStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("DeleteResources spec is mandatory");
   }
@@ -184,7 +193,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testGetK8sDeleteStepParameter() {
-    assertThat(deleteStep.getStepParametersClass()).isEqualTo(K8sDeleteStepParameters.class);
+    assertThat(deleteStep.getStepParametersClass()).isEqualTo(StepElementParameters.class);
   }
 
   @Override

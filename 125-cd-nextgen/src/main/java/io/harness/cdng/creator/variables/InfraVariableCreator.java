@@ -67,32 +67,48 @@ public class InfraVariableCreator {
     if (type != null) {
       switch (type) {
         case InfrastructureKind.KUBERNETES_DIRECT:
-          YamlField specNode = infraDefNode.getNode().getField(YamlTypes.SPEC);
-          if (specNode != null) {
-            addVariablesForKubernetesInfra(specNode, yamlPropertiesMap);
-          }
+          addVariablesForKubernetesInfra(infraDefNode, yamlPropertiesMap);
           break;
+
+        case InfrastructureKind.KUBERNETES_GCP:
+          addVariablesForKubernetesGcpInfra(infraDefNode, yamlPropertiesMap);
+          break;
+
         default:
           throw new InvalidRequestException("Invalid infra definition type");
       }
     }
   }
 
-  private void addVariablesForKubernetesInfra(YamlField infraSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    YamlField connectorRefNode = infraSpecNode.getNode().getField(YamlTypes.CONNECTOR_REF);
-    if (connectorRefNode != null) {
-      VariableCreatorHelper.addFieldToPropertiesMap(
-          connectorRefNode, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
+  private void addVariablesForKubernetesInfra(YamlField infraDefNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    YamlField infraSpecNode = infraDefNode.getNode().getField(YamlTypes.SPEC);
+    if (infraSpecNode == null) {
+      return;
     }
-    YamlField namespaceNode = infraSpecNode.getNode().getField(YamlTypes.NAMESPACE);
-    if (namespaceNode != null) {
-      VariableCreatorHelper.addFieldToPropertiesMap(
-          namespaceNode, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
+
+    addVariableForYamlType(YamlTypes.CONNECTOR_REF, infraSpecNode, yamlPropertiesMap);
+    addVariableForYamlType(YamlTypes.NAMESPACE, infraSpecNode, yamlPropertiesMap);
+    addVariableForYamlType(YamlTypes.RELEASE_NAME, infraSpecNode, yamlPropertiesMap);
+  }
+
+  private void addVariablesForKubernetesGcpInfra(
+      YamlField infraDefNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    YamlField infraSpecNode = infraDefNode.getNode().getField(YamlTypes.SPEC);
+    if (infraSpecNode == null) {
+      return;
     }
-    YamlField releaseNameNode = infraSpecNode.getNode().getField(YamlTypes.RELEASE_NAME);
-    if (namespaceNode != null) {
-      VariableCreatorHelper.addFieldToPropertiesMap(
-          releaseNameNode, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
+
+    addVariableForYamlType(YamlTypes.CONNECTOR_REF, infraSpecNode, yamlPropertiesMap);
+    addVariableForYamlType(YamlTypes.NAMESPACE, infraSpecNode, yamlPropertiesMap);
+    addVariableForYamlType(YamlTypes.RELEASE_NAME, infraSpecNode, yamlPropertiesMap);
+    addVariableForYamlType(YamlTypes.CLUSTER, infraSpecNode, yamlPropertiesMap);
+  }
+
+  private void addVariableForYamlType(
+      String yamlTypes, YamlField infraSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    YamlField yamlNode = infraSpecNode.getNode().getField(yamlTypes);
+    if (yamlNode != null) {
+      VariableCreatorHelper.addFieldToPropertiesMap(yamlNode, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
     }
   }
 }

@@ -1,6 +1,8 @@
 package io.harness.connector.entities;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
@@ -10,6 +12,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -24,9 +27,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
@@ -34,7 +39,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Persistent;
@@ -42,17 +46,17 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @StoreIn(DbAliases.NG_MANAGER)
 @Document("connectors")
 @Persistent
-public abstract class Connector implements PersistentEntity, NGAccountAccess {
-  @Id @org.mongodb.morphia.annotations.Id String id;
+@OwnedBy(HarnessTeam.DX)
+public abstract class Connector extends GitSyncableEntity implements PersistentEntity, NGAccountAccess {
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
-  // todo deepak: Where we should keep the scope, it will be used by everyone
   @NotEmpty io.harness.encryption.Scope scope;
   String description;
   @Trimmed @NotEmpty String accountIdentifier;
@@ -62,6 +66,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
+  Set<String> delegateSelectors;
   @CreatedBy private EmbeddedUser createdBy;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @CreatedDate Long createdAt;

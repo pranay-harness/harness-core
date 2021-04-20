@@ -69,17 +69,19 @@ public class ArtifactoryServiceTest extends CategoryTest {
    */
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(9881));
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
 
   String url = "http://localhost:9881/artifactory/";
 
-  private ArtifactoryConfig artifactoryConfig =
-      ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
-
-  private ArtifactoryConfig artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
+  private ArtifactoryConfig artifactoryConfig;
+  private ArtifactoryConfig artifactoryConfigAnonymous;
 
   @Before
   public void setUp() throws IllegalAccessException {
+    url = String.format("http://localhost:%d/artifactory/", wireMockRule.port());
+    artifactoryConfig =
+        ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
+    artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
     FieldUtils.writeField(
         artifactoryService, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
   }
@@ -329,7 +331,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  public void shouldThrowExceptionOnArtifactoryResponseWith400StatusCode() throws IOException, IllegalAccessException {
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCode() throws IOException, IllegalAccessException {
     ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
     Artifactory client = Mockito.mock(Artifactory.class);
     ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
@@ -349,6 +351,35 @@ public class ArtifactoryServiceTest extends CategoryTest {
     when(client.restCall(any())).thenReturn(artifactoryResponse);
 
     assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .hasMessageContaining(
+            "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCodeForGetRespositories()
+      throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
+    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
+        .thenReturn(JsonUtils.convertStringToObj("{\n"
+                + "  \"errors\" : [ {\n"
+                + "    \"status\" : 500,\n"
+                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
+                + "  } ]\n"
+                + "}",
+            ArtifactoryErrorResponse.class));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.getRepositories(artifactoryConfig, null))
         .isInstanceOf(ArtifactoryServerException.class)
         .hasMessageContaining(
             "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");

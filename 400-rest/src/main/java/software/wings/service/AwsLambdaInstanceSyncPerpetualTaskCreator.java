@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient.FUNCTION_NAME;
 import static io.harness.perpetualtask.instancesync.AwsLambdaInstanceSyncPerpetualTaskClient.QUALIFIER;
@@ -12,6 +13,7 @@ import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import static java.lang.Long.parseLong;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -43,6 +45,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class AwsLambdaInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
   @Inject ServerlessInstanceService serverlessInstanceService;
   @Inject PerpetualTaskService perpetualTaskService;

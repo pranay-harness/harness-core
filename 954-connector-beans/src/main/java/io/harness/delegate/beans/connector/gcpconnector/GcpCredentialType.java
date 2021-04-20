@@ -26,4 +26,13 @@ public enum GcpCredentialType {
   final String displayName() {
     return this.displayName;
   }
+
+  public static GcpCredentialType fromString(String typeEnum) {
+    for (GcpCredentialType enumValue : GcpCredentialType.values()) {
+      if (enumValue.getDisplayName().equals(typeEnum)) {
+        return enumValue;
+      }
+    }
+    throw new IllegalArgumentException("Invalid value: " + typeEnum);
+  }
 }

@@ -7,7 +7,7 @@ import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERN
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
@@ -28,7 +28,9 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploym
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.exception.InvalidArgumentsException;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
+import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServicePackageDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 
 import com.google.inject.Singleton;
@@ -45,10 +47,19 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
+      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient,
+      ArtifactStreamAttributes artifactStreamAttributes) {
+    return artifactStreamAttributes == null
+        ? executeDockerTask(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient)
+        : executePackageTask(
+            azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient, artifactStreamAttributes);
+  }
+
+  private AzureAppServiceTaskResponse executeDockerTask(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters =
         (AzureWebAppSlotSetupParameters) azureAppServiceTaskParameters;
@@ -80,6 +91,27 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
           .errorMsg(message)
           .preDeploymentData(azureAppServicePreDeploymentData)
           .build();
+    }
+  }
+
+  public AzureAppServiceTaskResponse executePackageTask(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
+      AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient,
+      ArtifactStreamAttributes streamAttributes) {
+    AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters =
+        (AzureWebAppSlotSetupParameters) azureAppServiceTaskParameters;
+
+    AzureWebClientContext azureWebClientContext =
+        buildAzureWebClientContext(azureWebAppSlotSetupParameters, azureConfig);
+    AzureAppServicePackageDeploymentContext dockerDeploymentContext = toAzureAppServicePackageDeploymentContext(
+        azureWebAppSlotSetupParameters, azureWebClientContext, streamAttributes, logStreamingTaskClient);
+
+    try {
+      markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
+      return AzureWebAppSlotSetupResponse.builder().azureAppDeploymentData(null).preDeploymentData(null).build();
+    } catch (Exception ex) {
+      String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
+      logErrorMsg(azureAppServiceTaskParameters, logStreamingTaskClient, ex, message);
+      return AzureWebAppSlotSetupResponse.builder().errorMsg(message).preDeploymentData(null).build();
     }
   }
 
@@ -187,5 +219,30 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     return azureAppServiceDeploymentService.getAzureAppServicePreDeploymentData(azureWebClientContext, slotName,
         targetSlotName, userAddedAppSettings, userAddedConnSettings,
         dockerDeploymentContext.getLogStreamingTaskClient());
+  }
+
+  private AzureAppServicePackageDeploymentContext toAzureAppServicePackageDeploymentContext(
+      AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters, AzureWebClientContext azureWebClientContext,
+      ArtifactStreamAttributes streamAttributes, ILogStreamingTaskClient logStreamingTaskClient) {
+    List<AzureAppServiceApplicationSetting> applicationSettings =
+        azureWebAppSlotSetupParameters.getApplicationSettings();
+    Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd = applicationSettings.stream().collect(
+        Collectors.toMap(AzureAppServiceApplicationSetting::getName, Function.identity()));
+
+    List<AzureAppServiceConnectionString> connectionStrings = azureWebAppSlotSetupParameters.getConnectionStrings();
+    Map<String, AzureAppServiceConnectionString> connSettingsToAdd = connectionStrings.stream().collect(
+        Collectors.toMap(AzureAppServiceConnectionString::getName, Function.identity()));
+
+    return AzureAppServicePackageDeploymentContext.builder()
+        .logStreamingTaskClient(logStreamingTaskClient)
+        .appSettingsToAdd(appSettingsToAdd)
+        .connSettingsToAdd(connSettingsToAdd)
+        .slotName(azureWebAppSlotSetupParameters.getSlotName())
+        .targetSlotName(azureWebAppSlotSetupParameters.getTargetSlotName())
+        .azureWebClientContext(azureWebClientContext)
+        .artifactStreamAttributes(streamAttributes)
+        .startupCommand(azureWebAppSlotSetupParameters.getStartupCommand())
+        .steadyStateTimeoutInMin(azureWebAppSlotSetupParameters.getTimeoutIntervalInMin())
+        .build();
   }
 }

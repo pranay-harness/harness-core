@@ -235,6 +235,7 @@ timescaledb:
   instanceStatsMigrationQueryBatchSize: 100
   deploymentDataMigrationRowLimit: 1000
   deploymentDataMigrationQueryBatchSize: 100
+  isHealthCheckNeeded: false
 
 grpcServerConfig:
   connectors:
@@ -323,6 +324,15 @@ gcpMarketplaceConfig:
 
 cfClientConfig:
   apiKey: ""
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl : "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
 
 featuresEnabled: ""
 
@@ -534,6 +544,7 @@ ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
+  enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
 
 cvngClientConfig:
   baseUrl: https://localhost:6060/cv/
@@ -543,7 +554,7 @@ eventsFramework:
   redis:
     sentinel: false
     masterName: "test"
-    redisUrl: "dummyRedisUrl"
+    redisUrl: "redis://localhost:6379"
     sentinelUrls:
       - "redis://redis1:26379"
       - "redis://redis2:26379"
@@ -552,6 +563,8 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
+    password: ""
 
 mockServerConfig:
   baseUrl: http://localhost

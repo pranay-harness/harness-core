@@ -9,6 +9,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
+import java.util.List;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface ApiKeyService extends OwnedByAccount {
@@ -28,4 +29,5 @@ public interface ApiKeyService extends OwnedByAccount {
   void evictAndRebuildPermissions(String accountId, boolean rebuild);
   void evictAndRebuildPermissionsAndRestrictions(String accountId, boolean rebuild);
   void evictPermissionsAndRestrictionsForUserGroup(UserGroup userGroup);
+  void loadUserGroupsForApiKeys(List<ApiKeyEntry> apiKeyEntries, String accountId);
 }

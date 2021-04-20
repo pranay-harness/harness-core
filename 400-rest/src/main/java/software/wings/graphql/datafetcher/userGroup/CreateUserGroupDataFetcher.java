@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -16,8 +19,9 @@ import software.wings.service.intfc.UserGroupService;
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(DX)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CreateUserGroupDataFetcher
     extends BaseMutatorDataFetcher<QLCreateUserGroupInput, QLCreateUserGroupPayload> {
   @Inject UserGroupService userGroupService;
@@ -39,6 +43,8 @@ public class CreateUserGroupDataFetcher
     UserGroup userGroup = userGroupController.populateUserGroupEntity(parameter, mutationContext.getAccountId());
     userGroup.setAccountId(mutationContext.getAccountId());
     userGroupService.save(userGroup);
+    log.info("Creating user group wth name {} in account {} from graphql", parameter.getName(),
+        mutationContext.getAccountId());
     return userGroupController.populateCreateUserGroupPayload(userGroup, parameter.getClientMutationId());
   }
 }

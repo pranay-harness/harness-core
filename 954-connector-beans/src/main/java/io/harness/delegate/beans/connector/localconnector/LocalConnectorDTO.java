@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.localconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
@@ -14,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @NoArgsConstructor

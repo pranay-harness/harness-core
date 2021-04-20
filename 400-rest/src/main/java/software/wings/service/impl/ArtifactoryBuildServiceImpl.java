@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -11,7 +12,8 @@ import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_
 import static software.wings.utils.ArtifactType.DOCKER;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -38,10 +40,12 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by sgurubelli on 6/28/17.
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
+  public static final int MANUAL_PULL_ARTIFACTORY_LIMIT = 1000;
   @Inject private ArtifactoryService artifactoryService;
 
   @Override
@@ -49,7 +53,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     return wrapNewBuildsWithLabels(
-        getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, ARTIFACT_RETENTION_SIZE),
+        getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, MANUAL_PULL_ARTIFACTORY_LIMIT),
         artifactStreamAttributes, artifactoryConfig);
   }
 
@@ -151,8 +155,8 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public boolean validateArtifactServer(ArtifactoryConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(config.getArtifactoryUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not reach Artifactory Server at : " + config.getArtifactoryUrl());
+      throw new InvalidArtifactServerException(
+          "Could not reach Artifactory Server at : " + config.getArtifactoryUrl(), USER);
     }
     return artifactoryService.isRunning(config, encryptedDataDetails);
   }

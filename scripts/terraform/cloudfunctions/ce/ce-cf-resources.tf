@@ -292,7 +292,7 @@ resource "google_cloudfunctions_function" "ce-awsdata-manifest-function" {
     event_type = "google.storage.object.finalize"
     resource   = "awscustomerbillingdata-${var.deployment}"
     failure_policy {
-      retry = true
+      retry = false
     }
   }
 }

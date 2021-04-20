@@ -11,6 +11,7 @@
     },
     "type":"Artifactory",
     "spec" : {
+      "delegateSelectors": null,
       "artifactoryServerUrl" : "https://artifactoryurl",
       "auth" : {
         "type" : "Anonymous"

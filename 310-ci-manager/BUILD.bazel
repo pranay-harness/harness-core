@@ -1,16 +1,15 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
-sources()
+HarnessTeam = "CI"
 
 shared_dependencies = [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
     "//950-common-entities:module",
+    "//955-delegate-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
     "//400-rest:module",
@@ -118,7 +117,7 @@ shared_dependencies = [
     "@maven//:com_hazelcast_hazelcast",
     "@maven//:com_intellij_annotations",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_mchange_c3p0",
     "@maven//:com_mchange_mchange_commons_java",
@@ -129,7 +128,6 @@ shared_dependencies = [
     "@maven//:com_microsoft_azure_azure_client_runtime",
     "@maven//:com_microsoft_azure_azure_keyvault",
     "@maven//:com_microsoft_azure_azure_keyvault_core",
-    "@maven//:com_microsoft_azure_azure_keyvault_cryptography",
     "@maven//:com_microsoft_azure_azure_keyvault_webkey",
     "@maven//:com_microsoft_azure_azure_mgmt_appservice",
     "@maven//:com_microsoft_azure_azure_mgmt_batch",
@@ -415,6 +413,7 @@ shared_dependencies = [
     "@maven//:org_zeroturnaround_zt_exec",
     "@maven//:ru_vyarus_guice_validator",
     "@maven//:software_amazon_ion_ion_java",
+    "//:lombok",
 ]
 
 java_binary(
@@ -430,13 +429,11 @@ java_binary(
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
-    deps = shared_dependencies + [
-        "//:lombok",
-    ],
+    deps = shared_dependencies,
 )
 
 test_deps = [
-    "module",
+    ":module",
     "//960-persistence:supporter-test",
     "//990-commons-test:module",
     "@maven//:io_dropwizard_dropwizard_testing",
@@ -448,27 +445,17 @@ test_deps = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = [
         "//310-ci-manager/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = test_deps + shared_dependencies + [
-        "//:lombok",
-    ],
+    deps = test_deps + shared_dependencies,
 )
 
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

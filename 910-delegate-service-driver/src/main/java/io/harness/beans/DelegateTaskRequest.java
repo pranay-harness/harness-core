@@ -22,4 +22,5 @@ public class DelegateTaskRequest {
   Duration executionTimeout;
   String taskDescription;
   LinkedHashMap<String, String> logStreamingAbstractions;
+  boolean forceExecute;
 }

@@ -1,0 +1,24 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+shared_dependencies = [
+    "//970-ng-commons:module",
+    "//960-persistence:module",
+    "//949-access-control-commons:module",
+    "@maven//:com_google_inject_guice",
+    "//:lombok",
+]
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)
+
+checkstyle()
+
+pmd()

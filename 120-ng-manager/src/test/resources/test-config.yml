@@ -60,6 +60,21 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
+    password: ""
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://localhost:26379"
+    - "redis://localhost:26379"
+    - "redis://localhost:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
 
 # [secondary-db]: Uncomment the following if you want to connect to another database
 #secondary-mongo:
@@ -92,15 +107,6 @@ grpcServer:
       certFilePath: cert.pem
     - port: 9979
 
-smtp:
-  type: SMTP
-  host: host_placeholder
-  port: 465
-  fromAddress: noreply@harness.io
-  useSSL: true
-  username: smtp_username_placeholder
-  password: "smtp_password_placeholder"
-
 pmsSdkGrpcServerConfig:
   connectors:
     - port: 12101
@@ -109,9 +115,17 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: false
+gitSyncServerConfig:
+  connectors:
+    - port: 13001
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 13002
 
-ngManagerPublicBaseUrl: http://localhost:7457/
+shouldDeployWithGitSync: false
+
+shouldConfigureWithPMS: false
 
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
@@ -123,22 +137,65 @@ ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
 
-baseUrls:
-  ngManager: http://localhost:7457/
-  ui: http://localhost:8080/
-  ngUi: http://localhost:8080/ng/#/
-
-ResoureGroupConfig:
-  ng-manager:
+resourceGroupClientConfig:
+  serviceConfig:
     baseUrl: http://localhost:7457/
-    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-  manager:
-    baseUrl: http://localhost:3457/api/
-    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+notificationClient:
+  messageBroker:
+    type: MONGO
+    uri: mongodb://localhost:27017/notification
+    connectTimeout: 30000
+    serverSelectionTimeout: 90000
+    maxConnectionIdleTime: 600000
+    connectionsPerHost: 300
+  httpClient:
+    baseUrl: http://localhost:9005/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  secrets:
+    notificationClientSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
 
 accessControlClient:
+  enableAccessControl: false
+
+accessControlAdminClient:
   accessControlServiceConfig:
-    baseUrl: http://localhost:9006
+    baseUrl: http://localhost:9006/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  mockAccessControlService: true
+
+gitGrpcClientConfigs:
+  pms:
+    target: localhost:12011
+    authority: localhost
+  core:
+    target: localhost:13001
+    authority: localhost
+
+gitSdkConfiguration:
+  grpcServerConfig:
+    # For ng it will be in process server so this isn't required.
+    connectors:
+      - port: 13001
+        secure: true
+        keyFilePath: key.pem
+        certFilePath: cert.pem
+      - port: 13002
+  grpcClientConfig:
+    target: localhost:13001
+    authority: localhost
+  scmConnectionConfig:
+    url: localhost:8091
+
+baseUrls:
+  currentGenUiUrl: http://localhost:8181/#/

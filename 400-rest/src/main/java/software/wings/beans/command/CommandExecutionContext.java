@@ -10,12 +10,14 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -28,8 +30,10 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -42,6 +46,7 @@ import software.wings.settings.SettingValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +58,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private String accountId;
   private String envId;
@@ -94,6 +99,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
   private boolean
       disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+  private boolean replaceWinrmCapabilityWithHttp; // WINRM_CAPABILITY_DEPRECATE_FOR_HTTP
+  private boolean winrmCopyConfigOptimize;
   private List<String> delegateSelectors;
 
   // new fields for multi artifact
@@ -102,8 +109,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean multiArtifact;
   private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
   private String artifactFileName;
+  private SSHVaultConfig sshVaultConfig;
 
-  public CommandExecutionContext() {}
+  public CommandExecutionContext(boolean replaceWinrmCapabilityWithHttp) {
+    this.replaceWinrmCapabilityWithHttp = replaceWinrmCapabilityWithHttp;
+  }
 
   /**
    * Instantiates a new Command execution context.
@@ -152,6 +162,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     artifactServerEncryptedDataDetailsMap = other.artifactServerEncryptedDataDetailsMap;
     artifactFileName = other.artifactFileName;
     delegateSelectors = other.delegateSelectors;
+    sshVaultConfig = other.sshVaultConfig;
   }
 
   /**
@@ -231,17 +242,29 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
 
         return capabilities;
       case WINRM:
-        capabilities.add(WinrmHostValidationCapability.builder()
-                             .validationInfo(BasicValidationInfo.builder()
-                                                 .accountId(accountId)
-                                                 .appId(appId)
-                                                 .activityId(activityId)
-                                                 .executeOnDelegate(executeOnDelegate)
-                                                 .publicDns(host == null ? null : host.getPublicDns())
-                                                 .build())
-                             .winRmConnectionAttributes(winrmConnectionAttributes)
-                             .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
-                             .build());
+        if (!replaceWinrmCapabilityWithHttp) {
+          capabilities.add(WinrmHostValidationCapability.builder()
+                               .validationInfo(BasicValidationInfo.builder()
+                                                   .accountId(accountId)
+                                                   .appId(appId)
+                                                   .activityId(activityId)
+                                                   .executeOnDelegate(executeOnDelegate)
+                                                   .publicDns(host == null ? null : host.getPublicDns())
+                                                   .build())
+                               .winRmConnectionAttributes(winrmConnectionAttributes)
+                               .winrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
+                               .build());
+
+        } else if (!executeOnDelegate) {
+          capabilities.add(HttpConnectionExecutionCapability.builder()
+                               .host(host.getPublicDns())
+                               .port(winrmConnectionAttributes.getPort())
+                               .build());
+          if (winrmConnectionAttributes.getAuthenticationScheme() == AuthenticationScheme.KERBEROS) {
+            capabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
+                "kinit", Arrays.asList("/bin/sh", "-c", "kinit --help")));
+          }
+        }
         if (isNotEmpty(delegateSelectors)) {
           capabilities.add(
               SelectorCapability.builder().selectors(delegateSelectors.stream().collect(Collectors.toSet())).build());
@@ -326,6 +349,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
     private boolean
         disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
+    private boolean replaceWinrmCapabilityWithHttp;
+    private boolean winrmCopyConfigOptimize;
     private List<String> delegateSelectors;
 
     // new fields for multi artifact
@@ -334,15 +359,23 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean multiArtifact;
     private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
     private String artifactFileName;
+    private SSHVaultConfig sshVaultConfig;
 
-    private Builder() {}
+    private Builder(boolean replaceWinrmCapabilityWithHttp) {
+      this.replaceWinrmCapabilityWithHttp = replaceWinrmCapabilityWithHttp;
+    }
 
-    public static Builder aCommandExecutionContext() {
-      return new Builder();
+    public static Builder aCommandExecutionContext(boolean replaceWinrmCapabilityWithHttp) {
+      return new Builder(replaceWinrmCapabilityWithHttp);
     }
 
     public Builder accountId(String accountId) {
       this.accountId = accountId;
+      return this;
+    }
+
+    public Builder sshVaultConfig(SSHVaultConfig sshVaultConfig) {
+      this.sshVaultConfig = sshVaultConfig;
       return this;
     }
 
@@ -521,6 +554,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
+    public Builder winrmCopyConfigOptimize(boolean winrmCopyConfigOptimize) {
+      this.winrmCopyConfigOptimize = winrmCopyConfigOptimize;
+      return this;
+    }
+
     public Builder disableWinRMEnvVariables(boolean disableWinRMEnvVariables) {
       this.disableWinRMEnvVariables = disableWinRMEnvVariables;
       return this;
@@ -563,7 +601,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     }
 
     public Builder but() {
-      return aCommandExecutionContext()
+      return aCommandExecutionContext(replaceWinrmCapabilityWithHttp)
           .accountId(accountId)
           .envId(envId)
           .host(host)
@@ -607,11 +645,12 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           .artifactFileName(artifactFileName)
           .disableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet)
           .disableWinRMEnvVariables(disableWinRMEnvVariables)
-          .delegateSelectors(delegateSelectors);
+          .delegateSelectors(delegateSelectors)
+          .sshVaultConfig(sshVaultConfig);
     }
 
     public CommandExecutionContext build() {
-      CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
+      CommandExecutionContext commandExecutionContext = new CommandExecutionContext(replaceWinrmCapabilityWithHttp);
       commandExecutionContext.setAccountId(accountId);
       commandExecutionContext.setEnvId(envId);
       commandExecutionContext.setHost(host);
@@ -655,7 +694,9 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setArtifactFileName(artifactFileName);
       commandExecutionContext.setDisableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
       commandExecutionContext.setDisableWinRMEnvVariables(disableWinRMEnvVariables);
+      commandExecutionContext.setWinrmCopyConfigOptimize(winrmCopyConfigOptimize);
       commandExecutionContext.setDelegateSelectors(delegateSelectors);
+      commandExecutionContext.setSshVaultConfig(sshVaultConfig);
       return commandExecutionContext;
     }
   }

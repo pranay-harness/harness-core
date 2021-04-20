@@ -116,7 +116,7 @@ public class ArtifactUtilsTest extends CategoryTest {
                          .sidecar(SidecarArtifact.builder().artifactConfig(sidecarArtifact).build())
                          .build())
             .build();
-    List<ArtifactConfig> artifactsList = ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig);
+    List<ArtifactConfig> artifactsList = ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig, null);
     assertThat(artifactsList).containsOnly(primaryArtifact, sidecarArtifact);
   }
 }

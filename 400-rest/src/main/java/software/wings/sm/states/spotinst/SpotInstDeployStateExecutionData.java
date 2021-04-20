@@ -1,5 +1,8 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.spotinst.model.ElastiGroup;
 
@@ -22,6 +25,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(CDP)
 public class SpotInstDeployStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String appId;
   private String infraId;

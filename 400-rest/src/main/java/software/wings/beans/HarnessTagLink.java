@@ -4,9 +4,8 @@ import static software.wings.beans.HarnessTagType.USER;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -15,7 +14,6 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 
-import software.wings.beans.HarnessTagLink.HarnessTagLinkKeys;
 import software.wings.jersey.JsonViews;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -32,14 +32,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-
-@NgUniqueIndex(name = "entityTagIdx",
-    fields =
-    { @Field(HarnessTagLinkKeys.accountId)
-      , @Field(HarnessTagLinkKeys.entityId), @Field(HarnessTagLinkKeys.key) })
-@CdIndex(name = "tagValueIdx",
-    fields = { @Field(HarnessTagLinkKeys.accountId)
-               , @Field(HarnessTagLinkKeys.key), @Field(HarnessTagLinkKeys.value) })
 @Data
 @Builder
 @JsonInclude(Include.NON_NULL)
@@ -48,6 +40,23 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 public class HarnessTagLink implements PersistentEntity, UuidAware, UpdatedAtAware, UpdatedByAware, CreatedAtAware,
                                        CreatedByAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("entityTagIdx")
+                 .unique(true)
+                 .field(HarnessTagLinkKeys.accountId)
+                 .field(HarnessTagLinkKeys.entityId)
+                 .field(HarnessTagLinkKeys.key)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("tagValueIdx")
+                 .field(HarnessTagLinkKeys.accountId)
+                 .field(HarnessTagLinkKeys.key)
+                 .field(HarnessTagLinkKeys.value)
+                 .build())
+        .build();
+  }
   @Id private String uuid;
   @NotEmpty private String accountId;
   @NotEmpty private String appId;

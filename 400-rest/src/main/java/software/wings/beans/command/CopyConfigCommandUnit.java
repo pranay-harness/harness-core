@@ -8,7 +8,7 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.ConfigFile;

@@ -1,16 +1,19 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
-import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
@@ -20,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.Data;
@@ -30,27 +34,34 @@ import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
+@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._871_CG_BEANS)
 @JsonTypeInfo(use = Id.NAME, property = "infrastructureProvisionerType")
 @JsonSubTypes({
   @Type(value = TerraformInfrastructureProvisioner.class, name = "TERRAFORM")
   , @Type(value = ShellScriptInfrastructureProvisioner.class, name = "SHELL_SCRIPT"),
       @Type(value = CloudFormationInfrastructureProvisioner.class, name = "CLOUD_FORMATION"),
-      @Type(value = ARMInfrastructureProvisioner.class, name = "ARM")
+      @Type(value = ARMInfrastructureProvisioner.class, name = "ARM"),
+      @Type(value = TerragruntInfrastructureProvisioner.class, name = "TERRAGRUNT")
 })
-@CdIndex(name = "accountIdCreatedAtIdx",
-    fields =
-    {
-      @Field(InfrastructureProvisionerKeys.accountId)
-      , @Field(value = InfrastructureProvisionerKeys.createdAt, type = IndexType.DESC)
-    })
 @Entity(value = "infrastructureProvisioner")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "InfrastructureProvisionerKeys")
 public abstract class InfrastructureProvisioner
     extends Base implements NameAccess, TagAware, AccountAccess, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountIdCreatedAtIdx")
+                 .field(InfrastructureProvisionerKeys.accountId)
+                 .descSortField(InfrastructureProvisionerKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";
   public static final String NAME_KEY = "name";

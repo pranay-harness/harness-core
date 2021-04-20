@@ -1,5 +1,8 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.shell.CommandExecutionData;
 
 import software.wings.beans.AwsElbConfig;
@@ -14,6 +17,7 @@ import lombok.Data;
 /**
  * Created by brett on 11/18/17
  */
+@OwnedBy(CDP)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder

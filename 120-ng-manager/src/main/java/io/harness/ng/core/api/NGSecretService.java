@@ -1,10 +1,14 @@
 package io.harness.ng.core.api;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.ng.beans.PageResponse;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 
+@OwnedBy(PL)
 public interface NGSecretService {
   EncryptedData get(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 

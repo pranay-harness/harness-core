@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.deployment.InstanceDetails.InstanceType.AWS;
@@ -11,6 +12,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
 
@@ -42,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class AwsStateHelper {
   public static final String HOST = "host";
   @Inject private AwsUtils awsUtils;

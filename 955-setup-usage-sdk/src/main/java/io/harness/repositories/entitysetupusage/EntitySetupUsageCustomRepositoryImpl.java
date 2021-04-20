@@ -1,6 +1,9 @@
 package io.harness.repositories.entitysetupusage;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 
 import com.google.inject.Inject;
@@ -16,6 +19,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @HarnessRepo
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class EntitySetupUsageCustomRepositoryImpl implements EntitySetupUsageCustomRepository {
   private final MongoTemplate mongoTemplate;
 

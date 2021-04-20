@@ -1,5 +1,8 @@
 package io.harness.gitsync.core.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.mongo.index.FdIndex;
@@ -33,10 +36,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "gitCommit", noClassnameStored = true)
-@Document("gitCommit")
+@Entity(value = "gitCommitNG", noClassnameStored = true)
+@Document("gitCommitNG")
 @TypeAlias("io.harness.gitsync.core.beans.gitCommit")
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
+@OwnedBy(DX)
 public class GitCommit implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                   UpdatedByAware, AccountAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;

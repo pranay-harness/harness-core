@@ -15,7 +15,7 @@ func TestMainWithGrpc(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 	mockServer := mgrpcserver.NewMockSCMServer(ctrl)
-	s := func(uint, *zap.SugaredLogger) (grpc.SCMServer, error) {
+	s := func(uint, string, *zap.SugaredLogger) (grpc.SCMServer, error) {
 		return mockServer, nil
 	}
 

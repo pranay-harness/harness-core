@@ -1,9 +1,11 @@
 package io.harness.task.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.govern.Switch.unhandled;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
@@ -35,6 +37,7 @@ import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CI)
 public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
   private final DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   private final KryoSerializer kryoSerializer;
@@ -139,8 +142,9 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
             StepStatusTaskResponseData.builder()
                 .stepStatus(io.harness.delegate.task.stepstatus.StepStatus.builder()
                                 .numberOfRetries(stepStatus.getNumRetries())
-                                .totalTimeTaken(Duration.ofSeconds(stepStatus.getTotalTimeTaken().getSeconds())
-                                                    .plusNanos(stepStatus.getTotalTimeTaken().getNanos()))
+                                .totalTimeTakenInMillis(Duration.ofSeconds(stepStatus.getTotalTimeTaken().getSeconds())
+                                                            .plusNanos(stepStatus.getTotalTimeTaken().getNanos())
+                                                            .toMillis())
                                 .stepExecutionStatus(io.harness.delegate.task.stepstatus.StepExecutionStatus.valueOf(
                                     stepStatus.getStepExecutionStatus().name()))
                                 .output(io.harness.delegate.task.stepstatus.StepMapOutput.builder()

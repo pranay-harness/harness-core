@@ -19,6 +19,8 @@ import static java.util.Arrays.asList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
+import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.context.ContextElementType;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintException;
@@ -28,8 +30,6 @@ import io.harness.distribution.constraint.ConsumerId;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.PhaseElement;

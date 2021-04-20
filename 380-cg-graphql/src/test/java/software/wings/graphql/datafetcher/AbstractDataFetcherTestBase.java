@@ -1,7 +1,10 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static software.wings.beans.Account.Builder.anAccount;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -14,12 +17,15 @@ import io.harness.ccm.setup.CEClusterDao;
 import io.harness.persistence.HPersistence;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.CloudProviderType;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -38,10 +44,14 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.events.TestUtils;
+import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.InfraMappingInfrastructureProvider;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -54,6 +64,7 @@ import software.wings.settings.SettingVariableTypes;
 
 import com.google.inject.Inject;
 
+@OwnedBy(DX)
 public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String TAG_TEAM = "TEAM";
   public static final String TAG_VALUE_TEAM1 = "TEAM1";
@@ -65,6 +76,8 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String TAG_VALUE_MODULE2 = "MODULE2";
   public static final String TAG_MODULE1 = "MODULE:MODULE1";
   public static final String TAG_MODULE2 = "MODULE:MODULE2";
+  public static final String INFRA1_ID_ENV1_APP1_ACCOUNT1 = "INFRA1_ID_ENV1_APP1_ACCOUNT1";
+  public static final String INFRA2_ID_ENV1_APP1_ACCOUNT1 = "INFRA2_ID_ENV1_APP1_ACCOUNT1";
   public static final String TAG_ENVTYPE = "ENVTYPE";
   public static final String TAG_VALUE_PROD = "PROD";
   public static final String TAG_VALUE_NON_PROD = "NON_PROD";
@@ -97,6 +110,10 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String WORKLOAD_TYPE_ACCOUNT1 = "WORKLOAD_TYPE_ACCOUNT1";
   public static final String TRIGGER_ID1_APP1_ACCOUNT1 = "TRIGGER_ID1_APP1_ACCOUNT1";
   public static final String TRIGGER_ID2_APP1_ACCOUNT1 = "TRIGGER_ID2_APP1_ACCOUNT1";
+  public static final String TAG1_ID_ACCOUNT1 = "TAG1_ID_ACCOUNT1";
+  public static final String TAG2_ID_ACCOUNT1 = "TAG2_ID_ACCOUNT1";
+  public static final String TAG_KEY = "TAG_KEY";
+  public static final String TAG_VALUE = "TAG_VALUE";
   public static final String ACCOUNT2_ID = "ACCOUNT2_ID";
   public static final String APP3_ID_ACCOUNT2 = "APP3_ID_ACCOUNT2";
   public static final String SERVICE4_ID_APP3_ACCOUNT2 = "SERVICE4_ID_APP3_ACCOUNT2";
@@ -142,6 +159,7 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   @Inject ServiceResourceService serviceResourceService;
   @Inject EnvironmentService environmentService;
   @Inject InstanceService instanceService;
+  @Inject InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject SettingsService settingsService;
   @Inject TriggerService triggerService;
   @Inject WorkflowService workflowService;
@@ -234,6 +252,24 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
     return service;
   }
 
+  public InfrastructureDefinition createInfrastructureDefinition(
+      String accountId, String envId, String appId, String infrastructureId, String infrastructureName) {
+    InfraMappingInfrastructureProvider infraMappingInfrastructureProvider = AwsAmiInfrastructure.builder().build();
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionService.save(InfrastructureDefinition.builder()
+                                                 .name(infrastructureName)
+                                                 .uuid(infrastructureId)
+                                                 .envId(envId)
+                                                 .accountId(accountId)
+                                                 .cloudProviderType(CloudProviderType.AWS)
+                                                 .appId(appId)
+                                                 .infrastructure(infraMappingInfrastructureProvider)
+                                                 .deploymentType(DeploymentType.AMI)
+                                                 .build(),
+            true);
+    return infrastructureDefinition;
+  }
+
   public Environment createEnv(
       String accountId, String appId, String envId, String envName, String tagKey, String tagValue) {
     Environment environment = environmentService.save(
@@ -299,6 +335,11 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
                                      .withCategory(SettingCategory.CONNECTOR)
                                      .build();
     settingsService.save(connector, false);
+  }
+
+  public void createTag(String accountId, String uuid, String key) {
+    HarnessTag tag = HarnessTag.builder().accountId(accountId).key(key).uuid(uuid).build();
+    harnessTagService.create(tag);
   }
 
   public void createCEConnector(String uuid, String accountId, String name, SettingValue settingValue) {

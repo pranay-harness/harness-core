@@ -1,10 +1,16 @@
 package io.harness.batch.processing.anomalydetection.helpers;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
+import io.harness.batch.processing.service.impl.AnomalyDetectionLogContext;
+import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.EntityType;
+import io.harness.logging.AutoLogContext;
 
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -19,44 +25,53 @@ public class AnomalyDetectionHelper {
     if (timeSeries == null) {
       return;
     }
-    EntityType type = timeSeries.getEntityType();
-    switch (type) {
-      case CLUSTER:
-        log.warn("Invalid Data for TimeSeries :: AccountId : {} , clusterName : {} , clusterId : {} ",
-            timeSeries.getAccountId(), timeSeries.getClusterName(), timeSeries.getClusterId());
-        break;
-      case NAMESPACE:
-        log.warn("Invalid Data for TimeSeries :: AccountId : {} , clusterName : {} , clusterId : {} , namespace : {} ",
-            timeSeries.getAccountId(), timeSeries.getClusterName(), timeSeries.getClusterId(),
-            timeSeries.getNamespace());
-        break;
-      case GCP_PROJECT:
-        log.warn("Invalid Data for TimeSeries :: AccountId : {} , gcpProject : {}  ", timeSeries.getAccountId(),
-            timeSeries.getGcpProject());
-        break;
-      case GCP_PRODUCT:
-        log.warn("Invalid Data for TimeSeries :: AccountId : {} , gcpProject : {} , gcpProduct : {} ",
-            timeSeries.getAccountId(), timeSeries.getGcpProject(), timeSeries.getGcpProduct());
-        break;
-      case GCP_SKU_ID:
-        log.warn(
-            "Invalid Data for TimeSeries :: AccountId : {} , gcpProject : {} , gcpProduct : {} , gcpSkuDescription : {} ",
-            timeSeries.getAccountId(), timeSeries.getGcpProject(), timeSeries.getGcpProduct(),
-            timeSeries.getGcpSKUDescription());
-        break;
-      case AWS_ACCOUNT:
-        log.warn("Invalid Data for TimeSeries :: AccountId : {} , awsAccount : {}", timeSeries.getAccountId(),
-            timeSeries.getAwsAccount());
-        break;
-      case AWS_SERVICE:
-        log.warn("Invalid Data for TimeSeries :: AccountId : {} , awsAccount : {} , awsService : {} ",
-            timeSeries.getAccountId(), timeSeries.getAwsAccount(), timeSeries.getAwsService());
-        break;
-      case GCP_REGION:
-      case AWS_USAGE_TYPE:
-      case AWS_INSTANCE_TYPE:
-      default:
-        break;
+    try (AutoLogContext ignore = new AnomalyDetectionLogContext(timeSeries.getId(), OVERRIDE_ERROR)) {
+      Instant time = timeSeries.getTestTimePointsList().get(0);
+      EntityType type = timeSeries.getEntityType();
+      switch (type) {
+        case CLUSTER:
+          log.warn("Invalid Data for TimeSeries :: AccountId : {} , time : {} , clusterName : {} , clusterId : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getClusterName(), timeSeries.getClusterId());
+          break;
+        case NAMESPACE:
+          log.warn(
+              "Invalid Data for TimeSeries :: AccountId : {} , time : {} , clusterName : {} , clusterId : {} , namespace : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getClusterName(), timeSeries.getClusterId(),
+              timeSeries.getNamespace());
+          break;
+        case GCP_PROJECT:
+          log.warn("Invalid Data for TimeSeries :: AccountId : {} , time : {} , gcpProject : {}  ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getGcpProject());
+          break;
+        case GCP_PRODUCT:
+          log.warn("Invalid Data for TimeSeries :: AccountId : {} , time : {} , gcpProject : {} , gcpProduct : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getGcpProject(), timeSeries.getGcpProduct());
+          break;
+        case GCP_SKU_ID:
+          log.warn(
+              "Invalid Data for TimeSeries :: AccountId : {} , time : {} , gcpProject : {} , gcpProduct : {} , gcpSkuDescription : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getGcpProject(), timeSeries.getGcpProduct(),
+              timeSeries.getGcpSKUDescription());
+          break;
+        case AWS_ACCOUNT:
+          log.warn("Invalid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {}",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount());
+          break;
+        case AWS_SERVICE:
+          log.warn("Invalid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {} , awsService : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount(), timeSeries.getAwsService());
+          break;
+        case AWS_USAGE_TYPE:
+          log.warn(
+              "Invalid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {} , awsService : {} , awsUsageType : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount(), timeSeries.getAwsService(),
+              timeSeries.getAwsUsageType());
+          break;
+        case GCP_REGION:
+        case AWS_INSTANCE_TYPE:
+        default:
+          break;
+      }
     }
   }
 
@@ -64,44 +79,76 @@ public class AnomalyDetectionHelper {
     if (timeSeries == null) {
       return;
     }
-    EntityType type = timeSeries.getEntityType();
-    switch (type) {
-      case CLUSTER:
-        log.info("Valid Data for TimeSeries :: AccountId : {} , clusterName : {} , clusterId : {} ",
-            timeSeries.getAccountId(), timeSeries.getClusterName(), timeSeries.getClusterId());
-        break;
-      case NAMESPACE:
-        log.info("Valid Data for TimeSeries :: AccountId : {} , clusterName : {} , clusterId : {} , namespace : {} ",
-            timeSeries.getAccountId(), timeSeries.getClusterName(), timeSeries.getClusterId(),
-            timeSeries.getNamespace());
-        break;
-      case GCP_PROJECT:
-        log.info("Valid Data for TimeSeries :: AccountId : {} , gcpProject : {}  ", timeSeries.getAccountId(),
-            timeSeries.getGcpProject());
-        break;
-      case GCP_PRODUCT:
-        log.info("Valid Data for TimeSeries :: AccountId : {} , gcpProject : {} , gcpProduct : {} ",
-            timeSeries.getAccountId(), timeSeries.getGcpProject(), timeSeries.getGcpProduct());
-        break;
-      case GCP_SKU_ID:
-        log.info(
-            "Valid Data for TimeSeries :: AccountId : {} , gcpProject : {} , gcpProduct : {} , gcpSkuDescription : {} ",
-            timeSeries.getAccountId(), timeSeries.getGcpProject(), timeSeries.getGcpProduct(),
-            timeSeries.getGcpSKUDescription());
-        break;
-      case AWS_ACCOUNT:
-        log.info("Valid Data for TimeSeries :: AccountId : {} , awsAccount : {}", timeSeries.getAccountId(),
-            timeSeries.getAwsAccount());
-        break;
-      case AWS_SERVICE:
-        log.info("Valid Data for TimeSeries :: AccountId : {} , awsAccount : {} , awsService : {} ",
-            timeSeries.getAccountId(), timeSeries.getAwsAccount(), timeSeries.getAwsService());
-        break;
-      case GCP_REGION:
-      case AWS_USAGE_TYPE:
-      case AWS_INSTANCE_TYPE:
-      default:
-        break;
+
+    try (AutoLogContext ignore = new AnomalyDetectionLogContext(timeSeries.getId(), OVERRIDE_ERROR)) {
+      Instant time = timeSeries.getTestTimePointsList().get(0);
+      EntityType type = timeSeries.getEntityType();
+      switch (type) {
+        case CLUSTER:
+          log.info("Valid Data for TimeSeries :: AccountId : {} , time : {} , clusterName : {} , clusterId : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getClusterName(), timeSeries.getClusterId());
+          break;
+        case NAMESPACE:
+          log.info(
+              "Valid Data for TimeSeries :: AccountId : {} , time : {} , clusterName : {} , clusterId : {} , namespace : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getClusterName(), timeSeries.getClusterId(),
+              timeSeries.getNamespace());
+          break;
+        case GCP_PROJECT:
+          log.info("Valid Data for TimeSeries :: AccountId : {} , time : {} , gcpProject : {}  ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getGcpProject());
+          break;
+        case GCP_PRODUCT:
+          log.info("Valid Data for TimeSeries :: AccountId : {} , time : {} , gcpProject : {} , gcpProduct : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getGcpProject(), timeSeries.getGcpProduct());
+          break;
+        case GCP_SKU_ID:
+          log.info(
+              "Valid Data for TimeSeries :: AccountId : {} , time : {} , gcpProject : {} , gcpProduct : {} , gcpSkuDescription : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getGcpProject(), timeSeries.getGcpProduct(),
+              timeSeries.getGcpSKUDescription());
+          break;
+        case AWS_ACCOUNT:
+          log.info("Valid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {}",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount());
+          break;
+        case AWS_SERVICE:
+          log.info("Valid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {} , awsService : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount(), timeSeries.getAwsService());
+          break;
+        case AWS_USAGE_TYPE:
+          log.warn(
+              "Valid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {} , awsService : {} , awsUsageType : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount(), timeSeries.getAwsService(),
+              timeSeries.getAwsUsageType());
+          break;
+        case GCP_REGION:
+        case AWS_INSTANCE_TYPE:
+        default:
+          break;
+      }
+    }
+  }
+
+  public static void logProcessingTimeSeries(String model) {
+    log.info("Processing time series using {}", model);
+  }
+
+  public static void logUnsuccessfulHttpCall(Integer code, String error) {
+    log.info("unsuccessful http request from python server , error code {}", code);
+    log.error(error);
+  }
+
+  public static String getHash(AnomalyEntity anomaly, boolean includeTime) {
+    if (includeTime) {
+      return AnomalyDetectionHelper.generateHash(
+          String.join(",", anomaly.getAnomalyTime().toString(), anomaly.getClusterId(), anomaly.getNamespace(),
+              anomaly.getWorkloadName(), anomaly.getGcpProject(), anomaly.getGcpProduct(), anomaly.getGcpSKUId(),
+              anomaly.getAwsAccount(), anomaly.getAwsService(), anomaly.getAwsUsageType()));
+    } else {
+      return AnomalyDetectionHelper.generateHash(String.join(",", anomaly.getClusterId(), anomaly.getNamespace(),
+          anomaly.getWorkloadName(), anomaly.getGcpProject(), anomaly.getGcpProduct(), anomaly.getGcpSKUId(),
+          anomaly.getAwsAccount(), anomaly.getAwsService(), anomaly.getAwsUsageType()));
     }
   }
 }

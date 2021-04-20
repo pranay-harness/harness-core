@@ -50,6 +50,7 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   @Attributes(title = "Username") private String username;
 
   @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
+  private List<String> delegateSelectors;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
@@ -66,8 +67,8 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
     return isNotEmpty(username);
   }
 
-  public NexusConfig(String nexusUrl, String version, String username, char[] password, String accountId,
-      String encryptedPassword, boolean useCredentialsWithAuth) {
+  public NexusConfig(String nexusUrl, String version, String username, char[] password, List<String> delegateSelectors,
+      String accountId, String encryptedPassword, boolean useCredentialsWithAuth) {
     this();
     this.nexusUrl = nexusUrl;
     this.username = username;
@@ -76,6 +77,7 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
     this.encryptedPassword = encryptedPassword;
     this.version = version;
     this.useCredentialsWithAuth = useCredentialsWithAuth;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override
@@ -104,11 +106,14 @@ public class NexusConfig extends SettingValue implements EncryptableSetting, Art
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     private String version;
+    private List<String> delegateSelectors;
+
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String version,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions, List<String> delegateSelectors) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.version = version;
+      this.delegateSelectors = delegateSelectors;
     }
   }
 }

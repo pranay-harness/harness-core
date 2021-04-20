@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import java.time.Clock;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -82,13 +83,22 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public String getVerificationTaskId(String accountId, String cvConfigId, String verificationJobInstanceId) {
+    Optional<String> maybeVerificationTaskId =
+        maybeGetVerificationTaskId(accountId, cvConfigId, verificationJobInstanceId);
+    return maybeVerificationTaskId.orElseThrow(
+        () -> new IllegalStateException("VerificationTask mapping does not exist"));
+  }
+
+  private Optional<String> maybeGetVerificationTaskId(
+      String accountId, String cvConfigId, String verificationJobInstanceId) {
     Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId should not be null");
-    return hPersistence.createQuery(VerificationTask.class)
-        .filter(VerificationTaskKeys.accountId, accountId)
-        .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
-        .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
-        .get()
-        .getUuid();
+    return Optional
+        .ofNullable(hPersistence.createQuery(VerificationTask.class)
+                        .filter(VerificationTaskKeys.accountId, accountId)
+                        .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
+                        .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+                        .get())
+        .map(VerificationTask::getUuid);
   }
 
   @Override
@@ -164,17 +174,18 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
-  public String findBaselineVerificationTaskId(
+  public Optional<String> findBaselineVerificationTaskId(
       String currentVerificationTaskId, VerificationJobInstance verificationJobInstance) {
     Preconditions.checkState(verificationJobInstance.getResolvedJob() instanceof TestVerificationJob,
         "getResolvedJob has to be instance of TestVerificationJob");
     TestVerificationJob testVerificationJob = (TestVerificationJob) verificationJobInstance.getResolvedJob();
     String baselineVerificationJobInstanceId = testVerificationJob.getBaselineVerificationJobInstanceId();
     if (baselineVerificationJobInstanceId == null) {
-      return null;
+      return Optional.empty();
     }
     String cvConfigId = getCVConfigId(currentVerificationTaskId);
-    return getVerificationTaskId(verificationJobInstance.getAccountId(), cvConfigId, baselineVerificationJobInstanceId);
+    return maybeGetVerificationTaskId(
+        verificationJobInstance.getAccountId(), cvConfigId, baselineVerificationJobInstanceId);
   }
 
   @Override

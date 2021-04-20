@@ -1,5 +1,8 @@
 package io.harness.gitsync.common.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.encryption.Scope;
@@ -39,18 +42,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "YamlChangeSetKeys")
-@Document("yamlChangeSet")
+@Document("yamlChangeSetNG")
 @TypeAlias("io.harness.gitsync.common.beans.yamlChangeSet")
-@Entity(value = "yamlChangeSet", noClassnameStored = true)
+@Entity(value = "yamlChangeSetNG", noClassnameStored = true)
+@OwnedBy(DX)
 public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess, OrganizationAccess, ProjectAccess {
   public static final String MAX_RETRY_COUNT_EXCEEDED_CODE = "MAX_RETRY_COUNT_EXCEEDED";
   public static final String MAX_QUEUE_DURATION_EXCEEDED_CODE = "MAX_QUEUE_DURATION_EXCEEDED";
+
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
   @Trimmed @NotEmpty private String accountId;
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
-  @FdIndex @NotNull private Status status;
-  private boolean gitToHarness;
+  @FdIndex @NotNull private String status;
   private boolean forcePush;
   private long queuedOn = System.currentTimeMillis();
   private boolean fullSync;
@@ -75,14 +79,14 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   @LastModifiedDate private long lastUpdatedAt;
 
   @Builder
-  public YamlChangeSet(String organizationId, String projectId, String accountId, List<GitFileChange> gitFileChanges,
-      Status status, boolean gitToHarness, boolean forcePush, long queuedOn, boolean fullSync,
-      String parentYamlChangeSetId, GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount,
-      String messageCode, String queueKey, GitSyncMetadata gitSyncMetadata, Scope scope) {
+  public YamlChangeSet(String uuid, String accountId, List<GitFileChange> gitFileChanges, String status,
+      boolean forcePush, long queuedOn, boolean fullSync, String parentYamlChangeSetId,
+      GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount, String messageCode, String queueKey,
+      GitSyncMetadata gitSyncMetadata, String organizationId, String projectId, Scope scope) {
+    this.uuid = uuid;
     this.accountId = accountId;
     this.gitFileChanges = gitFileChanges;
     this.status = status;
-    this.gitToHarness = gitToHarness;
     this.forcePush = forcePush;
     this.queuedOn = queuedOn;
     this.fullSync = fullSync;

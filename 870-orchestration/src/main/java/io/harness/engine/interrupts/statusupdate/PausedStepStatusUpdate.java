@@ -5,24 +5,27 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.contracts.execution.Status.PAUSED;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.interrupts.InterruptService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
+import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import java.util.List;
 
 @OwnedBy(CDC)
 public class PausedStepStatusUpdate implements StepStatusUpdate {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private InterruptService interruptService;
 
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
@@ -38,9 +41,10 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
     if (nodeExecution.getParentId() == null) {
       return true;
     }
-    List<NodeExecution> flowingChildren =
-        nodeExecutionService.findByParentIdAndStatusIn(nodeExecution.getParentId(), StatusUtils.flowingStatuses());
+    List<NodeExecution> flowingChildren = nodeExecutionService.findByParentIdAndStatusIn(
+        nodeExecution.getParentId(), StatusUtils.unpausableChildStatuses());
     if (isEmpty(flowingChildren)) {
+      Interrupt interrupt = interruptService.get(interruptId);
       // Update Status
       nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), PAUSED,
           ops
@@ -49,7 +53,9 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
                   .interruptId(interruptId)
                   .tookEffectAt(System.currentTimeMillis())
                   .interruptType(InterruptType.PAUSE_ALL)
-                  .build()));
+                  .interruptConfig(interrupt.getInterruptConfig())
+                  .build()),
+          EnumSet.noneOf(Status.class));
       return pauseParents(nodeExecution.getParentId(), interruptId);
     } else {
       return false;

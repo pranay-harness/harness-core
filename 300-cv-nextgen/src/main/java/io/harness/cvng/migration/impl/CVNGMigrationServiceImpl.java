@@ -3,8 +3,8 @@ package io.harness.cvng.migration.impl;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.PENDING;
 import static io.harness.cvng.migration.beans.CVNGSchema.SCHEMA_ID;
 
-import io.harness.cvng.migration.CNVGMigration;
 import io.harness.cvng.migration.CVNGBackgroundMigrationList;
+import io.harness.cvng.migration.CVNGMigration;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.migration.service.CVNGMigrationService;
 import io.harness.persistence.HPersistence;
@@ -32,7 +32,7 @@ public class CVNGMigrationServiceImpl implements CVNGMigrationService {
 
   @Override
   public void runMigrations() {
-    Map<Integer, Class<? extends CNVGMigration>> backgroundMigrations =
+    Map<Integer, Class<? extends CVNGMigration>> backgroundMigrations =
         CVNGBackgroundMigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     int maxBackgroundVersion = backgroundMigrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
@@ -50,7 +50,7 @@ public class CVNGMigrationServiceImpl implements CVNGMigrationService {
                 "[Migration] - Updating schema version from {} to {}", cvngSchema.getVersion(), maxBackgroundVersion);
             for (int i = cvngSchema.getVersion() + 1; i <= maxBackgroundVersion; i++) {
               if (backgroundMigrations.containsKey(i)) {
-                Class<? extends CNVGMigration> migration = backgroundMigrations.get(i);
+                Class<? extends CVNGMigration> migration = backgroundMigrations.get(i);
                 log.info("[Migration] - Migrating to version {}: {} ...", i, migration.getSimpleName());
                 try {
                   injector.getInstance(migration).migrate();

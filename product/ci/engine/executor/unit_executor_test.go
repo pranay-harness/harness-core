@@ -743,7 +743,7 @@ func TestStepSkipSuccess(t *testing.T) {
 	}
 
 	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-		force bool, log *zap.SugaredLogger) (map[string]string, error) {
+		isSkipCondition bool, log *zap.SugaredLogger) (map[string]string, error) {
 		return nil, nil
 	}
 
@@ -783,7 +783,7 @@ func TestStepInvalidSkipCondition(t *testing.T) {
 	}
 
 	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-		force bool, log *zap.SugaredLogger) (map[string]string, error) {
+		isSkipCondition bool, log *zap.SugaredLogger) (map[string]string, error) {
 		return nil, nil
 	}
 
@@ -823,7 +823,7 @@ func TestStepInvalidJEXLSkipCondition(t *testing.T) {
 	}
 
 	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-		force bool, log *zap.SugaredLogger) (map[string]string, error) {
+		isSkipCondition bool, log *zap.SugaredLogger) (map[string]string, error) {
 		return nil, fmt.Errorf("Invalid JEXL")
 	}
 
@@ -863,7 +863,7 @@ func TestStepJEXLSkipCondition(t *testing.T) {
 	}
 
 	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-		force bool, log *zap.SugaredLogger) (map[string]string, error) {
+		isSkipCondition bool, log *zap.SugaredLogger) (map[string]string, error) {
 		m := make(map[string]string)
 		m[expr] = "true"
 		return m, nil

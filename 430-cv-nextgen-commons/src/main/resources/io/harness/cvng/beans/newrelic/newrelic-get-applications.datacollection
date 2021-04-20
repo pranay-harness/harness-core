@@ -1,0 +1,1 @@
+Var appsNrql = "SELECT count(*)  FROM Transaction,TransactionError FACET appId,appName"

@@ -1,5 +1,7 @@
 package io.harness.serializer.kryo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
@@ -9,13 +11,6 @@ import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskPara
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
 import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
-import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
-import io.harness.redesign.states.email.EmailStepParameters;
-import io.harness.redesign.states.http.BasicHttpStepParameters;
-import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
-import io.harness.redesign.states.shell.ShellScriptStepParameters;
-import io.harness.redesign.states.shell.ShellScriptVariablesSweepingOutput;
-import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.api.ARMStateExecutionData;
@@ -145,6 +140,10 @@ import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionDat
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
+import software.wings.api.terragrunt.TerragruntApplyMarkerParam;
+import software.wings.api.terragrunt.TerragruntExecutionData;
+import software.wings.api.terragrunt.TerragruntOutputVariables;
+import software.wings.api.terragrunt.TerragruntProvisionInheritPlanElement;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
@@ -158,7 +157,6 @@ import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
@@ -170,6 +168,7 @@ import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.DatadogYaml;
 import software.wings.beans.DelegateTaskBroadcast;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -194,7 +193,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphLink;
 import software.wings.beans.GraphNode;
-import software.wings.beans.HelmCommandFlag;
+import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
@@ -319,6 +318,7 @@ import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.delegation.TerragruntProvisionParameters;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
@@ -397,7 +397,6 @@ import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlVali
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
-import software.wings.delegatetasks.validation.capabilities.SftpCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.expression.ShellScriptEnvironmentVariables;
@@ -837,8 +836,11 @@ import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
+import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
+@Deprecated
+@OwnedBy(HarnessTeam.PL)
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -1014,11 +1016,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PortMapping.class, 5222);
     kryo.register(StorageConfiguration.class, 5164);
     kryo.register(CountsByStatuses.class, 4008);
-    kryo.register(DatadogConfig.DatadogYaml.class, 5468);
+    kryo.register(DatadogYaml.class, 5468);
     kryo.register(DatadogConfig.class, 5467);
     kryo.register(ShellScriptParameters.class, 5186);
-    kryo.register(TerraformProvisionParameters.TerraformCommand.class, 5524);
-    kryo.register(TerraformProvisionParameters.TerraformCommandUnit.class, 5525);
     kryo.register(TerraformProvisionParameters.class, 5342);
     kryo.register(DockerConfig.class, 5010);
     kryo.register(DynaTraceConfig.class, 5237);
@@ -1478,7 +1478,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EntityVersion.class, 71109);
     kryo.register(EntityVersion.ChangeType.class, 71110);
     kryo.register(ArtifactStreamSummary.class, 7202);
-    kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(AwsEcsListClusterServicesRequest.class, 7206);
     kryo.register(AwsEcsListClusterServicesResponse.class, 7207);
     kryo.register(Deployment.class, 7208);
@@ -1609,21 +1608,17 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmDeployContextElement.class, 7346);
     kryo.register(NewRelicMetricDataRecord.class, 7347);
     kryo.register(ClusterLevel.class, 7348);
-    kryo.register(SftpCapability.class, 7351);
     kryo.register(StackdriverLogGcpConfigTaskParams.class, 7360);
     kryo.register(StackdriverGcpConfigTaskParams.class, 7361);
     kryo.register(HarnessImportedTemplateDetails.class, 7373);
-    kryo.register(BasicHttpStepParameters.class, 7374);
     kryo.register(ImportedTemplateMetadata.class, 7375);
     kryo.register(CopiedTemplateMetadata.class, 7376);
-    kryo.register(ShellScriptVariablesSweepingOutput.class, 7377);
     kryo.register(CustomSecretsManagerConfig.class, 7378);
     kryo.register(CustomSecretsManagerShellScript.class, 7379);
     kryo.register(StackDriverMetricDefinition.Aggregation.class, 7380);
     kryo.register(Criteria.class, 7382);
     kryo.register(ConditionalOperator.class, 7383);
     kryo.register(ContainerSyncResponse.class, 7384);
-    kryo.register(BasicHttpChainStepParameters.class, 7385);
     kryo.register(ScriptType.class, 7386);
     kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
     kryo.register(ServiceNowApprovalParams.class, 7389);
@@ -1689,9 +1684,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
     kryo.register(GitConfig.UrlType.class, 7460);
-    kryo.register(EmailStepParameters.class, 7461);
-    kryo.register(ShellScriptStepParameters.class, 7462);
-    kryo.register(WaitStepParameters.class, 7463);
     kryo.register(GcbArtifactObjects.class, 7464);
     kryo.register(CeLicenseInfo.class, 7465);
     kryo.register(CeLicenseType.class, 7466);
@@ -1728,10 +1720,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TrialSignupOptions.Products.class, 8094);
     kryo.register(AzureTaskExecutionRequest.class, 8095);
 
-    kryo.register(HttpResponseCodeSwitchAdviserParameters.class, 8096);
     kryo.register(TfVarGitSource.class, 8097);
     kryo.register(HelmSubCommand.class, 8076);
-    kryo.register(HelmCommandFlag.class, 8077);
+    kryo.register(HelmCommandFlagConfig.class, 8077);
 
     kryo.register(AzureAppServiceSlotSetupContextElement.class, 8098);
     kryo.register(AzureAppServiceSlotSetupExecutionData.class, 8099);
@@ -1759,5 +1750,13 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ARMPreExistingTemplate.class, 8122);
     kryo.register(ARMStateExecutionData.class, 8123);
     kryo.register(AccountPreferences.class, 8124);
+    kryo.register(TerragruntProvisionParameters.TerragruntCommand.class, 8502);
+    kryo.register(TerragruntProvisionParameters.TerragruntCommandUnit.class, 8503);
+    kryo.register(TerragruntProvisionParameters.class, 8504);
+    kryo.register(TerragruntProvisionInheritPlanElement.class, 8505);
+    kryo.register(TerragruntApplyMarkerParam.class, 8506);
+    kryo.register(TerragruntExecutionData.class, 8507);
+    kryo.register(TerragruntOutputVariables.class, 8508);
+    kryo.register(ApiException.class, 8125);
   }
 }

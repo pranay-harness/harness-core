@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.APM_CONFIGURATION_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
 
@@ -17,6 +18,10 @@ import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 import static software.wings.sm.StateType.STACK_DRIVER_LOG;
 import static software.wings.sm.states.APMVerificationState.metricDefinitions;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
@@ -114,6 +119,8 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Inject WingsPersistence wingsPersistence;
   @Inject CvValidationService cvValidationService;
@@ -994,7 +1001,14 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             ErrorCode.APM_CONFIGURATION_ERROR, "No matching metric state type found " + stateType);
     }
 
-    return metricTemplates;
+    Map<String, TimeSeriesMetricDefinition> metricDefinitions = new HashMap<>();
+    if (isEmpty(metricTemplates)) {
+      return metricDefinitions;
+    }
+    metricTemplates.forEach(
+        (metricName, timeSeriesMetricDefinition)
+            -> metricDefinitions.put(replaceDotWithUnicode(metricName), timeSeriesMetricDefinition));
+    return metricDefinitions;
   }
 
   private Map<String, TimeSeriesMetricDefinition> getMetricTemplates(Map<String, String> metrics) {

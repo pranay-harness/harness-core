@@ -1,7 +1,9 @@
 package io.harness.gitsync.gitsyncerror.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncErrorUtils {
   public static final String EMPTY_STR = "";
   public static final Long DEFAULT_COMMIT_TIME = 0L;

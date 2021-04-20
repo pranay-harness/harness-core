@@ -63,5 +63,9 @@ profile.result
 
 bazel-*
 .bazelrc
+bazelrc.cache
+platform-bazel-cache-dev.json
 
 **/vendor
+
+test-util.bzl

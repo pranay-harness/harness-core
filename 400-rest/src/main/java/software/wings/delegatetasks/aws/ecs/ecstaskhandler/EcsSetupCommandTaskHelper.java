@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -23,11 +24,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -107,9 +110,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsSetupCommandTaskHelper {
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
@@ -609,15 +613,15 @@ public class EcsSetupCommandTaskHelper {
 
     // For DAEMON scheduling Strategy, no desired count is required.
     // Its automatically calculated by ECS based on number of instances in cluster
-    if (!setupParams.isDaemonSchedulingStrategy()) {
+    if (setupParams.isDaemonSchedulingStrategy()) {
+      createServiceRequest.setSchedulingStrategy(SchedulingStrategy.DAEMON.name());
+      createServiceRequest.withDeploymentConfiguration(
+          new DeploymentConfiguration().withMaximumPercent(100).withMinimumHealthyPercent(50));
+    } else {
       createServiceRequest.setDesiredCount(0);
       createServiceRequest.withDeploymentConfiguration(
           new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100));
       createServiceRequest.setSchedulingStrategy(SchedulingStrategy.REPLICA.name());
-    } else {
-      createServiceRequest.setSchedulingStrategy(SchedulingStrategy.DAEMON.name());
-      createServiceRequest.withDeploymentConfiguration(
-          new DeploymentConfiguration().withMaximumPercent(100).withMinimumHealthyPercent(50));
     }
 
     // Set load balancer config
@@ -684,6 +688,13 @@ public class EcsSetupCommandTaskHelper {
       // those are created with serviceCreation. We always create service with 0 count and
       // then upsize it in all case other than daemon (where ECS launches tasks with service creation)
       createServiceRequest.setPropagateTags(advancedServiceConfig.getPropagateTags());
+
+      if (advancedServiceConfig.getCapacityProviderStrategy() != null
+          && CollectionUtils.isNotEmpty(advancedServiceConfig.getCapacityProviderStrategy())) {
+        createServiceRequest.setCapacityProviderStrategy(advancedServiceConfig.getCapacityProviderStrategy());
+        // If a capacityProviderStrategy is specified, the launchType parameter must be omitted.
+        createServiceRequest.setLaunchType(null);
+      }
     }
     setServiceRegistryForDNSSwap((AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails, setupParams,
         containerServiceName, serviceRegistries, executionLogCallback, logger, commandExecutionDataBuilder);
@@ -1216,6 +1227,8 @@ public class EcsSetupCommandTaskHelper {
           awsHelperService.deleteService(setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(),
               encryptedDataDetails, deleteServiceRequest);
         }
+      } catch (TimeoutException e) {
+        throw e;
       } catch (Exception e) {
         String errorMsg = "Failed while handling rollback";
         log.error(errorMsg, e);
@@ -1247,7 +1260,7 @@ public class EcsSetupCommandTaskHelper {
                                                                .awsConfig(awsConfig)
                                                                .build();
 
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(updateCountRequestData);
+    ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(updateCountRequestData);
     ecsContainerService.waitForServiceToReachSteadyState(serviceSteadyStateTimeout, updateCountRequestData);
 
     return ecsContainerService.getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName,
@@ -1264,7 +1277,7 @@ public class EcsSetupCommandTaskHelper {
   }
   public void downsizeOldOrUnhealthy(SettingAttribute settingAttribute, EcsSetupParams setupParams,
       String containerServiceName, List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, boolean timeoutErrorSupported) {
     Map<String, Integer> activeCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
         settingAttribute, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
     String latestHealthyController = null;
@@ -1297,7 +1310,7 @@ public class EcsSetupCommandTaskHelper {
           executionLogCallback.saveExecutionLog("");
           awsClusterService.resizeCluster(setupParams.getRegion(), settingAttribute, encryptedDataDetails,
               setupParams.getClusterName(), serviceName, entry.getValue(), 0,
-              setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+              setupParams.getServiceSteadyStateTimeout(), executionLogCallback, timeoutErrorSupported);
         }
       }
     }

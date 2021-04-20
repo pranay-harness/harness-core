@@ -1,11 +1,13 @@
 package io.harness.steps.resourcerestraint;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.shared.ResourceRestraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
@@ -14,7 +16,9 @@ import io.harness.distribution.constraint.InvalidPermitsException;
 import io.harness.distribution.constraint.PermanentlyBlockedConsumerException;
 import io.harness.distribution.constraint.UnableToRegisterConsumerException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
@@ -25,14 +29,13 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.steps.OrchestrationStepTypes;
+import io.harness.pms.utils.PmsConstants;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
-import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.base.Preconditions;
@@ -42,13 +45,12 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 public class ResourceRestraintStep
     implements SyncExecutable<ResourceRestraintStepParameters>, AsyncExecutable<ResourceRestraintStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(OrchestrationStepTypes.RESOURCE_RESTRAINT).build();
-  private static final String PLAN = "PLAN";
+      StepType.newBuilder().setType(StepSpecTypeConstants.RESOURCE_CONSTRAINT).build();
 
   @Inject private ResourceRestraintService resourceRestraintService;
   @Inject private RestraintService restraintService;
@@ -64,7 +66,7 @@ public class ResourceRestraintStep
   public StepResponse executeSync(Ambiance ambiance, ResourceRestraintStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     final ResourceRestraint resourceRestraint =
-        restraintService.get(stepParameters.getClaimantId(), stepParameters.getResourceRestraintId());
+        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
     String releaseEntityId = getReleaseEntityId(stepParameters, ambiance.getPlanExecutionId());
 
     executeInternal(resourceRestraint, stepParameters, ambiance, releaseEntityId, false);
@@ -89,19 +91,22 @@ public class ResourceRestraintStep
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, ResourceRestraintStepParameters stepParameters, StepInputPackage inputPackage) {
     final ResourceRestraint resourceRestraint =
-        restraintService.get(stepParameters.getClaimantId(), stepParameters.getResourceRestraintId());
+        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
     String releaseEntityId = getReleaseEntityId(stepParameters, ambiance.getPlanExecutionId());
 
     String consumerId = executeInternal(resourceRestraint, stepParameters, ambiance, releaseEntityId, true);
 
-    return AsyncExecutableResponse.newBuilder().addCallbackIds(consumerId).build();
+    return AsyncExecutableResponse.newBuilder()
+        .addCallbackIds(consumerId)
+        .setMode(AsyncExecutableMode.RESOURCE_WAITING_MODE)
+        .build();
   }
 
   @Override
   public StepResponse handleAsyncResponse(
       Ambiance ambiance, ResourceRestraintStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     final ResourceRestraint resourceRestraint =
-        restraintService.get(stepParameters.getClaimantId(), stepParameters.getResourceRestraintId());
+        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
 
     resourceRestraintService.updateBlockedConstraints(ImmutableSet.of(resourceRestraint.getUuid()));
 
@@ -138,15 +143,20 @@ public class ResourceRestraintStep
 
     int permits = calculatePermits(stepParameters, ambiance);
 
-    ConstraintUnit renderedResourceUnit =
-        new ConstraintUnit(pmsEngineExpressionService.renderExpression(ambiance, stepParameters.getResourceUnit()));
+    if (EngineExpressionEvaluator.hasVariables(stepParameters.getResourceUnit())) {
+      throw new InvalidRequestException(
+          "Resource Unit should not contain variables: " + stepParameters.getResourceUnit());
+    }
 
-    Map<String, Object> constraintContext = populateConstraintContext(stepParameters, releaseEntityId);
+    ConstraintUnit constraintUnit = new ConstraintUnit(stepParameters.getResourceUnit());
+
+    Map<String, Object> constraintContext =
+        populateConstraintContext(resourceRestraint, stepParameters, releaseEntityId);
 
     String consumerId = generateUuid();
     try {
       Consumer.State state = constraint.registerConsumer(
-          renderedResourceUnit, new ConsumerId(consumerId), permits, constraintContext, resourceRestraintRegistry);
+          constraintUnit, new ConsumerId(consumerId), permits, constraintContext, resourceRestraintRegistry);
       if (isAsync && ACTIVE == state) {
         throw new InvalidRequestException("The state should be BLOCKED for consumer with id [" + consumerId + "].");
       } else if (!isAsync && BLOCKED == state) {
@@ -165,7 +175,7 @@ public class ResourceRestraintStep
 
   private String getReleaseEntityId(ResourceRestraintStepParameters stepParameters, String planExecutionId) {
     String releaseEntityId;
-    if (PLAN.equals(stepParameters.getHoldingScope().getScope())) {
+    if (PmsConstants.RELEASE_ENTITY_TYPE_PLAN.equals(stepParameters.getHoldingScope().getScope())) {
       releaseEntityId = ResourceRestraintService.getReleaseEntityId(planExecutionId);
     } else {
       releaseEntityId = ResourceRestraintService.getReleaseEntityId(
@@ -184,12 +194,12 @@ public class ResourceRestraintStep
   }
 
   private Map<String, Object> populateConstraintContext(
-      ResourceRestraintStepParameters stepParameters, String releaseEntityId) {
+      ResourceRestraint resourceRestraint, ResourceRestraintStepParameters stepParameters, String releaseEntityId) {
     Map<String, Object> constraintContext = new HashMap<>();
     constraintContext.put(ResourceRestraintInstanceKeys.releaseEntityType, stepParameters.getHoldingScope().getScope());
     constraintContext.put(ResourceRestraintInstanceKeys.releaseEntityId, releaseEntityId);
-    constraintContext.put(ResourceRestraintInstanceKeys.order,
-        resourceRestraintService.getMaxOrder(stepParameters.getResourceRestraintId()) + 1);
+    constraintContext.put(
+        ResourceRestraintInstanceKeys.order, resourceRestraintService.getMaxOrder(resourceRestraint.getUuid()) + 1);
 
     return constraintContext;
   }

@@ -1,5 +1,6 @@
 package io.harness.cvng.statemachine.services;
 
+import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -26,14 +27,15 @@ import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState
 import io.harness.cvng.statemachine.entities.TestTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private VerificationJobService verificationJobService;
+  @Inject private Clock clock;
 
   @Override
   public void initiateStateMachine(String verificationTaskId, AnalysisStateMachine stateMachine) {
@@ -71,7 +73,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
             "There can be only one statemachine execution at a time for verificationTaskId: " + verificationTaskId);
       }
     }
-    Optional<AnalysisStateMachine> ignoredStatemachine = ignoreOldStatemachine(stateMachine);
+    Optional<AnalysisStateMachine> ignoredStatemachine = ignoreOldStateMachine(stateMachine);
     if (ignoredStatemachine.isPresent()) {
       stateMachine = ignoredStatemachine.get();
     } else {
@@ -103,13 +105,13 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   }
 
   @Override
-  public Optional<AnalysisStateMachine> ignoreOldStatemachine(AnalysisStateMachine analysisStateMachine) {
+  public Optional<AnalysisStateMachine> ignoreOldStateMachine(AnalysisStateMachine analysisStateMachine) {
     Instant instantForAnalysis = analysisStateMachine.getAnalysisEndTime();
     if (analysisStateMachine.getStatus() != AnalysisStatus.RUNNING
-        && Instant.now().minus(2, ChronoUnit.HOURS).isAfter(instantForAnalysis)) {
-      log.info("The statemachine for {} and range {} to {} is before 2 hours. We will be ignoring it.",
+        && clock.instant().minus(STATE_MACHINE_IGNORE_MINUTES, ChronoUnit.MINUTES).isAfter(instantForAnalysis)) {
+      log.info("The statemachine for {} and range {} to {} is before {} minutes. We will be ignoring it.",
           analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
-          analysisStateMachine.getAnalysisEndTime());
+          analysisStateMachine.getAnalysisEndTime(), STATE_MACHINE_IGNORE_MINUTES);
       analysisStateMachine.setStatus(AnalysisStatus.IGNORED);
       return Optional.of(analysisStateMachine);
     }
@@ -117,17 +119,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   }
 
   @Override
-  public void executeStateMachine(AnalysisStateMachine analysisStateMachine) {
-    Instant instantForAnalysis = analysisStateMachine.getAnalysisEndTime();
-    if (analysisStateMachine.getStatus() != AnalysisStatus.RUNNING
-        && Instant.now().minus(2, ChronoUnit.HOURS).isAfter(instantForAnalysis)) {
-      log.info("The statemachine for {} and range {} to {} is before 2 hours. We will be ignoring it.",
-          analysisStateMachine.getVerificationTaskId(), analysisStateMachine.getAnalysisStartTime(),
-          analysisStateMachine.getAnalysisEndTime());
-      analysisStateMachine.setStatus(AnalysisStatus.IGNORED);
-      return;
-    }
-
+  public AnalysisStatus executeStateMachine(AnalysisStateMachine analysisStateMachine) {
     log.info("Executing state machine {} for verificationTask {}", analysisStateMachine.getUuid(),
         analysisStateMachine.getVerificationTaskId());
 
@@ -204,6 +196,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       nextState.handleFinalStatuses(nextState.getStatus());
     }
     hPersistence.save(analysisStateMachine);
+    return analysisStateMachine.getCurrentState().getStatus();
   }
 
   @Override
@@ -284,25 +277,26 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
       Preconditions.checkNotNull(cvConfigForDeployment, "cvConfigForDeployment can not be null");
 
-      if (VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
-        createDeploymentAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
+      if (verificationJobInstance.getResolvedJob().getType() == VerificationJobType.HEALTH) {
+        createHealthAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance);
       } else {
-        createHealthAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
+        createDeploymentAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
       }
     }
     return stateMachine;
   }
 
   private void createHealthAnalysisState(AnalysisStateMachine stateMachine, AnalysisInput inputForAnalysis,
-      VerificationJobInstance verificationJobInstance, CVConfig cvConfigForDeployment) {
+      VerificationJobInstance verificationJobInstance) {
+    HealthVerificationJob resolvedJob = (HealthVerificationJob) verificationJobInstance.getResolvedJob();
     ActivityVerificationState healthAnalysisState = ActivityVerificationState.builder().build();
     healthAnalysisState.setInputs(inputForAnalysis);
     healthAnalysisState.setHealthVerificationPeriod(HealthVerificationPeriod.PRE_ACTIVITY);
     healthAnalysisState.setDuration(verificationJobInstance.getResolvedJob().getDuration());
-    healthAnalysisState.setPreActivityVerificationStartTime(
-        verificationJobInstance.getPreActivityVerificationStartTime());
-    healthAnalysisState.setPostActivityVerificationStartTime(
-        verificationJobInstance.getPostActivityVerificationStartTime());
+    healthAnalysisState.setPreActivityVerificationStartTime(resolvedJob.getPreActivityVerificationStartTime(
+        verificationJobInstance.getStartTime(), verificationJobInstance.getPreActivityVerificationStartTime()));
+    healthAnalysisState.setPostActivityVerificationStartTime(resolvedJob.getPostActivityVerificationStartTime(
+        verificationJobInstance.getStartTime(), verificationJobInstance.getPostActivityVerificationStartTime()));
     healthAnalysisState.setStatus(AnalysisStatus.CREATED);
     stateMachine.setCurrentState(healthAnalysisState);
   }

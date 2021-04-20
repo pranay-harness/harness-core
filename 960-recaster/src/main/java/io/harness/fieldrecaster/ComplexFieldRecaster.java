@@ -21,15 +21,14 @@ public class ComplexFieldRecaster implements FieldRecaster {
           refObj = recaster.getTransformer().decode(cf.getType(), docVal, cf);
         } else if (!(docVal instanceof Document) && recaster.getTransformer().hasSimpleValueTransformer(docVal)) {
           // special case for parameterized classes. E.x: Dummy<T>
-          refObj = recaster.getTransformer().decode(cf.getType(), docVal, cf);
+          refObj = recaster.getTransformer().decode(docVal.getClass(), docVal, cf);
         } else {
           Document value = (Document) docVal;
           if (!value.containsKey(Recaster.RECAST_CLASS_KEY)) {
             // this is a map ex. Dummy<Map<String,String>>
             refObj = new LinkedHashMap<>(value);
           } else if (recaster.getTransformer().hasCustomTransformer(RecastReflectionUtils.getClass(value))) {
-            refObj = recaster.getTransformer().decode(
-                RecastReflectionUtils.getClass(value), value.get(Recaster.ENCODED_VALUE), cf);
+            refObj = recaster.getTransformer().decode(RecastReflectionUtils.getClass(value), value, cf);
           } else {
             refObj = recaster.getObjectFactory().createInstance(recaster, cf, value);
             refObj = recaster.fromDocument(value, refObj);
@@ -70,6 +69,6 @@ public class ComplexFieldRecaster implements FieldRecaster {
   private Document obtainEncodedValue(Recaster recaster, CastedField cf, Object fieldValue) {
     return new Document()
         .append(Recaster.RECAST_CLASS_KEY, cf.getType().getName())
-        .append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue));
+        .append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue, cf));
   }
 }

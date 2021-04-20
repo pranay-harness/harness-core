@@ -1,5 +1,6 @@
 package io.harness.functional.pipelines;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.NATARAJA;
 
@@ -9,6 +10,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
@@ -64,6 +66,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 @Slf4j
 public class PipelineE2ETest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
@@ -234,7 +237,7 @@ public class PipelineE2ETest extends AbstractFunctionalTest {
     assertThat(status).isEqualTo("SUCCESS");
 
     WorkflowExecution completedExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), pipelineExecutionId, true);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), pipelineExecutionId, true, false);
 
     log.info("Validation starts");
 

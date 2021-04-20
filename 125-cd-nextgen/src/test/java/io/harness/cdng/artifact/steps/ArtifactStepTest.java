@@ -82,7 +82,7 @@ public class ArtifactStepTest extends CDNGTestBase {
     when(artifactStepHelper.toSourceDelegateRequest(artifactStep.applyArtifactsOverlay(stepParameters), ambiance))
         .thenReturn(getDelegateRequest());
     when(artifactStepHelper.getArtifactStepTaskType(artifactStep.applyArtifactsOverlay(stepParameters)))
-        .thenReturn(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
+        .thenReturn(TaskType.DOCKER_ARTIFACT_TASK_NG);
     TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, stepParameters);
     assertThat(taskRequest.getDelegateTaskRequest()).isNotNull();
 

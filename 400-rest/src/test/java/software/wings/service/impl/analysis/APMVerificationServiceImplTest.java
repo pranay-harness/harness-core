@@ -57,6 +57,7 @@ import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
 import software.wings.service.impl.log.CustomLogSetupTestNodeData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
@@ -117,6 +118,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private CVActivityLogService cvActivityLogService;
   @Mock private DatadogService datadogService;
   @Mock private EnvironmentService environmentService;
+  @Mock private AccountService accountService;
   @Mock MLServiceUtils mlServiceUtils;
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;

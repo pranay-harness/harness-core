@@ -43,11 +43,11 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
       try {
         String originalExpr = expressionQuery.getJexl();
         Map<String, Object> context = getContextMap(expressionQuery.getJsonContext());
-        String evaluatedExpr =
-            expressionEvaluator.renderExpression(wrapWithExpressionString(originalExpr), context).toString();
-
-        if (!evaluatedExpr.equals(originalExpr)) {
-          evaluatedExpr = unWrapExpressionString(evaluatedExpr);
+        String evaluatedExpr = null;
+        if (expressionQuery.getIsSkipCondition()) {
+          evaluatedExpr = expressionEvaluator.evaluateExpression(originalExpr, context).toString();
+        } else {
+          evaluatedExpr = expressionEvaluator.renderExpression(originalExpr, context);
         }
 
         responseBuilder.addValues(ExpressionValue.newBuilder()
@@ -66,17 +66,6 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
     }
     responseObserver.onNext(responseBuilder.build());
     responseObserver.onCompleted();
-  }
-
-  public static String wrapWithExpressionString(String expr) {
-    return expr == null ? null : "<+" + expr + ">";
-  }
-
-  public static String unWrapExpressionString(String expr) {
-    if (expr.startsWith("<+") && expr.endsWith(">")) {
-      return expr.substring(2, expr.length() - 1);
-    }
-    return expr;
   }
 
   private Map<String, Object> getContextMap(String jsonContext) throws IOException {

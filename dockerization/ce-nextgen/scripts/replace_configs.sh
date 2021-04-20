@@ -17,10 +17,10 @@ replace_key_with_value logging.level $LOGGING_LEVEL
 
 replace_key_with_value server.applicationConnectors[0].port $CE_NEXTGEN_PORT
 
-replace_key_with_value mongo.uri "${MONGO_URI//\\&/&}"
+replace_key_with_value events-mongo.uri "${EVENTS_MONGO_DB_URL//\\&/&}"
 
-replace_key_with_value ngManagerClientConfig.baseUrl $NG_MANAGER_URL
-replace_key_with_value managerClientConfig.baseUrl $MANAGER_URL
+replace_key_with_value ngManagerClientConfig.baseUrl $NG_MANAGER_CLIENT_BASEURL
+replace_key_with_value managerClientConfig.baseUrl $MANAGER_CLIENT_BASEURL
 
 replace_key_with_value ngManagerServiceSecret $NEXT_GEN_MANAGER_SECRET
 replace_key_with_value jwtAuthSecret $JWT_AUTH_SECRET

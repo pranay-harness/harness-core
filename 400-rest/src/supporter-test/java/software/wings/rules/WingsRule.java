@@ -18,10 +18,13 @@ import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 
 import io.harness.NoopStatement;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
@@ -33,6 +36,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.lock.DistributedLockImplementation;
@@ -41,21 +45,10 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
-import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
-import io.harness.registrars.OrchestrationModuleRegistrarHelper;
-import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
-import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
-import io.harness.registrars.WingsAdviserRegistrar;
-import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
@@ -84,12 +77,12 @@ import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.app.IndexMigratorModule;
 import software.wings.app.JobsFrequencyConfig;
-import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.ObserversHelper;
 import software.wings.app.SSOModule;
+import software.wings.app.SearchModule;
 import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
@@ -116,10 +109,8 @@ import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -136,6 +127,8 @@ import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@Deprecated
 public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   protected ClosingFactory closingFactory = new ClosingFactory();
 
@@ -237,7 +230,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     }
     CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
     modules.add(0, cacheModule);
-    addPMSSdkModule(modules);
     long start = currentTimeMillis();
     injector = Guice.createInjector(modules);
     long diff = currentTimeMillis() - start;
@@ -253,27 +245,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         }
       }
     }
-  }
-
-  public void addPMSSdkModule(List<Module> modules) {
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
-  }
-
-  private PmsSdkConfiguration getPmsSdkConfiguration() {
-    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
-        new HashMap<>();
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-    return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.LOCAL)
-        .serviceName("wings")
-        .engineSteps(WingsStepRegistrar.getEngineSteps())
-        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(engineEventHandlersMap)
-        .build();
   }
 
   protected Set<Class<? extends KryoRegistrar>> getKryoRegistrars() {
@@ -359,6 +330,13 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
             .build());
 
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfMigrationConfig(CfMigrationConfig.builder()
+                                           .account("testAccount")
+                                           .enabled(false)
+                                           .environment("testEnv")
+                                           .org("testOrg")
+                                           .project("testProject")
+                                           .build());
     return configuration;
   }
 
@@ -393,7 +371,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       }
     });
 
-    modules.add(new LicenseModule());
     modules.add(new ValidationModule(validatorFactory));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
@@ -410,12 +387,21 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     modules.add(new AuthModule());
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
-    modules.add(new ManagerGrpcClientModule(
-        ManagerGrpcClientModule.Config.builder()
+    modules.add(new AbstractManagerGrpcClientModule() {
+      @Override
+      public ManagerGrpcClientModule.Config config() {
+        return ManagerGrpcClientModule.Config.builder()
             .target(((MainConfiguration) configuration).getGrpcClientConfig().getTarget())
             .authority(((MainConfiguration) configuration).getGrpcClientConfig().getAuthority())
-            .build()));
+            .build();
+      }
 
+      @Override
+      public String application() {
+        return "Manager";
+      }
+    });
+    modules.add(new SearchModule());
     return modules;
   }
 

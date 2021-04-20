@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -15,13 +17,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
@@ -30,6 +34,7 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -41,8 +46,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
-public class HelmClientImplTest extends WingsBaseTest {
+@OwnedBy(CDP)
+@TargetModule(_960_API_SERVICES)
+public class HelmClientImplTest extends CategoryTest {
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @InjectMocks private HelmClientImpl helmClient = Mockito.spy(HelmClientImpl.class);
   private ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
@@ -52,9 +60,10 @@ public class HelmClientImplTest extends WingsBaseTest {
 
   @Before
   public void setup() throws InterruptedException, TimeoutException, IOException {
+    MockitoAnnotations.initMocks(this);
     doReturn(HelmCliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build())
         .when(helmClient)
-        .executeHelmCLICommand(anyString(), anyLong());
+        .executeHelmCLICommand(anyString(), anyLong(), any(OutputStream.class));
     buildHelmInstallCommandRequest();
     buildHelmRollbackCommandRequest();
     when(k8sGlobalConfigService.getHelmPath(any(HelmVersion.class))).thenReturn("/client-tools/v3.1/helm");
@@ -319,10 +328,8 @@ public class HelmClientImplTest extends WingsBaseTest {
     String chartLocation = "chartLocation";
     String namespace = "namespace";
     List<String> valuesOverrides = Collections.emptyList();
-    ConsumerWrapper<HelmCommandRequest> command = r -> {
-      helmClient.renderChart((HelmInstallCommandRequest) r, chartLocation, namespace, valuesOverrides);
-    };
-    String val1 = getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandRequest);
+    ConsumerWrapper<HelmCommandRequest> command =
+        r -> helmClient.renderChart(r, chartLocation, namespace, valuesOverrides);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandRequest))
         .isEqualTo("helm template chartLocation  --name crazy-helm --namespace namespace");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandRequest))
@@ -344,17 +351,6 @@ public class HelmClientImplTest extends WingsBaseTest {
     return getHelmCommandPassedToExecutor(consumer, request);
   }
 
-  private void testWithoutKubeConfig(ConsumerWrapper<HelmCommandRequest> consumer) throws Exception {
-    String command_v2 = getCommandWithNoKubeConfig(HelmVersion.V2, consumer, helmInstallCommandRequest);
-    String command_v3 = getCommandWithNoKubeConfig(HelmVersion.V3, consumer, helmInstallCommandRequest);
-    assertThat(command_v2)
-        .isEqualTo(
-            "helm install  harness --repo https://oci-registry --version 0.0.1  --name crazy-helm --namespace helm-namespace");
-    assertThat(command_v3)
-        .isEqualTo(
-            "/client-tools/v3.1/helm install  crazy-helm harness --repo https://oci-registry --version 0.0.1    --namespace helm-namespace");
-  }
-
   private String getCommandWithNoKubeConfig(HelmVersion helmVersion, ConsumerWrapper<HelmCommandRequest> consumer,
       HelmCommandRequest request) throws Exception {
     request.setHelmVersion(helmVersion);
@@ -372,7 +368,8 @@ public class HelmClientImplTest extends WingsBaseTest {
   private String getHelmCommandPassedToExecutor(
       ConsumerWrapper<HelmCommandRequest> consumer, HelmCommandRequest request) throws Exception {
     consumer.accept(request);
-    verify(helmClient, Mockito.atLeastOnce()).executeHelmCLICommand(stringCaptor.capture(), anyLong());
+    verify(helmClient, Mockito.atLeastOnce())
+        .executeHelmCLICommand(stringCaptor.capture(), anyLong(), any(OutputStream.class));
     buildHelmInstallCommandRequest();
     buildHelmRollbackCommandRequest();
     return stringCaptor.getValue();
@@ -385,7 +382,7 @@ public class HelmClientImplTest extends WingsBaseTest {
     String successCommand = "exit 0";
     String failCommand = "exit 1";
     // Override @Before setup
-    doCallRealMethod().when(helmClient).executeHelmCLICommand(anyString(), anyLong());
+    doCallRealMethod().when(helmClient).executeHelmCLICommand(anyString(), anyLong(), any(OutputStream.class));
 
     assertThat(helmClient.executeHelmCLICommand(successCommand).getCommandExecutionStatus())
         .isEqualTo(CommandExecutionStatus.SUCCESS);

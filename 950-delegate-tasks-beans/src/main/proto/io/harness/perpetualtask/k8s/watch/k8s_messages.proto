@@ -27,6 +27,7 @@ message Owner {
   string kind = 2;
   string name = 3;
   map<string, string> labels = 4;
+  int64 replicas = 5;
 }
 
 message Volume {
@@ -58,6 +59,7 @@ message PodInfo {
   string qos_class = 16;
   repeated Volume volume = 17;
   map<string, string> namespace_labels = 18;
+  map<string, string> metadata_annotations = 19;
 }
 
 message PodEvent {

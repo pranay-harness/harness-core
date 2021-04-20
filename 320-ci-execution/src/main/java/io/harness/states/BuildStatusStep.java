@@ -1,5 +1,8 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
@@ -19,14 +22,14 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.ResponseData;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParameter> {
+@OwnedBy(CI)
+public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParameter, BuildStatusPushResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("COMMIT_STATUS").build();
   private static final int socketTimeoutMillis = 10000;
   @Inject GitClientHelper gitClientHelper;
@@ -96,10 +99,9 @@ public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParamete
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, BuildStatusUpdateParameter stepParameters, Map<String, ResponseData> responseDataMap) {
-    BuildStatusPushResponse executionResponse = (BuildStatusPushResponse) responseDataMap.values().iterator().next();
-
+  public StepResponse handleTaskResult(Ambiance ambiance, BuildStatusUpdateParameter stepParameters,
+      ThrowingSupplier<BuildStatusPushResponse> responseSupplier) throws Exception {
+    BuildStatusPushResponse executionResponse = responseSupplier.get();
     if (executionResponse.getStatus() == BuildStatusPushResponse.Status.SUCCESS) {
       return StepResponse.builder().status(Status.SUCCEEDED).build();
     } else {

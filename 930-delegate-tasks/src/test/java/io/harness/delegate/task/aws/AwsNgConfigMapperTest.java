@@ -13,6 +13,11 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
@@ -60,6 +65,38 @@ public class AwsNgConfigMapperTest extends CategoryTest {
                                         .crossAccountAccess(io.harness.aws.CrossAccountAccess.builder().build())
                                         .awsAccessKeyCredential(AwsAccessKeyCredential.builder()
                                                                     .secretKey(passwordRefIdentifier.toCharArray())
+                                                                    .accessKey(accessKey)
+                                                                    .build())
+                                        .build());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testMapAwsCodeCommit() {
+    final String secretKeyRefIdentifier = "secretKeyRefIdentifier";
+    final String accessKey = "accessKey";
+    SecretRefData secretKeySecretRef =
+        SecretRefData.builder().identifier(secretKeyRefIdentifier).scope(Scope.ACCOUNT).build();
+    doReturn(secretKeyRefIdentifier.toCharArray())
+        .when(awsNgConfigMapper)
+        .getDecryptedValueWithNullCheck(secretKeySecretRef);
+    final AwsCodeCommitAuthenticationDTO awsCodeCommitAuthenticationDTO =
+        AwsCodeCommitAuthenticationDTO.builder()
+            .authType(AwsCodeCommitAuthType.HTTPS)
+            .credentials(AwsCodeCommitHttpsCredentialsDTO.builder()
+                             .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
+                             .httpCredentialsSpec(AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+                                                      .accessKey(accessKey)
+                                                      .secretKeyRef(secretKeySecretRef)
+                                                      .build())
+                             .build())
+            .build();
+    final AwsConfig awsConfig = awsNgConfigMapper.mapAwsCodeCommit(awsCodeCommitAuthenticationDTO, null);
+    assertThat(awsConfig).isNotNull();
+    assertThat(awsConfig).isEqualTo(AwsConfig.builder()
+                                        .awsAccessKeyCredential(AwsAccessKeyCredential.builder()
+                                                                    .secretKey(secretKeyRefIdentifier.toCharArray())
                                                                     .accessKey(accessKey)
                                                                     .build())
                                         .build());

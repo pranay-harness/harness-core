@@ -16,6 +16,9 @@ import io.harness.pms.contracts.service.OutcomeFindAllBlobResponse;
 import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc.OutcomeProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.OutcomeResolveBlobRequest;
 import io.harness.pms.contracts.service.OutcomeResolveBlobResponse;
+import io.harness.pms.contracts.service.OutcomeResolveOptionalBlobRequest;
+import io.harness.pms.contracts.service.OutcomeResolveOptionalBlobResponse;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
@@ -72,5 +75,15 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
                                                     .setGroupName(groupName)
                                                     .build());
     return response.getResponse();
+  }
+
+  @Override
+  public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
+    OutcomeResolveOptionalBlobResponse response = outcomeProtoServiceBlockingStub.resolveOptional(
+        OutcomeResolveOptionalBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
+    return OptionalOutcome.builder()
+        .found(response.getFound())
+        .outcome(PmsOutcomeMapper.convertJsonToOutcome(response.getOutcome()))
+        .build();
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -15,6 +16,7 @@ import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
@@ -30,13 +32,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sCanaryBaseHandler;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -75,7 +79,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private K8sTaskHelper k8sTaskHelper;
@@ -472,5 +477,28 @@ public class K8sCanaryDeployTaskHandlerTest extends WingsBaseTest {
         K8sDelegateTaskParams.builder().build());
     verify(k8sCanaryBaseHandler, times(1))
         .failAndSaveKubernetesRelease(handler.getCanaryHandlerConfig(), "release-name-2");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldCatchGetAllPodsException() throws Exception {
+    K8sCanaryDeployTaskHandler handler = spy(k8sCanaryDeployTaskHandler);
+    K8sCanaryHandlerConfig canaryHandlerConfig = handler.getCanaryHandlerConfig();
+    canaryHandlerConfig.setCanaryWorkload(deployment);
+    InvalidRequestException thrownException = new InvalidRequestException("Failed to get all pods");
+
+    doReturn(true).when(handler).init(
+        any(K8sCanaryDeployTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    doReturn(true).when(handler).prepareForCanary(
+        any(K8sDelegateTaskParams.class), any(K8sCanaryDeployTaskParameters.class), any(ExecutionLogCallback.class));
+    doThrow(thrownException).when(k8sCanaryBaseHandler).getAllPods(eq(canaryHandlerConfig), anyString(), anyLong());
+
+    assertThatThrownBy(
+        ()
+            -> handler.executeTaskInternal(K8sCanaryDeployTaskParameters.builder().releaseName("releaseName").build(),
+                K8sDelegateTaskParams.builder().build()))
+        .isEqualTo(thrownException);
+    verify(k8sCanaryBaseHandler, times(1)).failAndSaveKubernetesRelease(canaryHandlerConfig, "releaseName");
   }
 }

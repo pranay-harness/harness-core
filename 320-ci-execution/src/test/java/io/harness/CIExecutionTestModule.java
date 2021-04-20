@@ -17,6 +17,8 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.service.intfc.DelegateAsyncService;
+import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tiserviceclient.TIServiceClientModule;
 
 import com.google.common.collect.ImmutableList;
@@ -77,6 +79,8 @@ public class CIExecutionTestModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+    bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
+    bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
     install(new ConnectorResourceClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "CI"));
     install(new SecretNGManagerClientModule(

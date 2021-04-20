@@ -67,6 +67,10 @@ class WorkloadSpecWriter implements ItemWriter<PublishedMessage> {
                                     .map(crMap -> crMap.get(currentResources.getKey()))
                                     .map(ContainerRecommendation::getBurstable)
                                     .orElse(null))
+                     .percentileBased(Optional.ofNullable(existingRecommendations)
+                                          .map(crMap -> crMap.get(currentResources.getKey()))
+                                          .map(ContainerRecommendation::getPercentileBased)
+                                          .orElse(new HashMap<>()))
                      .build()));
       recommendation.setContainerRecommendations(updatedRecommendations);
       recommendation.setDirty(true);

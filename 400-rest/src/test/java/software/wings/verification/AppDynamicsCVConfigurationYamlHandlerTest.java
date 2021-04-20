@@ -28,8 +28,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.verification.appdynamics.AppDynamicsCVConfigurationYaml;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
-import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration.AppDynamicsCVConfigurationYaml;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -2,7 +2,7 @@ package software.wings.helpers.ext.helm.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -17,7 +17,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDC)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class HelmChartCollectionParams implements ManifestCollectionParams {
   private String accountId;
   private String appId;

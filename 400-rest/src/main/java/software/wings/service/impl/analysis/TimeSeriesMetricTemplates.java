@@ -3,10 +3,10 @@ package software.wings.service.impl.analysis;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -15,8 +15,10 @@ import software.wings.sm.StateType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -25,18 +27,23 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
-/**
- * Created by rsingh on 08/30/17.
- */
-
-@NgUniqueIndex(name = "unique_Idx", fields = { @Field("stateExecutionId")
-                                               , @Field("cvConfigId") })
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricTemplatesKeys")
 @Entity(value = "timeSeriesMetricTemplates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class TimeSeriesMetricTemplates extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_state_execution_per_config")
+                 .unique(true)
+                 .field(TimeSeriesMetricTemplatesKeys.stateExecutionId)
+                 .field(TimeSeriesMetricTemplatesKeys.cvConfigId)
+                 .build())
+        .build();
+  }
+
   @NotEmpty private StateType stateType;
 
   @NotEmpty private String stateExecutionId;

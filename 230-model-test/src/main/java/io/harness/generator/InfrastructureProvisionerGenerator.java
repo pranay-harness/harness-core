@@ -1,5 +1,6 @@
 package io.harness.generator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.govern.Switch.unhandled;
 
 import static software.wings.api.DeploymentType.SSH;
@@ -8,6 +9,7 @@ import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringT
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.SettingGenerator.Settings;
 
@@ -23,6 +25,8 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInfrastructureProvisioner.TerraformInfrastructureProvisionerBuilder;
+import software.wings.beans.TerragruntInfrastructureProvisioner;
+import software.wings.beans.TerragruntInfrastructureProvisioner.TerragruntInfrastructureProvisionerBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -32,6 +36,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
 
+@OwnedBy(CDP)
 @Singleton
 public class InfrastructureProvisionerGenerator {
   @Inject private OwnerManager ownerManager;
@@ -199,6 +204,79 @@ public class InfrastructureProvisionerGenerator {
         throw new UnsupportedOperationException();
       }
     }
+
+    InfrastructureProvisioner finalInfraProvisioner = newInfrastructureProvisioner;
+    return GeneratorUtils.suppressDuplicateException(
+        () -> infrastructureProvisionerService.save(finalInfraProvisioner), () -> exists(finalInfraProvisioner));
+  }
+
+  public InfrastructureProvisioner ensureTerragruntInfrastructureProvisioner(
+      Randomizer.Seed seed, Owners owners, TerragruntInfrastructureProvisioner provisioner) {
+    EnhancedRandom random = Randomizer.instance(seed);
+
+    InfrastructureProvisioner newInfrastructureProvisioner = null;
+
+    final TerragruntInfrastructureProvisionerBuilder builder = TerragruntInfrastructureProvisioner.builder();
+
+    if (provisioner != null && provisioner.getAppId() != null) {
+      builder.appId(provisioner.getAppId());
+    } else {
+      Application application = owners.obtainApplication();
+      if (application == null) {
+        application = applicationGenerator.ensureRandom(seed, owners);
+      }
+      builder.appId(application.getUuid());
+    }
+
+    if (provisioner != null && provisioner.getName() != null) {
+      builder.name(provisioner.getName());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    InfrastructureProvisioner existing = exists(builder.build());
+    if (existing != null) {
+      return existing;
+    }
+
+    if (provisioner.getPath() != null) {
+      builder.path(provisioner.getPath());
+    } else {
+      builder.path(".");
+    }
+
+    if (provisioner.getSourceRepoBranch() != null) {
+      builder.sourceRepoBranch(provisioner.getSourceRepoBranch());
+    } else {
+      builder.sourceRepoBranch("master");
+    }
+
+    if (provisioner.getCommitId() != null) {
+      builder.commitId(provisioner.getCommitId());
+      builder.sourceRepoBranch(null);
+    }
+
+    builder.skipRefreshBeforeApplyingPlan(provisioner.isSkipRefreshBeforeApplyingPlan());
+
+    if (provisioner.getMappingBlueprints() != null) {
+      builder.mappingBlueprints(provisioner.getMappingBlueprints());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    if (provisioner.getSourceRepoSettingId() != null) {
+      builder.sourceRepoSettingId(provisioner.getSourceRepoSettingId());
+    } else {
+      final SettingAttribute settingAttribute =
+          settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_CITY_GIT_REPO);
+      builder.sourceRepoSettingId(settingAttribute.getUuid());
+    }
+
+    if (provisioner.getSecretManagerId() != null) {
+      builder.secretManagerId(provisioner.getSecretManagerId());
+    }
+
+    newInfrastructureProvisioner = builder.build();
 
     InfrastructureProvisioner finalInfraProvisioner = newInfrastructureProvisioner;
     return GeneratorUtils.suppressDuplicateException(

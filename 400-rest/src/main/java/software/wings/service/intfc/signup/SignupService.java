@@ -1,13 +1,14 @@
 package software.wings.service.intfc.signup;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInviteSource.SourceType;
-import software.wings.resources.UserResource.UpdatePasswordRequest;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.SimpleUrlBuilder;
 import software.wings.signup.OnpremSignupHandler;
@@ -20,7 +21,8 @@ import java.nio.charset.StandardCharsets;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(PL)
+@OwnedBy(GTM)
+@TargetModule(_950_NG_SIGNUP)
 @Slf4j
 public class SignupService {
   @Inject MarketoSignupHandler marketoSignupHandler;
@@ -47,8 +49,8 @@ public class SignupService {
     }
   }
 
-  public User completeSignup(UpdatePasswordRequest passwordRequest, String resetPasswordToken) {
-    return marketoSignupHandler.completeSignup(passwordRequest, resetPasswordToken);
+  public User completeSignup(String resetPasswordToken) {
+    return marketoSignupHandler.completeSignup(resetPasswordToken);
   }
 
   public User completeAzureMarketplaceSignup(String resetPasswordToken) {

@@ -68,7 +68,7 @@ public class TwoFactorAuthenticationManager {
 
     User loggedInUser =
         getTwoFactorAuthHandler(user.getTwoFactorAuthenticationMechanism()).authenticate(user, passcode);
-    authService.auditLogin(accountIds, loggedInUser);
+    authService.auditLogin2FA(accountIds, loggedInUser);
     return authService.generateBearerTokenForUser(user);
   }
 

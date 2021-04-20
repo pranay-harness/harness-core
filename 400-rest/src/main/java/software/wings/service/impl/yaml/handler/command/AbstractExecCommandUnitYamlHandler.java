@@ -15,7 +15,7 @@ import io.harness.shell.ScriptType;
 
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
-import software.wings.beans.command.ExecCommandUnit.AbstractYaml;
+import software.wings.beans.command.ExecCommandUnitAbstractYaml;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.utils.Utils;
@@ -27,7 +27,8 @@ import java.util.Objects;
 /**
  * @author rktummala on 11/13/17
  */
-public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml, B extends ExecCommandUnit>
+public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUnitAbstractYaml, B
+                                                             extends ExecCommandUnit>
     extends SshCommandUnitYamlHandler<Y, B> {
   @Override
   protected void toYaml(Y yaml, B bean) {
@@ -85,7 +86,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
   @Override
   public B toBean(AbstractCommandUnit.Yaml yaml) {
     B bean = super.toBean(yaml);
-    final ExecCommandUnit.AbstractYaml execYaml = (ExecCommandUnit.AbstractYaml) yaml;
+    final ExecCommandUnitAbstractYaml execYaml = (ExecCommandUnitAbstractYaml) yaml;
     ScriptType scriptType = isEmpty(execYaml.getScriptType())
         ? ScriptType.BASH
         : Utils.getEnumFromString(ScriptType.class, execYaml.getScriptType());

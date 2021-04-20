@@ -117,6 +117,9 @@ public interface ConfigService extends OwnedByService, OwnedByHost, OwnedByEnvir
   void delete(@NotEmpty String appId, @NotEmpty String entityId, @NotNull EntityType entityType,
       @NotEmpty String configFileName);
 
+  void delete(@NotEmpty String appId, @NotEmpty String entityId, @NotNull EntityType entityType,
+      @NotEmpty String configFileName, boolean syncFromGit);
+
   /**
    * Gets the config files for entity.
    *

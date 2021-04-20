@@ -2,6 +2,8 @@ package io.harness.grpc;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.AccountId;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
@@ -25,6 +27,8 @@ import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.paging.PageRequestGrpc;
+import io.harness.serializer.KryoSerializer;
+import io.harness.virtualstack.VirtualStackUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,14 +39,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateProfileServiceGrpcClient {
-  private final DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub;
+  private DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub;
+  private KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateProfileServiceGrpcClient(DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub) {
+  public DelegateProfileServiceGrpcClient(
+      DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub, KryoSerializer kryoSerializer) {
     this.delegateProfileServiceBlockingStub = delegateProfileServiceBlockingStub;
+    this.kryoSerializer = kryoSerializer;
   }
-
   public DelegateProfilePageResponseGrpc listProfiles(AccountId accountId, PageRequestGrpc pageRequest) {
     try {
       ListProfilesResponse listProfilesResponse = delegateProfileServiceBlockingStub.listProfiles(
@@ -85,7 +92,10 @@ public class DelegateProfileServiceGrpcClient {
     try {
       validateScopingRules(delegateProfileGrpc.getScopingRulesList());
       UpdateProfileResponse updateProfileResponse = delegateProfileServiceBlockingStub.updateProfile(
-          UpdateProfileRequest.newBuilder().setProfile(delegateProfileGrpc).build());
+          UpdateProfileRequest.newBuilder()
+              .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+              .setProfile(delegateProfileGrpc)
+              .build());
 
       if (!updateProfileResponse.hasProfile()) {
         return null;

@@ -1,11 +1,12 @@
 package io.harness.notification.remote.resources;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.entities.NotificationSetting;
 import io.harness.notification.remote.dto.AccountNotificationSettingDTO;
 import io.harness.notification.remote.mappers.NotificationSettingMapper;
@@ -26,6 +27,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(PL)
 @Api("settings")
 @Path("settings")
 @Produces({"application/json", "application/yaml"})
@@ -36,7 +38,6 @@ import lombok.AllArgsConstructor;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-@NotificationMicroserviceAuth
 public class NotificationSettingsResource {
   private final NotificationSettingsService notificationSettingsService;
 

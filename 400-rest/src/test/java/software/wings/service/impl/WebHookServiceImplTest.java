@@ -1,15 +1,19 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 import static software.wings.service.impl.WebHookServiceImpl.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -35,6 +39,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
@@ -90,7 +97,10 @@ import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebHookServiceImplTest extends WingsBaseTest {
+  private static final String API_KEY = "API_KEY";
   @Mock private TriggerService triggerService;
   @Mock private AppService appService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
@@ -162,7 +172,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     List<Map<String, Object>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
-    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, null).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getError()).isNotEmpty();
   }
@@ -175,7 +185,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     List<Map<String, Object>> artifacts =
         Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
-    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -186,12 +196,31 @@ public class WebHookServiceImplTest extends WingsBaseTest {
   public void shouldNotExecuteDisabledTrigger() {
     trigger.setDisabled(true);
 
-    Response response = webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build());
+    Response response =
+        webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build(), httpHeaders);
 
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_SERVICE_UNAVAILABLE);
     WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
     assertThat(webHookResponse.getError().contains("Trigger rejected")).isTrue();
+    assertThat(webHookResponse.getStatus()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteTriggerWithFilesChangedManually() {
+    WebHookTriggerCondition triggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+    triggerCondition.setCheckFileContentChanged(true);
+
+    Response response =
+        webHookService.execute(token, WebHookRequest.builder().application(APP_ID).build(), httpHeaders);
+
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
+    WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getError())
+        .isEqualTo("Trigger configured with deploy only if files changed option cannot be executed by manual trigger");
     assertThat(webHookResponse.getStatus()).isNullOrEmpty();
   }
 
@@ -867,7 +896,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
         .triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap(), any(), anyMap());
 
     WebHookRequest request = WebHookRequest.builder().application(APP_ID).build();
-    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getRequestId()).isEqualTo(WORKFLOW_EXECUTION_ID);
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
@@ -974,7 +1003,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     List<Map<String, Object>> artifacts = Collections.singletonList(
         of("service", SERVICE_NAME, "buildNumber", BUILD_NO, "artifactVariables", parameterMap));
     WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
-    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request).getEntity();
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -1059,11 +1088,68 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
     wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build());
 
-    Response response = webhookServiceImpl.execute("TOKEN", webHookRequest);
+    Response response = webhookServiceImpl.execute("TOKEN", webHookRequest, httpHeaders);
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(400);
     assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
     WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
     assertThat(webHookResponse.getError()).isEqualTo("Service Name [" + SERVICE_NAME + 2 + "] does not exist");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotExecuteWithEmptyApiKeyAndIsManualTriggerAuthEnabled_FfOn() {
+    wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).build());
+    List<Map<String, Object>> artifacts =
+        Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
+    WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+    Application application =
+        anApplication().uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).isManualTriggerAuthorized(true).build();
+    when(appService.get(APP_ID)).thenReturn(application);
+    when(httpHeaders.getHeaderString(API_KEY_HEADER)).thenReturn(null);
+
+    Response response = webHookService.execute(token, request, httpHeaders);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(400);
+    assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
+    WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
+    assertThat(webHookResponse.getError()).isEqualTo("Api Key cannot be empty");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldExecuteWithApiKeyAndIsManualTriggerAuthEnabled_FfOn() {
+    wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).build());
+    List<Map<String, Object>> artifacts =
+        Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
+    WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+    Application application =
+        anApplication().uuid(APP_ID).appId(APP_ID).accountId(ACCOUNT_ID).isManualTriggerAuthorized(true).build();
+    when(appService.get(APP_ID)).thenReturn(application);
+    when(httpHeaders.getHeaderString(API_KEY_HEADER)).thenReturn(API_KEY);
+
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldExecuteWithNoApiKeyAndIsManualTriggerAuthDisabled_FfOn() {
+    wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).build());
+    List<Map<String, Object>> artifacts =
+        Collections.singletonList(of("service", SERVICE_NAME, "buildNumber", BUILD_NO));
+    WebHookRequest request = WebHookRequest.builder().artifacts(artifacts).application(APP_ID).build();
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+    when(httpHeaders.getHeaderString(API_KEY_HEADER)).thenReturn("");
+
+    WebHookResponse response = (WebHookResponse) webHookService.execute(token, request, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
 }

@@ -1,15 +1,16 @@
 package io.harness.repositories;
 
-import io.harness.annotation.HarnessRepo;
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
 
-import java.util.Optional;
 import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.Repository;
 
-@HarnessRepo
+@GitSyncableHarnessRepo
 @NoRepositoryBean
-public interface ConnectorBaseRepository<T extends Connector> extends PagingAndSortingRepository<T, String> {
-  Optional<T> findByFullyQualifiedIdentifierAndDeletedNot(String fullyQualifiedIdentifier, boolean notDeleted);
-  boolean existsByFullyQualifiedIdentifier(String fullyQualifiedIdentifier);
-}
+@OwnedBy(DX)
+public interface ConnectorBaseRepository extends Repository<Connector, ConnectorDTO> {}

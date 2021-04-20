@@ -26,6 +26,7 @@ type SCMServer interface {
 
 type scmServer struct {
 	port       uint
+	unixSocket string
 	listener   net.Listener
 	grpcServer *grpc.Server
 	log        *zap.SugaredLogger
@@ -33,17 +34,29 @@ type scmServer struct {
 }
 
 //NewSCMServer constructs a new SCMServer
-func NewSCMServer(port uint, log *zap.SugaredLogger) (SCMServer, error) {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		return nil, err
+func NewSCMServer(port uint, unixSocket string, log *zap.SugaredLogger) (SCMServer, error) {
+	var listener net.Listener
+	var err error
+	if unixSocket != "" {
+		listener, err = net.Listen("unix", unixSocket)
+		if err != nil {
+			log.Errorw("NewSCMServer failure creating unix socket", "unixSocket", unixSocket, zap.Error(err))
+			return nil, err
+		}
+	} else {
+		listener, err = net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			log.Errorw("NewSCMServer failure opening port", "port", port, zap.Error(err))
+			return nil, err
+		}
 	}
 
 	stopCh := make(chan bool, 1)
 	server := scmServer{
-		port:   port,
-		log:    log,
-		stopCh: stopCh,
+		unixSocket: unixSocket,
+		port:       port,
+		log:        log,
+		stopCh:     stopCh,
 	}
 	server.grpcServer = grpc.NewServer()
 	server.listener = listener

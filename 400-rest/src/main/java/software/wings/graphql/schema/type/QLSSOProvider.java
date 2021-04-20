@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.ssoProvider.QLSSOType;
@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLSSOProviderKeys")
 @Scope(PermissionAttribute.ResourceType.SSO)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLSSOProvider implements QLObject {
   String id;
   String name;

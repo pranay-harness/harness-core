@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -19,6 +20,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -27,10 +30,10 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.annotation.EncryptableSetting;
@@ -103,6 +106,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsLambdaState extends State {
   @Inject protected transient SettingsService settingsService;
   @Inject protected transient ServiceResourceService serviceResourceService;
@@ -116,6 +120,7 @@ public class AwsLambdaState extends State {
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   public static final String AWS_LAMBDA_COMMAND_NAME = "Deploy AWS Lambda Function";
@@ -329,7 +334,8 @@ public class AwsLambdaState extends State {
 
     nullCheckForInvalidRequest(specification, "Missing lambda function specification in service", USER);
 
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     if (!ArtifactStreamType.CUSTOM.name().equalsIgnoreCase(artifactStreamAttributes.getArtifactStreamType())) {
       artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
       artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(

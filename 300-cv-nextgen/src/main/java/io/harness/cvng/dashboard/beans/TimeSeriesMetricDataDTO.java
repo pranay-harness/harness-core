@@ -34,13 +34,19 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
     return totalRisk;
   }
 
-  public void addMetricData(double value, long timestamp, Double risk) {
+  public void addMetricData(double value, long timestamp, Double riskScore) {
     if (metricDataList == null) {
       metricDataList = new TreeSet<>();
     }
-    totalRisk += risk.intValue();
+    if (isAnalysisDone(riskScore)) {
+      totalRisk += riskScore.intValue();
+    }
     metricDataList.add(
-        MetricData.builder().timestamp(timestamp).value(value).risk(Risk.valueOf(risk.intValue())).build());
+        MetricData.builder().timestamp(timestamp).value(value).risk(Risk.valueOf(riskScore.intValue())).build());
+  }
+
+  boolean isAnalysisDone(Double riskScore) {
+    return riskScore > 0;
   }
 
   @Override

@@ -2,11 +2,12 @@ package io.harness.ci.integrationstage;
 
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ARGS;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ENTRYPOINT;
-import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.SERVICE_PREFIX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
@@ -20,8 +21,6 @@ import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
-import io.harness.exception.InvalidRequestException;
-import io.harness.k8s.model.ImageDetails;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.stateutils.buildstate.providers.ServiceContainerUtils;
 import io.harness.util.PortFinder;
@@ -32,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIServiceBuilder {
   private static final String SEPARATOR = ",";
 
@@ -98,8 +98,10 @@ public class CIServiceBuilder {
         .commands(ServiceContainerUtils.getCommand())
         .args(ServiceContainerUtils.getArguments(service.getIdentifier(), image, port))
         .envVars(envVariables)
-        .containerImageDetails(
-            ContainerImageDetails.builder().imageDetails(getImageInfo(image)).connectorIdentifier(connectorRef).build())
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(image))
+                                   .connectorIdentifier(connectorRef)
+                                   .build())
         .containerResourceParams(
             getServiceContainerResource(service.getResources(), ciExecutionServiceConfig, service.getIdentifier()))
         .ports(Collections.singletonList(port))
@@ -172,23 +174,5 @@ public class CIServiceBuilder {
       }
     }
     return grpcPortList;
-  }
-
-  private static ImageDetails getImageInfo(String image) {
-    String tag = "";
-    String name = image;
-
-    if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
-      String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
-      if (subTokens.length > 2) {
-        throw new InvalidRequestException("Image should not contain multiple tags");
-      }
-      if (subTokens.length == 2) {
-        name = subTokens[0];
-        tag = subTokens[1];
-      }
-    }
-
-    return ImageDetails.builder().name(name).tag(tag).build();
   }
 }

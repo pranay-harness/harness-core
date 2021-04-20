@@ -1,19 +1,23 @@
 package io.harness.ngpipeline.executions.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EdgeList;
+import io.harness.beans.ExecutionGraph;
+import io.harness.beans.ExecutionGraph.ExecutionGraphBuilder;
+import io.harness.beans.ExecutionNode;
+import io.harness.beans.ExecutionNodeAdjacencyList;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionGraph;
-import io.harness.pms.execution.beans.ExecutionGraph.ExecutionGraphBuilder;
-import io.harness.pms.execution.beans.ExecutionNode;
-import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;
 
 import java.util.HashMap;
 import java.util.Map;
 import lombok.NonNull;
 
+@OwnedBy(CDC)
 public class ExecutionGraphMapper {
   private ExecutionGraphMapper() {}
 
@@ -40,6 +44,7 @@ public class ExecutionGraphMapper {
         .endTs(graphVertex.getEndTs())
         .failureInfo(graphVertex.getFailureInfo())
         .skipInfo(graphVertex.getSkipInfo())
+        .nodeRunInfo(graphVertex.getNodeRunInfo())
         .name(graphVertex.getName())
         .startTs(graphVertex.getStartTs())
         .status(ExecutionStatus.getExecutionStatus(graphVertex.getStatus()))
@@ -47,6 +52,7 @@ public class ExecutionGraphMapper {
         .uuid(graphVertex.getUuid())
         .executableResponses(graphVertex.getExecutableResponses())
         .taskIdToProgressDataMap(graphVertex.getProgressDataMap())
+        .setupId(graphVertex.getPlanNodeId())
         .build();
   }
 

@@ -4,7 +4,6 @@ import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 
 import io.harness.encryption.Scope;
-import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -14,10 +13,7 @@ import io.harness.yaml.snippets.YamlSnippetResource;
 import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
 import io.harness.yaml.snippets.impl.YamlSnippetProvider;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,7 +67,7 @@ public class NgCoreYamlSnippetResource implements YamlSnippetResource {
   @GET
   @Path("/{identifier}")
   @ApiOperation(value = "Get Yaml Snippet", nickname = "getYamlSnippet")
-  public ResponseDTO<String> getYamlSnippet(@PathParam("identifier") @NotNull String identifier,
+  public ResponseDTO<JsonNode> getYamlSnippet(@PathParam("identifier") @NotNull String identifier,
       @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam("scope") Scope scope) {
     final JsonNode yamlSnippet =
@@ -79,16 +75,6 @@ public class NgCoreYamlSnippetResource implements YamlSnippetResource {
     if (yamlSnippet == null) {
       throw new NotFoundException("No Snippet found for given identifier");
     }
-    String snippet;
-    try {
-      snippet = new YAMLMapper()
-                    .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(yamlSnippet);
-    } catch (JsonProcessingException e) {
-      throw new UnexpectedException("Error occurred while loading snippet", e);
-    }
-    snippet = snippet.replaceFirst("---\n", "");
-    return ResponseDTO.newResponse(snippet);
+    return ResponseDTO.newResponse(yamlSnippet);
   }
 }

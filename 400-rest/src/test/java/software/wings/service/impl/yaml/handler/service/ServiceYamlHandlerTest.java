@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.service;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.HINGER;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -78,6 +79,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   private Service service;
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Service/" + SERVICE_NAME + "/Index.yaml";
   private ArgumentCaptor<ServiceVariable> captor = ArgumentCaptor.forClass(ServiceVariable.class);
+  private ArgumentCaptor<Service> serviceCaptor = ArgumentCaptor.forClass(Service.class);
 
   @Before
   public void setUp() throws Exception {
@@ -152,7 +154,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     ChangeContext<Yaml> changeContext = getChangeContext(yaml);
     Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
     assertThat(fromYaml).isNotNull();
-    verify(serviceVariableService, times(3)).save(captor.capture(), anyBoolean());
+    verify(serviceVariableService, times(3)).save(captor.capture(), eq(true));
     assertThat(
         captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("some-secret", "other-secret", "var");
@@ -170,7 +172,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     yaml.getConfigVariables().get(0).setValue("amazonkms:other-secret");
     Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
     assertThat(fromYaml).isNotNull();
-    verify(serviceVariableService, times(2)).update(captor.capture(), anyBoolean());
+    verify(serviceVariableService, times(2)).update(captor.capture(), eq(true));
     assertThat(
         captor.getAllValues().stream().map(ServiceVariable::getValue).map(String::valueOf).collect(Collectors.toList()))
         .containsExactlyInAnyOrder("other-secret", "other-secret");
@@ -378,5 +380,35 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Cannot find the value: garbageValue");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnUpsertFromYaml() {
+    final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    changeContext.getChange().setSyncFromGit(true);
+
+    Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
+    assertThat(fromYaml).isNotNull();
+
+    verify(serviceResourceService, times(1)).save(serviceCaptor.capture(), anyBoolean(), anyBoolean());
+    Service capturedService = serviceCaptor.getValue();
+    assertThat(capturedService).isNotNull();
+    assertThat(capturedService.isSyncFromGit()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGitSyncFlagOnDelete() {
+    final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    changeContext.getChange().setSyncFromGit(true);
+    when(yamlHelper.getServiceIfPresent(anyString(), anyString())).thenReturn(Optional.of(service));
+
+    serviceYamlHandler.delete(changeContext);
+    verify(serviceResourceService, times(1)).deleteByYamlGit(APP_ID, SERVICE_ID, true);
   }
 }

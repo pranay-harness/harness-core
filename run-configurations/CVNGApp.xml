@@ -1,6 +1,11 @@
-<configuration name="CVNGApp" type="BlazeCommandRunConfigurationType" factoryName="Bazel Command">
-    <blaze-settings handler-id="BlazeJavaRunConfigurationHandlerProvider" blaze-command="run" debug_port="6006"
-                    kind="java_binary">
+<configuration name="CVNGApp"
+               type="BlazeCommandRunConfigurationType"
+               factoryName="Bazel Command">
+    <blaze-settings handler-id="BlazeJavaRunConfigurationHandlerProvider"
+                    kind="java_binary"
+                    debug_port="6007"
+                    blaze-command="run"
+                    keep-in-sync="true">
         <blaze-target>//300-cv-nextgen:module</blaze-target>
         <blaze-user-flag>
             --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"

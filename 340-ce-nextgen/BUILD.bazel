@@ -1,13 +1,13 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
+    "@ce_nextgen//:com_graphql_java_graphql_java",
+    "@ce_nextgen//:org_antlr_antlr4_runtime",
+] + [
+    "//490-ce-commons:module",
     "//930-ng-core-clients:module",
     "//940-feature-flag:module",
     "//960-persistence:module",
@@ -17,6 +17,7 @@ shared_dependencies = [
     "@maven//:io_swagger_swagger_annotations",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:io_dropwizard_dropwizard_core",
+    "@maven//:io_leangen_graphql_spqr",
     "@maven//:ru_vyarus_guice_validator",
     "//:lombok",
 ]
@@ -27,7 +28,7 @@ java_binary(
         "src/main/**/*.java",
     ]),
     data = ["//:resource"],
-    main_class = "io.harness.ceng.CENextGenApplication",
+    main_class = "io.harness.ccm.CENextGenApplication",
     visibility = ["//visibility:public"],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",
@@ -37,6 +38,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [
@@ -51,13 +53,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

@@ -1,0 +1,5 @@
+Var validateQuery = "query?nrql=SELECT count(*) FROM Transaction,TransactionError"
+Var fullQuery = concat(Env:baseUrl, Var:validateQuery)
+Var applications = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+Var t = "true"
+return Var:t

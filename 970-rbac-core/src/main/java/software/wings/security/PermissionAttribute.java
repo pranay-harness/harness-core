@@ -458,6 +458,11 @@ public class PermissionAttribute {
     MANAGE_SECRET_MANAGERS,
 
     /**
+     * Manage SSH and WinRM Connection
+     */
+    MANAGE_SSH_AND_WINRM,
+
+    /**
      * Manage Authentication Settings
      */
     MANAGE_AUTHENTICATION_SETTINGS,

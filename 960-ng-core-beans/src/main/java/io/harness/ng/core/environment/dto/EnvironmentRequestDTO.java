@@ -29,6 +29,7 @@ public class EnvironmentRequestDTO {
   Map<String, String> tags;
   @EntityName String name;
   String description;
+  String color;
   @ApiModelProperty(required = true) EnvironmentType type;
   @JsonIgnore Long version;
 }

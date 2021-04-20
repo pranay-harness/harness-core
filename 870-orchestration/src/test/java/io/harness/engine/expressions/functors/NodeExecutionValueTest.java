@@ -2,6 +2,7 @@ package io.harness.engine.expressions.functors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static java.util.Arrays.asList;
@@ -9,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.expressions.NodeExecutionsCache;
@@ -16,6 +19,7 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -38,6 +42,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NodeExecutionValueTest extends OrchestrationTestBase {
   @Mock NodeExecutionService nodeExecutionService;
   @Mock PmsOutcomeService pmsOutcomeService;
@@ -52,6 +57,8 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
   NodeExecution nodeExecution4;
   NodeExecution nodeExecution5;
   NodeExecution nodeExecution6;
+  NodeExecution nodeExecution7;
+  NodeExecution nodeExecution8;
 
   @Before
   public void setup() {
@@ -86,6 +93,18 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
                          .resolvedStepParameters(prepareStepParameters("eo"))
                          .build();
 
+    nodeExecution7 = NodeExecution.builder()
+                         .uuid(generateUuid())
+                         .node(preparePlanNode(false, "f"))
+                         .resolvedStepParameters(prepareStepParameters("eo"))
+                         .build();
+
+    nodeExecution8 = NodeExecution.builder()
+                         .uuid(generateUuid())
+                         .node(preparePlanNode(false, "g"))
+                         .resolvedStepParameters(prepareStepParameters("eo"))
+                         .build();
+
     nodeExecution2.setParentId(nodeExecution1.getUuid());
     nodeExecution3.setParentId(nodeExecution1.getUuid());
     nodeExecution2.setNextId(nodeExecution1.getUuid());
@@ -95,6 +114,10 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     nodeExecution4.setNextId(nodeExecution5.getUuid());
     nodeExecution5.setPreviousId(nodeExecution4.getUuid());
     nodeExecution6.setParentId(nodeExecution4.getUuid());
+    nodeExecution7.setParentId(nodeExecution6.getUuid());
+    nodeExecution7.setNextId(nodeExecution8.getUuid());
+    nodeExecution8.setParentId(nodeExecution6.getUuid());
+    nodeExecution8.setPreviousId(nodeExecution7.getUuid());
 
     when(nodeExecutionService.get(nodeExecution1.getUuid())).thenReturn(nodeExecution1);
     when(nodeExecutionService.get(nodeExecution2.getUuid())).thenReturn(nodeExecution2);
@@ -102,6 +125,8 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     when(nodeExecutionService.get(nodeExecution4.getUuid())).thenReturn(nodeExecution4);
     when(nodeExecutionService.get(nodeExecution5.getUuid())).thenReturn(nodeExecution5);
     when(nodeExecutionService.get(nodeExecution6.getUuid())).thenReturn(nodeExecution6);
+    when(nodeExecutionService.get(nodeExecution7.getUuid())).thenReturn(nodeExecution7);
+    when(nodeExecutionService.get(nodeExecution8.getUuid())).thenReturn(nodeExecution8);
 
     String planExecutionId = ambiance.getPlanExecutionId();
     when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, null))
@@ -112,6 +137,8 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
         .thenReturn(asList(nodeExecution4, nodeExecution5));
     when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution4.getUuid()))
         .thenReturn(Collections.singletonList(nodeExecution6));
+    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution6.getUuid()))
+        .thenReturn(asList(nodeExecution7, nodeExecution8));
   }
 
   @Test
@@ -156,6 +183,40 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     assertThat(engine.getProperty(functor, "d.param")).isEqualTo("di1");
     assertThat(engine.getProperty(functor, "d.e.param")).isEqualTo("eo");
     assertThat(engine.getProperty(functor, "e.param")).isEqualTo("eo");
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testNodeExecutionCurrentStatus() {
+    Ambiance newAmbiance =
+        AmbianceUtils.cloneForChild(ambiance, Level.newBuilder().setRuntimeId(nodeExecution8.getUuid()).build());
+    NodeExecutionAncestorFunctor functor =
+        NodeExecutionAncestorFunctor.builder()
+            .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, newAmbiance))
+            .pmsOutcomeService(pmsOutcomeService)
+            .ambiance(newAmbiance)
+            .groupAliases(ImmutableMap.of("stage", "STAGE"))
+            .build();
+
+    when(nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), nodeExecution4.getUuid(), false))
+        .thenReturn(asList(nodeExecution8, nodeExecution7, nodeExecution6));
+
+    nodeExecution4.setStatus(Status.RUNNING);
+    nodeExecution6.setStatus(Status.RUNNING);
+    nodeExecution7.setStatus(Status.SUCCEEDED);
+    nodeExecution8.setStatus(Status.QUEUED);
+
+    // Check current status for SUCCEEDED
+    assertThat(engine.getProperty(functor, "stage.currentStatus")).isEqualTo("SUCCEEDED");
+
+    // Check current status for FAILED
+    nodeExecution7.setStatus(Status.FAILED);
+    assertThat(engine.getProperty(functor, "stage.currentStatus")).isEqualTo("FAILED");
+
+    // Check current status for ERRORED
+    nodeExecution7.setStatus(Status.ERRORED);
+    assertThat(engine.getProperty(functor, "stage.currentStatus")).isEqualTo("ERRORED");
   }
 
   @Test

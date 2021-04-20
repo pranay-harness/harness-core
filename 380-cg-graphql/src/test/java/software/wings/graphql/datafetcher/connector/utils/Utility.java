@@ -19,6 +19,8 @@ import software.wings.graphql.schema.mutation.connector.input.helm.QLHttpServerP
 import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.nexus.QLNexusConnectorInput.QLNexusConnectorInputBuilder;
 
+import java.util.Collections;
+
 public class Utility {
   public static QLGitConnectorInputBuilder getQlGitConnectorInputBuilder() {
     return QLGitConnectorInput.builder()
@@ -49,6 +51,7 @@ public class Utility {
         .name(RequestField.ofNullable("NAME"))
         .URL(RequestField.ofNullable("URL"))
         .userName(RequestField.ofNullable("USER"))
+        .delegateSelectors(RequestField.ofNullable(Collections.singletonList("delegateSelector")))
         .passwordSecretId(RequestField.absent());
   }
 

@@ -1,9 +1,11 @@
 package io.harness.ssh;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.LogLevel.ERROR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
@@ -19,6 +21,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
 @Slf4j
+@OwnedBy(CDP)
 public class SshHelperUtils {
   public static void generateTGT(String userPrincipal, String password, String keyTabFilePath, LogCallback logCallback)
       throws JSchException {
@@ -32,7 +35,10 @@ public class SshHelperUtils {
     logCallback.saveExecutionLog("Generating Ticket Granting Ticket(TGT) for principal: " + userPrincipal);
     String commandString = !StringUtils.isEmpty(password) ? format("echo \"%s\" | kinit %s", password, userPrincipal)
                                                           : format("kinit -k -t %s %s", keyTabFilePath, userPrincipal);
-    boolean ticketGenerated = executeLocalCommand(commandString, logCallback, null, false);
+    boolean ticketGenerated;
+    synchronized (SshHelperUtils.class) {
+      ticketGenerated = executeLocalCommand(commandString, logCallback, null, false);
+    }
     if (ticketGenerated) {
       logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
       log.info("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);

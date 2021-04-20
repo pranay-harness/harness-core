@@ -1,12 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 java_library(
     name = "module",
@@ -15,30 +11,71 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        "@maven//:com_google_guava_guava",
+    ] + [
         "//:lombok",
         "//400-rest:module",
         "//440-connector-nextgen:module",
         "//940-secret-manager-client:module",
         "//950-delegate-tasks-beans:module",
+        "//952-scm-java-client:module",
+        "//954-connector-beans:module",
+        "//955-delegate-beans:module",
+        "@maven//:com_google_inject_guice",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_hibernate_hibernate_validator",
+        "//953-git-sync-commons:module",
         "//970-ng-commons:module",
         "//980-commons:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:io_fabric8_fabric8_utils",
+        "@maven//:io_grpc_grpc_alts",
+        "@maven//:io_grpc_grpc_api",
+        "@maven//:io_grpc_grpc_auth",
+        "@maven//:io_grpc_grpc_context",
+        "@maven//:io_grpc_grpc_core",
+        "@maven//:io_grpc_grpc_grpclb",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_grpc_grpc_netty_shaded",
+        "@maven//:io_grpc_grpc_protobuf",
+        "@maven//:io_grpc_grpc_protobuf_lite",
+        "@maven//:io_grpc_grpc_services",
+        "@maven//:io_grpc_grpc_stub",
+        "@maven//:io_grpc_grpc_testing",
         "@maven//:org_jetbrains_annotations",
         "@maven//:ru_vyarus_guice_validator",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_springframework_data_spring_data_commons",
+        "@maven//:org_springframework_data_spring_data_mongodb",
+        "@maven//:org_springframework_guice_spring_guice",
+        "@maven//:org_springframework_spring_aop",
+        "@maven//:org_springframework_spring_beans",
+        "@maven//:org_springframework_spring_context",
+        "@maven//:org_springframework_spring_core",
+        "@maven//:org_springframework_spring_expression",
+        "@maven//:org_springframework_spring_jcl",
+        "@maven//:org_springframework_spring_tx",
+        "@maven//:org_springframework_spring_web",
+        "@maven//:org_mongodb_morphia_morphia",
+        "@maven//:org_reflections_reflections",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//136-git-sync-manager/src/test/resources:resource",
         "//136-git-sync-manager/src/test/resources/software/wings/service/impl/webhook:resource",
     ],
+    resources = ["//136-git-sync-manager/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",
+        "//952-scm-java-client:module",
         "//960-persistence:module",
         "//960-persistence:supporter-test",
         "@maven//:io_dropwizard_dropwizard_testing",
@@ -52,13 +89,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

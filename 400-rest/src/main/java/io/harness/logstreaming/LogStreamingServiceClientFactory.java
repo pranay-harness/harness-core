@@ -3,7 +3,7 @@ package io.harness.logstreaming;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.network.Http;
 
@@ -20,7 +20,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 @Slf4j
-@TargetModule(Module._980_COMMONS)
+@TargetModule(HarnessModule._980_COMMONS)
 @BreakDependencyOn("software.wings.app.MainConfiguration")
 public class LogStreamingServiceClientFactory implements Provider<LogStreamingServiceRestClient> {
   @Inject private MainConfiguration mainConfiguration;

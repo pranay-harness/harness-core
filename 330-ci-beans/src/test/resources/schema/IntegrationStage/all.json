@@ -281,6 +281,22 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "IntegrationStageConfig": {
       "type": "object",
       "properties": {
@@ -352,8 +368,14 @@
     "K8sDirectInfraYamlSpec": {
       "type": "object",
       "properties": {
+        "annotations": {
+          "$ref": "#/definitions/ParameterFieldMapStringString"
+        },
         "connectorRef": {
           "type": "string"
+        },
+        "labels": {
+          "$ref": "#/definitions/ParameterFieldMapStringString"
         },
         "namespace": {
           "type": "string"
@@ -563,6 +585,63 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldMapStringString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "RetryFailureActionConfig": {
       "allOf": [
         {
@@ -595,7 +674,7 @@
       "required": [
         "onRetryFailure",
         "retryCount",
-        "retryInterval"
+        "retryIntervals"
       ],
       "properties": {
         "onRetryFailure": {
@@ -605,7 +684,7 @@
           "type": "integer",
           "format": "int32"
         },
-        "retryInterval": {
+        "retryIntervals": {
           "type": "array",
           "items": {
             "type": "string"

@@ -2,10 +2,9 @@ package io.harness.delegate.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.delegate.beans.TaskSelectorMap.TaskSelectorMapKeys;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -17,6 +16,8 @@ import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -32,11 +33,19 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "TaskSelectorMapKeys")
 @Entity(value = "taskSelectorMaps", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@NgUniqueIndex(name = "uniqueGroup",
-    fields = { @Field(value = TaskSelectorMapKeys.accountId)
-               , @Field(value = TaskSelectorMapKeys.taskGroup) })
 public class TaskSelectorMap implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                         UpdatedByAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .field(TaskSelectorMapKeys.accountId)
+                 .field(TaskSelectorMapKeys.taskGroup)
+                 .unique(true)
+                 .name("uniqueGroup")
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @FdIndex private long createdAt;

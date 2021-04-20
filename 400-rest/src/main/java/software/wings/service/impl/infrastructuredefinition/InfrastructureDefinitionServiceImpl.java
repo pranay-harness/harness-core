@@ -569,7 +569,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (infraDefinition.getCloudProviderType() == CloudProviderType.GCP) {
       SettingAttribute cloudProvider = settingsService.getByAccountAndId(
           infraDefinition.getAccountId(), infraDefinition.getInfrastructure().getCloudProviderId());
-      if (((GcpConfig) cloudProvider.getValue()).isUseDelegate()) {
+      if (((GcpConfig) cloudProvider.getValue()).isUseDelegateSelectors()) {
         throw new InvalidRequestException(
             "Infrastructure Definition Using a GCP Cloud Provider Inheriting from Delegate is not yet supported", USER);
       }
@@ -1044,6 +1044,29 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return infrastructureDefinition;
   }
 
+  public InfrastructureDefinition getInfraDefById(String accountId, String infraDefId) {
+    final InfrastructureDefinition infrastructureDefinition =
+        wingsPersistence.createQuery(InfrastructureDefinition.class)
+            .filter(InfrastructureDefinitionKeys.accountId, accountId)
+            .filter(InfrastructureDefinitionKeys.uuid, infraDefId)
+            .get();
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+    return infrastructureDefinition;
+  }
+
+  public InfrastructureDefinition getInfraByName(String accountId, String infraDefName, String envId) {
+    final InfrastructureDefinition infrastructureDefinition =
+        wingsPersistence.createQuery(InfrastructureDefinition.class)
+            .filter(InfrastructureDefinitionKeys.accountId, accountId)
+            .filter(InfrastructureDefinitionKeys.envId, envId)
+            .filter(InfrastructureDefinitionKeys.name, infraDefName)
+            .get();
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+    return infrastructureDefinition;
+  }
+
   private void validateInputs(String appId, String serviceId, String infraDefinitionId) {
     if (isEmpty(appId)) {
       throw new InvalidRequestException("App Id can't be empty");
@@ -1284,17 +1307,28 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     notNullCheck("Infrastructure Definition", infrastructureDefinition);
     InfraMappingInfrastructureProvider provider = infrastructureDefinition.getInfrastructure();
+
     String region = extractRegionFromInfrastructureProvider(provider);
     if (isEmpty(region)) {
       return Collections.emptyMap();
     }
     SettingAttribute computeProviderSetting = settingsService.get(provider.getCloudProviderId());
     notNullCheck("ComputeProvider", computeProviderSetting);
-    List<String> elasticBalancers = ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
-                                        .listElasticBalancers(computeProviderSetting, region, appId);
+
     Map<String, String> lbMap = new HashMap<>();
-    for (String lbName : elasticBalancers) {
-      lbMap.put(lbName, lbName);
+    try {
+      List<String> elasticBalancers = ((AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name()))
+                                          .listElasticBalancers(computeProviderSetting, region, appId);
+
+      for (String lbName : elasticBalancers) {
+        lbMap.put(lbName, lbName);
+      }
+    } catch (Exception ex) {
+      if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+        return emptyMap();
+      } else {
+        throw ex;
+      }
     }
 
     return lbMap;
@@ -1342,7 +1376,16 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
                                                                     : ((AwsEcsInfrastructure) provider).getRegion();
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) infrastructureProviderMap.get(AWS.name());
-      return infrastructureProvider.listTargetGroups(computeProviderSetting, region, loadbalancerName, appId);
+
+      try {
+        return infrastructureProvider.listTargetGroups(computeProviderSetting, region, loadbalancerName, appId);
+      } catch (Exception ex) {
+        if (isNotEmpty(infrastructureDefinition.getProvisionerId())) {
+          return emptyMap();
+        } else {
+          throw ex;
+        }
+      }
     }
     return Collections.emptyMap();
   }

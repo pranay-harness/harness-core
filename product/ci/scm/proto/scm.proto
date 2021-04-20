@@ -14,6 +14,7 @@ enum GitProvider {
   GITLAB = 3;
   GOGS = 4;
   STASH = 5;
+  CODECOMMIT = 6;
 }
 
 enum Action {
@@ -185,7 +186,271 @@ message ParseWebhookResponse {
   }
 }
 
+message GithubApp {
+  string app_id = 1;
+  string private_key = 2;
+}
+
+message GithubProvider {
+  oneof provider {
+    string access_token = 1;
+    GithubApp github_app = 2;
+  }
+}
+
+message GitlabProvider {
+  oneof provider {
+    string access_token = 1;
+    string personal_token = 2;
+  }
+}
+
+message GiteaProvider {
+  string access_token = 1;
+}
+
+message BitbucketCloudProvider {
+  string username = 1;
+  string app_password = 2;
+}
+
+message BitbucketServerProvider {
+  string access_token = 1;
+  string personal_token = 2;
+}
+
+message CodecommitProvider {
+  string access_key = 1;
+  string secret_key = 2;
+}
+
+message Provider {
+  oneof hook {
+    GithubProvider github = 1;
+    GitlabProvider gitlab = 2;
+    GiteaProvider gitea = 3;
+    BitbucketCloudProvider bitbucket_cloud = 4;
+    BitbucketServerProvider bitbucket_server = 5;
+    CodecommitProvider codecommit = 6;
+  }
+  string endpoint = 7;
+  bool skipVerify = 8;
+  bool debug = 9;
+}
+
+message PageResponse {
+  int32 next = 1;
+}
+
+message PageRequest {
+  int32 page = 1;
+}
+
+message GetFileRequest {
+  string slug = 1;
+  string path = 2;
+  oneof type {
+    string branch = 3;
+    string ref = 4;
+  }
+  Provider provider = 5;
+}
+
+message GetBatchFileRequest {
+  repeated GetFileRequest findRequest = 1;
+}
+
+message GetLatestFileRequest {
+  string slug = 1;
+  string path = 2;
+  string branch = 3;
+  Provider provider = 4;
+}
+
+message DeleteFileRequest {
+  string slug = 1;
+  string path = 2;
+  oneof type {
+    string branch = 3;
+    string ref = 4;
+  }
+  Provider provider = 5;
+}
+
+message DeleteFileResponse {
+  int32 status = 1;
+}
+
+message CreateFileResponse {
+  int32 status = 1;
+}
+
+message UpdateFileResponse {
+  int32 status = 1;
+}
+
+message FileModifyRequest {
+  string slug = 1;
+  string path = 2;
+  string branch = 3;
+  string content = 4;
+  string message = 5;
+  string commit_id = 6;
+  string blob_id = 7;
+  Signature signature = 8;
+  Provider provider = 9;
+}
+
+message FileContent {
+  string content = 1;
+  int32 status = 2;
+  string path = 3;
+  string commit_id = 4;
+  string blob_id = 5;
+}
+
+message FileBatchContentResponse {
+  repeated FileContent file_contents = 1;
+}
+
+message FindFilesInBranchRequest {
+  string slug = 1;
+  string branch = 2;
+  string path = 3;
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message FindFilesInBranchResponse {
+  repeated FileChange file = 1;
+  PageResponse pagination = 2;
+}
+
+message FindFilesInCommitRequest {
+  string slug = 1;
+  string ref = 2;
+  string path = 3;
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message FindFilesInCommitResponse {
+  repeated FileChange file = 1;
+  PageResponse pagination = 2;
+}
+
+enum ContentType {
+  UNKNOWN_CONTENT = 0;
+  FILE = 1;
+  DIRECTORY = 2;
+  SYMLINK = 3;
+  GITLINK = 4;
+}
+
+message FileChange {
+  string path = 1;
+  ContentType content_type = 2;
+  string commit_id = 3;
+  string blob_id = 4;
+}
+
+message IsLatestFileRequest {
+  string slug = 1;
+  string path = 2;
+  oneof type {
+    string branch = 3;
+    string ref = 4;
+  }
+  string commit_id = 5;
+  string blob_id = 6;
+  Provider provider = 7;
+}
+
+message IsLatestFileResponse {
+  bool latest = 1;
+}
+
+message CreatePRRequest {
+  string slug = 1;
+  string title = 2;
+  string body = 3;
+  string source = 4;
+  string target = 5;
+  Provider provider = 6;
+}
+
+message CreatePRResponse {
+  int32 status = 1;
+}
+
+message CreateBranchRequest {
+  string slug = 1;
+  string name = 2;
+  string commit_id = 3;
+  Provider provider = 4;
+}
+
+message CreateBranchResponse {
+  int32 status = 1;
+}
+
+message GetLatestCommitRequest {
+  string slug = 1;
+  string branch = 2;
+  Provider provider = 3;
+}
+
+message GetLatestCommitResponse {
+  string commit_id = 1;
+}
+
+message ListBranchesRequest {
+  string slug = 1;
+  PageRequest pagination = 2;
+  Provider provider = 3;
+}
+
+message ListBranchesResponse {
+  repeated string branches = 1;
+  PageResponse pagination = 2;
+}
+
+message ListCommitsRequest {
+  string slug = 1;
+  oneof type {
+    string branch = 2;
+    string ref = 3;
+  }
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message ListCommitsResponse {
+  repeated string commit_ids = 1;
+  PageResponse pagination = 2;
+}
+
 service SCM {
   // RPC to stop tailing on a file.
   rpc ParseWebhook(ParseWebhookRequest) returns (ParseWebhookResponse);
+
+  // File functions
+  rpc GetFile(GetFileRequest) returns (FileContent);
+  rpc GetBatchFile(GetBatchFileRequest) returns (FileBatchContentResponse);
+  rpc GetLatestFile(GetLatestFileRequest) returns (FileContent);
+  rpc IsLatestFile(IsLatestFileRequest) returns (IsLatestFileResponse);
+  rpc FindFilesInBranch(FindFilesInBranchRequest) returns (FindFilesInBranchResponse);
+  rpc FindFilesInCommit(FindFilesInCommitRequest) returns (FindFilesInCommitResponse);
+  rpc PushFile(FileModifyRequest) returns (FileContent);
+  // helpers
+  rpc CreateFile(FileModifyRequest) returns (CreateFileResponse);
+  rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+  rpc UpdateFile(FileModifyRequest) returns (UpdateFileResponse);
+
+  // Git functions. branch and commits
+  rpc CreatePR(CreatePRRequest) returns (CreatePRResponse);
+  rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse);
+  rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);
+  rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
+  rpc ListCommits(ListCommitsRequest) returns (ListCommitsResponse);
 }

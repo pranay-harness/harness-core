@@ -110,9 +110,9 @@ public class SettingsUtils {
         .auth()
         .oauth2(bearerToken)
         .queryParam(ACCOUNT_ID, accountId)
-        .body(setAttr, ObjectMapperType.GSON)
+        .body(setAttr, ObjectMapperType.JACKSON_2)
         .contentType(ContentType.JSON)
-        .post("/validate-connectivity")
+        .post("/settings/validate-connectivity")
         .jsonPath();
   }
 

@@ -24,6 +24,7 @@ public class YamlNode implements Visitable {
   public static final String IDENTIFIER_FIELD_NAME = "identifier";
   public static final String TYPE_FIELD_NAME = "type";
   public static final String NAME_FIELD_NAME = "name";
+  public static final String KEY_FIELD_NAME = "key";
 
   YamlNode parentNode;
   @NotNull JsonNode currJsonNode;
@@ -136,6 +137,10 @@ public class YamlNode implements Visitable {
 
   public String getName() {
     return getStringValue(NAME_FIELD_NAME);
+  }
+
+  public String getKey() {
+    return getStringValue(KEY_FIELD_NAME);
   }
 
   public String getNameOrIdentifier() {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @JsonTypeInfo(
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 })
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public abstract class ApplicationFilter implements BlackoutWindowFilter {
   private BlackoutWindowFilterType filterType;
   private EnvironmentFilter envSelection;

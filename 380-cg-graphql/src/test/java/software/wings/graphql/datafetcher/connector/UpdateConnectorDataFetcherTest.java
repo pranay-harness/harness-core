@@ -50,6 +50,7 @@ import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.utils.Utility;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput.QLDockerConnectorInputBuilder;
 import software.wings.graphql.schema.mutation.connector.input.git.QLCustomCommitDetailsInput;
@@ -64,6 +65,7 @@ import software.wings.graphql.schema.type.connector.QLGCSHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLGitConnector;
 import software.wings.graphql.schema.type.connector.QLHttpHelmRepoConnector;
 import software.wings.graphql.schema.type.connector.QLNexusConnector;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.SettingsService;
@@ -72,6 +74,7 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.inject.Inject;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashSet;
 import javax.validation.ConstraintViolationException;
 import org.junit.Before;
@@ -86,6 +89,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Mock private SettingServiceHelper settingServiceHelper;
   @Mock private ConnectorsController connectorsController;
   @Mock private SecretManager secretManager;
+  @Mock private UsageScopeController usageScopeController;
 
   @InjectMocks @Inject private UpdateConnectorDataFetcher dataFetcher;
 
@@ -150,6 +154,62 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());
 
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getConnector()).isNotNull();
+    assertThat(payload.getConnector()).isInstanceOf(QLGitConnector.class);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void updateShhGitConnector() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(GitConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                 .withValue(GitConfig.builder().accountId(ACCOUNT_ID).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    doReturn(new SettingAttribute()).when(settingsService).getByAccount(ACCOUNT_ID, SSH);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    doReturn(QLGitConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLGitConnector.builder()).when(connectorsController).populateConnector(any(), any());
+
+    QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
+        QLUpdateConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.GIT)
+            .gitConnector(
+                getQlUpdateGitConnectorInputBuilder()
+                    .branch(RequestField.ofNullable(BRANCH))
+                    .generateWebhookUrl(RequestField.ofNullable(true))
+                    .customCommitDetails(RequestField.ofNullable(QLCustomCommitDetailsInput.builder()
+                                                                     .authorName(RequestField.ofNullable(AUTHOR))
+                                                                     .authorEmailId(RequestField.ofNullable(EMAIL))
+                                                                     .commitMessage(RequestField.ofNullable(MESSAGE))
+                                                                     .build()))
+                    .sshSettingId(RequestField.ofNullable(SSH))
+                    .usageScope(RequestField.ofNullable(QLUsageScope.builder().build()))
+                    .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(usageScopeController, times(1)).populateUsageRestrictions(any(), any());
     verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
     verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
     verify(settingServiceHelper, times(1))
@@ -289,18 +349,25 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateDockerConnector() {
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withAccountId(ACCOUNT_ID)
-            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-            .withValue(DockerConfig.builder().accountId(ACCOUNT_ID).dockerRegistryUrl(URL).build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(DockerConfig.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .dockerRegistryUrl(URL)
+                                                  .delegateSelectors(Collections.singletonList("delegateSelector"))
+                                                  .build())
+                                   .build();
 
     doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-                 .withValue(DockerConfig.builder().accountId(ACCOUNT_ID).dockerRegistryUrl(URL).build())
+                 .withValue(DockerConfig.builder()
+                                .accountId(ACCOUNT_ID)
+                                .dockerRegistryUrl(URL)
+                                .delegateSelectors(Collections.singletonList("delegateSelector"))
+                                .build())
                  .build())
         .when(settingsService)
         .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
@@ -335,11 +402,14 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateDockerConnectorWithoutUsername() {
-    SettingAttribute setting =
-        SettingAttribute.Builder.aSettingAttribute()
-            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-            .withValue(DockerConfig.builder().accountId(ACCOUNT_ID).dockerRegistryUrl(URL).build())
-            .build();
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(DockerConfig.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .dockerRegistryUrl(URL)
+                                                  .delegateSelectors(Collections.singletonList("delegateSelector"))
+                                                  .build())
+                                   .build();
 
     QLDockerConnectorInputBuilder updateDockerConnectorInputBuilder =
         getQlDockerConnectorInputBuilder()
@@ -435,6 +505,7 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
                                        .connectorId(CONNECTOR_ID)
                                        .connectorType(QLConnectorType.NEXUS)
                                        .nexusConnector(getQlNexusConnectorInputBuilder()
+                                                           .delegateSelectors(RequestField.ofNull())
                                                            .passwordSecretId(RequestField.ofNullable(PASSWORD))
                                                            .version(RequestField.ofNullable(QLNexusVersion.V2))
                                                            .build())

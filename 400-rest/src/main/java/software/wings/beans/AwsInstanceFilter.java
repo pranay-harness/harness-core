@@ -1,7 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 
@@ -14,6 +16,7 @@ import lombok.experimental.FieldNameConstants;
 
 @Builder
 @FieldNameConstants(innerTypeName = "AwsInstanceFilterKeys")
+@OwnedBy(CDP)
 public class AwsInstanceFilter implements NestedAnnotationResolver {
   @Attributes(title = "VPC") private List<String> vpcIds = new ArrayList<>();
   @Attributes(title = "Tags") @Expression(ALLOW_SECRETS) private List<Tag> tags = new ArrayList<>();

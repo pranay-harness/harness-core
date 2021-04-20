@@ -1,8 +1,12 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -31,12 +35,6 @@ import io.harness.mongo.index.migrator.AggregateResult;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.notifications.NotificationReceiverInfo;
-import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
-import io.harness.redesign.states.email.EmailStepParameters;
-import io.harness.redesign.states.http.BasicHttpStepParameters;
-import io.harness.redesign.states.shell.ShellScriptStepParameters;
-import io.harness.redesign.states.wait.WaitStepParameters;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
@@ -152,6 +150,10 @@ import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
+import software.wings.api.terragrunt.TerragruntApplyMarkerParam;
+import software.wings.api.terragrunt.TerragruntExecutionData;
+import software.wings.api.terragrunt.TerragruntOutputVariables;
+import software.wings.api.terragrunt.TerragruntProvisionInheritPlanElement;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditRecord;
 import software.wings.audit.EntityAuditRecord;
@@ -276,7 +278,9 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.StringValue;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SystemCatalog;
+import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.TerragruntInfrastructureProvisioner;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -335,10 +339,10 @@ import software.wings.beans.artifact.SftpArtifactStream;
 import software.wings.beans.artifact.SmbArtifactStream;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
 import software.wings.beans.ce.CEGcpConfig;
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.ce.depricated.CECloudAccountOld;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
@@ -379,6 +383,7 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
+import software.wings.beans.command.TerragruntDummyCommandUnit;
 import software.wings.beans.commandlibrary.CommandEntity;
 import software.wings.beans.commandlibrary.CommandVersionEntity;
 import software.wings.beans.config.ArtifactSourceable;
@@ -404,6 +409,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.beans.infrastructure.instance.ServerlessInstance;
 import software.wings.beans.infrastructure.instance.SyncStatus;
+import software.wings.beans.infrastructure.instance.TerragruntConfig;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.AwsLambdaInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.AzureVMSSInstanceInfo;
@@ -759,6 +765,9 @@ import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
+import software.wings.sm.states.provision.TerragruntApplyState;
+import software.wings.sm.states.provision.TerragruntDestroyState;
+import software.wings.sm.states.provision.TerragruntRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
@@ -813,6 +822,8 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.security.Principal;
 import java.util.Set;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
 
@@ -862,12 +873,10 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(BatchJobInterval.class);
     set.add(BatchJobScheduledData.class);
     set.add(BillingDataPipelineRecord.class);
-    set.add(Budget.class);
     set.add(BugsnagCVConfiguration.class);
     set.add(CECloudAccount.class);
     set.add(CECloudAccountOld.class);
     set.add(CECluster.class);
-    set.add(CEMetadataRecord.class);
     set.add(CECommunications.class);
     set.add(CeExceptionRecord.class);
     set.add(CESlackWebhook.class);
@@ -1000,7 +1009,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PcfInfrastructureMapping.class);
     set.add(PcfServiceSpecification.class);
     set.add(Permit.class);
-    set.add(PerpetualTaskRecord.class);
     set.add(Personalization.class);
     set.add(PhysicalInfrastructureMapping.class);
     set.add(PhysicalInfrastructureMappingBase.class);
@@ -1052,6 +1060,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TemplateVersion.class);
     set.add(TerraformConfig.class);
     set.add(TerraformInfrastructureProvisioner.class);
+    set.add(TerraGroupProvisioners.class);
+    set.add(TerragruntConfig.class);
+    set.add(TerragruntInfrastructureProvisioner.class);
     set.add(ThirdPartyApiCallLog.class);
     set.add(TimeSeriesDataRecord.class);
     set.add(TimeSeriesKeyTransactions.class);
@@ -1095,11 +1106,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     h.put("marketplace.gcp.events.ProcurementPubsubMessage", ProcurementPubsubMessage.class);
 
     // Redesign Classes
-    h.put("redesign.advisers.HttpResponseCodeSwitchAdviserParameters", HttpResponseCodeSwitchAdviserParameters.class);
-    h.put("redesign.states.http.BasicHttpStepParameters", BasicHttpStepParameters.class);
-    h.put("redesign.states.wait.WaitStepParameters", WaitStepParameters.class);
-    h.put("redesign.states.shell.ShellScriptStepParameters", ShellScriptStepParameters.class);
-    h.put("redesign.states.email.EmailStepParameters", EmailStepParameters.class);
     h.put("waiter.ListNotifyResponseData", ListNotifyResponseData.class);
 
     w.put("api.AmiServiceDeployElement", AmiServiceDeployElement.class);
@@ -1203,6 +1209,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.AzureVMSSDeploymentInfo", AzureVMSSDeploymentInfo.class);
     w.put("api.AzureWebAppDeploymentInfo", AzureWebAppDeploymentInfo.class);
     w.put("api.terraform.TerraformProvisionInheritPlanElement", TerraformProvisionInheritPlanElement.class);
+    w.put("api.terragrunt.TerragruntExecutionData", TerragruntExecutionData.class);
+    w.put("api.terragrunt.TerragruntProvisionInheritPlanElement", TerragruntProvisionInheritPlanElement.class);
+    w.put("api.terragrunt.TerragruntApplyMarkerParam", TerragruntApplyMarkerParam.class);
     w.put("api.TerraformApplyMarkerParam", TerraformApplyMarkerParam.class);
     w.put("api.TerraformPlanParam", TerraformPlanParam.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
@@ -1250,6 +1259,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.CanaryWorkflowExecutionAdvisor", CanaryWorkflowExecutionAdvisor.class);
     w.put("beans.ce.CEAwsConfig", CEAwsConfig.class);
     w.put("beans.ce.CEGcpConfig", CEGcpConfig.class);
+    w.put("beans.ce.CEAzureConfig", CEAzureConfig.class);
     w.put("beans.command.AmiCommandUnit", AmiCommandUnit.class);
     w.put("beans.command.AwsLambdaCommandUnit", AwsLambdaCommandUnit.class);
     w.put("beans.command.CleanupPowerShellCommandUnit", CleanupPowerShellCommandUnit.class);
@@ -1286,6 +1296,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.AzureVMSSDummyCommandUnit", AzureVMSSDummyCommandUnit.class);
     w.put("beans.command.AzureWebAppCommandUnit", AzureWebAppCommandUnit.class);
     w.put("beans.command.AzureARMCommandUnit", AzureARMCommandUnit.class);
+    w.put("beans.command.TerragruntDummyCommandUnit", TerragruntDummyCommandUnit.class);
     w.put("beans.config.ArtifactoryConfig", ArtifactoryConfig.class);
     w.put("beans.config.LogzConfig", LogzConfig.class);
     w.put("beans.config.NexusConfig", NexusConfig.class);
@@ -1569,6 +1580,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.provision.DestroyTerraformProvisionState", DestroyTerraformProvisionState.class);
     w.put("sm.states.provision.ShellScriptProvisionState", ShellScriptProvisionState.class);
     w.put("sm.states.provision.TerraformRollbackState", TerraformRollbackState.class);
+    w.put("sm.states.provision.TerragruntApplyState", TerragruntApplyState.class);
+    w.put("sm.states.provision.TerragruntDestroyState", TerragruntDestroyState.class);
+    w.put("sm.states.provision.TerragruntRollbackState", TerragruntRollbackState.class);
     w.put("sm.states.provision.ARMProvisionState", ARMProvisionState.class);
     w.put("sm.states.provision.ARMRollbackState", ARMRollbackState.class);
     w.put("sm.states.RepeatState", RepeatState.class);
@@ -1649,6 +1663,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.FetchInstancesCommandUnit", FetchInstancesCommandUnit.class);
     w.put("api.AwsAmiInfoVariables", AwsAmiInfoVariables.class);
     w.put("api.terraform.TerraformOutputVariables", TerraformOutputVariables.class);
+    w.put("api.terragrunt.TerragruntOutputVariables", TerragruntOutputVariables.class);
     w.put("api.arm.ARMOutputVariables", ARMOutputVariables.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);

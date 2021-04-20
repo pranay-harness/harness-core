@@ -1,5 +1,8 @@
 package io.harness.ccm.setup.service.support.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.service.support.intfc.AzureCEConfigValidationService;
 import io.harness.exception.InvalidArgumentsException;
 
@@ -22,6 +25,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class AzureCEConfigValidationServiceImpl implements AzureCEConfigValidationService {
   private static final String AZURE_STORAGE_SUFFIX = "blob.core.windows.net";
   private static final String AZURE_STORAGE_URL_FORMAT = "https://%s.%s";

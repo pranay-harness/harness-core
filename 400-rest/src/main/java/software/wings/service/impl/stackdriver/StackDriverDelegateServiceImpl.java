@@ -96,7 +96,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
     Monitoring monitoring = gcpHelperService.getMonitoringService(
-        gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegate());
+        gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegateSelectors());
     String projectResource = "projects/" + projectId;
     List<ListTimeSeriesResponse> responses = new ArrayList<>();
     long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
@@ -133,7 +133,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     try {
       List<Region> regions =
           gcpHelperService
-              .getGCEService(gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegate())
+              .getGCEService(gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegateSelectors())
               .regions()
               .list(projectId)
               .execute()
@@ -156,7 +156,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     try {
       List<ForwardingRule> forwardingRulesByRegion =
           gcpHelperService
-              .getGCEService(gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegate())
+              .getGCEService(gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegateSelectors())
               .forwardingRules()
               .list(projectId, region)
               .execute()
@@ -359,7 +359,7 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
     Logging logging = gcpHelperService.getLoggingResource(
-        gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegate());
+        gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegateSelectors());
 
     String queryField = getQueryField(dataCollectionInfo.getHostnameField(),
         new ArrayList<>(dataCollectionInfo.getHosts()), dataCollectionInfo.getQuery(), startTime, endTime, is24x7Task);

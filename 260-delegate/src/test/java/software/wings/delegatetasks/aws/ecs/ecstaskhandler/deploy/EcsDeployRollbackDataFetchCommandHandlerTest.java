@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -18,7 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
@@ -45,7 +46,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest {
   @Mock private EcsDeployCommandTaskHelper mockEcsDeployCommandTaskHelper;
   @Mock private AwsClusterService mockAwsClusterService;
@@ -70,7 +71,7 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
         .when(mockEcsDeployCommandTaskHelper)
         .getEmptyEcsDeployRollbackDataFetchResponse();
 
-    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null);
+    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null, false);
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(response.getErrorMessage()).isEqualTo("Invalid request Type, expected EcsDeployRollbackFetchRequest");
@@ -125,7 +126,8 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
 
     verify(mockAwsClusterService, times(0))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
+        .resizeCluster(
+            anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), anyBoolean());
     verify(mockEcsDeployCommandTaskHelper, times(0)).restoreAutoScalarConfigs(any(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(0)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }
@@ -168,7 +170,8 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
     assertThat(ecsCommandResponse.getOldInstanceData()).containsExactly(oldInstanceData);
 
     verify(mockAwsClusterService, times(0))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
+        .resizeCluster(
+            anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), anyBoolean());
     verify(mockEcsDeployCommandTaskHelper, times(0)).deregisterAutoScalarsIfExists(any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(0)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }

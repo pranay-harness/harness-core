@@ -1,8 +1,10 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_ALL_STATUS_LIST;
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATUS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.repositories.gitCommit.GitCommitRepository;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class GitCommitServiceImpl implements GitCommitService {
   private GitCommitRepository gitCommitRepository;
 

@@ -74,6 +74,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
 
     when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
+    when(kubeCtlHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
@@ -117,6 +118,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
     when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
     when(kubeCtlHandler.deletePod(kubernetesClient, podName, namespace)).thenReturn(Boolean.TRUE);
     when(kubeCtlHandler.deleteService(kubernetesClient, namespace, serviceName)).thenReturn(Boolean.TRUE);
+    when(kubeCtlHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
 
     K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());

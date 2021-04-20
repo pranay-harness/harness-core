@@ -45,6 +45,7 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
   @Attributes(title = "Username") private String username;
   @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
+  private List<String> delegateSelectors;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
@@ -61,14 +62,15 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
     return isNotEmpty(username);
   }
 
-  public DockerConfig(
-      String dockerRegistryUrl, String username, char[] password, String accountId, String encryptedPassword) {
+  public DockerConfig(String dockerRegistryUrl, String username, char[] password, List<String> delegateSelectors,
+      String accountId, String encryptedPassword) {
     super(SettingVariableTypes.DOCKER.name());
     setDockerRegistryUrl(dockerRegistryUrl);
     this.username = username;
     this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.delegateSelectors = delegateSelectors;
   }
 
   // override the setter for URL to enforce that we always put / (slash) at the end
@@ -106,10 +108,13 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
+    private List<String> delegateSelectors;
+
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions, List<String> delegateSelectors) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
+      this.delegateSelectors = delegateSelectors;
     }
   }
 }

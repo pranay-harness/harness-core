@@ -35,7 +35,7 @@ logging:
     - type: console
       threshold: TRACE
       target: STDOUT
-      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
     - type: gke-console
       threshold: TRACE
       target: STDOUT
@@ -90,4 +90,31 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
+
+pmsMongo:
+  uri: mongodb://localhost:27017/pms-harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+pmsSdkGrpcServerConfig:
+  connectors:
+    - port: 12401
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 12402
+
+pmsGrpcClientConfig:
+  target: localhost:12011
+  authority: localhost
+shouldConfigureWithPMS: false
+
 portalUrl: https://localhost:8181/

@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 
@@ -40,11 +41,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -72,6 +75,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -114,6 +118,7 @@ import org.junit.experimental.categories.Category;
  * Created by anubhaw on 8/31/16.
  */
 @Slf4j
+@OwnedBy(PL)
 public class SecureResourceTest extends CategoryTest {
   /**
    * The constant TOKEN_EXPIRY_IN_MILLIS.
@@ -149,6 +154,8 @@ public class SecureResourceTest extends CategoryTest {
   private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = mock(Cache.class);
   private static VersionInfoManager versionInfoManager = mock(VersionInfoManager.class);
   private static ConfigurationController configurationController = mock(ConfigurationController.class);
+  private static ApiKeyService apiKeyService = mock(ApiKeyService.class);
+  private static io.harness.ff.FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
 
   private static AuthService authService =
       new AuthServiceImpl(genericDbCache, hPersistence, userService, userGroupService, usageRestrictionsService,
@@ -156,7 +163,7 @@ public class SecureResourceTest extends CategoryTest {
           harnessUserGroupService, secretManager, versionInfoManager, configurationController);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
-      accountService, whitelistService, harnessUserGroupService, graphQLUtils);
+      accountService, whitelistService, harnessUserGroupService, graphQLUtils, apiKeyService, featureFlagService);
 
   /**
    * The constant resources.

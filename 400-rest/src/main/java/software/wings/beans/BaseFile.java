@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.beans.ChecksumType;
+import io.harness.delegate.beans.ChecksumType;
 import io.harness.validation.Create;
 
 import com.google.common.base.MoreObjects;

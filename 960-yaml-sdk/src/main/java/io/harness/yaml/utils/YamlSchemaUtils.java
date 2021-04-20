@@ -1,9 +1,11 @@
 package io.harness.yaml.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.packages.HarnessPackages;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
@@ -27,6 +29,7 @@ import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
 @UtilityClass
+@OwnedBy(DX)
 public class YamlSchemaUtils {
   /**
    * @param classLoader     {@link ClassLoader} object which will be used for reflection. If null default class loader

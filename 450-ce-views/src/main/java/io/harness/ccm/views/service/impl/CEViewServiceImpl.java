@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -58,7 +59,7 @@ public class CEViewServiceImpl implements CEViewService {
   private static final String DEFAULT_AZURE_VIEW_NAME = "Azure";
   private static final String DEFAULT_AZURE_FIELD_ID = "azureServiceName";
   private static final String DEFAULT_AZURE_FIELD_NAME = "Service name";
-  private static final int VIEW_COUNT = 50;
+  private static final int VIEW_COUNT = 100;
   @Override
   public CEView save(CEView ceView) {
     validateView(ceView);
@@ -179,8 +180,12 @@ public class CEViewServiceImpl implements CEViewService {
   }
 
   @Override
-  public List<QLCEView> getAllViews(String accountId) {
+  public List<QLCEView> getAllViews(String accountId, boolean includeDefault) {
     List<CEView> viewList = ceViewDao.findByAccountId(accountId);
+    if (!includeDefault) {
+      viewList =
+          viewList.stream().filter(view -> view.getViewType() != ViewType.DEFAULT_AZURE).collect(Collectors.toList());
+    }
     List<QLCEView> graphQLViewObjList = new ArrayList<>();
     for (CEView view : viewList) {
       List<CEReportSchedule> reportSchedules =
@@ -229,7 +234,7 @@ public class CEViewServiceImpl implements CEViewService {
                                                    .identifier(ViewFieldIdentifier.AZURE)
                                                    .build())
                                     .viewOperator(ViewIdOperator.NOT_NULL)
-                                    .values(Collections.emptyList())
+                                    .values(Collections.singletonList(""))
                                     .build();
 
     ViewRule rule = ViewRule.builder().viewConditions(Collections.singletonList(condition)).build();
@@ -250,11 +255,10 @@ public class CEViewServiceImpl implements CEViewService {
   @Override
   public String getDefaultAzureViewId(String accountId) {
     List<CEView> views = ceViewDao.findByAccountIdAndType(accountId, ViewType.DEFAULT_AZURE);
-    if (views != null && views.size() > 1) {
-      log.error("More than 1 default azure perspectives present");
-      return null;
-    }
-    if (views != null) {
+    if (views != null && views.size() > 0) {
+      if (views.size() > 1) {
+        log.error("More than 1 default azure perspectives present");
+      }
       return views.get(0).getUuid();
     }
     return null;

@@ -7,10 +7,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 
 import software.wings.beans.Base;
 import software.wings.beans.Service;
@@ -18,6 +18,7 @@ import software.wings.expression.ArtifactLabelEvaluator;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,24 +36,41 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-
-@CdIndex(name = "owners", fields = { @Field("artifactStreamId")
-                                     , @Field("appId") })
-@CdIndex(name = "artifactStream_buildNo", fields = { @Field("artifactStreamId")
-                                                     , @Field("metadata.buildNo") })
-@CdIndex(name = "artifactStream_artifactPath", fields = { @Field("artifactStreamId")
-                                                          , @Field("metadata.artifactPath") })
-@CdIndex(name = "artifactStream_revision", fields = { @Field("artifactStreamId")
-                                                      , @Field("revision") })
-@CdIndex(name = "appId_artifactStreamId_createdAt_status",
-    fields =
-    {
-      @Field("appId"), @Field("artifactStreamId"), @Field(value = "createdAt", type = IndexType.DESC), @Field("status")
-    })
 @FieldNameConstants(innerTypeName = "ArtifactKeys")
 @Entity(value = "artifacts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class Artifact extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("owners")
+                 .field(ArtifactKeys.artifactStreamId)
+                 .field(ArtifactKeys.appId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("artifactStream_buildNo")
+                 .field(ArtifactKeys.artifactStreamId)
+                 .field(ArtifactKeys.metadata_buildNo)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("artifactStream_artifactPath")
+                 .field(ArtifactKeys.artifactStreamId)
+                 .field(ArtifactKeys.metadata_artifactPath)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("artifactStream_revision")
+                 .field(ArtifactKeys.artifactStreamId)
+                 .field(ArtifactKeys.revision)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("appId_artifactStreamId_status_createdAt")
+                 .field(ArtifactKeys.appId)
+                 .field(ArtifactKeys.artifactStreamId)
+                 .field(ArtifactKeys.status)
+                 .descSortField(ArtifactKeys.createdAt)
+                 .build())
+        .build();
+  }
   @UtilityClass
   public static final class ArtifactMetadataKeys {
     public static final String artifactFileName = "artifactFileName";
@@ -80,6 +98,7 @@ public class Artifact extends Base {
   public static final class ArtifactKeys {
     public static final String uuid = "uuid";
     public static final String appId = "appId";
+    public static final String createdAt = "createdAt";
     public static final String metadata_image = metadata + "." + ArtifactMetadataKeys.image;
     public static final String metadata_tag = metadata + "." + ArtifactMetadataKeys.tag;
     public static final String metadata_buildNo = metadata + "." + ArtifactMetadataKeys.buildNo;

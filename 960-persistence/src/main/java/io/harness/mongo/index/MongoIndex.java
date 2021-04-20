@@ -12,11 +12,13 @@ import org.slf4j.Logger;
 public interface MongoIndex {
   String NAME = "name";
   String UNIQUE = "unique";
+  String SPARSE = "sparse";
   String BACKGROUND = "background";
 
   IndexCreatorBuilder createBuilder(String id);
   String getName();
   boolean isUnique();
+  boolean isSparse();
   List<String> getFields();
 
   default void checks(Logger log) {
@@ -55,6 +57,9 @@ public interface MongoIndex {
       options.put(UNIQUE, Boolean.TRUE);
     } else {
       options.put(BACKGROUND, Boolean.TRUE);
+    }
+    if (isSparse()) {
+      options.put(SPARSE, Boolean.TRUE);
     }
     return options;
   }

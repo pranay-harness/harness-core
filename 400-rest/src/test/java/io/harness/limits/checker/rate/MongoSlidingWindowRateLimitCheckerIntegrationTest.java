@@ -1,10 +1,12 @@
 package io.harness.limits.checker.rate;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -35,6 +37,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;
 

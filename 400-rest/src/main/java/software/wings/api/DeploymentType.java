@@ -1,5 +1,9 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.ImmutableMap;
@@ -10,6 +14,7 @@ import java.util.List;
 /**
  * Created by rishi on 12/22/16.
  */
+@OwnedBy(CDP)
 public enum DeploymentType {
   SSH("Secure Shell (SSH)"),
   AWS_CODEDEPLOY("AWS CodeDeploy"),
@@ -48,7 +53,7 @@ public enum DeploymentType {
           .put(AMI, Collections.singletonList(ArtifactType.AMI))
           .put(WINRM, Arrays.asList(ArtifactType.IIS, ArtifactType.IIS_APP, ArtifactType.IIS_VirtualDirectory))
           .put(AZURE_VMSS, Collections.singletonList(ArtifactType.AZURE_MACHINE_IMAGE))
-          .put(AZURE_WEBAPP, Collections.singletonList(ArtifactType.AZURE_WEBAPP))
+          .put(AZURE_WEBAPP, Arrays.asList(ArtifactType.WAR, ArtifactType.ZIP, ArtifactType.NUGET, ArtifactType.DOCKER))
           .put(PCF, Collections.singletonList(ArtifactType.PCF))
           .put(CUSTOM,
               Arrays.asList(ArtifactType.DOCKER, ArtifactType.JAR, ArtifactType.WAR, ArtifactType.RPM,

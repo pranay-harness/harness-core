@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.mutation.application.input;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
@@ -13,7 +13,7 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLUpdateApplicationInputKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLUpdateApplicationInput implements QLMutationInput {
   private String clientMutationId;
   private String applicationId;

@@ -1,10 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.beans.ExecutionInterruptType.MARK_FAILED;
+import static io.harness.beans.ExecutionInterruptType.PAUSE_FOR_INPUTS;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.interrupts.ExecutionInterruptType.MARK_FAILED;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_FOR_INPUTS;
 
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;

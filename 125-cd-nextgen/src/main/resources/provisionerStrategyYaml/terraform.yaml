@@ -1,0 +1,29 @@
+provisioner:
+  steps:
+    - step:
+        type: TerraformApply
+        name: Terraform Apply
+        identifier: terraformApply
+        timeout: 10m
+        spec:
+          provisionerIdentifier:
+          configuration:
+            type: Inline
+            spec:
+              workspace: default
+              configFiles:
+                store:
+                  type: Git
+                  spec:
+                    gitFetchType: Branch
+                    repoName:
+                    branch:
+                    folderPath:
+                    connectorRef:
+              varFiles:
+              backendConfig:
+                type: Inline
+                spec:
+                  content:
+              targets:
+              environmentVariables:

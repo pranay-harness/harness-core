@@ -1,9 +1,13 @@
 package io.harness.connector.mappers.secretmanagermapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 
+@OwnedBy(PL)
 public class GcpKmsEntityToDTO implements ConnectorEntityToDTOMapper<GcpKmsConnectorDTO, GcpKmsConnector> {
   @Override
   public GcpKmsConnectorDTO createConnectorDTO(GcpKmsConnector connector) {

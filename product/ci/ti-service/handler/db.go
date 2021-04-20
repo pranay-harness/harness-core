@@ -148,7 +148,7 @@ func HandleTestCases(adb db.Db, config config.Config, log *zap.SugaredLogger) ht
 	}
 }
 
-// HandleTestCases returns an http.HandlerFunc that return test suite information.
+// HandleTestSuites returns an http.HandlerFunc that return test suite information.
 func HandleTestSuites(adb db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.network.Http;
@@ -45,7 +45,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  */
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CustomAPMDataCollector implements MetricsDataCollector<CustomAPMDataCollectionInfo> {
   private static final String URL_BODY_APPENDER = "__harness-body__";
   private DataCollectionExecutionContext dataCollectionExecutionContext;

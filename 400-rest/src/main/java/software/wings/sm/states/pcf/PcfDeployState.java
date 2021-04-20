@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -18,12 +19,15 @@ import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
@@ -81,9 +85,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CDP)
 public class PcfDeployState extends State {
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
@@ -99,6 +106,7 @@ public class PcfDeployState extends State {
   @Attributes(title = "Instance Unit Type", required = true)
   private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
   @Attributes(title = "Desired Instances- Old version") private Integer downsizeInstanceCount;
+  @Getter @Setter private boolean useAppResizeV2;
   @Attributes(title = "Instance Unit Type")
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
   public static final String PCF_RESIZE_COMMAND = "PCF Resize";
@@ -168,8 +176,18 @@ public class PcfDeployState extends State {
 
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
+    SetupSweepingOutputPcf setupSweepingOutputPcf = null;
 
-    SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
+    try {
+      setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
+    } catch (InvalidArgumentsException ex) {
+      if (isRollback()) {
+        setupSweepingOutputPcf = SetupSweepingOutputPcf.builder().build();
+      } else {
+        throw ex;
+      }
+    }
+
     pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
 
     Activity activity = createActivity(context, setupSweepingOutputPcf);
@@ -184,8 +202,8 @@ public class PcfDeployState extends State {
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
-    Integer upsizeUpdateCount = getUpsizeUpdateCount(setupSweepingOutputPcf);
-    Integer downsizeUpdateCount = getDownsizeUpdateCount(setupSweepingOutputPcf);
+    Integer upsizeUpdateCount = getUpsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
+    Integer downsizeUpdateCount = getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
 
     PcfDeployStateExecutionData stateExecutionData =
         getPcfDeployStateExecutionData(setupSweepingOutputPcf, activity, upsizeUpdateCount, downsizeUpdateCount);
@@ -243,13 +261,14 @@ public class PcfDeployState extends State {
     return setupSweepingOutputPcf.getNewPcfApplicationDetails().getApplicationName();
   }
 
-  protected Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+  protected Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
     Integer count = setupSweepingOutputPcf.getDesiredActualFinalCount();
-    return getInstanceCountToBeUpdated(count, instanceCount, instanceUnitType, true);
+    return getInstanceCountToBeUpdated(count, instanceCount, instanceUnitType, true, pcfConfig, true);
   }
 
   @VisibleForTesting
-  protected Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+  protected Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
+    boolean hasUserDefinedDownsizeForOldApp = downsizeInstanceCount != null;
     Integer downsizeUpdateCount = downsizeInstanceCount == null ? instanceCount : downsizeInstanceCount;
     downsizeInstanceUnitType = downsizeInstanceUnitType == null ? instanceUnitType : downsizeInstanceUnitType;
 
@@ -258,8 +277,8 @@ public class PcfDeployState extends State {
     Integer runningInstanceCount = existingAppInstanceCount != null
         ? existingAppInstanceCount
         : setupSweepingOutputPcf.getDesiredActualFinalCount();
-    downsizeUpdateCount =
-        getInstanceCountToBeUpdated(runningInstanceCount, downsizeUpdateCount, downsizeInstanceUnitType, false);
+    downsizeUpdateCount = getInstanceCountToBeUpdated(runningInstanceCount, downsizeUpdateCount,
+        downsizeInstanceUnitType, false, pcfConfig, hasUserDefinedDownsizeForOldApp);
 
     return downsizeUpdateCount;
   }
@@ -272,15 +291,15 @@ public class PcfDeployState extends State {
     }
 
     if (existingAppDetails != null && existingAppDetails.getInitialInstanceCount() != null
-        && existingAppDetails.getInitialInstanceCount().intValue() > 0) {
+        && existingAppDetails.getInitialInstanceCount() > 0) {
       return existingAppDetails.getInitialInstanceCount();
     }
 
     return null;
   }
 
-  private Integer getInstanceCountToBeUpdated(
-      Integer maxInstanceCount, Integer instanceCountValue, InstanceUnitType unitType, boolean upsize) {
+  private Integer getInstanceCountToBeUpdated(Integer maxInstanceCount, Integer instanceCountValue,
+      InstanceUnitType unitType, boolean upsize, PcfConfig pcfConfig, boolean hasUserDefinedDownsizeForOldApp) {
     // final count after upsize or downsize in this deploy phase
     Integer updateCount;
     if (unitType == PERCENTAGE) {
@@ -290,19 +309,29 @@ public class PcfDeployState extends State {
         // if use inputs 40%, means count after this phase deployment should be 40% of maxInstances
         updateCount = Math.max(count, 1);
       } else {
-        // if use inputs 40%, means 60% (100 - 40) of maxInstances should be downsized for old apps
-        // so only 40% of the max instances would remain
-        updateCount = Math.max(count, 0);
-        updateCount = maxInstanceCount - updateCount;
+        if (featureFlagService.isEnabled(FeatureName.PCF_OLD_APP_RESIZE, pcfConfig.getAccountId()) && useAppResizeV2
+            && hasUserDefinedDownsizeForOldApp) {
+          updateCount = Math.max(count, 0);
+        } else {
+          // if use inputs 40%, means 60% (100 - 40) of maxInstances should be downsized for old apps
+          // so only 40% of the max instances would remain
+          updateCount = Math.max(count, 0);
+          updateCount = maxInstanceCount - updateCount;
+        }
       }
     } else {
       if (upsize) {
         // if use inputs 5, means count after this phase deployment should be 5
         updateCount = Math.min(maxInstanceCount, instanceCountValue);
       } else {
-        // if use inputs 5, means count after this phase deployment for old apps should be,
-        // so manxInstances - 5 should be downsized
-        updateCount = Math.max(0, maxInstanceCount - instanceCountValue);
+        if (featureFlagService.isEnabled(FeatureName.PCF_OLD_APP_RESIZE, pcfConfig.getAccountId()) && useAppResizeV2
+            && hasUserDefinedDownsizeForOldApp) {
+          updateCount = Math.max(0, instanceCountValue);
+        } else {
+          // if use inputs 5, means count after this phase deployment for old apps should be,
+          // so manxInstances - 5 should be downsized
+          updateCount = Math.max(0, maxInstanceCount - instanceCountValue);
+        }
       }
     }
     return updateCount;

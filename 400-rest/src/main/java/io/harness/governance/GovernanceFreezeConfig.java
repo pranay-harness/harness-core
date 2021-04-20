@@ -2,11 +2,10 @@ package io.harness.governance;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
@@ -19,15 +18,16 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @ToString
 @EqualsAndHashCode
-@TargetModule(Module._980_COMMONS)
-public abstract class GovernanceFreezeConfig {
-  private boolean freezeForAllApps;
-  private List<String> appIds;
-  private List<EnvironmentType> environmentTypes;
+public abstract class GovernanceFreezeConfig implements UuidAware {
+  // not used
+  @EqualsAndHashCode.Exclude private boolean freezeForAllApps;
+  @EqualsAndHashCode.Exclude private List<String> appIds;
+  @EqualsAndHashCode.Exclude private List<EnvironmentType> environmentTypes;
+
   private String uuid;
   @NotEmpty private String name;
   private String description;
-  private boolean applicable; // Corresponds to the on/off button for each window
+  @EqualsAndHashCode.Exclude private boolean applicable; // Corresponds to the on/off button for each window
   private List<ApplicationFilter> appSelections;
   private List<String> userGroups; // User groups to be notified
 
@@ -61,4 +61,12 @@ public abstract class GovernanceFreezeConfig {
   }
 
   public abstract long fetchEndTime();
+
+  // this method takes into account applicable boolean as well
+  public boolean equalsWithApplicable(final Object o) {
+    if (!this.equals(o)) {
+      return false;
+    }
+    return ((GovernanceFreezeConfig) o).applicable == this.isApplicable();
+  }
 }

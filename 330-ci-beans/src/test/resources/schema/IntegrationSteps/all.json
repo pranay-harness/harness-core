@@ -68,6 +68,9 @@
                 }
               ]
             },
+            "optimize": {
+              "type": "boolean"
+            },
             "repo": {
               "type": "string"
             },
@@ -150,6 +153,9 @@
                   "type": "string"
                 }
               ]
+            },
+            "optimize": {
+              "type": "boolean"
             },
             "region": {
               "type": "string"
@@ -234,6 +240,9 @@
                 }
               ]
             },
+            "optimize": {
+              "type": "boolean"
+            },
             "projectID": {
               "type": "string"
             },
@@ -259,6 +268,22 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "JUnitTestReport": {
@@ -306,6 +331,93 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldListString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldMapStringString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PluginStepInfo": {
       "allOf": [
         {
@@ -323,6 +435,9 @@
             },
             "image": {
               "type": "string"
+            },
+            "privileged": {
+              "type": "boolean"
             },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
@@ -473,6 +588,9 @@
                 }
               ]
             },
+            "privileged": {
+              "type": "boolean"
+            },
             "reports": {
               "$ref": "#/definitions/UnitTestReport"
             },
@@ -508,14 +626,29 @@
             "connector": {
               "type": "string"
             },
+            "envVariables": {
+              "$ref": "#/definitions/ParameterFieldMapStringString"
+            },
             "image": {
               "type": "string"
             },
             "language": {
               "type": "string"
             },
+            "outputVariables": {
+              "$ref": "#/definitions/ParameterFieldListString"
+            },
             "packages": {
               "type": "string"
+            },
+            "postCommand": {
+              "type": "string"
+            },
+            "preCommand": {
+              "type": "string"
+            },
+            "privileged": {
+              "type": "boolean"
             },
             "reports": {
               "$ref": "#/definitions/UnitTestReport"

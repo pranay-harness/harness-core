@@ -27,12 +27,12 @@ import javax.validation.constraints.NotNull;
 @JsonTypeInfo(use = NAME, property = "type", include = PROPERTY, visible = true)
 @JsonSubTypes({
   @Type(value = AbortFailureActionConfig.class, name = ABORT)
-  , @Type(value = ManualInterventionFailureActionConfig.class, name = MANUAL_INTERVENTION),
+  , @Type(value = IgnoreFailureActionConfig.class, name = IGNORE),
+      @Type(value = ManualInterventionFailureActionConfig.class, name = MANUAL_INTERVENTION),
       @Type(value = MarkAsSuccessFailureActionConfig.class, name = MARK_AS_SUCCESS),
       @Type(value = RetryFailureActionConfig.class, name = RETRY),
       @Type(value = StageRollbackFailureActionConfig.class, name = STAGE_ROLLBACK),
-      @Type(value = StepGroupFailureActionConfig.class, name = STEP_GROUP_ROLLBACK),
-      @Type(value = IgnoreFailureActionConfig.class, name = IGNORE)
+      @Type(value = StepGroupFailureActionConfig.class, name = STEP_GROUP_ROLLBACK)
 })
 public interface FailureStrategyActionConfig {
   @NotNull NGFailureActionType getType();

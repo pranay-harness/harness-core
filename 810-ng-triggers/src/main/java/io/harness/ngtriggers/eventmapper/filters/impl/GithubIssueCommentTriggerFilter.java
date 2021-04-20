@@ -10,6 +10,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
+import io.harness.beans.IssueCommentWebhookEvent;
+import io.harness.beans.Repository;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.gitapi.GitApiFindPRTaskResponse;
 import io.harness.delegate.beans.gitapi.GitApiRequestType;
@@ -21,8 +23,6 @@ import io.harness.exception.WingsException;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
-import io.harness.ngtriggers.beans.scm.IssueCommentWebhookEvent;
-import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
@@ -36,6 +36,7 @@ import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.Reference;
 import io.harness.product.ci.scm.proto.User;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.WebhookParserSCMService;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ResponseData;
@@ -58,6 +59,7 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
   private KryoSerializer kryoSerializer;
   private WebhookEventPayloadParser webhookEventPayloadParser;
   private PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
+  private WebhookParserSCMService webhookParserSCMService;
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
@@ -116,7 +118,7 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
         .originalEvent(originalWebhookPayloadData.getOriginalEvent())
         .webhookGitUser(originalWebhookPayloadData.getWebhookGitUser())
         .parseWebhookResponse(newParseWebhookResponse)
-        .webhookEvent(webhookEventPayloadParser.convertPRWebhookEvent(pullRequestHook))
+        .webhookEvent(webhookParserSCMService.convertPRWebhookEvent(pullRequestHook))
         .build();
   }
 

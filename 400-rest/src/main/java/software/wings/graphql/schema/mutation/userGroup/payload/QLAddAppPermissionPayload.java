@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.mutation.userGroup.payload;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.usergroup.QLUserGroup;
@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLAddAppPermissionPayloadKeys")
 @Scope(PermissionAttribute.ResourceType.USER)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLAddAppPermissionPayload {
   String clientMutationId;
   QLUserGroup userGroup;

@@ -13,6 +13,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
@@ -27,6 +29,7 @@ import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -37,11 +40,9 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.LinkedList;
-import java.util.Map;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +51,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sScaleStepTest extends CategoryTest {
   @Mock private OutcomeService outcomeService;
   @Mock private K8sStepHelper k8sStepHelper;
@@ -68,7 +70,7 @@ public class K8sScaleStepTest extends CategoryTest {
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
-    doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(storeConfig, ambiance);
+    doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(manifestOutcome, ambiance);
   }
 
   @Test
@@ -83,13 +85,15 @@ public class K8sScaleStepTest extends CategoryTest {
             .instanceSelection(InstanceSelectionWrapper.builder().spec(spec).type(K8sInstanceUnitType.Count).build())
             .skipSteadyStateCheck(ParameterField.createValueField(false))
             .workload(ParameterField.createValueField("Deployment/test-scale-count-deployment"))
-            .timeout(ParameterField.createValueField("10m"))
             .build();
+
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     final TaskRequest taskRequest = TaskRequest.newBuilder().build();
     doReturn(TaskChainResponse.builder().taskRequest(taskRequest).build())
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
 
     doReturn(serviceOutcome)
         .when(outcomeService)
@@ -98,14 +102,14 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
     doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sManifestOutcome(any(LinkedList.class));
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
-    scaleStep.obtainTask(ambiance, stepParameters, stepInputPackage);
+    scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
 
     verify(k8sStepHelper, times(1))
         .queueK8sTask(
-            eq(stepParameters), scaleRequestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+            eq(stepElementParameters), scaleRequestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
     K8sScaleRequest scaleRequest = scaleRequestArgumentCaptor.getValue();
     assertThat(scaleRequest).isNotNull();
     assertThat(scaleRequest.getCommandName()).isEqualTo(K8S_SCALE_COMMAND_NAME);
@@ -115,6 +119,9 @@ public class K8sScaleStepTest extends CategoryTest {
     assertThat(scaleRequest.getWorkload()).isEqualTo("Deployment/test-scale-count-deployment");
     assertThat(scaleRequest.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(scaleRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
+
+    // We need this null as K8sScaleStep does not depend upon Manifests
+    assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
   }
 
   @Test
@@ -130,13 +137,15 @@ public class K8sScaleStepTest extends CategoryTest {
                 InstanceSelectionWrapper.builder().spec(spec).type(K8sInstanceUnitType.Percentage).build())
             .skipSteadyStateCheck(ParameterField.createValueField(false))
             .workload(ParameterField.createValueField("Deployment/test-scale-percentage-deployment"))
-            .timeout(ParameterField.createValueField("10m"))
             .build();
+
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     final TaskRequest taskRequest = TaskRequest.newBuilder().build();
     doReturn(TaskChainResponse.builder().taskRequest(taskRequest).build())
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
 
     doReturn(serviceOutcome)
         .when(outcomeService)
@@ -145,14 +154,14 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
     doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sManifestOutcome(any(LinkedList.class));
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
-    scaleStep.obtainTask(ambiance, stepParameters, stepInputPackage);
+    scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
 
     verify(k8sStepHelper, times(1))
         .queueK8sTask(
-            eq(stepParameters), scaleRequestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+            eq(stepElementParameters), scaleRequestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
     K8sScaleRequest scaleRequest = scaleRequestArgumentCaptor.getValue();
     assertThat(scaleRequest).isNotNull();
     assertThat(scaleRequest.getCommandName()).isEqualTo(K8S_SCALE_COMMAND_NAME);
@@ -162,36 +171,44 @@ public class K8sScaleStepTest extends CategoryTest {
     assertThat(scaleRequest.getWorkload()).isEqualTo("Deployment/test-scale-percentage-deployment");
     assertThat(scaleRequest.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(scaleRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
+
+    // We need this null as K8sScaleStep does not depend upon Manifests
+    assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testHandleTaskResultSucceeded() {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(SUCCESS)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(SUCCESS)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
+
+    StepResponse response = scaleStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testHandleTaskResultFailed() {
+  public void testHandleTaskResultFailed() throws Exception {
     K8sScaleStepParameter stepParameters = K8sScaleStepParameter.infoBuilder().build();
-    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
-        K8sDeployResponse.builder()
-            .errorMessage("Execution failed.")
-            .commandExecutionStatus(FAILURE)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .build());
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .errorMessage("Execution failed.")
+                                         .commandExecutionStatus(FAILURE)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
+
+    StepResponse response = scaleStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
   }
@@ -200,6 +217,6 @@ public class K8sScaleStepTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testGetK8sScaleStepParameter() {
-    assertThat(scaleStep.getStepParametersClass()).isEqualTo(K8sScaleStepParameter.class);
+    assertThat(scaleStep.getStepParametersClass()).isEqualTo(StepElementParameters.class);
   }
 }

@@ -1,16 +1,21 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.ROLLBACK_STEPS;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
+import io.harness.advisers.nextstep.NextStepAdviserParameters;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -21,12 +26,12 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
-import io.harness.steps.common.NGSectionStep;
-import io.harness.steps.common.NGSectionStepParameters;
 import io.harness.steps.common.steps.stepgroup.StepGroupStep;
 import io.harness.steps.common.steps.stepgroup.StepGroupStepParameters;
+import io.harness.when.utils.RunInfoUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -42,6 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(PIPELINE)
 public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElementConfig> {
   @Inject private KryoSerializer kryoSerializer;
 
@@ -61,7 +67,8 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
     if (EmptyPredicate.isNotEmpty(dependencyNodeIdsList)) {
       YamlField stepsField =
           Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
-      PlanNode stepsNode = getStepsPlanNode(stepsField, dependencyNodeIdsList.get(0).getNode().getUuid());
+      PlanNode stepsNode = CommonPlanCreatorUtils.getStepsPlanNode(
+          stepsField.getNode().getUuid(), dependencyNodeIdsList.get(0).getNode().getUuid(), "Steps Element");
       responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
     }
 
@@ -74,13 +81,22 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
     YamlField stepsField =
         Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
     StepParameters stepParameters = StepGroupStepParameters.getStepParameters(config, stepsField.getNode().getUuid());
+
+    boolean isStepGroupInsideRollback = false;
+    if (YamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
+      isStepGroupInsideRollback = true;
+    }
+
     return PlanNode.builder()
         .name(config.getName())
         .uuid(config.getUuid())
         .identifier(config.getIdentifier())
         .stepType(StepGroupStep.STEP_TYPE)
         .group(StepOutcomeGroup.STEP_GROUP.name())
-        .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
+        .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
+        // We Should add default when condition as StageFailure if stepGroup is inside rollback
+        .whenCondition(isStepGroupInsideRollback ? RunInfoUtils.getRunConditionForRollback(config.getWhen())
+                                                 : RunInfoUtils.getRunCondition(config.getWhen()))
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
@@ -100,25 +116,53 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
+
+    /*
+     * Adding OnSuccess adviser if stepGroup is inside rollback section else adding NextStep adviser for when condition
+     * to work.
+     */
     if (currentField != null && currentField.getNode() != null) {
-      if (currentField.checkIfParentIsParallel(STEP_GROUP)) {
-        return adviserObtainments;
-      }
-      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
-          currentField.getName(), Arrays.asList(YAMLFieldNameConstants.STEP, PARALLEL, STEP_GROUP));
-      if (siblingField != null && siblingField.getNode().getUuid() != null) {
-        adviserObtainments.add(
-            AdviserObtainment.newBuilder()
-                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-                .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                    OnSuccessAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
-                .build());
+      // Check if step is inside RollbackStep
+      if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+        addOnSuccessAdviser(currentField, adviserObtainments);
+      } else {
+        // Adding NextStep Adviser at last due to giving priority to Failure strategy more. DO NOT CHANGE.
+        addNextStepAdviser(currentField, adviserObtainments);
       }
     }
-
-    // Add custom rollback adviser
-    adviserObtainments.add(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build());
     return adviserObtainments;
+  }
+
+  private void addNextStepAdviser(YamlField currentField, List<AdviserObtainment> adviserObtainments) {
+    if (currentField.checkIfParentIsParallel(STEPS)) {
+      return;
+    }
+    YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
+        currentField.getName(), Arrays.asList(YAMLFieldNameConstants.STEP, PARALLEL, STEP_GROUP));
+    if (siblingField != null && siblingField.getNode().getUuid() != null) {
+      adviserObtainments.add(
+          AdviserObtainment.newBuilder()
+              .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.NEXT_STEP.name()).build())
+              .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                  NextStepAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
+              .build());
+    }
+  }
+
+  private void addOnSuccessAdviser(YamlField currentField, List<AdviserObtainment> adviserObtainments) {
+    if (currentField.checkIfParentIsParallel(ROLLBACK_STEPS)) {
+      return;
+    }
+    YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
+        currentField.getName(), Arrays.asList(YAMLFieldNameConstants.STEP, PARALLEL, STEP_GROUP));
+    if (siblingField != null && siblingField.getNode().getUuid() != null) {
+      adviserObtainments.add(
+          AdviserObtainment.newBuilder()
+              .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+              .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                  OnSuccessAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
+              .build());
+    }
   }
 
   List<YamlField> getDependencyNodeIdsList(PlanCreationContext planCreationContext) {
@@ -139,19 +183,5 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
       }
     });
     return childYamlFields;
-  }
-
-  PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {
-    StepParameters stepParameters =
-        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Steps Element").build();
-    return PlanNode.builder()
-        .uuid(stepsYamlField.getNode().getUuid())
-        .identifier(YAMLFieldNameConstants.STEPS)
-        .stepType(NGSectionStep.STEP_TYPE)
-        .name(YAMLFieldNameConstants.STEPS)
-        .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        .skipGraphType(SkipType.SKIP_NODE)
-        .build();
   }
 }

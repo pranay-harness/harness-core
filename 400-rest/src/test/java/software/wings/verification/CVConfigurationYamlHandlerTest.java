@@ -21,7 +21,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
-import software.wings.verification.CVConfiguration.CVConfigurationYaml;
+import software.wings.verification.datadog.DatadogCVConfigurationYaml;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 
 import com.google.inject.Inject;
@@ -142,14 +142,13 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
     CVConfiguration originalConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(originalConfig).isNotNull();
 
-    ChangeContext<DatadogCVServiceConfiguration.DatadogCVConfigurationYaml> changeContext =
-        ChangeContext.Builder.aChangeContext()
-            .withChange(Change.Builder.aFileChange()
-                            .withFilePath(filePath)
-                            .withChangeType(ChangeType.DELETE)
-                            .withAccountId(accountId)
-                            .build())
-            .build();
+    ChangeContext<DatadogCVConfigurationYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                                  .withChange(Change.Builder.aFileChange()
+                                                                                  .withFilePath(filePath)
+                                                                                  .withChangeType(ChangeType.DELETE)
+                                                                                  .withAccountId(accountId)
+                                                                                  .build())
+                                                                  .build();
     yamlHandler.delete(changeContext);
 
     CVConfiguration updatedConfig = persistence.get(CVConfiguration.class, configId);
@@ -167,14 +166,13 @@ public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
     CVConfiguration originalConfig = persistence.get(CVConfiguration.class, configId);
     assertThat(originalConfig).isNotNull();
 
-    ChangeContext<DatadogCVServiceConfiguration.DatadogCVConfigurationYaml> changeContext =
-        ChangeContext.Builder.aChangeContext()
-            .withChange(Change.Builder.aFileChange()
-                            .withFilePath(filePath)
-                            .withChangeType(ChangeType.DELETE)
-                            .withAccountId(accountId)
-                            .build())
-            .build();
+    ChangeContext<DatadogCVConfigurationYaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                                  .withChange(Change.Builder.aFileChange()
+                                                                                  .withFilePath(filePath)
+                                                                                  .withChangeType(ChangeType.DELETE)
+                                                                                  .withAccountId(accountId)
+                                                                                  .build())
+                                                                  .build();
     yamlHandler.delete(changeContext);
 
     CVConfiguration updatedConfig = persistence.get(CVConfiguration.class, configId);

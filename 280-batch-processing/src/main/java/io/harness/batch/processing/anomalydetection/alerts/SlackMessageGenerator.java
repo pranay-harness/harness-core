@@ -73,11 +73,15 @@ public class SlackMessageGenerator {
   }
 
   public LayoutBlock getDailyHeader(Integer noOfAnomalies, Instant date) {
-    return SectionBlock.builder()
-        .text(plainText(String.format(":bell: %1$s Cost Anomalies have been detected today(%2$s) by Harness.",
-                            noOfAnomalies, AnomalyUtility.convertInstantToDate2(date)),
-            true))
-        .build();
+    String content;
+    if (noOfAnomalies > 1) {
+      content = String.format(":bell: %1$s Cost Anomalies detected today(%2$s) by Harness.", noOfAnomalies,
+          AnomalyUtility.convertInstantToDate2(date));
+    } else {
+      content = String.format(":bell: %1$s Cost Anomaly detected today(%2$s) by Harness.", noOfAnomalies,
+          AnomalyUtility.convertInstantToDate2(date));
+    }
+    return SectionBlock.builder().text(plainText(content, true)).build();
   }
 
   public List<LayoutBlock> fromAnomaly(List<AnomalyEntity> anomalies) {
@@ -201,7 +205,7 @@ public class SlackMessageGenerator {
     templateString = addAwsAccountInfo(templateString, anomaly);
     templateString = addAwsServiceInfo(templateString, anomaly);
     templateString = templateString + "\n Total spend of *$ ${" + AnomalyEntityKeys.actualCost
-        + "}* detected which was typically at *$ ${" + AnomalyEntityKeys.expectedCost + "}*";
+        + "}* detected. Would be typically at *$ ${" + AnomalyEntityKeys.expectedCost + "}*";
 
     templateString = " *`$" + replace(templateString, AnomalyUtility.getEntityMap(anomaly));
     templateString = replace(templateString, AnomalyUtility.getURLMap(anomaly, mainConfiguration.getBaseUrl()));

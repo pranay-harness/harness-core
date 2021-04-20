@@ -190,12 +190,12 @@ public class GcbServiceImpl implements GcbService {
 
   @VisibleForTesting
   String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return gcpHelperService.getDefaultCredentialsAccessToken(TaskType.GCB.name());
     }
     encryptionService.decrypt(gcpConfig, encryptionDetails, false);
-    GoogleCredential gc =
-        gcpHelperService.getGoogleCredential(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+    GoogleCredential gc = gcpHelperService.getGoogleCredential(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
 
     try {
       if (gc.refreshToken()) {
@@ -212,7 +212,7 @@ public class GcbServiceImpl implements GcbService {
 
   @Override
   public String getProjectId(GcpConfig gcpConfig) {
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return gcpHelperService.getClusterProjectId(TaskType.GCB.name());
     } else {
       return (String) (JsonUtils.asObject(new String(gcpConfig.getServiceAccountKeyFileContent()), HashMap.class))

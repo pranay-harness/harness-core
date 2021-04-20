@@ -1,5 +1,7 @@
 package io.harness.tiserviceclient;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.network.Http;
 
@@ -10,6 +12,7 @@ import com.google.inject.Provider;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+@OwnedBy(HarnessTeam.CI)
 public class TIServiceClientFactory implements Provider<TIServiceClient> {
   private TIServiceConfig tiConfig;
 

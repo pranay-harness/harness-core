@@ -10,6 +10,7 @@ go_library(
         "//product/ci/ti-service/config:go_default_library",
         "//product/ci/ti-service/db:go_default_library",
         "//product/ci/ti-service/db/timescaledb:go_default_library",
+        "//product/ci/ti-service/eventsframework:go_default_library",
         "//product/ci/ti-service/handler:go_default_library",
         "//product/ci/ti-service/xxxxxxxxgo_default_library",
         "//product/ci/ti-service/tidb:go_default_library",

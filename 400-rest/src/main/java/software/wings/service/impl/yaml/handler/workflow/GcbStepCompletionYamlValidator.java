@@ -4,7 +4,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.ExpressionEvaluator;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-@TargetModule(Module._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_YAML_BEANS)
 @Data
 @Slf4j
 public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidator {

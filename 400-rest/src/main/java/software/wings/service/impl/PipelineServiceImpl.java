@@ -46,7 +46,9 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -144,6 +146,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineServiceImpl implements PipelineService {
   private static final Set<Character> ALLOWED_CHARS_SET_PIPELINE_STAGE =
       Sets.newHashSet(Lists.charactersOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ ()"));
@@ -204,7 +207,8 @@ public class PipelineServiceImpl implements PipelineService {
                 .build();
         try {
           List<WorkflowExecution> workflowExecutions =
-              workflowExecutionService.listExecutions(innerPageRequest, false, false, false, false).getResponse();
+              workflowExecutionService.listExecutions(innerPageRequest, false, false, false, false, false)
+                  .getResponse();
           pipeline.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
           log.error("Failed to fetch recent executions for pipeline {}", pipeline, e);
@@ -574,11 +578,9 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline = readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, false, null);
 
     // checking pipeline for loops and replacing looped states with multiple parallel states.
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      boolean isRuntimeEnabled =
-          featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
-      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
-    }
+    boolean isRuntimeEnabled =
+        featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
     return pipeline;
   }
 
@@ -600,11 +602,9 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline =
         readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, preExecutionChecks, null);
     // checking pipeline for loops and replacing looped states with multiple parallel states.
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      boolean isRuntimeEnabled =
-          featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
-      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
-    }
+    boolean isRuntimeEnabled =
+        featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
     return pipeline;
   }
 
@@ -630,9 +630,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
 
     setSinglePipelineDetails(pipeline, false, workflowCache, true);
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      validateMultipleValuesAllowed(pipeline, pipelineVariables);
-    }
+    validateMultipleValuesAllowed(pipeline, pipelineVariables);
 
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
@@ -663,9 +661,7 @@ public class PipelineServiceImpl implements PipelineService {
                 pipelineStageElement.getWorkflowVariables(), pipelineVariables);
         pipelineStageElement.setWorkflowVariables(resolvedWorkflowStepVariables);
 
-        if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-          PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds, isRuntimeEnabled);
-        }
+        PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds, isRuntimeEnabled);
 
         if (BUILD != workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
           resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
@@ -1026,8 +1022,7 @@ public class PipelineServiceImpl implements PipelineService {
         handleNonEntityVariables(pipelineVariables, variable, value, isRuntime);
       } else {
         boolean allowMulti = false;
-        if ((featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflow.getAccountId())
-                && infraVarsCount == 1 && INFRASTRUCTURE_DEFINITION == variable.obtainEntityType())
+        if ((infraVarsCount == 1 && INFRASTRUCTURE_DEFINITION == variable.obtainEntityType())
             || USER_GROUP == variable.obtainEntityType()) {
           allowMulti = true;
         }

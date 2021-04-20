@@ -1,7 +1,7 @@
 package io.harness.pms.yaml.validation;
 
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.expression.EngineExpressionService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,13 +20,13 @@ import java.util.stream.Collectors;
  * #evaluate
  */
 public class AllowedValuesValidator implements RuntimeValidator {
-  private final PmsEngineExpressionService pmsEngineExpressionService;
+  private final EngineExpressionService engineExpressionService;
   private final Ambiance ambiance;
 
   private static final Pattern JEXL_PATTERN = Pattern.compile("jexl\\(");
 
-  public AllowedValuesValidator(PmsEngineExpressionService pmsEngineExpressionService, Ambiance ambiance) {
-    this.pmsEngineExpressionService = pmsEngineExpressionService;
+  public AllowedValuesValidator(EngineExpressionService engineExpressionService, Ambiance ambiance) {
+    this.engineExpressionService = engineExpressionService;
     this.ambiance = ambiance;
   }
 
@@ -46,9 +46,9 @@ public class AllowedValuesValidator implements RuntimeValidator {
     }
 
     if (isJexlExpression) {
-      parameters = (String) pmsEngineExpressionService.evaluateExpression(ambiance, parameters);
+      parameters = (String) engineExpressionService.evaluateExpression(ambiance, parameters);
     } else {
-      parameters = pmsEngineExpressionService.renderExpression(ambiance, parameters);
+      parameters = engineExpressionService.renderExpression(ambiance, parameters);
     }
 
     String[] parametersList = parameters.split(",");

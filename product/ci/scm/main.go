@@ -19,8 +19,9 @@ const (
 var scmServer = grpc.NewSCMServer
 
 var args struct {
-	Verbose bool `arg:"--verbose" help:"enable verbose logging mode"`
-	Port    uint `arg:"--port" help:"port for running GRPC server"`
+	Verbose    bool   `arg:"--verbose" help:"enable verbose logging mode"`
+	Port       uint   `arg:"--port" help:"port for running GRPC server"`
+	UnixSocket string `arg:"--unix" help:"the unix socket to run on"`
 
 	Deployment            string `arg:"env:DEPLOYMENT" help:"name of the deployment"`
 	DeploymentEnvironment string `arg:"env:DEPLOYMENT_ENVIRONMENT" help:"environment of the deployment"`
@@ -31,6 +32,7 @@ func parseArgs() {
 	args.DeploymentEnvironment = "prod"
 	args.Port = port
 	args.Verbose = false
+	args.UnixSocket = ""
 
 	arg.MustParse(&args)
 }
@@ -48,13 +50,13 @@ func main() {
 			"application_name", applicationName)
 	logger := logBuilder.MustBuild().Sugar()
 
-	logger.Infow("Starting CI scm server", "port", args.Port)
-	s, err := scmServer(args.Port, logger)
+	logger.Infow("Starting CI GRPC scm server", "port", args.Port, "unixSocket", args.UnixSocket)
+	s, err := scmServer(args.Port, args.UnixSocket, logger)
 	if err != nil {
-		logger.Fatalw("error while running CI scm server", "port", args.Port, zap.Error(err))
+		logger.Fatalw("error while running CI GRPC scm server", "port", args.Port, "unixSocket", args.UnixSocket, zap.Error(err))
 	}
-
 	// Wait for stop signal and shutdown the server upon receiving it in a separate goroutine
 	go s.Stop()
 	s.Start()
+
 }

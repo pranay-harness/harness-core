@@ -1,5 +1,8 @@
 package io.harness.yaml.schema.client;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
@@ -11,6 +14,7 @@ import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(DX)
 public class YamlSchemaClientModule extends AbstractModule {
   private final YamlSchemaClientConfig yamlSchemaClientConfig;
   private final String clientId;

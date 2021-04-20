@@ -23,11 +23,15 @@ import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.exception.WingsException;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
+import io.harness.helpers.EncryptDecryptHelperImpl;
 import io.harness.kustomize.KustomizeClient;
 import io.harness.kustomize.KustomizeClientImpl;
 import io.harness.manage.ManagedExecutorService;
+import io.harness.manifest.CustomManifestService;
+import io.harness.manifest.CustomManifestServiceImpl;
 import io.harness.openshift.OpenShiftClient;
 import io.harness.openshift.OpenShiftClientImpl;
+import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -37,7 +41,6 @@ import io.harness.spotinst.SpotInstHelperServiceDelegate;
 import io.harness.spotinst.SpotInstHelperServiceDelegateImpl;
 import io.harness.threading.ThreadPool;
 
-import software.wings.app.MainConfiguration;
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
@@ -58,15 +61,6 @@ import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
 import software.wings.provider.NoopDelegateConfigurationServiceProviderImpl;
 import software.wings.provider.NoopDelegatePropertiesServiceProviderImpl;
-import software.wings.search.entities.application.ApplicationSearchEntity;
-import software.wings.search.entities.deployment.DeploymentSearchEntity;
-import software.wings.search.entities.environment.EnvironmentSearchEntity;
-import software.wings.search.entities.pipeline.PipelineSearchEntity;
-import software.wings.search.entities.service.ServiceSearchEntity;
-import software.wings.search.entities.workflow.WorkflowSearchEntity;
-import software.wings.search.framework.ElasticsearchDao;
-import software.wings.search.framework.SearchDao;
-import software.wings.search.framework.SearchEntity;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.AzureArtifactsBuildServiceImpl;
@@ -138,21 +132,14 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
 import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpHost;
-import org.apache.http.client.utils.URIBuilder;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
 
 @Slf4j
 public class WingsTestModule extends AbstractModule {
@@ -219,7 +206,6 @@ public class WingsTestModule extends AbstractModule {
     bind(KustomizeClient.class).to(KustomizeClientImpl.class);
     bind(OpenShiftClient.class).to(OpenShiftClientImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
-    bind(SearchDao.class).to(ElasticsearchDao.class);
     bind(PcfClient.class).to(PcfClientImpl.class);
     DelegateLogService mockDelegateLogService = mock(DelegateLogService.class);
     bind(DelegateLogService.class).toInstance(mockDelegateLogService);
@@ -238,6 +224,8 @@ public class WingsTestModule extends AbstractModule {
     bind(AzureAutoScaleSettingsClient.class).to(AzureAutoScaleSettingsClientImpl.class);
     bind(AzureNetworkClient.class).to(AzureNetworkClientImpl.class);
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
+    bind(CustomManifestService.class).to(CustomManifestServiceImpl.class);
+    bind(EncryptDecryptHelper.class).to(EncryptDecryptHelperImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))
@@ -258,33 +246,11 @@ public class WingsTestModule extends AbstractModule {
         .toInstance(new ManagedExecutorService(ThreadPool.create(1, 1, 0, TimeUnit.SECONDS)));
     bind(ShellExecutionService.class).to(ShellExecutionServiceImpl.class);
 
-    Multibinder<SearchEntity<?>> searchEntityMultibinder =
-        Multibinder.newSetBinder(binder(), new TypeLiteral<SearchEntity<?>>() {});
-    searchEntityMultibinder.addBinding().to(ApplicationSearchEntity.class);
-    searchEntityMultibinder.addBinding().to(DeploymentSearchEntity.class);
-    searchEntityMultibinder.addBinding().to(ServiceSearchEntity.class);
-    searchEntityMultibinder.addBinding().to(EnvironmentSearchEntity.class);
-    searchEntityMultibinder.addBinding().to(WorkflowSearchEntity.class);
-    searchEntityMultibinder.addBinding().to(PipelineSearchEntity.class);
-
     MapBinder<String, Cache<?, ?>> mapBinder =
         MapBinder.newMapBinder(binder(), TypeLiteral.get(String.class), new TypeLiteral<Cache<?, ?>>() {});
     mapBinder.addBinding("TestCache").to(Key.get(new TypeLiteral<Cache<Integer, Integer>>() {
     }, Names.named("TestCache")));
     mapBinder.addBinding("ExceptionTestCache").to(Key.get(new TypeLiteral<Cache<Integer, WingsException>>() {
     }, Names.named("ExceptionTestCache")));
-  }
-
-  @Provides
-  @Singleton
-  public RestHighLevelClient getElasticsearchClient(MainConfiguration mainConfiguration) {
-    try {
-      URI uri = new URIBuilder(mainConfiguration.getElasticsearchConfig().getUri()).build();
-      return new RestHighLevelClient(RestClient.builder(new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme())));
-    } catch (URISyntaxException e) {
-      log.error(
-          String.format("Elasticsearch URI %s is invalid", mainConfiguration.getElasticsearchConfig().getUri()), e);
-    }
-    return null;
   }
 }

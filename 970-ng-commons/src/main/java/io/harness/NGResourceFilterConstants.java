@@ -1,7 +1,12 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class NGResourceFilterConstants {
   public static final String SEARCH_TERM_KEY = "searchTerm";

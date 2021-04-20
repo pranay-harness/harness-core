@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_INFRA_STATE;
@@ -57,11 +58,12 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.FileCreationException;
@@ -119,6 +121,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -139,7 +142,8 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
  */
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class PcfCommandTaskHelper {
   private static final Yaml yaml;
   public static final String CURRENT_INSTANCE_COUNT = "CURRENT-INSTANCE-COUNT: ";
@@ -644,8 +648,8 @@ public class PcfCommandTaskHelper {
         pcfDeploymentManager.upsizeApplicationWithSteadyStateCheck(pcfRequestConfig, executionLogCallback);
     executionLogCallback.saveExecutionLog(sb.append("# Application upsized successfully ").toString());
 
-    List<InstanceDetail> instances = detailsAfterUpsize.getInstanceDetails().stream().collect(toList());
-    instances.forEach(instance
+    List<InstanceDetail> newUpsizedInstances = filterNewUpsizedAppInstances(detailsBeforeUpsize, detailsAfterUpsize);
+    newUpsizedInstances.forEach(instance
         -> pcfInstanceElements.add(PcfInstanceElement.builder()
                                        .uuid(detailsAfterUpsize.getId() + instance.getIndex())
                                        .applicationId(detailsAfterUpsize.getId())
@@ -655,10 +659,26 @@ public class PcfCommandTaskHelper {
                                        .build()));
 
     // Instance token is ApplicationGuid:InstanceIndex, that can be used to connect to instance from outside world
+    List<InstanceDetail> instancesAfterUpsize = new ArrayList<>(detailsAfterUpsize.getInstanceDetails());
     executionLogCallback.saveExecutionLog(
         new StringBuilder().append("\n# Application state details after upsize:  ").toString());
     printApplicationDetail(detailsAfterUpsize, executionLogCallback);
-    printInstanceDetails(executionLogCallback, instances);
+    printInstanceDetails(executionLogCallback, instancesAfterUpsize);
+  }
+
+  private List<InstanceDetail> filterNewUpsizedAppInstances(
+      ApplicationDetail appDetailsBeforeUpsize, ApplicationDetail appDetailsAfterUpsize) {
+    if (isEmpty(appDetailsBeforeUpsize.getInstanceDetails()) || isEmpty(appDetailsAfterUpsize.getInstanceDetails())) {
+      return appDetailsAfterUpsize.getInstanceDetails();
+    }
+
+    List<String> alreadyUpsizedInstances =
+        appDetailsBeforeUpsize.getInstanceDetails().stream().map(InstanceDetail::getIndex).collect(toList());
+
+    return appDetailsAfterUpsize.getInstanceDetails()
+        .stream()
+        .filter(instanceDetail -> !alreadyUpsizedInstances.contains(instanceDetail.getIndex()))
+        .collect(Collectors.toList());
   }
 
   public void mapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,

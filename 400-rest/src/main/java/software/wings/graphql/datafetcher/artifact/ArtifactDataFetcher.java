@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
@@ -20,7 +20,7 @@ import software.wings.security.annotations.AuthRule;
 import com.google.inject.Inject;
 
 @OwnedBy(CDC)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ArtifactDataFetcher extends AbstractObjectDataFetcher<QLArtifact, QLArtifactQueryParameters> {
   @Inject HPersistence persistence;
 

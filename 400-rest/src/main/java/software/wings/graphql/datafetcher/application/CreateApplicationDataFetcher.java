@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.application;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.Application;
@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CreateApplicationDataFetcher
     extends BaseMutatorDataFetcher<QLCreateApplicationInput, QLCreateApplicationPayload> {
   private AppService appService;

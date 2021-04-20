@@ -9,7 +9,6 @@ import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
@@ -19,19 +18,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VerificationJobInstanceService {
-  String create(String accountId, String orgIdentifier, String projectIdentifier,
-      VerificationJobInstanceDTO verificationJobInstanceDTO);
   String create(VerificationJobInstance verificationJobInstance);
   List<String> create(List<VerificationJobInstance> verificationJobInstances);
   List<String> dedupCreate(List<VerificationJobInstance> verificationJobInstances);
-  VerificationJobInstanceDTO get(String verificationJobInstanceId);
   List<VerificationJobInstance> get(List<String> verificationJobInstanceIds);
-  List<VerificationJobInstance> getNonDeploymentInstances(List<String> verificationJobInstanceIds);
+  List<VerificationJobInstance> getHealthVerificationJobInstances(List<String> verificationJobInstanceIds);
   VerificationJobInstance getVerificationJobInstance(String verificationJobInstanceId);
   void processVerificationJobInstance(VerificationJobInstance verificationJobInstance);
   void createDataCollectionTasks(VerificationJobInstance verificationJobInstance);
   void logProgress(ProgressLog progressLog);
-  void deletePerpetualTasks(VerificationJobInstance entity);
   Optional<TimeRange> getPreDeploymentTimeRange(String verificationJobInstanceId);
   DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(List<String> verificationJobInstanceIds);
   void addResultsToDeploymentResultSummary(
@@ -48,7 +43,6 @@ public interface VerificationJobInstanceService {
       String projectIdentifier, String envIdentifier, String serviceIdentifier, VerificationJobType jobType,
       Instant endTimeBefore);
   List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob);
-  void resetVerificationJobPerpetualTasks(CVConfig cvConfig);
   void markTimedOutIfNoProgress(VerificationJobInstance verificationJobInstance);
   CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId);
 }

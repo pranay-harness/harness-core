@@ -11,6 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.beans.DelegateTask;
@@ -141,7 +142,7 @@ public class ARMRollbackStateTest extends WingsBaseTest {
     doReturn(APP_ID).when(mockContext).getAppId();
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build())
         .when(helper)
-        .createActivity(eq(mockContext), eq(false), anyString());
+        .createARMActivity(eq(mockContext), eq(false), anyString());
     doReturn(20).when(helper).renderTimeout(eq(TIMEOUT_EXPRESSION), eq(mockContext));
 
     doReturn(azureConfig).when(azureVMSSStateHelper).getAzureConfig(eq(CLOUD_PROVIDER_ID));
@@ -164,13 +165,13 @@ public class ARMRollbackStateTest extends WingsBaseTest {
     ExecutionResponse response = armRollbackStateNotProvisioner.execute(mockContext);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
-    assertThat(response.getErrorMessage()).contains("No ARM Provisioner or scope found for provionser id - [testId]");
+    assertThat(response.getErrorMessage()).contains("No ARM Provisioner or scope found for provisioner id - [testId]");
 
     armRollbackStateNotProvisioner.setProvisionerId(PROVISIONER_ID);
     response = armRollbackStateNotProvisioner.execute(mockContext);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
-    assertThat(response.getErrorMessage()).contains("No ARM Provisioner or scope found for provionser id - [arm-id]");
+    assertThat(response.getErrorMessage()).contains("No ARM Provisioner or scope found for provisioner id - [arm-id]");
   }
 
   @Test
@@ -201,6 +202,20 @@ public class ARMRollbackStateTest extends WingsBaseTest {
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(response.getErrorMessage())
         .contains("ARM rollback is supported only for Resource Group scope. Current scope is - [TENANT]");
+
+    armInfrastructureProvisioner.setScopeType(ARMScopeType.MANAGEMENT_GROUP);
+    armInfrastructureProvisioner.setResourceType(ARMResourceType.BLUEPRINT);
+    response = armRollbackState.execute(mockContext);
+    assertThat(response).isNotNull();
+    assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getErrorMessage()).contains("Azure Blueprints rollback is not supported");
+
+    armInfrastructureProvisioner.setScopeType(ARMScopeType.SUBSCRIPTION);
+    armInfrastructureProvisioner.setResourceType(ARMResourceType.BLUEPRINT);
+    response = armRollbackState.execute(mockContext);
+    assertThat(response).isNotNull();
+    assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getErrorMessage()).contains("Azure Blueprints rollback is not supported");
   }
 
   @Test

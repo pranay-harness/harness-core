@@ -1,5 +1,10 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.encryption.Encrypted;
 
 import software.wings.annotation.EncryptableSetting;
@@ -18,6 +23,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 @ToString(exclude = "password")
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class WinRmSessionConfig implements EncryptableSetting {
   @NotEmpty private String accountId;
   @NotEmpty private String appId;

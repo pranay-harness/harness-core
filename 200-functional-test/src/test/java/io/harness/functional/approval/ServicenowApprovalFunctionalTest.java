@@ -744,7 +744,7 @@ public class ServicenowApprovalFunctionalTest extends AbstractFunctionalTest {
 
     log.info("Workflow Execution completed successfully");
     WorkflowExecution completedExecution =
-        workflowExecutionService.getExecutionDetails(environment.getAppId(), workflowExecution.getUuid(), false);
+        workflowExecutionService.getExecutionDetails(environment.getAppId(), workflowExecution.getUuid(), false, false);
 
     assertThat(completedExecution.getStatus()).isEqualTo(status);
 

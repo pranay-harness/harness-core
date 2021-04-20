@@ -22,10 +22,9 @@ type PluginStep interface {
 
 type pluginStep struct {
 	id            string
-	displayName   string
 	image         string
+	step          *pb.UnitStep
 	containerPort uint32
-	stepContext   *pb.StepContext
 	stageOutput   output.StageOutput
 	log           *zap.SugaredLogger
 }
@@ -36,10 +35,9 @@ func NewPluginStep(step *pb.UnitStep, stageOutput output.StageOutput,
 	r := step.GetPlugin()
 	return &pluginStep{
 		id:            step.GetId(),
-		displayName:   step.GetDisplayName(),
 		image:         r.GetImage(),
+		step:          step,
 		containerPort: r.GetContainerPort(),
-		stepContext:   r.GetContext(),
 		stageOutput:   stageOutput,
 		log:           log,
 	}
@@ -96,16 +94,7 @@ func (e *pluginStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 	}
 
 	return &addonpb.ExecuteStepRequest{
-		Step: &pb.UnitStep{
-			Id:          e.id,
-			DisplayName: e.displayName,
-			Step: &pb.UnitStep_Plugin{
-				Plugin: &pb.PluginStep{
-					Image:   e.image,
-					Context: e.stepContext,
-				},
-			},
-		},
+		Step:            e.step,
 		PrevStepOutputs: prevStepOutputs,
 	}
 }

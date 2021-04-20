@@ -1,11 +1,13 @@
 package software.wings.infra;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.validation.Validator.ensureType;
 
 import static software.wings.beans.InfrastructureType.AWS_LAMBDA;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.annotation.IncludeFieldMap;
@@ -30,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "AwsLambdaInfrastructureKeys")
+@OwnedBy(CDP)
 public class AwsLambdaInfrastructure
     implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider, ProvisionerAware {
   private String cloudProviderId;

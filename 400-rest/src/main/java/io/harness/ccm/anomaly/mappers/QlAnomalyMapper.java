@@ -1,5 +1,10 @@
 package io.harness.ccm.anomaly.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyData;
@@ -8,6 +13,8 @@ import software.wings.graphql.schema.type.aggregation.anomaly.QLEntityInfo;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(CE)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
 public class QlAnomalyMapper {
   public QLAnomalyData toDto(AnomalyEntity source) {
     QLAnomalyData returnDTO = new QLAnomalyData();
@@ -28,7 +35,9 @@ public class QlAnomalyMapper {
     returnDTO.setExpectedAmount(source.getExpectedCost());
     returnDTO.setAnomalyScore(source.getAnomalyScore());
     returnDTO.setId(source.getId());
-    returnDTO.setTime(source.getAnomalyTime().toEpochMilli());
+    if (source.getAnomalyTime() != null) {
+      returnDTO.setTime(source.getAnomalyTime().toEpochMilli());
+    }
     returnDTO.setUserFeedback(source.getFeedback());
     return returnDTO;
   }

@@ -8,6 +8,7 @@ import io.harness.capability.GitInstallationParameters;
 import io.harness.capability.HelmInstallationParameters;
 import io.harness.capability.HttpConnectionParameters;
 import io.harness.capability.KustomizeParameters;
+import io.harness.capability.LiteEngineConnectionParameters;
 import io.harness.capability.PcfAutoScalarParameters;
 import io.harness.capability.PcfConnectivityParameters;
 import io.harness.capability.ProcessExecutorParameters;
@@ -22,6 +23,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
+import io.harness.delegate.beans.executioncapability.LiteEngineConnectionCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
@@ -81,6 +83,14 @@ public class CapabilityProtoConverter {
         return builder
             .setHttpConnectionParameters(
                 HttpConnectionParameters.newBuilder().setUrl(httpConnectionExecutionCapability.fetchCapabilityBasis()))
+            .build();
+      case LITE_ENGINE:
+        LiteEngineConnectionCapability liteEngineConnectionCapability =
+            (LiteEngineConnectionCapability) executionCapability;
+        return builder
+            .setLiteEngineConnectionParameters(LiteEngineConnectionParameters.newBuilder()
+                                                   .setIp(liteEngineConnectionCapability.getIp())
+                                                   .setPort(liteEngineConnectionCapability.getPort()))
             .build();
       case KUSTOMIZE:
         KustomizeCapability kustomizeCapability = (KustomizeCapability) executionCapability;

@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.perpetualtask.PerpetualTaskType.PCF_INSTANCE_SYNC;
 import static io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient.PCF_APPLICATION_NAME;
@@ -12,6 +13,7 @@ import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class PCFInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
   @Inject InstanceService instanceService;
   @Inject private PerpetualTaskService perpetualTaskService;

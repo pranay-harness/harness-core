@@ -1,5 +1,8 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.container.ContainerInfo;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -25,6 +28,7 @@ import java.util.Optional;
 /**
  * Created by anubhaw on 12/28/16.
  */
+@OwnedBy(CDP)
 public interface EcsContainerService {
   /**
    * Provision nodes.
@@ -48,9 +52,10 @@ public interface EcsContainerService {
    */
   List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
-      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported);
 
-  void waitForTasksToBeInRunningStateButDontThrowException(UpdateServiceCountRequestData requestData);
+  void waitForTasksToBeInRunningStateWithHandledExceptions(UpdateServiceCountRequestData requestData);
 
   void waitForServiceToReachSteadyState(int serviceSteadyStateTimeout, UpdateServiceCountRequestData requestData);
 

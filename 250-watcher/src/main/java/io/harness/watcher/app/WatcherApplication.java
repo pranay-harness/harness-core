@@ -14,7 +14,7 @@ import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.tailer.TailerModule;
 import io.harness.event.client.impl.tailer.TailerModule.Config;
-import io.harness.managerclient.ManagerClientModule;
+import io.harness.managerclient.WatcherManagerClientModule;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.watcher.service.WatcherService;
@@ -120,7 +120,7 @@ public class WatcherApplication {
       }
     });
 
-    modules.add(new ManagerClientModule(
+    modules.add(new WatcherManagerClientModule(
         configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
 
     modules.add(WatcherModule.getInstance());

@@ -8,7 +8,6 @@ import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.CacheUtils;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 
 import software.wings.dl.WingsPersistence;
 
@@ -51,21 +50,6 @@ public class InstanceDataServiceImpl extends CacheUtils implements InstanceDataS
   @Override
   public boolean create(InstanceData instanceData) {
     return instanceDataDao.create(instanceData);
-  }
-
-  @Override
-  public boolean updateInstanceState(InstanceData instanceData, Instant instant, InstanceState instanceState) {
-    String instantField = null;
-    if (InstanceState.RUNNING == instanceState) {
-      instantField = InstanceDataKeys.usageStartTime;
-    } else if (InstanceState.STOPPED == instanceState) {
-      instantField = InstanceDataKeys.usageStopTime;
-    }
-
-    if (null != instantField) {
-      return instanceDataDao.updateInstanceState(instanceData, instant, instantField, instanceState);
-    }
-    return false;
   }
 
   @Override

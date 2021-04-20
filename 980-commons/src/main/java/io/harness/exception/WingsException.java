@@ -1,5 +1,6 @@
 package io.harness.exception;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
@@ -8,6 +9,7 @@ import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.exception.WingsException.ReportTarget.RED_BELL_ALERT;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 
@@ -23,6 +25,7 @@ import org.slf4j.MDC;
 /**
  * The generic exception class for the Wings Application.
  */
+@OwnedBy(PL)
 @Getter
 public class WingsException extends RuntimeException {
   public enum ReportTarget {

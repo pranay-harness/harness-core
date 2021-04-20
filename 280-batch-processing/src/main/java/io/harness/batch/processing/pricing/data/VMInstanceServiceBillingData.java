@@ -13,4 +13,5 @@ public class VMInstanceServiceBillingData {
   private String resourceId;
   private String serviceCode;
   private String productFamily;
+  private String usageType;
 }

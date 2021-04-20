@@ -4,18 +4,22 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.SyncExecutableResponse;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -23,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SyncStrategy implements ExecuteStrategy {
   @Inject private StepRegistry stepRegistry;
-  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
+  @Inject private SdkNodeExecutionService sdkNodeExecutionService;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -31,9 +35,17 @@ public class SyncStrategy implements ExecuteStrategy {
     Ambiance ambiance = nodeExecution.getAmbiance();
     SyncExecutable syncExecutable = extractSyncExecutable(nodeExecution);
     StepResponse stepResponse =
-        syncExecutable.executeSync(ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
+        syncExecutable.executeSync(ambiance, sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
             invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
-    pmsNodeExecutionService.handleStepResponse(
+    sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
+        ExecutableResponse.newBuilder()
+            .setSync(SyncExecutableResponse.newBuilder()
+                         .addAllLogKeys(syncExecutable.getLogKeys(nodeExecution.getAmbiance()))
+                         .addAllUnits(syncExecutable.getCommandUnits(nodeExecution.getAmbiance()))
+                         .build())
+            .build(),
+        new ArrayList<>());
+    sdkNodeExecutionService.handleStepResponse(
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 

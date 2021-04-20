@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -10,6 +11,7 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.Long.parseLong;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -39,6 +41,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class AwsLambdaInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
   public static final String FUNCTION_NAME = "functionName";
   public static final String QUALIFIER = "qualifier";

@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.ce;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,6 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.health.CEClusterHealth;
 import io.harness.ccm.health.CEError;
@@ -30,6 +34,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class CeHealthStatusDataFetcherTest extends CategoryTest {
   private String cloudProviderId = "CLOUD_PROVIDER_ID";
   private String clusterId = "CLUSTER_ID";

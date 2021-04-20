@@ -1,25 +1,26 @@
 package software.wings.graphql.datafetcher.connector.types;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.graphql.datafetcher.connector.ConnectorsController;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ConnectorFactory {
   private ConnectorFactory() {
     throw new IllegalStateException("Utility class");
   }
 
   public static Connector getConnector(QLConnectorType qlConnectorType, ConnectorsController connectorsController,
-      SecretManager secretManager, SettingsService settingsService) {
+      SecretManager secretManager, SettingsService settingsService, UsageScopeController usageScopeController) {
     switch (qlConnectorType) {
       case GIT:
-        return new GitConnector(secretManager, settingsService, connectorsController);
+        return new GitConnector(secretManager, settingsService, connectorsController, usageScopeController);
       case DOCKER:
         return new DockerConnector(secretManager, connectorsController);
       case NEXUS:

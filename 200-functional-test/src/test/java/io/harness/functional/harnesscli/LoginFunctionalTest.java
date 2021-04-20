@@ -12,6 +12,7 @@ import io.harness.rule.Owner;
 import com.google.inject.Inject;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -21,6 +22,7 @@ public class LoginFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void loginToLocalhost() {
     String domain = "localhost:9090", loginOutput = "";
 
@@ -50,6 +52,7 @@ public class LoginFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = DEEPAK)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void loginWithInvalidCredToLocalhost() {
     String domain, loginOutput = "";
     domain = "localhost:9090";

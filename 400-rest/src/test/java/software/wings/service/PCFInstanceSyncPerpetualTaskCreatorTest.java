@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.AMAN;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -13,6 +14,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -36,6 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@OwnedBy(CDP)
 public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "accountId";
   private static final String TASK_ID = "taskId";

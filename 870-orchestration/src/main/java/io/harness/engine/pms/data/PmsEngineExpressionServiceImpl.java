@@ -8,7 +8,6 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import org.apache.commons.lang3.ClassUtils;
 
 public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
@@ -26,9 +25,6 @@ public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionServic
     EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(expression);
-    if (ClassUtils.isPrimitiveOrWrapper(value.getClass())) {
-      return String.valueOf(value);
-    }
     return RecastOrchestrationUtils.toDocumentJson(value);
   }
 

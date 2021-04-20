@@ -13,7 +13,7 @@ import static software.wings.common.NotificationConstants.RESUMED_COLOR;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -57,7 +57,7 @@ import org.apache.http.client.utils.URIBuilder;
  */
 @Singleton
 @Slf4j
-@TargetModule(Module._830_NOTIFICATION_SERVICE)
+@TargetModule(HarnessModule._830_NOTIFICATION_SERVICE)
 public class NotificationMessageResolver {
   private Map<String, ChannelTemplate> templateMap;
 

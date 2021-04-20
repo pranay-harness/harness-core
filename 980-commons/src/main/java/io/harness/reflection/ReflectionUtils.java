@@ -198,4 +198,9 @@ public class ReflectionUtils {
     }
     return annotations;
   }
+
+  public static void setObjectField(Field field, Object obj, Object value) throws IllegalAccessException {
+    field.setAccessible(true);
+    field.set(obj, value);
+  }
 }

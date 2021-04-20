@@ -1,5 +1,8 @@
 package io.harness.ng.core.exceptionmappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.ng.core.Status;
@@ -11,6 +14,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 
+@OwnedBy(PL)
 @Slf4j
 public class OptimisticLockingFailureExceptionMapper implements ExceptionMapper<OptimisticLockingFailureException> {
   @Override

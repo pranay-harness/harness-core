@@ -1,6 +1,7 @@
 package software.wings.signup;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
@@ -11,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
@@ -51,10 +53,11 @@ import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.commons.validator.routines.RegexValidator;
 import org.apache.http.client.utils.URIBuilder;
 
-@OwnedBy(PL)
+@OwnedBy(GTM)
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton
+@TargetModule(_950_NG_SIGNUP)
 public class SignupServiceImpl implements SignupService {
   @Inject EmailNotificationService emailNotificationService;
   @Inject MainConfiguration configuration;
@@ -79,6 +82,9 @@ public class SignupServiceImpl implements SignupService {
   private static final String CI_TRIAL_VERIFICATION_TEMPLATE = "trial_verification_ci";
   private static final String PLATFORM_TRIAL_VERIFICATION_TEMPLATE = "trial_verification_platform";
 
+  private static final String TRIAL_SIGNUP_LINKEDIN_TEMPLATE_NAME = "trial_signup_linkedin";
+  private static final String TRIAL_SIGNUP_COMPLETED_LINKEDIN_TEMPLATE_NAME = "trial_signup_completed_linkedin";
+
   private List<Character> illegalCharacters = Collections.unmodifiableList(Arrays.asList(
       '$', '&', ',', '/', ':', ';', '=', '?', '<', '>', '#', '{', '}', '|', '^', '~', '(', ')', ']', '`', '\'', '\"'));
 
@@ -87,6 +93,22 @@ public class SignupServiceImpl implements SignupService {
     try {
       Map<String, String> templateModel = getTrialSignupCompletedTemplateModel(userInvite);
       sendEmail(userInvite, TRIAL_SIGNUP_COMPLETED_TEMPLATE_NAME, templateModel);
+    } catch (URISyntaxException e) {
+      log.error("Trial sign-up completed email couldn't be sent ", e);
+    }
+  }
+
+  @Override
+  public void sendLinkedInTrialSignupCompletedEmail(UserInvite userInvite, String generatedPassword) {
+    try {
+      Map<String, String> templateModel = getTrialSignupCompletedTemplateModel(userInvite);
+      String moduleName = getModuleName(userInvite);
+      templateModel.put("module", moduleName);
+      templateModel.put("email", userInvite.getEmail());
+      templateModel.put("password", generatedPassword);
+      String logo = getLogo(userInvite);
+      templateModel.put("logo", logo);
+      sendEmail(userInvite, TRIAL_SIGNUP_COMPLETED_LINKEDIN_TEMPLATE_NAME, templateModel);
     } catch (URISyntaxException e) {
       log.error("Trial sign-up completed email couldn't be sent ", e);
     }
@@ -202,18 +224,91 @@ public class SignupServiceImpl implements SignupService {
   }
 
   @Override
-  public void sendMarketoSignupVerificationEmail(UserInvite userInvite) {
+  public void sendLinkedInSignupVerificationEmail(UserInvite userInvite) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     try {
-      String token = createSignupTokeFromSecret(jwtPasswordSecret, userInvite.getEmail(), 30);
+      String token = createSignupTokenFromSecret(jwtPasswordSecret, userInvite.getEmail(), 30);
       String resetPasswordUrl = getResetPasswordUrl(token, userInvite);
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("url", resetPasswordUrl);
       templateModel.put("name", userInvite.getName());
-      sendTrialSignupVerificationEmail(userInvite, templateModel);
+      sendLinkedInTrialVerificationEmail(userInvite, templateModel);
 
     } catch (URISyntaxException | UnsupportedEncodingException e) {
       log.error("Signup verification email couldn't be sent", e);
+    }
+  }
+
+  private void sendLinkedInTrialVerificationEmail(UserInvite userInvite, Map<String, String> templateModel) {
+    String templateName = getLinkedInTrialSignupTemplateName(userInvite);
+
+    // for now no email should be sent for CI only flow
+    if (templateName != null) {
+      String moduleName = getModuleName(userInvite);
+      templateModel.put("module", moduleName);
+      String logo = getLogo(userInvite);
+      templateModel.put("logo", logo);
+      sendEmail(userInvite, templateName, templateModel);
+    }
+  }
+
+  private String getModuleName(UserInvite userInvite) {
+    List<String> freemiumProducts = userInvite.getFreemiumProducts();
+
+    if (freemiumProducts == null || freemiumProducts.size() > 1) {
+      return "Platform";
+    }
+
+    String singleProduct = freemiumProducts.get(0);
+
+    switch (singleProduct) {
+      case "CD - Continuous Delivery":
+        return "Continuous Delivery";
+      case "CE - Continuous Efficiency":
+        return "Continuous Efficiency";
+      case "CI - Continuous Integration":
+        return "Continuous Integration";
+      default:
+        log.error("Unknown product: {}", singleProduct);
+        return "Platform";
+    }
+  }
+
+  private String getLogo(UserInvite userInvite) {
+    List<String> freemiumProducts = userInvite.getFreemiumProducts();
+
+    if (freemiumProducts == null || freemiumProducts.size() > 1) {
+      return "Platform";
+    }
+
+    String singleProduct = freemiumProducts.get(0);
+
+    switch (singleProduct) {
+      case "CD - Continuous Delivery":
+        return "cd_logo";
+      case "CE - Continuous Efficiency":
+        return "ce_logo";
+      case "CI - Continuous Integration":
+        return "ci_logo";
+      default:
+        log.error("Unknown product: {}", singleProduct);
+        return "Platform";
+    }
+  }
+
+  private String getLinkedInTrialSignupTemplateName(UserInvite userInvite) {
+    List<String> freemiumProducts = userInvite.getFreemiumProducts();
+
+    if (freemiumProducts == null || freemiumProducts.size() > 1) {
+      return TRIAL_SIGNUP_LINKEDIN_TEMPLATE_NAME;
+    }
+
+    String singleProduct = freemiumProducts.get(0);
+
+    if ("CI - Continuous Integration".equals(singleProduct)) {
+      return null;
+    } else {
+      return TRIAL_SIGNUP_LINKEDIN_TEMPLATE_NAME;
     }
   }
 
@@ -250,7 +345,7 @@ public class SignupServiceImpl implements SignupService {
   }
 
   @Override
-  public String createSignupTokeFromSecret(String jwtPasswordSecret, String email, int expireAfterDays)
+  public String createSignupTokenFromSecret(String jwtPasswordSecret, String email, int expireAfterDays)
       throws UnsupportedEncodingException {
     Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
     return JWT.create()

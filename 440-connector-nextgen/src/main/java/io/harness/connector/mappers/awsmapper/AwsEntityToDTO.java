@@ -8,7 +8,6 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO.AwsCredentialDTOBuilder;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
-import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
@@ -34,6 +33,7 @@ public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDT
     }
     return AwsConnectorDTO.builder()
         .credential(awsCredentialDTOBuilder.crossAccountAccess(connector.getCrossAccountAccess()).build())
+        .delegateSelectors(connector.getDelegateSelectors())
         .build();
   }
 
@@ -51,8 +51,6 @@ public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDT
   }
 
   private AwsCredentialDTOBuilder buildInheritFromDelegate(AwsIamCredential credential) {
-    final AwsInheritFromDelegateSpecDTO specDTO =
-        AwsInheritFromDelegateSpecDTO.builder().delegateSelectors(credential.getDelegateSelectors()).build();
-    return AwsCredentialDTO.builder().awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE).config(specDTO);
+    return AwsCredentialDTO.builder().awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE).config(null);
   }
 }

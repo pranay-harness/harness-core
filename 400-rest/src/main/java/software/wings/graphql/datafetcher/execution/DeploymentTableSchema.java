@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.execution;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class DeploymentTableSchema {
   /**
    *  EXECUTIONID TEXT NOT NULL,

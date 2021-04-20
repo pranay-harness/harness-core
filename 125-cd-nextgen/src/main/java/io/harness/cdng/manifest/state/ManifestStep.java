@@ -2,6 +2,8 @@ package io.harness.cdng.manifest.state;
 
 import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.mappers.ManifestOutcomeMapper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
@@ -13,6 +15,7 @@ import io.harness.cdng.manifest.yaml.ManifestsOutcome.ManifestsOutcomeBuilder;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 
@@ -26,10 +29,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 @Slf4j
 public class ManifestStep {
-  public StepOutcome processManifests(ServiceConfig serviceConfig) {
+  public StepOutcome processManifests(ServiceConfig serviceConfig, NGLogCallback ngManagerLogCallback) {
     List<ManifestConfigWrapper> serviceSpecManifests =
         serviceConfig.getServiceDefinition().getServiceSpec().getManifests();
     List<ManifestConfigWrapper> manifestOverrideSets = getManifestOverrideSetsApplicable(serviceConfig);
@@ -47,7 +51,8 @@ public class ManifestStep {
               .map(ManifestOverrideSetWrapper::getOverrideSet)
               .collect(Collectors.toList());
 
-    return processManifests(serviceSpecManifests, manifestOverrideSets, stageOverrideManifests, allOverrideSets);
+    return processManifests(
+        serviceSpecManifests, manifestOverrideSets, stageOverrideManifests, allOverrideSets, ngManagerLogCallback);
   }
 
   private List<ManifestConfigWrapper> getManifestOverrideSetsApplicable(ServiceConfig serviceConfig) {
@@ -78,7 +83,7 @@ public class ManifestStep {
   @VisibleForTesting
   StepOutcome processManifests(List<ManifestConfigWrapper> serviceSpecManifests,
       List<ManifestConfigWrapper> applicableManifestOverrideSets, List<ManifestConfigWrapper> stageOverrideManifests,
-      List<ManifestOverrideSets> allOverrideSets) {
+      List<ManifestOverrideSets> allOverrideSets, NGLogCallback ngManagerLogCallback) {
     Map<String, ManifestAttributes> identifierToManifestMap = new HashMap<>();
 
     // 1. Get Manifests belonging to KubernetesServiceSpec

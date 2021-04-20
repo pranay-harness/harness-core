@@ -1,12 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.Cd1SetupFields.APP_ID_FIELD;
+import static io.harness.beans.Cd1SetupFields.ENV_ID_FIELD;
+import static io.harness.beans.Cd1SetupFields.ENV_TYPE_FIELD;
+import static io.harness.beans.Cd1SetupFields.SERVICE_ID_FIELD;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.tasks.Cd1SetupFields.APP_ID_FIELD;
-import static io.harness.tasks.Cd1SetupFields.ENV_ID_FIELD;
-import static io.harness.tasks.Cd1SetupFields.ENV_TYPE_FIELD;
-import static io.harness.tasks.Cd1SetupFields.SERVICE_ID_FIELD;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 

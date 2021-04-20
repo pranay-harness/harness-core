@@ -1,7 +1,7 @@
 package software.wings.delegatetasks;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.SyncTaskContext;
@@ -12,7 +12,7 @@ import com.google.inject.Singleton;
 import java.lang.reflect.Proxy;
 
 @Singleton
-@TargetModule(Module._910_DELEGATE_SERVICE_DRIVER)
+@TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class DelegateProxyFactory {
   @Inject private DelegateService delegateService;

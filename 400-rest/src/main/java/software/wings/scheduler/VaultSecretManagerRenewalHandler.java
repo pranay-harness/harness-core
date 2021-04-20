@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.encryption.AccessType.APP_ROLE;
 
@@ -8,6 +9,7 @@ import static software.wings.beans.alert.AlertType.InvalidKMS;
 
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -15,19 +17,22 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
+import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
-import software.wings.beans.VaultConfig;
+import software.wings.beans.BaseVaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.VaultService;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerConfig> {
   @Inject private AccountService accountService;
@@ -51,7 +56,11 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
             .acceptableNoAlertDelay(ofSeconds(62))
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
-            .filterExpander(query -> query.field(SecretManagerConfigKeys.encryptionType).equal(EncryptionType.VAULT))
+            .filterExpander(query
+                -> query.criteria(SecretManagerConfigKeys.encryptionType)
+                       .in(Sets.newHashSet(EncryptionType.VAULT, EncryptionType.VAULT_SSH))
+                       .criteria(SecretManagerConfigKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.deleted)
+                       .notEqual(true))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));
@@ -60,27 +69,28 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   @Override
   public void handle(SecretManagerConfig secretManagerConfig) {
     log.info("renewing client tokens for {}", secretManagerConfig.getUuid());
-    VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
-    KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(vaultConfig);
+    BaseVaultConfig baseVaultConfig = (BaseVaultConfig) secretManagerConfig;
+    KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(baseVaultConfig);
     try {
-      long renewalInterval = vaultConfig.getRenewalInterval();
+      long renewalInterval = baseVaultConfig.getRenewalInterval();
       if (renewalInterval <= 0 || secretManagerConfig.isTemplatized()) {
-        log.info("Vault {} not configured for renewal.", vaultConfig.getUuid());
+        log.info("Vault {} not configured for renewal.", baseVaultConfig.getUuid());
         return;
       }
-      if (!checkIfEligibleForRenewal(vaultConfig.getRenewedAt(), renewalInterval)) {
-        log.info("Vault config {} renewed at {} not renewing now", vaultConfig.getUuid(), vaultConfig.getRenewedAt());
+      if (!checkIfEligibleForRenewal(baseVaultConfig.getRenewedAt(), renewalInterval)) {
+        log.info("Vault config {} renewed at {} not renewing now", baseVaultConfig.getUuid(),
+            baseVaultConfig.getRenewedAt());
         return;
       }
-      if (vaultConfig.getAccessType() == APP_ROLE) {
-        vaultService.renewAppRoleClientToken(vaultConfig);
+      if (baseVaultConfig.getAccessType() == APP_ROLE) {
+        vaultService.renewAppRoleClientToken(baseVaultConfig);
       } else {
-        vaultService.renewToken(vaultConfig);
+        vaultService.renewToken(baseVaultConfig);
       }
-      alertService.closeAlert(vaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
+      alertService.closeAlert(baseVaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
     } catch (Exception e) {
       log.info("Failed to renew vault token for vault id {}", secretManagerConfig.getUuid(), e);
-      alertService.openAlert(vaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
+      alertService.openAlert(baseVaultConfig.getAccountId(), GLOBAL_APP_ID, InvalidKMS, kmsSetupAlert);
     }
   }
 

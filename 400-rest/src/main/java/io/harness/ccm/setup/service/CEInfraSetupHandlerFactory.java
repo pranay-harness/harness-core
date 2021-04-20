@@ -1,5 +1,8 @@
 package io.harness.ccm.setup.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.service.impl.AwsCEInfraSetupHandler;
 import io.harness.exception.InvalidRequestException;
 
@@ -10,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(CE)
 public class CEInfraSetupHandlerFactory {
   private final AwsCEInfraSetupHandler awsCEInfraSetupHandler;
 

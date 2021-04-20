@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,9 +30,9 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = DeploymentStageVisitorHelper.class)
 public class DeploymentStageConfig implements StageInfoConfig, Visitable {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
-  ServiceConfig serviceConfig;
-  PipelineInfrastructure infrastructure;
-  ExecutionElementConfig execution;
+  @NotNull ServiceConfig serviceConfig;
+  @NotNull PipelineInfrastructure infrastructure;
+  @NotNull ExecutionElementConfig execution;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;

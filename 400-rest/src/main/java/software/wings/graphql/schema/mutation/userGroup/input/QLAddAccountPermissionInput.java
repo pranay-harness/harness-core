@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.mutation.userGroup.input;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.permissions.QLAccountPermissionType;
@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLAddAccountPermissionInputKeys")
 @Scope(PermissionAttribute.ResourceType.USER)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLAddAccountPermissionInput {
   private String clientMutationId;
   private String userGroupId;

@@ -18,6 +18,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.NexusConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,13 +27,16 @@ import org.mockito.InjectMocks;
 public class NexusConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private NexusConfigYamlHandler yamlHandler;
 
-  public static final String url = "https://nexus.wings.software/";
+  public static final String URL = "https://nexus.wings.software/";
 
   private String invalidYamlContent = "url_Nexus: https://nexus.wings.software\n"
       + "username: admin\n"
       + "password: safeharness:Q1ESI1KVTrCaBARuR38kqA\n"
       + "harnessApiVersion: '1.0'\n"
       + "version: 3.x\n"
+      + "delegateSelectors:\n"
+      + "- nexus\n"
+      + "- harness\n"
       + "type: NEXUS";
 
   private Class yamlClass = NexusConfig.Yaml.class;
@@ -72,9 +76,10 @@ public class NexusConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTes
             .withAccountId(ACCOUNT_ID)
             .withValue(NexusConfig.builder()
                            .accountId(ACCOUNT_ID)
-                           .nexusUrl(url)
+                           .nexusUrl(URL)
                            .username(userName)
                            .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .delegateSelectors(Lists.newArrayList("nexus", "harness"))
                            .version("3.x")
                            .build())
             .build());
@@ -90,7 +95,7 @@ public class NexusConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTes
         .name(name)
         .configclazz(NexusConfig.class)
         .updateMethodName("setNexusUrl")
-        .currentFieldValue(url)
+        .currentFieldValue(URL)
         .build();
   }
 }

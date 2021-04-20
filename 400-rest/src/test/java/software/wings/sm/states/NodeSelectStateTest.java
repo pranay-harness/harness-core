@@ -5,18 +5,22 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.SELECT_NODE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -30,11 +34,13 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
@@ -57,10 +63,13 @@ import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceArtifactParam;
+import software.wings.beans.Account;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.HostConnectionType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
@@ -71,6 +80,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.common.InstanceExpressionProcessor;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
@@ -89,13 +99,16 @@ import software.wings.utils.WingsTestConstants;
 import com.amazonaws.regions.Regions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -115,6 +128,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private InstanceExpressionProcessor instanceExpressionProcessor;
   @Mock private HostService hostService;
+  @Mock private AccountService accountService;
 
   @InjectMocks private NodeSelectState nodeSelectState = new DcNodeSelectState("DC_NODE_SELECT");
   private static final String INSTANCE_COUNT_EXPRESSION = "${workflow.variables.count}";
@@ -128,10 +142,18 @@ public class NodeSelectStateTest extends WingsBaseTest {
           .withHostConnectionType(HostConnectionType.PUBLIC_DNS.name())
           .build();
 
-  PhysicalInfrastructureMapping physicalInfrastructureMapping =
+  PhysicalInfrastructureMapping physicalSSHInfrastructureMapping =
       aPhysicalInfrastructureMapping()
           .withInfraMappingType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name())
           .build();
+
+  PhysicalInfrastructureMapping physicalWinRmInfrastructureMapping =
+      aPhysicalInfrastructureMapping()
+          .withInfraMappingType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.name())
+          .build();
+
+  AzureInfrastructureMapping azureInfrastructureMapping =
+      anAzureInfrastructureMapping().withInfraMappingType(InfrastructureMappingType.AZURE_INFRA.name()).build();
 
   private ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName("template").withServiceId(SERVICE_ID).build();
@@ -192,7 +214,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  public void shouldTestDonotExcludeHostsWithSameArtifact() {
+  public void shouldTestDoNotExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount("3");
     PhaseElement phaseElement = PhaseElement.builder()
                                     .infraDefinitionId(INFRA_DEFINITION_ID)
@@ -281,7 +303,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
                                     .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
                                     .build();
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(context.renderExpression("3")).thenReturn("3");
     when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
@@ -300,6 +322,107 @@ public class NodeSelectStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = nodeSelectState.execute(context);
 
     assertResponse(executionResponse);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void shouldTestExcludeHostsForAzureInfra() {
+    nodeSelectState.setInstanceCount("3");
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(azureInfrastructureMapping);
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.renderExpression("3")).thenReturn("3");
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+
+    assertResponse(executionResponse);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void shouldTestExcludeHostsForPhysicalWinrmInfra() {
+    nodeSelectState.setInstanceCount("3");
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalWinRmInfrastructureMapping);
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.renderExpression("3")).thenReturn("3");
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+
+    assertResponse(executionResponse);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void should() {
+    nodeSelectState.setInstanceCount("3");
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.INSTANCE)).thenReturn(null);
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalWinRmInfrastructureMapping);
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.renderExpression("3")).thenReturn("3");
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+    nodeSelectState.execute(context);
+    verify(context, times(1)).getArtifactForService(any());
   }
 
   private void assertResponse(ExecutionResponse executionResponse) {
@@ -360,7 +483,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
                                     .build();
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(context.renderExpression("1")).thenReturn("1");
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
         .thenReturn(emptyList());
     when(context.getAppId()).thenReturn(APP_ID);
@@ -380,6 +503,8 @@ public class NodeSelectStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = nodeSelectState.execute(context);
 
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo("No nodes selected (Nodes already deployed with the same artifact)");
     assertThat(executionResponse.getStateExecutionData()).isNotNull();
     SelectedNodeExecutionData selectedNodeExecutionData =
         (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
@@ -388,12 +513,101 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void shouldSucceedForPartialPercentageInstancesWithErrorMessage() {
+    nodeSelectState.setInstanceCount("1");
+    nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.renderExpression("1")).thenReturn("1");
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(false);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("No nodes selected");
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void shouldSucceedForPartialPercentageInstancesWithOverrideErrorMessage() {
+    nodeSelectState.setInstanceCount("1");
+    nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(context.getContextElement(ContextElementType.STANDARD))
+        .thenReturn(WorkflowStandardParams.Builder.aWorkflowStandardParams()
+                        .withExecutionHosts(Arrays.asList("host1", "host2"))
+                        .build());
+    when(context.renderExpression("1")).thenReturn("1");
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(false);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
+    StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance().build();
+    doReturn(Collections.singletonList(stateExecutionInstance))
+        .when(workflowExecutionService)
+        .getStateExecutionInstancesForPhases(WORKFLOW_EXECUTION_ID);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo("No nodes selected as targeted nodes have already been deployed");
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFailForZeroTotalInstances() {
     nodeSelectState.setInstanceCount("100");
     nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
         .thenReturn(emptyList());
     when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
@@ -659,7 +873,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
         .thenReturn(emptyList());
     when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
@@ -680,6 +894,309 @@ public class NodeSelectStateTest extends WingsBaseTest {
             + "The service infrastructure [null] does not have this host.\n"
             + "\n"
             + "Check whether you've selected a unique set of host names for each phase. ");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testErrorMessageNoHostSpecified() {
+    nodeSelectState.setSpecificHosts(true);
+    nodeSelectState.setHostNames(new ArrayList<>());
+
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1"));
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "No nodes were selected. 'Use Specific Hosts' was chosen but no host names were specified.  and 0 instances have already been deployed. \n"
+            + "\n"
+            + "\n"
+            + "\n"
+            + "Check whether you've selected a unique set of host names for each phase. ");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testErrorMessageNoSpecificHosts() {
+    nodeSelectState.setSpecificHosts(false);
+    nodeSelectState.setHostNames(new ArrayList<>());
+
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1"));
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "No nodes were selected. This phase deploys to 0 instances (cumulative) and 0 instances have already been deployed. \n"
+            + "\n");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testErrorMessageNoSpecificHostsWithAwsInfraMappingWithNonProvisionedInfrastructure() {
+    nodeSelectState.setSpecificHosts(false);
+    nodeSelectState.setHostNames(new ArrayList<>());
+
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1"));
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "No nodes were selected. This phase deploys to 0 instances (cumulative) and 0 instances have already been deployed. \n"
+            + "\n"
+            + "\n"
+            + "\n"
+            + "Check whether the filters specified in your service infrastructure are correct. ");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testErrorMessageNoSpecificHostsWithAwsInfraMappingWithProvisionedInfrastructure() {
+    nodeSelectState.setSpecificHosts(false);
+    nodeSelectState.setHostNames(new ArrayList<>());
+    awsInfrastructureMapping.setProvisionInstances(true);
+
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1"));
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "No nodes were selected. This phase deploys to 0 instances (cumulative) and 0 instances have already been deployed. \n"
+            + "\n"
+            + "\n"
+            + "\n"
+            + "Check whether your Auto Scale group [null] capacity has changed. ");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testErrorMessageTooManyNodesSelected() {
+    nodeSelectState.setSpecificHosts(false);
+    nodeSelectState.setHostNames(new ArrayList<>());
+    awsInfrastructureMapping.setProvisionInstances(true);
+
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(instances);
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1"));
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testErrorMessageLicenceConstraint() {
+    nodeSelectState.setSpecificHosts(false);
+    nodeSelectState.setHostNames(new ArrayList<>());
+    awsInfrastructureMapping.setProvisionInstances(true);
+    Account account = new Account();
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(COMMUNITY);
+    account.setLicenseInfo(licenseInfo);
+
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+    doReturn(account).when(accountService).get(any());
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Lists.newArrayList(instance1, instance2, instance3, instance3, instance3, instance3, instance3,
+            instance3, instance3, instance3, instance3));
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1", "host-2", "host-3", "host-3", "host-3", "host-3", "host-3", "host-3", "host-3",
+            "host-3", "host-3"));
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "The license for this account does not allow more than 10 concurrent instance deployments. Please contact Harness Support.");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteForRollingWorkflowInstancesToAddIsInstanceCountTotal() {
+    nodeSelectState.setSpecificHosts(false);
+    nodeSelectState.setInstanceCount("100");
+    nodeSelectState.setInstanceUnitType(InstanceUnitType.COUNT);
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid(generateUuid());
+    stateExecutionInstance.setDisplayName("DC_NODE_SELECT");
+    stateExecutionInstance.setOrchestrationWorkflowType(OrchestrationWorkflowType.ROLLING);
+
+    ArgumentCaptor<ServiceInstanceSelectionParams> argumentCaptor =
+        ArgumentCaptor.forClass(ServiceInstanceSelectionParams.class);
+
+    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.renderExpression("100")).thenReturn("100");
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1"));
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    nodeSelectState.execute(context);
+    verify(infrastructureMappingService, times(2))
+        .selectServiceInstances(anyString(), anyString(), anyString(), argumentCaptor.capture());
+    assertThat(argumentCaptor.getAllValues().get(0).getCount()).isEqualTo(100);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testThrowExceptionWhenAutoScalingGroup() {
+    nodeSelectState.setSpecificHosts(true);
+    nodeSelectState.setHostNames(asList("host-10"));
+
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping().withProvisionInstances(true).build());
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(asList("host-1"));
+
+    assertThatThrownBy(() -> nodeSelectState.execute(context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Cannot specify hosts when using an auto scale group");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testValidateFields() {
+    NodeSelectState nodeSelectState = new DcNodeSelectState("NodeSelect");
+    nodeSelectState.setSpecificHosts(true);
+    nodeSelectState.setHostNames(new ArrayList<>());
+
+    Map<String, String> result = nodeSelectState.validateFields();
+    assertThat(result.get(SELECT_NODE_NAME)).isEqualTo("Hostnames must be specified");
+
+    nodeSelectState.setSpecificHosts(false);
+    nodeSelectState.setHostNames(new ArrayList<>());
+    Map<String, String> result2 = nodeSelectState.validateFields();
+
+    assertThat(result2.size()).isEqualTo(0);
+
+    nodeSelectState.setSpecificHosts(true);
+    nodeSelectState.setHostNames(asList("hostname"));
+    Map<String, String> result3 = nodeSelectState.validateFields();
+
+    assertThat(result3.size()).isEqualTo(0);
   }
 
   @Test

@@ -1,15 +1,18 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.when.beans.StepWhenCondition;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
-import io.harness.yaml.core.intfc.WithSkipCondition;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +28,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @NoArgsConstructor
 @TypeAlias("stepElementConfig")
-public class StepElementConfig implements WithSkipCondition {
+@OwnedBy(CDC)
+public class StepElementConfig {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
   @EntityIdentifier String identifier;
   @EntityName String name;
@@ -33,12 +37,14 @@ public class StepElementConfig implements WithSkipCondition {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Timeout> timeout;
   List<FailureStrategyConfig> failureStrategies;
 
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) StepWhenCondition when;
+
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StepSpecType stepSpecType;
 
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
   ParameterField<List<String>> delegateSelectors;
@@ -46,7 +52,8 @@ public class StepElementConfig implements WithSkipCondition {
   @Builder
   public StepElementConfig(String uuid, String identifier, String name, String description,
       ParameterField<Timeout> timeout, List<FailureStrategyConfig> failureStrategies, String type,
-      StepSpecType stepSpecType, ParameterField<String> skipCondition, ParameterField<List<String>> delegateSelectors) {
+      StepSpecType stepSpecType, ParameterField<String> skipCondition, StepWhenCondition when,
+      ParameterField<List<String>> delegateSelectors) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;
@@ -57,5 +64,6 @@ public class StepElementConfig implements WithSkipCondition {
     this.stepSpecType = stepSpecType;
     this.skipCondition = skipCondition;
     this.delegateSelectors = delegateSelectors;
+    this.when = when;
   }
 }

@@ -1,8 +1,11 @@
 package io.harness.ng.core.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 
@@ -20,6 +23,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
@@ -27,7 +31,6 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Project")
 public class ProjectDTO {
-  String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
@@ -38,9 +41,8 @@ public class ProjectDTO {
   @JsonIgnore Long version;
 
   @Builder
-  public ProjectDTO(String accountIdentifier, String orgIdentifier, String identifier, String name, String color,
-      List<ModuleType> modules, String description, Map<String, String> tags) {
-    this.accountIdentifier = accountIdentifier;
+  public ProjectDTO(String orgIdentifier, String identifier, String name, String color, List<ModuleType> modules,
+      String description, Map<String, String> tags) {
     this.orgIdentifier = orgIdentifier;
     this.identifier = identifier;
     this.name = name;

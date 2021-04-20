@@ -9,6 +9,9 @@ import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -23,10 +26,18 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
+import io.harness.helm.HelmSubCommandType;
+import io.harness.manifest.CustomManifestSource;
+import io.harness.manifest.CustomSourceConfig;
+import io.harness.manifest.CustomSourceFile;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.PhaseElement;
@@ -38,6 +49,8 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.HelmCommandFlagConfig;
+import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -62,12 +75,14 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.StateExecutionContext;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -126,6 +141,16 @@ public class ApplicationManifestUtils {
         app.getUuid(), infraMapping.getEnvId(), serviceElement.getUuid(), appManifestKind);
     if (applicationManifest != null) {
       appManifestMap.put(K8sValuesLocation.Environment, applicationManifest);
+    }
+
+    // Need service manifest for opensift deployments in case if any of the params overrides is reusing script from
+    // service manifest
+    if (featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId()) && isNotEmpty(appManifestMap)
+        && OC_PARAMS == appManifestKind) {
+      applicationManifest = getApplicationManifestForService(context);
+      if (applicationManifest != null && applicationManifest.getStoreType() == CUSTOM_OPENSHIFT_TEMPLATE) {
+        appManifestMap.put(K8sValuesLocation.Service, applicationManifest);
+      }
     }
 
     return appManifestMap;
@@ -522,5 +547,116 @@ public class ApplicationManifestUtils {
   public boolean isPollForChangesEnabled(ApplicationManifest applicationManifest) {
     return applicationManifest != null && applicationManifest.getPollForChanges() != null
         && applicationManifest.getPollForChanges();
+  }
+
+  public static HelmCommandFlag getHelmCommandFlags(HelmCommandFlagConfig helmCommandFlagConfig) {
+    if (helmCommandFlagConfig == null) {
+      return null;
+    }
+
+    Map<HelmSubCommandType, String> resultValueMap = new HashMap<>();
+    if (isNotEmpty(helmCommandFlagConfig.getValueMap())) {
+      for (Map.Entry<HelmSubCommand, String> entry : helmCommandFlagConfig.getValueMap().entrySet()) {
+        resultValueMap.put(entry.getKey().getSubCommandType(), entry.getValue());
+      }
+    }
+
+    return HelmCommandFlag.builder().valueMap(resultValueMap).build();
+  }
+
+  public CustomManifestValuesFetchParams createCustomManifestValuesFetchParams(
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    return CustomManifestValuesFetchParams.builder()
+        .fetchFilesList(getCustomManifestFetchFilesList(context, appManifestMap))
+        .accountId(context.getAccountId())
+        .appId(context.getAppId())
+        .build();
+  }
+
+  private List<String> getCustomSourceFilePathList(
+      ExecutionContext context, K8sValuesLocation location, ApplicationManifest manifest) {
+    StateExecutionContext stateExecutionContext =
+        StateExecutionContext
+            .builder()
+            // this should prevent us from rendering any secrets and using overall any secrets in path
+            .adoptDelegateDecryption(true)
+            .build();
+    String filesPath = context.renderExpression(manifest.getCustomSourceConfig().getPath(), stateExecutionContext);
+    List<String> filesPathList;
+    if (K8sValuesLocation.Service == location) {
+      // Don't want to fetch any files for Openshift, just use the script output for params overrides that is reusing
+      // service manifest script
+      filesPathList = CUSTOM_OPENSHIFT_TEMPLATE == manifest.getStoreType()
+          ? emptyList()
+          : Arrays.asList(getValuesYamlGitFilePath(filesPath));
+    } else {
+      filesPathList = splitCommaSeparatedFilePath(filesPath);
+    }
+
+    return filesPathList;
+  }
+
+  private List<CustomManifestFetchConfig> getCustomManifestFetchFilesList(
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    List<CustomManifestFetchConfig> customManifestFetchFilesList = new ArrayList<>();
+    for (Map.Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
+      if (CUSTOM != entry.getValue().getStoreType() && CUSTOM_OPENSHIFT_TEMPLATE != entry.getValue().getStoreType()) {
+        continue;
+      }
+
+      List<String> filesPathList = getCustomSourceFilePathList(context, entry.getKey(), entry.getValue());
+      CustomSourceConfig customSourceConfig = entry.getValue().getCustomSourceConfig();
+      CustomManifestSource customManifestSource =
+          CustomManifestSource.builder().script(customSourceConfig.getScript()).filePaths(filesPathList).build();
+
+      customManifestFetchFilesList.add(CustomManifestFetchConfig.builder()
+                                           .key(entry.getKey().name())
+                                           .defaultSource(K8sValuesLocation.Service == entry.getKey())
+                                           .required(K8sValuesLocation.Service != entry.getKey())
+                                           .customManifestSource(customManifestSource)
+                                           .build());
+    }
+
+    return customManifestFetchFilesList;
+  }
+
+  public Map<K8sValuesLocation, Collection<String>> getValuesFilesFromCustomFetchValuesResponse(
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
+      CustomManifestValuesFetchResponse response) {
+    Multimap<K8sValuesLocation, String> valuesFiles = ArrayListMultimap.create();
+    if (isEmpty(response.getValuesFilesContentMap())) {
+      return valuesFiles.asMap();
+    }
+
+    for (Entry<String, Collection<CustomSourceFile>> entry : response.getValuesFilesContentMap().entrySet()) {
+      Map<String, CustomSourceFile> namedCustomSourceFiles = new HashMap<>();
+      for (CustomSourceFile customSourceFile : entry.getValue()) {
+        namedCustomSourceFiles.put(customSourceFile.getFilePath(), customSourceFile);
+      }
+
+      K8sValuesLocation valuesLocation = K8sValuesLocation.valueOf(entry.getKey());
+      ApplicationManifest manifest = appManifestMap.get(valuesLocation);
+      valuesFiles.putAll(
+          valuesLocation, getOrderedCustomFiles(context, valuesLocation, manifest, namedCustomSourceFiles));
+    }
+
+    return valuesFiles.asMap();
+  }
+
+  private Collection<String> getOrderedCustomFiles(ExecutionContext context, K8sValuesLocation location,
+      ApplicationManifest appManifest, Map<String, CustomSourceFile> sourceFiles) {
+    List<String> filePathList = getCustomSourceFilePathList(context, location, appManifest);
+    if (K8sValuesLocation.Service == location || isEmpty(filePathList)) {
+      return isNotEmpty(sourceFiles) ? singletonList(sourceFiles.values().iterator().next().getFileContent())
+                                     : emptyList();
+    }
+
+    return filePathList.stream()
+        .map(sourceFiles::get)
+        .map(Optional::ofNullable)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .map(CustomSourceFile::getFileContent)
+        .collect(Collectors.toList());
   }
 }

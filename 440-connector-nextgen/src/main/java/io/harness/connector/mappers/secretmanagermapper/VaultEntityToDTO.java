@@ -1,9 +1,13 @@
 package io.harness.connector.mappers.secretmanagermapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 
+@OwnedBy(PL)
 public class VaultEntityToDTO implements ConnectorEntityToDTOMapper<VaultConnectorDTO, VaultConnector> {
   @Override
   public VaultConnectorDTO createConnectorDTO(VaultConnector connector) {

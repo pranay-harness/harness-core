@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
@@ -11,6 +13,8 @@ import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -45,6 +49,8 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @Slf4j
 @JsonTypeName("INIT")
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class InitSshCommandUnit extends SshCommandUnit {
   @Inject @Transient private transient CommandUnitHelper commandUnitHelper;
   /**
@@ -126,15 +132,26 @@ public class InitSshCommandUnit extends SshCommandUnit {
     launcherScriptFileName = "harnesslauncher" + activityId + ".sh";
 
     CommandExecutionStatus commandExecutionStatus = context.executeCommandString(preInitCommand);
+    String launcherFile = null;
     try {
+      launcherFile = getLauncherFile();
       commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
-          ? context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()))
+          ? context.copyFiles(executionStagingDir, Collections.singletonList(launcherFile))
           : commandExecutionStatus;
     } catch (IOException | TemplateException e) {
       log.error("Error in InitCommandUnit", e);
+    } finally {
+      if (launcherFile != null) {
+        File file = new File(launcherFile);
+        if (!file.delete()) {
+          log.warn("Unable to delete file {} from delegate", launcherFile);
+        }
+      }
     }
+
+    List<String> commandUnitFiles = null;
     try {
-      List<String> commandUnitFiles = getCommandUnitFiles();
+      commandUnitFiles = getCommandUnitFiles();
       if (isNotEmpty(commandUnitFiles)) {
         commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
             ? context.copyFiles(executionStagingDir, commandUnitFiles)
@@ -143,7 +160,17 @@ public class InitSshCommandUnit extends SshCommandUnit {
     } catch (IOException | TemplateException e) {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
       log.error("Error in InitCommandUnit", e);
+    } finally {
+      if (commandUnitFiles != null) {
+        for (String commandUnitFile : commandUnitFiles) {
+          File file = new File(commandUnitFile);
+          if (!file.delete()) {
+            log.warn("Unable to delete file {} from delegate", commandUnitFile);
+          }
+        }
+      }
     }
+
     commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
         ? context.executeCommandString("chmod 0700 " + executionStagingDir + "/*")
         : commandExecutionStatus;

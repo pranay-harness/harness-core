@@ -1,5 +1,9 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.sm.StepExecutionSummary;
 
 import lombok.Builder;
@@ -11,6 +15,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(CDP)
 public class HelmSetupExecutionSummary extends StepExecutionSummary {
   private String releaseName;
   private Integer prevVersion;

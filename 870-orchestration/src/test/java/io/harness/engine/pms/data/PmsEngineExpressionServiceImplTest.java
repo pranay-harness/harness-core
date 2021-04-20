@@ -73,6 +73,6 @@ public class PmsEngineExpressionServiceImplTest extends OrchestrationTestBase {
   public void shouldTestEvaluateExpression() {
     Object value = pmsEngineExpressionService.evaluateExpression(ambiance, "<+dummyOutcome.test> == \"harness\"");
     assertThat(value).isNotNull();
-    assertThat(value).isEqualTo("true");
+    assertThat(value).isEqualTo(RecastOrchestrationUtils.toDocumentJson(true));
   }
 }

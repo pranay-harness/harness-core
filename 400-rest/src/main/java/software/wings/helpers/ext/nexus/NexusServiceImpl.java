@@ -162,7 +162,7 @@ public class NexusServiceImpl implements NexusService {
                       -> nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
                   20L, TimeUnit.SECONDS, true);
             default:
-              throw new WingsException("Unsupported repositoryFormat for Nexus 3.x");
+              throw new InvalidArtifactServerException("Unsupported repositoryFormat for Nexus 3.x");
           }
         } else {
           // for backward compatibility  with old UI when repositoryFormat is null

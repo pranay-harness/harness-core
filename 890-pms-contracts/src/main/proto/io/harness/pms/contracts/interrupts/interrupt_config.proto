@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.advisers;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/advisers/advise.proto";
+
+message InterruptConfig {
+  IssuedBy issuedBy = 1;
+  oneof config {
+    RetryInterruptConfig retryInterruptConfig = 3;
+  }
+}
+
+message RetryInterruptConfig {
+  string retryId = 1;
+}
+
+message IssuedBy {
+  oneof issuer {
+    ManualIssuer manualIssuer = 3;
+    AdviserIssuer adviserIssuer = 4;
+    TimeoutIssuer timeoutIssuer = 5;
+  }
+}
+
+message ManualIssuer {
+  // TODO(archit): Add user details
+  string email_id = 1;
+  string user_id = 2;
+}
+message AdviserIssuer {
+  io.harness.pms.contracts.advisers.AdviseType adviserType = 1;
+}
+
+message TimeoutIssuer {}

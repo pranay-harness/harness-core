@@ -1,12 +1,12 @@
 package io.harness.ng.core.event;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
-import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
-import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class ConnectorFeatureFlagStreamListener implements MessageListener {
@@ -44,11 +45,7 @@ public class ConnectorFeatureFlagStreamListener implements MessageListener {
   }
 
   private boolean processNGEnableAction(String accountId) {
-    try {
-      harnessSMManager.createHarnessSecretManager(accountId, null, null);
-    } catch (DuplicateFieldException ex) {
-      log.error(String.format("Harness Secret Manager for accountIdentifier %s already exists", accountId), ex, USER);
-    }
+    harnessSMManager.createHarnessSecretManager(accountId, null, null);
     return true;
   }
 }

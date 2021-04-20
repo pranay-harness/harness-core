@@ -1,5 +1,10 @@
 package io.harness.ccm.communication;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 
@@ -10,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@OwnedBy(CE)
+@TargetModule(HarnessModule._490_CE_COMMONS)
 public class CECommunicationsServiceImpl implements CECommunicationsService {
   @Inject CECommunicationsDao ceCommunicationsDao;
   @Inject CeAccountExpirationChecker accountChecker;

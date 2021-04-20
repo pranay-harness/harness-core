@@ -1,8 +1,12 @@
 package software.wings.service.impl.cloudwatch;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 /**
  * Created by rsingh on 3/30/18.
  */
+@OwnedBy(CDP)
 public enum AwsNameSpace {
   APIGATEWAY("AWS/ApiGateway", false),
   APPSTREAM("AWS/AppStream", false),

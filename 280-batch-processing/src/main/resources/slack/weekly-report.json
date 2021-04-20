@@ -5,7 +5,7 @@
       "elements": [
         {
           "type": "plain_text",
-          "text": "Your Continuous Efficiency Weekly Report (${DATE})",
+          "text": "Your Cloud Cost Management Weekly Report (${DATE})",
           "emoji": true
         }
       ]

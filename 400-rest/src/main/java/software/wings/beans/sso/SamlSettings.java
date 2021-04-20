@@ -3,18 +3,23 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
+@JsonTypeName("SAML")
 public class SamlSettings extends SSOSettings {
   @JsonIgnore @NotNull private String metaDataFile;
   @NotNull private String accountId;
@@ -36,6 +41,11 @@ public class SamlSettings extends SSOSettings {
   @Override
   public SSOSettings getPublicSSOSettings() {
     return this;
+  }
+
+  @Override
+  public SSOType getType() {
+    return SSOType.SAML;
   }
 
   @JsonProperty

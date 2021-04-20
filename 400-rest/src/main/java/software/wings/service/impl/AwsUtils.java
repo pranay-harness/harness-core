@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.api.DeploymentType;
@@ -25,6 +27,7 @@ import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
+@OwnedBy(CDP)
 public class AwsUtils {
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
 

@@ -1,5 +1,6 @@
 package io.harness.ccm.budget;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.budget.BudgetScopeType.APPLICATION;
 import static io.harness.ccm.budget.BudgetScopeType.CLUSTER;
 import static io.harness.ccm.budget.BudgetScopeType.PERSPECTIVE;
@@ -8,6 +9,9 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.budget.dao.BudgetDao;
@@ -55,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -62,6 +67,8 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetUtils {
   @Inject WingsPersistence wingsPersistence;
   @Inject BudgetTimescaleQueryHelper budgetTimescaleQueryHelper;
@@ -207,7 +214,7 @@ public class BudgetUtils {
   }
 
   private void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
-    String[] instanceTypeValues = {"ECS_TASK_FARGATE", "ECS_CONTAINER_INSTANCE", "K8S_NODE"};
+    String[] instanceTypeValues = {"ECS_TASK_FARGATE", "ECS_CONTAINER_INSTANCE", "K8S_NODE", "K8S_POD_FARGATE"};
     filters.add(QLBillingDataFilter.builder()
                     .instanceType(QLIdFilter.builder().operator(QLIdOperator.IN).values(instanceTypeValues).build())
                     .build());
@@ -482,5 +489,16 @@ public class BudgetUtils {
       default:
         return null;
     }
+  }
+
+  public AlertThreshold[] getSortedAlertThresholds(AlertThresholdBase costType, AlertThreshold[] alertThresholds) {
+    List<AlertThreshold> alerts = new ArrayList<>();
+    for (AlertThreshold alertThreshold : alertThresholds) {
+      if (alertThreshold.getBasedOn() == costType) {
+        alerts.add(alertThreshold);
+      }
+    }
+    alerts.sort(Comparator.comparing(AlertThreshold::getPercentage).reversed());
+    return alerts.toArray(new AlertThreshold[0]);
   }
 }

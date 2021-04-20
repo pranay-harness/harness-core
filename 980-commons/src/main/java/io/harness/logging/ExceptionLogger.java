@@ -9,6 +9,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.MessageManager;
@@ -24,6 +26,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
+@OwnedBy(HarnessTeam.DX)
 @UtilityClass
 public class ExceptionLogger {
   protected static String calculateResponseMessage(List<ResponseMessage> responseMessages) {
@@ -54,8 +57,12 @@ public class ExceptionLogger {
       final String message =
           MessageManager.getInstance().prepareMessage(ErrorCodeName.builder().value(exception.getCode().name()).build(),
               exception.getMessage(), exception.getParams());
-      ResponseMessage responseMessage =
-          ResponseMessage.builder().code(exception.getCode()).message(message).level(exception.getLevel()).build();
+      ResponseMessage responseMessage = ResponseMessage.builder()
+                                            .code(exception.getCode())
+                                            .message(message)
+                                            .level(exception.getLevel())
+                                            .failureTypes(exception.getFailureTypes())
+                                            .build();
 
       ResponseMessage finalResponseMessage = responseMessage;
       if (list.stream().noneMatch(msg -> StringUtils.equals(finalResponseMessage.getMessage(), msg.getMessage()))) {

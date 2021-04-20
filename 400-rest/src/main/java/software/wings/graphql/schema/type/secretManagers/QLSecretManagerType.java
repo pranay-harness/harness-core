@@ -5,8 +5,9 @@ import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.VAULT;
+import static io.harness.security.encryption.EncryptionType.VAULT_SSH;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptionType;
 
@@ -14,7 +15,7 @@ import software.wings.graphql.schema.type.QLEnum;
 
 import lombok.Getter;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLSecretManagerType implements QLEnum {
   AWS_KMS(KMS),
   AWS_SECRET_MANAGER(AWS_SECRETS_MANAGER),
@@ -23,7 +24,8 @@ public enum QLSecretManagerType implements QLEnum {
   GCP_SECRETS_MANAGER(EncryptionType.GCP_SECRETS_MANAGER),
   CYBERARK(EncryptionType.CYBERARK),
   GOOGLE_KMS(GCP_KMS),
-  CUSTOM(EncryptionType.CUSTOM);
+  CUSTOM(EncryptionType.CUSTOM),
+  SSH(VAULT_SSH);
 
   @Getter private final EncryptionType encryptionType;
 

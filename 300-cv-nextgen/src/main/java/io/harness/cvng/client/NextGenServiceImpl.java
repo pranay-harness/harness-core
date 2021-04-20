@@ -1,9 +1,13 @@
 package io.harness.cvng.client;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.utils.IdentifierRefHelper;
@@ -13,6 +17,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hazelcast.util.Preconditions;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CV)
 public class NextGenServiceImpl implements NextGenService {
   @Inject private NextGenClient nextGenClient;
   @Inject private RequestExecutor requestExecutor;
@@ -33,10 +39,13 @@ public class NextGenServiceImpl implements NextGenService {
           .build(new CacheLoader<EntityKey, EnvironmentResponseDTO>() {
             @Override
             public EnvironmentResponseDTO load(EntityKey entityKey) {
-              return requestExecutor
-                  .execute(nextGenClient.getEnvironment(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
-                      entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
-                  .getData();
+              EnvironmentResponse environmentResponse =
+                  requestExecutor
+                      .execute(nextGenClient.getEnvironment(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
+                          entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
+                      .getData();
+              Preconditions.checkNotNull(environmentResponse, "Environment Response from Ng Manager cannot be null");
+              return environmentResponse.getEnvironment();
             }
           });
 
@@ -117,6 +126,13 @@ public class NextGenServiceImpl implements NextGenService {
             nextGenClient.listEnvironmentsForProject(0, 1000, accountId, orgIdentifier, projectIdentifier, null, null))
         .getData()
         .getTotalItems();
+  }
+
+  @Override
+  public ProjectDTO getProject(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return requestExecutor.execute(nextGenClient.getProject(projectIdentifier, accountIdentifier, orgIdentifier))
+        .getData()
+        .getProject();
   }
 
   @Value

@@ -1,6 +1,9 @@
 package software.wings.service.intfc;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
@@ -24,7 +27,7 @@ import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
@@ -43,7 +46,8 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
@@ -57,9 +61,13 @@ public interface DelegateService extends OwnedByAccount {
 
   DelegateStatus getDelegateStatusWithScalingGroups(String accountId);
 
+  DelegateGroup getDelegateGroup(String accountId, String delegateGroupId);
+
   Set<String> retrieveDelegateSelectors(Delegate delegate);
 
   List<String> getAvailableVersions(String accountId);
+
+  Double getConnectedRatioWithPrimary(String targetVersion);
 
   DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails);
 
@@ -189,6 +197,8 @@ public interface DelegateService extends OwnedByAccount {
       List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
 
   void regenerateCapabilityPermissions(String accountId, String delegateId);
+
+  String getHostNameForGroupedDelegate(String hostname);
 
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 

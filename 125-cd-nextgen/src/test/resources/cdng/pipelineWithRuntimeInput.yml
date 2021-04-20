@@ -36,7 +36,7 @@ pipeline:
                 type: Retry
                 spec:
                   retryCount: 3
-                  retryInterval:
+                  retryIntervals:
                     - 1s
                     - 5s
                   onRetryFailure:

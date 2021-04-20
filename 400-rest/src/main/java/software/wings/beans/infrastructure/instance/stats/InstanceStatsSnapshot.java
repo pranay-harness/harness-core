@@ -1,9 +1,9 @@
 package software.wings.beans.infrastructure.instance.stats;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -29,11 +29,19 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "instanceStats", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-
-@NgUniqueIndex(name = "accountId_timestamp_unique_idx", fields = { @Field("accountId")
-                                                                   , @Field("timestamp") })
 @FieldNameConstants(innerTypeName = "InstanceStatsSnapshotKeys")
 public class InstanceStatsSnapshot extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_account_timestamp")
+                 .unique(true)
+                 .field(InstanceStatsSnapshotKeys.accountId)
+                 .field(InstanceStatsSnapshotKeys.timestamp)
+                 .build())
+        .build();
+  }
+
   private static final List<EntityType> ENTITY_TYPES_TO_AGGREGATE_ON = Arrays.asList(EntityType.APPLICATION);
 
   @NonFinal @FdIndex private Instant timestamp;

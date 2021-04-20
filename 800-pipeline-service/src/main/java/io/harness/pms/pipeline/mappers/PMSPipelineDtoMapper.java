@@ -1,5 +1,10 @@
 package io.harness.pms.pipeline.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
@@ -17,6 +22,7 @@ import java.util.Calendar;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class PMSPipelineDtoMapper {
   public PMSPipelineResponseDTO writePipelineDto(PipelineEntity pipelineEntity) {
@@ -109,5 +115,19 @@ public class PMSPipelineDtoMapper {
           pipeline.getExecutionSummaryInfo().getNumOfErrors().getOrDefault(sdf.format(cal.getTime()), 0));
     }
     return numberOfDeployments;
+  }
+
+  public PermissionCheckDTO toPermissionCheckDTO(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, String permission) {
+    return PermissionCheckDTO.builder()
+        .resourceScope(ResourceScope.builder()
+                           .accountIdentifier(accountIdentifier)
+                           .orgIdentifier(orgIdentifier)
+                           .projectIdentifier(projectIdentifier)
+                           .build())
+        .resourceType("PIPELINE")
+        .resourceIdentifier(pipelineIdentifier)
+        .permission(permission)
+        .build();
   }
 }

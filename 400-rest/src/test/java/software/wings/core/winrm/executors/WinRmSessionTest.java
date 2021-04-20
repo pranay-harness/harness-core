@@ -1,5 +1,6 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
@@ -34,6 +36,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PrepareForTest({software.wings.utils.SshHelperUtils.class, io.harness.ssh.SshHelperUtils.class, WinRmSession.class,
     InstallUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(CDP)
 public class WinRmSessionTest extends WingsBaseTest {
   @Mock private SshHelperUtils sshHelperUtils;
   @Mock private Writer writer;

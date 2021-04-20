@@ -8,15 +8,17 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EdgeList;
+import io.harness.beans.ExecutionGraph;
+import io.harness.beans.ExecutionNode;
+import io.harness.beans.ExecutionNodeAdjacencyList;
 import io.harness.category.element.UnitTests;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.execution.beans.ExecutionGraph;
-import io.harness.pms.execution.beans.ExecutionNode;
-import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
@@ -27,6 +29,7 @@ import lombok.NonNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ExecutionGraphMapperTest extends CategoryTest {
   @Test
   @Owner(developers = VAIBHAV_SI)

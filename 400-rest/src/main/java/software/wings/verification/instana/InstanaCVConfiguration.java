@@ -6,6 +6,7 @@ import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
 import software.wings.service.impl.instana.InstanaTagFilter;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.ArrayList;

@@ -1,15 +1,19 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.notification.NotificationClientConfiguration;
-import io.harness.pms.triggers.webhook.scm.ScmConnectionConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -38,6 +42,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.reflections.Reflections;
 
+@OwnedBy(PIPELINE)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
@@ -60,12 +65,16 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
   @JsonProperty("enableAuth") private boolean enableAuth;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
+  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
 
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
   private ScmConnectionConfig scmConnectionConfig;
   private ServiceHttpClientConfig managerClientConfig;
+  private LogStreamingServiceConfiguration logStreamingServiceConfig;
+  private PipelineServiceIteratorsConfig iteratorsConfig;
 
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

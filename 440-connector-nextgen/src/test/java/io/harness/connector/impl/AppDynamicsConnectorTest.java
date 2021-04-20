@@ -10,6 +10,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -17,6 +19,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.validator.ConnectionValidator;
+import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -41,9 +44,11 @@ import org.mockito.Spy;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@OwnedBy(HarnessTeam.CV)
 public class AppDynamicsConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
 
   @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
@@ -93,7 +98,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(appDynamicsConfig)).thenReturn(appDynamicsConfig);
+    when(connectorRepository.save(appDynamicsConfig, connectorRequest)).thenReturn(appDynamicsConfig);
     when(connectorMapper.writeDTO(appDynamicsConfig)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(appDynamicsConfig);
     doNothing().when(connectorService).assurePredefined(any(), any());
@@ -116,7 +121,8 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetAppDynamicsConnector() {
     createConnector();
-    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
+    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+             anyString(), anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Optional.of(appDynamicsConfig));
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureAppDynamicsConnectorFieldsAreCorrect(connectorDTO);
@@ -137,5 +143,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(accountName);
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(controllerUrl);
     assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(accountIdentifier);
+    assertThat(appDynamicsConnectorDTO.getAuthType().name()).isEqualTo(AppDynamicsAuthType.USERNAME_PASSWORD.name());
   }
 }

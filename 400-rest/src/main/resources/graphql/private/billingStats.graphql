@@ -417,6 +417,7 @@ input CCMFilter {
   labelSearch: IdFilter
   tagSearch: IdFilter
   instanceType: IdFilter
+  storageUtilizationValue: NumberFilter
 }
 
 input BillingDataLabelFilter {
@@ -487,6 +488,7 @@ type NodeAndPodDataPoint {
   clusterId: String
   node: String
   nodePoolName: String
+  cloudProviderInstanceId: String
   podCapacity: String
   totalCost: Number
   idleCost: Number

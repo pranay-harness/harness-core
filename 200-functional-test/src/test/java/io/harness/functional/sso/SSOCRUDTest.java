@@ -46,7 +46,7 @@ public class SSOCRUDTest extends AbstractFunctionalTest {
     log.info("Starting the SAML test");
     String filePath = System.getProperty("user.dir");
     filePath = filePath + "/"
-        + "src/test/resources/secrets/"
+        + "200-functional-test/src/test/resources/secrets/"
         + "SAML_SSO_Provider.xml";
     assertThat(SSORestUtils.addSAMLSettings(getAccount().getUuid(), bearerToken, "SAML", filePath) == HttpStatus.SC_OK)
         .isTrue();

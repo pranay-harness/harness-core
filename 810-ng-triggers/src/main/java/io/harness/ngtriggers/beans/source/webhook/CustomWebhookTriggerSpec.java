@@ -1,8 +1,9 @@
 package io.harness.ngtriggers.beans.source.webhook;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
 
-import io.harness.ngtriggers.beans.entity.metadata.AuthToken;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
@@ -12,10 +13,10 @@ import lombok.Data;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(PIPELINE)
 public class CustomWebhookTriggerSpec implements WebhookTriggerSpec {
   List<WebhookCondition> payloadConditions;
   List<WebhookCondition> headerConditions;
-  AuthToken authToken;
 
   public void setRepoSpec(RepoSpec repoUrl) {}
   public void setEvent(WebhookEvent webhookEvent) {}

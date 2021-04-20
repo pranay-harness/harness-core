@@ -11,6 +11,7 @@
     },
     "type": "DockerRegistry",
     "spec": {
+      "delegateSelectors": null,
       "dockerRegistryUrl": "https://index.docker.io/v2/",
       "providerType": "DockerHub",
       "auth": {

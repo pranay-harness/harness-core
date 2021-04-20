@@ -1,6 +1,6 @@
 package io.harness.cvng;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.google.inject.Inject;
@@ -18,7 +18,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @Singleton
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class CVNGRequestExecutor {
   private static final int MAX_RETRIES = 2;
   @Inject @Named("verificationDataCollectorExecutor") private ExecutorService executorService;

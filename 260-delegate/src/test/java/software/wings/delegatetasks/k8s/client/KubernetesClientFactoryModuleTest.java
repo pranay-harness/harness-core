@@ -1,21 +1,25 @@
 package software.wings.delegatetasks.k8s.client;
 
-import static io.harness.annotations.dev.Module._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.govern.ProviderModule;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -32,6 +36,7 @@ import org.junit.runners.JUnit4;
 @Slf4j
 @RunWith(JUnit4.class)
 @TargetModule(_930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class KubernetesClientFactoryModuleTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
@@ -46,7 +51,13 @@ public class KubernetesClientFactoryModuleTest extends CategoryTest {
         return mock(GkeClusterService.class);
       }
     });
-
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      SecretDecryptionService secretDecryptionService() {
+        return mock(SecretDecryptionService.class);
+      }
+    });
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -60,6 +71,14 @@ public class KubernetesClientFactoryModuleTest extends CategoryTest {
       @Singleton
       EncryptionService encryptionService() {
         return mock(EncryptionService.class);
+      }
+    });
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      TimeLimiter timeLimiter() {
+        return mock(TimeLimiter.class);
       }
     });
 

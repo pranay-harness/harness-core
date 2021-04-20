@@ -19,7 +19,9 @@ import static io.harness.exception.WingsException.USER_ADMIN;
 
 import static org.apache.cxf.common.util.UrlUtils.urlDecode;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
@@ -29,7 +31,9 @@ import io.harness.exception.WingsException;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AuthToken;
+import software.wings.beans.Event;
 import software.wings.beans.User;
+import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.oauth.OauthBasedAuthHandler;
@@ -38,6 +42,7 @@ import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountC
 import software.wings.security.authentication.recaptcha.MaxLoginAttemptExceededException;
 import software.wings.security.saml.SSORequest;
 import software.wings.security.saml.SamlClientService;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
@@ -57,6 +62,7 @@ import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Singleton
 @Slf4j
 public class AuthenticationManager {
@@ -73,6 +79,8 @@ public class AuthenticationManager {
   @Inject private OauthOptions oauthOptions;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private FailedLoginAttemptCountChecker failedLoginAttemptCountChecker;
+  @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private LoginSettingsService loginSettingsService;
 
   private static final String LOGIN_ERROR_CODE_INVALIDSSO = "#/login?errorCode=invalidsso";
   private static final String LOGIN_ERROR_CODE_SAMLTESTSUCCESS = "#/login?errorCode=samltestsuccess";
@@ -283,7 +291,7 @@ public class AuthenticationManager {
         .build();
   }
 
-  private String[] decryptBasicToken(String basicToken) {
+  public String[] decryptBasicToken(String basicToken) {
     String[] decryptedData = decodeBase64ToString(basicToken).split(":", 2);
     if (decryptedData.length < 2) {
       throw new WingsException(INVALID_CREDENTIAL, USER);
@@ -350,6 +358,7 @@ public class AuthenticationManager {
       } else {
         user = authHandler.authenticate(userName, password).getUser();
       }
+
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
@@ -360,14 +369,24 @@ public class AuthenticationManager {
       }
 
     } catch (WingsException we) {
-      log.warn("Failed to login via default mechanism", we);
+      log.error("Failed to login via default mechanism", we);
+      User user = userService.getUserByEmail(userName);
+      if (Objects.nonNull(user)) {
+        String accountId = user.getDefaultAccountId();
+        authService.auditUnsuccessfulLogin(accountId, user);
+      }
       if (NON_INVALID_CREDENTIALS_ERROR_CODES.contains(we.getCode())) {
         throw we;
       } else {
         throw new WingsException(INVALID_CREDENTIAL, USER);
       }
     } catch (Exception e) {
-      log.warn("Failed to login via default mechanism", e);
+      log.error("Failed to login via default mechanism", e);
+      User user = userService.getUserByEmail(userName);
+      if (Objects.nonNull(user)) {
+        String accountId = user.getDefaultAccountId();
+        authService.auditUnsuccessfulLogin(accountId, user);
+      }
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }
@@ -407,7 +426,8 @@ public class AuthenticationManager {
         return loggedInUser;
       }
     } catch (Exception e) {
-      log.warn("Failed to login via SSO", e);
+      log.error("Failed to login via SSO", e);
+      auditServiceHelper.reportForAuditingUsingAccountId(null, null, null, Event.Type.UNSUCCESSFUL_LOGIN);
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }

@@ -15,9 +15,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.RepairActionCode;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

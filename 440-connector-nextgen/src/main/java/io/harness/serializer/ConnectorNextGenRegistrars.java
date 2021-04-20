@@ -1,8 +1,12 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.filter.serializer.FiltersRegistrars;
+import io.harness.gitsync.serializer.GitSyncSdkRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.ConnectorNextGenKryoRegistrar;
 import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
@@ -14,6 +18,7 @@ import lombok.experimental.UtilityClass;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(DX)
 public class ConnectorNextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -25,6 +30,8 @@ public class ConnectorNextGenRegistrars {
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(DelegateAgentBeansRegistrars.kryoRegistrars)
           .add(ConnectorNextGenKryoRegistrar.class)
+          .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
+          .addAll(GitSyncSdkRegistrar.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -37,6 +44,9 @@ public class ConnectorNextGenRegistrars {
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .add(ConnectorMorphiaClassesRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .add(PmsSdkCoreMorphiaRegistrar.class)
+          .addAll(PmsCommonsModuleRegistrars.morphiaRegistrars)
+          .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

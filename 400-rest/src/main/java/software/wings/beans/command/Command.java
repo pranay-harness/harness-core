@@ -10,9 +10,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.serializer.MapperUtils;
 
 import software.wings.beans.Base;
@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -53,10 +54,20 @@ import org.mongodb.morphia.annotations.Entity;
 @Attributes(title = "Command")
 @Entity(value = "commands")
 @HarnessEntity(exportable = true)
-@NgUniqueIndex(name = "yaml", fields = { @Field("appId")
-                                         , @Field("originEntityId"), @Field("version") })
 @FieldNameConstants(innerTypeName = "CommandKeys")
 public class Command extends Base implements CommandUnit {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("yaml")
+                 .unique(true)
+                 .field(BaseKeys.appId)
+                 .field(CommandKeys.originEntityId)
+                 .field(CommandKeys.version)
+                 .build())
+        .build();
+  }
+
   @NotEmpty @SchemaIgnore private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;

@@ -3,10 +3,14 @@ package io.harness.manage;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
 import io.harness.context.MdcGlobalContextData;
 import io.harness.logging.AutoLogContext;
+import io.harness.serializer.KryoSerializer;
+import io.harness.virtualstack.VirtualStackRequest;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -16,6 +20,7 @@ import org.slf4j.MDC;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class GlobalContextManager {
   private static final ThreadLocal<GlobalContext> contextThreadLocal = new ThreadLocal<>();
 
@@ -66,6 +71,18 @@ public class GlobalContextManager {
     return new GlobalContextGuard(globalContext);
   }
 
+  public static GlobalContextGuard initGlobalContextGuard(
+      KryoSerializer kryoSerializer, VirtualStackRequest virtualStackRequest) {
+    GlobalContext globalContext = null;
+    if (virtualStackRequest == null || virtualStackRequest.getGlobalContext() == null) {
+      globalContext = new GlobalContext();
+    } else {
+      globalContext =
+          (GlobalContext) kryoSerializer.asInflatedObject(virtualStackRequest.getGlobalContext().toByteArray());
+    }
+    return new GlobalContextGuard(globalContext);
+  }
+
   public static AutoLogContext set(GlobalContext globalContext) {
     AutoLogContext autoLogContext = null;
     final MdcGlobalContextData globalContextData = globalContext.get(MdcGlobalContextData.MDC_ID);
@@ -79,6 +96,14 @@ public class GlobalContextManager {
 
   public static void unset() {
     contextThreadLocal.remove();
+  }
+
+  public static void unset(String key) {
+    GlobalContext globalContext = contextThreadLocal.get();
+    if (globalContext == null) {
+      return;
+    }
+    globalContext.unset(key);
   }
 
   public static <T extends GlobalContextData> T get(String key) {

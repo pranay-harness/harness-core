@@ -11,7 +11,7 @@ import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.SettingAttribute;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @OwnedBy(CDC)
 @Slf4j
-public class ArtifactCollectionCallback implements NotifyCallback {
+public class ArtifactCollectionCallback implements OldNotifyCallback {
   @Inject private ArtifactService artifactService;
   @Inject private NotificationService notificationService;
   @Inject private SettingsService settingsService;

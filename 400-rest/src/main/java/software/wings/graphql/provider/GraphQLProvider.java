@@ -1,6 +1,6 @@
 package software.wings.graphql.provider;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ff.FeatureFlagService;
 
@@ -33,7 +33,7 @@ import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class GraphQLProvider implements QueryLanguageProvider<GraphQL> {
   private static final String GRAPHQL_SCHEMA_PUBLIC_DIRECTORY_PATH = "graphql/public/";
   private static final String GRAPHQL_SCHEMA_PRIVATE_DIRECTORY_PATH = "graphql/private/";

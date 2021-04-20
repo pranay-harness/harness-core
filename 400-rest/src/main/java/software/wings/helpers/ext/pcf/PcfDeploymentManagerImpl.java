@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.pcf.model.PcfConstants.DISABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.ENABLE_AUTOSCALING;
 import static io.harness.pcf.model.PcfConstants.HARNESS__ACTIVE__IDENTIFIER;
@@ -18,6 +19,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.LogLevel;
@@ -48,6 +50,7 @@ import org.cloudfoundry.operations.routes.Route;
 import org.zeroturnaround.exec.StartedProcess;
 
 @Singleton
+@OwnedBy(CDP)
 public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
   public static final String DELIMITER = "__";
   private static final List<String> STATUS_ENV_VARIABLES =

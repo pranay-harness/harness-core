@@ -12,7 +12,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.DeprecatedIntegrationTests;
@@ -55,7 +55,7 @@ import org.mockito.Mock;
  *
  * @author rktummala
  */
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class GovernanceConfigServiceTest extends IntegrationTestBase {
   @Inject private AccountService accountService;
   @Inject private LicenseService licenseService;

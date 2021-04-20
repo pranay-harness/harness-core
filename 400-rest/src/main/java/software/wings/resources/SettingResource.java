@@ -136,7 +136,6 @@ public class SettingResource {
     if (isNotEmpty(settingVariableTypes)) {
       pageRequest.addFilter("value.type", IN, settingVariableTypes.toArray());
     }
-
     if (gitSshConfigOnly) {
       pageRequest.addFilter("accountId", EQ, accountId);
       pageRequest.addFilter("value.type", EQ, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());

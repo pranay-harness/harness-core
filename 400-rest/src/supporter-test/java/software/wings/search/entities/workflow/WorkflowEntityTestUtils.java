@@ -7,14 +7,14 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeEvent.ChangeEventBuilder;
+import io.harness.mongo.changestreams.ChangeType;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
-import software.wings.search.framework.changestreams.ChangeEvent;
-import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
-import software.wings.search.framework.changestreams.ChangeType;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;

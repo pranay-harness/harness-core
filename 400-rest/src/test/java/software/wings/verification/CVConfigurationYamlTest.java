@@ -2,7 +2,6 @@ package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
 
-import static software.wings.verification.CVConfiguration.CVConfigurationYaml;
 import static software.wings.verification.prometheus.PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml;
 
 import static org.assertj.core.api.Assertions.assertThat;

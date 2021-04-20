@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
@@ -18,6 +20,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -47,6 +50,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class SpotinstAmiInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock InstanceService instanceService;
   @Mock PerpetualTaskService perpetualTaskService;

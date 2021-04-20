@@ -1,7 +1,5 @@
 package io.harness.governance;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 
 import software.wings.resources.stats.model.WeeklyRange;
@@ -18,7 +16,6 @@ import org.codehaus.jackson.annotate.JsonCreator;
 @ToString
 @EqualsAndHashCode
 @ParametersAreNonnullByDefault
-@TargetModule(Module._980_COMMONS)
 public class WeeklyFreezeConfig extends GovernanceFreezeConfig {
   // if freezeForAllApps=true, ignore appIds
   private WeeklyRange weeklyRange;

@@ -40,9 +40,9 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Mock private PMSPipelineRepository pmsPipelineRepository;
   @Mock private FilterCreatorMergeService filterCreatorMergeService;
   @Mock private PmsSdkInstanceService pmsSdkInstanceService;
-
+  @Mock private CommonStepInfo commonStepInfo;
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
-
+  private String accountId = "accountId";
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
@@ -63,9 +63,9 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     Mockito.when(pmsSdkInstanceService.getInstanceNameToSupportedSteps())
         .thenReturn(serviceInstanceNameToSupportedSteps);
     PowerMockito.mockStatic(CommonStepInfo.class);
-    Mockito.when(CommonStepInfo.getCommonSteps()).thenReturn(new ArrayList<>());
+    Mockito.when(commonStepInfo.getCommonSteps(accountId)).thenReturn(new ArrayList<>());
 
-    StepCategory stepCategory = pmsPipelineService.getSteps("cd", null);
+    StepCategory stepCategory = pmsPipelineService.getSteps("cd", null, accountId);
     String expected =
         "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
 
@@ -93,9 +93,9 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     Mockito.when(pmsSdkInstanceService.getInstanceNameToSupportedSteps())
         .thenReturn(serviceInstanceNameToSupportedSteps);
     PowerMockito.mockStatic(CommonStepInfo.class);
-    Mockito.when(CommonStepInfo.getCommonSteps()).thenReturn(new ArrayList<>());
+    Mockito.when(commonStepInfo.getCommonSteps(accountId)).thenReturn(new ArrayList<>());
 
-    StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform");
+    StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform", accountId);
     String expected =
         "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
     assertThat(stepCategory.toString()).isEqualTo(expected);

@@ -3,25 +3,21 @@ package tasks
 import (
 	"bytes"
 	"context"
-	"syscall"
-
-	//"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"syscall"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-
 	mexec "github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
+	"go.uber.org/zap"
 	//"github.com/wings-software/portal/product/ci/addon/testreports"
 	//mreports "github.com/wings-software/portal/product/ci/addon/testreports/mocks"
-	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	//ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
 	//mclient "github.com/wings-software/portal/product/ci/ti-service/client/mocks"
 	//"github.com/wings-software/portal/product/ci/ti-service/types"
@@ -62,7 +58,7 @@ func TestExecuteSuccess(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
 	cmd.EXPECT().Start().Return(nil)
 	cmd.EXPECT().Pid().Return(int(1))
 	cmd.EXPECT().ProcessState().Return(pstate)
@@ -302,7 +298,7 @@ func TestExecuteNonZeroStatus(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
 	cmd.EXPECT().Start().Return(nil)
 	cmd.EXPECT().ProcessState().Return(pstate)
 	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
@@ -359,7 +355,7 @@ func TestExecuteSuccessWithOutput(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
 	cmd.EXPECT().Start().Return(nil)
 	cmd.EXPECT().ProcessState().Return(pstate)
 	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
@@ -411,7 +407,7 @@ func TestExecuteErrorWithOutput(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
 	cmd.EXPECT().Start().Return(nil)
 	cmd.EXPECT().ProcessState().Return(pstate)
 	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
@@ -438,6 +434,6 @@ func TestRunTaskCreate(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	executor := NewRunTask(step, tmpPath, log.Sugar(), &buf, false, log.Sugar())
+	executor := NewRunTask(step, nil, tmpPath, log.Sugar(), &buf, false, log.Sugar())
 	assert.NotNil(t, executor)
 }

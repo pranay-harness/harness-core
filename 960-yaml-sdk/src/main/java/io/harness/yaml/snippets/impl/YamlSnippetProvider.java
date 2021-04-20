@@ -2,9 +2,11 @@ package io.harness.yaml.snippets.impl;
 
 import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.jackson.JsonNodeUtils;
@@ -35,6 +37,7 @@ import org.apache.commons.io.IOUtils;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class YamlSnippetProvider {
   YamlSnippetHelper yamlSnippetHelper;
 

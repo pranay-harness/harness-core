@@ -1,5 +1,7 @@
 package software.wings.expression;
 
+import static software.wings.expression.SecretManagerFunctorInterface.obtainConfigFileExpression;
+
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.exception.FunctorException;
 import io.harness.expression.ExpressionEvaluatorUtils;
@@ -24,12 +26,18 @@ public class ConfigFileFunctor implements ExpressionFunctor {
   private String appId;
   private String envId;
   private String serviceTemplateId;
+  private int expressionFunctorToken;
 
   public Object getAsString(String relativeFilePath) {
     if (serviceTemplateId == null) {
       throw new FunctorException("Cannot evaluate expression: ${configFile.getAsString(\"" + relativeFilePath + "\")}");
     }
-    byte[] fileContent = getConfigFileContent(relativeFilePath);
+    ConfigFile configFile = obtainConfigFile(relativeFilePath);
+    if (configFile.isEncrypted()) {
+      return obtainConfigFileExpression(
+          "obtainConfigFileAsString", relativeFilePath, configFile.getEncryptedFileId(), expressionFunctorToken);
+    }
+    byte[] fileContent = getConfigFileContent(relativeFilePath, configFile);
     return new String(fileContent, Charset.forName("UTF-8"));
   }
 
@@ -37,18 +45,16 @@ public class ConfigFileFunctor implements ExpressionFunctor {
     if (serviceTemplateId == null) {
       throw new FunctorException("Cannot evaluate expression: ${configFile.getAsBase64(\"" + relativeFilePath + "\")}");
     }
-    byte[] fileContent = getConfigFileContent(relativeFilePath);
+    ConfigFile configFile = obtainConfigFile(relativeFilePath);
+    if (configFile.isEncrypted()) {
+      return obtainConfigFileExpression(
+          "obtainConfigFileAsBase64", relativeFilePath, configFile.getEncryptedFileId(), expressionFunctorToken);
+    }
+    byte[] fileContent = getConfigFileContent(relativeFilePath, configFile);
     return EncodingUtils.encodeBase64(fileContent);
   }
 
-  private byte[] getConfigFileContent(String relativeFilePath) {
-    log.info("Get content for file: {}", relativeFilePath);
-    ConfigFile configFile =
-        serviceTemplateService.computedConfigFileByRelativeFilePath(appId, envId, serviceTemplateId, relativeFilePath);
-    if (configFile == null) {
-      throw new FunctorException("Config file " + relativeFilePath + " not found");
-    }
-
+  private byte[] getConfigFileContent(String relativeFilePath, ConfigFile configFile) {
     log.info("ConfigFile details: relativePath:{}, encrypted:{}, encryptedFileId:{}, fileId:{}",
         configFile.getRelativeFilePath(), configFile.isEncrypted(), configFile.getEncryptedFileId(),
         configFile.getUuid());
@@ -58,5 +64,15 @@ public class ConfigFileFunctor implements ExpressionFunctor {
       throw new FunctorException("Too large config file " + relativeFilePath);
     }
     return contents;
+  }
+
+  private ConfigFile obtainConfigFile(String relativeFilePath) {
+    log.info("Get content for file: {}", relativeFilePath);
+    ConfigFile configFile =
+        serviceTemplateService.computedConfigFileByRelativeFilePath(appId, envId, serviceTemplateId, relativeFilePath);
+    if (configFile == null) {
+      throw new FunctorException("Config file " + relativeFilePath + " not found");
+    }
+    return configFile;
   }
 }

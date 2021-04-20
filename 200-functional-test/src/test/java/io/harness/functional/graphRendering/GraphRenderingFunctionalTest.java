@@ -1,5 +1,6 @@
 package io.harness.functional.graphRendering;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.POOJA;
 
@@ -13,6 +14,7 @@ import static software.wings.sm.StateType.DC_NODE_SELECT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.ff.FeatureFlagService;
@@ -63,6 +65,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 public class GraphRenderingFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
@@ -118,7 +121,7 @@ public class GraphRenderingFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution).isNotNull();
 
     workflowExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true, false);
     assertThat(workflowExecution.getExecutionNode()).isNotNull();
     GraphNode executionGraph = workflowExecution.getExecutionNode();
     GraphNode phase1Graph = executionGraph.getNext();
@@ -159,7 +162,7 @@ public class GraphRenderingFunctionalTest extends AbstractFunctionalTest {
     assertThat(workflowExecution).isNotNull();
 
     workflowExecution =
-        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true);
+        workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true, false);
     assertThat(workflowExecution.getExecutionNode()).isNotNull();
     GraphNode executionGraph = workflowExecution.getExecutionNode();
     GraphNode phase1Graph = executionGraph.getNext();

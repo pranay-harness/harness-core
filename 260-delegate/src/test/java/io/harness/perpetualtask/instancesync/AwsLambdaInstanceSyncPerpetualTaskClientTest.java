@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
@@ -10,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.category.element.UnitTests;
@@ -42,6 +45,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class AwsLambdaInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   @Mock SecretManager secretManager;
   @Mock SettingsService settingsService;

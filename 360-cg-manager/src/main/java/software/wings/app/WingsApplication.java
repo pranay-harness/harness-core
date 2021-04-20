@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -21,6 +22,7 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
@@ -49,7 +51,6 @@ import io.harness.delegate.event.handler.DelegateProfileEventHandler;
 import io.harness.delegate.resources.DelegateTaskResource;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
-import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
 import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
@@ -65,6 +66,7 @@ import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
+import io.harness.insights.DelegateInsightsSummaryJob;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
@@ -99,31 +101,21 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
-import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
-import io.harness.registrars.OrchestrationModuleRegistrarHelper;
-import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
-import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
-import io.harness.registrars.WingsAdviserRegistrar;
-import io.harness.registrars.WingsStepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
+import io.harness.serializer.CurrentGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
+import io.harness.service.impl.DelegateInsightsServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.impl.DelegateTaskServiceImpl;
+import io.harness.service.intfc.DelegateTaskService;
 import io.harness.springdata.SpringPersistenceModule;
-import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.GuiceObjectFactory;
 import io.harness.stream.StreamModule;
@@ -131,6 +123,7 @@ import io.harness.threading.ExecutorModule;
 import io.harness.threading.Schedulable;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
+import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -179,12 +172,12 @@ import software.wings.scheduler.audit.EntityAuditRecordHandler;
 import software.wings.scheduler.events.segment.SegmentGroupEventJob;
 import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
 import software.wings.scheduler.persistance.PersistentLockCleanup;
-import software.wings.search.framework.ElasticsearchSyncService;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
+import software.wings.security.encryption.migration.EncryptedDataAwsKmsToGcpKmsMigrationHandler;
 import software.wings.security.encryption.migration.EncryptedDataLocalToGcpKmsMigrationHandler;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
@@ -265,7 +258,6 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -304,6 +296,7 @@ import ru.vyarus.guice.validator.ValidationModule;
  * @author Rishi
  */
 @Slf4j
+@OwnedBy(PL)
 public class WingsApplication extends Application<MainConfiguration> {
   private static final SecureRandom random = new SecureRandom();
 
@@ -354,7 +347,6 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    mapper.registerModule(new PmsBeansJacksonModule());
     mapper.addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
     final AnnotationAwareJsonSubtypeResolver subtypeResolver =
         AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
@@ -388,13 +380,15 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(CurrentGenRegistrars.kryoRegistrars)
+            .build();
       }
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .addAll(CurrentGenRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -402,7 +396,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(ManagerRegistrars.morphiaConverters)
+            .addAll(CurrentGenRegistrars.morphiaConverters)
             .build();
       }
 
@@ -410,7 +404,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Singleton
       List<Class<? extends Converter<?, ?>>> springConverters() {
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
-            .addAll(ManagerRegistrars.springConverters)
+            .addAll(CurrentGenRegistrars.springConverters)
             .build();
       }
     });
@@ -497,7 +491,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
     modules.add(new GrpcServiceConfigurationModule(
         configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
-
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -513,7 +506,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
 
     modules.add(new CommandLibraryServiceClientModule(configuration.getCommandLibraryServiceConfig()));
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     Injector injector = Guice.createInjector(modules);
 
     // Access all caches before coming out of maintenance
@@ -616,23 +608,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
   }
 
-  private PmsSdkConfiguration getPmsSdkConfiguration() {
-    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
-        new HashMap<>();
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-    return PmsSdkConfiguration.builder()
-        .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
-        .serviceName("wings")
-        .engineSteps(WingsStepRegistrar.getEngineSteps())
-        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(engineEventHandlersMap)
-        .build();
-  }
-
   private void registerCVNGVerificationTaskIterator(Injector injector) {
     injector.getInstance(CVNGVerificationTaskHandler.class).registerIterator();
   }
@@ -726,6 +701,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (!injector.getInstance(FeatureFlagService.class).isGlobalEnabled(GLOBAL_DISABLE_HEALTH_CHECK)) {
       healthService.registerMonitor(injector.getInstance(HPersistence.class));
       healthService.registerMonitor((HealthMonitor) injector.getInstance(PersistentLocker.class));
+      TimeScaleDBService timeScaleDBService = injector.getInstance(TimeScaleDBService.class);
+      if (timeScaleDBService.getTimeScaleDBConfig().isHealthCheckNeeded()) {
+        healthService.registerMonitor(injector.getInstance(TimeScaleDBService.class));
+      }
     }
   }
 
@@ -786,9 +765,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskMigrationJob.class));
     environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
-    if (configuration.isSearchEnabled()) {
-      environment.lifecycle().manage(injector.getInstance(ElasticsearchSyncService.class));
-    }
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -825,15 +801,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
-    queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
   }
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {
     log.info("Initializing scheduled jobs...");
-    ScheduledExecutorService taskPollExecutor =
-        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")));
-
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
@@ -842,25 +813,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
-    taskPollExecutor.scheduleWithFixedDelay(
-        injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
-    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
-      taskPollExecutor.scheduleWithFixedDelay(
-          injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
-    }
+
     injector.getInstance(DeploymentReconExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(
-        () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate(), 0L, 10L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(new Schedulable("Failed while detecting disconnected delegates",
-                                                injector.getInstance(DelegateDisconnectedDetector.class)),
-        0L, 60L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(
-        injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
 
     ImmutableList<Class<? extends AccountDataRetentionEntity>> classes =
         ImmutableList.<Class<? extends AccountDataRetentionEntity>>builder()
@@ -869,6 +825,14 @@ public class WingsApplication extends Application<MainConfiguration> {
             .add(Activity.class)
             .add(Log.class)
             .build();
+
+    ScheduledExecutorService taskPollExecutor =
+        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")));
+
+    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
+      taskPollExecutor.scheduleWithFixedDelay(
+          injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
+    }
 
     taskPollExecutor.scheduleWithFixedDelay(
         new Schedulable("Failed ensure data retention",
@@ -885,6 +849,30 @@ public class WingsApplication extends Application<MainConfiguration> {
     taskPollExecutor.scheduleWithFixedDelay(
         new Schedulable("Failed cleaning up manager versions.", injector.getInstance(ManagerVersionsCleanUpJob.class)),
         0L, 5L, TimeUnit.MINUTES);
+
+    ScheduledExecutorService delegateExecutor =
+        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegatePool")));
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
+                                                injector.getInstance(ProgressUpdateService.class)),
+        0L, 5L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while detecting disconnected delegates",
+                                                injector.getInstance(DelegateDisconnectedDetector.class)),
+        0L, 60L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(
+        new Schedulable("Failed while broadcasting perpetual tasks",
+            () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate()),
+        0L, 10L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring sync task responses",
+                                                injector.getInstance(DelegateSyncServiceImpl.class)),
+        0L, 2L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while calculating delegate insights summaries",
+                                                injector.getInstance(DelegateInsightsSummaryJob.class)),
+        0L, 10L, TimeUnit.MINUTES);
   }
 
   public static void registerObservers(Injector injector) {
@@ -905,6 +893,13 @@ public class WingsApplication extends Application<MainConfiguration> {
     KubernetesClusterHandler kubernetesClusterHandler = injector.getInstance(Key.get(KubernetesClusterHandler.class));
     DelegateServiceImpl delegateService = (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
     delegateService.getSubject().register(kubernetesClusterHandler);
+    delegateService.getDelegateTaskStatusObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
+
+    DelegateTaskServiceImpl delegateTaskService =
+        (DelegateTaskServiceImpl) injector.getInstance(Key.get(DelegateTaskService.class));
+    delegateTaskService.getDelegateTaskStatusObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
 
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
         (InfrastructureDefinitionServiceImpl) injector.getInstance(Key.get(InfrastructureDefinitionService.class));
@@ -932,6 +927,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         (PerpetualTaskServiceImpl) injector.getInstance(Key.get(PerpetualTaskService.class));
     perpetualTaskService.getPerpetualTaskCrudSubject().register(
         injector.getInstance(Key.get(PerpetualTaskRecordHandler.class)));
+    perpetualTaskService.getPerpetualTaskStateObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
 
     DelegateServiceImpl delegateServiceImpl =
         (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
@@ -984,15 +981,14 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
     injector.getInstance(DeploymentFreezeActivationHandler.class).registerIterators();
     injector.getInstance(DeploymentFreezeDeactivationHandler.class).registerIterators();
-    injector.getInstance(io.harness.steps.barriers.service.BarrierServiceImpl.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
-    injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
     injector.getInstance(DeleteAccountHandler.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
     injector.getInstance(EncryptedDataLocalToGcpKmsMigrationHandler.class).registerIterators();
+    injector.getInstance(EncryptedDataAwsKmsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
   }
 

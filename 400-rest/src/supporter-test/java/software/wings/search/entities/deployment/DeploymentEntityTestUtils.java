@@ -5,6 +5,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeEvent.ChangeEventBuilder;
+import io.harness.mongo.changestreams.ChangeType;
 import io.harness.persistence.PersistentEntity;
 
 import software.wings.WingsBaseTest;
@@ -12,9 +15,6 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.WorkflowExecution;
-import software.wings.search.framework.changestreams.ChangeEvent;
-import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
-import software.wings.search.framework.changestreams.ChangeType;
 import software.wings.sm.PipelineSummary;
 
 import com.mongodb.BasicDBObject;

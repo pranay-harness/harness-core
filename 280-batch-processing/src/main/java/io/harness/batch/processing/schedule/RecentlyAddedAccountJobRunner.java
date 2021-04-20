@@ -86,6 +86,8 @@ public class RecentlyAddedAccountJobRunner {
             latestClusterInfo, BatchJobType.INSTANCE_BILLING_HOURLY, hourlyBillingJobEndTime, hourlyBillingStartTime);
         runBillingJobs(latestClusterInfo, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY, hourlyBillingJobEndTime,
             hourlyBillingStartTime);
+        runBillingJobs(latestClusterInfo, BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION, hourlyBillingJobEndTime,
+            hourlyBillingStartTime);
 
         Instant dailyBillingJobEndTime =
             Instant.ofEpochMilli(latestClusterInfo.getCreatedAt()).truncatedTo(ChronoUnit.DAYS);
@@ -93,6 +95,8 @@ public class RecentlyAddedAccountJobRunner {
         runBillingJobs(latestClusterInfo, BatchJobType.INSTANCE_BILLING, dailyBillingJobEndTime, dailyBillingStartTime);
         runBillingJobs(
             latestClusterInfo, BatchJobType.ACTUAL_IDLE_COST_BILLING, dailyBillingJobEndTime, dailyBillingStartTime);
+        runBillingJobs(latestClusterInfo, BatchJobType.INSTANCE_BILLING_AGGREGATION, dailyBillingJobEndTime,
+            dailyBillingStartTime);
         runBillingJobs(
             latestClusterInfo, BatchJobType.CLUSTER_DATA_TO_BIG_QUERY, dailyBillingJobEndTime, dailyBillingStartTime);
       }

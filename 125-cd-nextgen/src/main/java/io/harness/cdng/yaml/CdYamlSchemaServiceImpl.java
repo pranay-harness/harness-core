@@ -48,8 +48,14 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     JsonNode deploymentStepsSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
 
+    JsonNode pipelineStepsSchema =
+        yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
+
     JsonNode definitions = deploymentStageSchema.get(DEFINITIONS_NODE);
-    JsonNode stepDefinitions = deploymentStepsSchema.get(DEFINITIONS_NODE);
+    JsonNode deploymentStepDefinitions = deploymentStepsSchema.get(DEFINITIONS_NODE);
+    JsonNode pipelineStepDefinitions = pipelineStepsSchema.get(DEFINITIONS_NODE);
+
+    JsonNode stepDefinitions = JsonNodeUtils.merge(deploymentStepDefinitions, pipelineStepDefinitions);
     JsonNode mergedDefinitions = JsonNodeUtils.merge(definitions, stepDefinitions);
 
     JsonNode jsonNode = mergedDefinitions.get(StepElementConfig.class.getSimpleName());

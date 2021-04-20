@@ -5,9 +5,14 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserIssuer;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.advisers.IssuedBy;
+import io.harness.pms.contracts.advisers.RetryInterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -17,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class EngineWaitRetryCallback implements NotifyCallback {
+public class EngineWaitRetryCallback implements OldNotifyCallback {
   @Inject private InterruptManager interruptManager;
 
   @NonNull String planExecutionId;
@@ -31,11 +36,20 @@ public class EngineWaitRetryCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    interruptManager.register(InterruptPackage.builder()
-                                  .planExecutionId(planExecutionId)
-                                  .nodeExecutionId(nodeExecutionId)
-                                  .interruptType(InterruptType.RETRY)
-                                  .build());
+    interruptManager.register(
+        InterruptPackage.builder()
+            .planExecutionId(planExecutionId)
+            .nodeExecutionId(nodeExecutionId)
+            .interruptType(InterruptType.RETRY)
+            .interruptConfig(
+                InterruptConfig.newBuilder()
+                    .setIssuedBy(
+                        IssuedBy.newBuilder()
+                            .setAdviserIssuer(AdviserIssuer.newBuilder().setAdviserType(AdviseType.RETRY).build())
+                            .build())
+                    .setRetryInterruptConfig(RetryInterruptConfig.newBuilder().build())
+                    .build())
+            .build());
   }
 
   @Override

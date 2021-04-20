@@ -1,11 +1,13 @@
 package io.harness.ccm;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static java.util.Collections.EMPTY_LIST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMConfigYamlHandler;
@@ -17,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CE)
 public class CCMConfigYamlHandlerTest extends CategoryTest {
   private boolean isCloudCostEnabled = true;
   private CCMConfig ccmConfig;

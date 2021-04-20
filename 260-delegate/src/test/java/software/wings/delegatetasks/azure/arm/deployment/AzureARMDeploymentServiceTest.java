@@ -11,7 +11,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.context.ARMDeploymentSteadyStateContext;
@@ -44,7 +44,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureARMDeploymentServiceTest extends WingsBaseTest {
   public static final String CLIENT_ID = "CLIENT_ID";
   public static final String TENANT_ID = "TENANT_ID";
@@ -91,7 +91,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Unable to deploy at resource group scope, deployment validation failed: Code: InvalidTemplate, Message: "
-            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id");
+            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id\n");
   }
 
   @Test
@@ -157,7 +157,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Unable to deploy at subscription scope, deployment validation failed: Code: InvalidTemplate, Message: "
-            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id");
+            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id\n");
   }
 
   @Test
@@ -227,7 +227,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Unable to deploy at management group scope, deployment validation failed: Code: InvalidTemplate, Message: "
-            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id");
+            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id\n");
   }
 
   @Test
@@ -294,7 +294,7 @@ public class AzureARMDeploymentServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> azureARMDeploymentService.deployAtTenantScope(context))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Unable to deploy at tenant scope, deployment validation failed: Code: InvalidTemplate, Message: "
-            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id");
+            + "Deployment template validation failed, Target:  /providers/Microsoft.Management/resource_id\n");
   }
 
   @Test

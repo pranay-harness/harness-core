@@ -9,6 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
 
+import io.dropwizard.jackson.Jackson;
 import io.swagger.models.ComposedModel;
 import io.swagger.models.Model;
 import io.swagger.models.ModelImpl;
@@ -21,7 +22,7 @@ public class SwaggerGeneratorTest extends CategoryTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testGenerateDefinitions() {
-    SwaggerGenerator swaggerGenerator = new SwaggerGenerator();
+    SwaggerGenerator swaggerGenerator = new SwaggerGenerator(Jackson.newObjectMapper());
     final Map<String, Model> stringModelMap =
         swaggerGenerator.generateDefinitions(TestClass.ClassWhichContainsInterface.class);
     assertThat(stringModelMap.size()).isEqualTo(4);

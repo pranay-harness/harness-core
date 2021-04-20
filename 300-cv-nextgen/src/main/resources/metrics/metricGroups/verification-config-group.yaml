@@ -1,0 +1,5 @@
+name: Verification Configuration
+identifier: verification_configuration
+labels:
+  - accountId
+  - verificationTaskId

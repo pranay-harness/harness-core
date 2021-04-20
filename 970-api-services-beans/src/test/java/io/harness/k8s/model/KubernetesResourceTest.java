@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.lang.String.format;
 import static junit.framework.TestCase.assertEquals;
@@ -24,11 +25,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.rule.Owner;
+import io.harness.yaml.BooleanPatchedRepresenter;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.util.Yaml;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -660,5 +663,23 @@ public class KubernetesResourceTest extends CategoryTest {
     assertThat(resource.getField(format(podTemplateSpec, "containers[0].env[1].valueFrom.secretKeyRef.name")))
         .isEqualTo("secret-key-value-2");
     assertThat(resource.getField(format(podTemplateSpec, "volumes[0].secret.secretName"))).isEqualTo("volume-secret-2");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testYamlDumpQuotingBooleanRegex() throws Exception {
+    URL url = this.getClass().getResource("/deployment-with-boolean.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = processYaml(fileContents).get(0);
+    Object k8sResource = resource.getK8sResource();
+
+    URL resultUrl = this.getClass().getResource("/deployment-after-dump.yaml");
+    String resultContents = Resources.toString(resultUrl, Charsets.UTF_8);
+
+    org.yaml.snakeyaml.Yaml yaml =
+        new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+
+    assertThat(yaml.dump(k8sResource)).isEqualTo(resultContents);
   }
 }

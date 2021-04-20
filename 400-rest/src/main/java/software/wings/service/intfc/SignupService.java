@@ -1,12 +1,22 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.UserInvite;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
+@OwnedBy(GTM)
+@TargetModule(_950_NG_SIGNUP)
 public interface SignupService {
   void sendTrialSignupCompletedEmail(UserInvite userInvite);
+
+  void sendLinkedInTrialSignupCompletedEmail(UserInvite userInvite, String generatedPassword);
 
   void sendEmail(UserInvite userInvite, String templateName, Map<String, String> templateModel);
 
@@ -20,11 +30,11 @@ public interface SignupService {
 
   void checkIfEmailIsValid(String email);
 
-  void sendMarketoSignupVerificationEmail(UserInvite userInvite);
+  void sendLinkedInSignupVerificationEmail(UserInvite userInvite);
 
   void sendTrialSignupVerificationEmail(UserInvite userInvite, Map<String, String> templateModel);
 
-  String createSignupTokeFromSecret(String jwtPasswordSecret, String email, int expireAfterDays)
+  String createSignupTokenFromSecret(String jwtPasswordSecret, String email, int expireAfterDays)
       throws UnsupportedEncodingException;
 
   void validatePassword(char[] password);

@@ -9,6 +9,7 @@ public enum InstanceType {
   ECS_CONTAINER_INSTANCE(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE),
   EC2_INSTANCE(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE),
   K8S_POD(PricingGroup.COMPUTE, 1, CostAttribution.PARTIAL),
+  K8S_POD_FARGATE(PricingGroup.COMPUTE, 60, CostAttribution.COMPLETE),
   K8S_NODE(PricingGroup.COMPUTE, 3600, CostAttribution.COMPLETE),
   K8S_PV(PricingGroup.STORAGE, 1, CostAttribution.COMPLETE),
   K8S_PVC(PricingGroup.STORAGE, 1, CostAttribution.PARTIAL),

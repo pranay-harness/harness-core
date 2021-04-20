@@ -1,5 +1,9 @@
 package software.wings.rules;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,6 +22,7 @@ import org.junit.runners.model.Statement;
 /**
  * Created by peeyushaggarwal on 7/27/16.
  */
+@OwnedBy(CDP)
 public class SshRule implements MethodRule {
   private SshServer sshd;
   private TemporaryFolder temporaryFolder;

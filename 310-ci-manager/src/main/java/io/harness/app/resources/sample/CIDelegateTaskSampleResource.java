@@ -8,12 +8,13 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.time.Duration;
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.ws.rs.Consumes;
@@ -60,7 +61,8 @@ public class CIDelegateTaskSampleResource {
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
 
-    String taskId = delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken);
+    String taskId =
+        delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken, Duration.ZERO);
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, new SampleNotifyCallback(), taskId);
     return String.format("{\"accountId\": \"%s\", \"taskId\": \"%s\", \"token\": \"%s\"}", accountId, taskId,
         delegateCallbackToken.getToken());
@@ -84,14 +86,15 @@ public class CIDelegateTaskSampleResource {
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
     DelegateCallbackToken delegateCallbackToken = delegateCallbackTokenSupplier.get();
-    final String taskId = delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken);
+    final String taskId =
+        delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken, Duration.ZERO);
 
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, new SampleNotifyCallback(), taskId);
     return String.format("{\"accountId\": \"%s\", \"taskId\": \"%s\", \"token\": \"%s\"}", accountId, taskId,
         delegateCallbackToken.getToken());
   }
 
-  public static class SampleNotifyCallback implements NotifyCallback {
+  public static class SampleNotifyCallback implements OldNotifyCallback {
     @Override
     public void notify(Map<String, ResponseData> response) {
       log.info("received response = [{}]", response);

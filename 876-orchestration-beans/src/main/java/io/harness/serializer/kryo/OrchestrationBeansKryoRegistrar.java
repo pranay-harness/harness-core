@@ -5,9 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.interrupts.RepairActionCode;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.timeout.trackers.active.ActiveTimeoutParameters;
 
@@ -28,14 +26,11 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(Duration.class, 2516);
     kryo.register(OutcomeInstance.class, 2517);
 
-    kryo.register(RepairActionCode.class, 2528);
-
     kryo.register(InterruptEffect.class, 2534);
 
     kryo.register(ActiveTimeoutParameters.class, 2537);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes
-    kryo.register(ExecutionInterruptType.class, 4000);
   }
 }

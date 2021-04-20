@@ -1,7 +1,10 @@
 package io.harness.ng.core.delegate.sample;
 
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -11,6 +14,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.time.Duration;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -27,6 +31,8 @@ import org.hibernate.validator.constraints.NotBlank;
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
+@ToBeDeleted
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NGDelegate2TaskResource {
   private static final String HTTP_URL_200 = "http://httpstat.us/200";
 
@@ -68,7 +74,7 @@ public class NGDelegate2TaskResource {
                                                         .taskSetupAbstraction("orgIdentifier", orgIdentifier)
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
-    final String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
+    final String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
 
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION, new SimpleNotifyCallback(), taskId);
     return taskId;

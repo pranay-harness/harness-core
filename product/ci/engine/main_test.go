@@ -29,6 +29,12 @@ func TestMainEmptyStage(t *testing.T) {
 		args.Stage = nil
 	}()
 
+	oldGetLogKey := getLogKey
+	defer func() { getLogKey = oldGetLogKey }()
+	getLogKey = func(keyID string) (string, error) {
+		return "foo:bar", nil
+	}
+
 	oldLogger := newHTTPRemoteLogger
 	defer func() { newHTTPRemoteLogger = oldLogger }()
 	newHTTPRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
@@ -71,6 +77,12 @@ func TestMainEmptyStageMultiWorkers(t *testing.T) {
 	defer func() {
 		args.Stage = nil
 	}()
+
+	oldGetLogKey := getLogKey
+	defer func() { getLogKey = oldGetLogKey }()
+	getLogKey = func(keyID string) (string, error) {
+		return "foo:bar", nil
+	}
 
 	oldLogger := newHTTPRemoteLogger
 	defer func() { newHTTPRemoteLogger = oldLogger }()

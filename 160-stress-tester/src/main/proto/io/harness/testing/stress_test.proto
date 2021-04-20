@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package io.harness.testing;
+
+option java_multiple_files = true;
+
+import "920-delegate-service-beans/src/main/proto/io/harness/delegate/delegate_service.proto";
+
+// The stages of a delegate stress test
+// Next ID: 2
+message DelegateTaskStressTest {
+  repeated DelegateTaskStressTestStage stage = 1;
+}
+
+// Each stage of the delegate task stress test
+message DelegateTaskStressTestStage {
+  // The set of requests, at each point in time we will randomly choose one to
+  // fire off. If you would like a weighted distribution, you could repeat
+  // individual instances in task request or use multiple stages to send off the
+  // approximately correct number of each request.
+  repeated delegate.SubmitTaskRequest task_request = 1;
+
+  // the delay before firing off the first task in seconds
+  int32 offset = 2;
+
+  // the total number of iterations for each stage
+  int32 iterations = 3;
+
+  // the number of iterations to fire off per second. Recommended to not go
+  // above 40 per stage, and 100 at any given time to give time for the stub to
+  // actually fire off the task
+  int32 qps = 4;
+}

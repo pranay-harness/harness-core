@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 import static io.harness.shell.SshSessionFactory.getSSHSession;
 
@@ -7,7 +8,8 @@ import static software.wings.utils.SshHelperUtils.populateBuilderWithCredentials
 
 import static java.time.Duration.ofSeconds;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
@@ -22,9 +24,11 @@ import io.harness.shell.SshSessionConfig;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -35,11 +39,13 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class SSHHostValidationCapabilityCheck implements CapabilityCheck {
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private EncryptionService encryptionService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
@@ -56,7 +62,8 @@ public class SSHHostValidationCapabilityCheck implements CapabilityCheck {
 
     if (!rolledOut) {
       decryptCredentials(capability.getHostConnectionAttributes(), capability.getBastionConnectionAttributes(),
-          capability.getHostConnectionCredentials(), capability.getBastionConnectionCredentials());
+          capability.getHostConnectionCredentials(), capability.getBastionConnectionCredentials(),
+          capability.getSshVaultConfig());
       try {
         SshSessionConfig hostConnectionTest = createSshSessionConfig(capability);
         int timeout = (int) ofSeconds(15L).toMillis();
@@ -98,10 +105,15 @@ public class SSHHostValidationCapabilityCheck implements CapabilityCheck {
 
   private void decryptCredentials(SettingAttribute hostConnectionAttributes,
       SettingAttribute bastionConnectionAttributes, List<EncryptedDataDetail> hostConnectionCredential,
-      List<EncryptedDataDetail> bastionConnectionCredential) {
+      List<EncryptedDataDetail> bastionConnectionCredential, SSHVaultConfig sshVaultConfig) {
     if (hostConnectionAttributes != null) {
       encryptionService.decrypt(
           (HostConnectionAttributes) hostConnectionAttributes.getValue(), hostConnectionCredential, false);
+      if (hostConnectionAttributes.getValue() instanceof HostConnectionAttributes
+          && ((HostConnectionAttributes) hostConnectionAttributes.getValue()).isVaultSSH()) {
+        secretManagementDelegateService.signPublicKey(
+            (HostConnectionAttributes) hostConnectionAttributes.getValue(), sshVaultConfig);
+      }
     }
     if (bastionConnectionAttributes != null) {
       encryptionService.decrypt(

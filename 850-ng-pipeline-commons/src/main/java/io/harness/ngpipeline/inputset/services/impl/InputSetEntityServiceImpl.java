@@ -255,8 +255,8 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
 
   private Set<EntityDetail> getReferences(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, NgPipeline pipeline) {
-    EntityReferenceExtractorVisitor visitor =
-        simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(accountIdentifier, orgIdentifier, projectIdentifier);
+    EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
+        accountIdentifier, orgIdentifier, projectIdentifier, null);
     visitor.walkElementTree(pipeline);
     return new HashSet<>(); // visitor.getEntityReferenceSet();
   }

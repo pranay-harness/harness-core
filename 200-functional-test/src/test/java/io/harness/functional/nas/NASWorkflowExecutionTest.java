@@ -211,7 +211,7 @@ public class NASWorkflowExecutionTest extends AbstractFunctionalTest {
     assertThat(workflowExecutionId).isNotNull();
 
     Awaitility.await()
-        .atMost(120, TimeUnit.SECONDS)
+        .atMost(300, TimeUnit.SECONDS)
         .pollInterval(5, TimeUnit.SECONDS)
         .until(()
                    -> Setup.portal()

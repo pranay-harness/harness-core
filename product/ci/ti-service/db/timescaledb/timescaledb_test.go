@@ -45,8 +45,8 @@ func Test_SingleWrite(t *testing.T) {
 	stmt := fmt.Sprintf(
 		`
 				INSERT INTO %s
-				(time, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
-				class_name, duration_ms, status, message, type, description, stdout, stderr)
+				(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
+				class_name, duration_ms, result, message, type, description, stdout, stderr)
 				VALUES %s`, table, valueStrings)
 	stmt = regexp.QuoteMeta(stmt)
 	mock.ExpectExec(stmt).
@@ -80,7 +80,7 @@ func Test_Summary(t *testing.T) {
 		AddRow(10, "failed", "t1").
 		AddRow(25, "passed", "t2")
 	query := fmt.Sprintf(`
-		SELECT duration_ms, status, name FROM %s WHERE account_id = $1
+		SELECT duration_ms, result, name FROM %s WHERE account_id = $1
 		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6;`, table)
 	t1 := types.TestSummary{Name: "t1", Status: types.StatusFailed}
 	t2 := types.TestSummary{Name: "t2", Status: types.StatusPassed}
@@ -155,10 +155,10 @@ func Test_GetTestCases(t *testing.T) {
 	tests := []types.TestCase{tc1, tc2}
 	query := fmt.Sprintf(
 		`
-		SELECT name, suite_name, class_name, duration_ms, status, message,
+		SELECT name, suite_name, class_name, duration_ms, result, message,
 		description, type, stdout, stderr, COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND status IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND result IN (%s)
 		ORDER BY %s %s, %s %s
 		LIMIT $8 OFFSET $9;`, table, "'failed', 'error'", "duration_ms", "DESC", "name", "ASC")
 	query = regexp.QuoteMeta(query)
@@ -218,13 +218,13 @@ func Test_GetTestSuites(t *testing.T) {
 	query := fmt.Sprintf(
 		`
 		SELECT suite_name, SUM(duration_ms) AS duration_ms, COUNT(*) AS total_tests,
-		SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) AS skipped_tests,
-		SUM(CASE WHEN status = 'passed' THEN 1 ELSE 0 END) AS passed_tests,
-		SUM(CASE WHEN status = 'failed' OR status = 'error' THEN 1 ELSE 0 END) AS failed_tests,
-		SUM(CASE WHEN status = 'failed' OR status = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
+		SUM(CASE WHEN result = 'skipped' THEN 1 ELSE 0 END) AS skipped_tests,
+		SUM(CASE WHEN result = 'passed' THEN 1 ELSE 0 END) AS passed_tests,
+		SUM(CASE WHEN result = 'failed' OR result = 'error' THEN 1 ELSE 0 END) AS failed_tests,
+		SUM(CASE WHEN result = 'failed' OR result = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
 		COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND status IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND result IN (%s)
 		GROUP BY suite_name
 		ORDER BY %s %s, %s %s
 		LIMIT $7 OFFSET $8;`, table, "'failed', 'error', 'passed', 'skipped'", "fail_pct", desc, "suite_name", asc)

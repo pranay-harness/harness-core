@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.ecs.request;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AwsConfig;
@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
   private String prodListenerArn;
   private String stageListenerArn;
@@ -35,8 +35,9 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
       String targetGroupArn1, String targetGroupArn2, String serviceName, String clusterName, String region,
       String serviceNameDownsized, int serviceCountDownsized, AwsConfig awsConfig, boolean rollback,
       boolean downsizeOldService, boolean isUseSpecificListenerRuleArn, String targetGroupForNewService,
-      String targetGroupForExistingService, int serviceSteadyStateTimeout) {
-    super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, EcsCommandType.LISTENER_UPDATE_BG);
+      String targetGroupForExistingService, int serviceSteadyStateTimeout, boolean timeoutErrorSupported) {
+    super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, EcsCommandType.LISTENER_UPDATE_BG,
+        timeoutErrorSupported);
     this.prodListenerArn = prodListenerArn;
     this.stageListenerArn = stageListenerArn;
     this.prodListenerRuleArn = prodListenerRuleArn;

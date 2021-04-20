@@ -1,5 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -11,6 +14,7 @@ import software.wings.service.intfc.LogService;
 import com.google.common.base.Objects;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 public class ManagerExecutionLogCallback implements LogCallback {
   private transient LogService logService;

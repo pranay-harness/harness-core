@@ -8,6 +8,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ManagerExecutorModule extends AbstractModule {
@@ -27,7 +28,12 @@ public class ManagerExecutorModule extends AbstractModule {
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
-        .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
+        .toInstance(
+            new ScheduledThreadPoolExecutor(3, new ThreadFactoryBuilder().setNameFormat("TaskPoll-Thread").build()));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("delegatePool"))
+        .toInstance(new ScheduledThreadPoolExecutor(
+            4, new ThreadFactoryBuilder().setNameFormat("DelegatePool-Thread").build()));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("perpetualTaskAssignor"))
         .toInstance(new ManagedScheduledExecutorService("perpetualTaskAssignor"));

@@ -1,5 +1,6 @@
 package io.harness.ccm.views.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.views.graphql.QLCEViewAggregateOperation.MAX;
 import static io.harness.ccm.views.graphql.QLCEViewAggregateOperation.MIN;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
@@ -7,6 +8,7 @@ import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantC
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMaxStartTime;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMinStartTime;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCondition;
 import io.harness.ccm.views.entities.ViewField;
@@ -74,6 +76,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class ViewsBillingServiceImpl implements ViewsBillingService {
   @Inject ViewsQueryBuilder viewsQueryBuilder;
   @Inject CEViewService viewService;
@@ -181,6 +184,33 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     ViewCostData prevCostData = getViewTrendStatsCostData(bigQuery, prevTrendStatsQuery);
 
     return getCostBillingStats(costData, prevCostData, timeFilters, trendStartInstant);
+  }
+
+  @Override
+  public List<String> getColumnsForTable(BigQuery bigQuery, String informationSchemaView, String table) {
+    SelectQuery query = viewsQueryBuilder.getInformationSchemaQueryForColumns(informationSchemaView, table);
+    return getColumnsData(bigQuery, query);
+  }
+
+  private List<String> getColumnsData(BigQuery bigQuery, SelectQuery query) {
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query.toString()).build();
+    TableResult result;
+    try {
+      result = bigQuery.query(queryConfig);
+    } catch (InterruptedException e) {
+      log.error("Failed to getTrendStatsData. {}", e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+    return convertToColumnList(result);
+  }
+
+  private List<String> convertToColumnList(TableResult result) {
+    List<String> columns = new ArrayList<>();
+    for (FieldValueList row : result.iterateAll()) {
+      columns.add(row.get("column_name").getValue().toString());
+    }
+    return columns;
   }
 
   private ViewCostData getViewTrendStatsCostData(BigQuery bigQuery, SelectQuery query) {

@@ -8,14 +8,14 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Map;
 import lombok.Builder;
 
 @OwnedBy(CDC)
-public class EngineWaitResumeCallback implements NotifyCallback {
+public class EngineWaitResumeCallback implements OldNotifyCallback {
   @Inject private OrchestrationEngine orchestrationEngine;
 
   Ambiance ambiance;

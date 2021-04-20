@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.TaskType.AZURE_APP_SERVICE_TASK;
 import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -167,6 +168,7 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
         .deploySlotName(DEPLOYMENT_SLOT)
         .appServiceName(APP_NAME)
         .activityId(ACTIVITY_ID)
+        .taskType(AZURE_APP_SERVICE_TASK)
         .build();
   }
 

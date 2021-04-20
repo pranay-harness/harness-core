@@ -116,6 +116,30 @@ public interface AzureConstants {
   String DEPLOYMENT_DOES_NOT_EXIST_SUBSCRIPTION = "The deployment - [%s] does not exist in subscription - [%s]";
   String DEPLOYMENT_DOES_NOT_EXIST_MANAGEMENT_GROUP = "The deployment - [%s] does not exist in management group - [%s]";
   String DEPLOYMENT_DOES_NOT_EXIST_TENANT = "The deployment - [%s] does not exist in tenant - [%s]";
+  String RESOURCE_SCOPE_BLANK_VALIDATION_MSG = "Parameter resourceScope cannot be empty or null";
+  String RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG = "Parameter resourceScope is not valid, resourceScope: %s";
+  String BLUEPRINT_NAME_BLANK_VALIDATION_MSG = "Parameter blueprintName cannot be empty or null";
+  String BLUEPRINT_JSON_BLANK_VALIDATION_MSG = "Parameter blueprintJSON cannot be empty or null";
+  String ARTIFACT_NAME_BLANK_VALIDATION_MSG = "Parameter artifactName cannot be empty or null";
+  String ARTIFACT_JSON_BLANK_VALIDATION_MSG = "Parameter artifactJSON cannot be empty or null";
+  String VERSION_ID_BLANK_VALIDATION_MSG = "Parameter versionId cannot be empty or null";
+  String ASSIGNMENT_NAME_BLANK_VALIDATION_MSG = "Parameter assignmentName cannot be empty or null";
+  String ASSIGNMENT_JSON_BLANK_VALIDATION_MSG = "Parameter assignmentJSON cannot be empty or null";
+  String NEXT_PAGE_LINK_BLANK_VALIDATION_MSG = "Parameter nextPageLink is required and cannot be null.";
+  String BLUEPRINT_ID_BLANK_VALIDATION_MSG = "Parameter blueprintId cannot be null or empty";
+  String AZURE_CONFIG_BLANK_VALIDATION_MSG = "Parameter azureConfig cannot be null";
+  String ASSIGNMENT_IDENTITY_NULL_VALIDATION_MSG = "Assignment identity property cannot be null";
+  String ASSIGNMENT_LOCATION_BLANK_VALIDATION_MSG = "Assignment location property cannot be null or empty";
+  String PROPERTIES_BLUEPRINT_ID_VALIDATION_MSG = "Assignment properties.blueprintId cannot be null or empty";
+  String PROPERTIES_SCOPE_BLANK_VALIDATION_MSG =
+      "Assignment properties.scope cannot be null or empty for management group resource scope";
+  String OBJECT_ID_NAME_BLANK_VALIDATION_MSG = "Parameter objectId cannot be empty or null";
+  String ROLE_ASSIGNMENT_NAME_BLANK_VALIDATION_MSG = "Parameter roleAssignmentName cannot be empty or null";
+  String BLUEPRINT_ID_IS_NOT_VALIDATION_MSG = "Parameter blueprintId is not valid, blueprintId: %s";
+  String ASSIGNMENT_SUBSCRIPTION_ID_BLANK_VALIDATION_MSG = "Parameter assignmentSubscriptionId cannot be empty or null";
+  String ASSIGNMENT_BLANK_VALIDATION_MSG = "Parameter assignment cannot be empty or null";
+  String BLUEPRINT_JSON_FILE_BLANK_VALIDATION_MSG = "Blueprints blueprint json file cannot be empty or null";
+  String ASSIGN_JSON_FILE_BLANK_VALIDATION_MSG = "Blueprints assign json file cannot be empty or null";
 
   // Patterns
   String GALLERY_IMAGE_ID_PATTERN =
@@ -183,7 +207,7 @@ public interface AzureConstants {
   String DOCKER_HUB_PUBLIC = "DOCKER_HUB_PUBLIC";
   String ARTIFACTORY_PRIVATE_REGISTRY = "ARTIFACTORY_PRIVATE_REGISTRY";
 
-  // Web App Instance status
+  // Web App Instance STATUS
   String WEB_APP_INSTANCE_STATUS_RUNNING = "Running";
 
   // App Service Manifest Utils
@@ -201,9 +225,28 @@ public interface AzureConstants {
   String DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN = "Code: %s, Message: %s, Target: %s";
 
   String FETCH_FILES = "Download Files";
+  String BLUEPRINT_JSON_FILE_NAME = "blueprint.json";
+  String ASSIGN_JSON_FILE_NAME = "assign.json";
+  String ARTIFACTS_FOLDER_NAME = "artifacts";
+  String UNIX_SEPARATOR = "/";
+
+  // ARM & Blueprint command units
   String EXECUTE_ARM_DEPLOYMENT = "Execute ARM Deployment";
   String ARM_DEPLOYMENT_STEADY_STATE = "ARM Deployment Steady state";
   String ARM_DEPLOYMENT_OUTPUTS = "ARM Deployment Outputs";
+  String BLUEPRINT_DEPLOYMENT = "Execute Blueprint Deployment";
+  String BLUEPRINT_DEPLOYMENT_STEADY_STATE = "Blueprint Deployment Steady state";
 
   String ARM_DEPLOYMENT_NAME_PATTERN = "%s-%s";
+  String RESOURCE_SCOPE_MNG_GROUP_PATTERN = "/providers/Microsoft.Management/managementGroups/";
+  String RESOURCE_SCOPE_SUBSCRIPTION_PATTERN = "/subscriptions/";
+  String ASSIGNMENT_NAME_PATTERN = "Assignment-%s-%s";
+  Pattern BLUEPRINT_ID_REGEX = Pattern.compile(
+      "^(?<resourceScope>\\S+)(?<providerName>/providers/Microsoft.Blueprint/blueprints/)(?<blueprintName>\\S+)(?<versionsPath>/versions/)(?<versionId>\\S+)$");
+  String DEPLOYMENT_NAME_PATTERN = "harness_%s_%s";
+
+  // Azure Cloud Error codes
+  String ROLE_ASSIGNMENT_EXISTS_CLOUD_ERROR_CODE = "RoleAssignmentExists";
+
+  String ARTIFACT_PATH_PREFIX = "artifact/";
 }

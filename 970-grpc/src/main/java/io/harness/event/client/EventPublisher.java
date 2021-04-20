@@ -4,6 +4,8 @@ import static io.harness.grpc.IdentifierKeys.DELEGATE_ID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.PublishMessage;
 
@@ -14,6 +16,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Supplier;
 
+@OwnedBy(HarnessTeam.CE)
 public abstract class EventPublisher {
   private final Supplier<String> delegateIdSupplier;
 

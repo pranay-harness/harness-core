@@ -1,11 +1,13 @@
 package io.harness.delegate.beans.connector.vaultconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.exception.InvalidRequestException;
@@ -22,6 +24,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @Builder

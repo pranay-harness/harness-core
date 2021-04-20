@@ -1,15 +1,13 @@
 package io.harness.steps.common.script;
 
-import io.harness.common.SwaggerConstants;
-import io.harness.pms.sdk.core.steps.io.RollbackInfo;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.variables.NGVariable;
 
-import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
-import javax.validation.constraints.NotNull;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,43 +20,19 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("shellScriptStepParameters")
-public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implements StepParameters {
-  String name;
-  String identifier;
-  String description;
-  ParameterField<String> skipCondition;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-  RollbackInfo rollbackInfo;
+@OwnedBy(HarnessTeam.CDC)
+public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implements SpecParameters {
+  Map<String, Object> outputVariables;
+  Map<String, Object> environmentVariables;
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
-  public ShellScriptStepParameters(String name, String identifier, String description,
-      ParameterField<String> skipCondition, ShellType shellType, ShellScriptSourceWrapper source,
-      List<NGVariable> environmentVariables, List<NGVariable> outputVariables, ExecutionTarget executionTarget,
-      ParameterField<String> timeout, ParameterField<Boolean> onDelegate, RollbackInfo rollbackInfo) {
-    super(shellType, source, environmentVariables, outputVariables, executionTarget, onDelegate);
-    this.name = name;
-    this.identifier = identifier;
-    this.timeout = timeout;
-    this.rollbackInfo = rollbackInfo;
-    this.description = description;
-    this.skipCondition = skipCondition;
-  }
-
-  @Override
-  public String toViewJson() {
-    return RecastOrchestrationUtils.toDocumentJson(ShellScriptStepParameters.infoBuilder()
-                                                       .environmentVariables(getEnvironmentVariables())
-                                                       .executionTarget(getExecutionTarget())
-                                                       .onDelegate(getOnDelegate())
-                                                       .outputVariables(getOutputVariables())
-                                                       .environmentVariables(getEnvironmentVariables())
-                                                       .shellType(getShell())
-                                                       .source(getSource())
-                                                       .timeout(getTimeout())
-                                                       .name(getName())
-                                                       .identifier(getIdentifier())
-                                                       .description(getDescription())
-                                                       .skipCondition(getSkipCondition())
-                                                       .build());
+  public ShellScriptStepParameters(ShellType shellType, ShellScriptSourceWrapper source,
+      ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate, Map<String, Object> outputVariables,
+      Map<String, Object> environmentVariables, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(shellType, source, executionTarget, onDelegate);
+    this.outputVariables = outputVariables;
+    this.environmentVariables = environmentVariables;
+    this.delegateSelectors = delegateSelectors;
   }
 }

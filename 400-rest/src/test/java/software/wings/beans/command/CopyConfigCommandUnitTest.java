@@ -11,7 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -47,7 +47,7 @@ public class CopyConfigCommandUnitTest extends WingsBaseTest {
   private Host host = Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build();
   @InjectMocks
   private ShellCommandExecutionContext winRmContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true)
                                            .accountId(WingsTestConstants.ACCOUNT_ID)
                                            .appId(WingsTestConstants.APP_ID)
                                            .envId(WingsTestConstants.ENV_ID)

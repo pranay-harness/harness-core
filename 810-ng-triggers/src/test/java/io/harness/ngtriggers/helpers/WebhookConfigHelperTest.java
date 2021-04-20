@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_DECLINED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_MERGED;
@@ -17,11 +18,13 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.REOPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.SYNCHRONIZED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.UNLABELED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.BRANCH;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.DELETE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PUSH;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.REPOSITORY;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.TAG;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLAB;
@@ -32,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
@@ -47,6 +51,7 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PIPELINE)
 public class WebhookConfigHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
@@ -56,6 +61,7 @@ public class WebhookConfigHelperTest extends CategoryTest {
     Set<WebhookEvent> events = new HashSet<>(map.get(GITHUB));
     events.addAll(map.get(WebhookSourceRepo.GITLAB));
     events.addAll(map.get(WebhookSourceRepo.BITBUCKET));
+    events.addAll(map.get(WebhookSourceRepo.AWS_CODECOMMIT));
 
     Set<WebhookEvent> allEvents = EnumSet.allOf(WebhookEvent.class);
     Set<WebhookEvent> eventsNotPresent = new HashSet<>();
@@ -66,7 +72,7 @@ public class WebhookConfigHelperTest extends CategoryTest {
     }
 
     // Need to ad support for these
-    assertThat(eventsNotPresent).containsOnly(DELETE, REPOSITORY);
+    assertThat(eventsNotPresent).containsOnly(DELETE, REPOSITORY, BRANCH, TAG);
   }
 
   @Test

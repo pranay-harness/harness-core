@@ -1,16 +1,21 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API;
+import static software.wings.graphql.utils.GraphQLConstants.CREATE_USERGROUP_API;
 import static software.wings.graphql.utils.GraphQLConstants.DELETE_APPLICATION_API;
-import static software.wings.security.AuthRuleFilter.getAllowedAppIds;
+import static software.wings.graphql.utils.GraphQLConstants.DELETE_USERGROUP_API;
+import static software.wings.graphql.utils.GraphQLConstants.UPDATE_USERGROUP_API;
+import static software.wings.graphql.utils.GraphQLConstants.UPDATE_USERGROUP_PERMISSIONS_API;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -34,7 +39,6 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
-import software.wings.security.UserRequestContext.UserRequestContextBuilder;
 import software.wings.security.UserRestrictionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
@@ -51,7 +55,6 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -64,10 +67,12 @@ import org.dataloader.DataLoader;
  */
 @Slf4j
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(DX)
 public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   private static final Set<String> apisToEvictUserPermissionRestrictionCache =
-      ImmutableSet.of(CREATE_APPLICATION_API, DELETE_APPLICATION_API);
+      ImmutableSet.of(CREATE_APPLICATION_API, DELETE_APPLICATION_API, CREATE_USERGROUP_API, DELETE_USERGROUP_API,
+          UPDATE_USERGROUP_API, UPDATE_USERGROUP_PERMISSIONS_API);
   private AuthRuleFilter authRuleFilter;
   private AuthHandler authHandler;
   private AuthService authService;
@@ -180,7 +185,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     boolean isScopedToApp = ResourceType.APPLICATION == resourceType;
 
     if (isEmpty(permissionAttributes) || PermissionType.LOGGED_IN == permissionAttribute.getPermissionType()) {
-      UserRequestContext userRequestContext = buildUserRequestContext(
+      UserRequestContext userRequestContext = authRuleFilter.buildUserRequestContext(
           userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopedToApp, appIdsFromRequest);
       user.setUserRequestContext(userRequestContext);
       UserThreadLocal.set(user);
@@ -193,7 +198,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     }
 
     UserRequestContext userRequestContext =
-        buildUserRequestContext(userPermissionInfo, userRestrictionInfo, permissionAttributes, accountId,
+        authRuleFilter.buildUserRequestContext(userPermissionInfo, userRestrictionInfo, permissionAttributes, accountId,
             emptyAppIdsInReq, httpMethod, appIdsFromRequest, false, isAccountLevelPermissions, isScopedToApp);
     user.setUserRequestContext(userRequestContext);
     UserThreadLocal.set(user);
@@ -313,44 +318,6 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     }
 
     return HttpMethod.GET.name();
-  }
-
-  private UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
-      UserRestrictionInfo userRestrictionInfo, List<PermissionAttribute> requiredPermissionAttributes, String accountId,
-      boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
-      boolean accountLevelPermissions, boolean isScopeToApp) {
-    UserRequestContext userRequestContext = buildUserRequestContext(
-        userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopeToApp, appIdsFromRequest);
-
-    if (!accountLevelPermissions) {
-      authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
-          userRequestContext.isAppIdFilterRequired(), userRequestContext.getAppIds(), appIdsFromRequest);
-    }
-    return userRequestContext;
-  }
-
-  private UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
-      UserRestrictionInfo userRestrictionInfo, String accountId, boolean emptyAppIdsInReq, boolean isScopedToApp,
-      List<String> appIdsFromRequest) {
-    UserRequestContextBuilder userRequestContextBuilder =
-        UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
-
-    userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
-    userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
-
-    if (isScopedToApp) {
-      Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
-      if (emptyAppIdsInReq) {
-        userRequestContextBuilder.appIdFilterRequired(true);
-        userRequestContextBuilder.appIds(allowedAppIds);
-      } else {
-        if (isEmpty(allowedAppIds) || !allowedAppIds.containsAll(appIdsFromRequest)) {
-          throw new WingsException(ErrorCode.ACCESS_DENIED);
-        }
-      }
-    }
-
-    return userRequestContextBuilder.build();
   }
 
   public <I, O> void handlePostMutation(MutationContext mutationContext, I parameter, O mutationResult) {

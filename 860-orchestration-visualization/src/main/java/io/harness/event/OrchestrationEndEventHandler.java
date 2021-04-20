@@ -7,21 +7,21 @@ import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHandler {
+@Singleton
+public class OrchestrationEndEventHandler {
   @Inject PlanExecutionService planExecutionService;
   @Inject GraphGenerationService graphGenerationService;
 
-  @Override
-  public void handleEvent(OrchestrationEvent event) {
+  public OrchestrationGraph handleEvent(OrchestrationEvent event, OrchestrationGraph orchestrationGraph) {
     NodeExecutionProto nodeExecutionProto = event.getNodeExecutionProto();
     String planExecutionId = nodeExecutionProto.getAmbiance().getPlanExecutionId();
     try {
@@ -29,13 +29,11 @@ public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHand
       log.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
           planExecution.getStatus());
 
-      OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
-
-      graphGenerationService.cacheOrchestrationGraph(
-          cachedGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs()));
+      return orchestrationGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs());
     } catch (Exception e) {
       log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(), nodeExecutionProto.getUuid(),
           planExecutionId, e);
+      throw e;
     }
   }
 }

@@ -1,8 +1,11 @@
 package io.harness.serializer.morphia;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
+import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
@@ -29,6 +32,7 @@ import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesLoadTestLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesShortTermHistory;
+import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVNGLog;
@@ -41,6 +45,7 @@ import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
+import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.StackdriverCVConfig;
@@ -64,7 +69,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
-
+@OwnedBy(HarnessTeam.CV)
 public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -137,6 +142,9 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(TimeSeriesLearningEngineTask.class);
     set.add(CVNGLog.class);
     set.add(MonitoringSourcePerpetualTask.class);
+    set.add(NewRelicCVConfig.class);
+    set.add(CDNGActivitySource.class);
+    set.add(CVNGStepTask.class);
   }
 
   @Override

@@ -45,7 +45,7 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
@@ -176,7 +176,7 @@ import org.quartz.TriggerKey;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class TriggerServiceImpl implements TriggerService {
   public static final String TRIGGER_SLOWNESS_ERROR_MESSAGE = "Trigger rejected due to slowness in the product";
   @Inject private WingsPersistence wingsPersistence;
@@ -332,6 +332,11 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public boolean delete(String appId, String triggerId) {
+    return delete(appId, triggerId, false);
+  }
+
+  @Override
+  public boolean delete(String appId, String triggerId, boolean syncFromGit) {
     Trigger trigger = get(appId, triggerId);
     boolean answer = triggerServiceHelper.delete(triggerId);
 
@@ -340,7 +345,7 @@ public class TriggerServiceImpl implements TriggerService {
       harnessTagService.pruneTagLinks(accountId, triggerId);
     }
     if (featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId) && (trigger != null)) {
-      yamlPushService.pushYamlChangeSet(accountId, trigger, null, Type.DELETE, trigger.isSyncFromGit(), false);
+      yamlPushService.pushYamlChangeSet(accountId, trigger, null, Type.DELETE, syncFromGit, false);
     } else {
       // TODO: Once this flag is enabled for all accounts, this can be removed
       auditServiceHelper.reportDeleteForAuditing(trigger.getAppId(), trigger);
@@ -359,36 +364,35 @@ public class TriggerServiceImpl implements TriggerService {
   public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Trigger.class).filter(Trigger.APP_ID_KEY2, appId).asList().forEach(trigger -> {
       delete(appId, trigger.getUuid());
-      auditServiceHelper.reportDeleteForAuditing(appId, trigger);
-      harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), trigger.getUuid());
     });
   }
 
   @Override
   public void pruneByPipeline(String appId, String pipelineId) {
     List<Trigger> triggers = triggerServiceHelper.getTriggersByWorkflow(appId, pipelineId);
-    triggers.forEach(trigger -> triggerServiceHelper.delete(trigger.getUuid()));
+    triggers.forEach(trigger -> delete(appId, trigger.getUuid()));
 
-    triggerServiceHelper.deletePipelineCompletionTriggers(appId, pipelineId);
+    triggerServiceHelper.getPipelineCompletionTriggers(appId, pipelineId)
+        .forEach(trigger -> delete(appId, trigger.getUuid()));
   }
 
   @Override
   public void pruneByWorkflow(String appId, String workflowId) {
     List<Trigger> triggers = triggerServiceHelper.getTriggersByWorkflow(appId, workflowId);
-    triggers.forEach(trigger -> triggerServiceHelper.delete(trigger.getUuid()));
+    triggers.forEach(trigger -> delete(appId, trigger.getUuid()));
   }
 
   @Override
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     for (Trigger trigger : triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId)) {
-      triggerServiceHelper.delete(trigger.getUuid());
+      delete(appId, trigger.getUuid());
     }
   }
 
   @Override
   public void pruneByApplicationManifest(String appId, String applicationManifestId) {
     for (Trigger trigger : triggerServiceHelper.getNewManifestConditionTriggers(appId, applicationManifestId)) {
-      triggerServiceHelper.delete(trigger.getUuid());
+      delete(appId, trigger.getUuid());
     }
   }
 
@@ -715,11 +719,9 @@ public class TriggerServiceImpl implements TriggerService {
           if (preferArtifactSelectionOverTriggeringArtifact) {
             List<Artifact> artifactsFromSelection = new ArrayList<>();
             List<HelmChart> helmCharts = new ArrayList<>();
-            if (isNotEmpty(trigger.getArtifactSelections())) {
-              log.info("Artifact selections found collecting artifacts as per artifactStream selections");
-              addArtifactsFromSelectionsTriggeringArtifactSource(
-                  trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
-            }
+            addArtifactsFromSelectionsTriggeringArtifactSource(
+                trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
+
             if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
               addHelmChartsFromSelections(appId, trigger, helmCharts);
             }
@@ -762,12 +764,18 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private void addArtifactsFromSelectionsTriggeringArtifactSource(
+  @VisibleForTesting
+  void addArtifactsFromSelectionsTriggeringArtifactSource(
       String appId, Trigger trigger, List<Artifact> artifactSelections, List<Artifact> triggeringArtifacts) {
     if (isEmpty(trigger.getArtifactSelections())) {
+      log.info(
+          "Artifact selections not found for trigger with name: {}, triggerId: {} used to trigger {}. Collecting all artifacts.",
+          trigger.getName(), trigger.getUuid(),
+          trigger.getWorkflowType() == PIPELINE ? trigger.getPipelineName() : trigger.getWorkflowName());
       artifactSelections.addAll(triggeringArtifacts);
       return;
     }
+    log.info("Artifact selections found collecting artifacts as per artifactStream selections");
     trigger.getArtifactSelections().forEach(artifactSelection -> {
       if (artifactSelection.getType() == LAST_COLLECTED) {
         addLastCollectedArtifact(appId, artifactSelection, artifactSelections);
@@ -1187,9 +1195,7 @@ public class TriggerServiceImpl implements TriggerService {
             "Service Infrastructure [" + infraMappingIdOrName + "] does not exist", infrastructureMapping, USER);
         triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
       } else {
-        if (infraDefIdOrName.contains(",")
-            && featureFlagService.isEnabled(
-                FeatureName.MULTISELECT_INFRA_PIPELINE, appService.getAccountIdByAppId(appId))) {
+        if (infraDefIdOrName.contains(",")) {
           if (!variable.isAllowMultipleValues()) {
             throw new InvalidRequestException(
                 "Multiple values provided for infra var { " + infraDefVarName + " }, but variable only allows one");

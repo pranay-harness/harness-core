@@ -1,5 +1,6 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -60,6 +62,7 @@ import org.springframework.data.domain.Page;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(DX)
 @Slf4j
 public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock KubernetesConnectionValidator kubernetesConnectionValidator;
@@ -67,6 +70,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";

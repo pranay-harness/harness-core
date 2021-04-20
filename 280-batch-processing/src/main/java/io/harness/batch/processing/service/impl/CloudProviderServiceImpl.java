@@ -19,6 +19,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +37,14 @@ public class CloudProviderServiceImpl implements CloudProviderService {
 
   private static final CloudProvider DEFAULT_CLOUD_PROVIDER = ON_PREM;
 
-  private Cache<String, CloudProvider> cloudProviderInfoCache =
+  @Value
+  @AllArgsConstructor
+  private static class CacheKey {
+    private String cloudProviderId;
+    private String providerId;
+  }
+
+  private final Cache<CacheKey, CloudProvider> cloudProviderInfoCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
 
   @Autowired
@@ -48,7 +57,8 @@ public class CloudProviderServiceImpl implements CloudProviderService {
     if (null == providerId) {
       return DEFAULT_CLOUD_PROVIDER;
     }
-    return cloudProviderInfoCache.get(cloudProviderId, key -> getK8SCloudProviderFromProviderId(key, providerId));
+    return cloudProviderInfoCache.get(new CacheKey(cloudProviderId, providerId),
+        key -> getK8SCloudProviderFromProviderId(key.cloudProviderId, key.providerId));
   }
 
   @Override

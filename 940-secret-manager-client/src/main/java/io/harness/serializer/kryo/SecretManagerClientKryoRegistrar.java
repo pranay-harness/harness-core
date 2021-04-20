@@ -1,6 +1,11 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.SSHTaskParams;
+import io.harness.ng.core.NGAccessWithEncryptionConsumer;
+import io.harness.ng.core.entities.SampleEncryptableSettingImplementation;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -15,6 +20,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
 
+@OwnedBy(PL)
 public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -31,5 +37,8 @@ public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
     kryo.register(GcpKmsConfigUpdateDTO.class, 543221);
 
     kryo.register(SSHTaskParams.class, 543225);
+
+    kryo.register(SampleEncryptableSettingImplementation.class, 54322);
+    kryo.register(NGAccessWithEncryptionConsumer.class, 54323);
   }
 }

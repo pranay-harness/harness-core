@@ -12,6 +12,7 @@ import io.harness.batch.processing.budgets.service.impl.BudgetAlertsServiceImpl;
 import io.harness.batch.processing.budgets.service.impl.BudgetCostUpdateService;
 import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.cleanup.CEDataCleanupRequestService;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.GcpScheduledQueryTriggerAction;
 import io.harness.batch.processing.metrics.ProductMetricsService;
@@ -74,6 +75,7 @@ public class EventJobScheduler {
   @Autowired private ViewCostUpdateService viewCostUpdateService;
   @Autowired private BatchMainConfig batchMainConfig;
   @Autowired private CEMetaDataRecordUpdateService ceMetaDataRecordUpdateService;
+  @Autowired private CEDataCleanupRequestService ceDataCleanupRequestService;
   @Autowired private CfClient cfClient;
 
   @PostConstruct
@@ -85,6 +87,11 @@ public class EventJobScheduler {
   @Scheduled(cron = "0 */20 * * * ?")
   public void runCloudEfficiencyInClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER, true);
+  }
+
+  @Scheduled(cron = "0 */30 * * * ?")
+  public void runCloudEfficiencyInClusterRecommendationsJobs() {
+    runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER_RECOMMENDATION, true);
   }
 
   @Scheduled(cron = "0 */1 * * * ?")
@@ -214,6 +221,19 @@ public class EventJobScheduler {
     }
   }
 
+  @Scheduled(cron = "0 0 */1 ? * *")
+  public void processDataCleanupRequest() {
+    boolean masterPod = accountShardService.isMasterPod();
+    if (masterPod) {
+      try {
+        ceDataCleanupRequestService.processDataCleanUpRequest();
+        log.info("updated cost data");
+      } catch (Exception ex) {
+        log.error("Exception while running updateCostMetadatRecord", ex);
+      }
+    }
+  }
+
   @Scheduled(cron = "0 30 8 * * ?")
   public void runViewUpdateCostJob() {
     try {
@@ -252,7 +272,7 @@ public class EventJobScheduler {
     k8sLabelServiceInfoFetcher.logCacheStats();
   }
 
-  @Scheduled(cron = "0 * * ? * *")
+  @Scheduled(cron = "0 0 6 * * ?")
   public void runCfSampleJob() {
     if (cfClient == null) {
       return;

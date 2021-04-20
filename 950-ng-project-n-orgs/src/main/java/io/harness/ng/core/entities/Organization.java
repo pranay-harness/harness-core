@@ -1,12 +1,17 @@
 package io.harness.ng.core.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
@@ -29,6 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "OrganizationKeys")
@@ -44,20 +50,36 @@ public class Organization implements PersistentEntity, NGAccountAccess {
                  .field(OrganizationKeys.accountIdentifier)
                  .field(OrganizationKeys.identifier)
                  .unique(true)
-                 .collation(CompoundMongoIndex.Collation.builder()
-                                .locale(CollationLocale.ENGLISH)
-                                .strength(CollationStrength.PRIMARY)
-                                .build())
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountIdentifierDeletedHarnessManagedNameWithCollationIdx")
+                 .field(OrganizationKeys.accountIdentifier)
+                 .field(OrganizationKeys.deleted)
+                 .descSortField(OrganizationKeys.harnessManaged)
+                 .ascSortField(OrganizationKeys.name)
+                 .unique(false)
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountIdentifierIdentifierDeletedHarnessManagedNameWithCollationIdx")
+                 .field(OrganizationKeys.accountIdentifier)
+                 .field(OrganizationKeys.identifier)
+                 .field(OrganizationKeys.deleted)
+                 .descSortField(OrganizationKeys.harnessManaged)
+                 .ascSortField(OrganizationKeys.name)
+                 .unique(false)
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("accountIdentifierNameIdx")
+                 .name("accountIdentifierDeletedIdentifierIdx")
                  .field(OrganizationKeys.accountIdentifier)
-                 .field(OrganizationKeys.name)
+                 .field(OrganizationKeys.deleted)
+                 .field(OrganizationKeys.identifier)
                  .unique(false)
-                 .collation(CompoundMongoIndex.Collation.builder()
-                                .locale(CollationLocale.ENGLISH)
-                                .strength(CollationStrength.PRIMARY)
-                                .build())
                  .build())
         .build();
   }

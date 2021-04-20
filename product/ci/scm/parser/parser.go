@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drone/go-scm-codecommit/codecommit"
 	"github.com/drone/go-scm/scm"
 	"github.com/drone/go-scm/scm/driver/bitbucket"
 	"github.com/drone/go-scm/scm/driver/gitea"
@@ -18,6 +19,7 @@ import (
 	"github.com/wings-software/portal/product/ci/scm/converter"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
 	"go.uber.org/zap"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -33,7 +35,7 @@ const (
 func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 	log *zap.SugaredLogger) (*pb.ParseWebhookResponse, error) {
 	start := time.Now()
-	webhook, err := parseRequest(in)
+	webhook, err := parseWebhookRequest(in)
 	if err != nil {
 		log.Errorw(
 			"Failed to parse input webhook payload",
@@ -83,6 +85,9 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 			"Unsupported webhook event",
 			"event", event,
 			"elapsed_time_ms", utils.TimeSince(start),
+			"body", in.GetBody(),
+			"header", in.GetHeader(),
+			"provider", in.GetProvider(),
 			zap.Error(err),
 		)
 		return nil, status.Errorf(codes.InvalidArgument,
@@ -90,8 +95,8 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 	}
 }
 
-// parseRequest parses incoming request and convert it to scm.Webhook
-func parseRequest(in *pb.ParseWebhookRequest) (scm.Webhook, error) {
+// parseWebhookRequest parses incoming request and convert it to scm.Webhook
+func parseWebhookRequest(in *pb.ParseWebhookRequest) (scm.Webhook, error) {
 	body := strings.NewReader(in.GetBody())
 	r, err := http.NewRequest(defaultMethod, defaultPath, body)
 	if err != nil {
@@ -132,6 +137,8 @@ func getClient(p pb.GitProvider) (*scm.Client, error) {
 		return gogs.New(gogsURI)
 	case pb.GitProvider_STASH:
 		return stash.NewDefault(), nil
+	case pb.GitProvider_CODECOMMIT:
+		return codecommit.NewDefault(), nil
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,
 			fmt.Sprintf("Unsupported git provider %s", p.String()))

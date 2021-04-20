@@ -22,7 +22,8 @@ var _ Client = (*HTTPClient)(nil)
 
 const (
 	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
-	testEndpoint = "tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
+	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
+	cgEndpoint   = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -72,12 +73,24 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 	return err
 }
 
-// GetTests returns list of tests which should be run intelligently
-func (c *HTTPClient) GetTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.Test, error) {
-	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
-	var tests []types.Test
-	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &change, &tests)
-	return tests, err
+// SelectTests returns a list of tests which should be run intelligently
+func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, repo, sha, source, target, body string) (types.SelectTestsResp, error) {
+	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, source, target)
+	var resp types.SelectTestsResp
+	var e types.SelectTestsReq
+	err := json.Unmarshal([]byte(body), &e)
+	if err != nil {
+		return types.SelectTestsResp{}, err
+	}
+	_, err = c.do(context.Background(), c.Endpoint+path, "POST", &e, &resp)
+	return resp, err
+}
+
+// UploadCg uploads avro encoded callgraph to server
+func (c *HTTPClient) UploadCg(org, project, pipeline, build, stage, step, repo, sha, source string, cg []byte) error {
+	path := fmt.Sprintf(cgEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, source)
+	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &cg, nil)
+	return err
 }
 
 func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out interface{}, isOpen bool, b backoff.BackOff) (*http.Response, error) {
@@ -104,7 +117,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			// 5xx's are typically not permanent errors and may
 			// relate to outages on the server side.
 			if res.StatusCode >= 500 {
-				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: server error: reconnect and retry")
+				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: ti-server error: reconnect and retry")
 				if duration == backoff.Stop {
 					return nil, err
 				}

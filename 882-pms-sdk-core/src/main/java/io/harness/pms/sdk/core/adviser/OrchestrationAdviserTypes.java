@@ -11,6 +11,9 @@ public enum OrchestrationAdviserTypes {
   // SUCCESS
   ON_SUCCESS,
 
+  // NEXT_STEP
+  NEXT_STEP,
+
   // FAILURES
   ON_FAIL,
   IGNORE,
@@ -21,8 +24,5 @@ public enum OrchestrationAdviserTypes {
   RESUME,
   MANUAL_INTERVENTION,
 
-  MARK_SUCCESS,
-
-  // Rollback Custom
-  ROLLBACK_CUSTOM
+  MARK_SUCCESS
 }

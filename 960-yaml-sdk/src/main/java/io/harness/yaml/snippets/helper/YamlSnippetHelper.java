@@ -1,7 +1,9 @@
 package io.harness.yaml.snippets.helper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -30,6 +32,7 @@ import org.apache.commons.io.IOUtils;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class YamlSnippetHelper {
   @Inject List<YamlSchemaRootClass> yamlSchemaRootClasses;
   /**

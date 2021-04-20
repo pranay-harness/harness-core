@@ -4,7 +4,7 @@ import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 
 import static org.joor.Reflect.on;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -25,7 +25,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.joor.ReflectException;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private Injector injector;
 

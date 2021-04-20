@@ -1,6 +1,6 @@
 package software.wings.integration;
 
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
+import static io.harness.delegate.beans.FileBucket.ARTIFACTS;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -95,7 +95,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    */
   @Inject WingsPersistence wingsPersistence;
   private CommandExecutionContext context =
-      CommandExecutionContext.Builder.aCommandExecutionContext()
+      CommandExecutionContext.Builder.aCommandExecutionContext(true)
           .activityId(ACTIVITY_ID)
           .runtimePath("$HOME/apps")
           .executionCredential(aSSHExecutionCredential().withSshUser(USER).withSshPassword(PASSWORD).build())

@@ -8,11 +8,14 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -31,6 +34,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,9 +57,20 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Entity(value = "verificationJobs")
 @HarnessEntity(exportable = true)
 @SuperBuilder
+@OwnedBy(HarnessTeam.CV)
 // Also the serialization of duration is in millis.
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  private static final String RUNTIME_PARAMS_VALUE_KEY = "value";
+  private static final String RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY = "isRuntimeParam";
+  public static final String SERVICE_IDENTIFIER_VALUE_KEY =
+      String.format("%s.%s", VerificationJobKeys.serviceIdentifier, RUNTIME_PARAMS_VALUE_KEY);
+  public static final String SERVICE_IDENTIFIER_IS_RUNTIME_PARAM_KEY =
+      String.format("%s.%s", VerificationJobKeys.serviceIdentifier, RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY);
+  public static final String ENV_IDENTIFIER_VALUE_KEY =
+      String.format("%s.%s", VerificationJobKeys.envIdentifier, RUNTIME_PARAMS_VALUE_KEY);
+  public static final String ENV_IDENTIFIER_IS_RUNTIME_PARAM_KEY =
+      String.format("%s.%s", VerificationJobKeys.envIdentifier, RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY);
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -237,13 +253,19 @@ public abstract class VerificationJob
       runtimeParameters.keySet().forEach(key -> {
         switch (key) {
           case SERVICE_IDENTIFIER_KEY:
-            this.setServiceIdentifier(runtimeParameters.get(key), false);
+            if (serviceIdentifier.isRuntimeParam()) {
+              this.setServiceIdentifier(runtimeParameters.get(key), false);
+            }
             break;
           case ENV_IDENTIFIER_KEY:
-            this.setEnvIdentifier(runtimeParameters.get(key), false);
+            if (envIdentifier.isRuntimeParam()) {
+              this.setEnvIdentifier(runtimeParameters.get(key), false);
+            }
             break;
           case DURATION_KEY:
-            this.setDuration(runtimeParameters.get(key), false);
+            if (duration.isRuntimeParam()) {
+              this.setDuration(runtimeParameters.get(key), false);
+            }
             break;
           default:
             break;
@@ -263,6 +285,26 @@ public abstract class VerificationJob
 
   public abstract boolean collectHostData();
 
+  public Instant roundToClosestBoundary(Instant deploymentStartTime, Instant startTime) {
+    if (deploymentStartTime.equals(startTime)) {
+      // This is done to handle the case of host detection.
+      // Host detection logic does not work if deployment minute and start time are same.
+      startTime = startTime.plus(Duration.ofMinutes(1));
+    }
+    return DateTimeUtils.roundDownTo1MinBoundary(startTime);
+  }
+
+  public Duration getExecutionDuration() {
+    return getDuration();
+  }
+
+  public Instant getAnalysisStartTime(Instant startTime) {
+    return startTime;
+  }
+
+  public Instant eligibleToStartAnalysisTime(Instant startTime, Duration dataCollectionDelay, Instant createdAt) {
+    return Collections.max(Arrays.asList(startTime.plus(dataCollectionDelay), createdAt));
+  }
   @FieldNameConstants(innerTypeName = "RuntimeParameterKeys")
   @Data
   @Builder

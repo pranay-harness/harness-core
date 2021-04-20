@@ -32,8 +32,12 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
+import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.ExecutionSource.Type;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.Repository;
@@ -45,6 +49,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CI)
 public class BuildEnvironmentUtils {
   private static final String REPO_SCM = "git";
 
@@ -80,6 +85,15 @@ public class BuildEnvironmentUtils {
       }
       if (!isEmpty(manualExecutionSource.getTag())) {
         envVarMap.put(DRONE_TAG, manualExecutionSource.getTag());
+        envVarMap.put(DRONE_BUILD_EVENT, "tag");
+      }
+    } else if (ciExecutionArgs.getExecutionSource().getType() == Type.CUSTOM) {
+      CustomExecutionSource customExecutionSource = (CustomExecutionSource) ciExecutionArgs.getExecutionSource();
+      if (!isEmpty(customExecutionSource.getBranch())) {
+        envVarMap.put(DRONE_COMMIT_BRANCH, customExecutionSource.getBranch());
+      }
+      if (!isEmpty(customExecutionSource.getTag())) {
+        envVarMap.put(DRONE_TAG, customExecutionSource.getTag());
         envVarMap.put(DRONE_BUILD_EVENT, "tag");
       }
     }

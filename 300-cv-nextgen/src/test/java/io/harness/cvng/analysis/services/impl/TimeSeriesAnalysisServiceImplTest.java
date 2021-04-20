@@ -487,11 +487,11 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TIME_SERIES_LOAD_TEST.name());
     assertThat(task.getControlDataUrl())
         .isEqualTo("/cv/api/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
-            + "&startTime=1595846766390&endTime=1595847666390");
-    assertThat(task.getBaselineStartTime()).isEqualTo(1595846766390L);
+            + "&startTime=1595846760000&endTime=1595847660000");
+    assertThat(task.getBaselineStartTime()).isEqualTo(1595846760000L);
     assertThat(task.getTestDataUrl())
         .isEqualTo("/cv/api/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
-            + "&startTime=1595846766390&endTime=1595847306390");
+            + "&startTime=1595846760000&endTime=1595847306390");
     assertThat(task.getMetricTemplateUrl())
         .isEqualTo("/cv/api/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId="
             + verificationTaskId);
@@ -527,7 +527,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(task.getBaselineStartTime()).isNull();
     assertThat(task.getTestDataUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL + "/timeseries-analysis/time-series-data?verificationTaskId="
-            + verificationTaskId + "&startTime=1595846766390&endTime=1595847306390");
+            + verificationTaskId + "&startTime=1595846760000&endTime=1595847306390");
     assertThat(task.getMetricTemplateUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL
             + "/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId=" + verificationTaskId);
@@ -721,7 +721,6 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
         VerificationJobInstance.builder()
             .accountId(accountId)
             .executionStatus(VerificationJobInstance.ExecutionStatus.QUEUED)
-            .verificationJobIdentifier(verificationJob.getIdentifier())
             .deploymentStartTime(Instant.ofEpochMilli(deploymentStartTimeMs))
             .resolvedJob(verificationJob)
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))

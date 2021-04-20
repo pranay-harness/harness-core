@@ -12,6 +12,7 @@ import io.harness.batch.processing.billing.tasklet.dao.intfc.DataGeneratedNotifi
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -53,6 +54,7 @@ public class BillingDataGeneratedMailTaskletTest extends CategoryTest {
   @Mock private DataUtils utils;
   @Mock private CEMailNotificationService emailNotificationService;
   @Mock private JobParameters parameters;
+  @Mock private CEMetadataRecordDao metadataRecordDao;
   @InjectMocks private BillingDataGeneratedMailTasklet tasklet;
 
   @Mock Statement statement;

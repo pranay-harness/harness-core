@@ -178,17 +178,17 @@ public class CEKubernetesConnectionValidatorTest extends CategoryTest {
         (KubernetesDelegateDetailsDTO) kubernetesConnectionTaskParams.getKubernetesClusterConfig()
             .getCredential()
             .getConfig();
-    assertThat(kubernetesDelegateDetailsDTO.getDelegateSelectors()).contains(DELEGATE_NAME);
+    assertThat(kubernetesConnectionTaskParams.getKubernetesClusterConfig().getDelegateSelectors())
+        .contains(DELEGATE_NAME);
   }
 
   private static ConnectorResponseDTO createConnectorResponseDTO() {
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
+            .delegateSelectors(Collections.singleton(DELEGATE_NAME))
             .credential(KubernetesCredentialDTO.builder()
                             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                            .config(KubernetesDelegateDetailsDTO.builder()
-                                        .delegateSelectors(Collections.singleton(DELEGATE_NAME))
-                                        .build())
+                            .config(KubernetesDelegateDetailsDTO.builder().build())
                             .build())
             .build();
     return ConnectorResponseDTO.builder()

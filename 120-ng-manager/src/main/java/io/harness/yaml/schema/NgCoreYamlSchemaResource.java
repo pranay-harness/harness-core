@@ -20,13 +20,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.io.IOException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
@@ -65,15 +63,5 @@ public class NgCoreYamlSchemaResource implements YamlSchemaResource {
           schema, NGCommonEntityConstants.IDENTIFIER_KEY, CONST_NODE, identifier);
     }
     return ResponseDTO.newResponse(schema);
-  }
-
-  // todo(abhinav): Currently handled only for connector subtype, handle it generically for all subtypes.
-  @GET
-  @Path("{entityType}")
-  @ApiOperation(value = "Get Yaml Schema for subtype", nickname = "getYamlSchemaForSubtype")
-  public ResponseDTO<JsonNode> getYamlSchemaForSubtype(@PathParam("entityType") @NotNull EntityType entityType,
-      @QueryParam("subtype") @NotNull ConnectorType entitySubtype) throws IOException {
-    // todo(abhinav):  remove this and subtype helper class once UI services are updated.
-    return null;
   }
 }

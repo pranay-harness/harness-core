@@ -1,9 +1,11 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.windows.CmdUtils.escapeEnvValueSpecialChars;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -33,6 +35,7 @@ import java.util.Map.Entry;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class WinRmSession implements AutoCloseable {
   private static final int retryCount = 1;
   @VisibleForTesting static final String COMMAND_PLACEHOLDER = "%s %s";

@@ -1,10 +1,12 @@
 package io.harness.ccm.license;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMinutes;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -20,6 +22,7 @@ import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Optional;
 
+@OwnedBy(CE)
 public class CeLicenseExpiryHandler implements Handler<Account> {
   private static final int CE_LICENSE_EXPIRY_INTERVAL_DAY = 1;
 

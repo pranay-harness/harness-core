@@ -1,10 +1,13 @@
 package io.harness.ccm.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.SettingAttribute;
@@ -20,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   private GcpOrganizationDao gcpOrganizationDao;
   private SettingsService settingsService;
@@ -47,7 +51,7 @@ public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   @Override
   public GcpOrganization upsert(GcpOrganization organization) {
     if (gcpOrganizationDao.count(organization.getAccountId()) > 1) {
-      throw new InvalidRequestException("Cannot enable Continuous Efficiency for more than one GCP cloud account.");
+      throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than one GCP cloud account.");
     }
     GcpServiceAccount gcpServiceAccount = ceGcpServiceAccountService.getByAccountId(organization.getAccountId());
     checkArgument(

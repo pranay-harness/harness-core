@@ -19,6 +19,7 @@ import io.harness.delegatetasks.DeleteSecretTaskParameters;
 import io.harness.delegatetasks.DeleteSecretTaskResponse;
 import io.harness.delegatetasks.UpsertSecretTaskParameters;
 import io.harness.delegatetasks.UpsertSecretTaskResponse;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskParameters;
 import io.harness.delegatetasks.ValidateSecretReferenceTaskParameters;
 import io.harness.encryptors.DelegateTaskUtils;
 import io.harness.encryptors.VaultEncryptor;
@@ -160,6 +161,13 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
             .build();
 
     return managerEncryptorHelper.validateReference(accountId, parameters);
+  }
+
+  @Override
+  public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    ValidateSecretManagerConfigurationTaskParameters parameters =
+        ValidateSecretManagerConfigurationTaskParameters.builder().encryptionConfig(encryptionConfig).build();
+    return managerEncryptorHelper.validateConfiguration(accountId, parameters);
   }
 
   @Override

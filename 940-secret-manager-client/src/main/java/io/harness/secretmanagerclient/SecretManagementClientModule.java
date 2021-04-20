@@ -1,5 +1,8 @@
 package io.harness.secretmanagerclient;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.remote.SecretManagerHttpClientFactory;
@@ -12,6 +15,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
+@OwnedBy(PL)
 public class SecretManagementClientModule extends AbstractModule {
   private final ServiceHttpClientConfig secretManagerConfig;
   private final String serviceSecret;

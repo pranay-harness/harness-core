@@ -1,11 +1,13 @@
 package software.wings.delegatetasks.delegatecapability;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -33,12 +35,14 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(DEL)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CapabilityHelper {
   public static final String TERRAFORM = "terraform";
+  public static final String TERRAGRUNT = "terragrunt";
   public static final String HELM = "helm";
 
   public static List<ExecutionCapability> generateDelegateCapabilities(ExecutionCapabilityDemander capabilityDemander,
@@ -215,5 +219,16 @@ public class CapabilityHelper {
 
     return generateExecutionCapabilitiesForProcessExecutor(
         TERRAFORM, processExecutorArguments, encryptedDataDetails, maskingEvaluator);
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForTerragrunt(
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
+    List<String> processExecutorArguments = new ArrayList<>();
+    processExecutorArguments.add("/bin/sh");
+    processExecutorArguments.add("-c");
+    processExecutorArguments.add("terragrunt --version");
+
+    return generateExecutionCapabilitiesForProcessExecutor(
+        TERRAGRUNT, processExecutorArguments, encryptedDataDetails, maskingEvaluator);
   }
 }

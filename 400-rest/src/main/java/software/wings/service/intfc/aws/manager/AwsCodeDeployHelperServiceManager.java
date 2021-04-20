@@ -1,5 +1,8 @@
 package software.wings.service.intfc.aws.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -8,6 +11,7 @@ import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
 import com.amazonaws.services.ec2.model.Instance;
 import java.util.List;
 
+@OwnedBy(CDP)
 public interface AwsCodeDeployHelperServiceManager {
   List<String> listApplications(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId);

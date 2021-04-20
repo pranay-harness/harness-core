@@ -4,10 +4,14 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
-import io.harness.globalcontex.EntityOperationIdentifier.entityOperation;
+import io.harness.globalcontex.EntityOperationIdentifier.EntityOperation;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.rule.Owner;
@@ -19,6 +23,8 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._940_CG_AUDIT_SERVICE)
 public class AuditServiceHelperTest extends WingsBaseTest {
   @Inject AuditServiceHelper auditServiceHelper;
 
@@ -33,7 +39,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                                                                             .entityId("abc")
                                                                             .entityName("Service1")
                                                                             .entityType(EntityType.SERVICE.name())
-                                                                            .operation(entityOperation.CREATE)
+                                                                            .operation(EntityOperation.CREATE)
                                                                             .build());
 
       AuditGlobalContextData auditGlobalContextData =
@@ -47,7 +53,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                                                                                 .entityId("abc")
                                                                                 .entityName("Service1")
                                                                                 .entityType(EntityType.SERVICE.name())
-                                                                                .operation(entityOperation.CREATE)
+                                                                                .operation(EntityOperation.CREATE)
                                                                                 .build()))
           .isTrue();
 
@@ -56,7 +62,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                                                                                 .entityId("abcd") // id changed
                                                                                 .entityName("Service1")
                                                                                 .entityType(EntityType.SERVICE.name())
-                                                                                .operation(entityOperation.CREATE)
+                                                                                .operation(EntityOperation.CREATE)
                                                                                 .build()))
           .isFalse();
 
@@ -65,7 +71,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                                                                                 .entityId("abcd")
                                                                                 .entityName("Service10") // name changed
                                                                                 .entityType(EntityType.SERVICE.name())
-                                                                                .operation(entityOperation.CREATE)
+                                                                                .operation(EntityOperation.CREATE)
                                                                                 .build()))
           .isFalse();
     }
@@ -82,7 +88,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                                                                             .entityId("abc")
                                                                             .entityName("Env1")
                                                                             .entityType(EntityType.ENVIRONMENT.name())
-                                                                            .operation(entityOperation.CREATE)
+                                                                            .operation(EntityOperation.CREATE)
                                                                             .build());
 
       AuditGlobalContextData auditGlobalContextData =
@@ -96,7 +102,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                          .entityId("abc")
                          .entityName("Env1")
                          .entityType(EntityType.ENVIRONMENT.name())
-                         .operation(entityOperation.CREATE)
+                         .operation(EntityOperation.CREATE)
                          .build()))
           .isTrue();
 
@@ -105,7 +111,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                          .entityId("abcd") // id changed
                          .entityName("Env1")
                          .entityType(EntityType.ENVIRONMENT.name())
-                         .operation(entityOperation.CREATE)
+                         .operation(EntityOperation.CREATE)
                          .build()))
           .isFalse();
 
@@ -114,7 +120,7 @@ public class AuditServiceHelperTest extends WingsBaseTest {
                          .entityId("abcd")
                          .entityName("Env10") // name changed
                          .entityType(EntityType.ENVIRONMENT.name())
-                         .operation(entityOperation.CREATE)
+                         .operation(EntityOperation.CREATE)
                          .build()))
           .isFalse();
     }

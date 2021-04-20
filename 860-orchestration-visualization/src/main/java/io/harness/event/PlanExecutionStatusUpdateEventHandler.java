@@ -4,31 +4,28 @@ import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PlanExecutionStatusUpdateEventHandler implements AsyncOrchestrationEventHandler {
+@Singleton
+public class PlanExecutionStatusUpdateEventHandler {
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private GraphGenerationService graphGenerationService;
 
-  @Override
-  public void handleEvent(OrchestrationEvent event) {
+  public OrchestrationGraph handleEvent(OrchestrationEvent event, OrchestrationGraph orchestrationGraph) {
     Ambiance ambiance = event.getAmbiance();
     try {
       PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
       log.info("Updating Plan Execution with uuid [{}] with status [{}].", planExecution.getUuid(),
           planExecution.getStatus());
 
-      OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
-
-      graphGenerationService.cacheOrchestrationGraph(cachedGraph.withStatus(planExecution.getStatus()));
+      return orchestrationGraph.withStatus(planExecution.getStatus());
     } catch (Exception e) {
       log.error("[{}] event failed for plan [{}]", event.getEventType(), ambiance.getPlanExecutionId(), e);
+      throw e;
     }
   }
 }

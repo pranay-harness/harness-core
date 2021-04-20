@@ -1,5 +1,9 @@
 package io.harness.yaml.schema.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(DX)
 public class SchemaConstants {
   public static final String IF_NODE = "if";
   public static final String THEN_NODE = "then";
@@ -20,6 +24,8 @@ public class SchemaConstants {
   public static final String TYPE_NODE = "type";
   public static final String STRING_TYPE_NODE = "string";
   public static final String NUMBER_TYPE_NODE = "number";
+  public static final String INTEGER_TYPE_NODE = "integer";
+  public static final String BOOL_TYPE_NODE = "boolean";
   public static final String OBJECT_TYPE_NODE = "object";
   public static final String ARRAY_TYPE_NODE = "array";
 }

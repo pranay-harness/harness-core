@@ -1,9 +1,10 @@
 package software.wings.search.entities.service;
 
+import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeEvent.ChangeEventBuilder;
+import io.harness.mongo.changestreams.ChangeType;
+
 import software.wings.beans.Service;
-import software.wings.search.framework.changestreams.ChangeEvent;
-import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
-import software.wings.search.framework.changestreams.ChangeType;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;

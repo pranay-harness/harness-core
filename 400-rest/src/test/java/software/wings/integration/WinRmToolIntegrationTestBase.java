@@ -1,8 +1,11 @@
 package software.wings.integration;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.rules.Integration;
 
@@ -19,6 +22,7 @@ This test class is making calls to WinRM. The purpose is to do directed testing 
 This is not to be run as an automated test[hence the @Ignore].
  */
 @Slf4j
+@OwnedBy(CDP)
 public abstract class WinRmToolIntegrationTestBase extends CategoryTest {
   private static void setUp() {}
 

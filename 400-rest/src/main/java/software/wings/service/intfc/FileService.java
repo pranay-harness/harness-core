@@ -3,8 +3,8 @@ package software.wings.service.intfc;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FileMetadata;
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.BaseFile;
@@ -19,7 +19,7 @@ import java.util.Map;
  * The Interface FileService.
  */
 @OwnedBy(PL)
-public interface FileService extends DelegateAgentFileService {
+public interface FileService {
   String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
 
   boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,

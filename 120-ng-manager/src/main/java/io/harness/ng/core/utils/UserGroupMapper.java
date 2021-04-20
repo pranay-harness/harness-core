@@ -6,11 +6,6 @@ import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
-import io.harness.ng.core.dto.EmailConfigDTO;
-import io.harness.ng.core.dto.MicrosoftTeamsConfigDTO;
-import io.harness.ng.core.dto.NotificationSettingConfigDTO;
-import io.harness.ng.core.dto.PagerDutyConfigDTO;
-import io.harness.ng.core.dto.SlackConfigDTO;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.entities.EmailConfig;
 import io.harness.ng.core.entities.MicrosoftTeamsConfig;
@@ -18,7 +13,13 @@ import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.entities.PagerDutyConfig;
 import io.harness.ng.core.entities.SlackConfig;
 import io.harness.ng.core.entities.UserGroup;
+import io.harness.ng.core.notification.EmailConfigDTO;
+import io.harness.ng.core.notification.MicrosoftTeamsConfigDTO;
+import io.harness.ng.core.notification.NotificationSettingConfigDTO;
+import io.harness.ng.core.notification.PagerDutyConfigDTO;
+import io.harness.ng.core.notification.SlackConfigDTO;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
@@ -38,8 +39,9 @@ public class UserGroupMapper {
               .name(userGroup.getName())
               .notificationConfigs(
                   userGroup.getNotificationConfigs().stream().map(UserGroupMapper::toDTO).collect(Collectors.toList()))
-              .users(userGroup.getUsers())
+              .users(userGroup.getUsers() == null ? emptyList() : new ArrayList<>(userGroup.getUsers()))
               .lastModifiedAt(userGroup.getLastModifiedAt())
+              .version(userGroup.getVersion())
               .build();
   }
 

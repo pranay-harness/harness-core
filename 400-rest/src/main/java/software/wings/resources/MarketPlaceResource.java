@@ -1,5 +1,10 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessModule._940_MARKETPLACE_INTEGRATIONS;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
 import io.harness.security.annotations.PublicApi;
 
@@ -23,9 +28,11 @@ import javax.ws.rs.core.Response;
 
 @Api("mktplace")
 @Path("/mktplace")
+@OwnedBy(GTM)
+@TargetModule(_940_MARKETPLACE_INTEGRATIONS)
 @Produces(MediaType.APPLICATION_JSON)
 public class MarketPlaceResource {
-  @Inject AwsMarketPlaceApiHandler awsMarketPlaceApiHandler;
+  @Inject private AwsMarketPlaceApiHandler awsMarketPlaceApiHandler;
   @Inject private GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
 
   @Path("aws-signup")
@@ -48,5 +55,15 @@ public class MarketPlaceResource {
   public Response gcpSignUp(@FormParam(value = "x-gcp-marketplace-token") String token,
       @Context HttpServletRequest request, @Context HttpServletResponse response) {
     return gcpMarketPlaceApiHandler.signUp(token);
+  }
+
+  @POST
+  @Path("/gcp-billing")
+  @Produces(MediaType.TEXT_HTML)
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  @PublicApi
+  public Response gcpBilling(@FormParam(value = "x-gcp-marketplace-token") String token,
+      @Context HttpServletRequest request, @Context HttpServletResponse response) {
+    return gcpMarketPlaceApiHandler.registerBillingOnlyTransaction(token);
   }
 }

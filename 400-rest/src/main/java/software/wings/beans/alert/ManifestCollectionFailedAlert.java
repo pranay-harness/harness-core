@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -27,7 +27,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Data
 @Builder
-@TargetModule(Module._970_API_SERVICES_BEANS)
+@TargetModule(HarnessModule._470_ALERT)
 public class ManifestCollectionFailedAlert implements AlertData {
   @Inject @Transient @SchemaIgnore ApplicationManifestService applicationManifestService;
   @Inject @Transient @SchemaIgnore ServiceResourceService serviceResourceService;

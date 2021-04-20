@@ -47,6 +47,6 @@ public class ParallelStepElement implements ExecutionWrapper, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.PARALLEL_STEP_ELEMENT).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.PARALLEL_STEP_ELEMENT).isPartOfFQN(false).build();
   }
 }

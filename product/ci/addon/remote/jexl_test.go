@@ -32,6 +32,14 @@ func (c *mockJEXLClient) EvaluateJEXL(ctx context.Context, in *pb.EvaluateJEXLRe
 	return c.response, c.err
 }
 
+func (c *mockJEXLClient) Ping(ctx context.Context, in *pb.PingRequest, opts ...grpc.CallOption) (*pb.PingResponse, error) {
+	return nil, nil
+}
+
+func (c *mockJEXLClient) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest, opts ...grpc.CallOption) (*pb.ExecuteStepResponse, error) {
+	return nil, nil
+}
+
 func TestEvaluateJEXLServerErr(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()

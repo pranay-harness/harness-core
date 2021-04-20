@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getResourcesInStringFormat;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
@@ -20,6 +21,7 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -51,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(CDP)
 @NoArgsConstructor
 @Slf4j
 public class K8sDeleteRequestHandler extends K8sRequestHandler {
@@ -118,7 +121,19 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     if (!success) {
       return getGenericFailureResponse(null);
     }
-    k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+
+    try {
+      success = k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+      if (!success) {
+        return getGenericFailureResponse(null);
+      }
+    } catch (Exception ex) {
+      log.error("Exception:", ex);
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR);
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+      return getGenericFailureResponse(null);
+    }
+
     return k8sDeleteBaseHandler.getSuccessResponse();
   }
 
@@ -182,7 +197,13 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     if (isEmpty(resourceIdsToDelete)) {
       return k8sDeleteBaseHandler.getSuccessResponse();
     }
-    k8sTaskHelperBase.delete(client, k8sDelegateTaskParams, resourceIdsToDelete, executionLogCallback, true);
+
+    success =
+        k8sTaskHelperBase.executeDelete(client, k8sDelegateTaskParams, resourceIdsToDelete, executionLogCallback, true);
+    if (!success) {
+      return getGenericFailureResponse(null);
+    }
+
     return k8sDeleteBaseHandler.getSuccessResponse();
   }
 

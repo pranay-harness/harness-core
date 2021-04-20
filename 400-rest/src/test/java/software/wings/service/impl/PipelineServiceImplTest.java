@@ -79,7 +79,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -103,11 +102,6 @@ public class PipelineServiceImplTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory mockLimitCheckerFactory;
   @Mock protected FeatureFlagService featureFlagService;
   @Inject @InjectMocks private PipelineServiceImpl pipelineServiceImpl;
-
-  @Before
-  public void setup() {
-    when(featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, ACCOUNT_ID)).thenReturn(true);
-  }
 
   @Test
   @Owner(developers = POOJA)

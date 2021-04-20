@@ -5,23 +5,32 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.context.GlobalContext;
 import io.harness.context.GlobalContextData;
 import io.harness.manage.GlobalContextManager;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
-import io.harness.queue.Queuable.QueuableKeys;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Date;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 
-@CdIndex(name = "next4", fields = { @Field(QueuableKeys.topic)
-                                    , @Field(QueuableKeys.earliestGet) })
 @FieldNameConstants(innerTypeName = "QueuableKeys")
 public abstract class Queuable implements PersistentEntity {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("next4")
+                 .field(QueuableKeys.topic)
+                 .field(QueuableKeys.earliestGet)
+                 .build())
+        .build();
+  }
+
   @Getter @Setter @Id private String id;
 
   @Getter

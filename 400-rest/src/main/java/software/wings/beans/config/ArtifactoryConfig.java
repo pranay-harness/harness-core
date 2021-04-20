@@ -46,6 +46,7 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
   @Attributes(title = "Username") private String username;
 
   @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
+  private List<String> delegateSelectors;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -55,14 +56,15 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
     super(SettingVariableTypes.ARTIFACTORY.name());
   }
 
-  public ArtifactoryConfig(
-      String artifactoryUrl, String username, char[] password, String accountId, String encryptedPassword) {
+  public ArtifactoryConfig(String artifactoryUrl, String username, char[] password, List<String> delegateSelectors,
+      String accountId, String encryptedPassword) {
     this();
     this.artifactoryUrl = artifactoryUrl;
     this.username = username;
     this.password = password == null ? null : password.clone();
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.delegateSelectors = delegateSelectors;
   }
 
   // NOTE: Do not remove this. As UI expects this field should be there..Lombok Default is not working
@@ -100,10 +102,13 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
+    private List<String> delegateSelectors;
+
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictions.Yaml usageRestrictions, List<String> delegateSelectors) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
+      this.delegateSelectors = delegateSelectors;
     }
   }
 }

@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector.jira;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -10,6 +11,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,10 +30,11 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("JiraConnector")
-public class JiraConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity {
+public class JiraConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
   @NotNull @NotBlank String jiraUrl;
   @NotBlank String username;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
+  Set<String> delegateSelectors;
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {

@@ -51,6 +51,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
               .filter(WorkflowExecutionBaselineKeys.envId, workflowExecutionBaseline.getEnvId())
               .filter(WorkflowExecutionBaselineKeys.serviceId, workflowExecutionBaseline.getServiceId())
               .asList();
+      log.info("existing baselines {}", existingBaselines);
       if (!isEmpty(existingBaselines)) {
         Preconditions.checkState(
             existingBaselines.size() == 1, "found more than 1 baselines for " + workflowExecutionBaseline);
@@ -60,6 +61,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
         wingsPersistence.updateField(WorkflowExecution.class, workflowExecutionId, "isBaseline", false);
 
         // mark workflows in pipeline to be baseline
+        log.info("marking workflow baseline {}", executionBaseline);
         markPipelineWorkflowBaselineIfNecessary(executionBaseline, false);
         if (isBaseline) {
           Map<String, Object> updates = new HashMap<>();
@@ -98,7 +100,8 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
   private void markPipelineWorkflowBaselineIfNecessary(WorkflowExecutionBaseline baseline, boolean isBaseline) {
     WorkflowExecution execution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, baseline.getAppId(), baseline.getWorkflowExecutionId());
-    if (isEmpty(execution.getPipelineExecutionId())) {
+    // the workflow execution might have been deleted due to expiry.
+    if (execution == null || isEmpty(execution.getPipelineExecutionId())) {
       return;
     }
 

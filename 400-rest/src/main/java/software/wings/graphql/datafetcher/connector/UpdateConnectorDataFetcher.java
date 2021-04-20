@@ -7,7 +7,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.ConstraintViolationHandlerUtils;
@@ -18,6 +18,7 @@ import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.types.Connector;
 import software.wings.graphql.datafetcher.connector.types.ConnectorFactory;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload.QLUpdateConnectorPayloadBuilder;
@@ -33,13 +34,14 @@ import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UpdateConnectorDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateConnectorInput, QLUpdateConnectorPayload> {
   @Inject private SettingsService settingsService;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private ConnectorsController connectorsController;
   @Inject private SecretManager secretManager;
+  @Inject private UsageScopeController usageScopeController;
 
   public UpdateConnectorDataFetcher() {
     super(QLUpdateConnectorInput.class, QLUpdateConnectorPayload.class);
@@ -69,8 +71,8 @@ public class UpdateConnectorDataFetcher
     QLUpdateConnectorPayloadBuilder builder =
         QLUpdateConnectorPayload.builder().clientMutationId(input.getClientMutationId());
 
-    Connector connector =
-        ConnectorFactory.getConnector(input.getConnectorType(), connectorsController, secretManager, settingsService);
+    Connector connector = ConnectorFactory.getConnector(
+        input.getConnectorType(), connectorsController, secretManager, settingsService, usageScopeController);
     connector.checkInputExists(input);
     connector.checkSecrets(input, settingAttribute);
     connector.updateSettingAttribute(settingAttribute, input);

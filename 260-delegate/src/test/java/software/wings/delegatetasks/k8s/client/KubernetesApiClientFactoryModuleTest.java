@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.k8s.client;
 
-import static io.harness.annotations.dev.Module._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;

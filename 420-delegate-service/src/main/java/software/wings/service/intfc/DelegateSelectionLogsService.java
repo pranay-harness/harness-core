@@ -1,6 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -9,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(DEL)
 public interface DelegateSelectionLogsService {
   void save(BatchDelegateSelectionLog batch);
 
@@ -17,6 +22,9 @@ public interface DelegateSelectionLogsService {
   void logCanAssign(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
   void logExcludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopeName);
+
+  void logOwnerRuleNotMatched(
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateOwner owner);
 
   void logMissingSelector(
       BatchDelegateSelectionLog batch, String accountId, String delegateId, String selector, String selectorOrigin);

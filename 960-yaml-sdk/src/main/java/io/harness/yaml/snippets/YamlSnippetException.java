@@ -1,10 +1,13 @@
 package io.harness.yaml.snippets;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eraro.ErrorCode.UNEXPECTED_SNIPPET_EXCEPTION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 
+@OwnedBy(DX)
 public class YamlSnippetException extends WingsException {
   private static final String MESSAGE_ARG = "message";
 

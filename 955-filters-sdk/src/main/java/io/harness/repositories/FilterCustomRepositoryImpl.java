@@ -1,6 +1,9 @@
 package io.harness.repositories;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.entity.Filter;
 
 import java.util.List;
@@ -14,6 +17,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @HarnessRepo
+@OwnedBy(DX)
 public class FilterCustomRepositoryImpl implements FilterCustomRepository {
   private final MongoTemplate mongoTemplate;
 

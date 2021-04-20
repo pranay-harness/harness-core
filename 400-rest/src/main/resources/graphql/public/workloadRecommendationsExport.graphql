@@ -1,0 +1,71 @@
+extend type Query {
+  k8sWorkloadRecommendations(filters: [WorkloadFilter], limit: Int!, offset: Int): WorkloadRecommendationConnection
+    @dataFetcher(name: k8sWorkloadRecommendations)
+}
+
+input WorkloadFilter {
+  cluster: IdFilter
+  namespace: IdFilter
+  workloadName: IdFilter
+  workloadType: IdFilter
+}
+
+type WorkloadRecommendationConnection {
+  pageInfo: PageInfo
+  nodes: [WorkloadRecommendation]
+}
+
+type WorkloadRecommendation {
+  clusterId: String
+  clusterName: String
+  namespace: String
+  workloadType: String
+  workloadName: String
+  containerRecommendations: [ContainerRecommendation]
+  estimatedSavings: Number
+  numDays: Int
+  lastDayCost: LastDayCost @deprecated(reason: "Will be removed in few days.")
+  preset: K8sWorkloadRecommendationPreset @deprecated(reason: "Will be removed in few days.")
+}
+
+type LastDayCost {
+  cpu: Number
+  memory: Number
+  info: String
+}
+
+type ContainerRecommendation {
+  containerName: String
+  current: ResourceRequirements
+  burstable: ResourceRequirements @deprecated(reason: "Will be removed in few days.")
+  guaranteed: ResourceRequirements @deprecated(reason: "Will be removed in few days.")
+  recommended: ResourceRequirements
+  p50: ResourceRequirements
+  p80: ResourceRequirements
+  p90: ResourceRequirements
+  p95: ResourceRequirements
+  p99: ResourceRequirements
+  numDays: Int
+  totalSamplesCount: Int
+}
+
+type ResourceRequirements {
+  yaml: String
+  limits: [ResourceEntry]
+  requests: [ResourceEntry]
+}
+
+type ResourceEntry {
+  name: String
+  quantity: String
+}
+
+type K8sWorkloadRecommendationPreset {
+  cpuRequest: Number
+  cpuLimit: Number
+  memoryRequest: Number
+  memoryLimit: Number
+  safetyMargin: Number
+  minCpuMilliCores: Long
+  minMemoryBytes: Long
+}

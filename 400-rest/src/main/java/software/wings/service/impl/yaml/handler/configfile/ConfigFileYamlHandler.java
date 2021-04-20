@@ -8,8 +8,8 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.beans.ChecksumType;
 import io.harness.beans.EncryptedData;
+import io.harness.delegate.beans.ChecksumType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
@@ -69,8 +69,8 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
 
     Yaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
-    configService.delete(
-        optionalApplication.get().getUuid(), serviceOptional.get().getUuid(), EntityType.SERVICE, targetFilePath);
+    configService.delete(optionalApplication.get().getUuid(), serviceOptional.get().getUuid(), EntityType.SERVICE,
+        targetFilePath, changeContext.getChange().isSyncFromGit());
   }
 
   @Override

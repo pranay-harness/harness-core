@@ -1,8 +1,11 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse.CapabilityResponseBuilder;
@@ -10,6 +13,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.logging.LogCallback;
 import io.harness.logging.NoopExecutionCallback;
+import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.WinRmConnectionAttributes;
@@ -27,9 +31,11 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
   @Inject private EncryptionService encryptionService;
 
@@ -47,6 +53,9 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
         config.isUseSSL());
 
     try (WinRmSession ignore = makeSession(config, new NoopExecutionCallback())) {
+      if (!checkHttp(capability)) {
+        log.warn("Http failure on winrm success: " + capability);
+      }
       capabilityResponseBuilder.validated(true);
     } catch (Exception e) {
       log.info("Exception in WinrmSession Validation: {}", e);
@@ -82,5 +91,20 @@ public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
   @VisibleForTesting
   WinRmSession makeSession(WinRmSessionConfig config, LogCallback logCallback) throws JSchException {
     return new WinRmSession(config, logCallback);
+  }
+
+  private boolean checkHttp(WinrmHostValidationCapability capability) {
+    try {
+      if (capability.getValidationInfo().isExecuteOnDelegate()) {
+        return true;
+      }
+      return Http.connectableHttpUrl(new URIBuilder()
+                                         .setHost(capability.getValidationInfo().getPublicDns())
+                                         .setPort(capability.getWinRmConnectionAttributes().getPort())
+                                         .toString());
+    } catch (Exception e) {
+      log.warn("Winrm/http AB testing failed: " + e);
+      return false;
+    }
   }
 }

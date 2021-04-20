@@ -39,6 +39,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -60,20 +61,21 @@ import org.mockito.Mock;
 public class BambooServiceTest extends WingsBaseTest {
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(9095));
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
   @Inject @InjectMocks DelegateFileManager delegateFileManager;
   @Mock private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   @Mock private EncryptionService encryptionService;
   @InjectMocks private BambooService bambooService = new BambooServiceImpl();
 
-  private BambooConfig bambooConfig = BambooConfig.builder()
-                                          .bambooUrl("http://localhost:9095")
-                                          .username("admin")
-                                          .password("admin".toCharArray())
-                                          .build();
+  private BambooConfig bambooConfig;
   @Before
   public void setupMocks() {
+    bambooConfig = BambooConfig.builder()
+                       .bambooUrl("http://localhost:" + wireMockRule.port())
+                       .username("admin")
+                       .password("admin".toCharArray())
+                       .build();
     on(bambooService).set("timeLimiter", new FakeTimeLimiter());
     on(bambooService).set("encryptionService", encryptionService);
     on(bambooService).set("artifactCollectionTaskHelper", artifactCollectionTaskHelper);
@@ -158,10 +160,12 @@ public class BambooServiceTest extends WingsBaseTest {
     assertThat(bamboo_plan_key).isNotEmpty();
     assertThat(bamboo_plan_key.get(0)).extracting(BuildDetails::getNumber).isEqualTo("4");
     assertThat(bamboo_plan_key.get(0).getArtifactFileMetadataList().get(0).getUrl())
-        .isEqualTo("http://localhost:9095/browse/TP-PLAN3-4/artifact/JOB1/myartifacts/todolist.war");
+        .isEqualTo(
+            "http://localhost:" + wireMockRule.port() + "/browse/TP-PLAN3-4/artifact/JOB1/myartifacts/todolist.war");
     assertThat(bamboo_plan_key.get(0).getArtifactFileMetadataList().get(0).getFileName()).isEqualTo("todolist.war");
     assertThat(bamboo_plan_key.get(0).getArtifactFileMetadataList().get(1).getUrl())
-        .isEqualTo("http://localhost:9095/browse/TP-PLAN3-4/artifact/JOB1/myartifacts/todolist.zip");
+        .isEqualTo(
+            "http://localhost:" + wireMockRule.port() + "/browse/TP-PLAN3-4/artifact/JOB1/myartifacts/todolist.zip");
     assertThat(bamboo_plan_key.get(0).getArtifactFileMetadataList().get(1).getFileName()).isEqualTo("todolist.zip");
   }
 
@@ -196,11 +200,11 @@ public class BambooServiceTest extends WingsBaseTest {
         ArtifactStreamAttributes.builder()
             .jobName("TOD-TOD")
             .artifactPaths(asList("artifacts/todolist.tar"))
-            .artifactFileMetadata(
-                asList(ArtifactFileMetadata.builder()
-                           .fileName("todolist.tar")
-                           .url("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar")
-                           .build()))
+            .artifactFileMetadata(asList(ArtifactFileMetadata.builder()
+                                             .fileName("todolist.tar")
+                                             .url("http://localhost:" + wireMockRule.port()
+                                                 + "/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar")
+                                             .build()))
             .build();
     ListNotifyResponseData listNotifyResponseData = new ListNotifyResponseData();
     DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("FILE_ID").build();
@@ -208,7 +212,8 @@ public class BambooServiceTest extends WingsBaseTest {
     bambooService.downloadArtifacts(
         bambooConfig, null, artifactStreamAttributes, "11", null, null, null, listNotifyResponseData);
     verify(artifactCollectionTaskHelper, times(1))
-        .addDataToResponse(any(), eq("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar"),
+        .addDataToResponse(any(),
+            eq("http://localhost:" + wireMockRule.port() + "/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar"),
             any(), any(), any(), any());
   }
 
@@ -219,7 +224,7 @@ public class BambooServiceTest extends WingsBaseTest {
     wireMockRule.stubFor(get(urlEqualTo("/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar"))
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
     long size = bambooService.getFileSize(bambooConfig, null, "todolist.tar",
-        "http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar");
+        "http://localhost:" + wireMockRule.port() + "/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar");
     assertThat(size).isEqualTo(4);
   }
 
@@ -292,8 +297,11 @@ public class BambooServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetBuildResult() {
     Result actual = bambooService.getBuildResult(bambooConfig, null, "TOD-TODIR");
-    Result expected =
-        JsonUtils.readResourceFile("__files/bamboo/expected-body-get-build-result-details.json", Result.class);
+    Result expected = JsonUtils.convertStringToObj(
+        JsonUtils.readResourceFile("__files/bamboo/expected-body-get-build-result-details.json", JsonNode.class)
+            .toString()
+            .replace("9095", String.valueOf(wireMockRule.port())),
+        Result.class);
     assertThat(actual).isEqualTo(expected);
   }
 

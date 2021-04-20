@@ -1,7 +1,11 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -16,6 +20,8 @@ import org.mongodb.morphia.query.Query;
 @JsonTypeName("AWS_ECS")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "EcsClusterKeys")
+@OwnedBy(CE)
+@TargetModule(HarnessModule._490_CE_COMMONS)
 public class EcsCluster implements Cluster {
   String cloudProviderId;
   String region;

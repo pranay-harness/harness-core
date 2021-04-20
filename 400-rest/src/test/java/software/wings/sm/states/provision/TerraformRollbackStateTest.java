@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.BOJANA;
 
@@ -27,11 +28,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
@@ -80,6 +85,8 @@ import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock TerraformConfig configParameter;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) ExecutionContextImpl executionContext;
@@ -115,7 +122,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
         .extractUnresolvedTextVariables(anyListOf(NameValuePair.class));
     doAnswer(doExtractEncryptedVariables)
         .when(infrastructureProvisionerService)
-        .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString());
+        .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString(), anyString());
     doAnswer(doReturnSameValue).when(executionContext).renderExpression(anyString());
   }
 
@@ -184,18 +191,17 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
   public void testExecuteInternal() {
     setUp("sourceRepoBranch", true, WORKFLOW_EXECUTION_ID);
     ExecutionResponse executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
-    verifyResponse(
-        executionResponse, "sourceRepoBranch", true, 1, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    verifyResponse(executionResponse, "sourceRepoBranch", true, 1, TerraformCommand.DESTROY);
 
     // no variables, no backend configs, no source repo branch
     setUp(null, false, WORKFLOW_EXECUTION_ID);
     executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
-    verifyResponse(executionResponse, null, false, 2, TerraformProvisionParameters.TerraformCommand.DESTROY);
+    verifyResponse(executionResponse, null, false, 2, TerraformCommand.DESTROY);
 
     // Inheriting terraform execution from last successful terraform execution
     setUp("sourceRepoBranch", true, null);
     executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
-    verifyResponse(executionResponse, "sourceRepoBranch", true, 3, TerraformProvisionParameters.TerraformCommand.APPLY);
+    verifyResponse(executionResponse, "sourceRepoBranch", true, 3, TerraformCommand.APPLY);
   }
 
   private void setUp(String sourceRepoBranch, boolean setVarsAndBackendConfigs, String workflowExecutionId) {
@@ -239,14 +245,14 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     when(morphiaIterator.getCursor()).thenReturn(dbCursor);
     when(query.fetch()).thenReturn(morphiaIterator);
 
-    when(fileService.getLatestFileId(anyString(), any(DelegateAgentFileService.FileBucket.class))).thenReturn("fileId");
+    when(fileService.getLatestFileId(anyString(), any(FileBucket.class))).thenReturn("fileId");
     when(gitUtilsManager.getGitConfig(anyString())).thenReturn(GitConfig.builder().build());
     when(infrastructureProvisionerService.getManagerExecutionCallback(anyString(), anyString(), anyString()))
         .thenReturn(mock(ManagerExecutionLogCallback.class));
   }
 
   private void verifyResponse(ExecutionResponse executionResponse, String branch, boolean checkVarsAndBackendConfigs,
-      int i, TerraformProvisionParameters.TerraformCommand command) {
+      int i, TerraformCommand command) {
     verify(wingsPersistence, times(i)).createQuery(TerraformConfig.class);
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo(ACTIVITY_ID);
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
@@ -294,19 +300,18 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
                                                                                 .build();
     when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(terraformInfrastructureProvisioner);
     Map<String, ResponseData> response = new HashMap<>();
-    TerraformExecutionData terraformExecutionData =
-        TerraformExecutionData.builder()
-            .executionStatus(ExecutionStatus.SUCCESS)
-            .stateFileId("stateFileId")
-            .commandExecuted(TerraformProvisionParameters.TerraformCommand.APPLY)
-            .build();
+    TerraformExecutionData terraformExecutionData = TerraformExecutionData.builder()
+                                                        .executionStatus(ExecutionStatus.SUCCESS)
+                                                        .stateFileId("stateFileId")
+                                                        .commandExecuted(TerraformCommand.APPLY)
+                                                        .build();
     response.put("activityId", terraformExecutionData);
 
     ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
     verifyResponse(executionResponse, 1);
     verify(fileService, times(1))
-        .updateParentEntityIdAndVersion(any(Class.class), anyString(), anyInt(), anyString(), anyMap(),
-            any(DelegateAgentFileService.FileBucket.class));
+        .updateParentEntityIdAndVersion(
+            any(Class.class), anyString(), anyInt(), anyString(), anyMap(), any(FileBucket.class));
 
     // no state file
     terraformExecutionData.setStateFileId(null);
@@ -336,12 +341,11 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
         TerraformInfrastructureProvisioner.builder().build();
     when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(terraformInfrastructureProvisioner);
     Map<String, ResponseData> response = new HashMap<>();
-    TerraformExecutionData terraformExecutionData =
-        TerraformExecutionData.builder()
-            .executionStatus(ExecutionStatus.SUCCESS)
-            .stateFileId("stateFileId")
-            .commandExecuted(TerraformProvisionParameters.TerraformCommand.DESTROY)
-            .build();
+    TerraformExecutionData terraformExecutionData = TerraformExecutionData.builder()
+                                                        .executionStatus(ExecutionStatus.SUCCESS)
+                                                        .stateFileId("stateFileId")
+                                                        .commandExecuted(TerraformCommand.DESTROY)
+                                                        .build();
     response.put("activityId", terraformExecutionData);
 
     Query<TerraformConfig> query = mock(Query.class);
@@ -350,8 +354,8 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
 
     verify(fileService, times(1))
-        .updateParentEntityIdAndVersion(any(Class.class), anyString(), anyInt(), anyString(), anyMap(),
-            any(DelegateAgentFileService.FileBucket.class));
+        .updateParentEntityIdAndVersion(
+            any(Class.class), anyString(), anyInt(), anyString(), anyMap(), any(FileBucket.class));
     verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
     verify(wingsPersistence, times(1)).createQuery(TerraformConfig.class);
     verify(wingsPersistence, times(1)).delete(query);

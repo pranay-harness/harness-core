@@ -47,9 +47,11 @@ public class ApplicationReadyListener {
 
   @EventListener(ApplicationReadyEvent.class)
   void ensureTimescaleConnectivity() {
+    log.info("Inside ensureTimescaleConnectivity");
     if (Boolean.TRUE.equals(environment.getProperty("ensure-timescale", Boolean.class, Boolean.TRUE))) {
       verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
     }
+    log.info("End ensureTimescaleConnectivity");
   }
 
   @EventListener(ApplicationReadyEvent.class)
@@ -65,6 +67,7 @@ public class ApplicationReadyListener {
   @EventListener(ApplicationReadyEvent.class)
   @Order(Ordered.HIGHEST_PRECEDENCE)
   void ensureMongoConnectivity() throws Exception {
+    log.info("Inside ensureMongoConnectivity");
     TimeLimiter timeLimiter = new SimpleTimeLimiter();
     try {
       timeLimiter.callWithTimeout(() -> {
@@ -75,6 +78,7 @@ public class ApplicationReadyListener {
       log.error("Timed out waiting for mongo connectivity");
       throw e;
     }
+    log.info("End ensureMongoConnectivity");
   }
 
   @EventListener(ApplicationReadyEvent.class)

@@ -81,15 +81,17 @@ public class DelegateServiceGrpcClient {
     this.delegateSyncService = delegateSyncService;
   }
 
-  public String submitAsyncTask(DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
+  public String submitAsyncTask(
+      DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken, Duration holdFor) {
     final SubmitTaskResponse submitTaskResponse =
-        submitTaskInternal(TaskMode.ASYNC, taskRequest, delegateCallbackToken);
+        submitTaskInternal(TaskMode.ASYNC, taskRequest, delegateCallbackToken, holdFor);
     return submitTaskResponse.getTaskId().getId();
   }
 
   public <T extends DelegateResponseData> T executeSyncTask(
       DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
-    final SubmitTaskResponse submitTaskResponse = submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken);
+    final SubmitTaskResponse submitTaskResponse =
+        submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken, Duration.ZERO);
     final String taskId = submitTaskResponse.getTaskId().getId();
     log.info("sync task id created =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
@@ -115,7 +117,8 @@ public class DelegateServiceGrpcClient {
    */
   public <T extends ResponseData> T executeSyncTaskReturningResponseData(
       DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
-    final SubmitTaskResponse submitTaskResponse = submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken);
+    final SubmitTaskResponse submitTaskResponse =
+        submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken, Duration.ZERO);
     final String taskId = submitTaskResponse.getTaskId().getId();
     log.info("ID for Sync Task =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
@@ -125,14 +128,15 @@ public class DelegateServiceGrpcClient {
 
   public SubmitTaskResponse submitTask(DelegateCallbackToken delegateCallbackToken, AccountId accountId,
       TaskSetupAbstractions taskSetupAbstractions, TaskLogAbstractions taskLogAbstractions, TaskDetails taskDetails,
-      List<ExecutionCapability> capabilities, List<String> taskSelectors) {
+      List<ExecutionCapability> capabilities, List<String> taskSelectors, Duration holdFor, boolean forceExecute) {
     try {
       SubmitTaskRequest.Builder submitTaskRequestBuilder = SubmitTaskRequest.newBuilder()
                                                                .setCallbackToken(delegateCallbackToken)
                                                                .setAccountId(accountId)
                                                                .setSetupAbstractions(taskSetupAbstractions)
                                                                .setLogAbstractions(taskLogAbstractions)
-                                                               .setDetails(taskDetails);
+                                                               .setDetails(taskDetails)
+                                                               .setForceExecute(forceExecute);
 
       if (isNotEmpty(capabilities)) {
         submitTaskRequestBuilder.addAllCapabilities(
@@ -155,8 +159,8 @@ public class DelegateServiceGrpcClient {
                                         .submitTask(submitTaskRequestBuilder.build());
 
       if (taskDetails.getMode() == TaskMode.ASYNC) {
-        delegateAsyncService.setupTimeoutForTask(
-            response.getTaskId().getId(), Timestamps.toMillis(response.getTotalExpiry()));
+        delegateAsyncService.setupTimeoutForTask(response.getTaskId().getId(),
+            Timestamps.toMillis(response.getTotalExpiry()), currentTimeMillis() + holdFor.toMillis());
       }
 
       return response;
@@ -165,8 +169,8 @@ public class DelegateServiceGrpcClient {
     }
   }
 
-  private SubmitTaskResponse submitTaskInternal(
-      TaskMode taskMode, DelegateTaskRequest taskRequest, DelegateCallbackToken delegateCallbackToken) {
+  private SubmitTaskResponse submitTaskInternal(TaskMode taskMode, DelegateTaskRequest taskRequest,
+      DelegateCallbackToken delegateCallbackToken, Duration holdFor) {
     final TaskParameters taskParameters = taskRequest.getTaskParameters();
 
     final List<ExecutionCapability> capabilities = (taskParameters instanceof ExecutionCapabilityDemander)
@@ -187,7 +191,7 @@ public class DelegateServiceGrpcClient {
             .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters)))
             .setExecutionTimeout(Durations.fromSeconds(taskRequest.getExecutionTimeout().getSeconds()))
             .build(),
-        capabilities, taskRequest.getTaskSelectors());
+        capabilities, taskRequest.getTaskSelectors(), holdFor, taskRequest.isForceExecute());
   }
 
   public TaskExecutionStage cancelTask(AccountId accountId, TaskId taskId) {

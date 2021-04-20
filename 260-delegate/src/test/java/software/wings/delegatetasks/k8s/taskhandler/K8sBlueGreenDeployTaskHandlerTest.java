@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -27,6 +28,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -36,21 +38,25 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sBGBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
@@ -98,7 +104,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private KubernetesContainerService kubernetesContainerService;
@@ -813,6 +820,65 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
     verify(k8sTaskHelperBase)
         .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void shouldCatchGetPodListException() throws Exception {
+    K8sBlueGreenDeployTaskHandler spyHandler = spy(k8sBlueGreenDeployTaskHandler);
+    doReturn(true)
+        .when(spyHandler)
+        .init(any(K8sBlueGreenDeployTaskParameters.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
+    doReturn(true)
+        .when(spyHandler)
+        .prepareForBlueGreen(any(K8sBlueGreenDeployTaskParameters.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class), anyBoolean());
+    doReturn(true)
+        .when(k8sTaskHelperBase)
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
+            any(ExecutionLogCallback.class));
+    doReturn("latest-rev")
+        .when(k8sTaskHelperBase)
+        .getLatestRevision(any(Kubectl.class), eq(deployment().getResourceId()), any(K8sDelegateTaskParams.class));
+    doReturn(executionLogCallback)
+        .when(k8sTaskHelper)
+        .getExecutionLogCallback(any(K8sBlueGreenDeployTaskParameters.class), anyString());
+
+    on(spyHandler).set("managedWorkload", deployment());
+    on(spyHandler).set("currentRelease", new Release());
+    on(spyHandler).set("primaryService", primaryService());
+    on(spyHandler).set("stageService", stageService());
+
+    InvalidRequestException thrownException = new InvalidRequestException("Failed to get pod details");
+    doThrow(thrownException)
+        .when(mockedK8sBGBaseHandler)
+        .getAllPods(anyLong(), any(KubernetesConfig.class), any(KubernetesResource.class), anyString(), anyString(),
+            anyString());
+
+    assertThatThrownBy(
+        ()
+            -> spyHandler.executeTaskInternal(
+                K8sBlueGreenDeployTaskParameters.builder().k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY).build(),
+                K8sDelegateTaskParams.builder()
+                    .workingDirectory("./")
+                    .kubectlPath("kubectl")
+                    .kubeconfigPath("kubeconfig")
+                    .build()))
+        .isEqualTo(thrownException);
+
+    verify(executionLogCallback, atLeastOnce()).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
+    verify(k8sTaskHelperBase, times(2))
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), anyString(), anyString());
   }
 
   @Data

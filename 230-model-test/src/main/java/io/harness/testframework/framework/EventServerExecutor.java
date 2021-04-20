@@ -56,7 +56,6 @@ public class EventServerExecutor {
     if (failedAlready) {
       return;
     }
-
     String directoryPath = Project.rootDirectory(clazz);
     final File directory = new File(directoryPath);
     final File lockfile = new File(directoryPath, "event-server");

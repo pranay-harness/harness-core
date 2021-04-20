@@ -1,7 +1,9 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
 
 import software.wings.api.DeploymentType;
@@ -19,6 +21,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 public class PcfServiceSpecificationYamlHandler
     extends DeploymentSpecificationYamlHandler<Yaml, PcfServiceSpecification> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;

@@ -1,4 +1,19 @@
+enum ApplicationEntityAggregation {
+  Application
+}
+
+input ApplicationAggregation {
+  entityAggregation: ApplicationEntityAggregation
+  tagAggregation: ApplicationTagAggregation
+}
+
+input ApplicationTagAggregation {
+  entityType: ApplicationTagType
+  tagName: String
+}
+
 extend type Query {
-  #Get statistics for a Harness Application.
-  applicationStats: SinglePointData @dataFetcher(name: applicationStats)
+  #Get statistics for an application.
+  applicationStats(filters: [ApplicationFilter], groupBy: [ApplicationAggregation]): Data
+    @dataFetcher(name: applicationStats)
 }

@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.api.ContainerServiceData;
@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class EcsResizeParams extends ContainerResizeParams {
   private String region;
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;

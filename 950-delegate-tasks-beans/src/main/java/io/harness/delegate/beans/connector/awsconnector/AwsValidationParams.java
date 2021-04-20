@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
+import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -8,12 +9,13 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
-@Value
-@Builder
-public class AwsValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
+@Data
+@SuperBuilder
+public class AwsValidationParams
+    extends ConnectorTaskParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
   AwsConnectorDTO awsConnectorDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
   String connectorName;
@@ -25,6 +27,6 @@ public class AwsValidationParams implements ConnectorValidationParams, Execution
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return AwsCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, awsConnectorDTO);
+    return AwsCapabilityHelper.fetchRequiredExecutionCapabilities(awsConnectorDTO, maskingEvaluator);
   }
 }

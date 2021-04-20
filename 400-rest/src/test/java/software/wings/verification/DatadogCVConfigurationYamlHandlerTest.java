@@ -20,8 +20,8 @@ import software.wings.metrics.MetricType;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState.Metric;
+import software.wings.verification.datadog.DatadogCVConfigurationYaml;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
-import software.wings.verification.datadog.DatadogCVServiceConfiguration.DatadogCVConfigurationYaml;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;

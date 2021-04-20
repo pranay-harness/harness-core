@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
@@ -9,6 +10,7 @@ import static io.harness.logging.LogLevel.WARN;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.LogLevel;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class AwsMetadataApiHelper {
   private static final String CONTAINER_METADATA_FORMAT_STRING = "http://%s:51678/v1/tasks";
 

@@ -5,6 +5,10 @@ import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.pop
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.billing.writer.support.ClusterDataGenerationValidator;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -21,6 +25,7 @@ import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
@@ -43,6 +48,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class K8sPodInfoTasklet implements Tasklet {
   @Autowired private BatchMainConfig config;
@@ -111,6 +117,9 @@ public class K8sPodInfoTasklet implements Tasklet {
     String workloadName = podInfo.getTopLevelOwner().getName();
     String workloadType = podInfo.getTopLevelOwner().getKind();
 
+    // TODO(utsav): insert workload into the timescaleDB as a part of new Data Model for nodeRecommendation
+    // insertWorkload(podInfo.getTopLevelOwner()) into timescaleDB;
+
     if (podInfo.getNamespace().equals(KUBE_SYSTEM_NAMESPACE)
         && podInfo.getPodName().startsWith(KUBE_PROXY_POD_PREFIX)) {
       workloadName = KUBE_PROXY_POD_PREFIX;
@@ -128,6 +137,7 @@ public class K8sPodInfoTasklet implements Tasklet {
 
     PrunedInstanceData prunedInstanceData = instanceDataService.fetchPrunedInstanceDataWithName(
         accountId, clusterId, podInfo.getNodeName(), publishedMessage.getOccurredAt());
+    InstanceType instanceType = InstanceType.K8S_POD;
     if (null != prunedInstanceData && prunedInstanceData.getInstanceId() != null) {
       Map<String, String> nodeMetaData = prunedInstanceData.getMetaData();
       metaData.put(InstanceMetaDataConstants.REGION, nodeMetaData.get(InstanceMetaDataConstants.REGION));
@@ -146,8 +156,12 @@ public class K8sPodInfoTasklet implements Tasklet {
           String.valueOf(prunedInstanceData.getTotalResource().getCpuUnits()));
       metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY,
           String.valueOf(prunedInstanceData.getTotalResource().getMemoryMb()));
-      if (null != nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE)) {
-        metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE));
+      String computeType = nodeMetaData.get(InstanceMetaDataConstants.COMPUTE_TYPE);
+      if (null != computeType) {
+        metaData.put(InstanceMetaDataConstants.COMPUTE_TYPE, computeType);
+        if (K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
+          instanceType = InstanceType.K8S_POD_FARGATE;
+        }
       }
       if (null != prunedInstanceData.getCloudProviderInstanceId()) {
         metaData.put(
@@ -171,12 +185,15 @@ public class K8sPodInfoTasklet implements Tasklet {
       log.error("Error while saving pod workload {} {}", podInfo.getCloudProviderId(), podUid);
     }
 
-    Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());
+    final Resource resource = K8sResourceUtils.getResource(podInfo.getTotalResource().getRequestsMap());
     Resource resourceLimit = Resource.builder().cpuUnits(0.0).memoryMb(0.0).build();
     if (!isEmpty(podInfo.getTotalResource().getLimitsMap())) {
       resourceLimit = K8sResourceUtils.getResource(podInfo.getTotalResource().getLimitsMap());
     }
-    List<String> pvcClaimNames = podInfo.getVolumeList().stream().map(Volume::getId).collect(Collectors.toList());
+
+    final List<String> pvcClaimNames = podInfo.getVolumeList().stream().map(Volume::getId).collect(Collectors.toList());
+    final Resource pricingResource = K8sResourceUtils.getResourceFromAnnotationMap(
+        firstNonNull(podInfo.getMetadataAnnotationsMap(), Collections.emptyMap()));
 
     return InstanceInfo.builder()
         .accountId(accountId)
@@ -185,16 +202,18 @@ public class K8sPodInfoTasklet implements Tasklet {
         .clusterId(clusterId)
         .clusterName(podInfo.getClusterName())
         .instanceName(podInfo.getPodName())
-        .instanceType(InstanceType.K8S_POD)
+        .instanceType(instanceType)
         .instanceState(InstanceState.RUNNING)
         .usageStartTime(HTimestamps.toInstant(podInfo.getCreationTimestamp()))
         .resource(resource)
         .resourceLimit(resourceLimit)
         .allocatableResource(resource)
+        .pricingResource(pricingResource)
         .pvcClaimNames(pvcClaimNames)
         .metaData(metaData)
         .labels(encodeDotsInKey(labelsMap))
         .namespaceLabels(encodeDotsInKey(podInfo.getNamespaceLabelsMap()))
+        .metadataAnnotations(podInfo.getMetadataAnnotationsMap())
         .harnessServiceInfo(harnessServiceInfo)
         .build();
   }

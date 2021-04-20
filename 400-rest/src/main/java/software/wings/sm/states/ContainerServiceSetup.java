@@ -11,8 +11,10 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -23,7 +25,6 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.annotation.EncryptableSetting;
@@ -216,7 +217,8 @@ public abstract class ContainerServiceSetup extends State {
       }
 
       CommandExecutionContext commandExecutionContext =
-          aCommandExecutionContext()
+          aCommandExecutionContext(
+              featureFlagService.isEnabled(FeatureName.WINRM_CAPABILITY_DEPRECATE_FOR_HTTP, app.getAccountId()))
               .accountId(app.getAccountId())
               .appId(app.getUuid())
               .envId(env.getUuid())

@@ -39,6 +39,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.SweepingOutputInstance;
@@ -49,7 +50,6 @@ import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.deployment.InstanceDetails;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;

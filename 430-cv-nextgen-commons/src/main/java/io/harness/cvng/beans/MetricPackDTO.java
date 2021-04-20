@@ -25,6 +25,8 @@ public class MetricPackDTO {
     TimeSeriesMetricType type;
     String path;
     String validationPath;
+    String responseJsonPath;
+    String validationResponseJsonPath;
     List<TimeSeriesThresholdDTO> thresholds;
     boolean included;
   }

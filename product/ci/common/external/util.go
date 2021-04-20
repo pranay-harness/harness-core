@@ -9,40 +9,70 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
+	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"github.com/wings-software/portal/product/log-service/client"
 	"go.uber.org/zap"
 )
 
 const (
-	accountIDEnv  = "HARNESS_ACCOUNT_ID"
-	orgIDEnv      = "HARNESS_ORG_ID"
-	projectIDEnv  = "HARNESS_PROJECT_ID"
-	buildIDEnv    = "HARNESS_BUILD_ID"
-	stageIDEnv    = "HARNESS_STAGE_ID"
-	pipelineIDEnv = "HARNESS_PIPELINE_ID"
-	tiSvcEp       = "HARNESS_TI_SERVICE_ENDPOINT"
-	tiSvcToken    = "HARNESS_TI_SERVICE_TOKEN"
-	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
-	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
-	secretList    = "HARNESS_SECRETS_LIST"
-	dSourceBranch = "DRONE_SOURCE_BRANCH"
-	dRemoteUrl    = "DRONE_REMOTE_URL"
-	dCommitSha    = "DRONE_COMMIT_SHA"
-	wrkspcPath    = "HARNESS_WORKSPACE"
-	gitBinPath    = "HARNESS_GIT_BINARY_PATH"
-	diffFilesCmd  = "%s diff --name-only HEAD HEAD@{1} -1"
+	accountIDEnv     = "HARNESS_ACCOUNT_ID"
+	orgIDEnv         = "HARNESS_ORG_ID"
+	projectIDEnv     = "HARNESS_PROJECT_ID"
+	buildIDEnv       = "HARNESS_BUILD_ID"
+	stageIDEnv       = "HARNESS_STAGE_ID"
+	pipelineIDEnv    = "HARNESS_PIPELINE_ID"
+	tiSvcEp          = "HARNESS_TI_SERVICE_ENDPOINT"
+	tiSvcToken       = "HARNESS_TI_SERVICE_TOKEN"
+	logSvcEp         = "HARNESS_LOG_SERVICE_ENDPOINT"
+	logSvcToken      = "HARNESS_LOG_SERVICE_TOKEN"
+	logPrefixEnv     = "HARNESS_LOG_PREFIX"
+	serviceLogKeyEnv = "HARNESS_SERVICE_LOG_KEY"
+	secretList       = "HARNESS_SECRETS_LIST"
+	dSourceBranch    = "DRONE_SOURCE_BRANCH"
+	dTargetBranch    = "DRONE_TARGET_BRANCH"
+	dRemoteUrl       = "DRONE_REMOTE_URL"
+	dCommitSha       = "DRONE_COMMIT_SHA"
+	wrkspcPath       = "HARNESS_WORKSPACE"
+	gitBin           = "git"
+	diffFilesCmd     = "%s diff --name-status --diff-filter=MADR HEAD@{1} HEAD -1"
 )
 
-// GetChangedFiles executes a shell command and retuns list of files changed in PR
-func GetChangedFiles(ctx context.Context, gitPath, workspace string, log *zap.SugaredLogger) ([]string, error) {
+// GetChangedFiles executes a shell command and returns a list of files changed in the PR
+// along with their corresponding status
+func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger) ([]types.File, error) {
 	cmdContextFactory := exec.OsCommandContextGracefulWithLog(log)
-	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitPath)).WithDir(workspace)
+	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).WithDir(workspace)
 	out, err := cmd.Output()
-
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(string(out), "\n"), nil
+	res := []types.File{}
+
+	for _, l := range strings.Split(string(out), "\n") {
+		t := strings.Fields(l)
+		// t looks like:
+		// <M/A/D file_name> for modified/added/deleted files
+		// <RXYZ old_file new_file> for renamed files where XYZ denotes %age similarity
+		if len(t) == 0 {
+			break
+		}
+
+		if t[0][0] == 'M' {
+			res = append(res, types.File{Status: types.FileModified, Name: t[1]})
+		} else if t[0][0] == 'A' {
+			res = append(res, types.File{Status: types.FileAdded, Name: t[1]})
+		} else if t[0][0] == 'D' {
+			res = append(res, types.File{Status: types.FileDeleted, Name: t[1]})
+		} else if t[0][0] == 'R' {
+			res = append(res, types.File{Status: types.FileDeleted, Name: t[1]})
+			res = append(res, types.File{Status: types.FileAdded, Name: t[2]})
+		} else {
+			// Log the error, don't error out for now
+			log.Errorw(fmt.Sprintf("unsupported file status: %s, file name: %s", t[0], t[1]))
+			return res, nil
+		}
+	}
+	return res, nil
 }
 
 func GetSecrets() []logs.Secret {
@@ -64,11 +94,8 @@ func GetSecrets() []logs.Secret {
 	return res
 }
 
-func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
-	key, err := GetLogKey(stepID)
-	if err != nil {
-		return nil, err
-	}
+// GetHTTPRemoteLogger returns a remote HTTP logger for a key.
+func GetHTTPRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	client, err := GetRemoteHTTPClient()
 	if err != nil {
 		return nil, err
@@ -85,7 +112,7 @@ func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	return rl, nil
 }
 
-// GetRemoteHttpClient returns a new HTTP client to talk to log service using information available in env.
+// GetRemoteHTTPClient returns a new HTTP client to talk to log service using information available in env.
 func GetRemoteHTTPClient() (client.Client, error) {
 	l, ok := os.LookupEnv(logSvcEp)
 	if !ok {
@@ -102,34 +129,24 @@ func GetRemoteHTTPClient() (client.Client, error) {
 	return client.NewHTTPClient(l, account, token, false), nil
 }
 
-// GetLogKey returns a stringified key for log service using various identifiers
-func GetLogKey(stepID string) (string, error) {
-	account, err := GetAccountId()
-	if err != nil {
-		return "", err
+// GetLogKey returns a key for log service
+func GetLogKey(id string) (string, error) {
+	logPrefix, ok := os.LookupEnv(logPrefixEnv)
+	if !ok {
+		return "", fmt.Errorf("log prefix variable not set %s", logPrefixEnv)
 	}
-	org, err := GetOrgId()
-	if err != nil {
-		return "", err
+
+	return fmt.Sprintf("%s/%s", logPrefix, id), nil
+}
+
+// GetServiceLogKey returns log key for service
+func GetServiceLogKey() (string, error) {
+	logKey, ok := os.LookupEnv(serviceLogKeyEnv)
+	if !ok {
+		return "", fmt.Errorf("service log key variable not set %s", serviceLogKeyEnv)
 	}
-	project, err := GetProjectId()
-	if err != nil {
-		return "", err
-	}
-	pipeline, err := GetPipelineId()
-	if err != nil {
-		return "", err
-	}
-	build, err := GetBuildId()
-	if err != nil {
-		return "", err
-	}
-	stage, err := GetStageId()
-	if err != nil {
-		return "", err
-	}
-	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", account, org, project, pipeline, build, stage, stepID)
-	return key, nil
+
+	return logKey, nil
 }
 
 // GetTiHTTPClient returns a client to talk to the TI service
@@ -198,11 +215,19 @@ func GetStageId() (string, error) {
 }
 
 func GetSourceBranch() (string, error) {
-	stage, ok := os.LookupEnv(dSourceBranch)
+	source, ok := os.LookupEnv(dSourceBranch)
 	if !ok {
 		return "", fmt.Errorf("source branch variable not set %s", dSourceBranch)
 	}
-	return stage, nil
+	return source, nil
+}
+
+func GetTargetBranch() (string, error) {
+	target, ok := os.LookupEnv(dTargetBranch)
+	if !ok {
+		return "", fmt.Errorf("target branch variable not set %s", dTargetBranch)
+	}
+	return target, nil
 }
 
 func GetRepo() (string, error) {
@@ -225,14 +250,6 @@ func GetWrkspcPath() (string, error) {
 	path, ok := os.LookupEnv(wrkspcPath)
 	if !ok {
 		return "", fmt.Errorf("workspace path variable not set %s", wrkspcPath)
-	}
-	return path, nil
-}
-
-func GetGitBinPath() (string, error) {
-	path, ok := os.LookupEnv(gitBinPath)
-	if !ok {
-		return "", fmt.Errorf("git binary path variable not set %s", gitBinPath)
 	}
 	return path, nil
 }

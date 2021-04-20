@@ -90,24 +90,36 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePodUidsList());
       activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsList());
 
-      SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
+      final SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
 
       log.info("Inactive K8S instance arns {}", inactiveInstanceArns.toString());
 
       lifecycleList.addAll(
           inactiveInstanceArns.stream()
-              .map(inactiveInstanceArn -> createLifecycle(inactiveInstanceArn, clusterId, lastProcessedTimestamp))
+              .map(instanceId
+                  -> createLifecycle(instanceId, clusterId, lastProcessedTimestamp, EventType.EVENT_TYPE_STOP))
+              .collect(Collectors.toList()));
+
+      // instances which are actually active but in instanceData collection it is either stopped or doesn't exists.
+      final SetView<String> missedActiveInstanceArns = Sets.difference(activeInstanceArns, activeInstanceIds);
+      log.info("Missed K8S instance arns {}", missedActiveInstanceArns.toString());
+
+      lifecycleList.addAll(
+          missedActiveInstanceArns.stream()
+              .map(instanceId
+                  -> createLifecycle(instanceId, clusterId, lastProcessedTimestamp, EventType.EVENT_TYPE_START))
               .collect(Collectors.toList()));
     });
 
     return lifecycleList;
   }
 
-  private Lifecycle createLifecycle(String instanceId, String clusterId, Timestamp lastProcessedTimestamp) {
+  private Lifecycle createLifecycle(
+      String instanceId, String clusterId, Timestamp lastProcessedTimestamp, final EventType eventType) {
     return Lifecycle.newBuilder()
         .setInstanceId(instanceId)
         .setClusterId(clusterId)
-        .setType(EventType.EVENT_TYPE_STOP)
+        .setType(eventType)
         .setTimestamp(lastProcessedTimestamp)
         .build();
   }

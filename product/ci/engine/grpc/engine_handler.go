@@ -3,6 +3,7 @@ package grpc
 import (
 	"github.com/wings-software/portal/commons/go/lib/images"
 	"github.com/wings-software/portal/product/ci/engine/jexl"
+	"github.com/wings-software/portal/product/ci/engine/new/executor"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/state"
@@ -16,6 +17,7 @@ var (
 	getPublicImgMetadata  = images.PublicMetadata
 	getPrivateImgMetadata = images.PrivateMetadata
 	evaluateJEXL          = jexl.EvaluateJEXL
+	executeStepInAsync    = executor.ExecuteStepInAsync
 )
 
 // handler is used to implement EngineServer
@@ -96,4 +98,17 @@ func (h *engineHandler) EvaluateJEXL(ctx context.Context, in *pb.EvaluateJEXLReq
 		EvaluatedExpressions: result,
 	}
 	return response, nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Synchronous RPC to check health of lite-engine service.
+func (h *engineHandler) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResponse, error) {
+	return &pb.PingResponse{}, nil
+}
+
+// Asynchronous RPC that starts execution of a step.
+func (h *engineHandler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
+	executeStepInAsync(ctx, in, h.log)
+	return &pb.ExecuteStepResponse{}, nil
 }

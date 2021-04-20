@@ -1,5 +1,8 @@
 package io.harness.limits.impl.memory;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.lib.StaticLimit;
 import io.harness.limits.lib.StaticLimitChecker;
 
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory;
  *
  * See <code>InMemoryLimitCheckerTest</code> for usage details
  */
+@OwnedBy(PL)
 @ThreadSafe
 public class InMemoryLimitChecker implements StaticLimitChecker {
   private static final Logger log = LoggerFactory.getLogger(InMemoryLimitChecker.class);

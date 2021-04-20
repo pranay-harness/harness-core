@@ -8,4 +8,5 @@ import lombok.Data;
 public class LevelNode {
   private String qualifierName;
   private LevelNodeType levelNodeType;
+  @Builder.Default private boolean isPartOfFQN = true;
 }
