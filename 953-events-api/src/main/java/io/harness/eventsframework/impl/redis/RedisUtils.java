@@ -10,15 +10,19 @@ import static java.lang.Long.parseLong;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
+import io.harness.redis.RedisSSLConfig;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
@@ -30,6 +34,7 @@ import org.redisson.config.SingleServerConfig;
 
 @OwnedBy(PL)
 @UtilityClass
+@Slf4j
 public class RedisUtils {
   // Keeping this as small as possible to save on memory for redis instance
   public static final String REDIS_STREAM_INTERNAL_KEY = "o";
@@ -49,6 +54,17 @@ public class RedisUtils {
 
       if (isNotEmpty(redisPassword)) {
         serverConfig.setPassword(redisPassword);
+      }
+
+      RedisSSLConfig sslConfig = redisConfig.getSslConfig();
+      if (sslConfig != null && sslConfig.isEnabled()) {
+        try {
+          serverConfig.setSslTruststore(new File(sslConfig.getCATrustStorePath()).toURI().toURL());
+          serverConfig.setSslTruststorePassword(sslConfig.getCATrustStorePassword());
+        } catch (MalformedURLException e) {
+          log.error("Malformed URL provided for Redis SSL CA trustStore file", e);
+          return null;
+        }
       }
     } else {
       config.useSentinelServers().setMasterName(redisConfig.getMasterName());
