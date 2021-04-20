@@ -19,7 +19,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("approvalStage")
 public class ApprovalStageConfig implements StageInfoConfig {
-  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String uuid;
 
-  ExecutionElementConfig execution;
+  private ExecutionElementConfig execution;
 }
