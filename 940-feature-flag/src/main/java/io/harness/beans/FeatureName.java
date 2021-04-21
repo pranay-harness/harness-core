@@ -134,9 +134,6 @@ public enum FeatureName {
   USE_CDN_FOR_STORAGE_FILES,
   USE_NEXUS3_PRIVATE_APIS,
   WEEKLY_WINDOW,
-  WINRM_CAPABILITY_DEPRECATE_FOR_HTTP,
-
-  // experiments below this line are not in alphabetical order
   ENABLE_CVNG_INTEGRATION,
   CVNG_CDNG_INTEGRATION,
   YAML_RBAC,
