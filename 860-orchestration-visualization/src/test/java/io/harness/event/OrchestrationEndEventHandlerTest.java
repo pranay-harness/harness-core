@@ -15,6 +15,10 @@ import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggerType;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -36,6 +40,15 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
   @Inject GraphGenerationService graphGenerationService;
   @Inject OrchestrationEndEventHandler orchestrationEndEventHandler;
 
+  private static final ExecutionMetadata metadata =
+      ExecutionMetadata.newBuilder()
+          .setPipelineIdentifier(generateUuid())
+          .setTriggerInfo(ExecutionTriggerInfo.newBuilder()
+                              .setTriggerType(TriggerType.MANUAL)
+                              .setTriggeredBy(TriggeredBy.newBuilder().setIdentifier("admin").build())
+                              .build())
+          .build();
+
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
@@ -46,6 +59,7 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
                                       .startTs(System.currentTimeMillis())
                                       .endTs(System.currentTimeMillis())
                                       .status(Status.SUCCEEDED)
+                                      .metadata(metadata)
                                       .build();
     planExecutionService.save(planExecution);
 
@@ -70,8 +84,9 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
                                                 .build();
     mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
 
-    OrchestrationGraph updatedGraph = orchestrationEndEventHandler.handleEvent(event, orchestrationGraph);
+    orchestrationEndEventHandler.handleEvent(event);
 
+    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
     assertThat(updatedGraph.getStartTs()).isEqualTo(planExecution.getStartTs());

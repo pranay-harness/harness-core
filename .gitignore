@@ -60,6 +60,7 @@ eventQueue
 **/*.lock.info\
 profile
 profile.result
+bolt.db
 
 bazel-*
 .bazelrc
