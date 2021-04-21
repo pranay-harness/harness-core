@@ -50,6 +50,9 @@ type Config struct {
 		RedisUrl      string `envconfig:"EVENTS_FRAMEWORK_REDIS_URL"`
 		EnvNamespace  string `envconfig:"EVENTS_FRAMEWORK_ENV_NAMESPACE"`
 		RedisPassword string `envconfig:"EVENTS_FRAMEWORK_REDIS_PASSWORD"`
+		SSLEnabled    bool   `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_ENABLED"`
+		// Path to b64 encoded .pem file
+		CertPath string `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_CA_CERT_PATH"`
 	}
 }
 
