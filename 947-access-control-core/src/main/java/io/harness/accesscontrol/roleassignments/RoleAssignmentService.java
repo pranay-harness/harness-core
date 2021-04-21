@@ -8,7 +8,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -16,8 +15,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
 public interface RoleAssignmentService {
-  List<RoleAssignment> createMulti(@Valid @NotNull List<RoleAssignment> roleAssignments);
-
   RoleAssignment create(@Valid @NotNull RoleAssignment roleAssignment);
 
   PageResponse<RoleAssignment> list(

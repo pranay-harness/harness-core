@@ -13,7 +13,6 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
 import com.google.inject.Inject;
-import java.util.List;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.AccessLevel;
@@ -29,11 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   RoleAssignmentDao roleAssignmentDao;
   RoleAssignmentValidator roleAssignmentValidator;
-
-  @Override
-  public List<RoleAssignment> createMulti(List<RoleAssignment> roleAssignments) {
-    return roleAssignmentDao.insertAllIgnoringDuplicates(roleAssignments);
-  }
 
   @Override
   public RoleAssignment create(RoleAssignment roleAssignment) {

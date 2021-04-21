@@ -33,7 +33,6 @@ import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnexpectedException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -213,22 +212,21 @@ public class RoleAssignmentResource {
             .stream()
             .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO))
             .collect(Collectors.toList());
-    List<RoleAssignment> filteredRoleAssignments = new ArrayList<>();
+    List<RoleAssignment> createdRoleAssignments = new ArrayList<>();
     for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
       try {
         harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
         if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
           harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
         }
-        filteredRoleAssignments.add(roleAssignment);
-      } catch (InvalidRequestException | UnexpectedException exception) {
-        // ignore creation of this role assignment since sync failed
+        RoleAssignment createdRoleAssignment = roleAssignmentService.create(roleAssignment);
+        createdRoleAssignments.add(createdRoleAssignment);
+      } catch (Exception e) {
+        log.error(String.format("Could not create role assignment %s", roleAssignment), e);
       }
     }
-    return ResponseDTO.newResponse(roleAssignmentService.createMulti(filteredRoleAssignments)
-                                       .stream()
-                                       .map(roleAssignmentDTOMapper::toResponseDTO)
-                                       .collect(toList()));
+    return ResponseDTO.newResponse(
+        createdRoleAssignments.stream().map(roleAssignmentDTOMapper::toResponseDTO).collect(toList()));
   }
 
   @POST

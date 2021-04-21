@@ -73,6 +73,10 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(GIT_PUSH_EVENT_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -128,6 +132,11 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(GIT_PUSH_EVENT_STREAM))
           .toInstance(RedisProducer.of(
               GIT_PUSH_EVENT_STREAM, redisConfig, GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.USERMEMBERSHIP, NG_MANAGER.getServiceId(), redisConfig,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.ENTITY_ACTIVITY_READ_BATCH_SIZE));
     }
   }
 }
