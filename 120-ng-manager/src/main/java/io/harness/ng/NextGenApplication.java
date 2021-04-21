@@ -256,7 +256,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     final GitSdkConfiguration gitSdkConfiguration = config.getGitSdkConfiguration();
     return GitSyncSdkConfiguration.builder()
         .gitSyncSortOrder(sortOrder)
-        .grpcClientConfig(gitSdkConfiguration.getGrpcClientConfig())
+        .grpcClientConfig(gitSdkConfiguration.getGitManagerGrpcClientConfig())
         // In process server so server config not required.
         //        .grpcServerConfig(config.getGitSyncGrpcServerConfig())
         .deployMode(GitSyncSdkConfiguration.DeployMode.IN_PROCESS)
