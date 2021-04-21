@@ -506,7 +506,8 @@ public enum ErrorCode {
   EXCEPTION_HANDLER_NOT_FOUND,
   CONNECTOR_NOT_FOUND_EXCEPTION,
   GCP_SERVER_ERROR,
-  HTTP_RESPONSE_EXCEPTION;
+  HTTP_RESPONSE_EXCEPTION,
+  DATA;
 
   private Status status = BAD_REQUEST;
   private String description;
