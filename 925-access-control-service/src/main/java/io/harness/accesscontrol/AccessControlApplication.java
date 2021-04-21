@@ -90,6 +90,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   @Override
   public void initialize(Bootstrap<AccessControlConfiguration> bootstrap) {
     initializeLogging();
+    bootstrap.addCommand(new InspectCommand<>(this));
     bootstrap.addBundle(new SwaggerBundle<AccessControlConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AccessControlConfiguration appConfig) {
