@@ -61,7 +61,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
 
   @Inject
   public ProjectEventHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      AuditClientService auditClientService, NgUserService ngUserService, ResourceGroupClient resourceGroupClient) {
+      AuditClientService auditClientService, NgUserService ngUserService,
+      @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient) {
     this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
