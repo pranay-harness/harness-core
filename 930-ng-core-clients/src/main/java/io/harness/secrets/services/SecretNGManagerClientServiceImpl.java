@@ -8,6 +8,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -33,5 +34,12 @@ public class SecretNGManagerClientServiceImpl implements SecretManagerClientServ
                                     .build();
     return getResponse(secretManagerClient.getEncryptionDetails(
         NGAccessWithEncryptionConsumer.builder().ngAccess(baseNGAccess).decryptableEntity(consumer).build()));
+  }
+
+  @Override
+  public SecretManagerConfigDTO getSecretManager(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, boolean maskSecrets) {
+    return getResponse(secretManagerClient.getSecretManager(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, maskSecrets));
   }
 }

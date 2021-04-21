@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -27,9 +28,12 @@ public class SamlSettings extends SSOSettings {
   private String logoutUrl;
   private String groupMembershipAttr;
 
+  @JsonCreator
   @Builder
-  public SamlSettings(SSOType ssoType, String displayName, String url, String metaDataFile, String accountId,
-      String origin, String groupMembershipAttr, String logoutUrl) {
+  public SamlSettings(@JsonProperty("type") SSOType ssoType, @JsonProperty("displayName") String displayName,
+      @JsonProperty("url") String url, @JsonProperty("metaDataFile") String metaDataFile,
+      @JsonProperty("accountId") String accountId, @JsonProperty("origin") String origin,
+      @JsonProperty("groupMembershipAttr") String groupMembershipAttr, @JsonProperty("logoutUrl") String logoutUrl) {
     super(SSOType.SAML, displayName, url);
     this.metaDataFile = metaDataFile;
     this.accountId = accountId;

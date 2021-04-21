@@ -245,7 +245,7 @@ gitGrpcClientConfigs:
     authority: localhost
 
 gitSdkConfiguration:
-  grpcServerConfig:
+  gitSdkGrpcServerConfig:
     # For ng it will be in process server so this isn't required.
     connectors:
       - port: 13001
@@ -253,7 +253,7 @@ gitSdkConfiguration:
         keyFilePath: key.pem
         certFilePath: cert.pem
       - port: 13002
-  grpcClientConfig:
+  gitManagerGrpcClientConfig:
     target: localhost:13001
     authority: localhost
   scmConnectionConfig:
@@ -261,3 +261,5 @@ gitSdkConfiguration:
 
 baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
+
+enableDefaultResourceGroupCreation: false

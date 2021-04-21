@@ -1,10 +1,11 @@
 package io.harness.registrars;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.event.OrchestrationGraphGenerationHandler;
+import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationStartEventHandler;
+import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 
@@ -14,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class OrchestrationVisualizationModuleEventHandlerRegistrar {
   public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers() {
@@ -23,13 +24,9 @@ public class OrchestrationVisualizationModuleEventHandlerRegistrar {
     engineEventHandlersMap.put(
         OrchestrationEventType.ORCHESTRATION_START, Sets.newHashSet(OrchestrationStartEventHandler.class));
     engineEventHandlersMap.put(
-        OrchestrationEventType.ORCHESTRATION_END, Sets.newHashSet(OrchestrationGraphGenerationHandler.class));
-    engineEventHandlersMap.put(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
-        Sets.newHashSet(OrchestrationGraphGenerationHandler.class));
-    engineEventHandlersMap.put(
-        OrchestrationEventType.NODE_EXECUTION_UPDATE, Sets.newHashSet(OrchestrationGraphGenerationHandler.class));
+        OrchestrationEventType.ORCHESTRATION_END, Sets.newHashSet(OrchestrationEndEventHandler.class));
     engineEventHandlersMap.put(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE,
-        Sets.newHashSet(OrchestrationGraphGenerationHandler.class));
+        Sets.newHashSet(PlanExecutionStatusUpdateEventHandler.class));
     return engineEventHandlersMap;
   }
 }

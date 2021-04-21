@@ -55,6 +55,7 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.impl.GraphGenerationServiceImpl;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.threading.ExecutorModule;
@@ -191,6 +192,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
+    injector.getInstance(GraphGenerationServiceImpl.class).registerIterators();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();

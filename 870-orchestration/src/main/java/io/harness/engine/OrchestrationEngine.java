@@ -344,9 +344,9 @@ public class OrchestrationEngine {
     queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
-  public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
+  public void concludeNodeExecution(NodeExecution nodeExecution, Status status, EnumSet<Status> overrideStatusSet) {
     NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status,
-        ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()), EnumSet.noneOf(Status.class));
+        ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()), overrideStatusSet);
     if (updatedNodeExecution == null) {
       log.warn(
           "Cannot conclude node execution. Status update failed From :{}, To:{}", nodeExecution.getStatus(), status);
@@ -358,6 +358,10 @@ public class OrchestrationEngine {
       return;
     }
     queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
+  }
+
+  public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
+    concludeNodeExecution(nodeExecution, status, EnumSet.noneOf(Status.class));
   }
 
   public void queueAdvisingEvent(NodeExecution nodeExecution, Status fromStatus) {

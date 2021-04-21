@@ -74,6 +74,7 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.cdng.provision.terraform.TerraformApplyStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
+import io.harness.cdng.service.beans.NativeHelmServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceConfigOutcome;
 import io.harness.cdng.service.beans.ServiceDefinition;
@@ -194,5 +195,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(GcsStoreConfig.class, 12539);
     kryo.register(RollbackCustomStepParameters.class, 12540);
     kryo.register(TerraformApplyStepInfo.class, 12541);
+    kryo.register(NativeHelmServiceSpec.class, 12542);
   }
 }

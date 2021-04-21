@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.trigger;
 
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.POOJA;
@@ -16,6 +17,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -91,6 +93,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
+  private static final String VARIABLE = "variable";
   @Mock private YamlHelper mockYamlHelper;
   @Mock private YamlHandlerFactory mockYamlHandlerFactory;
 
@@ -883,6 +886,27 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
 
     handler.delete(changeContext);
     verify(triggerService).delete(APP_ID, null, true);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowInvalidRequestExceptionWhenWorkflowDoesNotContainProvidedVariable() {
+    assertThatThrownBy(()
+                           -> handler.getVariableByName(aWorkflow().name("WF").build(),
+                               singletonList(aVariable().name(VARIABLE).build()), "invalid"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Workflow WF does not contain variable with name: invalid");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnVariableByName() {
+    Variable variable = aVariable().name(VARIABLE).build();
+    assertThat(handler.getVariableByName(
+                   aWorkflow().name("WF").build(), singletonList(aVariable().name(VARIABLE).build()), VARIABLE))
+        .isEqualTo(variable);
   }
 
   private void saveAndRetrieveTrigger(String trigger1) throws IOException {

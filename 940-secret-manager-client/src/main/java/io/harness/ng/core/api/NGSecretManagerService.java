@@ -25,7 +25,7 @@ public interface NGSecretManagerService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   SecretManagerConfigDTO getSecretManager(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean maskSecrets);
 
   ConnectorValidationResult validate(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
