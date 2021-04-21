@@ -85,7 +85,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
                                                                   .withResizeStrategy(ResizeStrategy.RESIZE_NEW_FIRST);
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
   private CommandExecutionContext.Builder contextBuilder =
-      aCommandExecutionContext().cloudProviderSetting(computeProvider).cloudProviderCredentials(emptyList());
+      aCommandExecutionContext(true).cloudProviderSetting(computeProvider).cloudProviderCredentials(emptyList());
 
   @Before
   public void setup() {

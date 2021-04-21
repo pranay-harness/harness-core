@@ -154,7 +154,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
   private Builder builder = aHost().withAppId(APP_ID).withHostName(HOST_NAME).withPublicDns(PUBLIC_DNS);
   private CommandExecutionContext.Builder commandExecutionContextBuider =
-      aCommandExecutionContext()
+      aCommandExecutionContext(true)
           .appId(APP_ID)
           .activityId(ACTIVITY_ID)
           .runtimePath("/tmp/runtime")

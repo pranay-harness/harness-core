@@ -100,7 +100,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                                   .withReleaseName("release-Name")
                                                   .build();
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
-  private CommandExecutionContext context = aCommandExecutionContext()
+  private CommandExecutionContext context = aCommandExecutionContext(true)
                                                 .cloudProviderSetting(computeProvider)
                                                 .containerSetupParams(setupParams)
                                                 .cloudProviderCredentials(emptyList())

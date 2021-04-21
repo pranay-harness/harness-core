@@ -58,7 +58,7 @@ public class CommandTaskTest extends WingsBaseTest {
 
   private Host.Builder builder = aHost().withAppId(APP_ID).withHostName(HOST_NAME).withPublicDns(PUBLIC_DNS);
   private CommandExecutionContext commandExecutionContextBuider =
-      aCommandExecutionContext()
+      aCommandExecutionContext(true /* winrm_capability_deprecate_for_http */)
           .appId(APP_ID)
           .activityId(ACTIVITY_ID)
           .runtimePath("/tmp/runtime")

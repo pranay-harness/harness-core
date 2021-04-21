@@ -90,7 +90,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldExecuteCommandForServiceInstance() {
-    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
+    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext(true)
                                           .appId(APP_ID)
                                           .activityId(ACTIVITY_ID)
                                           .runtimePath(RUNTIME_PATH)
@@ -113,7 +113,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldExecuteNestedCommandForServiceInstance() {
-    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
+    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext(true)
                                           .appId(APP_ID)
                                           .activityId(ACTIVITY_ID)
                                           .runtimePath(RUNTIME_PATH)
@@ -139,7 +139,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testExecuteInlineSSHCommand() {
-    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
+    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext(true)
                                           .appId(APP_ID)
                                           .activityId(ACTIVITY_ID)
                                           .runtimePath(RUNTIME_PATH)
@@ -166,7 +166,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testExecuteWinrm() {
-    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
+    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext(true)
                                           .appId(APP_ID)
                                           .activityId(ACTIVITY_ID)
                                           .runtimePath(RUNTIME_PATH)
@@ -193,7 +193,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testExecuteNonSSHCommand() {
-    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
+    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext(true)
                                           .appId(APP_ID)
                                           .activityId(ACTIVITY_ID)
                                           .runtimePath(RUNTIME_PATH)
@@ -217,7 +217,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testDecryptCredentialsHostConnectionAttribute() {
-    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
+    CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext(true)
                                           .appId(APP_ID)
                                           .activityId(ACTIVITY_ID)
                                           .runtimePath(RUNTIME_PATH)

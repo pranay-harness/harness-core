@@ -47,7 +47,7 @@ public class CopyConfigCommandUnitTest extends WingsBaseTest {
   private Host host = Host.Builder.aHost().withPublicDns(WingsTestConstants.PUBLIC_DNS).build();
   @InjectMocks
   private ShellCommandExecutionContext winRmContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext()
+      new ShellCommandExecutionContext(aCommandExecutionContext(true)
                                            .accountId(WingsTestConstants.ACCOUNT_ID)
                                            .appId(WingsTestConstants.APP_ID)
                                            .envId(WingsTestConstants.ENV_ID)
