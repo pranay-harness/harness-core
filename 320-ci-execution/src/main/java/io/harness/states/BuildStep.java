@@ -2,9 +2,9 @@ package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.CICommonPodConstants.CONTAINER_NAME;
-import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
 import static io.harness.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
+import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
 
 import static java.util.stream.Collectors.toList;
 
@@ -76,7 +76,7 @@ public class BuildStep implements SyncExecutable<BuildStepInfo> {
       // TODO only k8 cluster is supported
       K8ExecCommandParams k8ExecCommandParams = K8ExecCommandParams.builder()
                                                     .containerName(CONTAINER_NAME)
-                                                    .mountPath(MOUNT_PATH)
+                                                    .mountPath(STEP_MOUNT_PATH)
                                                     .relStdoutFilePath(REL_STDOUT_FILE_PATH)
                                                     .relStderrFilePath(REL_STDERR_FILE_PATH)
                                                     .commandTimeoutSecs(buildStepInfo.getTimeout())

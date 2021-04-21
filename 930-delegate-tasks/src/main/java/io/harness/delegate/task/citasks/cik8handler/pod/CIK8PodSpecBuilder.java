@@ -16,13 +16,8 @@ import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodFluent;
-import io.fabric8.kubernetes.api.model.Volume;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -45,24 +40,6 @@ public class CIK8PodSpecBuilder extends BasePodSpecBuilder {
       throw new InvalidRequestException("Type miss matched");
     }
 
-    ContainerSpecBuilderResponse initCtrSpecBuilderResponse =
-        getInitContainer(cik8PodParams.getGitConnector(), cik8PodParams.getBranchName(), cik8PodParams.getCommitId(),
-            cik8PodParams.getStepExecVolumeName(), cik8PodParams.getStepExecWorkingDir());
-
-    List<Container> initContainers = new ArrayList<>();
-    List<Volume> volumes = new ArrayList<>();
-    ContainerBuilder containerBuilder =
-        initCtrSpecBuilderResponse == null ? null : initCtrSpecBuilderResponse.getContainerBuilder();
-    if (containerBuilder != null) {
-      initContainers.add(containerBuilder.build());
-      final List<Volume> initCtrVolumeList = initCtrSpecBuilderResponse.getVolumes();
-      if (initCtrVolumeList != null) {
-        volumes = initCtrVolumeList;
-      }
-    }
-
-    podBuilderSpecNested.addAllToInitContainers(initContainers);
-    podBuilderSpecNested.addAllToVolumes(volumes);
     podBuilderSpecNested.withRestartPolicy(CIConstants.RESTART_POLICY);
     podBuilderSpecNested.withActiveDeadlineSeconds(CIConstants.POD_MAX_TTL_SECS);
   }
