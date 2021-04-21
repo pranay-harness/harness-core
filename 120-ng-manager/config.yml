@@ -261,3 +261,5 @@ gitSdkConfiguration:
 
 baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
+
+enableDefaultResourceGroupCreation: false
