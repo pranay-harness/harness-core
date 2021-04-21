@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.UserMembershipUpdateMechanism;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.Scope;
 
@@ -33,15 +34,16 @@ public interface NgUserService {
 
   List<UserMembership> listUserMemberships(Criteria criteria);
 
-  void addUserToScope(UserInfo user, Scope scope);
+  void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateMechanism mechanism);
 
-  void addUserToScope(String user, Scope scope, String roleIdentifier);
+  void addUserToScope(String user, Scope scope, String roleIdentifier, UserMembershipUpdateMechanism mechanism);
 
-  void addUserToScope(UserInfo user, Scope scope, boolean postCreation);
+  void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateMechanism mechanism);
 
   boolean isUserInAccount(String accountId, String userId);
 
   boolean isUserAtScope(String userId, Scope scope);
 
-  void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      UserMembershipUpdateMechanism mechanism);
 }

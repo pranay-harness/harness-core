@@ -2,6 +2,7 @@ package io.harness.ng.accesscontrol.user;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.AUTHORIZED_USER;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.util.stream.Collectors.mapping;
@@ -224,7 +225,7 @@ public class UserServiceImpl implements UserService {
       successfullyDeleted = successfullyDeleted && Objects.nonNull(roleAssignmentResponseDTO);
     }
     if (successfullyDeleted) {
-      ngUserService.removeUserFromScope(userId, accountIdentifier, orgIdentifier, projectIdentifier);
+      ngUserService.removeUserFromScope(userId, accountIdentifier, orgIdentifier, projectIdentifier, AUTHORIZED_USER);
     }
     return successfullyDeleted;
   }
