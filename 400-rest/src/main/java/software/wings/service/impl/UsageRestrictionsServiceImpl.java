@@ -145,6 +145,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       }
     } else {
       User user = UserThreadLocal.get();
+      UserPermissionInfo userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
+      UserRestrictionInfo userRestrictionInfo = user.getUserRequestContext().getUserRestrictionInfo();
+
+      log.info("UserPermissionInfo:", userPermissionInfo);
+      log.info("UserRestrictionInfo:", userRestrictionInfo);
 
       if (user == null) {
         return true;
