@@ -2,10 +2,13 @@ package eventsframework
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/robinjoseph08/redisqueue"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -25,11 +28,32 @@ type RedisBroker struct {
 	log      *zap.SugaredLogger
 }
 
-func New(endpoint, password string, log *zap.SugaredLogger) (*RedisBroker, error) {
+func New(endpoint, password string, enableTLS bool, certPath string, log *zap.SugaredLogger) (*RedisBroker, error) {
 	// TODO: (vistaar) Configure with options using values suitable for prod and pass as env variables.
 	opt := redisqueue.RedisOptions{Addr: endpoint}
 	if password != "" {
 		opt.Password = password
+	}
+	if enableTLS == true {
+		// Create TLS config using cert PEM
+		rootPem, err := ioutil.ReadFile(certPath)
+		if err != nil {
+			log.Errorw("could not read certificate file", "path", certPath, zap.Error(err))
+			return nil, err
+		}
+		// Base64 decode the PEM file
+		rootPemDec, err := base64.StdEncoding.DecodeString(string(rootPem))
+		if err != nil {
+			log.Errorw("could not b64 decode cert", "path", certPath, zap.Error(err))
+			return nil, err
+		}
+		roots := x509.NewCertPool()
+		ok := roots.AppendCertsFromPEM(rootPemDec)
+		if !ok {
+			log.Errorw("could not use cert", "path", certPath, zap.Error(err))
+			return nil, err
+		}
+		opt.TLSConfig = &tls.Config{RootCAs: roots}
 	}
 	c1, err := redisqueue.NewConsumerWithOptions(&redisqueue.ConsumerOptions{
 		RedisOptions:      &opt,
