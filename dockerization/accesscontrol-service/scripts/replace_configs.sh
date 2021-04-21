@@ -4,6 +4,8 @@ CONFIG_FILE=/opt/harness/config.yml
 
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 
+yq write -i $CONFIG_FILE server.adminConnectors "[]"
+
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
