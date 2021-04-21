@@ -143,12 +143,12 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testGetSecretManager() throws IOException {
-    when(secretManagerClient.getSecretManager(any(), any(), any(), any()).execute())
+    when(secretManagerClient.getSecretManager(any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(LocalConfigDTO.builder().build())));
     SecretManagerConfigDTO secretManagerConfigDTO =
-        ngSecretManagerService.getSecretManager("account", null, null, "identifier");
+        ngSecretManagerService.getSecretManager("account", null, null, "identifier", true);
     assertThat(secretManagerConfigDTO).isNotNull();
-    verify(secretManagerClient, atLeastOnce()).getSecretManager(any(), any(), any(), any());
+    verify(secretManagerClient, atLeastOnce()).getSecretManager(any(), any(), any(), any(), any());
   }
 
   @Test

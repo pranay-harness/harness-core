@@ -1692,6 +1692,22 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "NativeHelmServiceSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ServiceSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "metadata": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "NumberNGVariable": {
       "allOf": [
         {

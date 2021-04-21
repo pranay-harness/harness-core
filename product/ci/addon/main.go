@@ -65,6 +65,9 @@ func init() {
 func main() {
 	parseArgs()
 
+	lc := external.LogCloser()
+	lc.Run()
+
 	// Addon logs not part of a step go to addon:<port>
 	logState := addonlogs.LogState()
 	pendingLogs := logState.PendingLogs()
@@ -118,6 +121,9 @@ func getRemoteLogger(keyID string) *logs.RemoteLogger {
 		panic(err)
 	}
 
+	lc := external.LogCloser()
+	lc.Add(remoteLogger)
+
 	return remoteLogger
 }
 
@@ -131,6 +137,9 @@ func getSvcRemoteLogger() *logs.RemoteLogger {
 	if err != nil {
 		panic(err)
 	}
+
+	lc := external.LogCloser()
+	lc.Add(remoteLogger)
 
 	return remoteLogger
 }

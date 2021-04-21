@@ -60,7 +60,9 @@ public class PlanExecutionStatusUpdateEventHandlerTest extends OrchestrationVisu
                                                 .build();
     mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
 
-    OrchestrationGraph updatedGraph = planExecutionStatusUpdateEventHandler.handleEvent(event, orchestrationGraph);
+    planExecutionStatusUpdateEventHandler.handleEvent(event);
+
+    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());

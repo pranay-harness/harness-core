@@ -20,8 +20,8 @@ public enum ServiceDefinitionType {
   ECS("Ecs",
       Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
       ServiceSpecType.ECS),
-  @JsonProperty(ServiceSpecType.HELM)
-  HELM("Helm", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.HELM),
+  @JsonProperty(ServiceSpecType.NATIVE_HELM)
+  NATIVE_HELM("NativeHelm", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.NATIVE_HELM),
   @JsonProperty(ServiceSpecType.PCF)
   PCF("Pcf",
       Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),

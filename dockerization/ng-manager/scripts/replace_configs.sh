@@ -162,11 +162,11 @@ if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
 fi
 
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE gitSdkConfiguration.grpcClientConfig.target $NG_MANAGER_TARGET
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.target $NG_MANAGER_TARGET
 fi
 
 if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE gitSdkConfiguration.grpcClientConfig.authority $NG_MANAGER_AUTHORITY
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.authority $NG_MANAGER_AUTHORITY
 fi
 
 
@@ -246,3 +246,5 @@ replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
 replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GROUP_BASE_URL"
 
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
+
+replace_key_value enableDefaultResourceGroupCreation "$ENABLE_DEFAULT_RESOURCE_GROUP_CREATION"

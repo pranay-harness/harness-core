@@ -11,7 +11,7 @@ public class GitSdkConfiguration {
   /**
    * Grpc server config which sdk will start.
    */
-  GrpcServerConfig grpcServerConfig;
+  GrpcServerConfig gitSdkGrpcServerConfig;
   /**
    * client to communicate to gms server. For local it is: (can be seen in config where git sync is initialized)
    * <p>
@@ -20,7 +20,7 @@ public class GitSdkConfiguration {
    * authority: localhost
    * </p>ha
    */
-  GrpcClientConfig grpcClientConfig;
+  GrpcClientConfig gitManagerGrpcClientConfig;
   /**
    * Scm connection config.
    * <p>

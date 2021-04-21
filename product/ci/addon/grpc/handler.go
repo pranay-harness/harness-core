@@ -7,6 +7,7 @@ import (
 	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	pb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/addon/tasks"
+	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/logutil"
 	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
@@ -53,6 +54,9 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 		return &pb.ExecuteStepResponse{}, err
 	}
 	defer rl.Writer.Close()
+
+	lc := external.LogCloser()
+	lc.Add(rl)
 
 	h.log.Infow("Executing step", "arg", in)
 

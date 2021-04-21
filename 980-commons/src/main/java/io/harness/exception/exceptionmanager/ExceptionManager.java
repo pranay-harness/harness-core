@@ -50,13 +50,13 @@ public class ExceptionManager {
   private WingsException handleException(Exception exception) {
     try {
       WingsException handledException;
-      ExceptionHandler exceptionHandler = getExceptionHandler(exception);
-      if (exceptionHandler == null && exception instanceof WingsException) {
+      if (exception instanceof WingsException) {
         handledException = (WingsException) exception;
         if (handledException.getCause() != null) {
           setExceptionCause(handledException, handleException((Exception) handledException.getCause()));
         }
       } else {
+        ExceptionHandler exceptionHandler = getExceptionHandler(exception);
         if (exceptionHandler != null) {
           handledException = exceptionHandler.handleException(exception);
         } else {
