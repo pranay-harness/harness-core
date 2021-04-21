@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildFailureInfo;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
+import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsActiveAndFailedInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
 import io.harness.core.ci.services.CIOverviewDashboardService;
@@ -84,11 +85,22 @@ public class CIDashboardOverviewResource {
   @GET
   @Path("/repositoryBuild")
   @ApiOperation(value = "Get build getRepositoryBuild", nickname = "getRepositoryBuild")
-  public ResponseDTO getRepositoryBuild(@NotNull @QueryParam("accountId") String accountIdentifier,
+  public ResponseDTO<DashboardBuildRepositoryInfo> getRepositoryBuild(
+      @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
-    return ResponseDTO.newResponse();
+    LocalDate startDate = LocalDate.parse(startInterval);
+    LocalDate endDate = LocalDate.parse(endInterval);
+    long interval = ChronoUnit.DAYS.between(startDate, endDate);
+
+    if (interval < 0) {
+      interval = interval * (-1);
+    }
+
+    LocalDate previousStartDate = startDate.minusDays(interval);
+    return ResponseDTO.newResponse(ciOverviewDashboardService.getDashboardBuildRepository(
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartDate.toString()));
   }
 
   @GET
