@@ -7,6 +7,7 @@ import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.NotificationSenderMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableSet;
+import org.mongodb.morphia.converters.TypeConverter;
 
 public class NotificationRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
@@ -25,4 +26,7 @@ public class NotificationRegistrars {
           .add(NotificationSenderMorphiaRegistrar.class)
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .build();
+
+  public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
+      ImmutableSet.<Class<? extends TypeConverter>>builder().build();
 }
