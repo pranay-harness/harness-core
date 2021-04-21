@@ -1,15 +1,20 @@
 package io.harness.springdata;
 
-import static com.google.inject.Key.get;
-import static com.google.inject.name.Names.named;
 import static io.harness.springdata.SpringDataMongoUtils.DOT_REPLACEMENT;
 
-import com.google.inject.Injector;
+import static com.google.inject.Key.get;
+import static com.google.inject.name.Names.named;
 
-import com.mongodb.MongoClient;
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+
+import com.google.inject.Injector;
+import com.mongodb.MongoClient;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,11 +30,6 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.PL)
 @Configuration
