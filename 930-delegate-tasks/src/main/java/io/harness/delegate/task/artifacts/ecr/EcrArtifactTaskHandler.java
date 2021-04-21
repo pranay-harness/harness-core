@@ -1,6 +1,7 @@
 package io.harness.delegate.task.artifacts.ecr;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
@@ -137,18 +138,21 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
     AwsInternalConfig awsInternalConfig = AwsInternalConfig.builder().build();
     if (attributesRequest.getAwsConnectorDTO() != null) {
       AwsCredentialDTO credential = attributesRequest.getAwsConnectorDTO().getCredential();
-      AwsManualConfigSpecDTO awsManualConfigSpecDTO = (AwsManualConfigSpecDTO) credential.getConfig();
-      String accessKey = getSecretAsStringFromPlainTextOrSecretRef(
-          awsManualConfigSpecDTO.getAccessKey(), awsManualConfigSpecDTO.getAccessKeyRef());
-      if (accessKey == null) {
-        throw new InvalidArgumentsException(Pair.of("accessKey", "Missing or empty"));
-      }
+      if (MANUAL_CREDENTIALS == credential.getAwsCredentialType()) {
+        AwsManualConfigSpecDTO awsManualConfigSpecDTO = (AwsManualConfigSpecDTO) credential.getConfig();
+        String accessKey = getSecretAsStringFromPlainTextOrSecretRef(
+            awsManualConfigSpecDTO.getAccessKey(), awsManualConfigSpecDTO.getAccessKeyRef());
+        if (accessKey == null) {
+          throw new InvalidArgumentsException(Pair.of("accessKey", "Missing or empty"));
+        }
 
-      awsInternalConfig =
-          AwsInternalConfig.builder()
-              .accessKey(accessKey.toCharArray())
-              .secretKey(SecretRefHelper.getSecretConfigString(awsManualConfigSpecDTO.getSecretKeyRef()).toCharArray())
-              .build();
+        awsInternalConfig =
+            AwsInternalConfig.builder()
+                .accessKey(accessKey.toCharArray())
+                .secretKey(
+                    SecretRefHelper.getSecretConfigString(awsManualConfigSpecDTO.getSecretKeyRef()).toCharArray())
+                .build();
+      }
     }
     AmazonCloudWatchClientBuilder builder =
         AmazonCloudWatchClientBuilder.standard().withRegion(attributesRequest.getRegion());
