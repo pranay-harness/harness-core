@@ -5,7 +5,6 @@
 package software.wings.beans;
 
 import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
@@ -20,7 +19,6 @@ import lombok.Data;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "executionType", include = As.EXISTING_PROPERTY)
 @Data
 @AllArgsConstructor
-@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
 public abstract class ExecutionCredential {
   private ExecutionType executionType;
 

@@ -2,6 +2,7 @@ package io.harness.batch.processing.cloudevents.aws.ecs.service.support.impl;
 
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.AwsCredentialHelper;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AWSOrganizationHelperService;
 
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@BreakDependencyOn("software.wings.service.impl.aws.model.AwsConstants")
 public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperService {
   @Autowired private AwsCredentialHelper awsCredentialHelper;
 
