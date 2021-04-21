@@ -71,9 +71,9 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     }
 
     public static final class DummyOutputKeys {
-      public final static String test = "test";
-      public final static String keyValuePairs = "keyValuePairs";
-      public final static String pair = "pair";
+      public static final String test = "test";
+      public static final String keyValuePairs = "keyValuePairs";
+      public static final String pair = "pair";
     }
   }
 }
