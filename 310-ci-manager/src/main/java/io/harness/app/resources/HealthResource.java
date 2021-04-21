@@ -53,6 +53,7 @@ public class HealthResource {
           .build();
     }
 
+
     final HealthCheck.Result check = healthService.check();
     if (check.isHealthy()) {
       return new RestResponse<>("healthy");
