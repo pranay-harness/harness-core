@@ -4,6 +4,30 @@ then
   exit 1
 fi
 
+#Setting up remote cache related config BT-282
+GOOGLE_CREDENTIALS_FILE="platform-bazel-cache-dev.json"
+REMOTE_CACHE="https://storage.googleapis.com/harness-bazel-cache-us-dev"
+if date +"%Z" | grep -q 'IST'; then
+  echo "Setting remote-cache in asia region"
+  REMOTE_CACHE="https://storage.googleapis.com/harness-bazel-cache-blr-dev"
+fi
+
+cat <<EOT > bazelrc.cache
+#Remote cache configuration
+build --remote_cache=${REMOTE_CACHE}
+build --google_credentials=${GOOGLE_CREDENTIALS_FILE}
+build --remote_upload_local_results=false
+build --experimental_guard_against_concurrent_changes
+EOT
+
+if [[ ! -f "$GOOGLE_CREDENTIALS_FILE" ]]; then
+    curl -u "${JFROG_USERNAME}":"${JFROG_PASSWORD}" \
+      https://harness.jfrog.io/artifactory/harness-internal/bazel/cache/platform-bazel-cache-dev.json \
+      -o $GOOGLE_CREDENTIALS_FILE
+fi
+
+#Configure JFrog credentials file
+
 cat > bazel-credentials.bzl <<EOF
 JFROG_USERNAME="${JFROG_USERNAME}"
 JFROG_PASSWORD="${JFROG_PASSWORD}"
