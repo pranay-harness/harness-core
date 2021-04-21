@@ -1,7 +1,7 @@
 package main
 
 /*
-	CI lite engine executes steps of stage provided as an input.
+	CI lite engine executes steps of stage provided as an input
 */
 import (
 	"os"
