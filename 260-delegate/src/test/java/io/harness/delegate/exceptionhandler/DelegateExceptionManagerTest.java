@@ -1,5 +1,6 @@
 package io.harness.delegate.exceptionhandler;
 
+import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,19 +11,25 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.exceptionhandler.beans.DelegateMetadataTestException;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HintException;
 import io.harness.exception.HourAggregationException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.ExceptionManager;
+import io.harness.logging.ExceptionLogger;
 import io.harness.rule.Owner;
 
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -162,6 +169,30 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     exception = (WingsException) exception.getCause();
     assertThat(exception instanceof ExplanationException).isTrue();
     assertThat(exception.getMessage().equals(errorMessage3)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testIfDataExceptionProcessedIntoResponseMessage() {
+    String errorMessage = "error message";
+
+    InvalidRequestException invalidRequestException = new InvalidRequestException(errorMessage);
+    InvalidArtifactServerException invalidArtifactServerException =
+        new InvalidArtifactServerException(errorMessage, invalidRequestException);
+    DelegateMetadataTestException delegateMetadataTestException =
+        new DelegateMetadataTestException(invalidArtifactServerException);
+
+    List<ResponseMessage> responseMessages =
+        ExceptionLogger.getResponseMessageList(delegateMetadataTestException, REST_API);
+    assertThat(responseMessages).isNotNull();
+    assertThat(responseMessages.size()).isEqualTo(2);
+
+    ResponseMessage responseMessage = responseMessages.get(0);
+    assertThat("INVALID_ARTIFACT_SERVER".equals(responseMessage.getMessage())).isTrue();
+
+    responseMessage = responseMessages.get(1);
+    assertThat("INVALID_REQUEST".equals(responseMessage.getMessage())).isTrue();
   }
 
   public static class RandomRuntimeException extends RuntimeException {
