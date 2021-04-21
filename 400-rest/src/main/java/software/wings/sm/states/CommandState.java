@@ -498,8 +498,7 @@ public class CommandState extends State {
       String windowsRuntimePath = getEvaluatedSettingValue(context, accountId, appId, envId, WINDOWS_RUNTIME_PATH);
 
       CommandExecutionContext.Builder commandExecutionContextBuilder =
-          aCommandExecutionContext(
-              featureFlagService.isEnabled(FeatureName.WINRM_CAPABILITY_DEPRECATE_FOR_HTTP, accountId))
+          aCommandExecutionContext()
               .appId(appId)
               .envId(envId)
               .backupPath(backupPath)

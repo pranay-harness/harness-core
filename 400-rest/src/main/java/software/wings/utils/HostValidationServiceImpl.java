@@ -104,7 +104,7 @@ public class HostValidationServiceImpl implements HostValidationService {
   private HostValidationResponse validateHostSsh(
       String hostName, SettingAttribute connectionSetting, ExecutionCredential executionCredential) {
     CommandExecutionContext commandExecutionContext =
-        aCommandExecutionContext(false)
+        aCommandExecutionContext()
             .hostConnectionAttributes(connectionSetting)
             .executionCredential(executionCredential)
             .host(Host.Builder.aHost().withHostName(hostName).withPublicDns(hostName).build())

@@ -30,6 +30,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
+import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.utils.WingsTestConstants;
 
 import com.google.common.collect.ImmutableMap;
@@ -42,7 +43,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   private static final String MASTER_URL = "http://example.com";
 
   CommandExecutionContext.Builder contextBuilder =
-      aCommandExecutionContext(true)
+      aCommandExecutionContext()
           .appId(APP_ID)
           .envId(ENV_ID)
           .accountId(ACCOUNT_ID)
@@ -83,7 +84,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(1);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(WinrmHostValidationCapability.class);
   }
 
   @Test
@@ -99,7 +100,7 @@ public class CommandExecutionContextTest extends WingsBaseTest {
 
     List<ExecutionCapability> executionCapabilities = executionContext.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(2);
-    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(0)).isExactlyInstanceOf(WinrmHostValidationCapability.class);
     assertThat(executionCapabilities.get(1)).isExactlyInstanceOf(SelectorCapability.class);
   }
 
@@ -220,14 +221,14 @@ public class CommandExecutionContextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotSetEnvVariablesWithFF() {
     CommandExecutionContext context;
-    context = aCommandExecutionContext(true)
+    context = aCommandExecutionContext()
                   .host(aHost().build())
                   .winRmConnectionAttributes(WinRmConnectionAttributes.builder().useKeyTab(true).build())
                   .envVariables(ImmutableMap.of("k1", "v1"))
                   .build();
     assertThat(context.winrmSessionConfig("Execute", "foo").getEnvironment()).containsKey("k1");
 
-    context = aCommandExecutionContext(true)
+    context = aCommandExecutionContext()
                   .envVariables(ImmutableMap.of("k1", "v1"))
                   .host(aHost().build())
                   .winRmConnectionAttributes(WinRmConnectionAttributes.builder().useKeyTab(true).build())
