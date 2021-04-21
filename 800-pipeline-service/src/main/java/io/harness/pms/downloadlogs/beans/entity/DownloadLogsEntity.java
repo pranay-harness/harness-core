@@ -35,7 +35,7 @@ public class DownloadLogsEntity implements PersistentEntity, AccountAccess, Uuid
   @NotEmpty @FdUniqueIndex String logKey;
   @NotNull @FdTtlIndex Date validUntil;
 
-  @Setter @NonFinal @NotNull DownloadLogsStatus status = DownloadLogsStatus.QUEUED;
+  @Setter @NonFinal @NotNull @Builder.Default DownloadLogsStatus status = DownloadLogsStatus.QUEUED;
   @Setter @NonFinal String errorMessage;
 
   @NotEmpty String accountId;

@@ -10,13 +10,16 @@ import io.harness.repositories.downloadLogs.DownloadLogsRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Optional;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class DownloadLogsServiceImpl implements DownloadLogsService {
-  @Inject private DownloadLogsRepository downloadLogsRepository;
-  @Inject private PipelineServiceConfiguration pipelineServiceConfiguration;
+  private final DownloadLogsRepository downloadLogsRepository;
+  private final PipelineServiceConfiguration pipelineServiceConfiguration;
 
   private static final String LOG_KEY_STARTING_FORMAT_STRING = "accountId:%s/orgId:%s/projectId:%s/pipelineId:%s/";
 
