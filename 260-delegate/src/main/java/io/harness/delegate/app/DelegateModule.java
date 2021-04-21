@@ -1,5 +1,6 @@
 package io.harness.delegate.app;
 
+import io.harness.SCMJavaClientModule;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -133,6 +134,8 @@ import io.harness.delegate.task.k8s.KubernetesValidationHandler;
 import io.harness.delegate.task.manifests.CustomManifestValuesFetchTask;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.nexus.NexusValidationHandler;
+import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.delegate.task.scm.ScmDelegateClientImpl;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.delegate.task.terraform.TFTaskType;
@@ -759,6 +762,7 @@ public class DelegateModule extends AbstractModule {
     install(TimeModule.getInstance());
     install(NGDelegateModule.getInstance());
     install(ExceptionModule.getInstance());
+    install(SCMJavaClientModule.getInstance());
 
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
@@ -980,6 +984,7 @@ public class DelegateModule extends AbstractModule {
     bind(AzureBlueprintClient.class).to(AzureBlueprintClientImpl.class);
     bind(AzureAuthorizationClient.class).to(AzureAuthorizationClientImpl.class);
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
+    bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
