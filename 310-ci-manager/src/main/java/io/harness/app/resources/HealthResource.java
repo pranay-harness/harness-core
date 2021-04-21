@@ -57,7 +57,6 @@ public class HealthResource {
     if (check.isHealthy()) {
       return new RestResponse<>("healthy");
     }
-
     throw new HealthException(check.getMessage(), check.getError());
   }
 }
