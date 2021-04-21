@@ -105,12 +105,12 @@ if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.cd.authority $NG_MANAGER_AUTHORITY
 fi
 
-if [[ "" != "$CV_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.cv.target $CV_MANAGER_TARGET
+if [[ "" != "$CVNG_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcClientConfigs.cvng.target $CVNG_MANAGER_TARGET
 fi
 
-if [[ "" != "$CV_MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.cv.authority $CV_MANAGER_AUTHORITY
+if [[ "" != "$CVNG_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcClientConfigs.cvng.authority $CVNG_MANAGER_AUTHORITY
 fi
 
 if [[ "" != "$CI_MANAGER_TARGET" ]]; then
