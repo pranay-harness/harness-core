@@ -88,7 +88,7 @@ ciExecutionServiceConfig:
   liteEngineImageTag: releaseBuild-29
   defaultMemoryLimit: 500
   defaultCPULimit: 400
-  defaultInternalImageConnector: account.harnessimage
+  defaultInternalImageConnector: ''
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
   addonImage: harness/ci-addon:releaseBuild-30
