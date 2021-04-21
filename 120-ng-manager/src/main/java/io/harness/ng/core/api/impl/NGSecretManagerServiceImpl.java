@@ -46,10 +46,10 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   }
 
   @Override
-  public SecretManagerConfigDTO getSecretManager(
-      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
-    return getResponse(
-        secretManagerClient.getSecretManager(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+  public SecretManagerConfigDTO getSecretManager(@NotNull String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, @NotNull String identifier, boolean maskSecrets) {
+    return getResponse(secretManagerClient.getSecretManager(
+        identifier, accountIdentifier, orgIdentifier, projectIdentifier, maskSecrets));
   }
 
   @Override

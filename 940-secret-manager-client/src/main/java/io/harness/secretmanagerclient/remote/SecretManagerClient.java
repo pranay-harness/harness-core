@@ -140,7 +140,8 @@ public interface SecretManagerClient {
   Call<RestResponse<SecretManagerConfigDTO>> getSecretManager(@Path("identifier") String identifier,
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(NGCommonEntityConstants.MASK_SECRETS) Boolean maskSecrets);
 
   // get global secret manager
   @GET(SECRET_MANAGERS_API + "/global/{accountIdentifier}")

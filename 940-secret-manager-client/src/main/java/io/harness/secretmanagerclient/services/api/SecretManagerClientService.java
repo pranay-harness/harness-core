@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.NGAccess;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -12,4 +13,6 @@ import java.util.List;
 @OwnedBy(PL)
 public interface SecretManagerClientService {
   List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer);
+  SecretManagerConfigDTO getSecretManager(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean maskSecrets);
 }
