@@ -182,7 +182,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
     log.info("Instance data list new {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
     instanceDataLists.forEach(instanceData -> {
-      if (null == instanceData.getActiveInstanceIterator() && null == instanceData.getUsageStopTime()) {
+      if (null == instanceData.getActiveInstanceIterator()) {
         instanceDataDao.updateInstanceActiveIterationTime(instanceData);
       }
     });
