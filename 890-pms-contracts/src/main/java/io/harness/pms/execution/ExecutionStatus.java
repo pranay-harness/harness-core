@@ -30,7 +30,8 @@ public enum ExecutionStatus {
   WAITING(Sets.newHashSet(Status.INTERVENTION_WAITING, Status.APPROVAL_WAITING, Status.RESOURCE_WAITING), "Waiting"),
   @JsonProperty("Success") SUCCESS(Sets.newHashSet(Status.SUCCEEDED), "Success"),
   @JsonProperty("Suspended") SUSPENDED(Sets.newHashSet(Status.SUSPENDED), "Suspended"),
-  @JsonProperty("Skipped") SKIPPED(Sets.newHashSet(Status.SKIPPED), "Skipped");
+  @JsonProperty("Skipped") SKIPPED(Sets.newHashSet(Status.SKIPPED), "Skipped"),
+  @JsonProperty("Pausing") PAUSING(Sets.newHashSet(Status.PAUSING), "Pausing");
 
   static final Set<ExecutionStatus> TERMINAL_STATUSES = Sets.newHashSet(FAILED, SUCCESS, ABORTED, EXPIRED);
   public static final Set<Status> BROKE_STATUSES = EnumSet.of(Status.FAILED, Status.ERRORED);
