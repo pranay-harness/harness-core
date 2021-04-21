@@ -9,6 +9,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
+import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -22,6 +23,8 @@ import retrofit2.http.Query;
 @OwnedBy(PL)
 public interface SecretNGManagerClient {
   String SECRETS_API = "v2/secrets";
+
+  String SECRET_MANAGERS_API = "secret-managers";
 
   @GET(SECRETS_API + "/{identifier}")
   Call<ResponseDTO<SecretResponseWrapper>> getSecret(
@@ -42,4 +45,13 @@ public interface SecretNGManagerClient {
   @POST(SECRETS_API + "/encryption-details")
   Call<ResponseDTO<List<EncryptedDataDetail>>> getEncryptionDetails(
       @Body NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer);
+
+  // get secret manager
+  @GET(SECRET_MANAGERS_API + "/{identifier}")
+  Call<ResponseDTO<SecretManagerConfigDTO>> getSecretManager(
+      @Path(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(NGCommonEntityConstants.MASK_SECRETS) boolean maskSecrets);
 }
