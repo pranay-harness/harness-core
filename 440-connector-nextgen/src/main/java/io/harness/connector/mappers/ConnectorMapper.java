@@ -97,6 +97,7 @@ public class ConnectorMapper {
         .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
         .branch(connector.getBranch())
         .repoIdentifier(connector.getYamlGitConfigRef())
+        .objectId(connector.getObjectIdOfYaml())
         .build();
   }
 
