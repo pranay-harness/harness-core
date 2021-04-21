@@ -2,6 +2,7 @@ package io.harness.ng.accesscontrol.migrations.events;
 
 import static io.harness.beans.FeatureName.NG_ACCESS_CONTROL_MIGRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
@@ -216,7 +217,7 @@ public class AccessControlMigrationHandler implements MessageListener {
                         .projectIdentifier(projectIdentifier)
                         .orgIdentifier(orgIdentifier)
                         .build();
-      ngUserService.addUserToScope(user, scope, false);
+      ngUserService.addUserToScope(user, scope, false, SYSTEM);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       log.info("Usermembership entry map already exists account: {}, org: {}, project: {}, principal: {}", accountId,
           orgIdentifier, projectIdentifier, user.getUuid());

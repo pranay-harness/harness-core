@@ -112,7 +112,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
 
     final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
     final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
-    doNothing().when(ngUserService).addUserToScope(any(), any(), any());
+    doNothing().when(ngUserService).addUserToScope(any(), any(), any(), any());
     verifyMethodInvocation(outboxEvent, messageArgumentCaptor, auditEntryArgumentCaptor);
 
     Message message = messageArgumentCaptor.getValue();

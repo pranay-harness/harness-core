@@ -1,6 +1,12 @@
 package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import static io.harness.rule.OwnerRule.KARAN;
 
@@ -25,11 +31,16 @@ import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.producer.Message;
 import io.harness.ng.core.events.UserInviteCreateEvent;
 import io.harness.ng.core.events.UserInviteDeleteEvent;
 import io.harness.ng.core.events.UserInviteUpdateEvent;
+import io.harness.ng.core.events.UserMembershipAddEvent;
+import io.harness.ng.core.events.UserMembershipRemoveEvent;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.remote.RoleBinding;
+import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.outbox.OutboxEvent;
 import io.harness.rule.Owner;
 
@@ -37,6 +48,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -99,17 +111,9 @@ public class UserEventHandlerTest extends CategoryTest {
     verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any());
 
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
-    assertNotNull(auditEntry);
-    assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(ResourceTypeConstants.USER, auditEntry.getResource().getType());
-    assertEquals(email, auditEntry.getResource().getIdentifier());
-    assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
-    assertEquals(orgIdentifier, auditEntry.getResourceScope().getOrgIdentifier());
-    assertNull(auditEntry.getResourceScope().getProjectIdentifier());
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
     assertEquals(Action.INVITE, auditEntry.getAction());
-    assertEquals(ModuleType.CORE, auditEntry.getModule());
-    assertEquals(outboxEvent.getCreatedAt().longValue(), auditEntry.getTimestamp());
-    assertNull(auditEntry.getEnvironment());
+    assertNull(auditEntry.getOldYaml());
   }
 
   @Test
@@ -142,17 +146,8 @@ public class UserEventHandlerTest extends CategoryTest {
     verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any());
 
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
-    assertNotNull(auditEntry);
-    assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
-    assertEquals(ResourceTypeConstants.USER, auditEntry.getResource().getType());
-    assertEquals(email, auditEntry.getResource().getIdentifier());
-    assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
-    assertEquals(orgIdentifier, auditEntry.getResourceScope().getOrgIdentifier());
-    assertNull(auditEntry.getResourceScope().getProjectIdentifier());
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
     assertEquals(Action.RESEND_INVITE, auditEntry.getAction());
-    assertEquals(ModuleType.CORE, auditEntry.getModule());
-    assertEquals(outboxEvent.getCreatedAt().longValue(), auditEntry.getTimestamp());
-    assertNull(auditEntry.getEnvironment());
   }
 
   @Test
@@ -184,6 +179,103 @@ public class UserEventHandlerTest extends CategoryTest {
     verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any());
 
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
+    assertEquals(Action.REVOKE_INVITE, auditEntry.getAction());
+    assertNull(auditEntry.getNewYaml());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testMembershipAdd() throws JsonProcessingException, ProducerShutdownException {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String email = randomAlphabetic(10);
+    UserMembershipAddEvent userMembershipAddEvent = new UserMembershipAddEvent(accountIdentifier,
+        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        randomAlphabetic(10), SYSTEM);
+    String eventData = objectMapper.writeValueAsString(userMembershipAddEvent);
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .id(randomAlphabetic(10))
+                                  .blocked(false)
+                                  .eventType("UserMembershipAdded")
+                                  .eventData(eventData)
+                                  .resourceScope(userMembershipAddEvent.getResourceScope())
+                                  .resource(userMembershipAddEvent.getResource())
+                                  .createdAt(Long.parseLong(randomNumeric(5)))
+                                  .build();
+
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
+    when(producer.send(any())).thenReturn("");
+    when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
+
+    userEventHandler.handle(outboxEvent);
+
+    verify(producer, times(1)).send(messageArgumentCaptor.capture());
+    verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
+
+    Message message = messageArgumentCaptor.getValue();
+    assertNotNull(message.getMetadataMap());
+    Map<String, String> metadataMap = message.getMetadataMap();
+    assertEquals(accountIdentifier, metadataMap.get("accountId"));
+    assertEquals(USERMEMBERSHIP, metadataMap.get(ENTITY_TYPE));
+    assertEquals(CREATE_ACTION, metadataMap.get(ACTION));
+
+    AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
+    assertEquals(Action.ADD_MEMBERSHIP, auditEntry.getAction());
+    assertNotNull(auditEntry.getAuditEventData());
+    assertNull(auditEntry.getOldYaml());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testMembershipRemove() throws JsonProcessingException, ProducerShutdownException {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String email = randomAlphabetic(10);
+    UserMembershipRemoveEvent userMembershipRemoveEvent = new UserMembershipRemoveEvent(accountIdentifier,
+        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        randomAlphabetic(10), SYSTEM);
+    String eventData = objectMapper.writeValueAsString(userMembershipRemoveEvent);
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .id(randomAlphabetic(10))
+                                  .blocked(false)
+                                  .eventType("UserMembershipRemoved")
+                                  .eventData(eventData)
+                                  .resourceScope(userMembershipRemoveEvent.getResourceScope())
+                                  .resource(userMembershipRemoveEvent.getResource())
+                                  .createdAt(Long.parseLong(randomNumeric(5)))
+                                  .build();
+
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
+    when(producer.send(any())).thenReturn("");
+    when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
+
+    userEventHandler.handle(outboxEvent);
+
+    verify(producer, times(1)).send(messageArgumentCaptor.capture());
+    verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
+
+    Message message = messageArgumentCaptor.getValue();
+    assertNotNull(message.getMetadataMap());
+    Map<String, String> metadataMap = message.getMetadataMap();
+    assertEquals(accountIdentifier, metadataMap.get("accountId"));
+    assertEquals(USERMEMBERSHIP, metadataMap.get(ENTITY_TYPE));
+    assertEquals(DELETE_ACTION, metadataMap.get(ACTION));
+
+    AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
+    assertEquals(Action.REMOVE_MEMBERSHIP, auditEntry.getAction());
+    assertNotNull(auditEntry.getAuditEventData());
+    assertNull(auditEntry.getNewYaml());
+  }
+
+  private void assertAuditEntry(
+      String accountIdentifier, String orgIdentifier, String email, AuditEntry auditEntry, OutboxEvent outboxEvent) {
     assertNotNull(auditEntry);
     assertEquals(outboxEvent.getId(), auditEntry.getInsertId());
     assertEquals(ResourceTypeConstants.USER, auditEntry.getResource().getType());
@@ -191,7 +283,6 @@ public class UserEventHandlerTest extends CategoryTest {
     assertEquals(accountIdentifier, auditEntry.getResourceScope().getAccountIdentifier());
     assertEquals(orgIdentifier, auditEntry.getResourceScope().getOrgIdentifier());
     assertNull(auditEntry.getResourceScope().getProjectIdentifier());
-    assertEquals(Action.REVOKE_INVITE, auditEntry.getAction());
     assertEquals(ModuleType.CORE, auditEntry.getModule());
     assertEquals(outboxEvent.getCreatedAt().longValue(), auditEntry.getTimestamp());
     assertNull(auditEntry.getEnvironment());

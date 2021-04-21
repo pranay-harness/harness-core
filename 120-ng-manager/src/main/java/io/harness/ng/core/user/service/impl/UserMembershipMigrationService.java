@@ -2,6 +2,7 @@ package io.harness.ng.core.user.service.impl;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
@@ -114,7 +115,7 @@ public class UserMembershipMigrationService implements Managed {
                                      .orgIdentifier(userProjectMap.getOrgIdentifier())
                                      .projectIdentifier(userProjectMap.getProjectIdentifier())
                                      .build();
-    ngUserService.addUserToScope(userProjectMap.getUserId(), scope, null);
+    ngUserService.addUserToScope(userProjectMap.getUserId(), scope, null, SYSTEM);
 
     //    Create role assignment for the user
     List<Role> roles = userProjectMap.getRoles();
