@@ -66,7 +66,7 @@ public class BatchJobScheduledDataDaoImpl implements BatchJobScheduledDataDao {
                                              .field(BatchJobScheduledDataKeys.batchJobType)
                                              .in(batchJobTypes)
                                              .field(BatchJobScheduledDataKeys.startAt)
-                                             .greaterThan(instant);
+                                             .greaterThanOrEq(instant);
 
     UpdateOperations<BatchJobScheduledData> updateOperations =
         hPersistence.createUpdateOperations(BatchJobScheduledData.class);
