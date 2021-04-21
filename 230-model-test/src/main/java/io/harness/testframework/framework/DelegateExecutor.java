@@ -53,7 +53,7 @@ public class DelegateExecutor {
       log.info("Delegate not healthy, sleeping for 2s.");
     }
     if (!isHealthy(account.getUuid(), bearerToken)) {
-      log.info("Delegate not healthy, gave up.");
+      log.info("Delegate not healthy, gave up. ");
     } else {
       log.info("Delegate healthy.");
     }
