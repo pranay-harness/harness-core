@@ -2,6 +2,8 @@ package io.harness.data;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import com.google.common.collect.ImmutableList;
+
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
@@ -12,12 +14,6 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
-
-import com.google.common.collect.ImmutableList;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
@@ -30,6 +26,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
 @Value
@@ -57,7 +59,7 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   @NotNull @Trimmed String name;
   String levelRuntimeIdIdx;
 
-  @Getter org.bson.Document value;
+  @Getter Map<String, Object> value;
   @Wither @CreatedDate Long createdAt;
 
   @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());

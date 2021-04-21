@@ -2,12 +2,9 @@ package io.harness.springdata;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-
-import java.util.List;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,10 +16,13 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
+import java.util.List;
+
 @OwnedBy(PL)
 @UtilityClass
 @Slf4j
 public class SpringDataMongoUtils {
+  public static final String DOT_REPLACEMENT = "__dot__";
   public static final FindAndModifyOptions returnNewOptions = new FindAndModifyOptions().returnNew(true).upsert(false);
 
   public static Update setUnset(Update ops, String field, Object value) {

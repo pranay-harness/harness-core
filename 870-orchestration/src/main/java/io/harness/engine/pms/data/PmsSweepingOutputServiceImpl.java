@@ -1,11 +1,14 @@
 package io.harness.engine.pms.data;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
+import com.mongodb.DuplicateKeyException;
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.data.structure.EmptyPredicate;
@@ -18,15 +21,13 @@ import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.mongodb.DuplicateKeyException;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
+import java.util.Map;
 
 public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
@@ -102,7 +103,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep) {
+  public String consumeInternal(Ambiance ambiance, String name, Map<String, Object> value, int levelsToKeep) {
     if (levelsToKeep >= 0) {
       ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
     }
@@ -114,7 +115,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
                                    .planExecutionId(ambiance.getPlanExecutionId())
                                    .levels(ambiance.getLevelsList())
                                    .name(name)
-                                   .value(RecastOrchestrationUtils.toDocumentFromJson(value))
+                                   .value(value)
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();

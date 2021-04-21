@@ -2,15 +2,12 @@ package io.harness.springdata;
 
 import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
-
-import io.harness.annotation.HarnessRepo;
+import static io.harness.springdata.SpringDataMongoUtils.DOT_REPLACEMENT;
 
 import com.google.inject.Injector;
+
 import com.mongodb.MongoClient;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import io.harness.annotation.HarnessRepo;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -23,9 +20,15 @@ import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @GuiceModule
@@ -56,7 +59,9 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
   @Bean(name = "primary")
   @Primary
   public MongoTemplate mongoTemplate() throws Exception {
-    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+    MappingMongoConverter mappingMongoConverter = mappingMongoConverter();
+    mappingMongoConverter.setMapKeyDotReplacement(DOT_REPLACEMENT);
+    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter);
   }
 
   @Bean

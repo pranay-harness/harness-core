@@ -1,26 +1,17 @@
 package io.harness.core;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import io.harness.RecasterTestBase;
-import io.harness.category.element.UnitTests;
-import io.harness.exceptions.MapKeyContainsDotException;
-import io.harness.exceptions.RecasterException;
-import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import io.harness.RecasterTestBase;
+import io.harness.category.element.UnitTests;
+import io.harness.exceptions.RecasterException;
+import io.harness.rule.Owner;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -29,6 +20,14 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class RecastComplexValuesTest extends RecasterTestBase {
   private static final String RECAST_KEY = Recaster.RECAST_CLASS_KEY;
@@ -60,20 +59,6 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   private static class DummyEnum {
     private List<Type> types;
     private enum Type { SUPER_DUMMY }
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  public void shouldTestRecasterWithSimpleMap() {
-    final Map<String, String> map = new HashMap<>();
-    map.put("key.param", "value");
-
-    Recast recast = new Recast(recaster, ImmutableSet.of());
-
-    assertThatThrownBy(() -> recast.toDocument(map))
-        .isInstanceOf(MapKeyContainsDotException.class)
-        .hasMessageContaining("Map key should not contain dots inside");
   }
 
   @Test
