@@ -66,7 +66,7 @@ public class ChangeTracker {
     }
 
     TagSet mongoTagSet = getMongoTagSet();
-    if (mongoTagSet != null) {
+    if (mongoTagSet == null) {
       readPreference = ReadPreference.secondaryPreferred();
     } else {
       readPreference = ReadPreference.secondary(mongoTagSet);
