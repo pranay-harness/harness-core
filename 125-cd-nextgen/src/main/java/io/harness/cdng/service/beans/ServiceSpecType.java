@@ -4,6 +4,6 @@ public interface ServiceSpecType {
   String KUBERNETES = "Kubernetes";
   String SSH = "Ssh";
   String ECS = "Ecs";
-  String HELM = "Helm";
+  String NATIVE_HELM = "NativeHelm";
   String PCF = "Pcf";
 }
