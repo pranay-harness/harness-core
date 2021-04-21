@@ -98,6 +98,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
         return getSwaggerConfiguration();
       }
     });
+    bootstrap.addCommand(new InspectCommand<>(this));
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
