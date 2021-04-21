@@ -11,6 +11,14 @@ xxxxxxxx
     - type: http
       port: 9006
       maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: https
+      port: 9096
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
   rootPath: /api
   maxThreads: 1024
 
