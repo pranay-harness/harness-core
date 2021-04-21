@@ -17,4 +17,5 @@ public class QLCreateApplicationInput implements QLMutationInput {
   String clientMutationId;
   String name;
   String description;
+  Boolean isManualTriggerAuthorized;
 }

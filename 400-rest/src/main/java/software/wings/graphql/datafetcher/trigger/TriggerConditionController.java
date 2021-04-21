@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -18,6 +19,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute;
@@ -71,6 +73,7 @@ public class TriggerConditionController {
   @Inject MainConfiguration mainConfiguration;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject SettingsService settingsService;
+  @Inject FeatureFlagService featureFlagService;
 
   public QLTriggerCondition populateTriggerCondition(Trigger trigger, String accountId) {
     QLTriggerCondition condition = null;
@@ -130,14 +133,18 @@ public class TriggerConditionController {
           }
         }
 
+        boolean isManualTriggerAuthorized = featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId);
+        String contentType = "content-type: application/json";
+
         webhookUrl +=
             "/api/webhooks/" + webHookTriggerCondition.getWebHookToken().getWebHookToken() + "?accountId=" + accountId;
-        QLWebhookDetails details = QLWebhookDetails.builder()
-                                       .webhookURL(webhookUrl)
-                                       .header("content-type: application/json")
-                                       .method(webHookTriggerCondition.getWebHookToken().getHttpMethod())
-                                       .payload(webHookTriggerCondition.getWebHookToken().getPayload())
-                                       .build();
+        QLWebhookDetails details =
+            QLWebhookDetails.builder()
+                .webhookURL(webhookUrl)
+                .header(isManualTriggerAuthorized ? contentType + ", x-api-key: x-api-key_placeholder" : contentType)
+                .method(webHookTriggerCondition.getWebHookToken().getHttpMethod())
+                .payload(webHookTriggerCondition.getWebHookToken().getPayload())
+                .build();
 
         QLWebhookEvent event = null;
         switch (webhookSource) {
