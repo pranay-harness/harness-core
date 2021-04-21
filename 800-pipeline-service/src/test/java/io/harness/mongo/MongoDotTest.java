@@ -33,11 +33,8 @@ public class MongoDotTest extends PipelineServiceTestBase {
   public void testMapWithDotKeySerialization() {
     String id = generateUuid();
     ImmutableMap<String, String> valMap = ImmutableMap.of("f.g", "h.i");
-    MapDotTestPersistentEntity mapDotTestPersistentEntity = MapDotTestPersistentEntity.builder()
-                                                                .id(id)
-                                                                .keyValPair("a.b", "c")
-                                                                .keyValPair("d.e", valMap)
-                                                                .build();
+    MapDotTestPersistentEntity mapDotTestPersistentEntity =
+        MapDotTestPersistentEntity.builder().id(id).keyValPair("a.b", "c").keyValPair("d.e", valMap).build();
     mongoTemplate.insert(mapDotTestPersistentEntity);
     Query query = query(where("id").is(id));
     MapDotTestPersistentEntity persistentEntity = mongoTemplate.findOne(query, MapDotTestPersistentEntity.class);

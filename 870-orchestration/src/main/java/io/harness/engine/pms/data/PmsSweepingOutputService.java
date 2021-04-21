@@ -14,7 +14,8 @@ import javax.validation.constraints.NotNull;
 public interface PmsSweepingOutputService {
   String resolve(Ambiance ambiance, RefObject refObject);
 
-  default String consume(@NotNull Ambiance ambiance, @NotNull String name, Map<String, Object> value, String groupName) {
+  default String consume(
+      @NotNull Ambiance ambiance, @NotNull String name, Map<String, Object> value, String groupName) {
     if (EmptyPredicate.isEmpty(groupName)) {
       return consumeInternal(ambiance, name, value, -1);
     }

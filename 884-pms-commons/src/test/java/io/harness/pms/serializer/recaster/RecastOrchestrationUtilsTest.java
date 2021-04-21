@@ -18,7 +18,6 @@ import org.junit.experimental.categories.Category;
 import java.util.Map;
 
 public class RecastOrchestrationUtilsTest extends CategoryTest {
-
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
@@ -51,7 +50,6 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     assertThat(((Map<String, Object>) ((Map<String, Object>) oMap.get(DummyOutputKeys.pair)).get("keyVal")).keySet())
         .contains("j.k");
   }
-
 
   public static class DummyOutput {
     String test;
