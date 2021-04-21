@@ -2,8 +2,6 @@ package io.harness.stateutils.buildstate;
 
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
-import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
@@ -14,6 +12,9 @@ import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
+import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
+import static io.harness.common.CIExecutionConstants.STEP_VOLUME;
+import static io.harness.common.CIExecutionConstants.STEP_WORK_DIR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -190,11 +191,12 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
     stepEnvVars.putAll(ciExecutionPlanTestHelper.getEnvVariables(true));
 
     Map<String, String> map = new HashMap<>();
-    map.put(STEP_EXEC, MOUNT_PATH);
-    String workDir = String.format("/%s/%s", STEP_EXEC, "workspace");
+    map.put(STEP_VOLUME, STEP_MOUNT_PATH);
     assertThat(podParams.getContainerParamsList().get(3))
-        .isEqualToIgnoringGivenFields(
-            ciExecutionPlanTestHelper.getRunStepCIK8Container().volumeToMountPath(map).workingDir(workDir).build(),
+        .isEqualToIgnoringGivenFields(ciExecutionPlanTestHelper.getRunStepCIK8Container()
+                                          .volumeToMountPath(map)
+                                          .workingDir(STEP_WORK_DIR)
+                                          .build(),
             "envVars", "containerSecrets");
     assertThat(podParams.getContainerParamsList().get(3).getContainerSecrets().getSecretVariableDetails())
         .containsAnyElementsOf(secretVariableDetails);
