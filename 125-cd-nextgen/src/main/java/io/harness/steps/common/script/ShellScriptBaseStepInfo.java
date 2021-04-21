@@ -5,9 +5,11 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
+import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,5 +25,8 @@ public class ShellScriptBaseStepInfo {
   @NotNull ShellType shell;
   @NotNull ShellScriptSourceWrapper source;
   ExecutionTarget executionTarget;
-  @NotNull @YamlSchemaTypes({string, bool}) ParameterField<Boolean> onDelegate;
+  @NotNull
+  @YamlSchemaTypes({string, bool})
+  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
+  ParameterField<Boolean> onDelegate;
 }

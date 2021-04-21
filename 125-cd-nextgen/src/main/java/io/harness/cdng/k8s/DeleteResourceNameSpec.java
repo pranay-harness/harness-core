@@ -18,10 +18,13 @@ import lombok.Data;
 @Data
 @JsonTypeName("ResourceName")
 public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
+  @ApiModelProperty(allowableValues = "ResourceName")
+  private DeleteResourcesType type = DeleteResourcesType.ResourceName;
+
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> resourceNames;
   @Override
   public DeleteResourcesType getType() {
-    return DeleteResourcesType.ResourceName;
+    return type;
   }
 
   @Override

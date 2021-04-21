@@ -48,27 +48,22 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     JsonNode deploymentStepsSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
 
-    JsonNode pipelineStepsSchema =
-        yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
-
     JsonNode definitions = deploymentStageSchema.get(DEFINITIONS_NODE);
     JsonNode deploymentStepDefinitions = deploymentStepsSchema.get(DEFINITIONS_NODE);
-    JsonNode pipelineStepDefinitions = pipelineStepsSchema.get(DEFINITIONS_NODE);
 
-    JsonNode stepDefinitions = JsonNodeUtils.merge(deploymentStepDefinitions, pipelineStepDefinitions);
-    JsonNode mergedDefinitions = JsonNodeUtils.merge(definitions, stepDefinitions);
+    JsonNodeUtils.merge(definitions, deploymentStepDefinitions);
 
-    JsonNode jsonNode = mergedDefinitions.get(StepElementConfig.class.getSimpleName());
+    JsonNode jsonNode = definitions.get(StepElementConfig.class.getSimpleName());
     modifyStepElementSchema((ObjectNode) jsonNode);
 
-    jsonNode = mergedDefinitions.get(ParallelStepElementConfig.class.getSimpleName());
+    jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
     }
 
     yamlSchemaGenerator.modifyRefsNamespace(deploymentStageSchema, CD_NAMESPACE);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    JsonNode node = mapper.createObjectNode().set(CD_NAMESPACE, mergedDefinitions);
+    JsonNode node = mapper.createObjectNode().set(CD_NAMESPACE, definitions);
 
     JsonNode partialCdSchema = ((ObjectNode) deploymentStageSchema).set(DEFINITIONS_NODE, node);
 

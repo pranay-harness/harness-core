@@ -18,12 +18,14 @@ import lombok.Data;
 @Data
 @JsonTypeName("ManifestPath")
 public class DeleteManifestPathSpec implements DeleteResourcesBaseSpec {
+  @ApiModelProperty(allowableValues = "ManifestPath")
+  private DeleteResourcesType type = DeleteResourcesType.ManifestPath;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> manifestPaths;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> allManifestPaths;
 
   @Override
   public DeleteResourcesType getType() {
-    return DeleteResourcesType.ManifestPath;
+    return type;
   }
 
   @Override

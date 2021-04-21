@@ -5,9 +5,11 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,5 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @TypeAlias("K8sRollingRollbackBaseStepInfo")
 public class K8sRollingRollbackBaseStepInfo {
-  @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
+  @YamlSchemaTypes({string, bool})
+  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
+  ParameterField<Boolean> skipDryRun;
 }

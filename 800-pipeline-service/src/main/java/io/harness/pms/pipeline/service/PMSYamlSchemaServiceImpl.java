@@ -39,20 +39,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
+  private static final String PMS_NAMESPACE = "pms";
   public static final String STAGE_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StageElementConfig.class);
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
@@ -72,33 +71,41 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
 
+    JsonNode pipelineSteps =
+        yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
     ObjectNode pipelineDefinitions = (ObjectNode) pipelineSchema.get(DEFINITIONS_NODE);
+    ObjectNode pipelineStepsDefinitions = (ObjectNode) pipelineSteps.get(DEFINITIONS_NODE);
+
+    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
+
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.remove(STAGE_ELEMENT_CONFIG);
 
-    JsonNode jsonNode = pipelineDefinitions.get(ParallelStageElementConfig.class.getSimpleName());
+    JsonNode jsonNode = mergedDefinitions.get(ParallelStageElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
     }
 
     Set<String> instanceNames = pmsSdkInstanceService.getInstanceNames();
+    instanceNames.remove(PmsConstants.INTERNAL_SERVICE_NAME);
     Set<String> refs = new HashSet<>();
     for (String instanceName : instanceNames) {
-      if (instanceName.equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
+      PartialSchemaDTO partialSchemaDTO = getStage(instanceName, projectIdentifier, orgIdentifier, scope);
+      if (partialSchemaDTO == null) {
         continue;
       }
-      PartialSchemaDTO partialSchemaDTO = getStage(instanceName, projectIdentifier, orgIdentifier, scope);
-      processPartialStageSchema(pipelineDefinitions, stageElementConfig, refs, instanceName, partialSchemaDTO);
+      processPartialStageSchema(
+          mergedDefinitions, pipelineStepsDefinitions, stageElementConfig, refs, instanceName, partialSchemaDTO);
     }
-    processPartialStageSchema(pipelineDefinitions, stageElementConfig, refs, APPROVAL_INSTANCE_NAME,
-        getApprovalStage(projectIdentifier, orgIdentifier, scope));
+    processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig, refs,
+        APPROVAL_INSTANCE_NAME, getApprovalStage(projectIdentifier, orgIdentifier, scope));
 
     ObjectNode stageElementWrapperConfig = (ObjectNode) pipelineDefinitions.get("StageElementWrapperConfig");
     modifyStageElementWrapperConfig(stageElementWrapperConfig, refs);
     return ((ObjectNode) pipelineSchema).set(DEFINITIONS_NODE, pipelineDefinitions);
   }
 
-  private void processPartialStageSchema(ObjectNode pipelineDefinitions, ObjectNode stageElementConfig,
-      Set<String> refs, String instanceName, PartialSchemaDTO partialSchemaDTO) {
+  private void processPartialStageSchema(ObjectNode pipelineDefinitions, ObjectNode pipelineSteps,
+      ObjectNode stageElementConfig, Set<String> refs, String instanceName, PartialSchemaDTO partialSchemaDTO) {
     SubtypeClassMap subtypeClassMap =
         SubtypeClassMap.builder()
             .subTypeDefinitionKey(partialSchemaDTO.getNamespace() + "/" + partialSchemaDTO.getNodeName())
@@ -106,16 +113,27 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
             .build();
     ObjectNode stageDefinitionsNode = moveRootNodeToDefinitions(
         partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
+
+    ObjectNode pipelineStepsCopy = obtainPipelineStepsCopyWithCorrectNamespace(pipelineSteps, partialSchemaDTO);
+    JsonNodeUtils.merge(stageDefinitionsNode.get(partialSchemaDTO.getNamespace()), pipelineStepsCopy);
+
     ObjectNode stageElementCopy = stageElementConfig.deepCopy();
     modifyStageElementConfig(stageElementCopy, subtypeClassMap,
-        instanceName.equals("ci")                         ? Arrays.asList("rollbackSteps", "failureStrategies")
-            : instanceName.equals(APPROVAL_INSTANCE_NAME) ? Collections.singletonList("rollbackSteps")
-                                                          : Collections.emptyList());
+        instanceName.equals(APPROVAL_INSTANCE_NAME) ? Collections.singletonList("rollbackSteps")
+                                                    : Collections.emptyList());
 
     ObjectNode namespaceNode = (ObjectNode) stageDefinitionsNode.get(partialSchemaDTO.getNamespace());
     namespaceNode.set(STAGE_ELEMENT_CONFIG, stageElementCopy);
     refs.add(format(DEFINITIONS_NAMESPACE_STRING_PATTERN, partialSchemaDTO.getNamespace(), STAGE_ELEMENT_CONFIG));
-    JsonNodeUtils.merge(pipelineDefinitions, stageDefinitionsNode);
+
+    pipelineDefinitions.set(partialSchemaDTO.getNamespace(), stageDefinitionsNode.get(partialSchemaDTO.getNamespace()));
+  }
+
+  private ObjectNode obtainPipelineStepsCopyWithCorrectNamespace(
+      ObjectNode pipelineSteps, PartialSchemaDTO partialSchemaDTO) {
+    ObjectNode pipelineStepsCopy = pipelineSteps.deepCopy();
+    yamlSchemaGenerator.modifyRefsNamespace(pipelineStepsCopy, partialSchemaDTO.getNamespace());
+    return pipelineStepsCopy;
   }
 
   private void modifyStageElementWrapperConfig(ObjectNode node, Set<String> refs) {
@@ -178,10 +196,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       return SafeHttpCall.execute(obtainYamlSchemaClient(instanceName).get(projectIdentifier, orgIdentifier, scope))
           .getData();
     } catch (Exception e) {
-      throw new NotFoundException(
+      log.warn(
           format("Unable to get %s schema information for projectIdentifier: [%s], orgIdentifier: [%s], scope: [%s]",
               instanceName, projectIdentifier, orgIdentifier, scope),
           e);
+      return null;
     }
   }
 

@@ -15,10 +15,11 @@ import lombok.Data;
 @Data
 @JsonTypeName("ReleaseName")
 public class DeleteReleaseNameSpec implements DeleteResourcesBaseSpec {
+  @ApiModelProperty(allowableValues = "ReleaseName") DeleteResourcesType type = DeleteResourcesType.ReleaseName;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> deleteNamespace;
   @Override
   public DeleteResourcesType getType() {
-    return DeleteResourcesType.ReleaseName;
+    return type;
   }
 
   @Override
