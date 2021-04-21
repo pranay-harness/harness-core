@@ -17,8 +17,10 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import javax.validation.Valid;
 import lombok.NonNull;
 
@@ -40,9 +42,10 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
     }
 
     NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
-    if (nodeExecution.getStatus() != INTERVENTION_WAITING) {
+    if (!StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())
+        && nodeExecution.getStatus() != INTERVENTION_WAITING) {
       throw new InvalidRequestException(
-          "NodeExecution is not in a finalizable status. Current Status: " + nodeExecution.getStatus());
+          "NodeExecution is not in a finalizable or broken status. Current Status: " + nodeExecution.getStatus());
     }
 
     interrupt.setState(Interrupt.State.PROCESSING);
@@ -55,6 +58,10 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   }
 
   protected Interrupt handleInterruptStatus(Interrupt interrupt, Status status) {
+    return handleInterruptStatus(interrupt, status, EnumSet.noneOf(Status.class));
+  }
+
+  protected Interrupt handleInterruptStatus(Interrupt interrupt, Status status, EnumSet<Status> overrideStatusSet) {
     try {
       NodeExecution nodeExecution = nodeExecutionService.update(interrupt.getNodeExecutionId(),
           ops
@@ -66,7 +73,7 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
                   .interruptConfig(interrupt.getInterruptConfig())
                   .build()));
 
-      orchestrationEngine.concludeNodeExecution(nodeExecution, status);
+      orchestrationEngine.concludeNodeExecution(nodeExecution, status, overrideStatusSet);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
       throw ex;
