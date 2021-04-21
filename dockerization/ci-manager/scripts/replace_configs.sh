@@ -190,4 +190,7 @@ if [[ "" != "$TIMESCALEDB_USERNAME" ]]; then
   yq write -i $CONFIG_FILE timescaledb.timescaledbUsername "$TIMESCALEDB_USERNAME"
 fi
 
+if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE cimanager-mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
+fi
 
