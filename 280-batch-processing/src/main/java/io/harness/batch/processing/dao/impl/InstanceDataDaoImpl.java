@@ -104,9 +104,14 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
   @Override
   public void updateInstanceActiveIterationTime(InstanceData instanceData) {
-    instanceData.setActiveInstanceIterator(
-        ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(instanceData.getUsageStartTime()));
-    hPersistence.save(instanceData);
+    try {
+      instanceData.setActiveInstanceIterator(
+          ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(instanceData.getUsageStartTime()));
+      hPersistence.save(instanceData);
+    } catch (Exception ex) {
+      log.info("Instance data {}", instanceData);
+      log.error("Error is ", ex);
+    }
   }
 
   @Override
