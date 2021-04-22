@@ -12,5 +12,7 @@ public interface UserService {
   PageResponse<UserAggregateDTO> getUsers(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String searchTerm, PageRequest pageRequest, ACLAggregateFilter aclAggregateFilter);
 
+  UserAggregateDTO getUsers(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
   boolean deleteUser(String accountIdentifier, String orgIdentifier, String projectIdentifier, String userId);
 }

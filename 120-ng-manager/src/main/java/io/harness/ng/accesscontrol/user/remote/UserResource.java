@@ -22,6 +22,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -44,6 +45,18 @@ import lombok.AllArgsConstructor;
 @OwnedBy(PL)
 public class UserResource {
   UserService userService;
+
+  @GET
+  @Path("/aggregate/{userId}")
+  @ApiOperation(value = "Get a user by userId for access control", nickname = "getUserAggregated")
+  public ResponseDTO<UserAggregateDTO> getUserAggregated(@PathParam("userId") String userId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    UserAggregateDTO aclUserAggregateDTOs =
+        userService.getUsers(userId, accountIdentifier, orgIdentifier, projectIdentifier);
+    return ResponseDTO.newResponse(aclUserAggregateDTOs);
+  }
 
   @POST
   @Path("aggregate")
