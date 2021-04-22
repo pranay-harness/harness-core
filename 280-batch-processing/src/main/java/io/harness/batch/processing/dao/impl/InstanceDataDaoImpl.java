@@ -1,6 +1,7 @@
 package io.harness.batch.processing.dao.impl;
 
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
+import static io.harness.persistence.HPersistence.upsertReturnOldOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.persistence.HQuery.excludeCount;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -104,9 +106,16 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
   @Override
   public void updateInstanceActiveIterationTime(InstanceData instanceData) {
-    instanceData.setActiveInstanceIterator(
-        ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(instanceData.getUsageStartTime()));
-    hPersistence.save(instanceData);
+    UpdateOperations<InstanceData> instanceDataUpdateOperations =
+        hPersistence.createUpdateOperations(InstanceData.class)
+            .set(InstanceDataKeys.activeInstanceIterator,
+                ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(instanceData.getUsageStartTime()));
+    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
+                                    .filter(InstanceDataKeys.accountId, instanceData.getAccountId())
+                                    .filter(InstanceDataKeys.clusterId, instanceData.getClusterId())
+                                    .filter(InstanceDataKeys.instanceId, instanceData.getInstanceId());
+
+    hPersistence.upsert(query, instanceDataUpdateOperations, upsertReturnOldOptions);
   }
 
   @Override
