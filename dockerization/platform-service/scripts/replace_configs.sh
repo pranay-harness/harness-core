@@ -222,3 +222,11 @@ replace_key_value resourceGroupServiceConfig.resourceClients.manager.baseUrl "$M
 replace_key_value resourceGroupServiceConfig.resourceClients.manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
 replace_key_value resourceGroupServiceConfig.mongo.uri "${RESOURCE_GROUP_MONGO_URI//\\&/&}"
+
+replace_key_value notificationServiceConfig.mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
+
+replace_key_value resourceGroupServiceConfig.mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
+
+replace_key_value auditServiceConfig.mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
+
+replace_key_value resourceGroupServiceConfig.enableResourceGroup "$ENABLE_RESOURCE_GROUP"

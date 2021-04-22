@@ -152,6 +152,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   @Override
   public void initialize(Bootstrap<NextGenConfiguration> bootstrap) {
     initializeLogging();
+    bootstrap.addCommand(new InspectCommand<>(this));
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -239,7 +240,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
     //    This is is temporary one time blocking migration
-    injector.getInstance(DefaultResourceGroupCreationService.class).defaultResourceGroupCreationJob();
+    if (appConfig.isEnableDefaultResourceGroupCreation()) {
+      injector.getInstance(DefaultResourceGroupCreationService.class).defaultResourceGroupCreationJob();
+    }
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {

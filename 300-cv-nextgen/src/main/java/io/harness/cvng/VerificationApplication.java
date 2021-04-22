@@ -166,6 +166,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     initializeLogging();
     log.info("bootstrapping ...");
     // Enable variable substitution with environment variables
+    bootstrap.addCommand(new InspectCommand<>(this));
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
     bootstrap.addBundle(new SwaggerBundle<VerificationConfiguration>() {

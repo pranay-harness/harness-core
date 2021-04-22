@@ -254,3 +254,5 @@ replace_key_value accessControlAdminClient.mockAccessControlService "$MOCK_ACCES
 replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
 
 replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GROUP_BASE_URL"
+
+replace_key_value enableDefaultResourceGroupCreation "$ENABLE_DEFAULT_RESOURCE_GROUP_CREATION"
