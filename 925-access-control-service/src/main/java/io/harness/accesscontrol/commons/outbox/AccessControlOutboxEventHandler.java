@@ -27,10 +27,13 @@ public class AccessControlOutboxEventHandler implements OutboxEventHandler {
   @Override
   public boolean handle(OutboxEvent outboxEvent) {
     try {
+      // TODO {karan} remove extra lowercase cases after some days
       switch (outboxEvent.getResource().getType()) {
         case ROLE:
+        case "role":
           return roleEventHandler.handle(outboxEvent);
         case ROLE_ASSIGNMENT:
+        case "roleassignment":
           return roleAssignmentEventHandler.handle(outboxEvent);
         default:
           return false;
