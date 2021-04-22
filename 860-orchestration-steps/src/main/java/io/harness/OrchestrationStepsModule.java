@@ -43,7 +43,11 @@ public class OrchestrationStepsModule extends AbstractModule {
   @Singleton
   CFApi providesCfAPI() {
     ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath(configuration.getFfServerBaseUrl());
+
+    if (configuration != null) {
+      apiClient.setBasePath(configuration.getFfServerBaseUrl());
+    }
+
     return new CFApi(apiClient);
   }
 

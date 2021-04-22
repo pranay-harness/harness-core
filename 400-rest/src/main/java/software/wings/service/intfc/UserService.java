@@ -77,6 +77,11 @@ public interface UserService extends OwnedByAccount {
    */
   boolean trialSignup(UserInvite userInvite);
 
+  /**
+   * Used for NG signup to create a new user and login from an NG user object
+   */
+  User createNewUserAndSignIn(User user, String accountId);
+
   UserInvite createUserInviteForMarketPlace();
 
   boolean hasPermission(String accountId, PermissionType permissionType);

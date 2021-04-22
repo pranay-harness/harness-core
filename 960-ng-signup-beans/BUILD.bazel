@@ -1,0 +1,18 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//970-ng-commons:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+    ],
+)
+
+checkstyle()
+
+pmd()

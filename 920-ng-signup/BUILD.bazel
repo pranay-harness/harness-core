@@ -7,7 +7,10 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 shared_dependencies = [
     "//:lombok",
     "//930-ng-core-clients:module",
+    "//940-feature-flag:module",
+    "//955-account-mgmt:module",
     "//960-ng-core-beans:module",
+    "@maven//:org_mindrot_jbcrypt",
 ]
 
 java_library(
@@ -16,6 +19,27 @@ java_library(
     visibility = ["//visibility:public"],
     deps = shared_dependencies,
 )
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_core",
+        "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:org_reflections_reflections",
+    ],
+)
+
+run_tests()
 
 checkstyle()
 
