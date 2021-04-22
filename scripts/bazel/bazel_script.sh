@@ -165,6 +165,7 @@ BAZEL_MODULES="\
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
   //960-expression-service:module \
   //960-ng-core-beans:module \
+  //960-ng-signup-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \

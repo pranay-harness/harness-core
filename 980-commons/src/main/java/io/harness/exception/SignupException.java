@@ -1,4 +1,4 @@
-package software.wings.service.intfc.signup;
+package io.harness.exception;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
@@ -6,8 +6,6 @@ import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
-import io.harness.exception.FailureType;
-import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
 

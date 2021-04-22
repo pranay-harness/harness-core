@@ -2,7 +2,6 @@ package io.harness.signup.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 
-import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.signup.data.UtmInfo;
 
@@ -20,5 +19,4 @@ public class SignupDTO {
   String email;
   String password;
   UtmInfo utmInfo;
-  ModuleType module;
 }

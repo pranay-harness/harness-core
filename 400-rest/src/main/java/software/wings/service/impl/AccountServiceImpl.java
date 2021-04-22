@@ -605,14 +605,14 @@ public class AccountServiceImpl implements AccountService {
    */
   @Override
   public String suggestAccountName(@NotNull String accountName) {
-    if (!isDuplicateAccountName(accountName)) {
+    if (!exists(accountName)) {
       return accountName;
     }
     log.debug("Account name '{}' already in use, generating new unique account name", accountName);
     int count = 0;
     while (count < NUM_OF_RETRIES_TO_GENERATE_UNIQUE_ACCOUNT_NAME) {
       String newAccountName = accountName + "-" + (1000 + random.nextInt(9000));
-      if (!isDuplicateAccountName(newAccountName)) {
+      if (!exists(newAccountName)) {
         return newAccountName;
       }
       count++;
@@ -772,7 +772,7 @@ public class AccountServiceImpl implements AccountService {
   public boolean exists(String accountName) {
     return wingsPersistence.createQuery(Account.class, excludeAuthority)
                .field(AccountKeys.accountName)
-               .equal(accountName)
+               .equalIgnoreCase(accountName)
                .getKey()
         != null;
   }
