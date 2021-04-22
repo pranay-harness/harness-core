@@ -15,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 public class GitEntityInfo {
   String branch;
   String yamlGitConfigId;
+  String folderPath;
   String filePath;
   String commitMsg;
   boolean createPr;
