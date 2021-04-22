@@ -82,6 +82,11 @@ public abstract class InfrastructureMapping
                  .field(InfrastructureMappingKeys.serviceTemplateId)
                  .descSortField(InfrastructureMappingKeys.createdAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("appId_createdAt")
+                 .field(InfrastructureMappingKeys.appId)
+                 .descSortField(InfrastructureMappingKeys.createdAt)
+                 .build())
         .build();
   }
 

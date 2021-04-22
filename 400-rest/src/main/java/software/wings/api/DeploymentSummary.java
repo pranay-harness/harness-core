@@ -79,6 +79,18 @@ public class DeploymentSummary extends Base {
                  .field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION)
                  .descSortField(DeploymentSummaryKeys.CREATED_AT)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("inframappingId_awsCodeDeployDeploymentKeyKey_createdAtDesc")
+                 .field(DeploymentSummaryKeys.infraMappingId)
+                 .field(DeploymentSummaryKeys.AWS_CODE_DEPLOY_DEPLOYMENT_KEY_KEY)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("inframappingId_awsAmiDeploymentKeyAsgName_createdAtDesc")
+                 .field(DeploymentSummaryKeys.infraMappingId)
+                 .field(DeploymentSummaryKeys.AWS_AMI_DEPLOYMENT_KEY_ASG_NAME)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
         .build();
   }
 
@@ -165,5 +177,7 @@ public class DeploymentSummary extends Base {
     public static final String CONTAINER_KEY_SERVICE_NAME = "containerDeploymentKey.containerServiceName";
     public static final String CONTAINER_KEY_LABELS = "containerDeploymentKey.labels";
     public static final String CONTAINER_KEY_NEW_VERSION = "containerDeploymentKey.newVersion";
+    public static final String AWS_CODE_DEPLOY_DEPLOYMENT_KEY_KEY = "awsCodeDeployDeploymentKey.key";
+    public static final String AWS_AMI_DEPLOYMENT_KEY_ASG_NAME = "awsAmiDeploymentKey.autoScalingGroupName";
   }
 }
