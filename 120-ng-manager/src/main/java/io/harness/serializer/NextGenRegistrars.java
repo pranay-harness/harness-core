@@ -44,6 +44,7 @@ public class NextGenRegistrars {
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .add(MockRoleAssignmentMorphiaRegistrar.class)
           .add(InvitesMorphiaRegistrar.class)
+          .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
