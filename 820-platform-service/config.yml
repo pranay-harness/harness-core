@@ -104,6 +104,7 @@ auditServiceConfig:
   enableAuditService: true
 
 resourceGroupServiceConfig:
+  enableResourceGroup: false
   resourceClients:
     ng-manager:
       baseUrl: http://localhost:7457/
