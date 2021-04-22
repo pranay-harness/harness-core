@@ -72,6 +72,13 @@ public class GitCommit extends Base implements AccountAccess {
                  .field(GitCommitKeys.yamlGitConfigIds)
                  .descSortField(GitCommitKeys.lastUpdatedAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("gitCommitAccountIdStatusYgLastUpdatedIdx")
+                 .field(GitCommitKeys.accountId)
+                 .field(GitCommitKeys.status)
+                 .field(GitCommitKeys.yamlGitConfigId)
+                 .descSortField(GitCommitKeys.lastUpdatedAt)
+                 .build())
         .build();
   }
 

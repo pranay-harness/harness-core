@@ -1303,13 +1303,16 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     // This is to handle the old git commit records which doesn't have yamlGitConfigId
     if (gitCommit == null) {
+      FindOptions findOptions_1 = new FindOptions();
+      findOptions_1.modifier("$hint", "gitCommitAccountIdStatusYgLastUpdatedIdx");
+
       gitCommit = wingsPersistence.createQuery(GitCommit.class)
                       .filter(GitCommitKeys.accountId, accountId)
                       .filter(GitCommitKeys.yamlGitConfigId, yamlGitConfigIds.get(0))
                       .field(GitCommitKeys.status)
                       .in(getProcessedGitCommitStatusList(accountId))
                       .order("-lastUpdatedAt")
-                      .get();
+                      .get(findOptions_1);
     }
 
     return gitCommit;
