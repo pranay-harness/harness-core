@@ -48,7 +48,7 @@ public class ChangeTracker {
   }
 
   public String getChangeDataCaptureDataStore(Class<? extends PersistentEntity> clazz) {
-    return clazz.getAnnotation(ChangeDataCapture.class).dataStore();
+    return clazz.getAnnotationsByType(ChangeDataCapture.class)[0].dataStore();
   }
 
   private MongoClientURI mongoClientUri(String dataStore) {
