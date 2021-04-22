@@ -63,6 +63,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SignupException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
@@ -160,7 +161,6 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.signup.SignupException;
 import software.wings.service.intfc.signup.SignupSpamChecker;
 
 import com.amazonaws.services.codedeploy.model.InvalidOperationException;
@@ -332,6 +332,20 @@ public class UserServiceImpl implements UserService {
     executorService.execute(() -> sendVerificationEmail(savedUser));
     eventPublishHelper.publishUserInviteFromAccountEvent(account.getUuid(), savedUser.getEmail());
     return savedUser;
+  }
+
+  @Override
+  public User createNewUserAndSignIn(User user, String accountId) {
+    user.setAppId(GLOBAL_APP_ID);
+
+    List<UserGroup> accountAdminGroups = getAccountAdminGroup(accountId);
+
+    User savedUser = save(user, accountId);
+
+    addUserToUserGroups(accountId, user, accountAdminGroups, false, false);
+
+    return authenticationManager.defaultLoginWithoutEmailVerification(
+        savedUser.getEmail(), savedUser.getPasswordHash());
   }
 
   @Override

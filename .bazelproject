@@ -116,6 +116,7 @@ directories:
   960-continuous-features
   960-expression-service
   960-ng-core-beans
+  960-ng-signup-beans
   960-notification-beans
   960-persistence
   960-recaster

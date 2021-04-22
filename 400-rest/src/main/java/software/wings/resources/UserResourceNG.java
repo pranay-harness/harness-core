@@ -9,7 +9,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.mappers.AccountMapper;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.user.remote.UserSearchFilter;
@@ -57,6 +59,16 @@ public class UserResourceNG {
   private final UserService userService;
   private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
+
+  @POST
+  public RestResponse<UserInfo> createNewUserAndSignIn(UserRequestDTO userRequest) {
+    User user = convertUserRequesttoUser(userRequest);
+    String accountId = user.getDefaultAccountId();
+
+    User createdUser = userService.createNewUserAndSignIn(user, accountId);
+
+    return new RestResponse<>(convertUserToNgUser(createdUser));
+  }
 
   @GET
   @Path("/search")
@@ -184,6 +196,11 @@ public class UserResourceNG {
                    .email(user.getEmail())
                    .name(user.getName())
                    .uuid(user.getUuid())
+                   .admin(Optional.ofNullable(user.getUserGroups())
+                              .map(x
+                                  -> x.stream().anyMatch(
+                                      y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
+                              .orElse(false))
                    .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
                    .build())
         .collect(Collectors.toList());
@@ -197,12 +214,31 @@ public class UserResourceNG {
         .email(user.getEmail())
         .name(user.getName())
         .uuid(user.getUuid())
-        .admin(
-            Optional.ofNullable(user.getUserGroups())
-                .map(x
-                    -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
-                .orElse(false))
+        .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+        .token(user.getToken())
+
+        .build();
+  }
+
+  private User convertUserRequesttoUser(UserRequestDTO userRequest) {
+    if (userRequest == null) {
+      return null;
+    }
+
+    return User.Builder.anUser()
+        .email(userRequest.getEmail())
+        .name(userRequest.getName())
+        .twoFactorAuthenticationEnabled(userRequest.isTwoFactorAuthenticationEnabled())
+        .passwordHash(userRequest.getPasswordHash())
+        .accountName(userRequest.getAccountName())
+        .companyName(userRequest.getCompanyName())
+        .accounts(userRequest.getAccounts()
+                      .stream()
+                      .map(account -> AccountMapper.fromAccountDTO(account))
+                      .collect(Collectors.toList()))
+        .emailVerified(userRequest.isEmailVerified())
+        .defaultAccountId(userRequest.getDefaultAccountId())
         .build();
   }
 

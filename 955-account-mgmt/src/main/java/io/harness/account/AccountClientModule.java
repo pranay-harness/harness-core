@@ -2,6 +2,8 @@ package io.harness.account;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.account.services.AccountService;
+import io.harness.account.services.impl.AccountServiceImpl;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
@@ -32,5 +34,6 @@ public class AccountClientModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(AccountClient.class).toProvider(AccountHttpClientFactory.class).in(Scopes.SINGLETON);
+    bind(AccountService.class).to(AccountServiceImpl.class).in(Scopes.SINGLETON);
   }
 }

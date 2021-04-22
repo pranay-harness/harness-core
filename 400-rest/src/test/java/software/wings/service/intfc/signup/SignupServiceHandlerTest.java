@@ -1,11 +1,16 @@
 package software.wings.service.intfc.signup;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.AMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.SignupException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -19,6 +24,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@OwnedBy(PL)
+@TargetModule(_950_NG_SIGNUP)
 public class SignupServiceHandlerTest extends WingsBaseTest {
   @Mock AzureMarketplaceIntegrationService azureMarketplaceIntegrationService;
 

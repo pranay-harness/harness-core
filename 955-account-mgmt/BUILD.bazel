@@ -10,7 +10,9 @@ java_library(
     deps = [
         "//:lombok",
         "//960-ng-core-beans:module",
+        "//960-ng-signup-beans:module",
         "//970-ng-commons:module",
+        "//970-rbac-core:module",
         "@maven//:com_google_inject_guice",
         "@maven//:com_squareup_retrofit2_retrofit",
         "@maven//:io_swagger_swagger_annotations",
