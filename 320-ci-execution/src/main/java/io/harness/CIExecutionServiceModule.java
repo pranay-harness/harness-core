@@ -42,7 +42,7 @@ public class CIExecutionServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(CIBeansModule.getInstance());
-    install(OrchestrationStepsModule.getInstance());
+    install(OrchestrationStepsModule.getInstance(null));
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
 

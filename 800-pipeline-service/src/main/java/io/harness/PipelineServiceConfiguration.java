@@ -67,6 +67,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
+  @JsonProperty("orchestrationStepConfig") private OrchestrationStepConfig orchestrationStepConfig;
 
   private String managerServiceSecret;
   private String managerTarget;

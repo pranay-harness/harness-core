@@ -1,9 +1,13 @@
 package io.harness.cdng.visitor;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 
+@OwnedBy(CDC)
 public interface YamlTypes {
   String PRIMARY_ARTIFACT = "primary";
   String ARTIFACT_LIST_CONFIG = "artifacts";
