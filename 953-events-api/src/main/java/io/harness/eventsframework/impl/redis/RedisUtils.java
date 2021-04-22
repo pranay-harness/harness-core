@@ -38,7 +38,7 @@ import org.redisson.config.SingleServerConfig;
 public class RedisUtils {
   // Keeping this as small as possible to save on memory for redis instance
   public static final String REDIS_STREAM_INTERNAL_KEY = "o";
-  public static final int MAX_DEAD_LETTER_QUEUE_SIZE = 1000000;
+  public static final int MAX_DEAD_LETTER_QUEUE_SIZE = 50000;
   public static final int UNACKED_RETRY_COUNT = 10;
 
   public RedissonClient getClient(RedisConfig redisConfig) {
