@@ -28,7 +28,7 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public Supplier<SampleBean1> getEntityFromYaml(SampleBean1 yaml) {
+  public Supplier<SampleBean1> getEntityFromYaml(SampleBean1 yaml, String accountIdentifier) {
     return null;
   }
 
