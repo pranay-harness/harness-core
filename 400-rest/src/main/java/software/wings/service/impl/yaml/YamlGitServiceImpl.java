@@ -1290,7 +1290,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     // After MultiGit support gitCommit record would have list of yamlGitConfigs.
 
     FindOptions findOptions = new FindOptions();
-    findOptions.modifier("$hint", "gitCommitAccountIdYamlConfigIdsStatusLastUpdatedIdx");
+    findOptions.modifier("$hint", "gitCommitAccountIdStatusYgcLastUpdatedIdx");
 
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
                               .filter(GitCommitKeys.accountId, accountId)
