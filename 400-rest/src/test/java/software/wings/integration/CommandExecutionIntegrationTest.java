@@ -95,7 +95,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    */
   @Inject WingsPersistence wingsPersistence;
   private CommandExecutionContext context =
-      CommandExecutionContext.Builder.aCommandExecutionContext(true)
+      CommandExecutionContext.Builder.aCommandExecutionContext()
           .activityId(ACTIVITY_ID)
           .runtimePath("$HOME/apps")
           .executionCredential(aSSHExecutionCredential().withSshUser(USER).withSshPassword(PASSWORD).build())

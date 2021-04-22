@@ -71,6 +71,9 @@
             "optimize": {
               "type": "boolean"
             },
+            "remoteCacheImage": {
+              "type": "string"
+            },
             "repo": {
               "type": "string"
             },
@@ -160,6 +163,9 @@
             "region": {
               "type": "string"
             },
+            "remoteCacheImage": {
+              "type": "string"
+            },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
             },
@@ -244,6 +250,9 @@
               "type": "boolean"
             },
             "projectID": {
+              "type": "string"
+            },
+            "remoteCacheImage": {
               "type": "string"
             },
             "resources": {

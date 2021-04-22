@@ -126,7 +126,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
   private boolean setupOrgForUserAuthz(String accountIdentifier, String orgIdentifier, GlobalContext globalContext) {
     createDefaultResourceGroup(accountIdentifier, orgIdentifier);
     if (!(globalContext.get(SOURCE_PRINCIPAL) instanceof SourcePrincipalContextData)) {
-      return false;
+      return true;
     }
     Principal principal = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal();
     if (principal instanceof UserPrincipal) {
