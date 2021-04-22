@@ -11,7 +11,6 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(DX)
 public interface GitAwarePersistence {
@@ -29,12 +28,6 @@ public interface GitAwarePersistence {
 
   <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(@NotNull Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
-
-  /**
-   * finds and modify first.
-   */
-  <B extends GitSyncableEntity, Y extends YamlDTO> B findAndModify(Criteria criteria, Update update,
-      ChangeType changeType, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass);
 
   <B extends GitSyncableEntity, Y extends YamlDTO> boolean exists(@NotNull Criteria criteria, String projectIdentifier,
       String orgIdentifier, String accountId, Class<B> entityClass);

@@ -3,6 +3,8 @@ package io.harness.repositories;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.entities.Connector.CONNECTOR_COLLECTION_NAME;
 
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
@@ -18,6 +20,7 @@ import java.util.Optional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -56,8 +59,8 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   @Override
   public Connector update(Criteria criteria, Update update, ChangeType changeType, String projectIdentifier,
       String orgIdentifier, String accountIdentifier) {
-    return gitAwarePersistence.findAndModify(
-        criteria, update, changeType, projectIdentifier, orgIdentifier, accountIdentifier, Connector.class);
+    return mongoTemplate.findAndModify(
+        query(criteria), update, FindAndModifyOptions.options().returnNew(true), Connector.class);
   }
 
   @Override
