@@ -3,6 +3,7 @@ package io.harness.cvng.verificationjob.entities;
 import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
+import io.harness.cvng.verificationjob.CVVerificationJobConstants;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,7 +33,8 @@ public class CanaryVerificationJob extends CanaryBlueGreenVerificationJob {
   @Override
   public VerificationJobDTO getVerificationJobDTO() {
     CanaryVerificationJobDTO canaryVerificationJobDTO = new CanaryVerificationJobDTO();
-    canaryVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
+    canaryVerificationJobDTO.setSensitivity(
+        getSensitivity() == null ? CVVerificationJobConstants.RUNTIME_STRING : getSensitivity().name());
     canaryVerificationJobDTO.setTrafficSplitPercentage(this.getTrafficSplitPercentage());
     populateCommonFields(canaryVerificationJobDTO);
     return canaryVerificationJobDTO;

@@ -346,7 +346,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
           registerPMSQueueListeners(configuration, injector);
         }
       } catch (Exception e) {
-        log.error("Failed To register pipeline sdk");
+        log.error("Failed To register pipeline sdk", e);
         // Don't fail for now. We have to find out retry strategy
         // System.exit(1);
       }

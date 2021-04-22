@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
@@ -62,6 +63,21 @@ public class CanaryVerificationJobTest extends CategoryTest {
     assertThat(timeRange.isPresent()).isTrue();
     assertThat(Duration.between(timeRange.get().getStartTime(), timeRange.get().getEndTime()).toMinutes())
         .isEqualTo(canaryVerificationJob.getDuration().toMinutes());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetSensitivity() {
+    CanaryVerificationJob canaryVerificationJob = createCanaryVerificationJob();
+    canaryVerificationJob.setSensitivity("High", false);
+    assertThat(canaryVerificationJob.getSensitivity()).isEqualTo(Sensitivity.HIGH);
+    canaryVerificationJob.setSensitivity("HIGH", false);
+    assertThat(canaryVerificationJob.getSensitivity()).isEqualTo(Sensitivity.HIGH);
+    canaryVerificationJob.setSensitivity("HIgH", false);
+    assertThatThrownBy(() -> canaryVerificationJob.getSensitivity())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No enum mapping found for HIgH");
   }
 
   private CanaryVerificationJob createCanaryVerificationJob() {
