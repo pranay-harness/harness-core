@@ -212,21 +212,27 @@ public class RoleAssignmentResource {
             .stream()
             .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO))
             .collect(Collectors.toList());
-    List<RoleAssignment> createdRoleAssignments = new ArrayList<>();
+    List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
     for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
       try {
         harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
         if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
           harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
         }
-        RoleAssignment createdRoleAssignment = roleAssignmentService.create(roleAssignment);
-        createdRoleAssignments.add(createdRoleAssignment);
+        RoleAssignmentResponseDTO roleAssignmentResponseDTO =
+            Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+              RoleAssignmentResponseDTO response =
+                  roleAssignmentDTOMapper.toResponseDTO(roleAssignmentService.create(roleAssignment));
+              outboxService.save(new RoleAssignmentCreateEvent(
+                  response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
+              return response;
+            }));
+        createdRoleAssignments.add(roleAssignmentResponseDTO);
       } catch (Exception e) {
         log.error(String.format("Could not create role assignment %s", roleAssignment), e);
       }
     }
-    return ResponseDTO.newResponse(
-        createdRoleAssignments.stream().map(roleAssignmentDTOMapper::toResponseDTO).collect(toList()));
+    return ResponseDTO.newResponse(createdRoleAssignments);
   }
 
   @POST
