@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.MockitoAnnotations.initMocks;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.GitSdkTestBase;
 import io.harness.annotations.dev.OwnedBy;
@@ -77,8 +78,8 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
   @Test
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
-  public void testSave() {
-    doSave(sampleBean);
+  public void testSave_0() {
+    doSave(sampleBean, false, "branch");
   }
 
   @Test
@@ -87,8 +88,8 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
   public void testFind() {
     final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
     try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
-      final SampleBean sampleBean_saved = doSave(sampleBean);
-      final SampleBean sampleBean_saved_1 = doSave(sampleBean1);
+      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch");
+      final SampleBean sampleBean_saved_1 = doSave(sampleBean1, false, "branch");
       assertFindReturnsObject(sampleBean_saved);
       assertFindReturnsObject(sampleBean_saved_1);
     }
@@ -101,7 +102,7 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
     assertThat(retObject.isPresent()).isTrue();
   }
 
-  private SampleBean doSave(SampleBean sampleBean) {
+  private SampleBean doSave(SampleBean sampleBean, boolean isDefaultBranch, String branch) {
     doReturn(new SampleBeanEntityGitPersistenceHelperServiceImpl())
         .when(gitPersistenceHelperServiceMap)
         .get(anyString());
@@ -110,11 +111,114 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
                  .accountIdentifier("acc")
                  .objectId(objectIdOfYaml)
                  .yamlGitConfigId("ygs")
-                 .branch("branch")
+                 .branch(branch)
+                 .pushToDefaultBranch(isDefaultBranch)
                  .build())
         .when(scmGitSyncHelper)
         .pushToGit(any(), anyString(), any(), any());
     doReturn(true).when(entityKeySource).fetchKey(any());
     return gitAwarePersistence.save(sampleBean, sampleBean, ChangeType.ADD, SampleBean.class);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testSave_1() {
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch");
+    }
+    final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      SampleBean sampleBean_1 = SampleBean.builder()
+                                    .test1("test")
+                                    .projectIdentifier(projectIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .identifier(identifier)
+                                    .build();
+      final SampleBean sampleBean_saved = doSave(sampleBean_1, true, "master");
+    }
+
+    final long count = mongoTemplate.count(query(new Criteria()), SampleBean.class);
+    assertThat(count).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testSave_2() {
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch");
+    }
+    final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      SampleBean sampleBean_1 = SampleBean.builder()
+                                    .test1("test1")
+                                    .projectIdentifier(projectIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .identifier(identifier)
+                                    .build();
+      final SampleBean sampleBean_saved = doSave(sampleBean_1, true, "master");
+    }
+
+    final long count = mongoTemplate.count(query(new Criteria()), SampleBean.class);
+    assertThat(count).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testSave_3() {
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      SampleBean sampleBean_saved = doSave(sampleBean, true, "branch");
+      assertFindReturnsObject(sampleBean_saved);
+    }
+    final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(branch_1)) {
+      SampleBean sampleBean_1 = SampleBean.builder()
+                                    .test1("test1")
+                                    .projectIdentifier(projectIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .identifier(identifier)
+                                    .build();
+      SampleBean sampleBean_saved_1 = doSave(sampleBean_1, false, "master");
+      assertFindReturnsObject(sampleBean_saved_1);
+    }
+
+    final long count = mongoTemplate.count(query(new Criteria()), SampleBean.class);
+    assertThat(count).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testSave_4() {
+    SampleBean sampleBean_saved;
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      sampleBean_saved = doSave(sampleBean, true, "branch");
+      assertFindReturnsObject(sampleBean_saved);
+    }
+    final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
+    SampleBean sampleBean_saved_1;
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      SampleBean sampleBean_1 = SampleBean.builder()
+                                    .test1("test")
+                                    .projectIdentifier(projectIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .identifier(identifier)
+                                    .build();
+      sampleBean_saved_1 = doSave(sampleBean_1, false, "master");
+      assertFindReturnsObject(sampleBean_saved_1);
+    }
+
+    final long count = mongoTemplate.count(query(new Criteria()), SampleBean.class);
+    assertThat(count).isEqualTo(1);
   }
 }
