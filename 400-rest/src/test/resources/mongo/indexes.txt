@@ -300,6 +300,7 @@ gitCommits {"name": "appId_1", "background": true} {"appId": 1}
 gitCommits {"name": "createdAt_1", "background": true} {"createdAt": 1}
 gitCommits {"name": "gitCommitAccountIdCreatedAtDesc", "background": true} {"accountId": 1, "createdAt": -1}
 gitCommits {"name": "gitCommitAccountIdLastUpdatedAT", "background": true} {"accountId": 1, "lastUpdatedAt": -1}
+gitCommits {"name": "gitCommitAccountIdStatusYgLastUpdatedIdx", "background": true} {"accountId": 1, "status": 1, "yamlGitConfigId": 1, "lastUpdatedAt": -1}
 gitCommits {"name": "gitCommitAccountIdStatusYgcLastUpdatedIdx", "background": true} {"accountId": 1, "status": 1, "yamlGitConfigIds": 1, "lastUpdatedAt": -1}
 gitCommits {"name": "gitCommitAccountIdYamlConfigIdsStatusLastUpdatedIdx", "background": true} {"accountId": 1, "yamlGitConfigIds": 1, "status": 1, "lastUpdatedAt": -1}
 gitCommits {"name": "gitCommitIdx", "unique": true} {"accountId": 1, "commitId": 1}
