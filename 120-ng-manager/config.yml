@@ -255,3 +255,5 @@ gitSdkConfiguration:
     authority: localhost
   scmConnectionConfig:
     url: localhost:8091
+
+enableDefaultResourceGroupCreation: false

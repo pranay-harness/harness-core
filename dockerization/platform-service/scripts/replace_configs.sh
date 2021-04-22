@@ -60,6 +60,10 @@ if [[ "" != "$MONGO_CONNECTIONS_PER_HOST" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.mongo.connectionsPerHost $MONGO_CONNECTIONS_PER_HOST
 fi
 
+if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
+fi
+
 if [[ "" != "$MANAGER_CLIENT_SECRET" ]]; then
   yq write -i $CONFIG_FILE secrets.managerServiceSecret "$MANAGER_CLIENT_SECRET"
 fi
@@ -219,14 +223,10 @@ replace_key_value resourceGroupServiceConfig.resourceClients.manager.secret "$NE
 
 replace_key_value resourceGroupServiceConfig.mongo.uri "${RESOURCE_GROUP_MONGO_URI//\\&/&}"
 
-replace_key_value resourceGroupServiceConfig.redis.sslConfig.enabled "$EVENTS_FRAMEWORK_REDIS_SSL_ENABLED"
-
-replace_key_value resourceGroupServiceConfig.redis.sslConfig.CATrustStorePath "$EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH"
-
-replace_key_value resourceGroupServiceConfig.redis.sslConfig.CATrustStorePassword "$EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD"
-
 replace_key_value notificationServiceConfig.mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
 
 replace_key_value resourceGroupServiceConfig.mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
 
 replace_key_value auditServiceConfig.mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
+
+replace_key_value resourceGroupServiceConfig.enableResourceGroup "$ENABLE_RESOURCE_GROUP"

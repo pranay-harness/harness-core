@@ -240,7 +240,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
     //    This is is temporary one time blocking migration
-    injector.getInstance(DefaultResourceGroupCreationService.class).defaultResourceGroupCreationJob();
+    if (appConfig.isEnableDefaultResourceGroupCreation()) {
+      injector.getInstance(DefaultResourceGroupCreationService.class).defaultResourceGroupCreationJob();
+    }
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {
