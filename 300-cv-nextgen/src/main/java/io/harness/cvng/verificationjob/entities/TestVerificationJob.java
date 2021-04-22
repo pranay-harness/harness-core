@@ -42,7 +42,7 @@ public class TestVerificationJob extends VerificationJob {
     if (sensitivity.isRuntimeParam()) {
       return null;
     }
-    return Sensitivity.valueOf(sensitivity.getValue());
+    return Sensitivity.getEnum(sensitivity.getValue());
   }
 
   public void setSensitivity(String sensitivity, boolean isRuntimeParam) {
