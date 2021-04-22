@@ -23,6 +23,7 @@ import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
@@ -153,6 +154,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   @Override
   public void initialize(Bootstrap<NextGenConfiguration> bootstrap) {
     initializeLogging();
+    bootstrap.addCommand(new InspectCommand<>(this));
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -229,6 +231,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
     registerIterators(injector);
+    registerJobs(injector);
 
     intializeGitSync(injector, appConfig);
     //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
@@ -287,6 +290,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerIterators(Injector injector) {
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+  }
+
+  public void registerJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

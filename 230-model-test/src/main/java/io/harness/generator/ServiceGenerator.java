@@ -510,8 +510,8 @@ public class ServiceGenerator {
     return serviceVariableService.save(serviceVariable);
   }
 
-  public Service ensureEcsRemoteTest(
-      Randomizer.Seed seed, Owners owners, String name, StoreType storeType, boolean accountConnector) {
+  public Service ensureEcsRemoteTest(Randomizer.Seed seed, Owners owners, String name, StoreType storeType,
+      boolean accountConnector, String containerSpecFilePath, String serviceSpecFilePath) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners,
         builder().name(name).artifactType(ArtifactType.DOCKER).deploymentType(DeploymentType.ECS).build()));
@@ -532,8 +532,8 @@ public class ServiceGenerator {
                                         .connectorId(gitConnectorSetting.getUuid())
                                         .branch("ecs-gitops-test")
                                         .useBranch(true)
-                                        .serviceSpecFilePath("ecsgitops/servicespec.json")
-                                        .taskSpecFilePath("ecsgitops/containerspec_templatized.json")
+                                        .serviceSpecFilePath(serviceSpecFilePath)
+                                        .taskSpecFilePath(containerSpecFilePath)
                                         .build();
       if (accountConnector) {
         gitFileConfig.setRepoName("arvind-test.git");

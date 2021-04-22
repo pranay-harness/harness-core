@@ -26,13 +26,13 @@ import lombok.experimental.FieldNameConstants;
 public abstract class CanaryBlueGreenVerificationJob extends VerificationJob {
   // TODO: move sensitivity to common base class.
   private RuntimeParameter sensitivity;
-  private Integer trafficSplitPercentage;
+  private Integer trafficSplitPercentage; // TODO: make this runtime param and write migration.
 
   public Sensitivity getSensitivity() {
     if (sensitivity.isRuntimeParam()) {
       return null;
     }
-    return Sensitivity.valueOf(sensitivity.getValue());
+    return Sensitivity.getEnum(sensitivity.getValue());
   }
 
   public void setSensitivity(String sensitivity, boolean isRuntimeParam) {

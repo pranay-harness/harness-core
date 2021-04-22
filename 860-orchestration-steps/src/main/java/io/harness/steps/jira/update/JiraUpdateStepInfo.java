@@ -12,6 +12,7 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.jira.JiraStepUtils;
 import io.harness.steps.jira.beans.JiraField;
 import io.harness.steps.jira.update.beans.TransitionTo;
 
@@ -20,7 +21,6 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -57,8 +57,7 @@ public class JiraUpdateStepInfo implements PMSStepInfo, WithConnectorRef {
         .connectorRef(connectorRef)
         .issueKey(issueKey)
         .transitionTo(transitionTo)
-        .fields(
-            fields == null ? null : fields.stream().collect(Collectors.toMap(JiraField::getName, JiraField::getValue)))
+        .fields(JiraStepUtils.prepareFieldMap(fields))
         .build();
   }
 

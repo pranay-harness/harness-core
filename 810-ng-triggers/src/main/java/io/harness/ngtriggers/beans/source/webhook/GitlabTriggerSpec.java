@@ -19,6 +19,7 @@ public class GitlabTriggerSpec implements WebhookTriggerSpec {
   WebhookEvent event;
   List<WebhookAction> actions;
   List<WebhookCondition> payloadConditions;
+  List<WebhookCondition> headerConditions;
   String jexlCondition;
   List<String> pathFilters;
 

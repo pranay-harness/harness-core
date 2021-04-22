@@ -7,6 +7,7 @@ import static io.harness.ng.core.invites.InviteOperationResponse.FAIL;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
 import static io.harness.ng.core.invites.remote.InviteMapper.writeDTO;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.ACCEPTED_INVITE;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -435,7 +436,8 @@ public class InviteServiceImpl implements InviteService {
                       .orgIdentifier(invite.getOrgIdentifier())
                       .projectIdentifier(invite.getProjectIdentifier())
                       .build();
-    ngUserService.addUserToScope(user, scope);
+
+    ngUserService.addUserToScope(user, scope, ACCEPTED_INVITE);
     createRoleAssignments(invite, user.getUuid());
     markInviteApprovedAndDeleted(invite);
     return true;

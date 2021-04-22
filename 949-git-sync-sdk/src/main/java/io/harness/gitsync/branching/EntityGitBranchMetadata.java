@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 // todo(abhinav): add indexes
 public class EntityGitBranchMetadata {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
+  @NotNull String uuidOfEntity;
   String entityType;
   List<String> branch;
   String yamlGitConfigId;

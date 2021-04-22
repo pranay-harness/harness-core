@@ -6,7 +6,6 @@ import static io.harness.logging.UnitStatus.EXPIRED;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.exception.InvalidRequestException;
@@ -20,6 +19,7 @@ import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 @Slf4j
 public class ExpiryHelper {
-  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OrchestrationEngine engine;
   @Inject private InterruptHelper interruptHelper;
 
@@ -40,25 +39,17 @@ public class ExpiryHelper {
         log.error("Delegate Task Cannot be aborted for NodeExecutionId: {}", nodeExecution.getUuid());
       }
 
-      List<UnitProgress> unitProgressList = new ArrayList<>();
-      if (!EmptyPredicate.isEmpty(nodeExecution.getUnitProgresses())) {
-        for (UnitProgress up : nodeExecution.getUnitProgresses()) {
-          if (isFinalUnitProgress(up.getStatus())) {
-            unitProgressList.add(up);
-          } else {
-            unitProgressList.add(up.toBuilder().setStatus(EXPIRED).setEndTime(System.currentTimeMillis()).build());
-          }
-        }
-      }
+      List<UnitProgress> unitProgressList = evaluateUnitProgresses(nodeExecution);
 
-      StepResponseProto expiredStepResponse = StepResponseProto.newBuilder()
-                                                  .setStatus(Status.EXPIRED)
-                                                  .setFailureInfo(FailureInfo.newBuilder()
-                                                                      .setErrorMessage("Node Expired")
-                                                                      .addFailureTypes(FailureType.TIMEOUT_FAILURE)
-                                                                      .build())
-                                                  .addAllUnitProgress(unitProgressList)
-                                                  .build();
+      StepResponseProto expiredStepResponse =
+          StepResponseProto.newBuilder()
+              .setStatus(Status.EXPIRED)
+              .setFailureInfo(FailureInfo.newBuilder()
+                                  .setErrorMessage("Step timed out before completion")
+                                  .addFailureTypes(FailureType.TIMEOUT_FAILURE)
+                                  .build())
+              .addAllUnitProgress(unitProgressList)
+              .build();
       engine.handleStepResponse(nodeExecution.getUuid(), expiredStepResponse);
       return interrupt.getUuid();
     } catch (NodeExecutionUpdateFailedException ex) {
@@ -68,6 +59,21 @@ public class ExpiryHelper {
       log.error("Error in discontinuing", e);
       throw new InvalidRequestException("Error in discontinuing, " + e.getMessage());
     }
+  }
+
+  @VisibleForTesting
+  List<UnitProgress> evaluateUnitProgresses(NodeExecution nodeExecution) {
+    List<UnitProgress> unitProgressList = new ArrayList<>();
+    if (!EmptyPredicate.isEmpty(nodeExecution.getUnitProgresses())) {
+      for (UnitProgress up : nodeExecution.getUnitProgresses()) {
+        if (isFinalUnitProgress(up.getStatus())) {
+          unitProgressList.add(up);
+        } else {
+          unitProgressList.add(up.toBuilder().setStatus(EXPIRED).setEndTime(System.currentTimeMillis()).build());
+        }
+      }
+    }
+    return unitProgressList;
   }
 
   private boolean isFinalUnitProgress(UnitStatus status) {

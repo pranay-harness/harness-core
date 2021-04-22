@@ -44,8 +44,8 @@ public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Conn
   }
 
   @Override
-  public Supplier<Connector> getEntityFromYaml(ConnectorDTO yaml) {
-    return () -> connectorMapper.toConnector(yaml, "accountIdentifier");
+  public Supplier<Connector> getEntityFromYaml(ConnectorDTO yaml, String accountIdentifier) {
+    return () -> connectorMapper.toConnector(yaml, accountIdentifier);
   }
 
   @Override

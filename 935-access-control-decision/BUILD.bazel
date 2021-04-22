@@ -11,7 +11,6 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//940-feature-flag:module",
         "//947-access-control-core:module",
         "//947-access-control-decision-commons:module",
         "//960-ng-core-beans:module",

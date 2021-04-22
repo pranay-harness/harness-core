@@ -27,7 +27,7 @@ const (
 	cgDir                        = "%s/ti/callgraph/cg/" // path where callgraph files will be generated
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
-	javaAgentArg = "-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
+	javaAgentArg = "-javaagent:/addon/bin/java-agent.jar=%s"
 	tiConfigPath = ".ticonfig.yaml"
 )
 

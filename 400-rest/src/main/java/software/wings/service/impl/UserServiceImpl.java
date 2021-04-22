@@ -3229,13 +3229,17 @@ public class UserServiceImpl implements UserService {
       return setupAccountForUser(user, userInvite, licenseInfo);
     } else if (marketPlace.getProductCode().equals(
                    configuration.getMarketPlaceConfig().getAwsMarketPlaceCeProductCode())) {
+      CeLicenseType ceLicenseType = CeLicenseType.PAID;
+      if (null != marketPlace.getLicenseType() && marketPlace.getLicenseType().equals("TRIAL")) {
+        ceLicenseType = CeLicenseType.FULL_TRIAL;
+      }
       licenseInfo.setAccountType(AccountType.TRIAL);
       licenseInfo.setLicenseUnits(MINIMAL_ORDER_QUANTITY);
       String accountId = setupAccountForUser(user, userInvite, licenseInfo);
       licenseService.updateCeLicense(accountId,
           CeLicenseInfo.builder()
               .expiryTime(marketPlace.getExpirationDate().getTime())
-              .licenseType(CeLicenseType.PAID)
+              .licenseType(ceLicenseType)
               .build());
       return accountId;
     } else {

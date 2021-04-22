@@ -12,7 +12,9 @@ import io.harness.logstreaming.LogLine;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(HarnessTeam.CDP)
 public class NGDelegateLogCallback implements LogCallback {
   private ILogStreamingTaskClient iLogStreamingTaskClient;
@@ -72,8 +74,16 @@ public class NGDelegateLogCallback implements LogCallback {
     commandUnitProgressMap.put(commandUnitName, commandUnitProgressBuilder.build());
 
     ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
+    sendTaskProgressUpdate(taskProgressClient);
+  }
+
+  void sendTaskProgressUpdate(ITaskProgressClient taskProgressClient) {
     if (taskProgressClient != null) {
-      taskProgressClient.sendTaskProgressUpdate(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
+      try {
+        taskProgressClient.sendTaskProgressUpdate(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
+      } catch (Exception exception) {
+        log.error("Failed to send task progress update {}", commandUnitsProgress, exception);
+      }
     }
   }
 }

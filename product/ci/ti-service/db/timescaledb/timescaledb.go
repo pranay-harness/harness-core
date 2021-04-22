@@ -417,6 +417,9 @@ func (tdb *TimeScaleDb) WriteDiffFiles(ctx context.Context, table, accountID, or
 // pull request. It returning information about the latest commit corresponding to the commits
 // present in sha.
 func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, table, accountID string, sha []string) (types.DiffInfo, error) {
+	if len(sha) == 0 {
+		return types.DiffInfo{}, nil
+	}
 	res := types.DiffInfo{}
 	files := []types.File{}
 	var shaIn string
@@ -450,6 +453,7 @@ func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, table, accountID strin
 		}
 		break
 	}
+	defer rows.Close()
 	if rows.Err() != nil {
 		return res, rows.Err()
 	}
@@ -472,6 +476,7 @@ func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, table, accountID strin
 		}
 		files = append(files, f)
 	}
+	defer rows.Close()
 	if rows.Err() != nil {
 		return res, rows.Err()
 	}

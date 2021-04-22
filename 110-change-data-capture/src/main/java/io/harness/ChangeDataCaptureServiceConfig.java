@@ -27,6 +27,7 @@ public class ChangeDataCaptureServiceConfig extends Configuration {
   @JsonProperty("pms-harness") private MongoConfig pmsMongo = MongoConfig.builder().build();
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("mongotags") private MongoTagsConfig mongoTagsConfig = MongoTagsConfig.builder().build();
+  @JsonProperty("gcp-project-id") private String gcpProjectId;
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(RESOURCE_PACKAGE);

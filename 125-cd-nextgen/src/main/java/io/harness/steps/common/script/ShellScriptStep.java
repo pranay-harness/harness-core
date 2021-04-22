@@ -23,6 +23,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.k8s.K8sConstants;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 import io.harness.ng.core.NGAccess;
@@ -88,17 +89,22 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
   @Override
   public TaskRequest obtainTask(
       Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
-    InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
-
-    if (infrastructureOutcome == null) {
-      throw new InvalidRequestException("Infrastructure not available");
-    }
-
     ShellScriptStepParameters shellScriptStepParameters = (ShellScriptStepParameters) stepParameters.getSpec();
 
     ScriptType scriptType = shellScriptStepParameters.getShell().getScriptType();
     ShellScriptTaskParametersNGBuilder taskParametersNGBuilder = ShellScriptTaskParametersNG.builder();
+
+    String shellScript = getShellScript(shellScriptStepParameters);
+
+    if (shellScript.contains(K8sConstants.HARNESS_KUBE_CONFIG_PATH)) {
+      InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
+          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+      if (infrastructureOutcome == null) {
+        throw new InvalidRequestException("Infrastructure not available");
+      }
+      taskParametersNGBuilder.k8sInfraDelegateConfig(
+          k8sStepHelper.getK8sInfraDelegateConfig(infrastructureOutcome, ambiance));
+    }
 
     if (!shellScriptStepParameters.onDelegate.getValue()) {
       ExecutionTarget executionTarget = shellScriptStepParameters.getExecutionTarget();
@@ -133,25 +139,13 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
         getEnvironmentVariables(shellScriptStepParameters.getEnvironmentVariables());
     List<String> outputVars = getOutputVars(shellScriptStepParameters.getOutputVariables());
 
-    // TODO: handle tags later, use task selectors
-    // List<String> tags = stepParameters.getTags();
-    // List<String> allTags = newArrayList();
-    // List<String> renderedTags = newArrayList();
-    // if (isNotEmpty(tags)) {
-    //   allTags.addAll(tags);
-    // }
-    // if (isNotEmpty(allTags)) {
-    //   renderedTags = trimStrings(renderedTags);
-    // }
-
     ShellScriptTaskParametersNG taskParameters =
         taskParametersNGBuilder.accountId(AmbianceHelper.getAccountId(ambiance))
             .executeOnDelegate(shellScriptStepParameters.onDelegate.getValue())
             .environmentVariables(environmentVariables)
             .executionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
-            .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructureOutcome, ambiance))
             .outputVars(outputVars)
-            .script(getShellScript(shellScriptStepParameters))
+            .script(shellScript)
             .scriptType(scriptType)
             .workingDirectory(workingDirectory)
             .build();

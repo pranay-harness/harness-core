@@ -220,7 +220,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
                                             .build()));
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().serviceName("orchestrationStepsTest").build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
-    modules.add(OrchestrationStepsModule.getInstance());
+    modules.add(OrchestrationStepsModule.getInstance(null));
     return modules;
   }
 

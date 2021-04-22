@@ -12,6 +12,7 @@ import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
+import io.harness.steps.cf.FeatureUpdateStepParameters;
 import io.harness.steps.dummy.DummySectionOutcome;
 import io.harness.steps.dummy.DummySectionStepParameters;
 import io.harness.steps.fork.ForkStepParameters;
@@ -41,7 +42,6 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.barriers.beans.BarrierOutcome", BarrierOutcome.class);
     h.put("steps.resourcerestraint.ResourceRestraintStepParameters", ResourceRestraintStepParameters.class);
     h.put("steps.resourcerestraint.beans.ResourceRestraintOutcome", ResourceRestraintOutcome.class);
-
     h.put("steps.dummy.DummySectionOutcome", DummySectionOutcome.class);
     h.put("steps.dummy.DummySectionStepParameters", DummySectionStepParameters.class);
     h.put("steps.fork.ForkStepParameters", ForkStepParameters.class);
@@ -49,5 +49,8 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.section.chain.SectionStepParameters", SectionChainStepParameters.class);
     h.put("steps.section.SectionStepParameters", SectionStepParameters.class);
     h.put("steps.approval.ApprovalStageStepParameters", ApprovalStageStepParameters.class);
+
+    // Feature Flag
+    h.put("steps.cf.FeatureUpdateStepParameters", FeatureUpdateStepParameters.class);
   }
 }

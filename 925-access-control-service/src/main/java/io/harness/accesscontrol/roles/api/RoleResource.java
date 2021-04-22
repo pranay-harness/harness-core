@@ -12,6 +12,7 @@ import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.RoleUpdateResult;
 import io.harness.accesscontrol.roles.events.RoleCreateEvent;
+import io.harness.accesscontrol.roles.events.RoleDeleteEvent;
 import io.harness.accesscontrol.roles.events.RoleUpdateEvent;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
@@ -152,7 +153,7 @@ public class RoleResource {
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       RoleResponseDTO response = roleDTOMapper.toResponseDTO(roleService.delete(identifier, scopeIdentifier));
       outboxService.save(
-          new RoleCreateEvent(response.getScope().getAccountIdentifier(), response.getRole(), response.getScope()));
+          new RoleDeleteEvent(response.getScope().getAccountIdentifier(), response.getRole(), response.getScope()));
       return ResponseDTO.newResponse(response);
     }));
   }

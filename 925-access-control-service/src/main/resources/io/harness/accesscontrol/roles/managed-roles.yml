@@ -131,6 +131,7 @@ roles:
       name: Pipeline Executor
       description: Execute a pipeline
       permissions:
+        - core_project_view
         - core_secret_view
         - core_secret_access
         - core_connector_view

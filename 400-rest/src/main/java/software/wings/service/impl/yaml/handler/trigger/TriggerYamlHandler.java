@@ -48,7 +48,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -426,7 +425,8 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
       triggerVariable.forEach((TriggerVariable variable) -> {
         String entityType = variable.getEntityType();
         String variableName = variable.getName();
-        Variable variableOrg = getVariableByName(workflow, variables, variableName);
+        Variable variableOrg =
+            variables.stream().filter(t -> t.getName().equals(variableName)).findFirst().orElse(null);
         String variableValue = variable.getValue();
         String workflowVariableValueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(
             accountId, envId, appId, entityType, variableValue, variableOrg);
@@ -437,16 +437,6 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     }
 
     return workflowVariables;
-  }
-
-  @VisibleForTesting
-  Variable getVariableByName(Workflow workflow, List<Variable> variables, String variableName) {
-    return variables.stream()
-        .filter(t -> t.getName().equals(variableName))
-        .findFirst()
-        .orElseThrow(()
-                         -> new InvalidRequestException(String.format(
-                             "Workflow %s does not contain variable with name: %s", workflow.getName(), variableName)));
   }
 
   private List<TriggerVariable> convertToTriggerYamlVariables(

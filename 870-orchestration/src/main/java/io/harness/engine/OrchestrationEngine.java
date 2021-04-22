@@ -29,6 +29,7 @@ import io.harness.engine.run.NodeRunCheck;
 import io.harness.engine.skip.SkipCheck;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.ExceptionUtils;
+import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
@@ -328,7 +329,9 @@ public class OrchestrationEngine {
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
           ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
           ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
-          setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
+          if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
+            setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
+          }
         }, EnumSet.noneOf(Status.class)));
   }
 

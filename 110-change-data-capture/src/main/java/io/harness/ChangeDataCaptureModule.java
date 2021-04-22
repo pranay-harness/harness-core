@@ -42,6 +42,7 @@ public class ChangeDataCaptureModule extends AbstractModule {
     bind(HPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
 
     try {
       bind(TimeScaleDBService.class)

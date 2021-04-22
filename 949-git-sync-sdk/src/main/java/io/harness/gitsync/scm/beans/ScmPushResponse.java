@@ -20,5 +20,7 @@ public interface ScmPushResponse {
 
   String getObjectId();
 
+  String getFolderPath();
+
   String getBranch();
 }
