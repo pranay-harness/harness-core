@@ -322,7 +322,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     checkDuplicateNames(savedConfigFile, inputConfigFile);
 
-    if (savedConfigFile.getEntityType() == SERVICE
+    if ((savedConfigFile.getEntityType() == SERVICE || savedConfigFile.getEntityType() == ENVIRONMENT)
         && !savedConfigFile.getRelativeFilePath().equals(inputConfigFile.getRelativeFilePath())) {
       updateRelativeFilePathForServiceAndAllOverrideFiles(savedConfigFile, inputConfigFile.getRelativeFilePath());
     }
