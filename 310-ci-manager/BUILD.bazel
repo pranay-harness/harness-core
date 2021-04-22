@@ -8,6 +8,7 @@ HarnessTeam = "CI"
 shared_dependencies = [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
+    "//940-primary-version-manager:module",
     "//950-common-entities:module",
     "//955-delegate-beans:module",
     "//960-persistence:module",

@@ -33,6 +33,7 @@ shared_dependencies = [
     "//955-delegate-beans:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
+    "//940-primary-version-manager:module",
     "//940-secret-manager-client:module",
     "//945-ng-audit-client:module",
     "//948-access-control-admin-client:module",

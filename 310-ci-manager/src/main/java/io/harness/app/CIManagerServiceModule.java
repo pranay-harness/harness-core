@@ -111,6 +111,7 @@ public class CIManagerServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(PrimaryVersionManagerModule.getInstance());
     bind(CIManagerConfiguration.class).toInstance(ciManagerConfiguration);
     bind(YAMLToObject.class).toInstance(new YAMLToObjectImpl());
     bind(HPersistence.class).to(MongoPersistence.class).in(Singleton.class);

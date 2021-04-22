@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.CIManagerConfiguration;
 import io.harness.app.CIManagerServiceModule;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.app.SCMGrpcClientModule;
 import io.harness.app.ScmConnectionConfig;
 import io.harness.ci.beans.entities.LogServiceConfig;
@@ -17,7 +18,6 @@ import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.queue.QueueController;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
@@ -29,6 +29,7 @@ import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -41,7 +42,6 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -73,6 +73,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
     List<Module> modules = new ArrayList<>();
     modules.add(YamlSdkModule.getInstance());
+    modules.add(PrimaryVersionManagerModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -90,6 +91,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CiExecutionRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -145,22 +147,6 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new SCMGrpcClientModule(configuration.getScmConnectionConfig()));
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(new CIManagerServiceModule(configuration));

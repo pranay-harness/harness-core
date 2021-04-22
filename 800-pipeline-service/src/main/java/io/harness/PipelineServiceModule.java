@@ -10,6 +10,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -74,7 +75,6 @@ import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImplV2;
 import io.harness.project.ProjectClientModule;
-import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
@@ -154,22 +154,7 @@ public class PipelineServiceModule extends AbstractModule {
                                                 .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
+    install(PrimaryVersionManagerModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
