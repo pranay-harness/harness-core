@@ -10,6 +10,8 @@ mongotags:
   tagKey: none
   tagValue: none
 
+gcp-project-id: "ce-qa-274307"
+
 harness-mongo:
   uri: mongodb://localhost:30001/harness
   connectTimeout: 30000
