@@ -179,8 +179,8 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     }
   }
 
-  private StepResponse handleTaskResultInline(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
-      ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+  private StepResponseBuilder createStepResponseBuilder(ThrowingSupplier<TerraformTaskNGResponse> responseSupplier)
+      throws Exception {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
     List<UnitProgress> unitProgresses = terraformTaskNGResponse.getUnitProgressData() == null
@@ -206,22 +206,39 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             "Unhandled type CommandExecutionStatus: " + terraformTaskNGResponse.getCommandExecutionStatus().name(),
             WingsException.USER);
     }
+    return stepResponseBuilder;
+  }
 
+  private void addStepOutcomeToStepResponse(
+      StepResponseBuilder stepResponseBuilder, TerraformTaskNGResponse terraformTaskNGResponse) {
+    stepResponseBuilder.stepOutcome(
+        StepResponse.StepOutcome.builder()
+            .name(OutcomeExpressionConstants.TERRAFORM_OUTPUT)
+            .outcome(TerraformApplyOutcome.builder()
+                         .outputs(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs()))
+                         .build())
+            .build());
+  }
+
+  private StepResponse handleTaskResultInline(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
+      ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+    StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
+    TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.saveRollbackDestroyConfigInline(stepParameters, terraformTaskNGResponse, ambiance);
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name(OutcomeExpressionConstants.TERRAFORM_OUTPUT)
-              .outcome(TerraformApplyOutcome.builder()
-                           .outputs(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs()))
-                           .build())
-              .build());
+      addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
     }
     return stepResponseBuilder.build();
   }
 
   private StepResponse handleTaskResultInherited(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
-    return null;
+    StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
+    TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
+    if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
+      helper.saveRollbackDestroyConfigInherited(stepParameters, ambiance);
+      addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
+    }
+    return stepResponseBuilder.build();
   }
 }
