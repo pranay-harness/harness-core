@@ -118,8 +118,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     GodInjector godInjector = new GodInjector();
     godInjector.put(NOTIFICATION_SERVICE,
         Guice.createInjector(new NotificationServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
-    godInjector.put(RESOURCE_GROUP_SERVICE,
-        Guice.createInjector(new ResourceGroupServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+    if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+      godInjector.put(RESOURCE_GROUP_SERVICE,
+          Guice.createInjector(new ResourceGroupServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+    }
     if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
       godInjector.put(AUDIT_SERVICE,
           Guice.createInjector(new AuditServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
@@ -133,8 +135,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
 
     new NotificationServiceSetup().setup(
         appConfig.getNotificationServiceConfig(), environment, godInjector.get(NOTIFICATION_SERVICE));
-    new ResourceGroupServiceSetup().setup(
-        appConfig.getResoureGroupServiceConfig(), environment, godInjector.get(RESOURCE_GROUP_SERVICE));
+    if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+      new ResourceGroupServiceSetup().setup(
+          appConfig.getResoureGroupServiceConfig(), environment, godInjector.get(RESOURCE_GROUP_SERVICE));
+    }
     if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
       new AuditServiceSetup().setup(appConfig.getAuditServiceConfig(), environment, godInjector.get(AUDIT_SERVICE));
     }
@@ -147,7 +151,9 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     if (Resource.isAcceptable(HealthResource.class)) {
       List<HealthService> healthServices = new ArrayList<>();
       healthServices.add(godInjector.get(NOTIFICATION_SERVICE).getInstance(HealthService.class));
-      healthServices.add(godInjector.get(RESOURCE_GROUP_SERVICE).getInstance(HealthService.class));
+      if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+        healthServices.add(godInjector.get(RESOURCE_GROUP_SERVICE).getInstance(HealthService.class));
+      }
       if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
         healthServices.add(godInjector.get(AUDIT_SERVICE).getInstance(HealthService.class));
       }
