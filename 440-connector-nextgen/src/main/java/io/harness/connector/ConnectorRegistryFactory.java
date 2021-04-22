@@ -51,6 +51,8 @@ import io.harness.connector.mappers.newerlicmapper.NewRelicDTOToEntity;
 import io.harness.connector.mappers.newerlicmapper.NewRelicEntityToDTO;
 import io.harness.connector.mappers.nexusmapper.NexusDTOToEntity;
 import io.harness.connector.mappers.nexusmapper.NexusEntityToDTO;
+import io.harness.connector.mappers.prometheusmapper.PrometheusDTOToEntity;
+import io.harness.connector.mappers.prometheusmapper.PrometheusEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.GcpKmsDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.GcpKmsEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.LocalDTOToEntity;
@@ -106,6 +108,7 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.SPLUNK,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));
+    registrar.put(ConnectorType.PROMETHEUS, new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class, NoOpConnectorValidationParamsProvider.class, PrometheusDTOToEntity.class, PrometheusEntityToDTO.class));
     registrar.put(ConnectorType.VAULT,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             VaultConnectorValidationParamsProvider.class, VaultDTOToEntity.class, VaultEntityToDTO.class));

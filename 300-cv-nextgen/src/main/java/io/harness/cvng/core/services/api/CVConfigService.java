@@ -12,7 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
+public interface
+CVConfigService extends DeleteEntityByHandler<CVConfig> {
   CVConfig save(CVConfig cvConfig);
   List<CVConfig> save(List<CVConfig> cvConfig);
   void update(CVConfig cvConfig);
