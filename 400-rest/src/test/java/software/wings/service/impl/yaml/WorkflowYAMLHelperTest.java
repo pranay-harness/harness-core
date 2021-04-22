@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HINGER;
@@ -17,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.VARIABLE_VALUE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -351,5 +353,16 @@ public class WorkflowYAMLHelperTest extends WingsBaseTest {
 
     workflowYAMLHelper.getWorkflowVariableValueBean(
         ACCOUNT_ID, ENV_ID, APP_ID, EntityType.SERVICE.name(), "${}", false, variable);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnProvidedVariableValueWhenWorkflowDoesNotContainSuchVariable() {
+    Variable variable = aVariable().name("test").entityType(EntityType.SERVICE).build();
+
+    assertThat(workflowYAMLHelper.getWorkflowVariableValueBean(
+                   ACCOUNT_ID, ENV_ID, APP_ID, EntityType.SERVICE.name(), VARIABLE_VALUE, false, null))
+        .isEqualTo(VARIABLE_VALUE);
   }
 }
