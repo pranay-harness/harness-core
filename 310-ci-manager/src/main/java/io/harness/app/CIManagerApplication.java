@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ci.app.InspectCommand;
 import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
@@ -273,6 +274,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   public void initialize(Bootstrap<CIManagerConfiguration> bootstrap) {
     initializeLogging();
     log.info("bootstrapping ...");
+    bootstrap.addCommand(new InspectCommand<>(this));
 
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
