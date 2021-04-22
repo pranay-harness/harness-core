@@ -158,6 +158,7 @@ BAZEL_MODULES="\
   //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \
   //952-scm-java-client:module \
+  //958-migration-sdk:module \
   //959-psql-database-models:module \
   //960-api-services:module \
   //960-continuous-features:module \
@@ -436,6 +437,7 @@ build_bazel_module 955-filters-sdk
 build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 952-scm-java-client
+build_bazel_module 958-migration-sdk
 build_bazel_module 959-psql-database-models
 build_bazel_module 960-api-services
 build_bazel_module 960-continuous-features
