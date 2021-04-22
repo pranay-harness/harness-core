@@ -10,8 +10,6 @@ replace_key_value () {
   fi
 }
 
-yq write -i $CONFIG_FILE server.adminConnectors “[]”
-
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
