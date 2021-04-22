@@ -33,7 +33,6 @@ import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.mongodb.DuplicateKeyException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -44,6 +43,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.TransactionException;
