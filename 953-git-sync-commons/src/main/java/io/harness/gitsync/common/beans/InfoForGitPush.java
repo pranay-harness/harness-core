@@ -13,6 +13,7 @@ import lombok.Data;
 @OwnedBy(DX)
 public class InfoForGitPush {
   ScmConnector scmConnector;
+  String folderPath;
   String filePath;
   boolean isDefault;
   String branch;

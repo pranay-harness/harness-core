@@ -27,6 +27,8 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
     final String branchName =
         getRequestParamFromContext(GitSyncApiConstants.BRANCH_KEY, pathParameters, queryParameters);
+    final String folderPath =
+        getRequestParamFromContext(GitSyncApiConstants.FOLDER_PATH, pathParameters, queryParameters);
     final String filePath =
         getRequestParamFromContext(GitSyncApiConstants.FILE_PATH_KEY, pathParameters, queryParameters);
     final String yamlGitConfigId =
@@ -46,6 +48,7 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
                                          .yamlGitConfigId(yamlGitConfigId)
                                          .commitMsg(commitMsg)
                                          .lastObjectId(lastObjectId)
+                                         .folderPath(folderPath)
                                          .createPr(Boolean.valueOf(createPrKey))
                                          .isNewBranch(Boolean.valueOf(isNewBranch))
                                          .build();

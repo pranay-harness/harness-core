@@ -24,6 +24,7 @@ message PushInfo {
   string yaml_git_config_id = 5;
   bool is_new_branch = 6;
   string branch_name = 7;
+  string folder_path = 8;
 }
 
 message PushResponse {
@@ -36,6 +37,7 @@ message FileInfo {
   io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 3;
   string account_id = 4;
   string branch = 5;
+  string folder_path = 6;
 }
 
 message InfoForPush {
@@ -50,6 +52,7 @@ message InfoForPush {
   google.protobuf.StringValue org_identifier = 8;
   google.protobuf.StringValue project_identifier = 9;
   string defaultBranchName = 10;
+  google.protobuf.StringValue folder_path = 11;
 }
 
 message IsGitSyncEnabled {

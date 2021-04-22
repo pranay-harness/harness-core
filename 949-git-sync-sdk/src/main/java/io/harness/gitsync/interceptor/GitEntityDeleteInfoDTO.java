@@ -21,6 +21,7 @@ import lombok.experimental.FieldNameConstants;
 public class GitEntityDeleteInfoDTO {
   @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
   @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigId;
+  @QueryParam(GitSyncApiConstants.FOLDER_PATH) String folderPath;
   @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath;
   @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg;
   @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) boolean createPr;
