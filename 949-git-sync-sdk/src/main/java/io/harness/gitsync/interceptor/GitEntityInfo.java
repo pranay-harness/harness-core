@@ -19,6 +19,7 @@ public class GitEntityInfo {
   String filePath;
   String commitMsg;
   boolean createPr;
+  String targetBranch;
   String lastObjectId; // required in case of update file
   boolean isNewBranch;
   boolean isSyncFromGit;

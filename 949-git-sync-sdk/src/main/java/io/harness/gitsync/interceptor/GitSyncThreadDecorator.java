@@ -8,8 +8,12 @@ import static javax.ws.rs.Priorities.HEADER_DECORATOR;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -41,6 +45,8 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
         getRequestParamFromContext(GitSyncApiConstants.CREATE_PR_KEY, pathParameters, queryParameters);
     final String isNewBranch =
         getRequestParamFromContext(GitSyncApiConstants.NEW_BRANCH, pathParameters, queryParameters);
+    final String targetBranch =
+        getRequestParamFromContext(GitSyncApiConstants.TARGET_BRANCH_FOR_PR, pathParameters, queryParameters);
     // todo(abhinav): see how we can add repo and other details automatically, if not we expect it in every request.
     final GitEntityInfo branchInfo = GitEntityInfo.builder()
                                          .branch(branchName)
@@ -51,12 +57,20 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
                                          .folderPath(folderPath)
                                          .createPr(Boolean.valueOf(createPrKey))
                                          .isNewBranch(Boolean.valueOf(isNewBranch))
+                                         .targetBranch(targetBranch)
                                          .build();
     GitSyncBranchThreadLocal.set(branchInfo);
   }
 
-  private String getRequestParamFromContext(
+  @VisibleForTesting
+  String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
-    return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : DEFAULT_BRANCH;
+    try {
+      return URLDecoder.decode(queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : DEFAULT_BRANCH,
+          Charsets.UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      log.error("Error in setting request param for {}", key);
+    }
+    return DEFAULT_BRANCH;
   }
 }
