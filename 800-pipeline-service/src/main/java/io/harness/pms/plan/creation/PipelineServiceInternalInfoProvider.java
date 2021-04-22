@@ -2,6 +2,9 @@ package io.harness.pms.plan.creation;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.pipeline.CfExecutionPMSPlanCreator;
+import io.harness.cf.pipeline.FeatureStageFilterJsonCreator;
+import io.harness.cf.pipeline.FeatureStagePlanCreator;
 import io.harness.filters.ExecutionPMSFilterJsonCreator;
 import io.harness.filters.ParallelFilterJsonCreator;
 import io.harness.filters.PipelineFilterJsonCreator;
@@ -48,6 +51,8 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     planCreators.add(new ExecutionPmsPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
     planCreators.add(new ResourceConstraintStepPlanCreator());
+    planCreators.add(new FeatureStagePlanCreator());
+    planCreators.add(new CfExecutionPMSPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }
@@ -61,6 +66,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     filterJsonCreators.add(new PmsStepFilterJsonCreator());
     filterJsonCreators.add(new ExecutionPMSFilterJsonCreator());
     filterJsonCreators.add(new StepGroupPmsFilterJsonCreator());
+    filterJsonCreators.add(new FeatureStageFilterJsonCreator());
     injectorUtils.injectMembers(filterJsonCreators);
     return filterJsonCreators;
   }

@@ -15,6 +15,7 @@ import io.harness.yaml.core.StepSpecType;
 import io.swagger.annotations.ApiModel;
 
 @OwnedBy(PIPELINE)
-@ApiModel(subTypes = {BarrierStepInfo.class, HttpStepInfo.class, HarnessApprovalStepInfo.class,
-              JiraApprovalStepInfo.class, JiraCreateStepInfo.class, JiraUpdateStepInfo.class})
+@ApiModel(
+    subTypes = {BarrierStepInfo.class, HttpStepInfo.class, FeatureUpdateStepInfo.class, HarnessApprovalStepInfo.class,
+        JiraApprovalStepInfo.class, JiraCreateStepInfo.class, JiraUpdateStepInfo.class})
 public interface PMSStepInfo extends StepSpecType, WithStepElementParameters {}

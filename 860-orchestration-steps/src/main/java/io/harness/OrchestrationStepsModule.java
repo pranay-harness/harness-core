@@ -1,5 +1,7 @@
 package io.harness;
 
+import io.harness.cf.CFApi;
+import io.harness.cf.openapi.ApiClient;
 import io.harness.steps.approval.step.ApprovalInstanceService;
 import io.harness.steps.approval.step.ApprovalInstanceServiceImpl;
 import io.harness.steps.barriers.service.BarrierService;
@@ -10,13 +12,20 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintServiceImpl;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 public class OrchestrationStepsModule extends AbstractModule {
+  private final OrchestrationStepConfig configuration;
   private static OrchestrationStepsModule instance;
 
-  public static OrchestrationStepsModule getInstance() {
+  public OrchestrationStepsModule(OrchestrationStepConfig configuration) {
+    this.configuration = configuration;
+  }
+
+  public static OrchestrationStepsModule getInstance(OrchestrationStepConfig orchestrationStepConfig) {
     if (instance == null) {
-      instance = new OrchestrationStepsModule();
+      instance = new OrchestrationStepsModule(orchestrationStepConfig);
     }
     return instance;
   }
@@ -28,5 +37,19 @@ public class OrchestrationStepsModule extends AbstractModule {
     bind(ResourceRestraintService.class).to(ResourceRestraintServiceImpl.class);
     bind(ResourceRestraintRegistry.class).to(ResourceRestraintRegistryImpl.class);
     bind(ApprovalInstanceService.class).to(ApprovalInstanceServiceImpl.class);
+  }
+
+  @Provides
+  @Singleton
+  CFApi providesCfAPI() {
+    ApiClient apiClient = new ApiClient();
+    apiClient.setBasePath(configuration.getFfServerBaseUrl());
+    return new CFApi(apiClient);
+  }
+
+  @Provides
+  @Singleton
+  public OrchestrationStepConfig orchestrationStepsConfig() {
+    return configuration;
   }
 }

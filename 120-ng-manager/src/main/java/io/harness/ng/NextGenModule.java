@@ -393,7 +393,7 @@ public class NextGenModule extends AbstractModule {
     });
 
     install(OrchestrationModule.getInstance(getOrchestrationConfig()));
-    install(OrchestrationStepsModule.getInstance());
+    install(OrchestrationStepsModule.getInstance(null));
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
