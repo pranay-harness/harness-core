@@ -22,6 +22,7 @@ import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.Scope;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
@@ -95,9 +96,7 @@ public class ConnectorMapper {
         .lastModifiedAt(timeWhenConnectorIsLastUpdated)
         .harnessManaged(isHarnessManaged(connector))
         .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
-        .branch(connector.getBranch())
-        .repoIdentifier(connector.getYamlGitConfigRef())
-        .objectId(connector.getObjectIdOfYaml())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(connector))
         .build();
   }
 
