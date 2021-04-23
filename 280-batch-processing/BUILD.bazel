@@ -13,6 +13,7 @@ shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "//490-ce-commons:module",
     "//870-orchestration:module",
     "//920-delegate-service-beans:module",
+    "//940-feature-flag:module",
     "//950-delegate-tasks-beans:module",
     "//950-events-framework:module",
     "//959-psql-database-models:module",

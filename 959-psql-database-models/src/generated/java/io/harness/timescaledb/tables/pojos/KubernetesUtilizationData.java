@@ -26,6 +26,7 @@ public class KubernetesUtilizationData implements Serializable {
   private Double maxmemory;
   private Double storagerequestvalue;
   private Double storageusagevalue;
+  private String actualinstanceid;
 
   public KubernetesUtilizationData() {}
 
@@ -43,11 +44,12 @@ public class KubernetesUtilizationData implements Serializable {
     this.maxmemory = value.maxmemory;
     this.storagerequestvalue = value.storagerequestvalue;
     this.storageusagevalue = value.storageusagevalue;
+    this.actualinstanceid = value.actualinstanceid;
   }
 
   public KubernetesUtilizationData(OffsetDateTime starttime, OffsetDateTime endtime, String accountid, String settingid,
       String instanceid, String instancetype, Double cpu, Double memory, String clusterid, Double maxcpu,
-      Double maxmemory, Double storagerequestvalue, Double storageusagevalue) {
+      Double maxmemory, Double storagerequestvalue, Double storageusagevalue, String actualinstanceid) {
     this.starttime = starttime;
     this.endtime = endtime;
     this.accountid = accountid;
@@ -61,6 +63,7 @@ public class KubernetesUtilizationData implements Serializable {
     this.maxmemory = maxmemory;
     this.storagerequestvalue = storagerequestvalue;
     this.storageusagevalue = storageusagevalue;
+    this.actualinstanceid = actualinstanceid;
   }
 
   /**
@@ -258,6 +261,21 @@ public class KubernetesUtilizationData implements Serializable {
     return this;
   }
 
+  /**
+   * Getter for <code>public.kubernetes_utilization_data.actualinstanceid</code>.
+   */
+  public String getActualinstanceid() {
+    return this.actualinstanceid;
+  }
+
+  /**
+   * Setter for <code>public.kubernetes_utilization_data.actualinstanceid</code>.
+   */
+  public KubernetesUtilizationData setActualinstanceid(String actualinstanceid) {
+    this.actualinstanceid = actualinstanceid;
+    return this;
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
@@ -332,6 +350,11 @@ public class KubernetesUtilizationData implements Serializable {
         return false;
     } else if (!storageusagevalue.equals(other.storageusagevalue))
       return false;
+    if (actualinstanceid == null) {
+      if (other.actualinstanceid != null)
+        return false;
+    } else if (!actualinstanceid.equals(other.actualinstanceid))
+      return false;
     return true;
   }
 
@@ -352,6 +375,7 @@ public class KubernetesUtilizationData implements Serializable {
     result = prime * result + ((this.maxmemory == null) ? 0 : this.maxmemory.hashCode());
     result = prime * result + ((this.storagerequestvalue == null) ? 0 : this.storagerequestvalue.hashCode());
     result = prime * result + ((this.storageusagevalue == null) ? 0 : this.storageusagevalue.hashCode());
+    result = prime * result + ((this.actualinstanceid == null) ? 0 : this.actualinstanceid.hashCode());
     return result;
   }
 
@@ -372,6 +396,7 @@ public class KubernetesUtilizationData implements Serializable {
     sb.append(", ").append(maxmemory);
     sb.append(", ").append(storagerequestvalue);
     sb.append(", ").append(storageusagevalue);
+    sb.append(", ").append(actualinstanceid);
 
     sb.append(")");
     return sb.toString();

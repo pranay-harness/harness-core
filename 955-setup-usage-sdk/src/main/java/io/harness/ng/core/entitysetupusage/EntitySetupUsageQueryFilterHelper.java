@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage.EntitySetupUsageKeys;
 
 import com.google.inject.Singleton;
+import java.util.List;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
@@ -43,5 +44,17 @@ public class EntitySetupUsageQueryFilterHelper {
           Criteria.where(EntitySetupUsageKeys.referredByEntityName).regex(searchTerm));
     }
     return criteria;
+  }
+
+  public Criteria createCriteriaForListAllReferredUsagesBatch(String accountIdentifier,
+      List<String> referredByEntityFQNList, EntityType referredByEntityType, EntityType referredEntityType) {
+    return Criteria.where(EntitySetupUsageKeys.accountIdentifier)
+        .is(accountIdentifier)
+        .and(EntitySetupUsageKeys.referredByEntityFQN)
+        .in(referredByEntityFQNList)
+        .and(EntitySetupUsageKeys.referredByEntityType)
+        .is(referredByEntityType.getYamlName())
+        .and(EntitySetupUsageKeys.referredEntityType)
+        .is(referredEntityType.getYamlName());
   }
 }

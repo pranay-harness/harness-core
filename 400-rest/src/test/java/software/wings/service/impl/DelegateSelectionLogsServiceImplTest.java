@@ -15,8 +15,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
@@ -58,6 +60,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
@@ -1136,7 +1139,9 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
     String accountId = generateUuid();
     String delegateId = generateUuid();
+
     DelegateEntityOwner owner = DelegateEntityOwner.builder().identifier("orgId/projectId").build();
+
     delegateSelectionLogsService.logOwnerRuleNotMatched(batch, accountId, delegateId, owner);
     assertThat(batch.getDelegateSelectionLogs()).hasSize(1);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage()).isEqualTo("No matching owner: orgId/projectId");

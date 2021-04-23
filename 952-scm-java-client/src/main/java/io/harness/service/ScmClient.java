@@ -31,8 +31,6 @@ public interface ScmClient {
 
   FileContent getFileContent(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 
-  FileBatchContentResponse getHarnessFilesOfBranch(ScmConnector connector, String branch);
-
   FileContent getLatestFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 
   IsLatestFileResponse isLatestFile(
@@ -40,17 +38,17 @@ public interface ScmClient {
 
   FileContent pushFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 
-  FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branch);
+  FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branchName);
 
   FindFilesInCommitResponse findFilesInCommit(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 
-  GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch);
+  GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName);
 
   ListBranchesResponse listBranches(ScmConnector scmConnector);
 
-  ListCommitsResponse listCommits(ScmConnector scmConnector, String branch);
+  ListCommitsResponse listCommits(ScmConnector scmConnector, String branchName);
 
-  FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch);
+  FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName);
 
   void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName);
 }

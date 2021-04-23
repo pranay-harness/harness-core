@@ -8,6 +8,8 @@ import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilityTaskSelectionDetails;
 import io.harness.capability.service.CapabilityService;
@@ -39,6 +41,7 @@ import org.mongodb.morphia.query.Sort;
 
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterator.Handler<Delegate> {
   private static final long CAPABILITIES_CHECK_INTERVAL_IN_MINUTES = 10L;
   private static final FindOptions FETCH_LIMIT_OPTIONS = new FindOptions().limit(10);

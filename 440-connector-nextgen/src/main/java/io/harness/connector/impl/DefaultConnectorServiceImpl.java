@@ -206,6 +206,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     assurePredefined(connectorRequestDTO, accountIdentifier);
+    ConnectorInfoDTO connectorInfo = connectorRequestDTO.getConnectorInfo();
+    validateTheIdentifierIsUnique(accountIdentifier, connectorInfo.getOrgIdentifier(),
+        connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
     validateThatAConnectorWithThisNameDoesNotExists(connectorRequestDTO.getConnectorInfo(), accountIdentifier);
     Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     connectorEntity.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());

@@ -7,8 +7,8 @@ import io.harness.timescaledb.tables.KubernetesUtilizationData;
 
 import java.time.OffsetDateTime;
 import org.jooq.Field;
-import org.jooq.Record13;
-import org.jooq.Row13;
+import org.jooq.Record14;
+import org.jooq.Row14;
 import org.jooq.impl.TableRecordImpl;
 
 /**
@@ -16,8 +16,8 @@ import org.jooq.impl.TableRecordImpl;
  */
 @SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class KubernetesUtilizationDataRecord
-    extends TableRecordImpl<KubernetesUtilizationDataRecord> implements Record13<OffsetDateTime, OffsetDateTime, String,
-        String, String, String, Double, Double, String, Double, Double, Double, Double> {
+    extends TableRecordImpl<KubernetesUtilizationDataRecord> implements Record14<OffsetDateTime, OffsetDateTime, String,
+        String, String, String, Double, Double, String, Double, Double, Double, Double, String> {
   private static final long serialVersionUID = 1L;
 
   /**
@@ -215,22 +215,37 @@ public class KubernetesUtilizationDataRecord
     return (Double) get(12);
   }
 
+  /**
+   * Setter for <code>public.kubernetes_utilization_data.actualinstanceid</code>.
+   */
+  public KubernetesUtilizationDataRecord setActualinstanceid(String value) {
+    set(13, value);
+    return this;
+  }
+
+  /**
+   * Getter for <code>public.kubernetes_utilization_data.actualinstanceid</code>.
+   */
+  public String getActualinstanceid() {
+    return (String) get(13);
+  }
+
   // -------------------------------------------------------------------------
-  // Record13 type implementation
+  // Record14 type implementation
   // -------------------------------------------------------------------------
 
   @Override
-  public Row13<OffsetDateTime, OffsetDateTime, String, String, String, String, Double, Double, String, Double, Double,
-      Double, Double>
+  public Row14<OffsetDateTime, OffsetDateTime, String, String, String, String, Double, Double, String, Double, Double,
+      Double, Double, String>
   fieldsRow() {
-    return (Row13) super.fieldsRow();
+    return (Row14) super.fieldsRow();
   }
 
   @Override
-  public Row13<OffsetDateTime, OffsetDateTime, String, String, String, String, Double, Double, String, Double, Double,
-      Double, Double>
+  public Row14<OffsetDateTime, OffsetDateTime, String, String, String, String, Double, Double, String, Double, Double,
+      Double, Double, String>
   valuesRow() {
-    return (Row13) super.valuesRow();
+    return (Row14) super.valuesRow();
   }
 
   @Override
@@ -299,6 +314,11 @@ public class KubernetesUtilizationDataRecord
   }
 
   @Override
+  public Field<String> field14() {
+    return KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.ACTUALINSTANCEID;
+  }
+
+  @Override
   public OffsetDateTime component1() {
     return getStarttime();
   }
@@ -364,6 +384,11 @@ public class KubernetesUtilizationDataRecord
   }
 
   @Override
+  public String component14() {
+    return getActualinstanceid();
+  }
+
+  @Override
   public OffsetDateTime value1() {
     return getStarttime();
   }
@@ -426,6 +451,11 @@ public class KubernetesUtilizationDataRecord
   @Override
   public Double value13() {
     return getStorageusagevalue();
+  }
+
+  @Override
+  public String value14() {
+    return getActualinstanceid();
   }
 
   @Override
@@ -507,9 +537,15 @@ public class KubernetesUtilizationDataRecord
   }
 
   @Override
+  public KubernetesUtilizationDataRecord value14(String value) {
+    setActualinstanceid(value);
+    return this;
+  }
+
+  @Override
   public KubernetesUtilizationDataRecord values(OffsetDateTime value1, OffsetDateTime value2, String value3,
       String value4, String value5, String value6, Double value7, Double value8, String value9, Double value10,
-      Double value11, Double value12, Double value13) {
+      Double value11, Double value12, Double value13, String value14) {
     value1(value1);
     value2(value2);
     value3(value3);
@@ -523,6 +559,7 @@ public class KubernetesUtilizationDataRecord
     value11(value11);
     value12(value12);
     value13(value13);
+    value14(value14);
     return this;
   }
 
@@ -542,7 +579,7 @@ public class KubernetesUtilizationDataRecord
    */
   public KubernetesUtilizationDataRecord(OffsetDateTime starttime, OffsetDateTime endtime, String accountid,
       String settingid, String instanceid, String instancetype, Double cpu, Double memory, String clusterid,
-      Double maxcpu, Double maxmemory, Double storagerequestvalue, Double storageusagevalue) {
+      Double maxcpu, Double maxmemory, Double storagerequestvalue, Double storageusagevalue, String actualinstanceid) {
     super(KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA);
 
     setStarttime(starttime);
@@ -558,5 +595,6 @@ public class KubernetesUtilizationDataRecord
     setMaxmemory(maxmemory);
     setStoragerequestvalue(storagerequestvalue);
     setStorageusagevalue(storageusagevalue);
+    setActualinstanceid(actualinstanceid);
   }
 }

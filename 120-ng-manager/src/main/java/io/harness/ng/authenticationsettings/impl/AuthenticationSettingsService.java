@@ -6,6 +6,7 @@ import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 
 import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SSOConfig;
@@ -28,4 +29,5 @@ public interface AuthenticationSettingsService {
       String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl);
   SSOConfig deleteSAMLMetadata(@NotNull String accountIdentifier);
   LoginTypeResponse getSAMLLoginTest(@NotNull String accountIdentifier);
+  PasswordStrengthPolicy getPasswordStrengthSettings(String accountIdentifier);
 }

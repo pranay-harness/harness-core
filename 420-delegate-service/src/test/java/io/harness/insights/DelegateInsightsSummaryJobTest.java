@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateInsightsType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.persistence.HPersistence;
@@ -21,7 +22,6 @@ import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.DelegateInsightsSummary;
 import software.wings.beans.DelegateInsightsSummary.DelegateInsightsSummaryKeys;
-import software.wings.beans.DelegateInsightsType;
 import software.wings.beans.DelegateTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsightsEventType;
 

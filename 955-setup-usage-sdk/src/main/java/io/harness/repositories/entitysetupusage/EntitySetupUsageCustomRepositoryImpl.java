@@ -29,4 +29,10 @@ public class EntitySetupUsageCustomRepositoryImpl implements EntitySetupUsageCus
     return PageableExecutionUtils.getPage(
         connectors, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), EntitySetupUsage.class));
   }
+
+  @Override
+  public long countAll(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.count(query, EntitySetupUsage.class);
+  }
 }

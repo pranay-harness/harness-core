@@ -5453,3 +5453,10 @@ go_repository(
     sum = "h1:beetH5mWDMzFznJ+Qzd5KVHp79YKhVUMcdO8LpRLeGw=",
     version = "v1.5.1",
 )
+
+go_repository(
+    name = "com_github_blendle_zapdriver",
+    importpath = "github.com/blendle/zapdriver",
+    sum = "h1:C3dydBOWYRiOk+B8X9IVZ5IOe+7cl+tGOexN4QqHfpE=",
+    version = "v1.3.1",
+)

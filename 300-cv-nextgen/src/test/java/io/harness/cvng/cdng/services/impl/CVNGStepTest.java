@@ -109,6 +109,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
                                               .activityId(activityId)
                                               .status(ActivityVerificationStatus.VERIFICATION_PASSED)
                                               .progressPercentage(100)
+                                              .remainingTimeMs(0)
                                               .durationMs(Duration.ofMinutes(30).toMillis())
                                               .build();
     StepResponse stepResponse = cvngStep.handleAsyncResponse(ambiance, cvngStepParameter,
@@ -116,11 +117,13 @@ public class CVNGStepTest extends CvNextGenTestBase {
             CVNGStep.CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(stepResponse.getFailureInfo()).isNull();
-    StepOutcome stepOutcome =
-        StepOutcome.builder()
-            .name("output")
-            .outcome(CVNGStep.VerifyStepOutcome.builder().activityStatus(activityStatusDTO).build())
-            .build();
+    StepOutcome stepOutcome = StepOutcome.builder()
+                                  .name("output")
+                                  .outcome(CVNGStep.VerifyStepOutcome.builder()
+                                               .progressPercentage(100)
+                                               .estimatedRemainingTime("0 minutes")
+                                               .build())
+                                  .build();
     assertThat(stepResponse.getStepOutcomes()).isEqualTo(Collections.singletonList(stepOutcome));
   }
   // TODO: more tests..
