@@ -37,5 +37,5 @@ java_binary(
 )
 
 run_analysis(
-    run_pmd = "no",
+    run_pmd = False,
 )

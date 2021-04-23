@@ -24,6 +24,6 @@ java_library(
 )
 
 run_analysis(
-    run_checkstyle = "no",
-    run_pmd = "no",
+    run_checkstyle = False,
+    run_pmd = False,
 )
