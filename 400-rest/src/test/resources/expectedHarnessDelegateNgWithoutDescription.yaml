@@ -118,6 +118,10 @@ spec:
           value: "9S5HMP0xROugl3_QgO62rQ"
         - name: DELEGATE_TASK_LIMIT
           value: "50"
+        - name: DELEGATE_ORG_IDENTIFIER
+          value: ""
+        - name: DELEGATE_PROJECT_IDENTIFIER
+          value: ""
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

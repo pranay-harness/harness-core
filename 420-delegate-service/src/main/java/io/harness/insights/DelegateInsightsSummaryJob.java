@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateInsightsType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.insights.DelegateInsightsSummaryKey.DelegateInsightsSummaryKeyBuilder;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -18,7 +19,6 @@ import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.DelegateInsightsSummary;
 import software.wings.beans.DelegateInsightsSummary.DelegateInsightsSummaryKeys;
-import software.wings.beans.DelegateInsightsType;
 import software.wings.beans.DelegateTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsights.DelegateTaskUsageInsightsKeys;
 import software.wings.beans.DelegateTaskUsageInsightsEventType;

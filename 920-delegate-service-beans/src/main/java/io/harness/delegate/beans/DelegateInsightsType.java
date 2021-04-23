@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.delegate.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
