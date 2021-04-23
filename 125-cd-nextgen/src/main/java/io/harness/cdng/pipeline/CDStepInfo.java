@@ -13,15 +13,17 @@ import io.harness.cdng.k8s.K8sRollingStepInfo;
 import io.harness.cdng.k8s.K8sScaleStepInfo;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.cdng.provision.terraform.TerraformApplyStepInfo;
+import io.harness.cdng.provision.terraform.TerraformDestroyStepInfo;
 import io.harness.cdng.provision.terraform.TerraformPlanStepInfo;
 import io.harness.plancreator.steps.common.WithStepElementParameters;
 import io.harness.yaml.core.StepSpecType;
 
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(subTypes = {K8sApplyStepInfo.class, K8sBlueGreenStepInfo.class, K8sCanaryStepInfo.class,
-              K8sRollingStepInfo.class, K8sRollingRollbackStepInfo.class, K8sScaleStepInfo.class,
-              ShellScriptStepInfo.class, K8sDeleteStepInfo.class, K8sBGSwapServicesStepInfo.class,
-              K8sCanaryDeleteStepInfo.class, TerraformApplyStepInfo.class, TerraformPlanStepInfo.class})
+@ApiModel(
+    subTypes = {K8sApplyStepInfo.class, K8sBlueGreenStepInfo.class, K8sCanaryStepInfo.class, K8sRollingStepInfo.class,
+        K8sRollingRollbackStepInfo.class, K8sScaleStepInfo.class, ShellScriptStepInfo.class, K8sDeleteStepInfo.class,
+        K8sBGSwapServicesStepInfo.class, K8sCanaryDeleteStepInfo.class, TerraformApplyStepInfo.class,
+        TerraformPlanStepInfo.class, TerraformDestroyStepInfo.class})
 @OwnedBy(HarnessTeam.CDC)
 public interface CDStepInfo extends StepSpecType, WithStepElementParameters {}
