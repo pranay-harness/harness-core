@@ -23,7 +23,7 @@ public interface InterruptService {
 
   List<Interrupt> fetchActivePlanLevelInterrupts(String planExecutionId);
 
-  InterruptCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId);
+  PreFacilitationCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId);
 
   Interrupt save(@Valid Interrupt interrupt);
 

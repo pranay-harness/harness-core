@@ -51,10 +51,10 @@ public class InterruptServiceImpl implements InterruptService {
   }
 
   @Override
-  public InterruptCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId) {
+  public PreFacilitationCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId) {
     List<Interrupt> interrupts = fetchActivePlanLevelInterrupts(planExecutionId);
     if (isEmpty(interrupts)) {
-      return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
+      return PreFacilitationCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
     }
     if (interrupts.size() > 1) {
       throw new InvalidRequestException("More than 2 active Plan Level Interrupts Present: "
@@ -66,12 +66,18 @@ public class InterruptServiceImpl implements InterruptService {
       case PAUSE_ALL:
         if (pauseRequired(interrupt, nodeExecutionId)) {
           pauseAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
-          return InterruptCheck.builder().proceed(false).reason("[InterruptCheck] PAUSE_ALL interrupt found").build();
+          return PreFacilitationCheck.builder()
+              .proceed(false)
+              .reason("[InterruptCheck] PAUSE_ALL interrupt found")
+              .build();
         }
-        return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
+        return PreFacilitationCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
       case RESUME_ALL:
         resumeAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
-        return InterruptCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
+        return PreFacilitationCheck.builder()
+            .proceed(true)
+            .reason("[InterruptCheck] RESUME_ALL interrupt found")
+            .build();
       default:
         throw new InvalidRequestException("No Handler Present for interrupt type: " + interrupt.getType());
     }
