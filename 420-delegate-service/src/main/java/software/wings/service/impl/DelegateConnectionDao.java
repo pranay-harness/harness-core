@@ -7,21 +7,17 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
 import static software.wings.beans.DelegateConnection.TTL;
-import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.DelegateConnectionDetails;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
-import software.wings.beans.DelegateStatus;
-import software.wings.beans.ManagerConfiguration;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,7 +34,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 public class DelegateConnectionDao {
   @Inject private HPersistence persistence;
@@ -63,8 +58,7 @@ public class DelegateConnectionDao {
         .count();
   }
 
-  public Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> obtainActiveDelegateConnections(
-      String accountId) {
+  public Map<String, List<DelegateConnectionDetails>> obtainActiveDelegateConnections(String accountId) {
     List<DelegateConnection> delegateConnections = persistence.createQuery(DelegateConnection.class)
                                                        .filter(DelegateConnectionKeys.accountId, accountId)
                                                        .field(DelegateConnectionKeys.disconnected)
@@ -79,7 +73,7 @@ public class DelegateConnectionDao {
     return delegateConnections.stream().collect(Collectors.groupingBy(delegateConnection
         -> delegateConnection.getDelegateId(),
         Collectors.mapping(delegateConnection
-            -> DelegateStatus.DelegateInner.DelegateConnectionInner.builder()
+            -> DelegateConnectionDetails.builder()
                    .uuid(delegateConnection.getUuid())
                    .lastHeartbeat(delegateConnection.getLastHeartbeat())
                    .version(delegateConnection.getVersion())
@@ -87,14 +81,14 @@ public class DelegateConnectionDao {
             toList())));
   }
 
-  public Set<String> obtainConnectedDelegates(String accountId) {
+  public Set<String> obtainConnectedDelegates(String accountId, String primaryVersion, String matchAllVersionWildcard) {
     Query<DelegateConnection> query = persistence.createQuery(DelegateConnection.class)
                                           .filter(DelegateConnectionKeys.accountId, accountId)
                                           .filter(DelegateConnectionKeys.disconnected, Boolean.FALSE)
                                           .field(DelegateConnectionKeys.lastHeartbeat)
                                           .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis());
-    String primaryVersion = persistence.createQuery(ManagerConfiguration.class).get().getPrimaryVersion();
-    if (isNotEmpty(primaryVersion) && !StringUtils.equals(primaryVersion, MATCH_ALL_VERSION)) {
+
+    if (isNotEmpty(primaryVersion) && !StringUtils.equals(primaryVersion, matchAllVersionWildcard)) {
       query.filter(DelegateConnectionKeys.version, primaryVersion);
     }
     return query.project(DelegateConnectionKeys.delegateId, true)
