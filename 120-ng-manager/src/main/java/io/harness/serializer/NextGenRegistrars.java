@@ -45,6 +45,7 @@ public class NextGenRegistrars {
           .add(MockRoleAssignmentMorphiaRegistrar.class)
           .add(InvitesMorphiaRegistrar.class)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
+          .addAll(LicenseManagerRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
