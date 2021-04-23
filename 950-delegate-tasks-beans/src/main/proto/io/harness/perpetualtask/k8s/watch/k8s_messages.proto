@@ -239,4 +239,9 @@ message K8sWorkloadSpec {
 
   repeated ContainerSpec container_specs = 8;
   repeated ContainerSpec init_container_specs = 9;
+
+  int64 replicas = 10;
+  string uid = 11;
+
+  int32 version = 12;
 }

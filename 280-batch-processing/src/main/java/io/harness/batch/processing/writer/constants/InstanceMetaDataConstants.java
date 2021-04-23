@@ -18,6 +18,7 @@ public class InstanceMetaDataConstants {
   public static final String COMPUTE_TYPE = "compute_type";
   public static final String CLUSTER_TYPE = "cluster_type";
   public static final String CLOUD_PROVIDER = "cloud_provider";
+  public static final String WORKLOAD_ID = "workload_id";
   public static final String WORKLOAD_NAME = "workload_name";
   public static final String WORKLOAD_TYPE = "workload_type";
   public static final String INSTANCE_FAMILY = "instance_family";

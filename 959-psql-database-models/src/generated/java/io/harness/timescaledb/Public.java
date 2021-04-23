@@ -4,6 +4,9 @@
 package io.harness.timescaledb;
 
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
+import io.harness.timescaledb.tables.NodeInfo;
+import io.harness.timescaledb.tables.PodInfo;
+import io.harness.timescaledb.tables.WorkloadInfo;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +33,21 @@ public class Public extends SchemaImpl {
       KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA;
 
   /**
+   * The table <code>public.node_info</code>.
+   */
+  public final NodeInfo NODE_INFO = NodeInfo.NODE_INFO;
+
+  /**
+   * The table <code>public.pod_info</code>.
+   */
+  public final PodInfo POD_INFO = PodInfo.POD_INFO;
+
+  /**
+   * The table <code>public.workload_info</code>.
+   */
+  public final WorkloadInfo WORKLOAD_INFO = WorkloadInfo.WORKLOAD_INFO;
+
+  /**
    * No further instances allowed
    */
   private Public() {
@@ -43,6 +61,7 @@ public class Public extends SchemaImpl {
 
   @Override
   public final List<Table<?>> getTables() {
-    return Arrays.<Table<?>>asList(KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA);
+    return Arrays.<Table<?>>asList(KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA, NodeInfo.NODE_INFO,
+        PodInfo.POD_INFO, WorkloadInfo.WORKLOAD_INFO);
   }
 }

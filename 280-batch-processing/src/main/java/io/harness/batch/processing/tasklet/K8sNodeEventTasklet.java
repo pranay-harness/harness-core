@@ -7,10 +7,13 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeEvent;
 
@@ -31,6 +34,8 @@ public class K8sNodeEventTasklet implements Tasklet {
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired protected InstanceDataService instanceDataService;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+  @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  @Autowired private FeatureFlagService featureFlagService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -52,6 +57,11 @@ public class K8sNodeEventTasklet implements Tasklet {
                                                   .collect(Collectors.toList());
 
       instanceDataBulkWriteService.updateList(instanceEventList);
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+        // we are not using START event now-a-days.
+        instanceInfoTimescaleDAO.updateNodeStopEvent(
+            instanceEventList.stream().filter(e -> EventType.STOP.equals(e.getType())).collect(Collectors.toList()));
+      }
     } while (publishedMessageList.size() == batchSize);
     return null;
   }

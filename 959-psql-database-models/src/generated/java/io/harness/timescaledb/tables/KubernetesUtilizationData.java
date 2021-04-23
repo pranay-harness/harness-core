@@ -15,7 +15,7 @@ import org.jooq.ForeignKey;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.Row13;
+import org.jooq.Row14;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -122,6 +122,12 @@ public class KubernetesUtilizationData extends TableImpl<KubernetesUtilizationDa
   public final TableField<KubernetesUtilizationDataRecord, Double> STORAGEUSAGEVALUE =
       createField(DSL.name("storageusagevalue"), SQLDataType.DOUBLE, this, "");
 
+  /**
+   * The column <code>public.kubernetes_utilization_data.actualinstanceid</code>.
+   */
+  public final TableField<KubernetesUtilizationDataRecord, String> ACTUALINSTANCEID =
+      createField(DSL.name("actualinstanceid"), SQLDataType.CLOB, this, "");
+
   private KubernetesUtilizationData(Name alias, Table<KubernetesUtilizationDataRecord> aliased) {
     this(alias, aliased, null);
   }
@@ -194,13 +200,13 @@ public class KubernetesUtilizationData extends TableImpl<KubernetesUtilizationDa
   }
 
   // -------------------------------------------------------------------------
-  // Row13 type methods
+  // Row14 type methods
   // -------------------------------------------------------------------------
 
   @Override
-  public Row13<OffsetDateTime, OffsetDateTime, String, String, String, String, Double, Double, String, Double, Double,
-      Double, Double>
+  public Row14<OffsetDateTime, OffsetDateTime, String, String, String, String, Double, Double, String, Double, Double,
+      Double, Double, String>
   fieldsRow() {
-    return (Row13) super.fieldsRow();
+    return (Row14) super.fieldsRow();
   }
 }
