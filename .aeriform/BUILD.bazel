@@ -244,10 +244,6 @@ aeriform("//930-delegate-tasks:tests")
 
 aeriform("//930-ng-core-clients:module")
 
-aeriform("//935-access-control-decision:module")
-
-aeriform("//935-access-control-decision:tests")
-
 aeriform("//940-cg-audit-service:module")
 
 aeriform("//940-cg-audit-service:tests")
@@ -275,6 +271,10 @@ aeriform("//945-ng-audit-client:module")
 aeriform("//946-access-control-aggregator:module")
 
 aeriform("//946-access-control-aggregator:tests")
+
+aeriform("//946-access-control-decision:module")
+
+aeriform("//946-access-control-decision:tests")
 
 aeriform("//947-access-control-core:module")
 

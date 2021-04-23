@@ -72,7 +72,6 @@ directories:
   930-ng-core-clients
   955-alert-beans
   955-delegate-beans
-  935-access-control-decision
   940-cg-audit-service
   940-feature-flag
   940-ng-audit-service
@@ -82,6 +81,7 @@ directories:
   940-secret-manager-client
   945-ng-audit-client
   949-git-sync-sdk
+  946-access-control-decision
   946-access-control-aggregator
   947-access-control-core
   947-access-control-decision-commons
