@@ -1,4 +1,4 @@
-package io.harness.exception.exceptionmanager;
+package io.harness.exception.exceptionmanager.exceptionhandler;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
