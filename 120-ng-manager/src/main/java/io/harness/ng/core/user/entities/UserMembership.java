@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
@@ -45,9 +44,9 @@ public class UserMembership implements PersistentEntity {
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("userMembershipAccountOrgProject")
-                 .field(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
-                 .field(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
-                 .field(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
+                 .field(UserMembershipKeys.scopes + "." + Scope.ScopeKeys.accountIdentifier)
+                 .field(UserMembershipKeys.scopes + "." + Scope.ScopeKeys.orgIdentifier)
+                 .field(UserMembershipKeys.scopes + "." + Scope.ScopeKeys.projectIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("uniqueUserMembershipUserId")
