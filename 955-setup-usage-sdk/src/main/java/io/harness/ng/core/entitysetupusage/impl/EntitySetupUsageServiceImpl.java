@@ -7,8 +7,12 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageQueryFilterHelper;
+import io.harness.ng.core.entitysetupusage.dto.EntityReferencesDTO;
+import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageBatchDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.ng.core.entitysetupusage.dto.ReferredEntityDTO;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage.EntitySetupUsageKeys;
 import io.harness.ng.core.entitysetupusage.mappers.EntitySetupUsageDTOtoEntity;
@@ -22,6 +26,7 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -149,6 +154,56 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
     final List<EntitySetupUsage> entitySetupUsageFiltered =
         filterSetupUsageByEntityTypes(entitySetupUsage, entityTypeFromChannel);
     return saveMultiple(entitySetupUsageFiltered);
+  }
+
+  @Override
+  public EntityReferencesDTO listAllReferredUsagesBatch(String accountIdentifier, List<String> referredByEntityFQNList,
+      EntityType referredByEntityType, EntityType referredEntityType) {
+    Criteria criteria = entitySetupUsageFilterHelper.createCriteriaForListAllReferredUsagesBatch(
+        accountIdentifier, referredByEntityFQNList, referredByEntityType, referredEntityType);
+    long count = entityReferenceRepository.countAll(criteria);
+    List<EntitySetupUsageDTO> entitySetupUsageDTOList = new ArrayList<>();
+    int maxSizeQuery = 100;
+    int page = 0;
+    while (count > 0) {
+      Pageable pageable =
+          getPageRequest(page, maxSizeQuery, Sort.by(Sort.Direction.DESC, EntitySetupUsageKeys.createdAt));
+      Page<EntitySetupUsage> entityReferences = entityReferenceRepository.findAll(criteria, pageable);
+      List<EntitySetupUsage> entityReferencesContent = entityReferences.getContent();
+      entitySetupUsageDTOList.addAll(
+          entityReferencesContent.stream()
+              .map(entityReference -> setupUsageEntityToDTO.createEntityReferenceDTO(entityReference))
+              .collect(Collectors.toList()));
+      count -= maxSizeQuery;
+      page++;
+    }
+    Map<EntityDetail, List<EntitySetupUsageDTO>> entityDetailListMap =
+        entitySetupUsageDTOList.stream().collect(Collectors.groupingBy(EntitySetupUsageDTO::getReferredByEntity));
+    return EntityReferencesDTO.builder()
+        .entitySetupUsageBatchList(buildEntitySetupUsageBatchDTOFromMap(entityDetailListMap))
+        .build();
+  }
+
+  private List<EntitySetupUsageBatchDTO> buildEntitySetupUsageBatchDTOFromMap(
+      Map<EntityDetail, List<EntitySetupUsageDTO>> entityDetailListMap) {
+    List<EntitySetupUsageBatchDTO> entitySetupUsageBatchDTOList = new ArrayList<>();
+    entityDetailListMap.forEach((referredByEntity, referredEntities)
+                                    -> entitySetupUsageBatchDTOList.add(
+                                        EntitySetupUsageBatchDTO.builder()
+                                            .referredByEntity(referredByEntity.getEntityRef().getFullyQualifiedName())
+                                            .referredEntities(referredEntities)
+                                            .build()));
+    return entitySetupUsageBatchDTOList;
+  }
+
+  private List<ReferredEntityDTO> getReferredEntityDTOList(List<EntitySetupUsageDTO> referredEntities) {
+    List<ReferredEntityDTO> referredEntityDTOList = new ArrayList<>();
+    referredEntities.forEach(referredEntity -> referredEntityDTOList.add(getReferredEntityDTO(referredEntity)));
+    return referredEntityDTOList;
+  }
+
+  private ReferredEntityDTO getReferredEntityDTO(EntitySetupUsageDTO referredEntity) {
+    return ReferredEntityDTO.builder().referredEntity(referredEntity.getReferredEntity()).build();
   }
 
   private Boolean saveMultiple(List<EntitySetupUsage> entitySetupUsages) {

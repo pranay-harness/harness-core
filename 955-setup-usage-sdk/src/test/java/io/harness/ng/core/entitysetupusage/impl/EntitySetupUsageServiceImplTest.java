@@ -11,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.common.EntityReference;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageTestBase;
+import io.harness.ng.core.entitysetupusage.dto.EntityReferencesDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -262,5 +263,52 @@ public class EntitySetupUsageServiceImplTest extends EntitySetupUsageTestBase {
                    .referredEntityType(referredEntity.getType().toString())
                    .build())
         .collect(Collectors.toList());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.HARI)
+  @Category(UnitTests.class)
+  public void listBatchTest() {
+    List<EntitySetupUsageDTO> setupUsages = new ArrayList<>();
+    String referredByIdentifier = "referredIdentifier";
+    String referredByEntityName = "Pipeline";
+    for (int i = 0; i < 2; i++) {
+      String referredIdentifier = "referredIdentifier" + i;
+      String referredEntityName = "Connector" + i;
+      EntityDetail referredByEntity = getEntityDetails(
+          referredByIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredByEntityName, PIPELINES);
+      EntityDetail referredEntity = getEntityDetails(
+          referredIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
+      EntitySetupUsageDTO entitySetupUsageDTO =
+          createEntityReference(accountIdentifier, referredEntity, referredByEntity);
+      setupUsages.add(entitySetupUsageDTO);
+      entitySetupUsageService.save(entitySetupUsageDTO);
+    }
+
+    // Adding one extra setup usage for different entity
+    String referredByIdentifier1 = "referredByIdentifier1";
+    String referredIdentifier1 = "referredIdentifier1";
+    EntityDetail referredByEntity = getEntityDetails(
+        referredByIdentifier1, accountIdentifier, orgIdentifier, projectIdentifier, referredByEntityName, PIPELINES);
+    EntityDetail referredEntity = getEntityDetails(
+        referredIdentifier1, accountIdentifier, orgIdentifier, projectIdentifier, referredEntityName, CONNECTORS);
+    EntitySetupUsageDTO entitySetupUsageDTO =
+        createEntityReference(accountIdentifier, referredEntity, referredByEntity);
+    setupUsages.add(entitySetupUsageDTO);
+    entitySetupUsageService.save(entitySetupUsageDTO);
+
+    String referredByEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier);
+    String referredByEntityFQN1 = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier1);
+    final EntityReferencesDTO entityReferencesDTO = entitySetupUsageService.listAllReferredUsagesBatch(
+        accountIdentifier, Arrays.asList(referredByEntityFQN, referredByEntityFQN1), PIPELINES, CONNECTORS);
+    assertThat(entityReferencesDTO.getEntitySetupUsageBatchList().size() == 2);
+    assertThat(
+        entityReferencesDTO.getEntitySetupUsageBatchList().get(0).getReferredByEntity().equals(referredByEntityFQN)
+        && entityReferencesDTO.getEntitySetupUsageBatchList().get(0).getReferredEntities().size() == 2);
+    assertThat(
+        entityReferencesDTO.getEntitySetupUsageBatchList().get(1).getReferredByEntity().equals(referredByEntityFQN1)
+        && entityReferencesDTO.getEntitySetupUsageBatchList().get(1).getReferredEntities().size() == 1);
   }
 }
