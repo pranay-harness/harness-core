@@ -274,18 +274,18 @@ public class TerraformStepHelper {
     Map<String, String> commitIdMap = response.getCommitIdForConfigFilesMap();
     builder.configFiles(getStoreConfigAtCommitId(
         stepParameters.getConfigFilesWrapper().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES)));
-    List<StoreConfigWrapper> remoteVarFiles = stepParameters.getRemoteVarFiles();
+    List<StoreConfigWrapper> remoteVarFiles = stepParameters.getRemoteVarFileConfigs();
     if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
       int i = 1;
       List<StoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
-      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFiles()) {
+      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFileConfigs()) {
         remoteVarFilesAtCommitIds.add(
             getStoreConfigAtCommitId(varFileWrapper.getStoreConfig(), commitIdMap.get(String.format(TF_VAR_FILES, i))));
         i++;
       }
       builder.remoteVarFiles(remoteVarFilesAtCommitIds);
     }
-    builder.inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFiles()))
+    builder.inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFilesListContent()))
         .backendConfig(ParameterFieldHelper.getParameterFieldValue(stepParameters.getBackendConfig()))
         .environmentVariables(getEnvironmentVariablesMap(stepParameters.getEnvironmentVariables()))
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))

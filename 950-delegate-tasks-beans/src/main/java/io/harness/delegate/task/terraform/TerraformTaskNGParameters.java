@@ -43,6 +43,9 @@ public class TerraformTaskNGParameters implements TaskParameters, ExecutionCapab
   // For plan
   TerraformCommand terraformCommand;
 
+  // To aid in logging
+  TerraformCommandUnit terraformCommandUnit;
+
   // For Apply when inheriting from plan
   EncryptionConfig encryptionConfig;
   EncryptedRecordData encryptedTfPlan;

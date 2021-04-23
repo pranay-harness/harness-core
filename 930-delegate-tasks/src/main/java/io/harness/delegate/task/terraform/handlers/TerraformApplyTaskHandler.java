@@ -11,6 +11,7 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
+import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
@@ -109,8 +110,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
           .build();
     }
 
-    String baseDir = terraformBaseHelper.resolveBaseDir(
-        taskParameters.getAccountId(), taskParameters.getEntityId().replace("/", "_"));
+    String baseDir = TF_WORKING_DIR + taskParameters.getEntityId();
     String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
     String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
 
@@ -145,17 +145,17 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
       log.warn("Exception Occurred when cleaning Terraform local directory", ioException);
     }
 
-    File tfOutputsFile =
-        Paths
-            .get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, taskParameters.getEntityId().replace("/", "_")))
-            .toFile();
+    File tfOutputsFile = Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, "output")).toFile();
 
     try (PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
       TerraformExecuteStepRequest terraformExecuteStepRequest =
           TerraformExecuteStepRequest.builder()
               .tfBackendConfigsFile(taskParameters.getBackendConfig())
               .tfOutputsFile(tfOutputsFile.getAbsolutePath())
-              .tfVarFilePaths(taskParameters.getInlineVarFiles())
+              .tfVarFilePaths(taskParameters.getInlineVarFiles() != null
+                      ? TerraformHelperUtils.createFileFromStringContent(
+                          taskParameters.getInlineVarFiles(), scriptDirectory)
+                      : taskParameters.getInlineVarFiles())
               .workspace(taskParameters.getWorkspace())
               .targets(taskParameters.getTargets())
               .scriptDirectory(scriptDirectory)

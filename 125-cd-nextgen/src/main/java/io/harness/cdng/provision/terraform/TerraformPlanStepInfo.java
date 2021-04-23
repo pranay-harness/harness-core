@@ -72,10 +72,10 @@ public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements 
       builder.configFilesWrapper(terraformPlanExecutionData.getTerraformConfigFilesWrapper().getStoreConfigWrapper());
       List<StoreConfigWrapper> remoteVarFiles = new ArrayList<>();
       List<String> inlineVarFiles = new ArrayList<>();
-      List<TerraformVarFile> terraformVarFiles = terraformPlanExecutionData.getTerraformVarFiles();
+      List<TerraformVarFileWrapper> terraformVarFiles = terraformPlanExecutionData.getTerraformVarFiles();
       if (EmptyPredicate.isNotEmpty(terraformVarFiles)) {
         terraformVarFiles.forEach(varFile -> {
-          TerraformVarFileSpec varFileSpec = varFile.getTerraformVarFileSpec();
+          TerraformVarFileSpec varFileSpec = varFile.getVarFile().getSpec();
           if (varFileSpec instanceof InlineTerraformVarFileSpec) {
             inlineVarFiles.add(
                 ParameterFieldHelper.getParameterFieldValue(((InlineTerraformVarFileSpec) varFileSpec).getContent()));
