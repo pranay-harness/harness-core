@@ -164,6 +164,21 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     assertThat(exception.getMessage().equals(errorMessage3)).isTrue();
   }
 
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testCommmonJavaException() {
+    String errorMessage = "Null Pointer Exception";
+    NullPointerException exception = new NullPointerException(errorMessage);
+    DelegateResponseData delegateResponseData = delegateExceptionManager.getResponseData(exception, null, true);
+    assertThat(delegateResponseData).isNotNull();
+
+    ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
+    assertThat(errorNotifyResponseData.getException()).isNotNull();
+    assertThat(errorNotifyResponseData.getException() instanceof GeneralException).isTrue();
+    assertThat(errorNotifyResponseData.getException().getMessage().equals(errorMessage)).isTrue();
+  }
+
   public static class RandomRuntimeException extends RuntimeException {
     public RandomRuntimeException(String message) {
       super(message);
