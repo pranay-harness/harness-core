@@ -46,6 +46,7 @@ import io.harness.migrations.timescaledb.DeploymentAdditionalColumns;
 import io.harness.migrations.timescaledb.InitSchemaMigration;
 import io.harness.migrations.timescaledb.InitTriggerFunctions;
 import io.harness.migrations.timescaledb.InitVerificationSchemaMigration;
+import io.harness.migrations.timescaledb.RecommendationsRelatedTables;
 import io.harness.migrations.timescaledb.RenameInstanceMigration;
 import io.harness.migrations.timescaledb.UniqueIndexCEUtilizationDataTables;
 import io.harness.migrations.timescaledb.UpdateServiceGuardSchema;
@@ -112,6 +113,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(47, AddActualInstanceIdToK8sUtilizationData.class))
         .add(Pair.of(48, AddNewentityToAnomalies.class))
         .add(Pair.of(49, AddNewIndexToAnomalies.class))
+        .add(Pair.of(50, RecommendationsRelatedTables.class))
         .build();
   }
 }
