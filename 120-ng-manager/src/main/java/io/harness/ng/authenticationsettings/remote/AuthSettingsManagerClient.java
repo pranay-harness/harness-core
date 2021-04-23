@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
@@ -80,4 +81,7 @@ public interface AuthSettingsManagerClient {
 
   @GET(API_PREFIX + "sso/saml-login-test")
   Call<RestResponse<LoginTypeResponse>> getSAMLLoginTest(@Query("accountId") @NotEmpty String accountIdentifier);
+
+  @GET(API_PREFIX + "login-settings/username-password/password-strength-policy")
+  Call<RestResponse<PasswordStrengthPolicy>> getPasswordStrengthSettings(@Query("accountId") String accountIdentifier);
 }

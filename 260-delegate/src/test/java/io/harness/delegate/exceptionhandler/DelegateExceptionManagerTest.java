@@ -19,6 +19,7 @@ import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.rule.Owner;
 
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
@@ -31,6 +32,7 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(HarnessTeam.DX)
 public class DelegateExceptionManagerTest extends DelegateTestBase {
   @Inject DelegateExceptionManager delegateExceptionManager;
+  @Inject ExceptionManager exceptionManager;
 
   @Before
   public void setUp() throws Exception {
@@ -177,6 +179,17 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     assertThat(errorNotifyResponseData.getException()).isNotNull();
     assertThat(errorNotifyResponseData.getException() instanceof GeneralException).isTrue();
     assertThat(errorNotifyResponseData.getException().getMessage().equals(errorMessage)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testIfExceptionIsNull() {
+    WingsException exception = exceptionManager.processException(null);
+    assertThat(exception).isNotNull();
+
+    assertThat(exception instanceof GeneralException).isTrue();
+    assertThat(exception.getMessage().equals(exceptionManager.DEFAULT_ERROR_MESSAGE)).isTrue();
   }
 
   public static class RandomRuntimeException extends RuntimeException {
