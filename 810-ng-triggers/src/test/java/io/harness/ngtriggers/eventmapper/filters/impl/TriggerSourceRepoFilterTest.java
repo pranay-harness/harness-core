@@ -68,7 +68,7 @@ public class TriggerSourceRepoFilterTest extends CategoryTest {
             .build();
 
     FilterRequestData filterRequestData = FilterRequestData.builder()
-                                              .projectFqn("acc/org/proj")
+                                              .accountId("acc")
                                               .webhookPayloadData(WebhookPayloadData.builder()
                                                                       .originalEvent(TriggerWebhookEvent.builder()
                                                                                          .accountId("acc")
@@ -102,7 +102,7 @@ public class TriggerSourceRepoFilterTest extends CategoryTest {
 
     FilterRequestData filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("acc/org/proj")
+            .accountId("acc")
             .webhookPayloadData(WebhookPayloadData.builder()
                                     .originalEvent(TriggerWebhookEvent.builder()
                                                        .accountId("acc")
