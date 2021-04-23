@@ -75,6 +75,7 @@ import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
@@ -292,8 +293,6 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 /**
  * The main application - entry point for the entire Wings Application.
- *
- * @author Rishi
  */
 @Slf4j
 @OwnedBy(PL)
@@ -454,6 +453,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
+    modules.add(MigrationModule.getInstance());
     modules.add(new WingsModule(configuration));
     modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {
