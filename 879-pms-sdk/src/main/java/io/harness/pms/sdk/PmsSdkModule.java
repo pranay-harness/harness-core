@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.PmsSdkCoreModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.exceptionmanager.ExceptionHandler;
 import io.harness.exception.exceptionmanager.ExceptionManager;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 
 import com.google.inject.AbstractModule;

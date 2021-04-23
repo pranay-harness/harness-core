@@ -186,6 +186,11 @@ public class BillingDataQueryBuilder {
 
     // To change node instance id filter to parent instance id filter in case of group by namespace/workload
     filters = getUpdatedInstanceIdFilter(filters, groupBy);
+
+    if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName) && !isWorkloadTypeFilterPresent(filters)) {
+      addWorkloadTypeFilter(filters);
+    }
+
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
@@ -290,6 +295,11 @@ public class BillingDataQueryBuilder {
     }
 
     addFiltersToExcludeUnallocatedRows(filters, groupBy);
+
+    if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName) && !isWorkloadTypeFilterPresent(filters)) {
+      addWorkloadTypeFilter(filters);
+    }
+
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
       filters = filters.stream()
@@ -432,6 +442,10 @@ public class BillingDataQueryBuilder {
     }
 
     List<QLBillingDataFilter> timeFilters = getTimeFilters(filters);
+
+    if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName) && !isWorkloadTypeFilterPresent(filters)) {
+      addWorkloadTypeFilter(filters);
+    }
 
     if (!Lists.isNullOrEmpty(timeFilters)) {
       decorateQueryWithFilters(selectQuery, timeFilters);
@@ -842,6 +856,8 @@ public class BillingDataQueryBuilder {
         return schema.getInstanceName();
       case WorkloadName:
         return schema.getWorkloadName();
+      case WorkloadType:
+        return schema.getWorkloadType();
       case Namespace:
         return schema.getNamespace();
       case CloudProvider:
@@ -1129,12 +1145,24 @@ public class BillingDataQueryBuilder {
     return false;
   }
 
+  private boolean isWorkloadTypeFilterPresent(List<QLBillingDataFilter> filters) {
+    return filters.stream().anyMatch(filter -> filter.getWorkloadType() != null);
+  }
+
   private boolean isClusterFilterPresent(List<QLBillingDataFilter> filters) {
     return filters.stream().anyMatch(filter -> filter.getCluster() != null);
   }
 
   protected boolean isUnallocatedCostAggregationPresent(List<QLCCMAggregationFunction> aggregationFunctions) {
     return aggregationFunctions.stream().anyMatch(agg -> agg.getColumnName().equals("unallocatedcost"));
+  }
+
+  private void addWorkloadTypeFilter(List<QLBillingDataFilter> filters) {
+    QLBillingDataFilter workloadTypeFilter =
+        QLBillingDataFilter.builder()
+            .workloadType(QLIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(new String[] {""}).build())
+            .build();
+    filters.add(workloadTypeFilter);
   }
 
   protected void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {

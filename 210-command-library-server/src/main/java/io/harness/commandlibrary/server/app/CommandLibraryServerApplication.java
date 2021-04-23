@@ -5,6 +5,9 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.inject.matcher.Matchers.not;
 
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.server.resources.CommandStoreResource;
 import io.harness.commandlibrary.server.security.CommandLibraryServerAuthenticationFilter;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -171,6 +174,17 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     modules.add(new CommandLibraryServerModule(configuration));
     modules.add(new CommandLibrarySharedModule(false));
     modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+    });
 
     modules.add(new ProviderModule() {
       @Provides

@@ -7,6 +7,8 @@ import io.harness.Microservice;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -87,6 +89,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
   @JsonProperty(value = "enableDefaultResourceGroupCreation", defaultValue = "false")
   private boolean enableDefaultResourceGroupCreation;
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

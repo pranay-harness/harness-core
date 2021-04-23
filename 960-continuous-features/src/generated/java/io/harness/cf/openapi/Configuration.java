@@ -13,9 +13,9 @@
 package io.harness.cf.openapi;
 
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen",
-    date = "2021-03-24T19:32:06.834-07:00[America/Los_Angeles]")
+    date = "2021-04-12T12:00:52.324-07:00[America/Los_Angeles]")
 public class Configuration {
-  private static io.harness.cf.openapi.ApiClient defaultApiClient = new io.harness.cf.openapi.ApiClient();
+  private static ApiClient defaultApiClient = new ApiClient();
 
   /**
    * Get the default API client, which would be used when creating API
@@ -23,7 +23,7 @@ public class Configuration {
    *
    * @return Default API client
    */
-  public static io.harness.cf.openapi.ApiClient getDefaultApiClient() {
+  public static ApiClient getDefaultApiClient() {
     return defaultApiClient;
   }
 

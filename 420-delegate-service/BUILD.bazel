@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 HarnessTeam = "DEL"
 
@@ -17,6 +16,7 @@ shared_dependencies = [
     "//950-common-entities:module",
     "//950-wait-engine:module",
     "//960-persistence:module",
+    "//960-continuous-features:module",
     "//970-grpc:module",
     "//970-rbac-core:module",
     "//910-delegate-task-grpc-service:module",
@@ -84,6 +84,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

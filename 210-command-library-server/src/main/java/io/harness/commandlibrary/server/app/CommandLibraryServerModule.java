@@ -1,5 +1,7 @@
 package io.harness.commandlibrary.server.app;
 
+import static io.harness.lock.DistributedLockImplementation.MONGO;
+
 import static java.util.Objects.requireNonNull;
 
 import io.harness.commandlibrary.server.service.impl.CommandServiceImpl;
@@ -13,8 +15,10 @@ import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
 import io.harness.exception.UnexpectedException;
 import io.harness.ff.FeatureFlagModule;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.redis.RedisConfig;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 
@@ -29,7 +33,10 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -100,6 +107,19 @@ public class CommandLibraryServerModule extends AbstractModule {
     } catch (IOException e) {
       throw new UnexpectedException("Could not load versionInfo.yaml", e);
     }
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return MONGO;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  RedisConfig redisLockConfig() {
+    return RedisConfig.builder().build();
   }
 
   private void bindCommandArchiveHandlers() {

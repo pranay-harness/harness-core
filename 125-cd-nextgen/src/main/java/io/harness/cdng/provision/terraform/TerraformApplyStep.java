@@ -85,15 +85,16 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     builder.currentStateFileId(helper.getLatestFileId(entityId))
         .taskType(TFTaskType.APPLY)
         .terraformCommand(TerraformCommand.APPLY)
+        .terraformCommandUnit(TerraformCommandUnit.Apply)
         .entityId(entityId)
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
             stepParameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFiles()));
-    if (EmptyPredicate.isNotEmpty(stepParameters.getRemoteVarFiles())) {
+        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFilesListContent()));
+    if (EmptyPredicate.isNotEmpty(stepParameters.getRemoteVarFileConfigs())) {
       List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
       int i = 1;
-      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFiles()) {
+      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFileConfigs()) {
         varFilesConfig.add(helper.getGitFetchFilesConfig(
             varFileWrapper.getStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
         i++;
@@ -121,6 +122,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder()
                                                    .taskType(TFTaskType.APPLY)
+                                                   .terraformCommandUnit(TerraformCommandUnit.Apply)
                                                    .entityId(stepParameters.getProvisionerIdentifier());
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);

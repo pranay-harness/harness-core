@@ -778,8 +778,8 @@ fn check_for_demotion(
                         kind: Kind::DevAction,
                         explanation: Explanation::Empty,
                         message: format!(
-                            "{} has dependee {} and this dependency has to be broken",
-                            class.name, dependee_class.name
+                            "{} depends on {} and this dependency has to be broken",
+                            dependee_class.name, class.name,
                         ),
                         action: Default::default(),
                         for_class: dependee_class.name.clone(),
@@ -792,8 +792,8 @@ fn check_for_demotion(
                         kind: Kind::Error,
                         explanation: Explanation::Empty,
                         message: format!(
-                            "{} has dependee {} that is in module {} but {} is not a dependee of it",
-                            class.name, dependee_class.name, dependee_target_module.name, target_module.name
+                            "{} depends on {} that is in module {} but {} does not depend on it",
+                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
                         ),
                         action: Default::default(),
                         for_team: class.team(module, &target_module.team),

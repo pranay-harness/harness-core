@@ -2,6 +2,7 @@ package io.harness.security;
 
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER;
@@ -14,14 +15,17 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.InvalidClaimException;
+import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import java.io.UnsupportedEncodingException;
 import java.security.interfaces.RSAKey;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -108,5 +112,25 @@ public class JWTTokenServiceUtils {
       return Optional.empty();
     }
     return Optional.of(sourceAndToken[0].trim());
+  }
+
+  public String generateJWTToken(Map<String, String> claims, Long validityDurationInMillis, String jwtPasswordSecret) {
+    if (jwtPasswordSecret == null) {
+      throw new InvalidRequestException("Could not find verification secret token");
+    }
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(ISSUER).withIssuedAt(new Date());
+
+      if (validityDurationInMillis != null) {
+        jwtBuilder.withExpiresAt(new Date(System.currentTimeMillis() + validityDurationInMillis));
+      }
+      if (!isEmpty(claims)) {
+        claims.forEach(jwtBuilder::withClaim);
+      }
+      return jwtBuilder.sign(algorithm);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new JWTCreationException("JWTToken could not be generated", exception);
+    }
   }
 }

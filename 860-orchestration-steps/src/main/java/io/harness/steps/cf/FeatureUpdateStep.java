@@ -3,9 +3,9 @@ package io.harness.steps.cf;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CFApi;
-import io.harness.cf.openapi.api.PatchInstruction;
-import io.harness.cf.openapi.api.PatchOperation;
 import io.harness.cf.openapi.model.Feature;
+import io.harness.cf.openapi.model.PatchInstruction;
+import io.harness.cf.openapi.model.PatchOperation;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -26,6 +26,7 @@ import io.harness.steps.cf.RemoveTargetsToVariationTargetMapYaml.RemoveTargetsTo
 import io.harness.steps.cf.SetFeatureFlagStateYaml.SetFeatureFlagStateYamlSpec;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FeatureUpdateStep implements SyncExecutable<StepElementParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.FEATURE_UPDATE).build();
-  @Inject private CFApi cfApi;
+  @Inject @Named("cfPipelineAPI") private CFApi cfApi;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {

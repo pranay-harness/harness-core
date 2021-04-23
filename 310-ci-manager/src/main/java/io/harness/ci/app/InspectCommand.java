@@ -1,5 +1,6 @@
 package io.harness.ci.app;
 
+import io.harness.app.CIManagerConfiguration;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -14,7 +15,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 
 import software.wings.app.IndexMigratorModule;
-import software.wings.app.MainConfiguration;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,9 +52,9 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
   }
 
   protected void run(Bootstrap<T> bootstrap, Namespace namespace, T configuration) {
-    MainConfiguration mainConfiguration = (MainConfiguration) configuration;
-    mainConfiguration.setMongoConnectionFactory(
-        mainConfiguration.getMongoConnectionFactory().toBuilder().indexManagerMode(IndexManager.Mode.INSPECT).build());
+    CIManagerConfiguration mainConfiguration = (CIManagerConfiguration) configuration;
+    mainConfiguration.setHarnessCIMongo(
+        mainConfiguration.getHarnessCIMongo().toBuilder().indexManagerMode(IndexManager.Mode.INSPECT).build());
 
     List<Module> modules = new ArrayList<>();
     modules.add(new AbstractModule() {
@@ -72,7 +72,7 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       @Provides
       @Singleton
       MongoConfig mongoConfig() {
-        return mainConfiguration.getMongoConnectionFactory();
+        return mainConfiguration.getHarnessCIMongo();
       }
     });
     modules.add(new AbstractMongoModule() {

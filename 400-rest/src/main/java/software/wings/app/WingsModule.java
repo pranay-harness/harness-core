@@ -48,11 +48,6 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
-import io.harness.cf.CFApi;
-import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
-import io.harness.cf.client.api.CfClient;
-import io.harness.cf.openapi.ApiClient;
 import io.harness.config.PipelineConfig;
 import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
@@ -347,7 +342,6 @@ import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.MicrosoftTeamsNotificationServiceImpl;
-import software.wings.service.impl.MigrationServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -566,7 +560,6 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.MicrosoftTeamsNotificationService;
-import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
@@ -1030,7 +1023,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VerificationService.class).to(VerificationServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
-    bind(MigrationService.class).to(MigrationServiceImpl.class).in(Singleton.class);
     bind(WorkflowExecutionBaselineService.class).to(WorkflowExecutionBaselineServiceImpl.class);
     bind(GitClient.class).to(GitClientUnsupported.class).in(Singleton.class);
     bind(WhitelistService.class).to(WhitelistServiceImpl.class);
@@ -1569,33 +1561,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
         MapBinder.newMapBinder(binder(), String.class, GcpProductHandler.class);
 
     binder.addBinding("harness-continuous-delivery").to(CDProductHandler.class).in(Singleton.class);
-  }
-
-  @Provides
-  CfClient provideCfClient() {
-    CfClientConfig cfClientConfig = configuration.getCfClientConfig();
-    if (cfClientConfig == null) {
-      return null;
-    }
-    log.info("Using CF API key {}", cfClientConfig.getApiKey());
-    String apiKey = cfClientConfig.getApiKey();
-
-    return new CfClient(apiKey);
-  }
-
-  @Provides
-  @Singleton
-  CFApi providesCfAPI() {
-    CfMigrationConfig migrationConfig = configuration.getCfMigrationConfig();
-    ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath(migrationConfig.getAdminUrl());
-    return new CFApi(apiClient);
-  }
-
-  @Provides
-  @Singleton
-  CfMigrationConfig providesCfMigrationConfig() {
-    return configuration.getCfMigrationConfig();
   }
 
   @Provides
