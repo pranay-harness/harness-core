@@ -3,6 +3,7 @@ package io.harness.platform;
 import io.harness.govern.ProviderModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.IndexManager;
+import io.harness.mongo.IndexManagerInspectException;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.NoopUserProvider;
@@ -20,9 +21,11 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
+import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import com.mongodb.MongoClientURI;
 import io.dropwizard.Application;
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
@@ -30,10 +33,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.converters.TypeConverter;
 
+@Slf4j
 public class InspectCommand<T extends io.dropwizard.Configuration> extends ConfiguredCommand<T> {
   public static final String PRIMARY_DATASTORE = "primaryDatastore";
   private final Class<T> configurationClass;
@@ -49,6 +54,7 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
   }
   @Override
   protected void run(Bootstrap<T> bootstrap, Namespace namespace, T configuration) throws Exception {
+    boolean isExceptionThrown = false;
     PlatformConfiguration appConfig = (PlatformConfiguration) configuration;
     List<Module> modules = new ArrayList<>();
     modules.add(new AbstractMongoModule() {
@@ -70,23 +76,52 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
       }
     });
+    MongoClientURI uri = new MongoClientURI(appConfig.getNotificationServiceConfig().getMongoConfig().getUri());
+    log.info("Database {}", uri.getDatabase());
     List<Module> notificationModules = new ArrayList<>(modules);
     notificationModules.add(getMongoConfigModule(
         appConfig.getNotificationServiceConfig().getMongoConfig(), NotificationRegistrars.morphiaRegistrars));
     Injector injector = Guice.createInjector(notificationModules);
-    injector.getInstance(Key.get(AdvancedDatastore.class, Names.named(PRIMARY_DATASTORE)));
+    try {
+      injector.getInstance(Key.get(AdvancedDatastore.class, Names.named(PRIMARY_DATASTORE)));
+    } catch (ProvisionException e) {
+      isExceptionThrown = true;
+      log.error(e.getMessage());
+    }
 
-    List<Module> resourceGroupModules = new ArrayList<>(modules);
-    resourceGroupModules.add(getMongoConfigModule(
-        appConfig.getResoureGroupServiceConfig().getMongoConfig(), ResourceGroupSerializer.morphiaRegistrars));
-    injector = Guice.createInjector(resourceGroupModules);
-    injector.getInstance(Key.get(AdvancedDatastore.class, Names.named(PRIMARY_DATASTORE)));
+    if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+      uri = new MongoClientURI(appConfig.getResoureGroupServiceConfig().getMongoConfig().getUri());
+      log.info("Database {}", uri.getDatabase());
+      List<Module> resourceGroupModules = new ArrayList<>(modules);
+      resourceGroupModules.add(getMongoConfigModule(
+          appConfig.getResoureGroupServiceConfig().getMongoConfig(), ResourceGroupSerializer.morphiaRegistrars));
+      injector = Guice.createInjector(resourceGroupModules);
+      try {
+        injector.getInstance(Key.get(AdvancedDatastore.class, Names.named(PRIMARY_DATASTORE)));
+      } catch (ProvisionException e) {
+        isExceptionThrown = true;
+        log.error(e.getMessage());
+      }
+    }
 
-    List<Module> auditModules = new ArrayList<>(modules);
-    auditModules.add(getMongoConfigModule(
-        appConfig.getAuditServiceConfig().getMongoConfig(), NGAuditServiceRegistrars.morphiaRegistrars));
-    injector = Guice.createInjector(auditModules);
-    injector.getInstance(Key.get(AdvancedDatastore.class, Names.named(PRIMARY_DATASTORE)));
+    if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
+      uri = new MongoClientURI(appConfig.getAuditServiceConfig().getMongoConfig().getUri());
+      log.info("Database {}", uri.getDatabase());
+      List<Module> auditModules = new ArrayList<>(modules);
+      auditModules.add(getMongoConfigModule(
+          appConfig.getAuditServiceConfig().getMongoConfig(), NGAuditServiceRegistrars.morphiaRegistrars));
+      injector = Guice.createInjector(auditModules);
+      try {
+        injector.getInstance(Key.get(AdvancedDatastore.class, Names.named(PRIMARY_DATASTORE)));
+      } catch (ProvisionException e) {
+        isExceptionThrown = true;
+        log.error(e.getMessage());
+      }
+    }
+
+    if (isExceptionThrown) {
+      throw new IndexManagerInspectException("GENERAL_ERROR");
+    }
   }
 
   private Module getMongoConfigModule(
