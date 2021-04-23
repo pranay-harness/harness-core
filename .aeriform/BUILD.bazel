@@ -232,6 +232,8 @@ aeriform("//920-delegate-service-beans:module")
 
 aeriform("//920-ng-signup:module")
 
+aeriform("//920-ng-signup:tests")
+
 aeriform("//925-access-control-service:module")
 
 aeriform("//925-access-control-service:tests")
@@ -385,6 +387,8 @@ aeriform("//960-expression-service:module")
 aeriform("//960-expression-service:tests")
 
 aeriform("//960-ng-core-beans:module")
+
+aeriform("//960-ng-signup-beans:module")
 
 aeriform("//960-notification-beans:module")
 
