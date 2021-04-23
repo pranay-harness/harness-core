@@ -260,6 +260,10 @@ aeriform("//940-ng-audit-service:tests")
 
 aeriform("//940-notification-client:module")
 
+aeriform("//940-primary-version-manager:module")
+
+aeriform("//940-primary-version-manager:tests")
+
 aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")

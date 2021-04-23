@@ -82,8 +82,6 @@ import lombok.EqualsAndHashCode;
 
 /**
  * Used to load all the application configuration.
- *
- * @author Rishi
  */
 @TargetModule(HarnessModule._360_CG_MANAGER)
 @Data
