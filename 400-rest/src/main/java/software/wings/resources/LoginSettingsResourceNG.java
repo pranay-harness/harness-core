@@ -9,6 +9,7 @@ import io.harness.security.annotations.NextGenManagerAuth;
 
 import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.loginSettings.LoginSettingsService;
+import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -46,6 +47,13 @@ public class LoginSettingsResourceNG {
   @Consumes(MediaType.APPLICATION_JSON)
   public RestResponse<LoginSettings> getLoginSettings(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(loginSettingsService.getLoginSettings(accountId));
+  }
+
+  @GET
+  @Path("/username-password/password-strength-policy")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public RestResponse<PasswordStrengthPolicy> getPasswordStrengthPolicy(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(loginSettingsService.getPasswordStrengthPolicy(accountId));
   }
 
   @PUT

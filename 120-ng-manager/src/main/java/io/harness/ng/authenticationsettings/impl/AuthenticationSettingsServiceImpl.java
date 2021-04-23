@@ -14,6 +14,7 @@ import io.harness.ng.authenticationsettings.dtos.mechanisms.UsernamePasswordSett
 import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
 
 import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
@@ -254,5 +255,10 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   @Override
   public LoginTypeResponse getSAMLLoginTest(@NotNull String accountIdentifier) {
     return getResponse(managerClient.getSAMLLoginTest(accountIdentifier));
+  }
+
+  @Override
+  public PasswordStrengthPolicy getPasswordStrengthSettings(String accountIdentifier) {
+    return getResponse(managerClient.getPasswordStrengthSettings(accountIdentifier));
   }
 }
