@@ -6,6 +6,9 @@ import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -85,8 +88,18 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
         20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting CE NextGen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector =
-        Guice.createInjector(new CENextGenModule(configuration), new MetricRegistryModule(metricRegistry));
+    Injector injector = Guice.createInjector(
+        new CENextGenModule(configuration), new MetricRegistryModule(metricRegistry), new AbstractCfModule() {
+          @Override
+          public CfClientConfig cfClientConfig() {
+            return configuration.getCfClientConfig();
+          }
+
+          @Override
+          public CfMigrationConfig cfMigrationConfig() {
+            return configuration.getCfMigrationConfig();
+          }
+        });
 
     // create collection and indexes
     injector.getInstance(HPersistence.class);

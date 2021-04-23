@@ -1,6 +1,8 @@
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 
+HarnessTeam = "CF"
+
 java_library(
     name = "module",
     srcs = glob([

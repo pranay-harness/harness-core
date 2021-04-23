@@ -97,7 +97,7 @@ public class DefaultApi {
     final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
     localVarHeaderParams.put("Content-Type", localVarContentType);
 
-    String[] localVarAuthNames = new String[] {"BearerAuth"};
+    String[] localVarAuthNames = new String[] {"ApiKeyAuth", "BearerAuth"};
     return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams,
         localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
   }
@@ -250,7 +250,7 @@ public class DefaultApi {
     final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
     localVarHeaderParams.put("Content-Type", localVarContentType);
 
-    String[] localVarAuthNames = new String[] {"BearerAuth"};
+    String[] localVarAuthNames = new String[] {"ApiKeyAuth", "BearerAuth"};
     return localVarApiClient.buildCall(localVarPath, "DELETE", localVarQueryParams, localVarCollectionQueryParams,
         localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
   }
@@ -424,7 +424,7 @@ public class DefaultApi {
     final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
     localVarHeaderParams.put("Content-Type", localVarContentType);
 
-    String[] localVarAuthNames = new String[] {"BearerAuth"};
+    String[] localVarAuthNames = new String[] {"ApiKeyAuth", "BearerAuth"};
     return localVarApiClient.buildCall(localVarPath, "GET", localVarQueryParams, localVarCollectionQueryParams,
         localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
   }
@@ -601,7 +601,7 @@ public class DefaultApi {
     final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
     localVarHeaderParams.put("Content-Type", localVarContentType);
 
-    String[] localVarAuthNames = new String[] {"BearerAuth"};
+    String[] localVarAuthNames = new String[] {"ApiKeyAuth", "BearerAuth"};
     return localVarApiClient.buildCall(localVarPath, "GET", localVarQueryParams, localVarCollectionQueryParams,
         localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
   }
@@ -655,8 +655,7 @@ public class DefaultApi {
    */
   public Feature getFeatureFlag(String identifier, String account, String org, String project, String environment)
       throws ApiException {
-    io.harness.cf.openapi.ApiResponse<Feature> localVarResp =
-        getFeatureFlagWithHttpInfo(identifier, account, org, project, environment);
+    ApiResponse<Feature> localVarResp = getFeatureFlagWithHttpInfo(identifier, account, org, project, environment);
     return localVarResp.getData();
   }
 
@@ -680,7 +679,7 @@ public class DefaultApi {
       <tr><td> 500 </td><td> Internal server error </td><td>  -  </td></tr>
    </table>
    */
-  public io.harness.cf.openapi.ApiResponse<Feature> getFeatureFlagWithHttpInfo(
+  public ApiResponse<Feature> getFeatureFlagWithHttpInfo(
       String identifier, String account, String org, String project, String environment) throws ApiException {
     okhttp3.Call localVarCall = getFeatureFlagValidateBeforeCall(identifier, account, org, project, environment, null);
     Type localVarReturnType = new TypeToken<Feature>() {}.getType();
@@ -780,7 +779,7 @@ public class DefaultApi {
     final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
     localVarHeaderParams.put("Content-Type", localVarContentType);
 
-    String[] localVarAuthNames = new String[] {"BearerAuth"};
+    String[] localVarAuthNames = new String[] {"ApiKeyAuth", "BearerAuth"};
     return localVarApiClient.buildCall(localVarPath, "PATCH", localVarQueryParams, localVarCollectionQueryParams,
         localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
   }
@@ -843,7 +842,7 @@ public class DefaultApi {
    */
   public Feature patchFeature(String identifier, String account, String org, String project, String environment,
       Object UNKNOWN_BASE_TYPE) throws ApiException {
-    io.harness.cf.openapi.ApiResponse<Feature> localVarResp =
+    ApiResponse<Feature> localVarResp =
         patchFeatureWithHttpInfo(identifier, account, org, project, environment, UNKNOWN_BASE_TYPE);
     return localVarResp.getData();
   }

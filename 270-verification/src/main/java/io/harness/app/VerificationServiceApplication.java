@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
@@ -19,6 +20,9 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -38,6 +42,7 @@ import io.harness.jobs.workflow.logs.WorkflowFeedbackAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogAnalysisJob;
 import io.harness.jobs.workflow.logs.WorkflowLogClusterJob;
 import io.harness.jobs.workflow.timeseries.WorkflowTimeSeriesAnalysisJob;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.metrics.HarnessMetricRegistry;
@@ -53,6 +58,7 @@ import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UserProvider;
+import io.harness.redis.RedisConfig;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.ServiceGuardAccountPoller;
 import io.harness.scheduler.WorkflowVerificationTaskPoller;
@@ -220,6 +226,19 @@ public class VerificationServiceApplication extends Application<VerificationServ
             .addAll(ManagerRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisConfig() {
+        return RedisConfig.builder().build();
+      }
+
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return MONGO;
+      }
     });
     modules.add(MetricsInstrumentationModule.builder()
                     .withMetricRegistry(metricRegistry)
@@ -262,7 +281,17 @@ public class VerificationServiceApplication extends Application<VerificationServ
     modules.add(new VerificationServiceSchedulerModule(configuration));
     modules.add(new VerificationManagerClientModule(configuration.getManagerUrl()));
     modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return configuration.getCfClientConfig();
+      }
 
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return configuration.getCfMigrationConfig();
+      }
+    });
     Injector injector = Guice.createInjector(modules);
 
     wingsPersistence = injector.getInstance(WingsPersistence.class);

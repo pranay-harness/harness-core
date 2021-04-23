@@ -34,13 +34,35 @@ import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.net.ssl.*;
-import okhttp3.*;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Headers;
+import okhttp3.Interceptor;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import okhttp3.internal.http.HttpMethod;
 import okhttp3.internal.tls.OkHostnameVerifier;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -55,7 +77,7 @@ public class ApiClient {
   private Map<String, String> defaultCookieMap = new HashMap<String, String>();
   private String tempFolderPath = null;
 
-  private Map<String, io.harness.cf.openapi.auth.Authentication> authentications;
+  private Map<String, Authentication> authentications;
 
   private DateFormat dateFormat;
   private DateFormat datetimeFormat;
@@ -79,6 +101,7 @@ public class ApiClient {
     initHttpClient();
 
     // Setup authentications (key: authentication name, value: authentication).
+    authentications.put("ApiKeyAuth", new ApiKeyAuth("header", "api-key"));
     authentications.put("BearerAuth", new HttpBearerAuth("bearer"));
     // Prevent the authentications from being modified.
     authentications = Collections.unmodifiableMap(authentications);
@@ -106,7 +129,7 @@ public class ApiClient {
     // Set default User-Agent.
     setUserAgent("OpenAPI-Generator/1.0.0/java");
 
-    authentications = new HashMap<String, io.harness.cf.openapi.auth.Authentication>();
+    authentications = new HashMap<String, Authentication>();
   }
 
   /**
@@ -266,7 +289,7 @@ public class ApiClient {
    *
    * @return Map of authentication objects
    */
-  public Map<String, io.harness.cf.openapi.auth.Authentication> getAuthentications() {
+  public Map<String, Authentication> getAuthentications() {
     return authentications;
   }
 
@@ -276,7 +299,7 @@ public class ApiClient {
    * @param authName The authentication name
    * @return The authentication, null if not found
    */
-  public io.harness.cf.openapi.auth.Authentication getAuthentication(String authName) {
+  public Authentication getAuthentication(String authName) {
     return authentications.get(authName);
   }
 
@@ -286,9 +309,9 @@ public class ApiClient {
    * @param username Username
    */
   public void setUsername(String username) {
-    for (io.harness.cf.openapi.auth.Authentication auth : authentications.values()) {
-      if (auth instanceof io.harness.cf.openapi.auth.HttpBasicAuth) {
-        ((io.harness.cf.openapi.auth.HttpBasicAuth) auth).setUsername(username);
+    for (Authentication auth : authentications.values()) {
+      if (auth instanceof HttpBasicAuth) {
+        ((HttpBasicAuth) auth).setUsername(username);
         return;
       }
     }
@@ -301,8 +324,8 @@ public class ApiClient {
    * @param password Password
    */
   public void setPassword(String password) {
-    for (io.harness.cf.openapi.auth.Authentication auth : authentications.values()) {
-      if (auth instanceof io.harness.cf.openapi.auth.HttpBasicAuth) {
+    for (Authentication auth : authentications.values()) {
+      if (auth instanceof HttpBasicAuth) {
         ((HttpBasicAuth) auth).setPassword(password);
         return;
       }
@@ -316,9 +339,9 @@ public class ApiClient {
    * @param apiKey API key
    */
   public void setApiKey(String apiKey) {
-    for (io.harness.cf.openapi.auth.Authentication auth : authentications.values()) {
-      if (auth instanceof io.harness.cf.openapi.auth.ApiKeyAuth) {
-        ((io.harness.cf.openapi.auth.ApiKeyAuth) auth).setApiKey(apiKey);
+    for (Authentication auth : authentications.values()) {
+      if (auth instanceof ApiKeyAuth) {
+        ((ApiKeyAuth) auth).setApiKey(apiKey);
         return;
       }
     }
@@ -331,8 +354,8 @@ public class ApiClient {
    * @param apiKeyPrefix API key prefix
    */
   public void setApiKeyPrefix(String apiKeyPrefix) {
-    for (io.harness.cf.openapi.auth.Authentication auth : authentications.values()) {
-      if (auth instanceof io.harness.cf.openapi.auth.ApiKeyAuth) {
+    for (Authentication auth : authentications.values()) {
+      if (auth instanceof ApiKeyAuth) {
         ((ApiKeyAuth) auth).setApiKeyPrefix(apiKeyPrefix);
         return;
       }
@@ -726,11 +749,11 @@ public class ApiClient {
    * @param response HTTP response
    * @param returnType The type of the Java object
    * @return The deserialized Java object
-   * @throws io.harness.cf.openapi.ApiException If fail to deserialize response body, i.e. cannot read response body
+   * @throws ApiException If fail to deserialize response body, i.e. cannot read response body
    *   or the Content-Type of the response is not supported.
    */
   @SuppressWarnings("unchecked")
-  public <T> T deserialize(Response response, Type returnType) throws io.harness.cf.openapi.ApiException {
+  public <T> T deserialize(Response response, Type returnType) throws ApiException {
     if (response == null || returnType == null) {
       return null;
     }
@@ -740,7 +763,7 @@ public class ApiClient {
       try {
         return (T) response.body().bytes();
       } catch (IOException e) {
-        throw new io.harness.cf.openapi.ApiException(e);
+        throw new ApiException(e);
       }
     } else if (returnType.equals(File.class)) {
       // Handle file downloading.
@@ -754,7 +777,7 @@ public class ApiClient {
       else
         respBody = null;
     } catch (IOException e) {
-      throw new io.harness.cf.openapi.ApiException(e);
+      throw new ApiException(e);
     }
 
     if (respBody == null || "".equals(respBody)) {
@@ -772,9 +795,8 @@ public class ApiClient {
       // Expecting string, return the raw response body.
       return (T) respBody;
     } else {
-      throw new io.harness.cf.openapi.ApiException(
-          "Content type \"" + contentType + "\" is not supported for type: " + returnType, response.code(),
-          response.headers().toMultimap(), respBody);
+      throw new ApiException("Content type \"" + contentType + "\" is not supported for type: " + returnType,
+          response.code(), response.headers().toMultimap(), respBody);
     }
   }
 
@@ -785,9 +807,9 @@ public class ApiClient {
    * @param obj The Java object
    * @param contentType The request Content-Type
    * @return The serialized request body
-   * @throws io.harness.cf.openapi.ApiException If fail to serialize the given object
+   * @throws ApiException If fail to serialize the given object
    */
-  public RequestBody serialize(Object obj, String contentType) throws io.harness.cf.openapi.ApiException {
+  public RequestBody serialize(Object obj, String contentType) throws ApiException {
     if (obj instanceof byte[]) {
       // Binary (byte array) body parameter support.
       return RequestBody.create(MediaType.parse(contentType), (byte[]) obj);
@@ -803,7 +825,7 @@ public class ApiClient {
       }
       return RequestBody.create(MediaType.parse(contentType), content);
     } else {
-      throw new io.harness.cf.openapi.ApiException("Content type \"" + contentType + "\" is not supported");
+      throw new ApiException("Content type \"" + contentType + "\" is not supported");
     }
   }
 
@@ -811,10 +833,10 @@ public class ApiClient {
    * Download file from the given response.
    *
    * @param response An instance of the Response object
-   * @throws io.harness.cf.openapi.ApiException If fail to read file content from response and write to disk
+   * @throws ApiException If fail to read file content from response and write to disk
    * @return Downloaded file
    */
-  public File downloadFileFromResponse(Response response) throws io.harness.cf.openapi.ApiException {
+  public File downloadFileFromResponse(Response response) throws ApiException {
     try {
       File file = prepareDownloadFile(response);
       BufferedSink sink = Okio.buffer(Okio.sink(file));
@@ -822,7 +844,7 @@ public class ApiClient {
       sink.close();
       return file;
     } catch (IOException e) {
-      throw new io.harness.cf.openapi.ApiException(e);
+      throw new ApiException(e);
     }
   }
 
@@ -875,9 +897,9 @@ public class ApiClient {
    * @param <T> Type
    * @param call An instance of the Call object
    * @return ApiResponse&lt;T&gt;
-   * @throws io.harness.cf.openapi.ApiException If fail to execute the call
+   * @throws ApiException If fail to execute the call
    */
-  public <T> ApiResponse<T> execute(Call call) throws io.harness.cf.openapi.ApiException {
+  public <T> ApiResponse<T> execute(Call call) throws ApiException {
     return execute(call, null);
   }
 
@@ -890,15 +912,15 @@ public class ApiClient {
    * @return ApiResponse object containing response status, headers and
    *   data, which is a Java object deserialized from response body and would be null
    *   when returnType is null.
-   * @throws io.harness.cf.openapi.ApiException If fail to execute the call
+   * @throws ApiException If fail to execute the call
    */
-  public <T> ApiResponse<T> execute(Call call, Type returnType) throws io.harness.cf.openapi.ApiException {
+  public <T> ApiResponse<T> execute(Call call, Type returnType) throws ApiException {
     try {
       Response response = call.execute();
       T data = handleResponse(response, returnType);
       return new ApiResponse<T>(response.code(), response.headers().toMultimap(), data);
     } catch (IOException e) {
-      throw new io.harness.cf.openapi.ApiException(e);
+      throw new ApiException(e);
     }
   }
 
@@ -927,7 +949,7 @@ public class ApiClient {
     call.enqueue(new Callback() {
       @Override
       public void onFailure(Call call, IOException e) {
-        callback.onFailure(new io.harness.cf.openapi.ApiException(e), 0, null);
+        callback.onFailure(new ApiException(e), 0, null);
       }
 
       @Override
@@ -935,7 +957,7 @@ public class ApiClient {
         T result;
         try {
           result = (T) handleResponse(response, returnType);
-        } catch (io.harness.cf.openapi.ApiException e) {
+        } catch (ApiException e) {
           callback.onFailure(e, response.code(), response.headers().toMultimap());
           return;
         }
@@ -951,10 +973,10 @@ public class ApiClient {
    * @param response Response
    * @param returnType Return type
    * @return Type
-   * @throws io.harness.cf.openapi.ApiException If the response has an unsuccessful status code or
+   * @throws ApiException If the response has an unsuccessful status code or
    *                      fail to deserialize the response body
    */
-  public <T> T handleResponse(Response response, Type returnType) throws io.harness.cf.openapi.ApiException {
+  public <T> T handleResponse(Response response, Type returnType) throws ApiException {
     if (response.isSuccessful()) {
       if (returnType == null || response.code() == 204) {
         // returning null if the returnType is not defined,
@@ -963,8 +985,7 @@ public class ApiClient {
           try {
             response.body().close();
           } catch (Exception e) {
-            throw new io.harness.cf.openapi.ApiException(
-                response.message(), e, response.code(), response.headers().toMultimap());
+            throw new ApiException(response.message(), e, response.code(), response.headers().toMultimap());
           }
         }
         return null;
@@ -977,12 +998,10 @@ public class ApiClient {
         try {
           respBody = response.body().string();
         } catch (IOException e) {
-          throw new io.harness.cf.openapi.ApiException(
-              response.message(), e, response.code(), response.headers().toMultimap());
+          throw new ApiException(response.message(), e, response.code(), response.headers().toMultimap());
         }
       }
-      throw new io.harness.cf.openapi.ApiException(
-          response.message(), response.code(), response.headers().toMultimap(), respBody);
+      throw new ApiException(response.message(), response.code(), response.headers().toMultimap(), respBody);
     }
   }
 
@@ -1000,11 +1019,11 @@ public class ApiClient {
    * @param authNames The authentications to apply
    * @param callback Callback for upload/download progress
    * @return The HTTP call
-   * @throws io.harness.cf.openapi.ApiException If fail to serialize the request body object
+   * @throws ApiException If fail to serialize the request body object
    */
   public Call buildCall(String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams,
       Object body, Map<String, String> headerParams, Map<String, String> cookieParams, Map<String, Object> formParams,
-      String[] authNames, ApiCallback callback) throws io.harness.cf.openapi.ApiException {
+      String[] authNames, ApiCallback callback) throws ApiException {
     Request request = buildRequest(path, method, queryParams, collectionQueryParams, body, headerParams, cookieParams,
         formParams, authNames, callback);
 
@@ -1025,7 +1044,7 @@ public class ApiClient {
    * @param authNames The authentications to apply
    * @param callback Callback for upload/download progress
    * @return The HTTP request
-   * @throws io.harness.cf.openapi.ApiException If fail to serialize the request body object
+   * @throws ApiException If fail to serialize the request body object
    */
   public Request buildRequest(String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams,
       Object body, Map<String, String> headerParams, Map<String, String> cookieParams, Map<String, Object> formParams,

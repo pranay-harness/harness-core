@@ -1,17 +1,26 @@
 package io.harness.signup;
 
+import static io.harness.lock.DistributedLockImplementation.NOOP;
+import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
+
 import static org.mockito.Mockito.mock;
 
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
+import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.index.migrator.Migrator;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoRegistrar;
@@ -21,6 +30,8 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -28,6 +39,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.lang.Nullable;
 import java.lang.annotation.Annotation;
@@ -48,6 +60,10 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
   public List<Module> modules(List<Annotation> annotations) {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
     List<Module> modules = new ArrayList<>();
+
+    MongoClientURI clientUri =
+        new MongoClientURI("mongodb://localhost:7457", MongoClientOptions.builder(defaultMongoClientOptions));
+    String dbName = clientUri.getDatabase();
 
     MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:7457"));
 
@@ -74,6 +90,33 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
       UserProvider userProvider() {
         return new NoopUserProvider();
       }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisLockConfig() {
+        return RedisConfig.builder().build();
+      }
+
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return NOOP;
+      }
+
+      @Provides
+      @Named("locksMongoClient")
+      @Singleton
+      public MongoClient locksMongoClient(ClosingFactory closingFactory) {
+        return mongoClient;
+      }
+
+      @Provides
+      @Named("locksDatabase")
+      @Singleton
+      String databaseNameProvider() {
+        return dbName;
+      }
     });
 
     modules.add(new AbstractModule() {
@@ -83,6 +126,18 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
         MapBinder.newMapBinder(binder(), String.class, Migrator.class);
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(AccountService.class).toInstance(mock(AccountService.class));
+        bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+      }
+    });
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
       }
     });
 

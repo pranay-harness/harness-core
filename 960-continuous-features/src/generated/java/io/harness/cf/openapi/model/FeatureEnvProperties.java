@@ -12,9 +12,21 @@
 
 package io.harness.cf.openapi.model;
 
+import io.harness.cf.openapi.model.FeatureState;
+import io.harness.cf.openapi.model.Serve;
+import io.harness.cf.openapi.model.ServingRule;
+import io.harness.cf.openapi.model.VariationMap;
+
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,14 +34,13 @@ import java.util.Objects;
  * FeatureEnvProperties
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen",
-    date = "2021-03-24T19:32:06.834-07:00[America/Los_Angeles]")
+    date = "2021-04-12T12:00:52.324-07:00[America/Los_Angeles]")
 public class FeatureEnvProperties {
   public static final String SERIALIZED_NAME_ENVIRONMENT = "environment";
   @SerializedName(SERIALIZED_NAME_ENVIRONMENT) private String environment;
 
   public static final String SERIALIZED_NAME_VARIATION_MAP = "variationMap";
-  @SerializedName(SERIALIZED_NAME_VARIATION_MAP)
-  private List<io.harness.cf.openapi.model.VariationMap> variationMap = null;
+  @SerializedName(SERIALIZED_NAME_VARIATION_MAP) private List<VariationMap> variationMap = null;
 
   public static final String SERIALIZED_NAME_RULES = "rules";
   @SerializedName(SERIALIZED_NAME_RULES) private List<ServingRule> rules = null;
@@ -38,7 +49,7 @@ public class FeatureEnvProperties {
   @SerializedName(SERIALIZED_NAME_STATE) private FeatureState state;
 
   public static final String SERIALIZED_NAME_DEFAULT_SERVE = "defaultServe";
-  @SerializedName(SERIALIZED_NAME_DEFAULT_SERVE) private io.harness.cf.openapi.model.Serve defaultServe;
+  @SerializedName(SERIALIZED_NAME_DEFAULT_SERVE) private Serve defaultServe;
 
   public static final String SERIALIZED_NAME_OFF_VARIATION = "offVariation";
   @SerializedName(SERIALIZED_NAME_OFF_VARIATION) private String offVariation;
@@ -68,12 +79,12 @@ public class FeatureEnvProperties {
     this.environment = environment;
   }
 
-  public FeatureEnvProperties variationMap(List<io.harness.cf.openapi.model.VariationMap> variationMap) {
+  public FeatureEnvProperties variationMap(List<VariationMap> variationMap) {
     this.variationMap = variationMap;
     return this;
   }
 
-  public FeatureEnvProperties addVariationMapItem(io.harness.cf.openapi.model.VariationMap variationMapItem) {
+  public FeatureEnvProperties addVariationMapItem(VariationMap variationMapItem) {
     if (this.variationMap == null) {
       this.variationMap = new ArrayList<>();
     }
@@ -88,7 +99,7 @@ public class FeatureEnvProperties {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public List<io.harness.cf.openapi.model.VariationMap> getVariationMap() {
+  public List<VariationMap> getVariationMap() {
     return variationMap;
   }
 
@@ -143,7 +154,7 @@ public class FeatureEnvProperties {
     this.state = state;
   }
 
-  public FeatureEnvProperties defaultServe(io.harness.cf.openapi.model.Serve defaultServe) {
+  public FeatureEnvProperties defaultServe(Serve defaultServe) {
     this.defaultServe = defaultServe;
     return this;
   }
@@ -154,7 +165,7 @@ public class FeatureEnvProperties {
    **/
   @ApiModelProperty(required = true, value = "")
 
-  public io.harness.cf.openapi.model.Serve getDefaultServe() {
+  public Serve getDefaultServe() {
     return defaultServe;
   }
 
