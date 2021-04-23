@@ -11,6 +11,8 @@ import io.harness.cvng.cdng.beans.CVNGStepType;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
@@ -35,6 +37,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -111,7 +114,8 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   @JsonTypeName("verifyStepOutcome")
   @TypeAlias("verifyStepOutcome")
   public static class VerifyStepOutcome implements Outcome {
-    ActivityStatusDTO activityStatus;
+    int progressPercentage;
+    String estimatedRemainingTime;
     @Override
     public String getType() {
       return "verifyStepOutcome";
@@ -136,7 +140,12 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
         status = Status.FAILED;
         break;
       case ERROR:
+      case IGNORED:
         status = Status.ERRORED;
+        break;
+      case NOT_STARTED:
+      case IN_PROGRESS:
+        status = Status.RUNNING;
         break;
       default:
         throw new IllegalStateException("Invalid status value: " + cvngResponseData.getActivityStatusDTO().getStatus());
@@ -145,11 +154,18 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(status).stepOutcome(
         StepResponse.StepOutcome.builder()
             .name("output")
-            .outcome(VerifyStepOutcome.builder().activityStatus(cvngResponseData.getActivityStatusDTO()).build())
+            .outcome(VerifyStepOutcome.builder()
+                         .progressPercentage(cvngResponseData.getActivityStatusDTO().getProgressPercentage())
+                         .estimatedRemainingTime(TimeUnit.MILLISECONDS.toMinutes(
+                                                     cvngResponseData.getActivityStatusDTO().getRemainingTimeMs())
+                             + " minutes")
+                         .build())
             .build());
     if (status == Status.FAILED) {
       stepResponseBuilder.failureInfo(FailureInfo.newBuilder()
                                           .addFailureData(FailureData.newBuilder()
+                                                              .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
+                                                              .setLevel(Level.INFO.name())
                                                               .addFailureTypes(FailureType.VERIFICATION_FAILURE)
                                                               .setMessage("Verification failed")
                                                               .build())
@@ -159,6 +175,8 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       stepResponseBuilder.failureInfo(
           FailureInfo.newBuilder()
               .addFailureData(FailureData.newBuilder()
+                                  .setCode(ErrorCode.UNKNOWN_ERROR.name())
+                                  .setLevel(Level.ERROR.name())
                                   .addFailureTypes(FailureType.UNKNOWN_FAILURE)
                                   .setMessage("Verification could not complete due to an unknown error")
                                   .build())
