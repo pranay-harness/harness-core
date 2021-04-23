@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "supporter-test",
@@ -67,4 +66,8 @@ java_library(
 
 run_tests()
 
-#pmd()
+run_analysis(
+    run_checkstyle = "no",
+    run_pmd = "no",
+    run_sonar = "no",
+)

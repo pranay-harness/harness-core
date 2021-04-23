@@ -1,10 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_binary(
     name = "module",
-    testonly = True,
     srcs = glob(["src/main/**/*.java"]),
     main_class = "io.harness.DataGenApplication",
     resources = [
@@ -30,6 +28,4 @@ java_binary(
     ],
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

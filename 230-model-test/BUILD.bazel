@@ -1,9 +1,7 @@
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "module",
-    testonly = True,
     srcs = glob([
         "src/main/**/*.java",
     ]),
@@ -46,6 +44,4 @@ java_binary(
     ],
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

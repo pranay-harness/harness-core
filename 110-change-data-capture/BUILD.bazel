@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//400-rest:module",
@@ -38,6 +37,4 @@ java_binary(
     deps = shared_dependencies,
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

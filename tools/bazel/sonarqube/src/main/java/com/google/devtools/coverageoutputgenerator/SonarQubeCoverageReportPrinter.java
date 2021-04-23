@@ -12,8 +12,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+/**
+ * <p>A copy of {@link LcovPrinter} which prints a merged coverage report in
+ * SonarQube 'Generic Test Coverage' XML format report.</p>
+ *
+ * @see <a
+ *     href="https://docs.sonarqube.org/latest/analysis/generic-test/">https://docs.sonarqube.org/latest/analysis/generic-test/</a>
+ */
 class SonarQubeCoverageReportPrinter {
-  private static final Logger log = Logger.getLogger(SonarQubeCoverageReportPrinter.class.getName());
+  private static final Logger logger = Logger.getLogger(SonarQubeCoverageReportPrinter.class.getName());
   private final BufferedWriter bufferedWriter;
 
   private SonarQubeCoverageReportPrinter(BufferedWriter bufferedWriter) {
@@ -21,14 +28,11 @@ class SonarQubeCoverageReportPrinter {
   }
 
   static boolean print(FileOutputStream outputStream, Coverage coverage) {
-    BufferedWriter bufferedWriter;
-    try (Writer fileWriter = new OutputStreamWriter(outputStream, UTF_8)) {
-      bufferedWriter = new BufferedWriter(fileWriter);
+    try (BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, UTF_8))) {
       SonarQubeCoverageReportPrinter printer = new SonarQubeCoverageReportPrinter(bufferedWriter);
       printer.print(coverage);
-      bufferedWriter.close();
     } catch (IOException exception) {
-      log.log(Level.SEVERE, "Could not write to output file.");
+      logger.log(Level.SEVERE, "Could not write to output file.");
       return false;
     }
     return true;
@@ -67,7 +71,7 @@ class SonarQubeCoverageReportPrinter {
 
       bufferedWriter.write("</coverage>");
     } catch (IOException exception) {
-      log.log(Level.SEVERE, "Could not write to output file.");
+      logger.log(Level.SEVERE, "Could not write to output file.");
       return false;
     }
     return true;

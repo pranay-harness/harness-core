@@ -1,8 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -57,4 +56,7 @@ java_library(
     deps = test_dependencies,
 )
 
-checkstyle()
+run_analysis(
+    run_pmd = "no",
+    run_sonar = "no",
+)
