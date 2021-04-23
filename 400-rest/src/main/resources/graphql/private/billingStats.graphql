@@ -405,6 +405,7 @@ input CCMFilter {
   taskId: IdFilter
   namespace: IdFilter
   workloadName: IdFilter
+  workloadType: IdFilter
   startTime: TimeFilter
   endTime: TimeFilter
   cloudProvider: IdFilter

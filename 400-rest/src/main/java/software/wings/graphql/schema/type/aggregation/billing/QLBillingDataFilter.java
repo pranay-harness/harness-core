@@ -36,6 +36,7 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter instanceName;
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
+  private QLIdFilter workloadType;
   private QLIdFilter cloudProvider;
   private QLIdFilter nodeInstanceId;
   private QLIdFilter podInstanceId;
@@ -93,6 +94,9 @@ public class QLBillingDataFilter implements EntityFilter {
     }
     if (filter.getWorkloadName() != null) {
       filterTypes.add(QLBillingDataFilterType.WorkloadName);
+    }
+    if (filter.getWorkloadType() != null) {
+      filterTypes.add(QLBillingDataFilterType.WorkloadType);
     }
     if (filter.getTag() != null) {
       filterTypes.add(QLBillingDataFilterType.Tag);
@@ -159,6 +163,8 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getNamespace();
       case WorkloadName:
         return filter.getWorkloadName();
+      case WorkloadType:
+        return filter.getWorkloadType();
       case Tag:
         return filter.getTag();
       case CloudProvider:
