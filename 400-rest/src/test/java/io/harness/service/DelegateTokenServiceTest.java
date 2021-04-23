@@ -178,7 +178,7 @@ public class DelegateTokenServiceTest extends WingsBaseTest {
     delegateTokenService.createDelegateToken(TEST_ACCOUNT_ID, TEST_TOKEN_NAME2);
 
     List<DelegateTokenDetails> delegateTokens =
-        delegateTokenService.getDelegateTokens(TEST_ACCOUNT_ID, "ACTIVE", TEST_TOKEN_NAME2);
+        delegateTokenService.getDelegateTokens(TEST_ACCOUNT_ID, DelegateTokenStatus.ACTIVE, TEST_TOKEN_NAME2);
 
     assertThat(delegateTokens).isNotNull();
     assertThat(delegateTokens.size()).isEqualTo(1);

@@ -441,7 +441,7 @@ public class AuthServiceImpl implements AuthService {
                                      .field(DelegateTokenKeys.accountId)
                                      .equal(accountId)
                                      .field(DelegateTokenKeys.status)
-                                     .equal(status.name());
+                                     .equal(status);
 
     try (HIterator<DelegateToken> records = new HIterator<>(query.fetch())) {
       for (DelegateToken delegateToken : records) {

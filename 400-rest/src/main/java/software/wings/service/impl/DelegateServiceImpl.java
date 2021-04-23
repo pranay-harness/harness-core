@@ -1539,7 +1539,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File downloadScripts(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException {
+      String delegateProfile, String tokenName) throws IOException {
     File delegateFile = File.createTempFile(DELEGATE_DIR, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(delegateFile))) {
@@ -1568,6 +1568,7 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateProfile(delegateProfile)
               .delegateType(SHELL_SCRIPT)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .delegateTokenName(tokenName)
               .build());
 
       if (isEmpty(scriptParams)) {
@@ -1660,7 +1661,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File downloadDocker(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException {
+      String delegateProfile, String tokenName) throws IOException {
     File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(dockerDelegateFile))) {
@@ -1689,6 +1690,7 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateProfile(delegateProfile)
               .delegateType(DOCKER)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .delegateTokenName(tokenName)
               .build());
 
       if (isEmpty(scriptParams)) {
@@ -1736,7 +1738,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File downloadKubernetes(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException {
+      String delegateProfile, String tokenName) throws IOException {
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
@@ -1762,6 +1764,7 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(KUBERNETES)
               .ciEnabled(isCiEnabled)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .delegateTokenName(tokenName)
               .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
@@ -1789,7 +1792,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File downloadCeKubernetesYaml(String managerHost, String verificationUrl, String accountId,
-      String delegateName, String delegateProfile) throws IOException {
+      String delegateName, String delegateProfile, String tokenName) throws IOException {
     String version;
     if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
       List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
@@ -1809,6 +1812,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateType(CE_KUBERNETES)
             .ceEnabled(true)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .delegateTokenName(tokenName)
             .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
@@ -1832,7 +1836,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File downloadDelegateValuesYamlFile(String managerHost, String verificationUrl, String accountId,
-      String delegateName, String delegateProfile) throws IOException {
+      String delegateName, String delegateProfile, String tokenName) throws IOException {
     String version;
 
     if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
@@ -1852,6 +1856,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateProfile(delegateProfile == null ? "" : delegateProfile)
             .delegateType(HELM_DELEGATE)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .delegateTokenName(tokenName)
             .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
@@ -1862,7 +1867,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
-      String hostname, String delegateGroupName, String delegateProfile) throws IOException {
+      String hostname, String delegateGroupName, String delegateProfile, String tokenName) throws IOException {
     File ecsDelegateFile = File.createTempFile(ECS_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(ecsDelegateFile))) {
@@ -1890,6 +1895,7 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(ECS)
               .delegateGroupId(delegateGroup.getUuid())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+              .delegateTokenName(tokenName)
               .build());
 
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);

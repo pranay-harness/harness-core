@@ -936,7 +936,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         } else if (errorResponse.contains(EXPIRED_TOKEN.name())) {
           log.warn("Delegate used expired token. It will be frozen and drained.");
           freeze();
-        } else if (errorResponse.contains(REVOKED_TOKEN.name())) {
+        } else if (errorResponse.contains(REVOKED_TOKEN.name()) || errorResponse.contains("Revoked Delegate Token")) {
           log.warn("Delegate used revoked token. It will be frozen and drained.");
           freeze();
         }
@@ -1011,7 +1011,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void checkForProfile() {
-    if (shouldContactManager() && !executingProfile.get() && !isLocked(new File("profile"))) {
+    if (shouldContactManager() && !executingProfile.get() && !isLocked(new File("profile")) && !frozen.get()) {
       try {
         log.info("Checking for profile ...");
         DelegateProfileParams profileParams = getProfile();
@@ -1711,7 +1711,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     if (frozen.get()) {
-      log.info("Delegate process with detected time out of sync is running. Won't acquire tasks.");
+      log.info(
+          "Delegate process with detected time out of sync or with revoked token is running. Won't acquire tasks.");
       return;
     }
 
