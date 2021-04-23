@@ -18,7 +18,6 @@ import lombok.Data;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
@@ -45,9 +44,12 @@ public class UserMembership implements PersistentEntity {
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("userMembershipAccountOrgProject")
-                 .field(UserMembershipKeys.SCOPE_ACCOUNT_IDENTIFIER_KEY)
-                 .field(UserMembershipKeys.SCOPE_ORG_IDENTIFIER_KEY)
-                 .field(UserMembershipKeys.SCOPE_PROJECT_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.scopes + "."
+                     + "accountIdentifier")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "orgIdentifier")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "projectIdentifier")
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("uniqueUserMembershipUserId")
@@ -71,15 +73,5 @@ public class UserMembership implements PersistentEntity {
     @NotEmpty String accountIdentifier;
     String orgIdentifier;
     String projectIdentifier;
-  }
-
-  @UtilityClass
-  public static final class UserMembershipKeys {
-    public static final String SCOPE_ACCOUNT_IDENTIFIER_KEY = UserMembershipKeys.scopes + "."
-        + "accountIdentifier";
-    public static final String SCOPE_ORG_IDENTIFIER_KEY = UserMembershipKeys.scopes + "."
-        + "orgIdentifier";
-    public static final String SCOPE_PROJECT_IDENTIFIER_KEY = UserMembershipKeys.scopes + "."
-        + "projectIdentifier";
   }
 }
