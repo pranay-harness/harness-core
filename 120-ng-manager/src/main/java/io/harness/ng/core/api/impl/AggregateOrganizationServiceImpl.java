@@ -98,14 +98,13 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
 
   private Pair<List<UserSearchDTO>, List<UserSearchDTO>> getAdminsAndCollaborators(
       String accountIdentifier, String identifier) {
-    Criteria userMembershipCriteria =
-        Criteria.where(UserMembershipKeys.scopes)
-            .elemMatch(Criteria.where(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
-                           .is(accountIdentifier)
-                           .and(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
-                           .is(identifier)
-                           .and(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
-                           .is(null));
+    Criteria userMembershipCriteria = Criteria.where(UserMembershipKeys.scopes)
+                                          .elemMatch(Criteria.where(ScopeKeys.accountIdentifier)
+                                                         .is(accountIdentifier)
+                                                         .and(ScopeKeys.orgIdentifier)
+                                                         .is(identifier)
+                                                         .and(ScopeKeys.projectIdentifier)
+                                                         .is(null));
     List<UserMembership> userMemberships = ngUserService.listUserMemberships(userMembershipCriteria);
     List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(Collectors.toList());
     Map<String, UserSearchDTO> userMap = getUserMap(userIds, accountIdentifier);
@@ -187,11 +186,11 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     List<Criteria> criteriaList = new ArrayList<>();
     organizations.forEach(organizationResponse -> {
       Criteria criteria = Criteria.where(UserMembershipKeys.scopes)
-                              .elemMatch(Criteria.where(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
+                              .elemMatch(Criteria.where(ScopeKeys.accountIdentifier)
                                              .is(accountIdentifier)
-                                             .and(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
+                                             .and(ScopeKeys.orgIdentifier)
                                              .is(organizationResponse.getOrganization().getIdentifier())
-                                             .and(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
+                                             .and(ScopeKeys.projectIdentifier)
                                              .is(null));
       criteriaList.add(criteria);
     });

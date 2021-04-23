@@ -102,11 +102,11 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   private Pair<List<UserSearchDTO>, List<UserSearchDTO>> getAdminsAndCollaborators(
       String accountIdentifier, String orgIdentifier, String identifier) {
     Criteria criteria = Criteria.where(UserMembershipKeys.scopes)
-                            .elemMatch(Criteria.where(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
+                            .elemMatch(Criteria.where(ScopeKeys.accountIdentifier)
                                            .is(accountIdentifier)
-                                           .and(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
+                                           .and(ScopeKeys.orgIdentifier)
                                            .is(orgIdentifier)
-                                           .and(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
+                                           .and(ScopeKeys.projectIdentifier)
                                            .is(identifier));
     List<UserMembership> userMemberships = ngUserService.listUserMemberships(criteria);
     List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(toList());
@@ -208,11 +208,11 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
     List<Criteria> criteriaList = new ArrayList<>();
     projects.forEach(projectResponse -> {
       Criteria criteria = Criteria.where(UserMembershipKeys.scopes)
-                              .elemMatch(Criteria.where(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
+                              .elemMatch(Criteria.where(ScopeKeys.accountIdentifier)
                                              .is(accountIdentifier)
-                                             .and(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
+                                             .and(ScopeKeys.orgIdentifier)
                                              .is(projectResponse.getProject().getOrgIdentifier())
-                                             .and(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
+                                             .and(ScopeKeys.projectIdentifier)
                                              .is(projectResponse.getProject().getIdentifier()));
       criteriaList.add(criteria);
     });
