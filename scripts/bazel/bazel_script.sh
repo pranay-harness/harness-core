@@ -120,7 +120,6 @@ BAZEL_MODULES="\
   //930-ng-core-clients:module \
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
-  //935-access-control-decision:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \
@@ -128,6 +127,7 @@ BAZEL_MODULES="\
   //940-secret-manager-client:module \
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
+  //946-access-control-decision:module \
   //947-access-control-core:module \
   //948-access-control-admin-client:module \
   //948-access-control-sdk:module \
@@ -408,13 +408,13 @@ build_bazel_module 920-delegate-service-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 955-delegate-beans
-build_bazel_module 935-access-control-decision
 build_bazel_module 940-feature-flag
 build_bazel_module 940-ng-audit-service
 build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 946-access-control-aggregator
+build_bazel_module 946-access-control-decision
 build_bazel_module 947-access-control-core
 build_bazel_module 948-access-control-admin-client
 build_bazel_module 948-access-control-sdk

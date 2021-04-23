@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>935-access-control-decision</artifactId>
+    <artifactId>946-access-control-decision</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.inject</groupId>
