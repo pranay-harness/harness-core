@@ -24,8 +24,8 @@ import javax.ws.rs.core.MediaType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
-@Api("/ng/signup")
-@Path("/ng/signup")
+@Api("signup")
+@Path("signup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @ApiResponses(value =
@@ -44,8 +44,8 @@ public class SignupResource {
    * @param dto
    * @return
    */
-  @PublicApi
   @POST
+  @PublicApi
   public RestResponse<UserInfo> signup(SignupDTO dto) {
     return new RestResponse<>(signupService.signup(dto));
   }

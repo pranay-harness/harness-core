@@ -15,6 +15,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import org.mongodb.morphia.converters.TypeConverter;
 
 @OwnedBy(HarnessTeam.PL)
 public class NextGenRegistrars {
@@ -43,6 +44,7 @@ public class NextGenRegistrars {
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .add(MockRoleAssignmentMorphiaRegistrar.class)
           .add(InvitesMorphiaRegistrar.class)
+          .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
@@ -58,4 +60,7 @@ public class NextGenRegistrars {
                    .clazz(SecretRequestWrapper.class)
                    .build())
           .build();
+
+  public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
+      ImmutableSet.<Class<? extends TypeConverter>>builder().build();
 }

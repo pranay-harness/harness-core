@@ -15,10 +15,12 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
@@ -120,23 +122,25 @@ public class JiraIssueUtilsNG {
       case DATE:
         return parseDate(name, value);
       case DATETIME:
-        return tryParseDateTime(name, value);
+        return parseDateTime(name, value);
       case OPTION:
-        Object optionValue = convertOptionToFinalValue(field, value);
-        if (optionValue == null) {
-          throw new InvalidRequestException(String.format("Field [%s] value is not in the allowed values", name));
-        }
-        return optionValue;
+        return convertOptionToFinalValue(field, name, value);
       default:
         throw new InvalidRequestException(String.format("Unsupported field type: %s", field.getSchema().getType()));
     }
   }
 
-  private Object convertOptionToFinalValue(JiraFieldNG field, String value) {
-    if (EmptyPredicate.isEmpty(field.getAllowedValues())) {
-      return null;
+  private Object convertOptionToFinalValue(JiraFieldNG field, String name, String value) {
+    List<JiraFieldAllowedValueNG> allowedValuesList =
+        field.getAllowedValues() == null ? Collections.emptyList() : field.getAllowedValues();
+    Optional<JiraFieldAllowedValueNG> allowedValues =
+        allowedValuesList.stream().filter(av -> av.matchesValue(value)).findFirst();
+    if (!allowedValues.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Value [%s] is not allowed for field [%s]. Allowed values: [%s]", value, name,
+              allowedValuesList.stream().map(JiraFieldAllowedValueNG::displayValue).collect(Collectors.joining(", "))));
     }
-    return field.getAllowedValues().stream().filter(av -> av.matchesValue(value)).findFirst().orElse(null);
+    return allowedValues.get();
   }
 
   private Long tryParseLong(String value) {
@@ -166,7 +170,7 @@ public class JiraIssueUtilsNG {
     throw new InvalidRequestException(String.format("Field [%s] expects a date value", name));
   }
 
-  private String tryParseDateTime(String name, String value) {
+  private String parseDateTime(String name, String value) {
     for (DateTimeFormatter formatter : JiraConstantsNG.DATETIME_FORMATTERS) {
       try {
         return ZonedDateTime.parse(value, formatter).format(JiraConstantsNG.DATETIME_FORMATTER);

@@ -19,6 +19,7 @@ import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.EventActionTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GitWebhookTriggerRepoFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GithubIssueCommentTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.HeaderTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.JexlConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.PayloadConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.ProjectTriggerFilter;
@@ -49,6 +50,7 @@ public class TriggerFilterHelperTest extends CategoryTest {
   @Mock EventActionTriggerFilter eventActionTriggerFilter;
   @Mock PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
   @Mock GithubIssueCommentTriggerFilter githubIssueCommentTriggerFilter;
+  @Mock HeaderTriggerFilter headerTriggerFilter;
   @Mock JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
   @Inject @InjectMocks TriggerFilterStore triggerFilterStore;
 
@@ -70,9 +72,9 @@ public class TriggerFilterHelperTest extends CategoryTest {
     assertThat(webhookTriggerFilters)
         .containsExactlyInAnyOrder(projectTriggerFilter, payloadConditionsTriggerFilter, jexlConditionsTriggerFilter);
 
-    TriggerFilter[] triggerFiltersDefaultGit =
-        new TriggerFilter[] {projectTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-            payloadConditionsTriggerFilter, gitWebhookTriggerRepoFilter, jexlConditionsTriggerFilter};
+    TriggerFilter[] triggerFiltersDefaultGit = new TriggerFilter[] {projectTriggerFilter, sourceRepoTypeTriggerFilter,
+        eventActionTriggerFilter, payloadConditionsTriggerFilter, gitWebhookTriggerRepoFilter, headerTriggerFilter,
+        jexlConditionsTriggerFilter};
 
     webhookTriggerFilters = triggerFilterStore.getWebhookTriggerFilters(
         webhookPayloadDataBuilder.parseWebhookResponse(ParseWebhookResponse.newBuilder().build())
@@ -109,7 +111,7 @@ public class TriggerFilterHelperTest extends CategoryTest {
     assertThat(webhookTriggerFilters).isNotNull();
     assertThat(webhookTriggerFilters)
         .containsExactlyInAnyOrder(projectTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-            gitWebhookTriggerRepoFilter, githubIssueCommentTriggerFilter);
+            gitWebhookTriggerRepoFilter, githubIssueCommentTriggerFilter, headerTriggerFilter);
   }
 
   @Test

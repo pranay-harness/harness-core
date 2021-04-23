@@ -634,7 +634,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       }
       Object evaluated = null;
       try {
-        evaluated = evaluator.substitute(property.getValue(), contextMap);
+        evaluated = evaluator.evaluate(property.getValue(), contextMap);
       } catch (Exception ignore) {
         // ignore this exception, it is based on user input
       }

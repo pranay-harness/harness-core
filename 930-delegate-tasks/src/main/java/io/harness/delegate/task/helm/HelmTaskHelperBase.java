@@ -280,7 +280,9 @@ public class HelmTaskHelperBase {
         builder.append(" from repo \"").append(repoDisplayName).append("\". ");
       }
       builder.append("Please check if the chart is present in the repo.");
-
+      if (processResult.hasOutput()) {
+        builder.append(" Details: ").append(processResult.outputUTF8());
+      }
       throw new InvalidRequestException(builder.toString(), USER);
     }
   }

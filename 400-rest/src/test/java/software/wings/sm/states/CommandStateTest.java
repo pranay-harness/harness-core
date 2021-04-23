@@ -716,7 +716,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext(true)
+             aCommandExecutionContext()
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)
@@ -801,7 +801,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext(true)
+             aCommandExecutionContext()
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)
@@ -987,7 +987,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext(true)
+             aCommandExecutionContext()
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)
@@ -1094,7 +1094,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext(true)
+             aCommandExecutionContext()
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)
@@ -1156,7 +1156,7 @@ public class CommandStateTest extends WingsBaseTest {
   private DelegateTaskBuilder getDelegateBuilder(
       Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes, Command command) {
     CommandExecutionContext commandExecutionContext =
-        aCommandExecutionContext(true)
+        aCommandExecutionContext()
             .appId(APP_ID)
             .backupPath(BACKUP_PATH)
             .runtimePath(RUNTIME_PATH)
@@ -1548,11 +1548,12 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = HINGER)
   @Category(UnitTests.class)
-  public void executeServiceCommandFromServiceWithWinRmConnection() {
+  public void executeServiceCommandFromServiceWithWinRmConnectionWithDelegateSelector() {
     commandState.setHost(HOST_NAME);
     commandState.setSshKeyRef("ssh_key_ref");
     commandState.setConnectionAttributes("WINRM_CONNECTION_ATTRIBUTES");
     commandState.setConnectionType(CommandState.ConnectionType.WINRM);
+    commandState.setDelegateSelectors(Arrays.asList("testDelegate"));
     SettingAttribute settingAttribute = new SettingAttribute();
     settingAttribute.setValue(WinRmConnectionAttributes.builder().build());
 
@@ -1578,8 +1579,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context).getStateExecutionData();
-
-    verify(context, times(6)).renderExpression(anyString());
+    verify(context, times(7)).renderExpression(anyString());
 
     verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(2)).get(anyString());
@@ -2290,13 +2290,28 @@ public class CommandStateTest extends WingsBaseTest {
     when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
     when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
 
-    when(templateService.get("TEMPLATE_ID", null))
-        .thenReturn(
-            Template.builder()
-                .templateObject(
-                    SshCommandTemplate.builder().commandUnits(Arrays.asList(commandWithTemplateReference)).build())
-                .build());
+    Map<String, Variable> variableMap = new HashMap<>();
+    Variable variable = aVariable().value("var1Value").name("var1").build();
 
+    List<ReferencedTemplate> referencedTemplateList = new ArrayList<>();
+    referencedTemplateList.add(
+        ReferencedTemplate.builder()
+            .templateReference(TemplateReference.builder().templateVersion(2L).templateUuid("NESTED_TEMP_UUID").build())
+            .variableMapping(variableMap)
+            .build());
+
+    variableMap.put("var1", variable);
+
+    when(templateService.get("TEMPLATE_ID", null))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder()
+                                            .commandUnits(Arrays.asList(commandWithTemplateReference))
+                                            .referencedTemplateList(referencedTemplateList)
+                                            .build())
+                        .variables(Arrays.asList(variable))
+                        .build());
+
+    commandState.setTemplateVariables(Arrays.asList(variable));
     ExecutionResponse executionResponse = commandState.execute(context);
 
     when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
@@ -2368,7 +2383,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
-             aCommandExecutionContext(true)
+             aCommandExecutionContext()
                  .appId(APP_ID)
                  .backupPath(BACKUP_PATH)
                  .runtimePath(RUNTIME_PATH)

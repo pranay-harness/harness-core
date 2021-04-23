@@ -1,5 +1,10 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.sdk.EntityGitDetails;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
 import lombok.AccessLevel;
@@ -16,6 +21,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel("ConnectorResponse")
+@OwnedBy(DX)
 public class ConnectorResponseDTO {
   ConnectorInfoDTO connector;
   Long createdAt;
@@ -23,6 +29,5 @@ public class ConnectorResponseDTO {
   ConnectorConnectivityDetails status;
   ConnectorActivityDetails activityDetails;
   boolean harnessManaged;
-  String branch;
-  String repoIdentifier;
+  EntityGitDetails gitDetails;
 }

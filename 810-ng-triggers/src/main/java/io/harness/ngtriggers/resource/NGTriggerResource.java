@@ -9,6 +9,11 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
+import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +31,7 @@ import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.pms.rbac.PipelineRbacPermissions;
 import io.harness.rest.RestResponse;
 import io.harness.utils.CryptoUtils;
 import io.harness.utils.PageUtils;
@@ -87,10 +93,11 @@ public class NGTriggerResource {
         dataType = "io.harness.ngtriggers.beans.config.NGTriggerConfig", paramType = "body")
   })
   @ApiOperation(value = "Create Trigger", nickname = "createTrigger")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
   public ResponseDTO<NGTriggerResponseDTO>
-  create(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+  create(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     NGTriggerEntity createdEntity = null;
     try {
@@ -108,12 +115,13 @@ public class NGTriggerResource {
   @GET
   @Path("/{triggerIdentifier}")
   @ApiOperation(value = "Gets a trigger by identifier", nickname = "getTrigger")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<NGTriggerResponseDTO> get(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") String targetIdentifier,
-      @PathParam("triggerIdentifier") String triggerIdentifier) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
     return ResponseDTO.newResponse(ngTriggerEntity.get().getVersion().toString(),
@@ -127,12 +135,13 @@ public class NGTriggerResource {
         dataType = "io.harness.ngtriggers.beans.config.NGTriggerConfig", paramType = "body")
   })
   @ApiOperation(value = "Update a trigger by identifier", nickname = "updateTrigger")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
   public ResponseDTO<NGTriggerResponseDTO>
   update(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam("triggerIdentifier") String triggerIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     try {
       TriggerDetails triggerDetails =
@@ -151,12 +160,14 @@ public class NGTriggerResource {
   @PUT
   @Path("{triggerIdentifier}/status")
   @ApiOperation(value = "Update a trigger's status by identifier", nickname = "updateTriggerStatus")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
   public ResponseDTO<Boolean> updateTriggerStatus(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") String targetIdentifier,
-      @PathParam("triggerIdentifier") String triggerIdentifier, @NotNull @QueryParam("status") boolean status) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier,
+      @NotNull @QueryParam("status") boolean status) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
     return ResponseDTO.newResponse(ngTriggerService.updateTriggerStatus(ngTriggerEntity.get(), status));
@@ -165,25 +176,28 @@ public class NGTriggerResource {
   @DELETE
   @Path("{triggerIdentifier}")
   @ApiOperation(value = "Delete a trigger by identifier", nickname = "deleteTrigger")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") String targetIdentifier,
-      @PathParam("triggerIdentifier") String triggerIdentifier) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier) {
     return ResponseDTO.newResponse(ngTriggerService.delete(accountIdentifier, orgIdentifier, projectIdentifier,
         targetIdentifier, triggerIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
   @GET
   @ApiOperation(value = "Gets Triggers list for target", nickname = "getTriggerListForTarget")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<PageResponse<NGTriggerDetailsResponseDTO>> getListForTarget(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam("targetIdentifier") String targetIdentifier, @QueryParam("filter") String filterQuery,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
-      @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     Criteria criteria = TriggerFilterHelper.createCriteriaForGetList(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, null, searchTerm, false);
     Pageable pageRequest;
@@ -201,12 +215,13 @@ public class NGTriggerResource {
   @GET
   @Path("{triggerIdentifier}/details")
   @ApiOperation(value = "Gets Triggers list for target", nickname = "getTriggerDetails")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<NGTriggerDetailsResponseDTO> getTriggerDetails(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam("triggerIdentifier") String triggerIdentifier,
-      @NotNull @QueryParam("targetIdentifier") String targetIdentifier) {
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier,
+      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
 
@@ -221,6 +236,7 @@ public class NGTriggerResource {
   @GET
   @Path("/triggersList")
   @ApiOperation(value = "Gets Triggers list for Repo URL", nickname = "getTriggerListForRepoURL")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<PageResponse<NGTriggerResponseDTO>> getListForRepoURL(
       @NotNull @QueryParam("repoURL") String repoURL, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,

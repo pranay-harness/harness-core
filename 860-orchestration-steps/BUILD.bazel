@@ -18,6 +18,7 @@ java_library(
         "//940-notification-client:module",
         "//950-cg-ng-shared-orchestration-beans:module",
         "//955-delegate-beans:module",
+        "//960-continuous-features:module",
         "//960-notification-beans:module",
         "//960-yaml-sdk:module",
         "@maven//:com_esotericsoftware_kryo",

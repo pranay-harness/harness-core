@@ -158,12 +158,14 @@ BAZEL_MODULES="\
   //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \
   //952-scm-java-client:module \
+  //958-migration-sdk:module \
   //959-psql-database-models:module \
   //960-api-services:module \
   //960-continuous-features:module \
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
   //960-expression-service:module \
   //960-ng-core-beans:module \
+  //960-ng-signup-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \
@@ -436,6 +438,7 @@ build_bazel_module 955-filters-sdk
 build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 952-scm-java-client
+build_bazel_module 958-migration-sdk
 build_bazel_module 959-psql-database-models
 build_bazel_module 960-api-services
 build_bazel_module 960-continuous-features

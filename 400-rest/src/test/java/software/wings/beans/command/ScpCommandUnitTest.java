@@ -296,38 +296,38 @@ public class ScpCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellCommandExecutionContext contextForS3 = new ShellCommandExecutionContext(
-      aCommandExecutionContext(true).artifactStreamAttributes(artifactStreamAttributesForS3).build());
+      aCommandExecutionContext().artifactStreamAttributes(artifactStreamAttributesForS3).build());
 
   @InjectMocks
   private ShellCommandExecutionContext contextForArtifactory = new ShellCommandExecutionContext(
-      aCommandExecutionContext(true).artifactStreamAttributes(artifactStreamAttributesForArtifactory).build());
+      aCommandExecutionContext().artifactStreamAttributes(artifactStreamAttributesForArtifactory).build());
 
   @InjectMocks
   private ShellCommandExecutionContext contextForArtifactoryRpm = new ShellCommandExecutionContext(
-      aCommandExecutionContext(true).artifactStreamAttributes(artifactStreamAttributesForArtifactoryRpmType).build());
+      aCommandExecutionContext().artifactStreamAttributes(artifactStreamAttributesForArtifactoryRpmType).build());
 
   @InjectMocks
   ShellCommandExecutionContext contextForAzureArtifacts =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
                                            .metadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
                                            .build());
   @InjectMocks
   ShellCommandExecutionContext contextForBambooArtifacts =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(bambooStreamAttributes)
                                            .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
                                            .build());
   @InjectMocks
   ShellCommandExecutionContext contextForJenkins =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForJenkins)
                                            .metadata(mockMetadata(ArtifactStreamType.JENKINS))
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext contextForJenkinsOld =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForJenkinsOld)
                                            .metadata(mockMetadata(ArtifactStreamType.JENKINS))
                                            .appId(APP_ID)
@@ -339,14 +339,14 @@ public class ScpCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext contextForNexusArtifacts =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForNexus)
                                            .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .build());
 
   @InjectMocks
   ShellCommandExecutionContext contextForNexusArtifactsWithEmptyArtifactFileMetadata = new ShellCommandExecutionContext(
-      aCommandExecutionContext(true)
+      aCommandExecutionContext()
           .artifactStreamAttributes(artifactStreamAttributesForNexusWithEmptyArtifactFileMetadata)
           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
           .host(host)

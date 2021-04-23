@@ -77,6 +77,7 @@ directories:
   940-feature-flag
   940-ng-audit-service
   940-notification-client
+  940-primary-version-manager
   940-resource-group-beans
   940-secret-manager-client
   945-ng-audit-client
@@ -109,11 +110,13 @@ directories:
   955-filters-sdk
   955-outbox-sdk
   955-setup-usage-sdk
+  958-migration-sdk
   959-psql-database-models
   960-api-services
   960-continuous-features
   960-expression-service
   960-ng-core-beans
+  960-ng-signup-beans
   960-notification-beans
   960-persistence
   960-recaster

@@ -30,6 +30,96 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AddSegmentToVariationTargetMapYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/AddSegmentToVariationTargetMapYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetFeatureFlagState",
+                "AddTargetsToVariationTargetMap",
+                "RemoveTargetsToVariationTargetMap",
+                "AddSegmentsToVariationTargetMap",
+                "RemoveSegmentsToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddSegmentToVariationTargetMapYamlSpec": {
+      "type": "object",
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddTargetsToVariationTargetMapYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/AddTargetsToVariationTargetMapYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetFeatureFlagState",
+                "AddTargetsToVariationTargetMap",
+                "RemoveTargetsToVariationTargetMap",
+                "AddSegmentsToVariationTargetMap",
+                "RemoveSegmentsToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddTargetsToVariationTargetMapYamlSpec": {
+      "type": "object",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ApprovalStageConfig": {
       "allOf": [
         {
@@ -338,6 +428,56 @@
           "$ref": "#/definitions/OnFailureConfig"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FeatureStageConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StageInfoConfig"
+        },
+        {
+          "type": "object",
+          "properties": { }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FeatureUpdateStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "environment",
+            "feature",
+            "featureUpdateRef",
+            "instructions",
+            "state"
+          ],
+          "properties": {
+            "environment": {
+              "type": "string"
+            },
+            "feature": {
+              "type": "string"
+            },
+            "featureUpdateRef": {
+              "type": "string"
+            },
+            "instructions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PatchInstruction"
+              }
+            },
+            "state": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "FlowControlConfig": {
@@ -1062,6 +1202,23 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "PatchInstruction": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "SetFeatureFlagState",
+            "AddTargetsToVariationTargetMap",
+            "RemoveTargetsToVariationTargetMap",
+            "AddSegmentsToVariationTargetMap",
+            "RemoveSegmentsToVariationTargetMap"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PipelineConfig": {
       "type": "object",
       "properties": {
@@ -1246,6 +1403,96 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "RemoveSegmentToVariationTargetMapYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetFeatureFlagState",
+                "AddTargetsToVariationTargetMap",
+                "RemoveTargetsToVariationTargetMap",
+                "AddSegmentsToVariationTargetMap",
+                "RemoveSegmentsToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RemoveSegmentToVariationTargetMapYamlSpec": {
+      "type": "object",
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RemoveTargetsToVariationTargetMapYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetFeatureFlagState",
+                "AddTargetsToVariationTargetMap",
+                "RemoveTargetsToVariationTargetMap",
+                "AddSegmentsToVariationTargetMap",
+                "RemoveSegmentsToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RemoveTargetsToVariationTargetMapYamlSpec": {
+      "type": "object",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ResourceConstraintStepInfo": {
       "allOf": [
         {
@@ -1363,6 +1610,45 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetFeatureFlagStateYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/SetFeatureFlagStateYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetFeatureFlagState",
+                "AddTargetsToVariationTargetMap",
+                "RemoveTargetsToVariationTargetMap",
+                "AddSegmentsToVariationTargetMap",
+                "RemoveSegmentsToVariationTargetMap"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetFeatureFlagStateYamlSpec": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StageElementConfig": {

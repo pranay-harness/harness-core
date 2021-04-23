@@ -134,9 +134,6 @@ public enum FeatureName {
   USE_CDN_FOR_STORAGE_FILES,
   USE_NEXUS3_PRIVATE_APIS,
   WEEKLY_WINDOW,
-  WINRM_CAPABILITY_DEPRECATE_FOR_HTTP,
-
-  // experiments below this line are not in alphabetical order
   ENABLE_CVNG_INTEGRATION,
   CVNG_CDNG_INTEGRATION,
   YAML_RBAC,
@@ -184,7 +181,8 @@ public enum FeatureName {
   NG_PROVISIONERS, /*Flag to use batch RBAC api exposed by SecretManager*/
   AWS_SM_ASSUME_IAM_ROLE,
   SERVICE_DASHBOARD_NG,
-  VAULT_NAMESPACE;
+  VAULT_NAMESPACE,
+  NG_SIGNUP(Scope.GLOBAL);
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

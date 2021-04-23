@@ -17,6 +17,7 @@ public class ApplicationController {
         .name(application.getName())
         .description(application.getDescription())
         .createdAt(application.getCreatedAt())
-        .createdBy(UserController.populateUser(application.getCreatedBy()));
+        .createdBy(UserController.populateUser(application.getCreatedBy()))
+        .isManualTriggerAuthorized(application.getIsManualTriggerAuthorized());
   }
 }

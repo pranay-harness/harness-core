@@ -13,6 +13,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.AccessControlClientModule;
@@ -25,6 +26,7 @@ import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventC
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.user.UserValidator;
+import io.harness.accesscontrol.principals.user.events.UserMembershipEventConsumer;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.UserGroupValidator;
@@ -50,8 +52,8 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
-import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
+import io.harness.usermembership.UserMembershipClientModule;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -121,6 +123,17 @@ public class AccessControlModule extends AbstractModule {
   }
 
   @Provides
+  @Named(USERMEMBERSHIP)
+  public Consumer getUserMembershipConsumer() {
+    RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
+    if (!config.getEventsConfig().isEnabled()) {
+      return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
+    }
+    return RedisConsumer.of(
+        USERMEMBERSHIP, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig, Duration.ofMinutes(10), 3);
+  }
+
+  @Provides
   public AccessControlIteratorsConfig getIteratorsConfig() {
     return config.getIteratorsConfig();
   }
@@ -163,7 +176,7 @@ public class AccessControlModule extends AbstractModule {
     install(new UserGroupClientModule(config.getUserGroupClientConfiguration().getUserGroupServiceConfig(),
         config.getUserGroupClientConfiguration().getUserGroupServiceSecret(), ACCESS_CONTROL_SERVICE.getServiceId()));
 
-    install(new UserClientModule(config.getUserClientConfiguration().getUserServiceConfig(),
+    install(new UserMembershipClientModule(config.getUserClientConfiguration().getUserServiceConfig(),
         config.getUserClientConfiguration().getUserServiceSecret(), ACCESS_CONTROL_SERVICE.getServiceId()));
 
     install(new AuditClientModule(config.getAuditClientConfig(), config.getDefaultServiceSecret(),
@@ -193,6 +206,10 @@ public class AccessControlModule extends AbstractModule {
     Multibinder<EventConsumer> featureFlagEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(FEATURE_FLAG_STREAM));
     featureFlagEventConsumers.addBinding().to(NGRBACEnabledFeatureFlagEventConsumer.class);
+
+    Multibinder<EventConsumer> userMembershipEventConsumers =
+        Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(USERMEMBERSHIP));
+    userMembershipEventConsumers.addBinding().to(UserMembershipEventConsumer.class);
 
     registerRequiredBindings();
   }

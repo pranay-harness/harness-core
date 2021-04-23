@@ -380,14 +380,13 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetUploadToGCSStepInfoEnvVariables() {
-    UploadToGCSStepInfo uploadToS3StepInfo =
-        UploadToGCSStepInfo.builder()
-            .bucket(ParameterField.createValueField("bucket"))
-            .sourcePath(ParameterField.createValueField("/step-exec/workspace/pom.xml"))
-            .target(ParameterField.createValueField("dir/pom.xml"))
-            .build();
+    UploadToGCSStepInfo uploadToS3StepInfo = UploadToGCSStepInfo.builder()
+                                                 .bucket(ParameterField.createValueField("bucket"))
+                                                 .sourcePath(ParameterField.createValueField("pom.xml"))
+                                                 .target(ParameterField.createValueField("dir/pom.xml"))
+                                                 .build();
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_SOURCE", "/step-exec/workspace/pom.xml");
+    expected.put("PLUGIN_SOURCE", "pom.xml");
     expected.put("PLUGIN_TARGET", "bucket/dir/pom.xml");
 
     Map<String, String> actual =

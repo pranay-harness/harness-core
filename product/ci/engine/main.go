@@ -125,5 +125,9 @@ func getRemoteLogger(keyID string) *logs.RemoteLogger {
 		panic(err)
 	}
 
+	lc := external.LogCloser()
+	lc.Run()
+	lc.Add(remoteLogger)
+
 	return remoteLogger
 }

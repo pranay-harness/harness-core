@@ -21,8 +21,10 @@ import lombok.experimental.FieldNameConstants;
 public class GitEntityCreateInfoDTO {
   @QueryParam(GitSyncApiConstants.BRANCH_KEY) String branch;
   @QueryParam(GitSyncApiConstants.REPO_IDENTIFIER_KEY) String yamlGitConfigId;
+  @QueryParam(GitSyncApiConstants.FOLDER_PATH) String folderPath;
   @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath;
   @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg;
   @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) boolean createPr;
   @QueryParam(GitSyncApiConstants.NEW_BRANCH) boolean isNewBranch;
+  @QueryParam(GitSyncApiConstants.TARGET_BRANCH_FOR_PR) String targetBranchForPr;
 }

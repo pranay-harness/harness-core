@@ -12,7 +12,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -31,6 +33,7 @@ import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Singleton
 @Slf4j
 public class PasswordBasedAuthHandler implements AuthHandler {
@@ -56,10 +59,11 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
-    return authenticateInternal(false, credentials);
+    return authenticateInternal(false, true, credentials);
   }
 
-  private AuthenticationResponse authenticateInternal(boolean isPasswordHash, String... credentials) {
+  private AuthenticationResponse authenticateInternal(
+      boolean isPasswordHash, boolean shouldVerifyEmail, String... credentials) {
     if (credentials == null || credentials.length != 2) {
       throw new WingsException(INVALID_ARGUMENT);
     }
@@ -73,9 +77,11 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     }
     String accountId = user == null ? null : user.getDefaultAccountId();
     String uuid = user == null ? null : user.getUuid();
+
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       log.info("Authenticating via Username Password");
-      if (!user.isEmailVerified()) {
+
+      if (shouldVerifyEmail && !user.isEmailVerified()) {
         throw new WingsException(EMAIL_NOT_VERIFIED, USER);
       }
 
@@ -145,8 +151,8 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     }
   }
 
-  public AuthenticationResponse authenticateWithPasswordHash(String... credentials) {
-    return authenticateInternal(true, credentials);
+  public AuthenticationResponse authenticateWithPasswordHash(boolean shouldVerifyEmail, String... credentials) {
+    return authenticateInternal(true, shouldVerifyEmail, credentials);
   }
 
   @Override

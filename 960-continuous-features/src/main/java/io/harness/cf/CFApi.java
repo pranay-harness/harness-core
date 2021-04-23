@@ -73,6 +73,34 @@ public class CFApi extends DefaultApi {
         .withParameters(new FeatureFlagStateParams(stateString))
         .build();
   }
+
+  public PatchInstruction getAddTargetToVariationMapParams(String variation, List<String> targets) {
+    return PatchInstructionBuilder.aPatchInstruction()
+        .withKind("addTargetsToVariationTargetMap")
+        .withParameters(new AddTargetToVariationMapParams(variation, targets))
+        .build();
+  }
+
+  public PatchInstruction getRemoveTargetToVariationMapParams(String variation, List<String> targets) {
+    return PatchInstructionBuilder.aPatchInstruction()
+        .withKind("removeTargetsToVariationTargetMap")
+        .withParameters(new RemoveTargetToVariationMapParams(variation, targets))
+        .build();
+  }
+
+  public PatchInstruction getAddSegmentToVariationMapParams(String variation, List<String> segments) {
+    return PatchInstructionBuilder.aPatchInstruction()
+        .withKind("addSegmentToVariationTargetMap")
+        .withParameters(new AddSegmentToVariationMapParams(variation, segments))
+        .build();
+  }
+
+  public PatchInstruction getRemoveSegmentToVariationMapParams(String variation, List<String> segments) {
+    return PatchInstructionBuilder.aPatchInstruction()
+        .withKind("removeSegmentToVariationTargetMap")
+        .withParameters(new RemoveSegmentToVariationMapParams(variation, segments))
+        .build();
+  }
 }
 
 class FeatureFlagStateParams {
@@ -87,6 +115,46 @@ class UpdateDefaultServeParams {
 
   UpdateDefaultServeParams(String variation) {
     this.variation = variation;
+  }
+}
+
+class AddTargetToVariationMapParams {
+  String variation;
+  List<String> targets;
+
+  AddTargetToVariationMapParams(String variation, List<String> targets) {
+    this.variation = variation;
+    this.targets = targets;
+  }
+}
+
+class RemoveTargetToVariationMapParams {
+  String variation;
+  List<String> targets;
+
+  RemoveTargetToVariationMapParams(String variation, List<String> targets) {
+    this.variation = variation;
+    this.targets = targets;
+  }
+}
+
+class AddSegmentToVariationMapParams {
+  String variation;
+  List<String> segments;
+
+  AddSegmentToVariationMapParams(String variation, List<String> segments) {
+    this.variation = variation;
+    this.segments = segments;
+  }
+}
+
+class RemoveSegmentToVariationMapParams {
+  String variation;
+  List<String> segments;
+
+  RemoveSegmentToVariationMapParams(String variation, List<String> segments) {
+    this.variation = variation;
+    this.segments = segments;
   }
 }
 

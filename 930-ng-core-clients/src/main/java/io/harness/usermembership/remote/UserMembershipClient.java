@@ -4,8 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.PageResponse;
-import io.harness.rest.RestResponse;
+import io.harness.ng.core.dto.ResponseDTO;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -16,7 +15,7 @@ public interface UserMembershipClient {
   String USER_MEMBERSHIP_API = "users/usermembership";
 
   @GET(USER_MEMBERSHIP_API)
-  Call<RestResponse<PageResponse<Boolean>>> isUserInScope(@Query(NGCommonEntityConstants.USER_ID) String userId,
+  Call<ResponseDTO<Boolean>> isUserInScope(@Query(NGCommonEntityConstants.USER_ID) String userId,
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);

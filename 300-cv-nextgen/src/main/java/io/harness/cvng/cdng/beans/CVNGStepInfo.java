@@ -65,6 +65,8 @@ public class CVNGStepInfo implements CVStepInfoBase {
         .verificationJobIdentifier(verificationJobRef)
         .serviceIdentifier(spec.getServiceRef())
         .envIdentifier(spec.getEnvRef())
+        .deploymentTag(spec.getDeploymentTag())
+        .runtimeValues(spec.getRuntimeValues())
         .build();
   }
 }

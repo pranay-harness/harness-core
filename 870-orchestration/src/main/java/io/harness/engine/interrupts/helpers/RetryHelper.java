@@ -21,6 +21,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -51,8 +52,9 @@ public class RetryHelper {
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).orchestrationEngine(engine).build());
   }
 
-  private NodeExecution cloneForRetry(NodeExecution nodeExecution, StepParameters parameters, String newUuid,
-      Ambiance ambiance, InterruptConfig interruptConfig, String interruptId) {
+  @VisibleForTesting
+  NodeExecution cloneForRetry(NodeExecution nodeExecution, StepParameters parameters, String newUuid, Ambiance ambiance,
+      InterruptConfig interruptConfig, String interruptId) {
     PlanNodeProto newPlanNode = nodeExecution.getNode();
     if (parameters != null) {
       newPlanNode = PlanNodeUtils.cloneForRetry(nodeExecution.getNode(), parameters);
@@ -71,7 +73,8 @@ public class RetryHelper {
                                           .interruptConfig(newInterruptConfig)
                                           .build();
 
-    List<InterruptEffect> interruptHistories = nodeExecution.getInterruptHistories();
+    List<InterruptEffect> interruptHistories =
+        isEmpty(nodeExecution.getInterruptHistories()) ? new ArrayList<>() : nodeExecution.getInterruptHistories();
     interruptHistories.add(0, interruptEffect);
     return NodeExecution.builder()
         .uuid(newUuid)

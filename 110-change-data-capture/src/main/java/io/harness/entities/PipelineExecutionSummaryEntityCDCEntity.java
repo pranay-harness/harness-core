@@ -16,7 +16,7 @@ public class PipelineExecutionSummaryEntityCDCEntity implements CDCEntity<Pipeli
   @Inject private PlanExecutionSummaryChangeDataHandler planExecutionSummaryChangeDataHandler;
 
   @Override
-  public ChangeHandler getTimescaleChangeHandler(String handlerClass) {
+  public ChangeHandler getChangeHandler(String handlerClass) {
     return planExecutionSummaryChangeDataHandler;
   }
 

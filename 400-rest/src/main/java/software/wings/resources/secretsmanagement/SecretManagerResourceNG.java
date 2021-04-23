@@ -22,6 +22,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -84,12 +85,13 @@ public class SecretManagerResourceNG {
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    Optional<SecretManagerConfig> secretManagerConfigOptional =
-        ngSecretManagerService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true);
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.MASK_SECRETS) @DefaultValue("true") Boolean maskSecrets) {
+    Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, Boolean.TRUE.equals(maskSecrets));
     SecretManagerConfigDTO dto = null;
     if (secretManagerConfigOptional.isPresent()) {
-      dto = secretManagerConfigOptional.get().toDTO(true);
+      dto = secretManagerConfigOptional.get().toDTO(maskSecrets);
     }
     return new RestResponse<>(dto);
   }

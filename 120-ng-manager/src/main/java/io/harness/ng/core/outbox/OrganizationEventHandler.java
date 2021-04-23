@@ -2,6 +2,7 @@ package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
 import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import static io.harness.security.SourcePrincipalContextData.SOURCE_PRINCIPAL;
@@ -65,7 +66,8 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   @Inject
   public OrganizationEventHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      AuditClientService auditClientService, NgUserService ngUserService, ResourceGroupClient resourceGroupClient) {
+      AuditClientService auditClientService, NgUserService ngUserService,
+      @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient) {
     this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
@@ -124,14 +126,14 @@ public class OrganizationEventHandler implements OutboxEventHandler {
   private boolean setupOrgForUserAuthz(String accountIdentifier, String orgIdentifier, GlobalContext globalContext) {
     createDefaultResourceGroup(accountIdentifier, orgIdentifier);
     if (!(globalContext.get(SOURCE_PRINCIPAL) instanceof SourcePrincipalContextData)) {
-      return false;
+      return true;
     }
     Principal principal = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal();
     if (principal instanceof UserPrincipal) {
       String userId = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal().getName();
       ngUserService.addUserToScope(userId,
           UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(),
-          ORG_ADMIN_ROLE);
+          ORG_ADMIN_ROLE, SYSTEM);
     }
     return true;
   }

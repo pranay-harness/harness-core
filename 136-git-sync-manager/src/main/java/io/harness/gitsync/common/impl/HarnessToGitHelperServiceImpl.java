@@ -105,7 +105,8 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(entityRef.getProjectIdentifier(),
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
     gitEntityService.save(pushInfo.getAccountId(), entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail),
-        yamlGitConfigDTO, pushInfo.getFilePath(), pushInfo.getCommitId(), pushInfo.getBranchName());
+        yamlGitConfigDTO, pushInfo.getFolderPath(), pushInfo.getFilePath(), pushInfo.getCommitId(),
+        pushInfo.getBranchName());
     if (pushInfo.getIsNewBranch()) {
       executorService.submit(
           ()

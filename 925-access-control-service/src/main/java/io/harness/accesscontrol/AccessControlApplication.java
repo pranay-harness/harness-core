@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
 import io.harness.accesscontrol.commons.events.EntityCrudEventListenerService;
 import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
+import io.harness.accesscontrol.commons.events.UserMembershipEventListenerService;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.aggregator.AggregatorApplication;
@@ -90,6 +91,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   @Override
   public void initialize(Bootstrap<AccessControlConfiguration> bootstrap) {
     initializeLogging();
+    bootstrap.addCommand(new InspectCommand<>(this));
     bootstrap.addBundle(new SwaggerBundle<AccessControlConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AccessControlConfiguration appConfig) {
@@ -156,8 +158,9 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       AccessControlConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.getEventsConfig().isEnabled()) {
       environment.lifecycle().manage(injector.getInstance(EntityCrudEventListenerService.class));
+      environment.lifecycle().manage(injector.getInstance(FeatureFlagEventListenerService.class));
+      environment.lifecycle().manage(injector.getInstance(UserMembershipEventListenerService.class));
     }
-    environment.lifecycle().manage(injector.getInstance(FeatureFlagEventListenerService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
   }
 

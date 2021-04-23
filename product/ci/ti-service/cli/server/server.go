@@ -97,9 +97,13 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 
 		// Test intelligence is configured. Start up redis watcher for watching push events
 		if config.EventsFramework.RedisUrl != "" {
-			log.Infow("connecting to redis for receiving events", "url", config.EventsFramework.RedisUrl)
-			rdb, err := eventsframework.New(config.EventsFramework.RedisUrl,
+			log.Infow("connecting to redis for receiving events", "url", config.EventsFramework.RedisUrl,
+				"ssl_enabled", config.EventsFramework.SSLEnabled, "cert_path", config.EventsFramework.CertPath)
+			rdb, err := eventsframework.New(
+				config.EventsFramework.RedisUrl,
 				config.EventsFramework.RedisPassword,
+				config.EventsFramework.SSLEnabled,
+				config.EventsFramework.CertPath,
 				log)
 			if err != nil {
 				log.Errorw("could not establish connection with events framework Redis")

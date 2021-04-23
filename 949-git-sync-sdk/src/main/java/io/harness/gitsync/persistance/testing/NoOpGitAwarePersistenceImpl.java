@@ -19,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @OwnedBy(DX)
@@ -57,16 +56,6 @@ public class NoOpGitAwarePersistenceImpl implements GitAwarePersistence {
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
     Query query = new Query(criteria).with(pageable);
     return mongoTemplate.find(query, entityClass);
-  }
-
-  /**
-   * finds and modify first.
-   */
-  @Override
-  public <B extends GitSyncableEntity, Y extends YamlDTO> B findAndModify(Criteria criteria, Update update,
-      ChangeType changeType, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    Query query = new Query(criteria);
-    return mongoTemplate.findAndModify(query, update, entityClass);
   }
 
   @Override

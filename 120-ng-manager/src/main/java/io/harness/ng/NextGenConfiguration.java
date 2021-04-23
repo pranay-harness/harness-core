@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.Path;
 import lombok.Getter;
+import lombok.Setter;
 import org.reflections.Reflections;
 
 @Getter
@@ -51,7 +52,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String ACCOUNT_PACKAGE = "io.harness.account.resource";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
-  @JsonProperty("mongo") private MongoConfig mongoConfig;
+  @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
@@ -84,6 +85,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
   @JsonProperty("gitSdkConfiguration") private GitSdkConfiguration gitSdkConfiguration;
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
+  @JsonProperty(value = "enableDefaultResourceGroupCreation", defaultValue = "false")
+  private boolean enableDefaultResourceGroupCreation;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

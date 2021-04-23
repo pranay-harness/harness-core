@@ -17,7 +17,7 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
 
   EntityType getEntityType();
 
-  Supplier<B> getEntityFromYaml(Y yaml);
+  Supplier<B> getEntityFromYaml(Y yaml, String accountIdentifier);
 
   EntityDetail getEntityDetail(B entity);
 

@@ -9,6 +9,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -55,6 +56,7 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.impl.GraphGenerationServiceImpl;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.threading.ExecutorModule;
@@ -191,6 +193,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
+    injector.getInstance(GraphGenerationServiceImpl.class).registerIterators();
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();

@@ -5,11 +5,15 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @JsonTypeName("Canary")
 @OwnedBy(HarnessTeam.CV)
-public class CanaryVerificationJobSpec extends VerificationJobSpec {
+@SuperBuilder
+@NoArgsConstructor
+public class CanaryVerificationJobSpec extends BlueGreenCanaryVerificationJobSpec {
   @Override
   public String getType() {
     return "Canary";

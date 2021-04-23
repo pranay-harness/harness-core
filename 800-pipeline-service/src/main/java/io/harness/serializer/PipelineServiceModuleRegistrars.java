@@ -35,6 +35,7 @@ public class PipelineServiceModuleRegistrars {
           .addAll(NGTriggerRegistrars.morphiaRegistrars)
           .add(FiltersMorphiaRegistrar.class)
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
+          .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

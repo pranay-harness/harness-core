@@ -139,6 +139,9 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Tathagat Chaurasiya <tathagat.chaurasiya@harness.io>$" |\
     grep -iv "^TP Honey <tp@harness.io>$" |\
     grep -iv "^Tudor Macari <tudor.macari@harness.io>$" |\
+    grep -iv "^Udham Singh <udham.singh@harness.io>$" |\
+    grep -iv "^USB-05 <udham.singh@harness.io>$" |\
+    grep -iv "^Udham Singh <80256915+USB-05@users.noreply.github.com>$" |\
     grep -iv "^Ujjawal Prasad <ujjawal.prasad@harness.io>$" |\
     grep -iv "^Utkarsh Gupta <utkarsh.gupta@harness.io>$" |\
     grep -iv "^Utsav Krishnan <utsav.krishnan@harness.io>$" |\

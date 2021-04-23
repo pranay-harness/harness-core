@@ -15,6 +15,7 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
@@ -101,6 +102,7 @@ import io.harness.serializer.CvNextGenRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -175,6 +177,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     initializeLogging();
     log.info("bootstrapping ...");
     // Enable variable substitution with environment variables
+    bootstrap.addCommand(new InspectCommand<>(this));
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
     bootstrap.addBundle(new SwaggerBundle<VerificationConfiguration>() {
@@ -220,6 +223,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CvNextGenRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -299,6 +303,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerDataCollectionTaskIterator(injector);
     registerRecoverNextTaskHandlerIterator(injector);
     injector.getInstance(CVNGStepTaskHandler.class).registerIterator();
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
@@ -345,7 +350,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
           registerPMSQueueListeners(configuration, injector);
         }
       } catch (Exception e) {
-        log.error("Failed To register pipeline sdk");
+        log.error("Failed To register pipeline sdk", e);
         // Don't fail for now. We have to find out retry strategy
         // System.exit(1);
       }
