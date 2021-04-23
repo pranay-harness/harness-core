@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 ORIGINAL_SCRIPT=`mktemp`
 SCRIPT=`mktemp`
 bazel run --script_path="$ORIGINAL_SCRIPT" //tools/rust/aeriform
