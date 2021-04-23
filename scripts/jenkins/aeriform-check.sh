@@ -1,4 +1,4 @@
-set -x
+set -e
 
 if [ -z "${HARNESS_TEAM}" ]
 then
