@@ -374,8 +374,6 @@ aeriform("//958-migration-sdk:module")
 
 aeriform("//959-psql-database-models:module")
 
-aeriform("//959-psql-database-models:tests")
-
 aeriform("//960-api-services:module")
 
 aeriform("//960-api-services:tests")
