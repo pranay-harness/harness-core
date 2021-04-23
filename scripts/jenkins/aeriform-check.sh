@@ -98,5 +98,11 @@ then
 	scripts/bazel/aeriform.sh analyze \
     ${TRACK_FILES} \
     --team-filter ${HARNESS_TEAM} \
+    --kind-filter AutoAction \
+    --kind-filter Critical \
+    --kind-filter DevAction \
+    --kind-filter Error \
+    --kind-filter ToDo \
+    --kind-filter Warning \
     --exit-code
 fi
