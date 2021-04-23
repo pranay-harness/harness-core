@@ -2,7 +2,6 @@ package io.harness;
 
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static io.harness.stream.AtmosphereBroadcaster.MEMORY;
 
 import static org.mockito.Mockito.mock;
@@ -23,7 +22,6 @@ import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
 import io.harness.govern.ProviderModule;
-import io.harness.lock.DistributedLockImplementation;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.AbstractMongoModule;
@@ -184,12 +182,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return configuration.getCfMigrationConfig();
-      }
-
-      @Provides
-      @Singleton
-      DistributedLockImplementation distributedLockImplementation() {
-        return MONGO;
       }
     });
     modules.add(new ValidationModule(validatorFactory));
