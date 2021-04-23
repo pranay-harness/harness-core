@@ -68,7 +68,6 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
       throw new NotFoundException(
           String.format("Project with orgIdentifier [%s] and identifier [%s] not found", orgIdentifier, identifier));
     }
-
     ProjectAggregateDTOBuilder projectAggregateDTO = ProjectAggregateDTO.builder();
     projectAggregateDTO.projectResponse(toResponseWrapper(projectOptional.get()));
 
