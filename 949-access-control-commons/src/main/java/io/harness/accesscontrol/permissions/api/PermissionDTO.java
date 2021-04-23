@@ -22,6 +22,7 @@ public class PermissionDTO {
   @ApiModelProperty(required = true) String identifier;
   @ApiModelProperty(required = true) String name;
   @ApiModelProperty(required = true) PermissionStatus status;
+  @ApiModelProperty(required = true) boolean includeInAllRoles;
   @ApiModelProperty(required = true) Set<String> allowedScopeLevels;
   @ApiModelProperty(required = true) String resourceType;
   @ApiModelProperty(required = true) String action;
