@@ -25,6 +25,8 @@ import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -91,6 +93,7 @@ public class CENextGenModule extends AbstractModule {
     install(FeatureFlagModule.getInstance());
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(CENextGenConfiguration.class).toInstance(configuration);
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
 
     install(new AbstractModule() {
       @Override
