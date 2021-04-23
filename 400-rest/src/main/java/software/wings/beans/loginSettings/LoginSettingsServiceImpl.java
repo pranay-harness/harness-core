@@ -250,6 +250,12 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
     return loginSettings;
   }
 
+  @Override
+  public PasswordStrengthPolicy getPasswordStrengthPolicy(String accountId) {
+    LoginSettings loginSettings = getLoginSettings(accountId);
+    return loginSettings.getPasswordStrengthPolicy();
+  }
+
   private List<PasswordStrengthViolation> getPasswordStrengthCheckViolationsInternal(
       PasswordStrengthPolicy passwordStrengthPolicy, char[] password) {
     PasswordData passwordData = new PasswordData(new String(password));
