@@ -52,14 +52,14 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   Map<Microservice, GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient;
 
   @Override
-  public void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfig, String branch, String accountId,
+  public void readFilesFromBranchAndProcess(YamlGitConfigDTO yamlGitConfig, String branchName, String accountId,
       String defaultBranch, String filePathToBeExcluded) {
     ScmConnector connectorAssociatedWithGitSyncConfig =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfig, accountId);
     FileBatchContentResponse harnessFilesOfBranch =
-        getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, defaultBranch, yamlGitConfig);
+        getFilesBelongingToThisBranch(connectorAssociatedWithGitSyncConfig, accountId, branchName, yamlGitConfig);
     List<FileContent> filteredFileList = removeTheExcludedFile(harnessFilesOfBranch, filePathToBeExcluded);
-    processTheChangesWeGotFromGit(filteredFileList, yamlGitConfig, branch, accountId);
+    processTheChangesWeGotFromGit(filteredFileList, yamlGitConfig, branchName, accountId);
   }
 
   private List<FileContent> removeTheExcludedFile(
@@ -76,10 +76,12 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   }
 
   private FileBatchContentResponse getFilesBelongingToThisBranch(
-      ScmConnector connector, String accountId, String branch, YamlGitConfigDTO yamlGitConfig) {
-    // todo @deepak: Later on we won't list the files from the default branch
-    List<String> filesList = getListOfFilesInTheDefaultBranch(yamlGitConfig);
-    return scmClient.listFiles(connector, filesList, branch);
+      ScmConnector connector, String accountId, String branchName, YamlGitConfigDTO yamlGitConfig) {
+    List<String> foldersList = emptyIfNull(yamlGitConfig.getRootFolders())
+                                   .stream()
+                                   .map(YamlGitConfigDTO.RootFolder::getRootFolder)
+                                   .collect(toList());
+    return scmClient.listFiles(connector, foldersList, branchName);
   }
 
   private List<String> getListOfFilesInTheDefaultBranch(YamlGitConfigDTO yamlGitConfig) {
