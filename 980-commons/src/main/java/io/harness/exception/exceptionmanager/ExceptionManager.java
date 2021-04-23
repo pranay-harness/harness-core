@@ -27,6 +27,8 @@ public class ExceptionManager {
   @Inject private Map<Class<? extends Exception>, ExceptionHandler> exceptionHandler;
   @Inject private KryoSerializer kryoSerializer;
 
+  public final String DEFAULT_ERROR_MESSAGE = "NULL EXCEPTION";
+
   public WingsException processException(Exception exception) {
     WingsException processedException = handleException(exception);
     return ensureExceptionIsKryoSerializable(processedException);
@@ -49,6 +51,10 @@ public class ExceptionManager {
   }
 
   private WingsException handleException(Exception exception) {
+    if (exception == null) {
+      return new GeneralException(DEFAULT_ERROR_MESSAGE);
+    }
+
     try {
       WingsException handledException;
       if (exception instanceof WingsException) {
