@@ -2,6 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(HarnessModule._390_DB_MIGRATION)
+@BreakDependencyOn("software.wings.app.MainConfiguration")
 public class NewRelicMetricDataBaselineMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DataStoreService dataStoreService;

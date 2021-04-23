@@ -4,12 +4,6 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
-shared_dependencies = [
-    "//390-db-migration:module",
-    "//400-rest:module",
-    "//:lombok",
-]
-
 filegroup(
     name = "resource",
     srcs = [
@@ -27,9 +21,9 @@ java_binary(
     data = [":resource"],
     main_class = "software.wings.app.WingsApplication",
     visibility = ["//visibility:public"],
-    runtime_deps = [
+    deps = [
+        "//:lombok",
         "//390-db-migration:module",
         "//400-rest:module",
     ],
-    deps = shared_dependencies,
 )

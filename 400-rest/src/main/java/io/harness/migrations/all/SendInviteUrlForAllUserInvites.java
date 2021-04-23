@@ -2,6 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.handler.impl.MarketoHelper;
@@ -31,6 +32,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  */
 @Slf4j
 @TargetModule(HarnessModule._390_DB_MIGRATION)
+@BreakDependencyOn("software.wings.app.MainConfiguration")
 public class SendInviteUrlForAllUserInvites implements Migration {
   @Inject private UserService userService;
   @Inject private AccountService accountService;

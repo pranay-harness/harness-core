@@ -6,6 +6,8 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * correct that anomaly
  */
 @Slf4j
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class InstanceSyncPerpetualTaskInfoMigration implements Migration {
   private static final String DEBUG_LINE = "InstanceSyncPerpetualTaskInfoMigration:";
   @Inject private WingsPersistence wingsPersistence;
