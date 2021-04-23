@@ -10,7 +10,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
-public class InterruptCheck {
+public class PreFacilitationCheck {
   boolean proceed;
   String reason;
 }
