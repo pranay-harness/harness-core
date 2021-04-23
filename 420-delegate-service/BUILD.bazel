@@ -16,6 +16,7 @@ shared_dependencies = [
     "//950-common-entities:module",
     "//950-wait-engine:module",
     "//960-persistence:module",
+    "//960-continuous-features:module",
     "//970-grpc:module",
     "//970-rbac-core:module",
     "//910-delegate-task-grpc-service:module",

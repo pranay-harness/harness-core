@@ -34,6 +34,9 @@ import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.ccm.license.CeLicenseExpiryHandler;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceClientModule;
 import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
@@ -506,6 +509,17 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
 
     modules.add(new CommandLibraryServiceClientModule(configuration.getCommandLibraryServiceConfig()));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return configuration.getCfClientConfig();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return configuration.getCfMigrationConfig();
+      }
+    });
     Injector injector = Guice.createInjector(modules);
 
     // Access all caches before coming out of maintenance

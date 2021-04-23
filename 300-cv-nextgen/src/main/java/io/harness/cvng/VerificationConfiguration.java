@@ -4,6 +4,8 @@ import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -48,6 +50,9 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+
   private String portalUrl;
   /**
    * Instantiates a new Main configuration.

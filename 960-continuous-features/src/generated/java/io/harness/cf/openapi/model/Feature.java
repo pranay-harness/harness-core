@@ -12,14 +12,21 @@
 
 package io.harness.cf.openapi.model;
 
+import io.harness.cf.openapi.model.FeatureEnvProperties;
+import io.harness.cf.openapi.model.Prerequisite;
+import io.harness.cf.openapi.model.Tag;
+import io.harness.cf.openapi.model.Variation;
+
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,7 +34,7 @@ import java.util.Objects;
  * Feature
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen",
-    date = "2021-03-24T19:32:06.834-07:00[America/Los_Angeles]")
+    date = "2021-04-12T12:00:52.324-07:00[America/Los_Angeles]")
 public class Feature {
   public static final String SERIALIZED_NAME_PROJECT = "project";
   @SerializedName(SERIALIZED_NAME_PROJECT) private String project;
@@ -36,8 +43,7 @@ public class Feature {
   @SerializedName(SERIALIZED_NAME_IDENTIFIER) private String identifier;
 
   public static final String SERIALIZED_NAME_PREREQUISITES = "prerequisites";
-  @SerializedName(SERIALIZED_NAME_PREREQUISITES)
-  private List<io.harness.cf.openapi.model.Prerequisite> prerequisites = null;
+  @SerializedName(SERIALIZED_NAME_PREREQUISITES) private List<Prerequisite> prerequisites = null;
 
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME) private String name;
@@ -106,8 +112,7 @@ public class Feature {
   @SerializedName(SERIALIZED_NAME_ARCHIVED) private Boolean archived;
 
   public static final String SERIALIZED_NAME_VARIATIONS = "variations";
-  @SerializedName(SERIALIZED_NAME_VARIATIONS)
-  private List<io.harness.cf.openapi.model.Variation> variations = new ArrayList<>();
+  @SerializedName(SERIALIZED_NAME_VARIATIONS) private List<Variation> variations = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_DEFAULT_ON_VARIATION = "defaultOnVariation";
   @SerializedName(SERIALIZED_NAME_DEFAULT_ON_VARIATION) private String defaultOnVariation;
@@ -119,8 +124,7 @@ public class Feature {
   @SerializedName(SERIALIZED_NAME_PERMANENT) private Boolean permanent;
 
   public static final String SERIALIZED_NAME_ENV_PROPERTIES = "envProperties";
-  @SerializedName(SERIALIZED_NAME_ENV_PROPERTIES)
-  private io.harness.cf.openapi.model.FeatureEnvProperties envProperties;
+  @SerializedName(SERIALIZED_NAME_ENV_PROPERTIES) private FeatureEnvProperties envProperties;
 
   public static final String SERIALIZED_NAME_CREATED_AT = "createdAt";
   @SerializedName(SERIALIZED_NAME_CREATED_AT) private Long createdAt;
@@ -129,7 +133,7 @@ public class Feature {
   @SerializedName(SERIALIZED_NAME_MODIFIED_AT) private Long modifiedAt;
 
   public static final String SERIALIZED_NAME_TAGS = "tags";
-  @SerializedName(SERIALIZED_NAME_TAGS) private List<io.harness.cf.openapi.model.Tag> tags = null;
+  @SerializedName(SERIALIZED_NAME_TAGS) private List<Tag> tags = null;
 
   public static final String SERIALIZED_NAME_EVALUATION = "evaluation";
   @SerializedName(SERIALIZED_NAME_EVALUATION) private String evaluation;
@@ -172,12 +176,12 @@ public class Feature {
     this.identifier = identifier;
   }
 
-  public Feature prerequisites(List<io.harness.cf.openapi.model.Prerequisite> prerequisites) {
+  public Feature prerequisites(List<Prerequisite> prerequisites) {
     this.prerequisites = prerequisites;
     return this;
   }
 
-  public Feature addPrerequisitesItem(io.harness.cf.openapi.model.Prerequisite prerequisitesItem) {
+  public Feature addPrerequisitesItem(Prerequisite prerequisitesItem) {
     if (this.prerequisites == null) {
       this.prerequisites = new ArrayList<>();
     }
@@ -192,7 +196,7 @@ public class Feature {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public List<io.harness.cf.openapi.model.Prerequisite> getPrerequisites() {
+  public List<Prerequisite> getPrerequisites() {
     return prerequisites;
   }
 
@@ -305,12 +309,12 @@ public class Feature {
     this.archived = archived;
   }
 
-  public Feature variations(List<io.harness.cf.openapi.model.Variation> variations) {
+  public Feature variations(List<Variation> variations) {
     this.variations = variations;
     return this;
   }
 
-  public Feature addVariationsItem(io.harness.cf.openapi.model.Variation variationsItem) {
+  public Feature addVariationsItem(Variation variationsItem) {
     this.variations.add(variationsItem);
     return this;
   }
@@ -321,7 +325,7 @@ public class Feature {
    **/
   @ApiModelProperty(required = true, value = "")
 
-  public List<io.harness.cf.openapi.model.Variation> getVariations() {
+  public List<Variation> getVariations() {
     return variations;
   }
 
@@ -386,7 +390,7 @@ public class Feature {
     this.permanent = permanent;
   }
 
-  public Feature envProperties(io.harness.cf.openapi.model.FeatureEnvProperties envProperties) {
+  public Feature envProperties(FeatureEnvProperties envProperties) {
     this.envProperties = envProperties;
     return this;
   }
@@ -398,7 +402,7 @@ public class Feature {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public io.harness.cf.openapi.model.FeatureEnvProperties getEnvProperties() {
+  public FeatureEnvProperties getEnvProperties() {
     return envProperties;
   }
 
@@ -444,12 +448,12 @@ public class Feature {
     this.modifiedAt = modifiedAt;
   }
 
-  public Feature tags(List<io.harness.cf.openapi.model.Tag> tags) {
+  public Feature tags(List<Tag> tags) {
     this.tags = tags;
     return this;
   }
 
-  public Feature addTagsItem(io.harness.cf.openapi.model.Tag tagsItem) {
+  public Feature addTagsItem(Tag tagsItem) {
     if (this.tags == null) {
       this.tags = new ArrayList<>();
     }
@@ -464,7 +468,7 @@ public class Feature {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public List<io.harness.cf.openapi.model.Tag> getTags() {
+  public List<Tag> getTags() {
     return tags;
   }
 

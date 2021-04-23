@@ -324,6 +324,11 @@ gcpMarketplaceConfig:
 
 cfClientConfig:
   apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
 
 cfMigrationConfig:
   enabled: false
@@ -333,6 +338,8 @@ cfMigrationConfig:
   org: "default_org"
   project: "project1"
   environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000
 
 featuresEnabled: ""
 
