@@ -26,8 +26,12 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConnectorInfoDTO {
-  @NotNull @NotBlank @ApiModelProperty("Name of the connector") String name;
-  @NotNull @NotBlank @EntityIdentifier @ApiModelProperty("Identifier of the connector") String identifier;
+  @NotNull @NotBlank @ApiModelProperty(value = "Name of the connector", position = 2) String name;
+  @NotNull
+  @NotBlank
+  @EntityIdentifier
+  @ApiModelProperty(value = "Identifier of the connector", position = 1)
+  String identifier;
   String description;
   String orgIdentifier;
   String projectIdentifier;

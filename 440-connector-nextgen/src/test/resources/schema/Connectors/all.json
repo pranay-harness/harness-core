@@ -855,10 +855,12 @@
         },
         "identifier": {
           "type": "string",
+          "position": 1,
           "description": "Identifier of the connector"
         },
         "name": {
           "type": "string",
+          "position": 2,
           "description": "Name of the connector"
         },
         "orgIdentifier": {
