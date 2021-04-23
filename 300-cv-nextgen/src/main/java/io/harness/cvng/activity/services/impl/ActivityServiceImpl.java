@@ -312,6 +312,7 @@ public class ActivityServiceImpl implements ActivityService {
         getDeploymentVerificationJobInstanceSummary(get(activityId));
     return ActivityStatusDTO.builder()
         .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
+        .remainingTimeMs(deploymentVerificationJobInstanceSummary.getRemainingTimeMs())
         .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())
         .activityId(activityId)
         .status(deploymentVerificationJobInstanceSummary.getStatus())

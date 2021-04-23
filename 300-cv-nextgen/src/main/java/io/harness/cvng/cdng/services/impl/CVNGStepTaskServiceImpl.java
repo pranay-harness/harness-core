@@ -26,12 +26,12 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
   }
 
   @Override
-  public void notifyCVNGStepIfDone(CVNGStepTask entity) {
+  public void notifyCVNGStep(CVNGStepTask entity) {
     ActivityStatusDTO activityStatusDTO =
         activityService.getActivityStatus(entity.getAccountId(), entity.getActivityId());
+    waitNotifyEngine.doneWith(entity.getActivityId(),
+        CVNGResponseData.builder().activityId(entity.getActivityId()).activityStatusDTO(activityStatusDTO).build());
     if (ActivityVerificationStatus.getFinalStates().contains(activityStatusDTO.getStatus())) {
-      waitNotifyEngine.doneWith(entity.getActivityId(),
-          CVNGResponseData.builder().activityId(entity.getActivityId()).activityStatusDTO(activityStatusDTO).build());
       markDone(entity.getUuid());
     }
   }

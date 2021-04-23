@@ -7,6 +7,7 @@ import lombok.Value;
 @Builder
 public class ActivityStatusDTO {
   long durationMs;
+  long remainingTimeMs;
   int progressPercentage;
   String activityId;
   ActivityVerificationStatus status;
