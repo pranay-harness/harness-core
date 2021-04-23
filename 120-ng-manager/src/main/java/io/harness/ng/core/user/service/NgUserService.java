@@ -28,10 +28,18 @@ public interface NgUserService {
 
   Optional<UserMembership> getUserMembership(String userId);
 
+  /**
+   Use this method with caution, verify that the pageable sort is able to make use of the indexes.
+   *
+ */
   Page<UserInfo> list(String accountIdentifier, String searchString, Pageable page);
 
   List<String> listUsersAtScope(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
+  /**
+  Use this method with caution, verify that the criteria is able to make use of the indexes.
+   *
+*/
   List<UserMembership> listUserMemberships(Criteria criteria);
 
   void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateMechanism mechanism);

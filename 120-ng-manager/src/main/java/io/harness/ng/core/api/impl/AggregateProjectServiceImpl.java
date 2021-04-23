@@ -1,6 +1,7 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
 import static io.harness.ng.core.user.remote.UserSearchMapper.writeDTO;
@@ -23,7 +24,6 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 
@@ -100,12 +100,13 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
 
   private Pair<List<UserSearchDTO>, List<UserSearchDTO>> getAdminsAndCollaborators(
       String accountIdentifier, String orgIdentifier, String identifier) {
-    Criteria criteria = Criteria.where(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
-                            .is(identifier);
+    Criteria criteria = Criteria.where(UserMembershipKeys.scopes)
+                            .elemMatch(Criteria.where(UserMembershipKeys.SCOPE_ACCOUNT_IDENTIFIER_KEY)
+                                           .is(accountIdentifier)
+                                           .and(UserMembershipKeys.SCOPE_ORG_IDENTIFIER_KEY)
+                                           .is(orgIdentifier)
+                                           .and(UserMembershipKeys.SCOPE_PROJECT_IDENTIFIER_KEY)
+                                           .is(identifier));
     List<UserMembership> userMemberships = ngUserService.listUserMemberships(criteria);
     List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(toList());
     Map<String, UserSearchDTO> userMap = getUserMap(userIds, accountIdentifier);
@@ -203,17 +204,21 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   }
 
   private List<UserMembership> getOrgUserMemberships(String accountIdentifier, Page<ProjectResponse> projects) {
-    List<String> orgIdentifiers =
-        projects.map(projectResponse -> projectResponse.getProject().getOrgIdentifier()).getContent();
-    List<String> projectIdentifiers =
-        projects.map(projectResponse -> projectResponse.getProject().getIdentifier()).getContent();
-    Criteria criteria = Criteria.where(UserMembershipKeys.scopes + "." + ScopeKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(UserMembershipKeys.scopes + "." + ScopeKeys.orgIdentifier)
-                            .in(orgIdentifiers)
-                            .and(UserMembershipKeys.scopes + "." + ScopeKeys.projectIdentifier)
-                            .in(projectIdentifiers);
-    return ngUserService.listUserMemberships(criteria);
+    List<Criteria> criteriaList = new ArrayList<>();
+    projects.forEach(projectResponse -> {
+      Criteria criteria = Criteria.where(UserMembershipKeys.scopes)
+                              .elemMatch(Criteria.where(UserMembershipKeys.SCOPE_ACCOUNT_IDENTIFIER_KEY)
+                                             .is(accountIdentifier)
+                                             .and(UserMembershipKeys.SCOPE_ORG_IDENTIFIER_KEY)
+                                             .is(projectResponse.getProject().getOrgIdentifier())
+                                             .and(UserMembershipKeys.SCOPE_PROJECT_IDENTIFIER_KEY)
+                                             .is(projectResponse.getProject().getIdentifier()));
+      criteriaList.add(criteria);
+    });
+    if (isEmpty(criteriaList)) {
+      return new ArrayList<>();
+    }
+    return ngUserService.listUserMemberships(new Criteria().orOperator(criteriaList.toArray(new Criteria[0])));
   }
 
   private Map<String, List<UserSearchDTO>> getProjectCollaboratorMap(
