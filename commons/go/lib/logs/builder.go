@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"github.com/blendle/zapdriver"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"strings"
@@ -15,7 +16,7 @@ type Builder struct {
 // NewBuilder returns a new Builder with the minimum default configuration, using a reasonable production configuration.
 func NewBuilder() *Builder {
 	var b Builder
-	b.Config = zap.NewProductionConfig()
+	b.Config = zapdriver.NewProductionConfig()
 	b.applyDefaults()
 	return &b
 }
