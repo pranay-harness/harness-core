@@ -268,6 +268,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     configureObjectMapper(ngObjectMapper);
     Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
     gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .entityType(EntityType.CONNECTORS)
                                           .yamlClass(ConnectorDTO.class)
                                           .entityClass(Connector.class)
                                           .entityHelperClass(ConnectorGitSyncHelper.class)

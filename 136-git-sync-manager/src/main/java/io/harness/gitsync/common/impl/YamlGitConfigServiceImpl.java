@@ -251,6 +251,9 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     ensureFolderEndsWithDelimiter(ygs);
     validateFolderFollowsHarnessParadigm(ygs);
     validateFolderPathIsUnique(ygs);
+    // todo @deepak: Add validation that one folder should not be contained within another
+    // that's redundant. This will enable us to go ahead with the assumption of
+    // independent folders
   }
 
   private void validateFolderPathIsUnique(YamlGitConfigDTO ygs) {

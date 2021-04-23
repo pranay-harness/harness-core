@@ -2,10 +2,12 @@ package io.harness.gitsync.gittoharness;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.gitsync.interceptor.GitSyncBranchThreadLocal.gitBranchGuard;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
 import io.harness.gitsync.FileProcessingResponse;
@@ -16,6 +18,7 @@ import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
+import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 
 import com.google.inject.Inject;
@@ -121,9 +124,18 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
   }
 
   private GitEntityInfo createGitEntityInfo(GitToHarnessInfo gitToHarnessBranchInfo, ChangeSet changeSet) {
+    String[] pathSplited = emptyIfNull(changeSet.getFilePath()).split(GitSyncConstants.FOLDER_PATH);
+    if (pathSplited.length != 2) {
+      throw new InvalidRequestException(
+          String.format("The path %s doesn't contain the .harness folder, thus this file won't be processed",
+              changeSet.getFilePath()));
+    }
+    String folderPath = pathSplited[0] + GitSyncConstants.FOLDER_PATH;
+    String filePath = pathSplited[1];
     return GitEntityInfo.builder()
         .branch(gitToHarnessBranchInfo.getBranch())
-        .filePath(changeSet.getFilePath())
+        .folderPath(folderPath)
+        .filePath(filePath)
         .yamlGitConfigId(gitToHarnessBranchInfo.getYamlGitConfigId())
         .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().toString())
         .isSyncFromGit(true)
