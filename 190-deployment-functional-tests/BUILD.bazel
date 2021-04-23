@@ -57,6 +57,6 @@ java_library(
 )
 
 run_analysis(
-    run_pmd = "no",
-    run_sonar = "no",
+    run_pmd = False,
+    run_sonar = False,
 )
