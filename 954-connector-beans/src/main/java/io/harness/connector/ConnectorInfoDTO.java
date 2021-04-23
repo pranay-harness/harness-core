@@ -10,6 +10,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -25,14 +26,17 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConnectorInfoDTO {
-  @NotNull @NotBlank String name;
-  @NotNull @NotBlank @EntityIdentifier String identifier;
+  @NotNull @NotBlank @ApiModelProperty("Name of the connector") String name;
+  @NotNull @NotBlank @EntityIdentifier @ApiModelProperty("Identifier of the connector") String identifier;
   String description;
   String orgIdentifier;
   String projectIdentifier;
   Map<String, String> tags;
 
-  @NotNull @JsonProperty(CONNECTOR_TYPES) io.harness.delegate.beans.connector.ConnectorType connectorType;
+  @NotNull
+  @JsonProperty(CONNECTOR_TYPES)
+  @ApiModelProperty("Type of connector")
+  io.harness.delegate.beans.connector.ConnectorType connectorType;
 
   @JsonProperty("spec")
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = CONNECTOR_TYPES, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,

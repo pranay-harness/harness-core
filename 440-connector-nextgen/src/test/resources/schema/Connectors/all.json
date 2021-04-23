@@ -854,10 +854,12 @@
           "type": "string"
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "description": "Identifier of the connector"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the connector"
         },
         "orgIdentifier": {
           "type": "string"
@@ -873,6 +875,7 @@
         },
         "type": {
           "type": "string",
+          "description": "Type of connector",
           "enum": [
             "K8sCluster",
             "Git",
@@ -1840,7 +1843,8 @@
               ]
             },
             "url": {
-              "type": "string"
+              "type": "string",
+              "description": "Url of the github repository."
             }
           }
         }
