@@ -20,6 +20,7 @@ go_library(
     deps = [
         "//product/log-service/client:go_default_library",
         "//product/log-service/stream:go_default_library",
+        "@com_github_blendle_zapdriver//:go_default_library",
         "@com_github_golang_mock//gomock:go_default_library",
         "@org_uber_go_zap//:go_default_library",
         "@org_uber_go_zap//zapcore:go_default_library",
