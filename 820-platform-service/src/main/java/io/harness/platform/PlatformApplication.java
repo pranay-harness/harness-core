@@ -112,7 +112,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
   @Override
   public void run(PlatformConfiguration appConfig, Environment environment) {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+        20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting Platform Application ...");
     MaintenanceController.forceMaintenance(true);
     GodInjector godInjector = new GodInjector();
