@@ -15,8 +15,10 @@ build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
 # build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 # build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 
+build --action_env=PWD=
 build --action_env=HARNESS_GENERATION_PASSPHRASE
 
+build --experimental_strict_action_env
 build --strict_java_deps=warn
 build --java_header_compilation=false
 build --javacopt='-XepDisableAllChecks'
@@ -41,3 +43,10 @@ coverage --remote_cache=https://storage.googleapis.com/harness-bazel-cache
 coverage --collect_code_coverage
 coverage --combined_report=lcov
 coverage --coverage_report_generator=//tools/bazel/sonarqube:sonarqube_coverage_generator
+
+
+# Cpp settings
+build:macos --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:macos --crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:macos --cpu=darwin
+build --xcode_version_config=//:host_xcodes
