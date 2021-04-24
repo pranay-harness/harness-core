@@ -239,6 +239,11 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public List<NGTriggerEntity> listEnabledTriggersForAccount(String accountId) {
+    return listEnabledTriggersForCurrentProject(accountId, null, null);
+  }
+
+  @Override
   public List<ConnectorResponseDTO> fetchConnectorsByFQN(String accountIdentifier, List<String> fqns) {
     if (isEmpty(fqns)) {
       return emptyList();

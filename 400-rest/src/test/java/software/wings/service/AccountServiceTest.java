@@ -229,7 +229,7 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testGetAccountDetails() {
-    when(configuration.getClusterName()).thenReturn(CLUSTER_NAME);
+    when(configuration.getDeploymentClusterName()).thenReturn(CLUSTER_NAME);
     Account account = setUpDataForTestingSetAccountStatusInternal(AccountType.PAID);
     AccountDetails details = accountService.getDetails(account.getUuid());
     assertThat(details.getCluster()).isEqualTo(CLUSTER_NAME);

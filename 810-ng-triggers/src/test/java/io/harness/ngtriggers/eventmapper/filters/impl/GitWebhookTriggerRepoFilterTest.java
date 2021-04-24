@@ -173,7 +173,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
 
     FilterRequestData filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("p")
+            .accountId("p")
             .webhookPayloadData(
                 WebhookPayloadData.builder()
                     .originalEvent(TriggerWebhookEvent.builder().accountId("acc").sourceRepoType("GITHUB").build())
@@ -190,7 +190,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
 
     filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("p")
+            .accountId("p")
             .webhookPayloadData(
                 WebhookPayloadData.builder()
                     .originalEvent(TriggerWebhookEvent.builder().accountId("acc").sourceRepoType("GITHUB").build())
@@ -207,7 +207,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
 
     filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("p")
+            .accountId("p")
             .webhookPayloadData(
                 WebhookPayloadData.builder()
                     .originalEvent(TriggerWebhookEvent.builder().accountId("acc").sourceRepoType("GITHUB").build())
@@ -273,7 +273,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
 
     FilterRequestData filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("acc/org/proj")
+            .accountId("acc")
             .webhookPayloadData(WebhookPayloadData.builder()
                                     .originalEvent(TriggerWebhookEvent.builder()
                                                        .accountId("acc")

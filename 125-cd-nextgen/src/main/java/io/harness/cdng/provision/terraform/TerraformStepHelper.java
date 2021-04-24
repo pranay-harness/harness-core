@@ -20,6 +20,7 @@ import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigBuilder;
+import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigKeys;
 import io.harness.cdng.provision.terraform.TerraformInheritOutput.TerraformInheritOutputBuilder;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
@@ -63,10 +64,11 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.mongodb.morphia.query.Sort;
 
-@OwnedBy(HarnessTeam.CDP)
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CDP)
 public class TerraformStepHelper {
   private static final String INHERIT_OUTPUT_FORMAT = "tfInheritOutput_%s";
   public static final String TF_CONFIG_FILES = "TF_CONFIG_FILES";
@@ -291,6 +293,31 @@ public class TerraformStepHelper {
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
         .targets(ParameterFieldHelper.getParameterFieldValue(stepParameters.getTargets()));
     persistence.save(builder.build());
+  }
+
+  public TerraformConfig getLastSuccessfulApplyConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
+    String entityId = generateFullIdentifier(parameters.getProvisionerIdentifier(), ambiance);
+    TerraformConfig terraformConfig =
+        persistence.createQuery(TerraformConfig.class)
+            .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
+            .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
+            .filter(TerraformConfigKeys.projectId, AmbianceHelper.getProjectIdentifier(ambiance))
+            .filter(TerraformConfigKeys.entityId, entityId)
+            .order(Sort.descending(TerraformConfigKeys.createdAt))
+            .get();
+    if (terraformConfig == null) {
+      throw new InvalidRequestException(String.format("Terraform config for Last Apply not found: [%s]", entityId));
+    }
+    return terraformConfig;
+  }
+
+  public void clearTerraformConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
+    String entityId = generateFullIdentifier(parameters.getProvisionerIdentifier(), ambiance);
+    persistence.delete(persistence.createQuery(TerraformConfig.class)
+                           .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
+                           .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
+                           .filter(TerraformConfigKeys.projectId, AmbianceHelper.getProjectIdentifier(ambiance))
+                           .filter(TerraformConfigKeys.entityId, entityId));
   }
 
   public Map<String, Object> parseTerraformOutputs(String terraformOutputString) {
