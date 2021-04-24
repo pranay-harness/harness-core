@@ -59,6 +59,7 @@ executionLogStorageMode: MONGO
 #                        GOOGLE_CLOUD_DATA_STORE
 fileStorageMode: MONGO
 clusterName: ""
+deploymentClusterName: ""
 bugsnagApiKey: ""
 numberOfRemindersBeforeAccountDeletion: 3
 
