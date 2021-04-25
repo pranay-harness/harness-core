@@ -13,9 +13,9 @@ public enum PcfCliVersion {
       return null;
     }
 
-    if (version.startsWith("7")) {
+    if (version.charAt(0) == '7') {
       return V7;
-    } else if (version.startsWith("6")) {
+    } else if (version.charAt(0) == '6') {
       return V6;
     } else {
       throw new InvalidArgumentsException(String.format("Unsupported CF CLI version, version: %s", version));
