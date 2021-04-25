@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
+import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.PcfInstallationParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -28,16 +30,16 @@ public class PcfInstallationCapabilityCheck implements CapabilityCheck, ProtoCap
 
   @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.PCF_INSTALLATION_PARAMETERS) {
-      return builder.permissionResult(CapabilitySubjectPermission.PermissionResult.DENIED).build();
+      return builder.permissionResult(PermissionResult.DENIED).build();
     }
 
     PcfCliVersion pcfCliVersion = convertPcfCliVersion(parameters.getPcfInstallationParameters().getPcfCliVersion());
     return builder
         .permissionResult(pcfCliDelegateResolver.isDelegateEligibleToExecuteCliCommand(pcfCliVersion)
-                ? CapabilitySubjectPermission.PermissionResult.ALLOWED
-                : CapabilitySubjectPermission.PermissionResult.DENIED)
+                ? PermissionResult.ALLOWED
+                : PermissionResult.DENIED)
         .build();
   }
 
