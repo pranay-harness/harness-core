@@ -40,7 +40,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.protobuf.StringValue;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -194,12 +193,12 @@ public class UserEventHandler implements OutboxEventHandler {
     try {
       io.harness.eventsframework.schemas.usermembership.Scope.Builder scopeBuilder =
           io.harness.eventsframework.schemas.usermembership.Scope.newBuilder().setAccountIdentifier(
-              StringValue.of(scope.getAccountIdentifier()));
+              scope.getAccountIdentifier());
       if (scope.getOrgIdentifier() != null) {
-        scopeBuilder.setOrgIdentifier(StringValue.of(scope.getOrgIdentifier()));
+        scopeBuilder.setOrgIdentifier(scope.getOrgIdentifier());
       }
       if (scope.getProjectIdentifier() != null) {
-        scopeBuilder.setProjectIdentifier(StringValue.of(scope.getProjectIdentifier()));
+        scopeBuilder.setProjectIdentifier(scope.getProjectIdentifier());
       }
       producer.send(Message.newBuilder()
                         .putAllMetadata(ImmutableMap.of("accountId", scope.getAccountIdentifier(),

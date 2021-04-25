@@ -10,6 +10,8 @@ import io.harness.resourcegroupclient.ResourceGroupResponse;
 
 import java.util.Optional;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 public interface ResourceGroupService {
@@ -18,22 +20,18 @@ public interface ResourceGroupService {
   ResourceGroupResponse createManagedResourceGroup(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, ResourceGroupDTO resourceGroupDTO);
 
-  Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      PageRequest pageRequest, String searchTerm);
-
-  boolean delete(
-      String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier, boolean safeDelete);
-
   Optional<ResourceGroupResponse> get(
       String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
+  Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      PageRequest pageRequest, String searchTerm);
+
+  Page<ResourceGroup> list(Criteria criteria, Pageable pageable);
+
   Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO);
 
-  boolean handleResourceDeleteEvent(ResourcePrimaryKey resourcePrimaryKey);
+  boolean delete(String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      boolean forceDeleteRoleAssignments);
 
-  boolean deleteStaleResources(ResourceGroup resourceGroup);
-
-  boolean createDefaultResourceGroup(ResourcePrimaryKey resourcePrimaryKey);
-
-  boolean restoreResourceGroupsUnderHierarchy(ResourcePrimaryKey resourcePrimaryKey);
+  boolean restoreAll(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

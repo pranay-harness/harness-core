@@ -19,15 +19,14 @@ import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.project.ProjectClientModule;
 import io.harness.project.remote.ProjectClient;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
-import io.harness.resourcegroup.framework.service.ResourceValidator;
-import io.harness.resourcegroup.framework.service.impl.DynamicResourceGroupValidatorServiceImpl;
 import io.harness.resourcegroup.framework.service.impl.ResourceGroupEventHandler;
 import io.harness.resourcegroup.framework.service.impl.ResourceGroupServiceImpl;
+import io.harness.resourcegroup.framework.service.impl.ResourceGroupValidatorServiceImpl;
 import io.harness.resourcegroup.framework.service.impl.ResourceTypeServiceImpl;
-import io.harness.resourcegroup.framework.service.impl.StaticResourceGroupValidatorServiceImpl;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.service.ServiceResourceClientModule;
@@ -35,7 +34,6 @@ import io.harness.service.ServiceResourceClientModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +45,7 @@ import org.reflections.Reflections;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @OwnedBy(PL)
 public class ResourceGroupModule extends AbstractModule {
+  public static final String RESOURCECLIENT_PACKAGE = "io.harness.resourcegroup.resourceclient";
   ResourceGroupServiceConfig resourceGroupServiceConfig;
 
   public ResourceGroupModule(ResourceGroupServiceConfig resourceGroupServiceConfig) {
@@ -58,13 +57,8 @@ public class ResourceGroupModule extends AbstractModule {
     install(new AccessControlAdminClientModule(
         resourceGroupServiceConfig.getAccessControlAdminClientConfiguration(), RESOUCE_GROUP_SERVICE.toString()));
     bind(ResourceGroupService.class).to(ResourceGroupServiceImpl.class);
-    bind(ResourceGroupValidatorService.class)
-        .annotatedWith(Names.named("StaticResourceValidator"))
-        .to(StaticResourceGroupValidatorServiceImpl.class);
     bind(ResourceTypeService.class).to(ResourceTypeServiceImpl.class);
-    bind(ResourceGroupValidatorService.class)
-        .annotatedWith(Names.named("DynamicResourceValidator"))
-        .to(DynamicResourceGroupValidatorServiceImpl.class);
+    bind(ResourceGroupValidatorService.class).to(ResourceGroupValidatorServiceImpl.class);
     bind(String.class).annotatedWith(Names.named("serviceId")).toInstance(RESOUCE_GROUP_SERVICE.toString());
     bind(OutboxEventHandler.class).to(ResourceGroupEventHandler.class);
     requireBinding(OutboxService.class);
@@ -72,23 +66,22 @@ public class ResourceGroupModule extends AbstractModule {
     addResourceValidatorConstraints();
   }
 
-  @Named("resourceValidatorMap")
   @Provides
-  public Map<String, ResourceValidator> getResourceValidatorMap(Injector injector) {
-    Reflections reflections = new Reflections("io.harness.resourcegroup.resourceclient");
-    Set<Class<? extends ResourceValidator>> resourceValidators = reflections.getSubTypesOf(ResourceValidator.class);
-    Map<String, ResourceValidator> resourceValidatorMap = new HashMap<>();
-    for (Class<? extends ResourceValidator> clz : resourceValidators) {
-      ResourceValidator resourceValidator = injector.getInstance(clz);
-      resourceValidatorMap.put(resourceValidator.getResourceType(), resourceValidator);
+  public Map<String, Resource> getResourceMap(Injector injector) {
+    Reflections reflections = new Reflections(RESOURCECLIENT_PACKAGE);
+    Set<Class<? extends Resource>> resources = reflections.getSubTypesOf(Resource.class);
+    Map<String, Resource> resourceMap = new HashMap<>();
+    for (Class<? extends Resource> clz : resources) {
+      Resource resource = injector.getInstance(clz);
+      resourceMap.put(resource.getType(), resource);
     }
-    return resourceValidatorMap;
+    return resourceMap;
   }
 
   private void addResourceValidatorConstraints() {
-    requireBinding(SecretNGManagerClient.class);
     requireBinding(ProjectClient.class);
     requireBinding(OrganizationClient.class);
+    requireBinding(SecretNGManagerClient.class);
     requireBinding(ConnectorResourceClient.class);
     requireBinding(PipelineServiceClient.class);
     requireBinding(AccountClient.class);
