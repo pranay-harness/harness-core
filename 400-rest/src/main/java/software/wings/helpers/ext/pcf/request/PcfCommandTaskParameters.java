@@ -3,6 +3,8 @@ package software.wings.helpers.ext.pcf.request;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -10,12 +12,12 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
-import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
+import io.harness.delegate.beans.executioncapability.PcfInstallationCapability;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.pcf.model.PcfCliVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -35,8 +37,11 @@ public class PcfCommandTaskParameters implements ExecutionCapabilityDemander {
         PcfConnectivityCapability.builder().endpointUrl(pcfCommandRequest.getPcfConfig().getEndpointUrl()).build());
     capabilities.addAll(fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
     if (pcfCommandRequest.isUseCfCLI() || needToCheckAppAutoscalarPluginInstall()) {
-      capabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
-          "PCF", Arrays.asList("/bin/sh", "-c", "cf --version")));
+      PcfCliVersion cfCliVersion = pcfCommandRequest.isUseCfCLI7() ? PcfCliVersion.V7 : PcfCliVersion.V6;
+      capabilities.add(PcfInstallationCapability.builder()
+                           .criteria(format("CF CLI version: %s is installed", cfCliVersion))
+                           .version(cfCliVersion)
+                           .build());
     }
 
     if (needToCheckAppAutoscalarPluginInstall()) {

@@ -507,7 +507,8 @@ public enum ErrorCode {
   CONNECTOR_NOT_FOUND_EXCEPTION,
   GCP_SERVER_ERROR,
   HTTP_RESPONSE_EXCEPTION,
-  DATA;
+  DATA,
+  PROCESS_EXECUTION_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

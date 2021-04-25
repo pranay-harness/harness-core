@@ -16,6 +16,7 @@ public class ProtoCapabilityCheckFactory {
   @Inject PcfAutoScalarCapabilityCheck pcfAutoScalarCapabilityCheck;
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
   @Inject PcfConnectivityCapabilityCheck pcfConnectivityCapabilityCheck;
+  @Inject PcfInstallationCapabilityCheck pcfInstallationCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
   @Inject SftpCapabilityCheck sftpCapabilityCheck;
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
@@ -44,6 +45,8 @@ public class ProtoCapabilityCheckFactory {
         return pcfAutoScalarCapabilityCheck;
       case PCF_CONNECTIVITY_PARAMETERS:
         return pcfConnectivityCapabilityCheck;
+      case PCF_INSTALLATION_PARAMETERS:
+        return pcfInstallationCapabilityCheck;
       case PROCESS_EXECUTOR_PARAMETERS:
         return processExecutorCapabilityCheck;
       case SFTP_CAPABILITY_PARAMETERS:

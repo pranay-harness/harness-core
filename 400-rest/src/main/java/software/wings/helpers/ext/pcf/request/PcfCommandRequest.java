@@ -32,6 +32,7 @@ public class PcfCommandRequest {
   private boolean useAppAutoscalar;
   private boolean limitPcfThreads;
   private boolean ignorePcfConnectionContextCache;
+  private boolean useCfCLI7;
 
   public enum PcfCommandType {
     SETUP,
