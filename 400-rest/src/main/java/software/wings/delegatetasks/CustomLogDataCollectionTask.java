@@ -441,8 +441,12 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             }
             filteredLogs.forEach(logObject -> allHosts.add(logObject.getHost()));
             for (String host : allHosts) {
-              for (Integer heartBeatMinute : collectionMinuteSet) {
-                addHeartbeat(host, dataCollectionInfo, heartBeatMinute, filteredLogs);
+              if (isNotEmpty(collectionMinuteSet)) {
+                for (Integer heartBeatMinute : collectionMinuteSet) {
+                  addHeartbeat(host, dataCollectionInfo, heartBeatMinute, filteredLogs);
+                }
+              } else {
+                addHeartbeat(host, dataCollectionInfo, logCollectionMinute, filteredLogs);
               }
             }
 
