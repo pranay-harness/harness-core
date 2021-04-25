@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.resourcegroup.beans.ValidatorType;
 
@@ -13,17 +14,16 @@ import java.util.Optional;
 import java.util.Set;
 
 @OwnedBy(PL)
-public interface ResourceValidator {
-  String getResourceType();
+public interface Resource {
+  String getType();
 
-  Set<Scope> getScopes();
+  Set<ScopeLevel> getValidScopeLevels();
 
   Optional<String> getEventFrameworkEntityType();
 
-  ResourcePrimaryKey getResourceGroupKeyFromEvent(Message message);
+  ResourceInfo getResourceInfoFromEvent(Message message);
 
-  List<Boolean> validate(
-      List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  List<Boolean> validate(List<String> resourceIds, Scope scope);
 
-  EnumSet<ValidatorType> getValidatorTypes();
+  EnumSet<ValidatorType> getSelectorKind();
 }
