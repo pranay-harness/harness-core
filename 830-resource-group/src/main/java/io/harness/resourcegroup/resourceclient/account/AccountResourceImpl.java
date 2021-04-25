@@ -9,13 +9,14 @@ import static java.util.stream.Collectors.toList;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.resourcegroup.beans.ValidatorType;
-import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
-import io.harness.resourcegroup.framework.service.ResourceValidator;
+import io.harness.resourcegroup.framework.service.Resource;
+import io.harness.resourcegroup.framework.service.ResourceInfo;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -35,31 +36,30 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
-public class AccountResourceValidatorImpl implements ResourceValidator {
+public class AccountResourceImpl implements Resource {
   AccountClient accountClient;
 
   @Override
-  public List<Boolean> validate(
-      List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public List<Boolean> validate(List<String> resourceIds, Scope scope) {
     List<AccountDTO> accounts = getResponse(accountClient.getAccountDTOs(resourceIds));
     Set<String> validResourceIds = accounts.stream().map(AccountDTO::getIdentifier).collect(Collectors.toSet());
     return resourceIds.stream()
-        .map(resourceId -> validResourceIds.contains(resourceId) && accountIdentifier.equals(resourceId))
+        .map(resourceId -> validResourceIds.contains(resourceId) && scope.getAccountIdentifier().equals(resourceId))
         .collect(toList());
   }
 
   @Override
-  public EnumSet<ValidatorType> getValidatorTypes() {
+  public EnumSet<ValidatorType> getSelectorKind() {
     return EnumSet.of(STATIC);
   }
 
   @Override
-  public String getResourceType() {
+  public String getType() {
     return "ACCOUNT";
   }
 
   @Override
-  public Set<Scope> getScopes() {
+  public Set<ScopeLevel> getValidScopeLevels() {
     return Collections.emptySet();
   }
 
@@ -69,7 +69,7 @@ public class AccountResourceValidatorImpl implements ResourceValidator {
   }
 
   @Override
-  public ResourcePrimaryKey getResourceGroupKeyFromEvent(Message message) {
+  public ResourceInfo getResourceInfoFromEvent(Message message) {
     AccountEntityChangeDTO accountEntityChangeDTO = null;
     try {
       accountEntityChangeDTO = AccountEntityChangeDTO.parseFrom(message.getMessage().getData());
@@ -79,10 +79,10 @@ public class AccountResourceValidatorImpl implements ResourceValidator {
     if (Objects.isNull(accountEntityChangeDTO)) {
       return null;
     }
-    return ResourcePrimaryKey.builder()
+    return ResourceInfo.builder()
         .accountIdentifier(accountEntityChangeDTO.getAccountId())
-        .resourceType(getResourceType())
-        .resourceIdetifier(accountEntityChangeDTO.getAccountId())
+        .resourceType(getType())
+        .resourceIdentifier(accountEntityChangeDTO.getAccountId())
         .build();
   }
 }

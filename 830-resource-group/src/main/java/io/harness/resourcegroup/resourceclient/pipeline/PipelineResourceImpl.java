@@ -1,11 +1,15 @@
 package io.harness.resourcegroup.resourceclient.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -14,11 +18,12 @@ import io.harness.pms.pipeline.PMSPipelineSummaryResponseDTO;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.beans.ValidatorType;
-import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
-import io.harness.resourcegroup.framework.service.ResourceValidator;
+import io.harness.resourcegroup.framework.service.Resource;
+import io.harness.resourcegroup.framework.service.ResourceInfo;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -34,17 +39,17 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(PIPELINE)
-public class PipelineResourceValidatorImpl implements ResourceValidator {
+public class PipelineResourceImpl implements Resource {
   PipelineServiceClient pipelineServiceClient;
 
   @Override
-  public String getResourceType() {
+  public String getType() {
     return "PIPELINE";
   }
 
   @Override
-  public Set<Scope> getScopes() {
-    return EnumSet.of(Scope.PROJECT);
+  public Set<ScopeLevel> getValidScopeLevels() {
+    return EnumSet.of(ScopeLevel.PROJECT);
   }
 
   @Override
@@ -53,7 +58,7 @@ public class PipelineResourceValidatorImpl implements ResourceValidator {
   }
 
   @Override
-  public ResourcePrimaryKey getResourceGroupKeyFromEvent(Message message) {
+  public ResourceInfo getResourceInfoFromEvent(Message message) {
     EntityChangeDTO entityChangeDTO = null;
     try {
       entityChangeDTO = EntityChangeDTO.parseFrom(message.getMessage().getData());
@@ -63,22 +68,24 @@ public class PipelineResourceValidatorImpl implements ResourceValidator {
     if (Objects.isNull(entityChangeDTO)) {
       return null;
     }
-    return ResourcePrimaryKey.builder()
-        .accountIdentifier(entityChangeDTO.getAccountIdentifier().getValue())
-        .orgIdentifier(entityChangeDTO.getOrgIdentifier().getValue())
-        .projectIdentifer(entityChangeDTO.getProjectIdentifier().getValue())
-        .resourceType(getResourceType())
-        .resourceIdetifier(entityChangeDTO.getIdentifier().getValue())
+    return ResourceInfo.builder()
+        .accountIdentifier(stripToNull(entityChangeDTO.getAccountIdentifier().getValue()))
+        .orgIdentifier(stripToNull(entityChangeDTO.getOrgIdentifier().getValue()))
+        .projectIdentifier(stripToNull(entityChangeDTO.getProjectIdentifier().getValue()))
+        .resourceType(getType())
+        .resourceIdentifier(entityChangeDTO.getIdentifier().getValue())
         .build();
   }
 
   @Override
-  public List<Boolean> validate(
-      List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public List<Boolean> validate(List<String> resourceIds, Scope scope) {
+    if (isEmpty(resourceIds)) {
+      return Collections.emptyList();
+    }
     List<PMSPipelineSummaryResponseDTO> pipelineResponses =
         NGRestUtils
-            .getResponse(pipelineServiceClient.listPipelines(accountIdentifier, orgIdentifier, projectIdentifier, 0,
-                resourceIds.size(), null, null, null, null,
+            .getResponse(pipelineServiceClient.listPipelines(scope.getAccountIdentifier(), scope.getOrgIdentifier(),
+                scope.getProjectIdentifier(), 0, resourceIds.size(), null, null, null, null,
                 PipelineFilterPropertiesDto.builder().pipelineIdentifiers(resourceIds).build()))
             .getContent();
     Set<String> validResourceIds =
@@ -87,7 +94,7 @@ public class PipelineResourceValidatorImpl implements ResourceValidator {
   }
 
   @Override
-  public EnumSet<ValidatorType> getValidatorTypes() {
+  public EnumSet<ValidatorType> getSelectorKind() {
     return EnumSet.of(STATIC, DYNAMIC);
   }
 }

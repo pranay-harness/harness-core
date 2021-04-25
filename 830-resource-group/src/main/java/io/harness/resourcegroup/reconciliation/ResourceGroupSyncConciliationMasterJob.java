@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public class SyncConciliationMasterJob implements Runnable {
-  @Inject SyncConciliationJob syncConciliationJob;
+public class ResourceGroupSyncConciliationMasterJob implements Runnable {
+  @Inject ResourceGroupSyncConciliationJob syncConciliationJob;
   final ExecutorService executorService = Executors.newSingleThreadExecutor(
       new ThreadFactoryBuilder().setNameFormat("sync-conciliation-worker-thread").build());
   Future syncConciliationJobFuture;
@@ -20,9 +20,10 @@ public class SyncConciliationMasterJob implements Runnable {
   @Override
   public void run() {
     if (Thread.currentThread().isInterrupted()) {
-      syncConciliationJobFuture.cancel(true);
-      log.info("{} thread got interruted", this.getClass().getName());
-      Thread.currentThread().interrupt();
+      if (syncConciliationJobFuture != null) {
+        syncConciliationJobFuture.cancel(true);
+      }
+      log.info("{} thread got interrupted", this.getClass().getName());
     } else if (syncConciliationJobFuture == null || syncConciliationJobFuture.isCancelled()) {
       syncConciliationJobFuture = executorService.submit(syncConciliationJob);
     }

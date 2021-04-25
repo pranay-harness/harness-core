@@ -128,7 +128,7 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     boolean deleted =
-        resourceGroupService.delete(identifier, accountIdentifier, orgIdentifier, projectIdentifier, true);
+        resourceGroupService.delete(identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
     return ResponseDTO.newResponse(deleted);
   }
 }

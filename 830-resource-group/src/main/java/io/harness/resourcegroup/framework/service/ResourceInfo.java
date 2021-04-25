@@ -8,10 +8,10 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Value
 @Builder
-public class ResourcePrimaryKey {
+public class ResourceInfo {
   String accountIdentifier;
   String orgIdentifier;
-  String projectIdentifer;
-  String resourceIdetifier;
+  String projectIdentifier;
+  String resourceIdentifier;
   String resourceType;
 }
