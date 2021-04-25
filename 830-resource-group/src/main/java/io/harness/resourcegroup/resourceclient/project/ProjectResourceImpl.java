@@ -1,6 +1,7 @@
 package io.harness.resourcegroup.resourceclient.project;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
@@ -8,6 +9,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
@@ -16,8 +18,8 @@ import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.project.remote.ProjectClient;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
-import io.harness.resourcegroup.framework.service.ResourcePrimaryKey;
-import io.harness.resourcegroup.framework.service.ResourceValidator;
+import io.harness.resourcegroup.framework.service.Resource;
+import io.harness.resourcegroup.framework.service.ResourceInfo;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -37,33 +39,35 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(PL)
-public class ProjectResourceValidatorImpl implements ResourceValidator {
+public class ProjectResourceImpl implements Resource {
   ProjectClient projectClient;
 
   @Override
-  public List<Boolean> validate(
-      List<String> resourceIds, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public List<Boolean> validate(List<String> resourceIds, Scope scope) {
+    if (isEmpty(resourceIds)) {
+      return Collections.emptyList();
+    }
     PageResponse<ProjectResponse> projects =
-        getResponse(projectClient.listProjects(accountIdentifier, orgIdentifier, resourceIds));
+        getResponse(projectClient.listProjects(scope.getAccountIdentifier(), scope.getOrgIdentifier(), resourceIds));
     Set<String> validResourceIds =
         projects.getContent().stream().map(e -> e.getProject().getIdentifier()).collect(Collectors.toSet());
     return resourceIds.stream()
-        .map(resourceId -> validResourceIds.contains(resourceId) && projectIdentifier.equals(resourceId))
+        .map(resourceId -> validResourceIds.contains(resourceId) && scope.getProjectIdentifier().equals(resourceId))
         .collect(toList());
   }
 
   @Override
-  public EnumSet<ValidatorType> getValidatorTypes() {
+  public EnumSet<ValidatorType> getSelectorKind() {
     return EnumSet.of(STATIC);
   }
 
   @Override
-  public String getResourceType() {
+  public String getType() {
     return ResourceGroupConstants.PROJECT;
   }
 
   @Override
-  public Set<Scope> getScopes() {
+  public Set<ScopeLevel> getValidScopeLevels() {
     return Collections.emptySet();
   }
 
@@ -73,7 +77,7 @@ public class ProjectResourceValidatorImpl implements ResourceValidator {
   }
 
   @Override
-  public ResourcePrimaryKey getResourceGroupKeyFromEvent(Message message) {
+  public ResourceInfo getResourceInfoFromEvent(Message message) {
     ProjectEntityChangeDTO projectEntityChangeDTO = null;
     try {
       projectEntityChangeDTO = ProjectEntityChangeDTO.parseFrom(message.getMessage().getData());
@@ -83,12 +87,12 @@ public class ProjectResourceValidatorImpl implements ResourceValidator {
     if (Objects.isNull(projectEntityChangeDTO)) {
       return null;
     }
-    return ResourcePrimaryKey.builder()
+    return ResourceInfo.builder()
         .accountIdentifier(projectEntityChangeDTO.getAccountIdentifier())
         .orgIdentifier(projectEntityChangeDTO.getOrgIdentifier())
-        .projectIdentifer(projectEntityChangeDTO.getIdentifier())
-        .resourceType(getResourceType())
-        .resourceIdetifier(projectEntityChangeDTO.getIdentifier())
+        .projectIdentifier(projectEntityChangeDTO.getIdentifier())
+        .resourceType(getType())
+        .resourceIdentifier(projectEntityChangeDTO.getIdentifier())
         .build();
   }
 }

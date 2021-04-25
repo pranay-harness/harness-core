@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -26,4 +27,5 @@ public class ResourceGroupServiceConfig {
   @JsonProperty("accessControlAdminClient") AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
+  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
 }

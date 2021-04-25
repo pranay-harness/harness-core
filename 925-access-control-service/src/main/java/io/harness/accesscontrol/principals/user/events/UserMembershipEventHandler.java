@@ -2,6 +2,8 @@ package io.harness.accesscontrol.principals.user.events;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
@@ -52,13 +54,9 @@ public class UserMembershipEventHandler implements EventHandler {
       io.harness.eventsframework.schemas.usermembership.Scope eventsScope = userMembershipDTO.getScope();
 
       HarnessScopeParamsBuilder builder =
-          HarnessScopeParams.builder().accountIdentifier(eventsScope.getAccountIdentifier().getValue());
-      if (eventsScope.getOrgIdentifier() != null) {
-        builder.orgIdentifier(eventsScope.getOrgIdentifier().getValue());
-      }
-      if (eventsScope.getProjectIdentifier() != null) {
-        builder.projectIdentifier(eventsScope.getProjectIdentifier().getValue());
-      }
+          HarnessScopeParams.builder().accountIdentifier(stripToNull(eventsScope.getAccountIdentifier()));
+      builder.orgIdentifier(stripToNull(eventsScope.getOrgIdentifier()));
+      builder.projectIdentifier(stripToNull(eventsScope.getProjectIdentifier()));
 
       Scope scope = scopeService.buildScopeFromParams(builder.build());
       if (isNotEmpty(userId)) {
