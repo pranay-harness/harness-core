@@ -21,10 +21,19 @@ public interface OrganizationService {
 
   Organization update(String accountIdentifier, String identifier, OrganizationDTO organization);
 
+  /**
+   * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
+   */
   Page<Organization> list(String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO);
 
+  /**
+   * Use this method with caution, verify that the criteria and pageable sort is able to make use of the indexes.
+   */
   Page<Organization> list(Criteria criteria, Pageable pageable);
 
+  /**
+   * Use this method with caution, verify that the criteria is able to make use of the indexes.
+   */
   List<Organization> list(Criteria criteria);
 
   boolean delete(String accountIdentifier, String identifier, Long version);
