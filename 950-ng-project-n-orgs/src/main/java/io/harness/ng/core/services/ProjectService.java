@@ -22,10 +22,19 @@ public interface ProjectService {
 
   Project update(String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO project);
 
+  /**
+   * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
+   */
   Page<Project> list(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
 
+  /**
+   * Use this method with caution, verify that the criteria and pageable sort is able to make use of the indexes.
+   */
   Page<Project> list(Criteria criteria, Pageable pageable);
 
+  /**
+   * Use this method with caution, verify that the criteria is able to make use of the indexes.
+   */
   List<Project> list(Criteria criteria);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String identifier, Long version);

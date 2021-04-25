@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,10 +17,12 @@ import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.K8SSyncEventTasklet;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Lifecycle;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 import io.harness.persistence.HPersistence;
@@ -59,6 +62,7 @@ public class K8SSyncEventWriterTest extends CategoryTest {
       "K8S_INSTANCE_INFO_ACTIVE_INSTANCE_ID_" + this.getClass().getSimpleName();
   private static final String ACCOUNT_ID = "account_id";
 
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private BatchMainConfig config;
   @Mock private HPersistence hPersistence;
   @Mock private PublishedMessageDao publishedMessageDao;
@@ -76,6 +80,7 @@ public class K8SSyncEventWriterTest extends CategoryTest {
   @Before
   public void setUpData() {
     MockitoAnnotations.initMocks(this);
+    when(featureFlagService.isEnabled(eq(FeatureName.NODE_RECOMMENDATION_1), eq(ACCOUNT_ID))).thenReturn(false);
     when(config.getBatchQueryConfig())
         .thenReturn(BatchQueryConfig.builder().queryBatchSize(50).syncJobDisabled(false).build());
   }

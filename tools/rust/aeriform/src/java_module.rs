@@ -7,7 +7,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
+use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass, UNKNOWN_LOCATION};
 use crate::repo::GIT_REPO_ROOT_DIR;
 use crate::team::SHARED_BETWEEN_TEAMS;
 
@@ -30,6 +30,7 @@ pub struct JavaModule {
 
 pub trait JavaModuleTraits {
     fn team(&self) -> String;
+    fn external(&self) -> bool;
 }
 
 impl JavaModuleTraits for &JavaModule {
@@ -38,6 +39,10 @@ impl JavaModuleTraits for &JavaModule {
             None => SHARED_BETWEEN_TEAMS.to_string(),
             Some(team) => team.clone(),
         }
+    }
+
+    fn external(&self) -> bool {
+        self.directory.eq(UNKNOWN_LOCATION)
     }
 }
 
@@ -421,7 +426,7 @@ fn populate_from_external(
         team: team,
         deprecated: false,
         index: 1000.0,
-        directory: "n/a".to_string(),
+        directory: UNKNOWN_LOCATION.to_string(),
         jar: jar,
         srcs: srcs,
         dependencies: HashSet::new(),

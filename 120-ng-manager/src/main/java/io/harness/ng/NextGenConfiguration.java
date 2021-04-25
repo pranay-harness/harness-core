@@ -7,6 +7,8 @@ import io.harness.Microservice;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -50,6 +52,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String SIGNUP_PACKAGE = "io.harness.signup";
   public static final String MOCKSERVER_PACKAGE = "io.harness.ng.core.acl.mockserver";
   public static final String ACCOUNT_PACKAGE = "io.harness.account.resource";
+  public static final String LICENSE_PACKAGE = "io.harness.licensing.api.resource";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -87,6 +90,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
   @JsonProperty(value = "enableDefaultResourceGroupCreation", defaultValue = "false")
   private boolean enableDefaultResourceGroupCreation;
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
@@ -108,7 +113,7 @@ public class NextGenConfiguration extends Configuration {
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
         OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, SIGNUP_PACKAGE, MOCKSERVER_PACKAGE,
-        ACCOUNT_PACKAGE);
+        ACCOUNT_PACKAGE, LICENSE_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

@@ -1,5 +1,6 @@
 package io.harness.gitsync.gitBranch;
 
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HARI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,5 +72,27 @@ public class GitBranchServiceImplTest extends GitSyncTestBase {
         .branchName(branchName)
         .branchSyncStatus(branchSyncStatus)
         .build();
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testUpdateBranchSyncStatus() {
+    final String projectIdentifier = "projectId";
+    final String orgIdentifier = "orgId";
+    final String accountIdentifier = "accountId";
+    final String yamlGitConfigIdentifier = "yamlGitConfigId";
+    final String branchName = "branch";
+    final GitBranch gitBranch1 = buildGitBranch(accountIdentifier, orgIdentifier, projectIdentifier,
+        yamlGitConfigIdentifier, branchName, BranchSyncStatus.UNSYNCED);
+    gitBranchesRepository.save(gitBranch1);
+    gitBranchServiceImpl.updateBranchSyncStatus(accountIdentifier, orgIdentifier, projectIdentifier,
+        yamlGitConfigIdentifier, branchName, BranchSyncStatus.SYNCING);
+    PageResponse<GitBranchDTO> gitBranchPageResponse = gitBranchServiceImpl.listBranchesWithStatus(
+        accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier, 0, 2, null);
+    assertThat(!gitBranchPageResponse.isEmpty());
+    GitBranchDTO gitBranchDTO = gitBranchPageResponse.getContent().get(0);
+    assertThat(gitBranchDTO.getBranchSyncStatus()).isEqualTo(BranchSyncStatus.SYNCING);
   }
 }

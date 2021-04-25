@@ -22,7 +22,7 @@ import lombok.experimental.FieldDefaults;
 public class TerraformExecutionData {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> workspace;
   @JsonProperty("configFiles") TerraformConfigFilesWrapper terraformConfigFilesWrapper;
-  @JsonProperty("varFiles") List<TerraformVarFile> terraformVarFiles;
+  @JsonProperty("varFiles") List<TerraformVarFileWrapper> terraformVarFiles;
   @JsonProperty("backendConfig") TerraformBackendConfig terraformBackendConfig;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> targets;
   List<NGVariable> environmentVariables;

@@ -19,6 +19,7 @@ import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
@@ -26,11 +27,13 @@ import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import io.harness.perpetualtask.k8s.watch.Volume;
@@ -58,6 +61,8 @@ public class K8sPodInfoTasklet implements Tasklet {
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Autowired private ClusterDataGenerationValidator clusterDataGenerationValidator;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+  @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  @Autowired private FeatureFlagService featureFlagService;
 
   private static final String POD = "Pod";
   private static final String KUBE_SYSTEM_NAMESPACE = "kube-system";
@@ -80,17 +85,22 @@ public class K8sPodInfoTasklet implements Tasklet {
     do {
       publishedMessageList = publishedMessageReader.getNext();
 
-      List<InstanceInfo> instanceInfoList =
-          publishedMessageList.stream()
-              .map(this::processPodInfoMessage)
-              .filter(instanceInfo
-                  -> null != instanceInfo.getAccountId()
-                      && getValueForKeyFromInstanceMetaData(
-                             InstanceMetaDataConstants.INSTANCE_CATEGORY, instanceInfo.getMetaData())
-                          != null)
-              .collect(Collectors.toList());
+      List<InstanceInfo> instanceInfoList = publishedMessageList.stream()
+                                                .map(this::processPodInfoMessage)
+                                                .filter(instanceInfo -> null != instanceInfo.getAccountId())
+                                                .collect(Collectors.toList());
 
-      instanceDataBulkWriteService.updateList(instanceInfoList);
+      instanceDataBulkWriteService.updateList(
+          instanceInfoList.stream()
+              .filter(x
+                  -> getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.INSTANCE_CATEGORY, x.getMetaData())
+                      != null)
+              .collect(Collectors.toList()));
+
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+        instanceInfoTimescaleDAO.insertIntoPodInfo(instanceInfoList);
+      }
+
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
@@ -116,9 +126,7 @@ public class K8sPodInfoTasklet implements Tasklet {
 
     String workloadName = podInfo.getTopLevelOwner().getName();
     String workloadType = podInfo.getTopLevelOwner().getKind();
-
-    // TODO(utsav): insert workload into the timescaleDB as a part of new Data Model for nodeRecommendation
-    // insertWorkload(podInfo.getTopLevelOwner()) into timescaleDB;
+    String workloadId = podInfo.getTopLevelOwner().getUid();
 
     if (podInfo.getNamespace().equals(KUBE_SYSTEM_NAMESPACE)
         && podInfo.getPodName().startsWith(KUBE_PROXY_POD_PREFIX)) {
@@ -134,6 +142,10 @@ public class K8sPodInfoTasklet implements Tasklet {
     metaData.put(
         InstanceMetaDataConstants.WORKLOAD_NAME, workloadName.equals("") ? podInfo.getPodName() : workloadName);
     metaData.put(InstanceMetaDataConstants.WORKLOAD_TYPE, workloadType.equals("") ? POD : workloadType);
+
+    if (!isEmpty(workloadId)) {
+      metaData.put(InstanceMetaDataConstants.WORKLOAD_ID, workloadId);
+    }
 
     PrunedInstanceData prunedInstanceData = instanceDataService.fetchPrunedInstanceDataWithName(
         accountId, clusterId, podInfo.getNodeName(), publishedMessage.getOccurredAt());

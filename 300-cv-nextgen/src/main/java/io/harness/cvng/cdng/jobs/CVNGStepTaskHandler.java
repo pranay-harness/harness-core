@@ -42,6 +42,6 @@ public class CVNGStepTaskHandler implements MongoPersistenceIterator.Handler<CVN
   }
   @Override
   public void handle(CVNGStepTask entity) {
-    cvngStepTaskService.notifyCVNGStepIfDone(entity);
+    cvngStepTaskService.notifyCVNGStep(entity);
   }
 }

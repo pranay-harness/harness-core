@@ -3034,6 +3034,28 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "TerraformDestroyStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "configuration": {
+              "$ref": "#/definitions/TerrformStepConfiguration"
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "TerraformExecutionData": {
       "type": "object",
       "properties": {
@@ -3058,7 +3080,7 @@
         "varFiles": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/TerraformVarFile"
+            "$ref": "#/definitions/TerraformVarFileWrapper"
           }
         },
         "workspace": {
@@ -3101,7 +3123,7 @@
         "varFiles": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/TerraformVarFile"
+            "$ref": "#/definitions/TerraformVarFileWrapper"
           }
         },
         "workspace": {
@@ -3144,6 +3166,20 @@
     "TerraformVarFileSpec": {
       "type": "object",
       "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformVarFileWrapper": {
+      "type": "object",
+      "properties": {
+        "varFile": {
+          "$ref": "#/definitions/TerraformVarFile"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "TerrformStepConfiguration": {

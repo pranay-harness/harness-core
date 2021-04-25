@@ -23,6 +23,7 @@ public class DeploymentActivityResultDTO {
   @Builder
   public static class DeploymentVerificationJobInstanceSummary {
     int progressPercentage;
+    long remainingTimeMs;
     Long startTime;
     Long durationMs;
     Risk risk;

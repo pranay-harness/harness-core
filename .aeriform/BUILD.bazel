@@ -232,6 +232,8 @@ aeriform("//920-delegate-service-beans:module")
 
 aeriform("//920-ng-signup:module")
 
+aeriform("//920-ng-signup:tests")
+
 aeriform("//925-access-control-service:module")
 
 aeriform("//925-access-control-service:tests")
@@ -241,10 +243,6 @@ aeriform("//930-delegate-tasks:module")
 aeriform("//930-delegate-tasks:tests")
 
 aeriform("//930-ng-core-clients:module")
-
-aeriform("//935-access-control-decision:module")
-
-aeriform("//935-access-control-decision:tests")
 
 aeriform("//940-cg-audit-service:module")
 
@@ -260,6 +258,10 @@ aeriform("//940-ng-audit-service:tests")
 
 aeriform("//940-notification-client:module")
 
+aeriform("//940-primary-version-manager:module")
+
+aeriform("//940-primary-version-manager:tests")
+
 aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")
@@ -269,6 +271,10 @@ aeriform("//945-ng-audit-client:module")
 aeriform("//946-access-control-aggregator:module")
 
 aeriform("//946-access-control-aggregator:tests")
+
+aeriform("//946-access-control-decision:module")
+
+aeriform("//946-access-control-decision:tests")
 
 aeriform("//947-access-control-core:module")
 
@@ -368,8 +374,6 @@ aeriform("//958-migration-sdk:module")
 
 aeriform("//959-psql-database-models:module")
 
-aeriform("//959-psql-database-models:tests")
-
 aeriform("//960-api-services:module")
 
 aeriform("//960-api-services:tests")
@@ -381,6 +385,8 @@ aeriform("//960-expression-service:module")
 aeriform("//960-expression-service:tests")
 
 aeriform("//960-ng-core-beans:module")
+
+aeriform("//960-ng-signup-beans:module")
 
 aeriform("//960-notification-beans:module")
 

@@ -1,5 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "run_analysis")
 
 # to run:
 # bazel run //160-stress-tester:module -- server /Users/matt/portal3/160-stress-tester/config.yml
@@ -36,4 +36,6 @@ java_binary(
     ],
 )
 
-checkstyle()
+run_analysis(
+    run_pmd = False,
+)

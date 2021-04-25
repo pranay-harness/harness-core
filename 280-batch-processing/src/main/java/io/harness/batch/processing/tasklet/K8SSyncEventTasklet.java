@@ -4,12 +4,15 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.EventWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
+import io.harness.beans.FeatureName;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 
@@ -35,6 +38,8 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
   @Autowired private BatchMainConfig config;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+  @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  @Autowired private FeatureFlagService featureFlagService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -56,6 +61,15 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       List<Lifecycle> lifecycleList = processK8SSyncEventMessage(publishedMessageList);
 
       instanceDataBulkWriteService.updateList(lifecycleList);
+
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+        // Since lifecycle event update uses instanceId (which is an uuid) as 'where' clause
+        // we can safely assume that it can't co exists between node_info and pod_info tables.
+        instanceInfoTimescaleDAO.updateNodeLifecycleEvent(accountId, lifecycleList);
+
+        instanceInfoTimescaleDAO.updatePodLifecycleEvent(accountId, lifecycleList);
+      }
+
     } while (publishedMessageList.size() == batchSize);
     return null;
   }

@@ -43,6 +43,7 @@ import org.joor.Reflect;
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiType> {
   private static final String METADATA = "metadata";
+  public static final Integer VERSION = 1;
 
   static {
     initModelMap();

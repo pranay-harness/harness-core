@@ -22,7 +22,7 @@ public abstract class BlueGreenCanaryVerificationJobSpec extends VerificationJob
     if (sensitivity.getValue() != null) {
       runtimeParams.put(BlueGreenCanaryVerificationJobSpecKeys.sensitivity, sensitivity.getValue());
     }
-    if (trafficSplitPercentage.getValue() != null) {
+    if (trafficSplitPercentage != null && trafficSplitPercentage.getValue() != null) {
       runtimeParams.put(
           BlueGreenCanaryVerificationJobSpecKeys.trafficSplitPercentage, trafficSplitPercentage.getValue());
     }

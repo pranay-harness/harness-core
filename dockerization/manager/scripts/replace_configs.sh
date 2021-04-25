@@ -407,6 +407,10 @@ if [[ "" != "$CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE clusterName "$CLUSTER_NAME"
 fi
 
+if [[ "" != "$DEPLOYMENT_CLUSTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
+fi
+
 if [[ "" != "$BACKGROUND_SCHEDULER_CLUSTERED" ]]; then
   yq write -i $CONFIG_FILE backgroundScheduler.clustered "$BACKGROUND_SCHEDULER_CLUSTERED"
 fi

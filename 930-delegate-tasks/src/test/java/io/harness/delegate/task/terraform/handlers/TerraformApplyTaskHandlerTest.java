@@ -94,7 +94,6 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
     TerraformTaskNGResponse response = terraformApplyTaskHandler.executeTaskInternal(
         getTerraformTaskParameters(), "delegateId", "taskId", logCallback);
     assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     Files.deleteIfExists(Paths.get(putputFile.getPath()));
     Files.deleteIfExists(Paths.get("sourceDir"));
   }

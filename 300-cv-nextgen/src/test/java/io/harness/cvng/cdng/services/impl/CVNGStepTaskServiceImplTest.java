@@ -17,6 +17,7 @@ import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
+import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.cdng.services.impl.CVNGStep.CVNGResponseData;
 import io.harness.persistence.HPersistence;
@@ -48,11 +49,8 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testCreate() {
     String activityId = generateUuid();
-    cvngStepTaskService.create(CVNGStepTask.builder()
-                                   .accountId(generateUuid())
-                                   .activityId(activityId)
-                                   .status(CVNGStepTask.Status.IN_PROGRESS)
-                                   .build());
+    cvngStepTaskService.create(
+        CVNGStepTask.builder().accountId(generateUuid()).activityId(activityId).status(Status.IN_PROGRESS).build());
     assertThat(get(activityId)).isNotNull();
   }
 
@@ -79,13 +77,32 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
                                               .durationMs(Duration.ofMinutes(30).toMillis())
                                               .build();
     when(activityService.getActivityStatus(eq(accountId), eq(activityId))).thenReturn(activityStatusDTO);
-    cvngStepTaskService.create(CVNGStepTask.builder()
-                                   .accountId(accountId)
-                                   .activityId(activityId)
-                                   .status(CVNGStepTask.Status.IN_PROGRESS)
-                                   .build());
-    cvngStepTaskService.notifyCVNGStepIfDone(get(activityId));
-    assertThat(get(activityId).getStatus()).isEqualTo(CVNGStepTask.Status.DONE);
+    cvngStepTaskService.create(
+        CVNGStepTask.builder().accountId(accountId).activityId(activityId).status(Status.IN_PROGRESS).build());
+    cvngStepTaskService.notifyCVNGStep(get(activityId));
+    assertThat(get(activityId).getStatus()).isEqualTo(Status.DONE);
+    verify(waitNotifyEngine, times(1))
+        .doneWith(eq(activityId),
+            eq(CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testNotifyCVNGStep_ifInProgress() {
+    String activityId = generateUuid();
+    String accountId = generateUuid();
+    ActivityStatusDTO activityStatusDTO = ActivityStatusDTO.builder()
+                                              .activityId(activityId)
+                                              .status(ActivityVerificationStatus.IN_PROGRESS)
+                                              .progressPercentage(100)
+                                              .durationMs(Duration.ofMinutes(30).toMillis())
+                                              .build();
+    when(activityService.getActivityStatus(eq(accountId), eq(activityId))).thenReturn(activityStatusDTO);
+    cvngStepTaskService.create(
+        CVNGStepTask.builder().accountId(accountId).activityId(activityId).status(Status.IN_PROGRESS).build());
+    cvngStepTaskService.notifyCVNGStep(get(activityId));
+    assertThat(get(activityId).getStatus()).isEqualTo(Status.IN_PROGRESS);
     verify(waitNotifyEngine, times(1))
         .doneWith(eq(activityId),
             eq(CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));

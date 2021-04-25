@@ -16,6 +16,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.govern.Switch;
 import io.harness.ng.core.BaseNGAccess;
@@ -120,8 +121,11 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       default:
         throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
     }
-
-    return createPerpetualTaskExecutionBundle(perpetualTaskPack, bundle.fetchRequiredExecutionCapabilities(null));
+    List<ExecutionCapability> executionCapabilities =
+        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+            encryptedDataDetailList, null);
+    executionCapabilities.addAll(bundle.fetchRequiredExecutionCapabilities(null));
+    return createPerpetualTaskExecutionBundle(perpetualTaskPack, executionCapabilities);
   }
 
   @NotNull

@@ -1,6 +1,7 @@
 package io.harness.impl.scm;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.stream.Collectors.toList;
@@ -114,17 +115,21 @@ public class SCMServiceGitClientImpl implements ScmClient {
     return scmBlockingStub.getFile(fileRequest);
   }
 
-  @Override
-  public FileBatchContentResponse getHarnessFilesOfBranch(ScmConnector connector, String branch) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
-    String slug = scmGitProviderHelper.getSlug(connector);
-    FindFilesInBranchRequest findFilesInBranchRequest =
-        FindFilesInBranchRequest.newBuilder().setBranch(branch).setSlug(slug).setProvider(gitProvider).build();
-    // todo @deepak: Add the pagination logic to get the list of file names, once scm provides support
-    FindFilesInBranchResponse filesInBranch = scmBlockingStub.findFilesInBranch(findFilesInBranchRequest);
-    List<String> harnessRelatedFilePaths = getPathsOfFilesBelongingToHarness(filesInBranch);
-    GetBatchFileRequest batchFileRequest = createBatchFileRequest(harnessRelatedFilePaths, slug, branch, gitProvider);
+  private FileBatchContentResponse getContentOfFiles(
+      List<String> filePaths, String slug, Provider gitProvider, String branch) {
+    GetBatchFileRequest batchFileRequest = createBatchFileRequest(filePaths, slug, branch, gitProvider);
     return scmBlockingStub.getBatchFile(batchFileRequest);
+  }
+
+  private List<String> getFileNames(List<String> foldersList, String slug, Provider gitProvider, String branchName) {
+    GetFilesInFolderForkTask getFilesInFolderTask = GetFilesInFolderForkTask.builder()
+                                                        .branch(branchName)
+                                                        .provider(gitProvider)
+                                                        .scmBlockingStub(scmBlockingStub)
+                                                        .slug(slug)
+                                                        .build();
+    List<FileChange> forkJoinTask = getFilesInFolderTask.createForkJoinTask(foldersList);
+    return emptyIfNull(forkJoinTask).stream().map(FileChange::getPath).collect(toList());
   }
 
   @Override
@@ -147,8 +152,8 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branch) {
-    FindFilesInBranchRequest findFilesInBranchRequest = getFindFilesInBranchRequest(scmConnector, branch);
+  public FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branchName) {
+    FindFilesInBranchRequest findFilesInBranchRequest = getFindFilesInBranchRequest(scmConnector, branchName);
     return scmBlockingStub.findFilesInBranch(findFilesInBranchRequest);
   }
 
@@ -160,8 +165,8 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch) {
-    GetLatestCommitRequest getLatestCommitRequest = getLatestCommitRequestObject(scmConnector, branch);
+  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName) {
+    GetLatestCommitRequest getLatestCommitRequest = getLatestCommitRequestObject(scmConnector, branchName);
     return scmBlockingStub.getLatestCommit(getLatestCommitRequest);
   }
 
@@ -172,8 +177,8 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public ListCommitsResponse listCommits(ScmConnector scmConnector, String branch) {
-    ListCommitsRequest listCommitsRequest = getListCommitsRequest(scmConnector, branch);
+  public ListCommitsResponse listCommits(ScmConnector scmConnector, String branchName) {
+    ListCommitsRequest listCommitsRequest = getListCommitsRequest(scmConnector, branchName);
     return scmBlockingStub.listCommits(listCommitsRequest);
   }
 
@@ -260,11 +265,11 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch) {
+  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
     String slug = scmGitProviderHelper.getSlug(connector);
-    GetBatchFileRequest batchFileRequest = createBatchFileRequest(filePaths, slug, branch, gitProvider);
-    return scmBlockingStub.getBatchFile(batchFileRequest);
+    List<String> getFilesWhichArePartOfHarness = getFileNames(foldersList, slug, gitProvider, branchName);
+    return getContentOfFiles(getFilesWhichArePartOfHarness, slug, gitProvider, branchName);
   }
 
   @Override

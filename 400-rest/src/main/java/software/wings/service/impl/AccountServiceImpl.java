@@ -515,7 +515,7 @@ public class AccountServiceImpl implements AccountService {
     accountDetails.setAccountId(accountId);
     accountDetails.setAccountName(account.getAccountName());
     accountDetails.setCompanyName(account.getCompanyName());
-    accountDetails.setCluster(mainConfiguration.getClusterName());
+    accountDetails.setCluster(mainConfiguration.getDeploymentClusterName());
     accountDetails.setLicenseInfo(account.getLicenseInfo());
     accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
     return accountDetails;

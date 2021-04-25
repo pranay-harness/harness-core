@@ -603,8 +603,8 @@ fn check_for_promotion(
             .cloned()
             .collect();
 
-            results.push(if class.break_dependencies_on.contains(src) {
-                Report {
+            if class.break_dependencies_on.contains(src) {
+                results.push(Report {
                     kind: Kind::DevAction,
                     explanation: Explanation::Empty,
                     message: format!(
@@ -616,9 +616,9 @@ fn check_for_promotion(
                     for_team: class.team(module, &target_module.team),
                     indirect_classes: Default::default(),
                     for_modules: mdls,
-                }
-            } else {
-                Report {
+                });
+            } else if !dependent_real_module.external() {
+                results.push(Report {
                     kind: Kind::Error,
                     explanation: Explanation::Empty,
                     message: format!(
@@ -630,8 +630,8 @@ fn check_for_promotion(
                     for_team: class.team(module, &target_module.team),
                     indirect_classes: [dependent_class.name.clone()].iter().cloned().collect(),
                     for_modules: mdls,
-                }
-            });
+                });
+            }
         }
 
         if dependent_real_module.index < target_module.index {
@@ -773,35 +773,35 @@ fn check_for_demotion(
                 .cloned()
                 .collect();
                 let indirect_classes = [dependee_class.name.clone()].iter().cloned().collect();
-                results.push(if dependee_class.break_dependencies_on.contains(&class.name) {
-                    Report {
+                if dependee_class.break_dependencies_on.contains(&class.name) {
+                    results.push(Report {
                         kind: Kind::DevAction,
                         explanation: Explanation::Empty,
                         message: format!(
-                            "{} has dependee {} and this dependency has to be broken",
-                            class.name, dependee_class.name
+                            "{} depends on {} and this dependency has to be broken",
+                            dependee_class.name, class.name,
                         ),
                         action: Default::default(),
                         for_class: dependee_class.name.clone(),
                         for_team: dependee_class.team(module, &dependee_class.target_module_team(modules)),
                         indirect_classes: indirect_classes,
                         for_modules: mdls,
-                    }
+                    });
                 } else {
-                    Report {
+                    results.push(Report {
                         kind: Kind::Error,
                         explanation: Explanation::Empty,
                         message: format!(
-                            "{} has dependee {} that is in module {} but {} is not a dependee of it",
-                            class.name, dependee_class.name, dependee_target_module.name, target_module.name
+                            "{} depends on {} that is in module {} but {} does not depend on it",
+                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
                         ),
                         action: Default::default(),
                         for_team: class.team(module, &target_module.team),
                         for_class: class.name.clone(),
                         indirect_classes: indirect_classes,
                         for_modules: mdls,
-                    }
-                });
+                    });
+                }
             }
 
             if dependee_real_module.index > target_module.index {

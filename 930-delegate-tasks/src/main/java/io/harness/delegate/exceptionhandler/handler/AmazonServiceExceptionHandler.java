@@ -9,7 +9,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.exception.exceptionmanager.ExceptionHandler;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;

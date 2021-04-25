@@ -31,6 +31,7 @@ public class GitSyncMsvcHelper {
             .setFolderPath(scmResponse.getFolderPath())
             .setFilePath(scmResponse.getFilePath())
             .setYamlGitConfigId(scmResponse.getYamlGitConfigId())
+            .setBranchName(gitBranchInfo.getBranch())
             .setIsNewBranch(checkIfItsANewBranch(gitBranchInfo))
             .build());
   }

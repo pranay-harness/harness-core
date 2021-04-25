@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_EVENT_ACTION;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PRWebhookEvent;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
@@ -43,6 +45,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PIPELINE)
 public class TriggerEventActionFilterTest extends CategoryTest {
   @Mock private NGTriggerService ngTriggerService;
   @Mock private NGTriggerElementMapper ngTriggerElementMapper;
@@ -92,7 +95,7 @@ public class TriggerEventActionFilterTest extends CategoryTest {
         FilterRequestData.builder()
             .details(Arrays.asList(TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub).build()))
             .webhookPayloadData(webhookPayloadData)
-            .projectFqn("p")
+            .accountId("p")
             .build());
 
     assertThat(webhookEventMappingResponse.getWebhookEventResponse()).isNotNull();
@@ -107,7 +110,7 @@ public class TriggerEventActionFilterTest extends CategoryTest {
     webhookEventMappingResponse = filter.applyFilter(
         FilterRequestData.builder()
             .details(Arrays.asList(TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub).build()))
-            .projectFqn("p")
+            .accountId("p")
             .webhookPayloadData(webhookPayloadData)
             .build());
 

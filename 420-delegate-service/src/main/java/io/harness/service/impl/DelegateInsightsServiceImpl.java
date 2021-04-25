@@ -1,20 +1,19 @@
 package io.harness.service.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.DEL;
-
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateInsightsBarDetails;
+import io.harness.delegate.beans.DelegateInsightsDetails;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateInsightsService;
 import io.harness.service.intfc.PerpetualTaskStateObserver;
 
-import software.wings.beans.DelegateInsightsBarDetails;
-import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateInsightsSummary;
 import software.wings.beans.DelegateInsightsSummary.DelegateInsightsSummaryKeys;
 import software.wings.beans.DelegateTaskUsageInsights;
@@ -35,7 +34,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
-@OwnedBy(DEL)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateInsightsServiceImpl
     implements DelegateInsightsService, DelegateTaskStatusObserver, PerpetualTaskStateObserver {
   @Inject private HPersistence persistence;

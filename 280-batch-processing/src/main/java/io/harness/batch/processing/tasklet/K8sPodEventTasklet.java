@@ -7,10 +7,13 @@ import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PodEvent;
 
@@ -31,6 +34,8 @@ public class K8sPodEventTasklet implements Tasklet {
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private ClusterDataGenerationValidator clusterDataGenerationValidator;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+  @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  @Autowired private FeatureFlagService featureFlagService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -52,6 +57,11 @@ public class K8sPodEventTasklet implements Tasklet {
                                                   .filter(instanceEvent -> null != instanceEvent.getAccountId())
                                                   .collect(Collectors.toList());
       instanceDataBulkWriteService.updateList(instanceEventList);
+
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+        instanceInfoTimescaleDAO.updatePodStopEvent(
+            instanceEventList.stream().filter(x -> x.getType() == EventType.STOP).collect(Collectors.toList()));
+      }
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
