@@ -8,6 +8,7 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
+    sha256 = "f45a40e132fb46f142d2ddc70ce86ac5eff17072034b221140fff0f3ad7021f9",
     strip_prefix = "buildtools-master",
     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
 )
@@ -2036,6 +2037,7 @@ pinned_maven_install()
 
 http_jar(
     name = "jira_client",
+    sha256 = "4e733673d5ecfbd0f81f6adef1703a1c3d8975bb091ce6af8dc6ec1604a56112",
     url = "https://harness.jfrog.io/artifactory/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20210122.053103-1.jar",
 )
 

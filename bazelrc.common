@@ -16,7 +16,6 @@ build --java_toolchain=@bazel_tools//tools/jdk:toolchain_vanilla
 # build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 
 build --action_env=HARNESS_GENERATION_PASSPHRASE
-build --action_env=JAVA_HOME
 
 build --strict_java_deps=warn
 build --java_header_compilation=false

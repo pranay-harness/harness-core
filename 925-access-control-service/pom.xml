@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>935-access-control-decision</artifactId>
+            <artifactId>946-access-control-decision</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

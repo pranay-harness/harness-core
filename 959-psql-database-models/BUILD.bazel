@@ -21,5 +21,5 @@ java_library(
 )
 
 run_analysis(
-    run_checkstyle = "no",
+    run_checkstyle = False,
 )

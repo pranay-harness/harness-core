@@ -132,6 +132,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
+  @JsonProperty("deploymentClusterName") private String deploymentClusterName;
   @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;

@@ -65,6 +65,6 @@ java_library(
 run_tests()
 
 run_analysis(
-    run_checkstyle = "no",
-    run_pmd = "no",
+    run_checkstyle = False,
+    run_pmd = False,
 )

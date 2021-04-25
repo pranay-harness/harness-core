@@ -184,7 +184,7 @@ public class AwsCodeCommitDataObtainerTest extends CategoryTest {
   public void shouldAcquireAwsCodeCommitData() {
     FilterRequestData filterRequestData = FilterRequestData.builder()
                                               .details(triggerDetailsList)
-                                              .projectFqn("acc/org/proj")
+                                              .accountId("acc")
                                               .webhookPayloadData(webhookPayloadData)
                                               .build();
 

@@ -75,16 +75,14 @@ def sonarqube_test(
     )
 
 def run_analysis(
-        run_checkstyle = "yes",
-        run_pmd = "yes",
-        run_sonar = "yes"):
-    print("Running Analysis for Module: {}".format(native.package_name()))
-    if run_checkstyle == "yes":
-        print("Running Checkstyle for Module: {}".format(native.package_name()))
+        run_checkstyle = True,
+        run_pmd = True,
+        run_sonar = True):
+    if run_checkstyle:
         checkstyle()
-    if run_pmd == "yes":
-        print("Running PMD for Module: {}".format(native.package_name()))
+
+    if run_pmd:
         pmd()
-    if run_sonar == "yes":
-        print("Running Sonar for Module: {}".format(native.package_name()))
+
+    if run_sonar:
         sonarqube_test()

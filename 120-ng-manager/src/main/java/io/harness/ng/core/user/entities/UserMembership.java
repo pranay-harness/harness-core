@@ -43,6 +43,15 @@ public class UserMembership implements PersistentEntity {
                  .field(UserMembershipKeys.scopes)
                  .build())
         .add(CompoundMongoIndex.builder()
+                 .name("userMembershipAccountOrgProject")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "accountIdentifier")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "orgIdentifier")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "projectIdentifier")
+                 .build())
+        .add(CompoundMongoIndex.builder()
                  .name("uniqueUserMembershipUserId")
                  .field(UserMembershipKeys.userId)
                  .unique(true)
