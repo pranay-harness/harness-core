@@ -29,6 +29,8 @@ import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.service.NgUserService;
+import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.notification.NotificationChannelType;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.NGObjectMapperHelper;
@@ -46,7 +48,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -72,6 +73,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   private final OutboxService outboxService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final TransactionTemplate transactionTemplate;
+  private final NgUserService ngUserService;
 
   private static final RetryPolicy<Object> retryPolicy =
       RetryUtils.getRetryPolicy("Could not find the user with the given identifier on attempt %s",
@@ -84,12 +86,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject
   public UserGroupServiceImpl(UserGroupRepository userGroupRepository, UserClient userClient,
       OutboxService outboxService, AccessControlAdminClient accessControlAdminClient,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, UserInfoService userInfoService,
+      NgUserService ngUserService) {
     this.userGroupRepository = userGroupRepository;
     this.userClient = userClient;
     this.outboxService = outboxService;
     this.accessControlAdminClient = accessControlAdminClient;
     this.transactionTemplate = transactionTemplate;
+    this.ngUserService = ngUserService;
   }
 
   @Override
@@ -228,6 +232,16 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
     if (userGroup.getUsers() != null) {
       validateUsers(userGroup.getUsers(), userGroup.getAccountIdentifier());
+      validateScopeMembership(userGroup);
+    }
+  }
+
+  private void validateScopeMembership(UserGroup userGroup) {
+    Set<String> filteredUserIds = ngUserService.filterUsersWithScopeMembership(userGroup.getUsers(),
+        userGroup.getAccountIdentifier(), userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier());
+    Sets.SetView<String> invalidUserIds = Sets.difference(new HashSet<>(userGroup.getUsers()), filteredUserIds);
+    if (isNotEmpty(invalidUserIds)) {
+      throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
     }
   }
 
@@ -237,21 +251,24 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  private void validateUsers(Set<String> usersIds, String accountId) {
+  private void validateUsers(List<String> usersIds, String accountId) {
     Failsafe.with(retryPolicy).run(() -> {
       Set<String> returnedUsersIds =
           RestClientUtils
-              .getResponse(userClient.listUsers(
-                  UserSearchFilter.builder().userIds(new ArrayList<>(usersIds)).build(), accountId))
+              .getResponse(userClient.listUsers(UserSearchFilter.builder().userIds(usersIds).build(), accountId))
               .stream()
               .map(UserInfo::getUuid)
               .collect(Collectors.toSet());
-      Set<String> invalidUserIds = Sets.difference(usersIds, returnedUsersIds);
+      Set<String> invalidUserIds = Sets.difference(new HashSet<>(usersIds), returnedUsersIds);
       if (!invalidUserIds.isEmpty()) {
-        throw new InvalidArgumentsException(
-            String.format("The following users are not valid %s", String.join(",", invalidUserIds)));
+        throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
       }
     });
+  }
+
+  private String getInvalidUserMessage(Set<String> invalidUserIds) {
+    return String.format("The following user%s not valid: [%s]", invalidUserIds.size() > 1 ? "s are" : " is",
+        String.join(", ", invalidUserIds));
   }
 
   private void validateNotificationSettings(List<NotificationSettingConfig> notificationSettingConfigs) {

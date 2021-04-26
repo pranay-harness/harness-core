@@ -27,9 +27,12 @@ import io.harness.security.dto.Principal;
 import io.harness.security.dto.PrincipalType;
 import io.harness.user.remote.UserClient;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,9 +47,29 @@ public class NgUserServiceImplTest extends CategoryTest {
   @Mock private UserMembershipRepository userMembershipRepository;
   @Inject @InjectMocks NgUserServiceImpl ngUserService;
 
+  private static String ACCOUNT_IDENTIFIER = "A";
+  private static String ORG_IDENTIFIER = "O";
+  private static String PROJECT_IDENTIFIER = "P";
+
   @Before
   public void setup() {
     initMocks(this);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testFilterUsersWithScopeMembership() {
+    List<String> users = Lists.newArrayList("u1", "u2", "u3");
+    Set<String> filteredUsers = Sets.newHashSet("u1", "u2");
+
+    doReturn(filteredUsers)
+        .when(userMembershipRepository)
+        .filterUsersWithMembership(users, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
+
+    Set<String> result =
+        ngUserService.filterUsersWithScopeMembership(users, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
+    assertThat(result).isEqualTo(filteredUsers);
   }
 
   @Test

@@ -49,7 +49,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -327,6 +329,13 @@ public class NgUserServiceImpl implements NgUserService {
     if (isUserRemovedFromAccount) {
       RestClientUtils.getResponse(userClient.safeDeleteUser(userId, accountIdentifier));
     }
+  }
+
+  @Override
+  public Set<String> filterUsersWithScopeMembership(List<String> userIds, String accountIdentifier,
+      @Nullable String orgIdentifier, @Nullable String projectIdentifier) {
+    return userMembershipRepository.filterUsersWithMembership(
+        userIds, accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   @Override
