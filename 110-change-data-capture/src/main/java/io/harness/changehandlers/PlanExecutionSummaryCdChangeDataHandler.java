@@ -8,13 +8,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import java.sql.Timestamp;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(HarnessTeam.CI)
+@OwnedBy(HarnessTeam.CDC)
 @Slf4j
-public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHandler {
+public class PlanExecutionSummaryCdChangeDataHandler extends AbstractChangeDataHandler {
   @Override
   public Map<String, String> getColumnValueMapping(ChangeEvent<?> changeEvent, String[] fields) {
     if (changeEvent == null) {
@@ -28,7 +27,6 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     if (dbObject == null) {
       return columnValueMapping;
     }
-
     if (dbObject.get("accountId") != null) {
       columnValueMapping.put("accountId", dbObject.get("accountId").toString());
     }
@@ -48,44 +46,18 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
       columnValueMapping.put("status", dbObject.get("status").toString());
     }
 
-    // if moduleInfo is not null
-    if (dbObject.get("moduleInfo") != null) {
-      if (((BasicDBObject) dbObject.get("moduleInfo")).get("ci") != null) {
-        columnValueMapping.put("moduleInfo_type", "CI");
-        DBObject ciObject = (DBObject) (((BasicDBObject) dbObject.get("moduleInfo")).get("ci"));
-        DBObject ciExecutionInfo = (DBObject) ciObject.get("ciExecutionInfoDTO");
-
-        if (ciObject.get("repoName") != null) {
-          columnValueMapping.put("moduleInfo_repository", ciObject.get("repoName").toString());
-        }
-
-        if (ciExecutionInfo != null) {
-          DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
-
-          HashMap firstCommit = null;
-          if (branch != null) {
-            firstCommit = (HashMap) ((List) branch.get("commits")).get(0);
-            if (firstCommit != null) {
-              columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
-              columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
-            }
-            columnValueMapping.put("moduleInfo_branch_name", branch.get("name").toString());
-          }
-          DBObject author = (DBObject) (ciExecutionInfo.get("author"));
-          if (ciExecutionInfo.get("event") != null) {
-            columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
-          }
-          if (author != null) {
-            columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
-          }
-        }
-      } else {
-        return null;
-      }
-    } else {
-      // no information mention related to moduleInfo
+    if (dbObject.get("moduleInfo") == null) {
       return null;
     }
+
+    // if moduleInfo is not null
+    if (((BasicDBObject) dbObject.get("moduleInfo")).get("cd") != null) {
+      columnValueMapping.put("moduleInfo_type", "CD");
+      // this is a cd deployment pipeline
+    } else {
+      return null;
+    }
+
     columnValueMapping.put(
         "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
     if (dbObject.get("endTs") != null) {

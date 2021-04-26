@@ -18,6 +18,7 @@ import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.notification.channeldetails.PagerDutyChannel;
@@ -57,6 +58,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
   @Inject private Clock clock;
   @Inject private ActivityService activityService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Inject private NextGenService nextGenService;
 
   @Override
   public PageResponse<AlertRuleDTO> listAlertRules(String accountId, String orgIdentifier, String projectIdentifier,
@@ -139,27 +141,30 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                   && (alertRule.getAlertCondition().isAllEnvironments()
                       || alertRule.getAlertCondition().getEnvironments().contains(envIdentifier)))
           .forEach(rule -> {
-            StringBuilder alertMessage = new StringBuilder(256)
-                                             .append("Harness CV detected risk.\nOrganization: ")
-                                             .append(orgIdentifier)
-                                             .append("\nProject: ")
-                                             .append(projectIdentifier)
-                                             .append("\nService: ")
-                                             .append(serviceIdentifier)
-                                             .append("\nEnvironment: ")
-                                             .append(envIdentifier)
-                                             .append("\nCategory: ")
-                                             .append(category.getDisplayName())
-                                             .append("\nIncident time: ")
-                                             .append(DATE_TIME_FORMATTER.format(timeStamp))
-                                             .append("\nNotification rule:")
-                                             .append(rule.getName())
-                                             .append("\nAlert threshold: ")
-                                             .append(rule.getAlertCondition().getNotify().getThreshold())
-                                             .append("\nCurrent risk: ")
-                                             .append(riskValue)
-                                             .append("\nCheck at: ")
-                                             .append(uiUrl);
+            StringBuilder alertMessage =
+                new StringBuilder(256)
+                    .append("Harness CV detected risk.\nOrganization: ")
+                    .append(nextGenService.getOrganization(accountId, orgIdentifier).getName())
+                    .append("\nProject: ")
+                    .append(nextGenService.getCachedProject(accountId, orgIdentifier, projectIdentifier).getName())
+                    .append("\nService: ")
+                    .append(nextGenService.getService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier)
+                                .getName())
+                    .append("\nEnvironment: ")
+                    .append(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, envIdentifier)
+                                .getName())
+                    .append("\nCategory: ")
+                    .append(category.getDisplayName())
+                    .append("\nIncident time: ")
+                    .append(DATE_TIME_FORMATTER.format(timeStamp))
+                    .append("\nNotification rule:")
+                    .append(rule.getName())
+                    .append("\nAlert threshold: ")
+                    .append(rule.getAlertCondition().getNotify().getThreshold())
+                    .append("\nCurrent risk: ")
+                    .append(riskValue)
+                    .append("\nCheck at: ")
+                    .append(uiUrl);
 
             AlertRuleAnomaly alertRuleAnomaly = alertRuleAnomalyService.openAnomaly(
                 accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category);
@@ -239,27 +244,30 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                       || alertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().contains(
                           activityType)))
           .forEach(rule -> {
-            StringBuilder alertMessage = new StringBuilder(256)
-                                             .append("Harness CV finished verification\nOrganization: ")
-                                             .append(orgIdentifier)
-                                             .append("\nProject: ")
-                                             .append(projectIdentifier)
-                                             .append("\nService: ")
-                                             .append(serviceIdentifier)
-                                             .append("\nEnvironment: ")
-                                             .append(envIdentifier)
-                                             .append("\nVerification start time: ")
-                                             .append(simpleDateFormat.format(startTime))
-                                             .append("\nVerification duration: ")
-                                             .append(simpleDateFormat.format(duration))
-                                             .append("\nNotification rule:")
-                                             .append(rule.getName())
-                                             .append("\nVerification Status: ")
-                                             .append(verificationStatus)
-                                             .append("\nActivity Type: ")
-                                             .append(activityType)
-                                             .append("\nCheck at: ")
-                                             .append(uiUrl);
+            StringBuilder alertMessage =
+                new StringBuilder(256)
+                    .append("Harness CV finished verification\nOrganization: ")
+                    .append(nextGenService.getOrganization(accountId, orgIdentifier).getName())
+                    .append("\nProject: ")
+                    .append(nextGenService.getCachedProject(accountId, orgIdentifier, projectIdentifier).getName())
+                    .append("\nService: ")
+                    .append(nextGenService.getService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier)
+                                .getName())
+                    .append("\nEnvironment: ")
+                    .append(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, envIdentifier)
+                                .getName())
+                    .append("\nVerification start time: ")
+                    .append(simpleDateFormat.format(startTime))
+                    .append("\nVerification duration: ")
+                    .append(simpleDateFormat.format(duration))
+                    .append("\nNotification rule:")
+                    .append(rule.getName())
+                    .append("\nVerification Status: ")
+                    .append(verificationStatus)
+                    .append("\nActivity Type: ")
+                    .append(activityType)
+                    .append("\nCheck at: ")
+                    .append(uiUrl);
             notifyChannel(rule.getAccountId(), rule.getNotificationMethod(), alertMessage.toString());
           });
     }

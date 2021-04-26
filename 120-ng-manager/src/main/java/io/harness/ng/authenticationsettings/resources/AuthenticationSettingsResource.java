@@ -6,6 +6,7 @@ import io.harness.exception.GeneralException;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 import io.harness.ng.authenticationsettings.impl.AuthenticationSettingsService;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
 
@@ -181,6 +182,17 @@ public class AuthenticationSettingsResource {
   @ApiOperation(value = "Get SAML Login Test", nickname = "getSamlLoginTest")
   public RestResponse<LoginTypeResponse> getSamlLoginTest(@QueryParam("accountId") @NotEmpty String accountId) {
     LoginTypeResponse response = authenticationSettingsService.getSAMLLoginTest(accountId);
+    return new RestResponse<>(response);
+  }
+
+  @PUT
+  @Path("/two-factor-admin-override-settings")
+  @ApiOperation(value = "Set account level two factor auth setting", nickname = "setTwoFactorAuthAtAccountLevel")
+  public RestResponse<Boolean> setTwoFactorAuthAtAccountLevel(
+      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
+      TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings) {
+    boolean response =
+        authenticationSettingsService.setTwoFactorAuthAtAccountLevel(accountIdentifier, twoFactorAdminOverrideSettings);
     return new RestResponse<>(response);
   }
 }
