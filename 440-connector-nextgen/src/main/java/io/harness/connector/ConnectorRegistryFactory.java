@@ -1,5 +1,8 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsValidationParamsProvider;
 import io.harness.connector.heartbeat.CEK8sConnectorValidationParamsProvider;
@@ -33,6 +36,8 @@ import io.harness.connector.mappers.cek8s.CEKubernetesDTOToEntity;
 import io.harness.connector.mappers.cek8s.CEKubernetesEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
+import io.harness.connector.mappers.gcpcloudcost.GcpCloudCostDTOToEntity;
+import io.harness.connector.mappers.gcpcloudcost.GcpCloudCostEntityToDTO;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
 import io.harness.connector.mappers.gcpmappers.GcpEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
@@ -67,6 +72,7 @@ import io.harness.connector.validator.CEKubernetesConnectionValidator;
 import io.harness.connector.validator.CVConnectorValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
+import io.harness.connector.validator.GcpCloudCostConnectorValidator;
 import io.harness.connector.validator.GcpConnectorValidator;
 import io.harness.connector.validator.HttpHelmRepoConnectionValidator;
 import io.harness.connector.validator.JiraConnectorValidator;
@@ -83,6 +89,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(DX)
 public class ConnectorRegistryFactory {
   private static Map<ConnectorType, ConnectorRegistrar> registrar = new HashMap<>();
 
@@ -152,6 +159,9 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.CE_AZURE,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAzureConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, CEAzureDTOToEntity.class, CEAzureEntityToDTO.class));
+    registrar.put(ConnectorType.GCP_CLOUD_COST,
+        new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, GcpCloudCostConnectorValidator.class,
+            NoOpConnectorValidationParamsProvider.class, GcpCloudCostDTOToEntity.class, GcpCloudCostEntityToDTO.class));
     registrar.put(ConnectorType.HTTP_HELM_REPO,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, HttpHelmRepoConnectionValidator.class,
             HttpHelmConnectorValidationParamsProvider.class, HttpHelmDTOToEntity.class, HttpHelmEntityToDTO.class));

@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.ceazure;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.ceazure.BillingExportDetails;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig.CEAzureConfigBuilder;
@@ -13,34 +16,38 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CE)
 public class CEAzureDTOToEntity implements ConnectorDTOToEntityMapper<CEAzureConnectorDTO, CEAzureConfig> {
   @Override
   public CEAzureConfig toConnectorEntity(CEAzureConnectorDTO connectorDTO) {
     final List<CEAzureFeatures> featuresEnabled = connectorDTO.getFeaturesEnabled();
 
-    CEAzureConfigBuilder builder = CEAzureConfig.builder()
-                                       .subscriptionId(connectorDTO.getSubscriptionId())
-                                       .tenantId(connectorDTO.getTenantId())
-                                       .featuresEnabled(featuresEnabled);
+    final CEAzureConfigBuilder configBuilder = CEAzureConfig.builder()
+                                                   .subscriptionId(connectorDTO.getSubscriptionId())
+                                                   .tenantId(connectorDTO.getTenantId())
+                                                   .featuresEnabled(featuresEnabled);
 
     if (featuresEnabled.contains(CEAzureFeatures.BILLING)) {
-      final BillingExportSpecDTO billingExportSpecDTO = connectorDTO.getBillingExportSpec();
-
-      if (billingExportSpecDTO == null) {
-        throw new InvalidRequestException(
-            String.format("billingExportSpec should be provided when the features %s is enabled.",
-                CEAzureFeatures.BILLING.getDescription()));
-      }
-
-      final BillingExportDetails billingExportDetails =
-          BillingExportDetails.builder()
-              .storageAccountName(billingExportSpecDTO.getStorageAccountName())
-              .containerName(billingExportSpecDTO.getContainerName())
-              .directoryName(billingExportSpecDTO.getDirectoryName())
-              .build();
-      builder.billingExportDetails(billingExportDetails);
+      populateBillingExportDetails(configBuilder, connectorDTO.getBillingExportSpec());
     }
 
-    return builder.build();
+    return configBuilder.build();
+  }
+
+  private void populateBillingExportDetails(
+      CEAzureConfigBuilder configBuilder, final BillingExportSpecDTO billingExportSpecDTO) {
+    if (billingExportSpecDTO == null) {
+      throw new InvalidRequestException(
+          String.format("billingExportSpec should be provided when the features %s is enabled.",
+              CEAzureFeatures.BILLING.getDescription()));
+    }
+
+    final BillingExportDetails billingExportDetails =
+        BillingExportDetails.builder()
+            .storageAccountName(billingExportSpecDTO.getStorageAccountName())
+            .containerName(billingExportSpecDTO.getContainerName())
+            .directoryName(billingExportSpecDTO.getDirectoryName())
+            .build();
+    configBuilder.billingExportDetails(billingExportDetails);
   }
 }

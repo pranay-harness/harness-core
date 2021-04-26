@@ -1,5 +1,8 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.ConnectorFilterProperties;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
@@ -23,6 +26,8 @@ import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.entities.embedded.cek8s.CEK8sDetails;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
+import io.harness.connector.entities.embedded.gcpccm.GcpBillingExportDetails;
+import io.harness.connector.entities.embedded.gcpccm.GcpCloudCostConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
 import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
@@ -65,6 +70,7 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
+@OwnedBy(DX)
 public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -91,6 +97,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(AwsCodeCommitConfig.class);
     set.add(HttpHelmConnector.class);
     set.add(NewRelicConnector.class);
+    set.add(GcpCloudCostConfig.class);
   }
 
   @Override
@@ -142,5 +149,6 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
         AwsCodeCommitSecretKeyAccessKey.class);
     h.put("connector.entities.embedded.helm.HttpHelmUsernamePasswordAuthentication",
         HttpHelmUsernamePasswordAuthentication.class);
+    h.put("connector.entities.embedded.gcpccm.GcpBillingExportDetails", GcpBillingExportDetails.class);
   }
 }
