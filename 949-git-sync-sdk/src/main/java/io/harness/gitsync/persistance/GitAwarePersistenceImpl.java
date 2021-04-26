@@ -207,15 +207,14 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
       } else {
         final String uuidOfEntity = entityGitBranchMetadata.getUuidOfEntity();
         Criteria criteria = Criteria.where(GitSyncableEntityKeys.id).is(uuidOfEntity);
-        final Optional<B> alreadySavedObject = findOne(criteria, entityGitBranchMetadata.getProjectIdentifier(),
-            entityGitBranchMetadata.getOrgIdentifier(), entityGitBranchMetadata.getAccountId(), entityClass);
-        if (!alreadySavedObject.isPresent()) {
+        final B alreadySavedObject = mongoTemplate.findOne(query(criteria), entityClass);
+        if (alreadySavedObject == null) {
           log.error(
               "Saved object deleted hence saving again. uuid: [{}], entityclass: [{}]", uuidOfEntity, entityClass);
           savedObject = mongoTemplate.save(objectToSave);
           newObjectSaved = true;
         } else {
-          savedObject = alreadySavedObject.get();
+          savedObject = alreadySavedObject;
         }
       }
       processGitBranchMetadata(objectToSave, changeType, entityDetail, scmPushResponse, objectIdOfYaml,
