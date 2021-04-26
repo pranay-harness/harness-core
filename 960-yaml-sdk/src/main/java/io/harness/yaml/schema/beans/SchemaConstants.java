@@ -28,4 +28,5 @@ public class SchemaConstants {
   public static final String BOOL_TYPE_NODE = "boolean";
   public static final String OBJECT_TYPE_NODE = "object";
   public static final String ARRAY_TYPE_NODE = "array";
+  public static final String ITEMS_NODE = "items";
 }

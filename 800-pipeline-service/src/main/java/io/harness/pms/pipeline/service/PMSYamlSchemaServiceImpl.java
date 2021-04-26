@@ -9,6 +9,8 @@ import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
 import static java.lang.String.format;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.network.SafeHttpCall;
@@ -31,6 +33,7 @@ import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.client.YamlSchemaClient;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,17 +42,17 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.ws.rs.NotFoundException;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
@@ -72,33 +75,52 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
 
+    JsonNode pipelineSteps =
+        yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
     ObjectNode pipelineDefinitions = (ObjectNode) pipelineSchema.get(DEFINITIONS_NODE);
+    ObjectNode pipelineStepsDefinitions = (ObjectNode) pipelineSteps.get(DEFINITIONS_NODE);
+
+    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
+
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.remove(STAGE_ELEMENT_CONFIG);
 
-    JsonNode jsonNode = pipelineDefinitions.get(ParallelStageElementConfig.class.getSimpleName());
-    if (jsonNode.isObject()) {
-      flattenParallelStepElementConfig((ObjectNode) jsonNode);
-    }
+    flattenParallelElementConfig(pipelineDefinitions);
 
     Set<String> instanceNames = pmsSdkInstanceService.getInstanceNames();
+    instanceNames.remove(PmsConstants.INTERNAL_SERVICE_NAME);
     Set<String> refs = new HashSet<>();
     for (String instanceName : instanceNames) {
-      if (instanceName.equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
+      PartialSchemaDTO partialSchemaDTO = getStage(instanceName, projectIdentifier, orgIdentifier, scope);
+      if (partialSchemaDTO == null) {
         continue;
       }
-      PartialSchemaDTO partialSchemaDTO = getStage(instanceName, projectIdentifier, orgIdentifier, scope);
-      processPartialStageSchema(pipelineDefinitions, stageElementConfig, refs, instanceName, partialSchemaDTO);
+      processPartialStageSchema(
+          mergedDefinitions, pipelineStepsDefinitions, stageElementConfig, refs, instanceName, partialSchemaDTO);
     }
-    processPartialStageSchema(pipelineDefinitions, stageElementConfig, refs, APPROVAL_INSTANCE_NAME,
-        getApprovalStage(projectIdentifier, orgIdentifier, scope));
+    processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig, refs,
+        APPROVAL_INSTANCE_NAME, getApprovalStage(projectIdentifier, orgIdentifier, scope));
 
     ObjectNode stageElementWrapperConfig = (ObjectNode) pipelineDefinitions.get("StageElementWrapperConfig");
     modifyStageElementWrapperConfig(stageElementWrapperConfig, refs);
     return ((ObjectNode) pipelineSchema).set(DEFINITIONS_NODE, pipelineDefinitions);
   }
 
-  private void processPartialStageSchema(ObjectNode pipelineDefinitions, ObjectNode stageElementConfig,
-      Set<String> refs, String instanceName, PartialSchemaDTO partialSchemaDTO) {
+  private void flattenParallelElementConfig(ObjectNode definitions) {
+    // flatten stage
+    JsonNode jsonNode = definitions.get(ParallelStageElementConfig.class.getSimpleName());
+    if (jsonNode.isObject()) {
+      flatten((ObjectNode) jsonNode);
+    }
+
+    // flatten step
+    jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
+    if (jsonNode.isObject()) {
+      flatten((ObjectNode) jsonNode);
+    }
+  }
+
+  private void processPartialStageSchema(ObjectNode pipelineDefinitions, ObjectNode pipelineSteps,
+      ObjectNode stageElementConfig, Set<String> refs, String instanceName, PartialSchemaDTO partialSchemaDTO) {
     SubtypeClassMap subtypeClassMap =
         SubtypeClassMap.builder()
             .subTypeDefinitionKey(partialSchemaDTO.getNamespace() + "/" + partialSchemaDTO.getNodeName())
@@ -106,16 +128,27 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
             .build();
     ObjectNode stageDefinitionsNode = moveRootNodeToDefinitions(
         partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
+
+    ObjectNode pipelineStepsCopy = obtainPipelineStepsCopyWithCorrectNamespace(pipelineSteps, partialSchemaDTO);
+    JsonNodeUtils.merge(stageDefinitionsNode.get(partialSchemaDTO.getNamespace()), pipelineStepsCopy);
+
     ObjectNode stageElementCopy = stageElementConfig.deepCopy();
     modifyStageElementConfig(stageElementCopy, subtypeClassMap,
-        instanceName.equals("ci")                         ? Arrays.asList("rollbackSteps", "failureStrategies")
-            : instanceName.equals(APPROVAL_INSTANCE_NAME) ? Collections.singletonList("rollbackSteps")
-                                                          : Collections.emptyList());
+        instanceName.equals(APPROVAL_INSTANCE_NAME) ? Collections.singletonList("rollbackSteps")
+                                                    : Collections.emptyList());
 
     ObjectNode namespaceNode = (ObjectNode) stageDefinitionsNode.get(partialSchemaDTO.getNamespace());
     namespaceNode.set(STAGE_ELEMENT_CONFIG, stageElementCopy);
     refs.add(format(DEFINITIONS_NAMESPACE_STRING_PATTERN, partialSchemaDTO.getNamespace(), STAGE_ELEMENT_CONFIG));
-    JsonNodeUtils.merge(pipelineDefinitions, stageDefinitionsNode);
+
+    pipelineDefinitions.set(partialSchemaDTO.getNamespace(), stageDefinitionsNode.get(partialSchemaDTO.getNamespace()));
+  }
+
+  private ObjectNode obtainPipelineStepsCopyWithCorrectNamespace(
+      ObjectNode pipelineSteps, PartialSchemaDTO partialSchemaDTO) {
+    ObjectNode pipelineStepsCopy = pipelineSteps.deepCopy();
+    yamlSchemaGenerator.modifyRefsNamespace(pipelineStepsCopy, partialSchemaDTO.getNamespace());
+    return pipelineStepsCopy;
   }
 
   private void modifyStageElementWrapperConfig(ObjectNode node, Set<String> refs) {
@@ -140,9 +173,12 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       ObjectNode stageElementConfig, SubtypeClassMap subtypeClassMap, List<String> unwantedNodes) {
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
-    Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
-    Field field = YamlSchemaUtils.getTypedField(STAGE_ELEMENT_CONFIG_CLASS);
-    classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(field, ImmutableSet.of(subtypeClassMap)));
+    List<Field> fields = YamlSchemaUtils.getTypedFields(STAGE_ELEMENT_CONFIG_CLASS);
+    Set<FieldSubtypeData> classFieldSubtypeData =
+        fields.stream()
+            .map(field -> YamlSchemaUtils.getFieldSubtypeData(field, ImmutableSet.of(subtypeClassMap)))
+            .filter(subtype -> subtype.getDiscriminatorType().equals(JsonTypeInfo.As.EXTERNAL_PROPERTY))
+            .collect(Collectors.toSet());
     Set<FieldEnumData> fieldEnumData = getFieldEnumData(subtypeClassMap);
     swaggerDefinitionsMetaInfoMap.put(STAGE_ELEMENT_CONFIG,
         SwaggerDefinitionsMetaInfo.builder()
@@ -164,7 +200,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
                                .build());
   }
 
-  private void flattenParallelStepElementConfig(ObjectNode objectNode) {
+  private void flatten(ObjectNode objectNode) {
     JsonNode sections = objectNode.get(PROPERTIES_NODE).get("sections");
     if (sections.isObject()) {
       objectNode.removeAll();
@@ -178,10 +214,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       return SafeHttpCall.execute(obtainYamlSchemaClient(instanceName).get(projectIdentifier, orgIdentifier, scope))
           .getData();
     } catch (Exception e) {
-      throw new NotFoundException(
+      log.warn(
           format("Unable to get %s schema information for projectIdentifier: [%s], orgIdentifier: [%s], scope: [%s]",
               instanceName, projectIdentifier, orgIdentifier, scope),
           e);
+      return null;
     }
   }
 
@@ -196,7 +233,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
-      flattenParallelStepElementConfig((ObjectNode) jsonNode);
+      flatten((ObjectNode) jsonNode);
     }
 
     yamlSchemaGenerator.modifyRefsNamespace(approvalStageSchema, APPROVAL_NAMESPACE);
