@@ -35,7 +35,6 @@ public class Schema implements PersistentEntity, UuidAware, CreatedAtAware, Upda
   @SchemaIgnore @FdIndex private long createdAt;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
-
   private int version;
   private int backgroundVersion;
   private int seedDataVersion;
