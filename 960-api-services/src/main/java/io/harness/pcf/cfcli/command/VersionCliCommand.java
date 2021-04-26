@@ -22,8 +22,8 @@ public class VersionCliCommand extends CfCliCommand {
     super(cliVersion, cliPath, globalOptions, CfCliCommandType.VERSION, arguments, options);
   }
 
-  @Builder
   @Value
+  @Builder
   @EqualsAndHashCode(callSuper = true)
   public static class VersionOptions extends Options {
     @Flag(value = "--version") boolean version;

@@ -251,7 +251,6 @@ public class CfCliCommandBuilderTest extends CategoryTest {
                             .options(buildLoginOptionsWithoutFlags())
                             .build()
                             .getCommand();
-    ;
 
     assertThat(cliVersionCommand)
         .isEqualTo("cf login -a apiEndpoint -u user -p pwd -o org -s space --sso-passcode ssoPasscode");

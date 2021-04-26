@@ -24,8 +24,8 @@ public class LoginCliCommand extends CfCliCommand {
     super(cliVersion, cliPath, globalOptions, CfCliCommandType.LOGIN, arguments, options);
   }
 
-  @Builder
   @Value
+  @Builder
   @EqualsAndHashCode(callSuper = true)
   public static class LoginOptions extends Options {
     @Option(value = "-a") String apiEndpoint;
