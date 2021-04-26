@@ -8,7 +8,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
-import software.wings.service.impl.MigrationServiceImpl;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
@@ -17,7 +16,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class NGMigrationServiceImplTest extends CategoryTest {
-  @Inject MigrationServiceImpl migrationService;
   @Inject private HPersistence persistence;
 
   @Test
