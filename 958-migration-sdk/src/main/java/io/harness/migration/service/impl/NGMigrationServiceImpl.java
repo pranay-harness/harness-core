@@ -79,13 +79,13 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
         } else if (currentVersion > maxVersion) {
           // If the current version is bigger than the max version we are downgrading. Restore to the previous version
-          log.info("[Migration] - Rolling back {} version from {} to {}", migrationDetail.getMigrationTypeName(),
-              currentVersion, maxVersion);
+          log.info("[Migration] - {} : Rolling back {} version from {} to {}", serviceName,
+              migrationDetail.getMigrationTypeName(), currentVersion, maxVersion);
           Update update = new Update().setOnInsert(
               NGSchemaKeys.migrationDetails + migrationDetail.getMigrationTypeName(), maxVersion);
           mongoTemplate.updateFirst(new Query(), update, collectionName);
         } else {
-          log.info("[Migration] - NGSchema background is up to date");
+          log.info("[Migration] - {} : NGSchema {} is up to date", serviceName, migrationDetail.getMigrationTypeName());
         }
       }
     }
