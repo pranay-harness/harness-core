@@ -1,8 +1,10 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -14,6 +16,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
+import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
@@ -30,6 +33,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -76,6 +80,13 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
     }
 
     return resultantManifest;
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("storeConfigWrapper", storeConfigWrapper);
+    return children;
   }
 
   @Override
