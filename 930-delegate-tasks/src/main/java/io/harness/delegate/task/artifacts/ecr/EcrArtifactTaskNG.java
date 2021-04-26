@@ -1,5 +1,7 @@
 package io.harness.delegate.task.artifacts.ecr;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class EcrArtifactTaskNG extends AbstractDelegateRunnableTask {
   @Inject EcrArtifactTaskHelper ecrArtifactTaskHelper;
   public EcrArtifactTaskNG(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,

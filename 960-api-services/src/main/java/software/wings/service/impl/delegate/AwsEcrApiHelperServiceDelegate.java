@@ -4,10 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.beans.AwsInternalConfig;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.AmazonECRClientBuilder;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelegateBase {
   public AmazonECRClient getAmazonEcrClient(AwsInternalConfig awsConfig, String region) {
     AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);

@@ -55,15 +55,14 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
       if (amazonServiceException instanceof ClientException) {
         log.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
       }
-      throw new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
+      return new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof AmazonAutoScalingException) {
       return new AwsAutoScaleException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof AmazonCloudFormationException) {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
         log.info("Nothing to update on stack" + amazonServiceException.getMessage());
-        return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
       } else {
-        throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException);
+        return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
       }
     } else {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
