@@ -918,6 +918,12 @@
         "spec": {
           "$ref": "#/definitions/StageInfoConfig"
         },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "type": {
           "type": "string"
         },
