@@ -27,24 +27,29 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 
 @OwnedBy(PL)
 @Api("auditYaml")
 @Path("auditYaml")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
-@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 public class AuditYamlResource {
-  @Inject private final AuditService auditService;
-  @Inject private final AuditYamlService auditYamlService;
-  @Inject private final AuditPermissionValidator auditPermissionValidator;
+  private final AuditService auditService;
+  private final AuditYamlService auditYamlService;
+  private final AuditPermissionValidator auditPermissionValidator;
+
+  @Inject
+  public AuditYamlResource(
+      AuditService auditService, AuditYamlService auditYamlService, AuditPermissionValidator auditPermissionValidator) {
+    this.auditService = auditService;
+    this.auditYamlService = auditYamlService;
+    this.auditPermissionValidator = auditPermissionValidator;
+  }
 
   @GET
   @ApiOperation(value = "Get Yaml Diff for an audit", nickname = "getYamlDiff")
