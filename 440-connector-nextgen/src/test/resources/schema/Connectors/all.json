@@ -893,6 +893,7 @@
             "Codecommit",
             "CEAws",
             "CEAzure",
+            "GcpCloudCost",
             "CEK8sCluster",
             "HttpHelmRepo",
             "NewRelic"
@@ -1057,6 +1058,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GcpConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "GcpCloudCost"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcpCloudCostConnector"
               }
             }
           }
@@ -1397,6 +1414,47 @@
               ]
             }
           ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GcpBillingExportSpec": {
+      "type": "object",
+      "required": [
+        "datasetId",
+        "projectId"
+      ],
+      "properties": {
+        "datasetId": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GcpCloudCostConnector": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "billingExportSpec": {
+              "$ref": "#/definitions/GcpBillingExportSpec"
+            },
+            "featuresEnabled": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "BILLING"
+                ]
+              }
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
