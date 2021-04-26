@@ -3049,12 +3049,6 @@
         "stageOverrides": {
           "$ref": "#/definitions/StageOverridesConfig"
         },
-        "tags": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "useFromStage": {
           "$ref": "#/definitions/ServiceUseFromStage"
         }

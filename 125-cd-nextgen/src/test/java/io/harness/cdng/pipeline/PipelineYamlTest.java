@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -9,6 +10,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
@@ -59,6 +61,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 public class PipelineYamlTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
@@ -129,7 +132,7 @@ public class PipelineYamlTest extends CategoryTest {
     ServiceConfig service = deploymentStage.getServiceConfig();
 
     // Test Service Tags
-    List<NGTag> tags = convertToList(service.getTags());
+    List<NGTag> tags = convertToList(service.getService().getTags());
     assertThat(tags.size()).isEqualTo(2);
     Set<String> tagStrings = tags.stream().map(tag -> tag.getKey() + ": " + tag.getValue()).collect(toSet());
     assertThat(tagStrings).containsOnly("k1: v1", "k2: v2");
