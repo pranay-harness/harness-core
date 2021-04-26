@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.migration.beans.MigrationType;
+import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Map;
@@ -20,7 +21,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Builder
 @FieldNameConstants(innerTypeName = "NGSchemaKeys")
 @OwnedBy(DX)
-public class NGSchema {
+public class NGSchema implements PersistentEntity {
   public static final String NG_SCHEMA_ID = "ngschema";
   @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @CreatedDate Long createdAt;

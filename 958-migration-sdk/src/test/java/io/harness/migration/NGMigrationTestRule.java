@@ -6,18 +6,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -39,6 +37,7 @@ import org.springframework.core.convert.converter.Converter;
 @Slf4j
 @OwnedBy(DX)
 public class NGMigrationTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
+  protected Injector injector;
   ClosingFactory closingFactory;
 
   public NGMigrationTestRule(ClosingFactory closingFactory) {
@@ -48,14 +47,10 @@ public class NGMigrationTestRule implements InjectorRuleMixin, MethodRule, Mongo
   @Override
   public List<Module> modules(List<Annotation> annotations) {
     List<Module> modules = new ArrayList<>();
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(HPersistence.class).to(MongoPersistence.class);
-      }
-    });
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
+    modules.add(new SpringPersistenceTestModule());
+
     modules.add(KryoModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides

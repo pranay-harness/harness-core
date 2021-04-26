@@ -8,12 +8,12 @@ import io.harness.migration.MigrationProvider;
 
 import java.util.List;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 @OwnedBy(DX)
 public class NGMigrationConfiguration {
-  List<MigrationProvider> migrationProviderList;
+  List<Class<? extends MigrationProvider>> migrationProviderList;
   Microservice microservice;
 }

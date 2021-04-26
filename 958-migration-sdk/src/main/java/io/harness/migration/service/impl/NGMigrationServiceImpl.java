@@ -19,6 +19,7 @@ import io.harness.migration.entities.NGSchema;
 import io.harness.migration.entities.NGSchema.NGSchemaKeys;
 import io.harness.migration.service.NGMigrationService;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -29,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -37,18 +39,19 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Slf4j
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
 public class NGMigrationServiceImpl implements NGMigrationService {
-  @Inject private PersistentLocker persistentLocker;
-  @Inject private ExecutorService executorService;
-  @Inject private TimeLimiter timeLimiter;
-  @Inject private Injector injector;
-  @Inject MongoTemplate mongoTemplate;
+  private PersistentLocker persistentLocker;
+  private ExecutorService executorService;
+  private TimeLimiter timeLimiter;
+  private Injector injector;
+  private MongoTemplate mongoTemplate;
   final String SCHEMA_PREFIX = "schema_";
 
   @Override
   public void runMigrations(NGMigrationConfiguration configuration) {
-    List<MigrationProvider> migrationProviderList = configuration.getMigrationProviderList();
+    List<Class<? extends MigrationProvider>> migrationProviderList = configuration.getMigrationProviderList();
     Microservice microservice = configuration.getMicroservice();
 
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
@@ -57,42 +60,45 @@ public class NGMigrationServiceImpl implements NGMigrationService {
         throw new GeneralException("The persistent lock was not acquired. That very unlikely, but yet it happened.");
       }
 
-      for (MigrationProvider migrationProvider : migrationProviderList) {
-        String serviceName = migrationProvider.getServiceName();
+      for (Class<? extends MigrationProvider> migrationProvider : migrationProviderList) {
+        MigrationProvider migrationProviderInstance = injector.getInstance(migrationProvider);
+        String serviceName = migrationProviderInstance.getServiceName();
         String collectionName = SCHEMA_PREFIX + serviceName;
-        List<? extends MigrationDetails> migrationDetailsList = migrationProvider.getMigrationDetailsList();
+        List<Class<? extends MigrationDetails>> migrationDetailsList =
+            migrationProviderInstance.getMigrationDetailsList();
 
         log.info("[Migration] - Checking for new migrations");
         NGSchema schema = mongoTemplate.findOne(new Query(), NGSchema.class, collectionName);
-        List<MigrationType> migrationTypes = migrationProvider.getMigrationDetailsList()
+        List<MigrationType> migrationTypes = migrationProviderInstance.getMigrationDetailsList()
                                                  .stream()
-                                                 .map(MigrationDetails::getMigrationTypeName)
+                                                 .map(item -> injector.getInstance(item).getMigrationTypeName())
                                                  .collect(Collectors.toList());
 
         if (schema == null) {
           Map<MigrationType, Integer> migrationTypesWithVersion =
               migrationTypes.stream().collect(Collectors.toMap(Function.identity(), e -> 0));
           schema = NGSchema.builder()
-                       .name(migrationProvider.getServiceName())
+                       .name(migrationProviderInstance.getServiceName())
                        .migrationDetails(migrationTypesWithVersion)
                        .build();
           mongoTemplate.save(schema, collectionName);
         }
 
-        for (MigrationDetails migrationDetail : migrationDetailsList) {
-          List<Pair<Integer, Class<? extends NGMigration>>> migrationsList = migrationDetail.getMigrations();
+        for (Class<? extends MigrationDetails> migrationDetail : migrationDetailsList) {
+          MigrationDetails migrationDetailInstance = injector.getInstance(migrationDetail);
+          List<Pair<Integer, Class<? extends NGMigration>>> migrationsList = migrationDetailInstance.getMigrations();
           Map<Integer, Class<? extends NGMigration>> migrations =
               migrationsList.stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
           int maxVersion = migrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
           Map<MigrationType, Integer> allSchemaMigrations = schema.getMigrationDetails();
-          int currentVersion = allSchemaMigrations.getOrDefault(migrationDetail.getMigrationTypeName(), 0);
+          int currentVersion = allSchemaMigrations.getOrDefault(migrationDetailInstance.getMigrationTypeName(), 0);
 
-          boolean isBackground = migrationDetail.isBackground();
+          boolean isBackground = migrationDetailInstance.isBackground();
 
-          runMigrationsInner(isBackground, currentVersion, maxVersion, migrations, migrationDetail, collectionName,
-              serviceName, microservice);
+          runMigrationsInner(isBackground, currentVersion, maxVersion, migrations, migrationDetailInstance,
+              collectionName, serviceName, microservice);
         }
       }
     } catch (Exception e) {
@@ -149,7 +155,8 @@ public class NGMigrationServiceImpl implements NGMigrationService {
     }
   }
 
-  private void doMigration(boolean isBackground, int currentVersion, int maxVersion,
+  @VisibleForTesting
+  void doMigration(boolean isBackground, int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationType migrationTypeName, String collectionName,
       String serviceName) throws Exception {
     log.info("[Migration] - {} : Updating {} version from {} to {}", serviceName, migrationTypeName, currentVersion,
@@ -172,7 +179,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
         }
       }
 
-      Update update = new Update().setOnInsert(NGSchemaKeys.migrationDetails + migrationTypeName, i);
+      Update update = new Update().set(NGSchemaKeys.migrationDetails + ".MongoMigration", i);
       mongoTemplate.updateFirst(new Query(), update, collectionName);
     }
 
