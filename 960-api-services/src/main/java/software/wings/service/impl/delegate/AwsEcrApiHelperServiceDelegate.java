@@ -25,17 +25,19 @@ public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelega
     attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonECRClient) builder.build();
   }
+
+  // TODO: separate out for CG
   private DescribeRepositoriesResult listRepositories(
       AwsInternalConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
-    try {
-      tracker.trackECRCall("List Repositories");
-      return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
-    }
-    return new DescribeRepositoriesResult();
+    //    try {
+    tracker.trackECRCall("List Repositories");
+    return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
+    //    } catch (AmazonServiceException amazonServiceException) {
+    //      handleAmazonServiceException(amazonServiceException);
+    //    } catch (AmazonClientException amazonClientException) {
+    //      handleAmazonClientException(amazonClientException);
+    //    }
+    //    return new DescribeRepositoriesResult();
   }
   private Repository getRepository(AwsInternalConfig awsConfig, String region, String repositoryName) {
     DescribeRepositoriesRequest describeRepositoriesRequest = new DescribeRepositoriesRequest();

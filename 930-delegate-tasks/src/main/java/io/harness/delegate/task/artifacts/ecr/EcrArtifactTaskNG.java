@@ -7,10 +7,6 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
-import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ExceptionUtils;
-import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
@@ -31,17 +27,19 @@ public class EcrArtifactTaskNG extends AbstractDelegateRunnableTask {
   }
 
   @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
+
+  @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    try {
-      ArtifactTaskParameters taskParameters = (ArtifactTaskParameters) parameters;
-      return ecrArtifactTaskHelper.getArtifactCollectResponse(taskParameters);
-    } catch (Exception exception) {
-      log.error("Exception in processing EcrArtifactTaskNG task [{}]", exception);
-      return ArtifactTaskResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(ExceptionUtils.getMessage(exception))
-          .errorCode(ErrorCode.INVALID_ARGUMENT)
-          .build();
-    }
+    ArtifactTaskParameters taskParameters = (ArtifactTaskParameters) parameters;
+    return ecrArtifactTaskHelper.getArtifactCollectResponse(taskParameters);
+    //      log.error("Exception in processing EcrArtifactTaskNG task [{}]", exception);
+    //      return ArtifactTaskResponse.builder()
+    //          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+    //          .errorMessage(ExceptionUtils.getMessage(exception))
+    //          .errorCode(ErrorCode.INVALID_ARGUMENT)
+    //          .build();
   }
 }
