@@ -9,6 +9,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.BOOL_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NAMESPACE_STRING_PATTERN;
 import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.INTEGER_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.ITEMS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.NUMBER_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.OBJECT_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
@@ -391,6 +392,10 @@ public class YamlSchemaGenerator {
     ObjectNode propertiesNodeFromDefinitionNode = getPropertiesNodeFromDefinitionNode(value);
     final String fieldName = fieldSubtypeData.getFieldName();
     final ObjectNode fieldNode = (ObjectNode) propertiesNodeFromDefinitionNode.get(fieldName);
+    if (fieldNode == null) {
+      log.error("We can have some error in schema of node {} with {}.", fieldName, fieldSubtypeData);
+      return;
+    }
     if (fieldNode.get(ONE_OF_NODE) != null) {
       throw new InvalidRequestException("Both Subtype and one of not handled for a single field");
     }
@@ -402,8 +407,16 @@ public class YamlSchemaGenerator {
                 -> mapper.createObjectNode().put(
                     REF_NODE, SchemaConstants.DEFINITIONS_STRING_PREFIX + fieldData.getSubTypeDefinitionKey()))
             .collect(Collectors.toList());
-    fieldNode.removeAll();
-    fieldNode.putArray(ONE_OF_NODE).addAll(possibleNodes);
+    final JsonNode refNode = fieldNode.get(REF_NODE);
+    // In Case of non list variables case 1 will happen else case 2 will happen
+    if (refNode != null) {
+      fieldNode.remove(REF_NODE);
+      fieldNode.putArray(ONE_OF_NODE).addAll(possibleNodes);
+    } else {
+      final ObjectNode itemsNode = (ObjectNode) fieldNode.get(ITEMS_NODE);
+      itemsNode.remove(REF_NODE);
+      itemsNode.putArray(ONE_OF_NODE).addAll(possibleNodes);
+    }
   }
 
   private void removeFieldWithRefFromSchema(ObjectNode value, FieldSubtypeData fieldSubtypeData) {
@@ -478,7 +491,9 @@ public class YamlSchemaGenerator {
    */
   public void addConditionalBlock(
       ObjectMapper mapper, List<ObjectNode> allOfNodeContents, FieldSubtypeData fieldSubtypeData) {
-    final List<SubtypeClassMap> fieldSubtypeDataList = new ArrayList<>(fieldSubtypeData.getSubtypesMapping());
+    final List<SubtypeClassMap> fieldSubtypeDataList = fieldSubtypeData.getSubtypesMapping() == null
+        ? new ArrayList<>()
+        : new ArrayList<>(fieldSubtypeData.getSubtypesMapping());
     fieldSubtypeDataList.sort(new SubtypeClassMapComparator());
     for (SubtypeClassMap subtypeClassMap : fieldSubtypeDataList) {
       ObjectNode ifElseBlock = mapper.createObjectNode();

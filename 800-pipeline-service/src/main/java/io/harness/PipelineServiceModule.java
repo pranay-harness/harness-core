@@ -340,9 +340,7 @@ public class PipelineServiceModule extends AbstractModule {
   @Named("yaml-schema-mapper")
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
-    ObjectMapper objectMapper = Jackson.newObjectMapper();
-    PipelineServiceApplication.configureObjectMapper(objectMapper);
-    return objectMapper;
+    return Jackson.newObjectMapper();
   }
 
   @Provides
