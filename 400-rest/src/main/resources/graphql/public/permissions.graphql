@@ -16,6 +16,8 @@ enum Actions {
   EXECUTE
   EXECUTE_WORKFLOW
   EXECUTE_PIPELINE
+  # Beta: This action will be used to govern workflow rollback
+  ROLLBACK_WORKFLOW
 }
 
 input AccountPermissionInput {
