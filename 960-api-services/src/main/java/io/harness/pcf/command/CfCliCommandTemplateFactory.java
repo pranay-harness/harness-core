@@ -4,12 +4,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.InvalidArgumentsException;
 
-public final class PcfCliCommandTemplateFactory {
+public final class CfCliCommandTemplateFactory {
   private static final String CLI_PATH_PLACEHOLDER = "${CLI_PATH}";
 
-  private PcfCliCommandTemplateFactory() {}
+  private CfCliCommandTemplateFactory() {}
 
-  static String getPcfCliCommandTemplate(PcfCliCommandType commandType, final String cliPath) {
+  static String getCfCliCommandTemplate(CfCliCommandType commandType, final String cliPath) {
     if (isBlank(cliPath)) {
       throw new InvalidArgumentsException("Parameter cliPath is empty or null");
     }

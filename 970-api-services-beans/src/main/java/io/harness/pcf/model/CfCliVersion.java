@@ -4,11 +4,11 @@ import io.harness.exception.InvalidArgumentsException;
 
 import org.apache.commons.lang3.StringUtils;
 
-public enum PcfCliVersion {
+public enum CfCliVersion {
   V6,
   V7;
 
-  public static PcfCliVersion fromString(final String version) {
+  public static CfCliVersion fromString(final String version) {
     if (StringUtils.isBlank(version)) {
       return null;
     }

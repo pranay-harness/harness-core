@@ -1,5 +1,5 @@
 package io.harness.pcf.command;
 
-public interface PcfCliCommandTemplate {
+public interface CfCliCommandTemplate {
   String getCommandTemplate();
 }

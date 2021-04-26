@@ -1,6 +1,6 @@
 package io.harness.pcf.command;
 
-public enum PcfCliCommandType implements PcfCliCommandTemplate {
+public enum CfCliCommandType implements CfCliCommandTemplate {
   VERSION {
     @Override
     public String getCommandTemplate() {

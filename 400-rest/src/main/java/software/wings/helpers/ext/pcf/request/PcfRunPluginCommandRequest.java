@@ -2,6 +2,7 @@ package software.wings.helpers.ext.pcf.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
+import static io.harness.pcf.model.CfCliVersion.V6;
 
 import static java.lang.String.format;
 
@@ -15,10 +16,9 @@ import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.PcfInstallationCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.pcf.model.PcfCliVersion;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
@@ -40,7 +40,7 @@ public class PcfRunPluginCommandRequest
   private List<FileData> fileDataList;
   private List<EncryptedDataDetail> encryptedDataDetails;
   private String repoRoot;
-  private boolean useCfCLI7;
+  @Builder.Default private CfCliVersion cfCliVersion = V6;
 
   @Builder
   public PcfRunPluginCommandRequest(String accountId, String appId, String commandName, String activityId,
@@ -48,21 +48,20 @@ public class PcfRunPluginCommandRequest
       Integer timeoutIntervalInMin, boolean useCLIForPcfAppCreation, boolean enforceSslValidation,
       boolean useAppAutoscalar, String renderedScriptString, List<String> filePathsInScript,
       List<FileData> fileDataList, List<EncryptedDataDetail> encryptedDataDetails, String repoRoot,
-      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, boolean useCfCLI7) {
+      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
-        limitPcfThreads, ignorePcfConnectionContextCache, useCfCLI7);
+        limitPcfThreads, ignorePcfConnectionContextCache, cfCliVersion);
     this.renderedScriptString = renderedScriptString;
     this.filePathsInScript = filePathsInScript;
     this.fileDataList = fileDataList;
     this.encryptedDataDetails = encryptedDataDetails;
     this.repoRoot = repoRoot;
-    this.useCfCLI7 = useCfCLI7;
+    this.cfCliVersion = cfCliVersion;
   }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    PcfCliVersion cfCliVersion = useCfCLI7 ? PcfCliVersion.V7 : PcfCliVersion.V6;
     return Arrays.asList(PcfConnectivityCapability.builder().endpointUrl(getPcfConfig().getEndpointUrl()).build(),
         PcfInstallationCapability.builder()
             .criteria(format("CF CLI version: %s is installed", cfCliVersion))

@@ -11,19 +11,19 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.PcfInstallationCapability;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.pcf.PcfCliDelegateResolver;
-import io.harness.pcf.model.PcfCliVersion;
+import io.harness.pcf.CfCliDelegateResolver;
+import io.harness.pcf.model.CfCliVersion;
 
 import com.google.inject.Inject;
 
 public class PcfInstallationCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
-  @Inject private PcfCliDelegateResolver pcfCliDelegateResolver;
+  @Inject private CfCliDelegateResolver cfCliDelegateResolver;
 
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     PcfInstallationCapability capability = (PcfInstallationCapability) delegateCapability;
     return CapabilityResponse.builder()
-        .validated(pcfCliDelegateResolver.isDelegateEligibleToExecuteCliCommand(capability.getVersion()))
+        .validated(cfCliDelegateResolver.isDelegateEligibleToExecuteCfCliCommand(capability.getVersion()))
         .delegateCapability(capability)
         .build();
   }
@@ -35,20 +35,20 @@ public class PcfInstallationCapabilityCheck implements CapabilityCheck, ProtoCap
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
 
-    PcfCliVersion pcfCliVersion = convertPcfCliVersion(parameters.getPcfInstallationParameters().getPcfCliVersion());
+    CfCliVersion cfCliVersion = convertPcfCliProtoVersion(parameters.getPcfInstallationParameters().getPcfCliVersion());
     return builder
-        .permissionResult(pcfCliDelegateResolver.isDelegateEligibleToExecuteCliCommand(pcfCliVersion)
+        .permissionResult(cfCliDelegateResolver.isDelegateEligibleToExecuteCfCliCommand(cfCliVersion)
                 ? PermissionResult.ALLOWED
                 : PermissionResult.DENIED)
         .build();
   }
 
-  private static PcfCliVersion convertPcfCliVersion(PcfInstallationParameters.PcfCliVersion protoVersion) {
+  private static CfCliVersion convertPcfCliProtoVersion(PcfInstallationParameters.PcfCliVersion protoVersion) {
     switch (protoVersion) {
       case V6:
-        return PcfCliVersion.V6;
+        return CfCliVersion.V6;
       case V7:
-        return PcfCliVersion.V7;
+        return CfCliVersion.V7;
       default:
         throw new InvalidArgumentsException(format("Pcf CLI version not found, protoVersion: %s", protoVersion));
     }

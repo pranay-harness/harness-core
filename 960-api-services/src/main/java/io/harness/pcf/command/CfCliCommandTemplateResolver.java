@@ -20,20 +20,19 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-public final class PcfCliCommandTemplateResolver {
+public final class CfCliCommandTemplateResolver {
   private static final String OPTION_TEMPLATE = "${KEY} ${VALUE}";
 
-  private PcfCliCommandTemplateResolver() {}
+  private CfCliCommandTemplateResolver() {}
 
   public static String getCliVersionCommand(CommandArguments commandArguments) {
-    return PcfCliCommandTemplateFactory.getPcfCliCommandTemplate(
-        PcfCliCommandType.VERSION, commandArguments.getCliPath());
+    return CfCliCommandTemplateFactory.getCfCliCommandTemplate(CfCliCommandType.VERSION, commandArguments.getCliPath());
   }
 
   public static String getCliLoginCommand(CommandArguments commandArguments, LoginOptions options) {
     validateCommandArguments(commandArguments);
     String cliCommand =
-        PcfCliCommandTemplateFactory.getPcfCliCommandTemplate(PcfCliCommandType.LOGIN, commandArguments.getCliPath());
+        CfCliCommandTemplateFactory.getCfCliCommandTemplate(CfCliCommandType.LOGIN, commandArguments.getCliPath());
 
     return cliCommand.replace("${OPTIONS}", buildCommandOptions(options));
   }

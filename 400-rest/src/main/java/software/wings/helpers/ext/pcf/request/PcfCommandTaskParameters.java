@@ -14,7 +14,7 @@ import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.PcfInstallationCapability;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.pcf.model.PcfCliVersion;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class PcfCommandTaskParameters implements ExecutionCapabilityDemander {
         PcfConnectivityCapability.builder().endpointUrl(pcfCommandRequest.getPcfConfig().getEndpointUrl()).build());
     capabilities.addAll(fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
     if (pcfCommandRequest.isUseCfCLI() || needToCheckAppAutoscalarPluginInstall()) {
-      PcfCliVersion cfCliVersion = pcfCommandRequest.isUseCfCLI7() ? PcfCliVersion.V7 : PcfCliVersion.V6;
+      CfCliVersion cfCliVersion = pcfCommandRequest.getCfCliVersion();
       capabilities.add(PcfInstallationCapability.builder()
                            .criteria(format("CF CLI version: %s is installed", cfCliVersion))
                            .version(cfCliVersion)

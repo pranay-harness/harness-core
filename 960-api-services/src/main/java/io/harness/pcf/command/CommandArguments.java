@@ -1,13 +1,13 @@
 package io.harness.pcf.command;
 
-import io.harness.pcf.model.PcfCliVersion;
+import io.harness.pcf.model.CfCliVersion;
 
 import lombok.Builder;
 import lombok.Value;
 
-@Builder
 @Value
+@Builder
 public class CommandArguments {
-  private PcfCliVersion cliVersion;
-  private String cliPath;
+  CfCliVersion cliVersion;
+  String cliPath;
 }

@@ -97,7 +97,7 @@ public class CapabilityAttributes {
         return "Checking that PCF resource " + parameters.getPcfConnectivityParameters().getEndpointUrl()
             + " is reachable";
       case PCF_INSTALLATION_PARAMETERS:
-        return "Checking that CF Cli is installed";
+        return "Checking that CF CLI is installed";
       case KUSTOMIZE_PARAMETERS:
         return "Checking that kustomize is installed at " + parameters.getKustomizeParameters().getPluginRootDir();
       case PROCESS_EXECUTOR_PARAMETERS:
