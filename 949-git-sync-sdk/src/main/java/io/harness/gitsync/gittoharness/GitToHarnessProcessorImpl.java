@@ -137,7 +137,7 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
         .folderPath(folderPath)
         .filePath(filePath)
         .yamlGitConfigId(gitToHarnessBranchInfo.getYamlGitConfigId())
-        .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().toString())
+        .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().getValue())
         .isSyncFromGit(true)
         .build();
   }

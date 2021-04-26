@@ -28,12 +28,14 @@ import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -129,7 +131,7 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
       final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch");
     }
     final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
-    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(branch_1)) {
       SampleBean sampleBean_1 = SampleBean.builder()
                                     .test1("test")
                                     .projectIdentifier(projectIdentifier)
@@ -153,7 +155,7 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
       final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch");
     }
     final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
-    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(branch_1)) {
       SampleBean sampleBean_1 = SampleBean.builder()
                                     .test1("test1")
                                     .projectIdentifier(projectIdentifier)
@@ -206,7 +208,7 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
     }
     final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
     SampleBean sampleBean_saved_1;
-    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(branch_1)) {
       SampleBean sampleBean_1 = SampleBean.builder()
                                     .test1("test")
                                     .projectIdentifier(projectIdentifier)
@@ -220,5 +222,39 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
 
     final long count = mongoTemplate.count(query(new Criteria()), SampleBean.class);
     assertThat(count).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testList() {
+    SampleBean sampleBean_saved;
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      sampleBean_saved = doSave(sampleBean, true, "branch");
+      doSave(sampleBean1, true, "branch");
+    }
+    final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
+    SampleBean sampleBean_saved_1;
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(branch_1)) {
+      SampleBean sampleBean_1 = SampleBean.builder()
+                                    .test1("test2")
+                                    .projectIdentifier(projectIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .identifier(identifier)
+                                    .build();
+      sampleBean_saved_1 = doSave(sampleBean_1, false, "master");
+    }
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(newBranch)) {
+      final List<SampleBean> sampleBeans = gitAwarePersistence.find(
+          new Criteria(), Pageable.unpaged(), projectIdentifier, orgIdentifier, accountIdentifier, SampleBean.class);
+      assertThat(sampleBeans.size()).isEqualTo(2);
+    }
+    try (GitSyncBranchThreadLocal.Guard guard = GitSyncBranchThreadLocal.gitBranchGuard(branch_1)) {
+      final List<SampleBean> sampleBeans = gitAwarePersistence.find(
+          new Criteria(), Pageable.unpaged(), projectIdentifier, orgIdentifier, accountIdentifier, SampleBean.class);
+      assertThat(sampleBeans.size()).isEqualTo(1);
+    }
   }
 }
