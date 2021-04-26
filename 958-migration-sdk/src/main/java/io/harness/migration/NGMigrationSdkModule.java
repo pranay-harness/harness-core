@@ -10,19 +10,19 @@ import com.google.inject.AbstractModule;
 import java.util.concurrent.atomic.AtomicReference;
 
 @OwnedBy(DX)
-public class NGMigrationModule extends AbstractModule {
-  private static final AtomicReference<NGMigrationModule> instanceRef = new AtomicReference();
+public class NGMigrationSdkModule extends AbstractModule {
+  private static final AtomicReference<NGMigrationSdkModule> instanceRef = new AtomicReference();
 
-  public NGMigrationModule() {}
+  public NGMigrationSdkModule() {}
 
   @Override
   protected void configure() {
     bind(NGMigrationService.class).to(NGMigrationServiceImpl.class);
   }
 
-  public static NGMigrationModule getInstance() {
+  public static NGMigrationSdkModule getInstance() {
     if (instanceRef.get() == null) {
-      instanceRef.compareAndSet(null, new NGMigrationModule());
+      instanceRef.compareAndSet(null, new NGMigrationSdkModule());
     }
     return instanceRef.get();
   }
