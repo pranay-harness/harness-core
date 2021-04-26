@@ -89,11 +89,11 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
         .workspace(ParameterFieldHelper.getParameterFieldValue(parameters.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
             parameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(parameters.getInlineVarFiles()));
-    if (EmptyPredicate.isNotEmpty(parameters.getRemoteVarFiles())) {
+        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(parameters.getInlineVarFilesListContent()));
+    if (EmptyPredicate.isNotEmpty(parameters.getRemoteVarFileConfigs())) {
       List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
       int i = 1;
-      for (StoreConfigWrapper varFileWrapper : parameters.getRemoteVarFiles()) {
+      for (StoreConfigWrapper varFileWrapper : parameters.getRemoteVarFileConfigs()) {
         varFilesConfig.add(helper.getGitFetchFilesConfig(
             varFileWrapper.getStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
         i++;
