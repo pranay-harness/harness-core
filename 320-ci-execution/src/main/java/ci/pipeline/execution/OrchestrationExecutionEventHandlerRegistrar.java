@@ -32,6 +32,6 @@ public class OrchestrationExecutionEventHandlerRegistrar {
       OrchestrationModuleRegistrarHelper.mergeEventHandlers(
           engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
     }
-    return engineEventHandlersMap;
+    return engineEventHandlersMap ;
   }
 }
