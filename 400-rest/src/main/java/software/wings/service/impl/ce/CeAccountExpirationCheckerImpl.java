@@ -29,7 +29,7 @@ public class CeAccountExpirationCheckerImpl implements CeAccountExpirationChecke
   private static final long CACHE_SIZE = 1000;
 
   private final LoadingCache<String, Boolean> accountIdToIsCeEnabled = Caffeine.newBuilder()
-                                                                           .expireAfterWrite(1, TimeUnit.DAYS)
+                                                                           .expireAfterWrite(1, TimeUnit.HOURS)
                                                                            .maximumSize(CACHE_SIZE)
                                                                            .build(this::isCeEnabledForAccount);
 
