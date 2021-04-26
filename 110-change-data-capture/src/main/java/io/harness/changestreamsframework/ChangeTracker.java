@@ -4,6 +4,7 @@ import io.harness.ChangeDataCaptureServiceConfig;
 import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
 
@@ -36,6 +37,7 @@ import org.mongodb.morphia.annotations.Entity;
 public class ChangeTracker {
   @Inject private ChangeDataCaptureServiceConfig mainConfiguration;
   @Inject private ChangeEventFactory changeEventFactory;
+  @Inject private MongoConfig mongoConfig;
   private ExecutorService executorService;
   private Set<ChangeTrackingTask> changeTrackingTasks;
   private Set<Future<?>> changeTrackingTasksFuture;
@@ -72,7 +74,8 @@ public class ChangeTracker {
       readPreference = ReadPreference.secondary(mongoTagSet);
     }
     return new MongoClientURI(mongoClientUrl,
-        MongoClientOptions.builder(MongoModule.defaultMongoClientOptions).readPreference(readPreference));
+        MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig))
+            .readPreference(readPreference));
   }
 
   private TagSet getMongoTagSet() {
