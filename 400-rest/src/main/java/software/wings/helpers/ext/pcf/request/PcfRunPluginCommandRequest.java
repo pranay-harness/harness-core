@@ -25,6 +25,7 @@ import software.wings.beans.PcfConfig;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -51,13 +52,13 @@ public class PcfRunPluginCommandRequest
       boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
-        limitPcfThreads, ignorePcfConnectionContextCache, cfCliVersion);
+        limitPcfThreads, ignorePcfConnectionContextCache, Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6));
     this.renderedScriptString = renderedScriptString;
     this.filePathsInScript = filePathsInScript;
     this.fileDataList = fileDataList;
     this.encryptedDataDetails = encryptedDataDetails;
     this.repoRoot = repoRoot;
-    this.cfCliVersion = cfCliVersion;
+    this.cfCliVersion = Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6);
   }
 
   @Override

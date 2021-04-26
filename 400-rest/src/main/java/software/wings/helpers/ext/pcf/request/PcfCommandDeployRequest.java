@@ -14,6 +14,7 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -61,7 +62,7 @@ public class PcfCommandDeployRequest extends PcfCommandRequest {
       CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads,
-        ignorePcfConnectionContextCache, cfCliVersion);
+        ignorePcfConnectionContextCache, Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6));
     this.newReleaseName = newReleaseName;
     this.updateCount = updateCount;
     this.downSizeCount = downSizeCount;

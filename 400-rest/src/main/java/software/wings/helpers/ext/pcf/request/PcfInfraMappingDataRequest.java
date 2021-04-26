@@ -9,6 +9,7 @@ import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.beans.PcfConfig;
 
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -37,7 +38,7 @@ public class PcfInfraMappingDataRequest extends PcfCommandRequest {
       boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, false, false, limitPcfThreads,
-        ignorePcfConnectionContextCache, cfCliVersion);
+        ignorePcfConnectionContextCache, Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6));
     this.pcfConfig = pcfConfig;
     this.host = host;
     this.domain = domain;

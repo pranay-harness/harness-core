@@ -1,5 +1,10 @@
 package io.harness.pcf.model;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public interface PcfConstants {
   String REPOSITORY_DIR_PATH = "./repository";
   String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";

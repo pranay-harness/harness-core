@@ -9,6 +9,7 @@ import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.beans.PcfConfig;
 
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 
@@ -29,7 +30,7 @@ public class PcfCommandRouteUpdateRequest extends PcfCommandRequest {
       boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads,
-        ignorePcfConnectionContextCache, cfCliVersion);
+        ignorePcfConnectionContextCache, Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6));
     this.pcfRouteUpdateConfigData = pcfRouteUpdateConfigData;
   }
 }
