@@ -11,6 +11,7 @@ import io.harness.migration.service.NGMigrationService;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +25,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @Slf4j
+@Singleton
 public class NGMigrationServiceImpl implements NGMigrationService {
   @Inject private MigrationProvider migrationProvider;
   @Inject private ExecutorService executorService;
@@ -47,8 +49,8 @@ public class NGMigrationServiceImpl implements NGMigrationService {
                                              .collect(Collectors.toList());
 
     if (schema == null) {
-      Map<String, Integer> migrationTypesWithVersion =
-          migrationTypes.stream().collect(Collectors.toMap(Function.identity(), 0));
+      Map<MigrationType, Integer> migrationTypesWithVersion =
+          migrationTypes.stream().collect(Collectors.toMap(Function.identity(), e -> 0));
       schema = NGSchema.builder()
                    .name(migrationProvider.getServiceName())
                    .migrationDetails(migrationTypesWithVersion)
@@ -63,7 +65,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
       int maxVersion = migrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
-      Map<String, Integer> allSchemaMigrations = schema.getMigrationDetails();
+      Map<MigrationType, Integer> allSchemaMigrations = schema.getMigrationDetails();
       int currentVersion = allSchemaMigrations.getOrDefault(migrationDetail.getMigrationTypeName(), 0);
 
       boolean isBackground = migrationDetail.isBackground();
@@ -96,12 +98,15 @@ public class NGMigrationServiceImpl implements NGMigrationService {
       String serviceName) {
     if (currentVersion < maxVersion) {
       executorService.submit(() -> {
-        //        timeLimiter.callUninterruptiblyWithTimeout()
-        timeLimiter.<Boolean>callWithTimeout(() -> {
-          doMigration(currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), collectionName,
-              serviceName);
-          return true;
-        }, 2, TimeUnit.HOURS, true);
+        try {
+          timeLimiter.<Boolean>callWithTimeout(() -> {
+            doMigration(currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), collectionName,
+                serviceName);
+            return true;
+          }, 2, TimeUnit.HOURS, true);
+        } catch (Exception ex) {
+          log.warn("Migration work", ex);
+        }
       });
     } else if (currentVersion > maxVersion) {
       // If the current version is bigger than the max version we are downgrading. Restore to the previous version

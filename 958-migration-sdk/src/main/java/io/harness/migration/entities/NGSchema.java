@@ -8,6 +8,7 @@ import io.harness.data.validator.EntityName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Map;
 
+import io.harness.migration.beans.MigrationType;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -25,5 +26,5 @@ public class NGSchema {
   @NotEmpty @CreatedDate Long createdAt;
   @LastModifiedDate Long lastUpdatedAt;
   @NotEmpty @EntityName String name;
-  Map<String, Integer> migrationDetails;
+  Map<MigrationType, Integer> migrationDetails;
 }
