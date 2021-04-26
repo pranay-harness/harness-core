@@ -37,7 +37,10 @@ public class CiExecutionRegistrars {
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
-          ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+      ImmutableSet.<Class<? extends TypeConverter>>builder()
+          .addAll(PersistenceRegistrars.morphiaConverters)
+          .addAll(DelegateTasksBeansRegistrars.morphiaConverters)
+          .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()
