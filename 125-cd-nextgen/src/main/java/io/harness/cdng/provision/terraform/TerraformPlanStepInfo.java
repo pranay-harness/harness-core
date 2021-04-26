@@ -91,7 +91,7 @@ public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements 
         builder.inlineVarFiles(ParameterField.createValueField(inlineVarFiles));
       }
       builder.terraformPlanCommand(terraformPlanExecutionData.getCommand());
-      builder.secretManagerId(terraformPlanExecutionData.getSecretManagerId());
+      builder.secretManagerId(terraformPlanExecutionData.getSecretManagerRef());
     }
     return builder.build();
   }

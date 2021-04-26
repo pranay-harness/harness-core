@@ -4277,7 +4277,7 @@
             ]
           }
         },
-        "secretManagerId": {
+        "secretManagerRef": {
           "type": "string"
         },
         "targets": {

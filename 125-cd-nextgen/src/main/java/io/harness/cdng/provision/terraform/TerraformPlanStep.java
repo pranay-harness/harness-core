@@ -10,6 +10,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
+import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters.TerraformTaskNGParametersBuilder;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
@@ -66,6 +67,7 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
     builder.accountId(accountId);
     String entityId = helper.generateFullIdentifier(planStepParameters.getProvisionerIdentifier(), ambiance);
     builder.taskType(TFTaskType.PLAN)
+        .terraformCommandUnit(TerraformCommandUnit.Plan)
         .entityId(entityId)
         .currentStateFileId(helper.getLatestFileId(entityId))
         .workspace(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getWorkspace()))
@@ -100,7 +102,7 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
             .build();
 
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer,
-        Collections.singletonList(TerraformConstants.COMMAND_UNIT), TaskType.TERRAFORM_TASK_NG.getDisplayName());
+        Collections.singletonList(TerraformCommandUnit.Plan.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName());
   }
 
   @Override
