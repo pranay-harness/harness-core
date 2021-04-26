@@ -181,14 +181,13 @@ instrPackages: %s`, dir, r.packages)
 	return fmt.Sprintf(javaAgentArg, iniFile), nil
 }
 
-func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
+func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest, runSelectedTests bool) (string, error) {
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
 	}
-	if !r.runOnlySelectedTests {
+	if !runSelectedTests {
 		// Run all the tests
-		// TODO -- Aman - check if instumentation is required here too.
 		return fmt.Sprintf("%s %s -am -DargLine=%s", mvnCmd, r.args, instrArg), nil
 	}
 	if len(tests) == 0 {
@@ -210,19 +209,24 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	return fmt.Sprintf("%s %s -Dtest=%s -am -DargLine=%s", mvnCmd, r.args, testStr, instrArg), nil
 }
 
-func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
+func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest, runSelectedTests bool) (string, error) {
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
 	}
 	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
-	// Don't run all the tests for now. TODO: Needs to be fixed
-	// defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
-	defaultCmd := fmt.Sprintf("echo \"There was some issue with getting tests. Skipping run\"")
+
+	// if runOnlySelectedTests was false in job, execute all tests.
 	if !r.runOnlySelectedTests {
 		// Run all the tests
-		return defaultCmd, nil
+		return fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg), nil
 	}
+	// if there was an issue in test selection skip running all tests for saving resources.
+	// TODO This needs to be fixed.
+	if runSelectedTests {
+		return fmt.Sprintf("echo \"There was some issue with getting tests. Skipping run\""), nil
+	}
+
 	if len(tests) == 0 {
 		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
 	}
@@ -298,6 +302,7 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	// Get the tests that need to be run if we are running selected tests
 	var err error
 	var selection types.SelectTestsResp
+	runSelectedTests := r.runOnlySelectedTests
 	if r.runOnlySelectedTests {
 		var files []types.File
 		err := json.Unmarshal([]byte(r.diffFiles), &files)
@@ -308,13 +313,13 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 		if err != nil {
 			r.log.Errorw("there was some issue in trying to figure out tests to run. Running all the tests", zap.Error(err))
 			// Set run only selected tests to false if there was some issue in the response
-			r.runOnlySelectedTests = false
+			runSelectedTests = false
 		} else if selection.SelectAll == true {
 			r.log.Infow("TI service wants to run all the tests to be sure")
-			r.runOnlySelectedTests = false
+			runSelectedTests = false
 		} else if !valid(selection.Tests) { // This shouldn't happen
 			r.log.Warnw("did not receive accurate test list from TI service.")
-			r.runOnlySelectedTests = false
+			runSelectedTests = false
 		} else {
 			r.log.Infow(fmt.Sprintf("got tests list: %s from TI service", selection.Tests))
 		}
@@ -324,13 +329,13 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	switch r.buildTool {
 	case "maven":
 		r.log.Infow("setting up maven as the build tool")
-		testCmd, err = r.getMavenCmd(selection.Tests)
+		testCmd, err = r.getMavenCmd(selection.Tests, runSelectedTests)
 		if err != nil {
 			return "", err
 		}
 	case "bazel":
 		r.log.Infow("setting up bazel as the build tool")
-		testCmd, err = r.getBazelCmd(ctx, selection.Tests)
+		testCmd, err = r.getBazelCmd(ctx, selection.Tests, runSelectedTests)
 		if err != nil {
 			return "", err
 		}
