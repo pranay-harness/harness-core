@@ -1,6 +1,9 @@
 package io.harness.migration.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.migration.beans.MigrationType;
 import io.harness.migration.entities.NGSchema;
@@ -14,6 +17,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(DX)
 public class NGMigrationServiceImplTest extends CategoryTest {
   @Inject private HPersistence persistence;
 
