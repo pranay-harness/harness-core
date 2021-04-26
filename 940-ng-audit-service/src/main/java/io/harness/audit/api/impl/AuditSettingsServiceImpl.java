@@ -1,8 +1,9 @@
-package io.harness.audit.retention;
+package io.harness.audit.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.api.AuditSettingsService;
 import io.harness.audit.entities.AuditSettings;
 import io.harness.audit.repositories.AuditRetentionRepository;
 
@@ -42,8 +43,7 @@ public class AuditSettingsServiceImpl implements AuditSettingsService {
   @Override
   public List<AuditSettings> fetchAll() {
     List<AuditSettings> auditSettingsList = new ArrayList<>();
-    auditRetentionRepository.findAll().iterator().forEachRemaining(
-        auditRetention -> auditSettingsList.add(auditRetention));
+    auditRetentionRepository.findAll().iterator().forEachRemaining(auditSettingsList::add);
     return auditSettingsList;
   }
 }
