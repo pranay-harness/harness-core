@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.executioncapability;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pcf.model.CfCliVersion;
 
 import java.time.Duration;
@@ -8,6 +10,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(HarnessTeam.CDP)
 public class PcfInstallationCapability implements ExecutionCapability {
   CfCliVersion version;
   String criteria;

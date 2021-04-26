@@ -1,9 +1,12 @@
 package io.harness.pcf.model;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(HarnessTeam.CDP)
 public enum CfCliVersion {
   V6,
   V7;

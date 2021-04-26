@@ -4,11 +4,13 @@ import static io.harness.pcf.model.PcfConstants.BIN_BASH;
 
 import static org.apache.commons.lang3.StringUtils.SPACE;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.ProcessExecutionException;
-import io.harness.pcf.command.CfCliCommandTemplateResolver;
-import io.harness.pcf.command.CommandArguments;
+import io.harness.pcf.cfcli.command.VersionCliCommand;
+import io.harness.pcf.cfcli.command.VersionCliCommand.VersionOptions;
 import io.harness.pcf.model.CfCliVersion;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -25,6 +27,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class CfCliDelegateResolver {
   private static final int DEFAULT_CF_VERSION_CHECKING_TIMEOUT_IN_MIN = 1;
   private static final String DEFAULT_CF_CLI_INSTALLATION_PATH = "cf";
@@ -83,7 +86,7 @@ public class CfCliDelegateResolver {
   }
 
   private boolean verifyCliVersionInstalledOnDelegate(CfCliVersion version, final String cliPath) {
-    String command = CfCliCommandTemplateResolver.getCliVersionCommand(buildCommandArguments(version, cliPath));
+    String command = buildCliVersionCommand(version, cliPath);
 
     ProcessResult processResult = executeCommand(command);
 
@@ -136,7 +139,12 @@ public class CfCliDelegateResolver {
     return null;
   }
 
-  private CommandArguments buildCommandArguments(CfCliVersion version, final String cliPath) {
-    return CommandArguments.builder().cliPath(cliPath).cliVersion(version).build();
+  private String buildCliVersionCommand(CfCliVersion version, final String cliPath) {
+    return VersionCliCommand.builder()
+        .cliPath(cliPath)
+        .cliVersion(version)
+        .options(VersionOptions.builder().version(true).build())
+        .build()
+        .getCommand();
   }
 }

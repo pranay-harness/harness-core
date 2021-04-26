@@ -52,8 +52,8 @@ public class PcfCommandTaskParametersTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(4);
     assertThat(executionCapabilities.stream().map(ExecutionCapability::getCapabilityType))
-        .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP,
-            CapabilityType.PROCESS_EXECUTOR, CapabilityType.PCF_AUTO_SCALAR);
+        .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP, CapabilityType.PCF_INSTALL,
+            CapabilityType.PCF_AUTO_SCALAR);
   }
 
   @Test
@@ -90,7 +90,6 @@ public class PcfCommandTaskParametersTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(3);
     assertThat(executionCapabilities.stream().map(ExecutionCapability::getCapabilityType))
-        .containsExactlyInAnyOrder(
-            CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP, CapabilityType.PROCESS_EXECUTOR);
+        .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP, CapabilityType.PCF_INSTALL);
   }
 }

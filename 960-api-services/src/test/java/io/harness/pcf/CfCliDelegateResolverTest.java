@@ -8,6 +8,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.exception.InvalidArgumentsException;
@@ -24,6 +26,7 @@ import org.mockito.Spy;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 
+@OwnedBy(HarnessTeam.CDP)
 public class CfCliDelegateResolverTest extends CategoryTest {
   public static final String CF_VERSIONING_COMMAND = "cf --version";
   public static final String PATH_TO_BINARY_CLI7 = "/path-to-cl7/cf7";

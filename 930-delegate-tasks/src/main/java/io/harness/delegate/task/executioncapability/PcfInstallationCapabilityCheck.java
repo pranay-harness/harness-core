@@ -2,6 +2,8 @@ package io.harness.delegate.task.executioncapability;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
@@ -16,6 +18,7 @@ import io.harness.pcf.model.CfCliVersion;
 
 import com.google.inject.Inject;
 
+@OwnedBy(HarnessTeam.CDP)
 public class PcfInstallationCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Inject private CfCliDelegateResolver cfCliDelegateResolver;
 
