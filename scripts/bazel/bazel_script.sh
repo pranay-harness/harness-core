@@ -120,7 +120,6 @@ BAZEL_MODULES="\
   //930-ng-core-clients:module \
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
-  //935-access-control-decision:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \
@@ -128,6 +127,7 @@ BAZEL_MODULES="\
   //940-secret-manager-client:module \
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
+  //946-access-control-decision:module \
   //947-access-control-core:module \
   //948-access-control-admin-client:module \
   //948-access-control-sdk:module \
@@ -144,6 +144,7 @@ BAZEL_MODULES="\
   //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
+  //950-ng-license-manager:module \
   //950-log-client:module \
   //950-telemetry:module \
   //950-timeout-engine:module \
@@ -158,12 +159,15 @@ BAZEL_MODULES="\
   //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \
   //952-scm-java-client:module \
+  //958-migration-sdk:module \
   //959-psql-database-models:module \
   //960-api-services:module \
   //960-continuous-features:module \
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
   //960-expression-service:module \
   //960-ng-core-beans:module \
+  //960-ng-signup-beans:module \
+  //960-ng-license-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \
@@ -406,13 +410,13 @@ build_bazel_module 920-delegate-service-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 955-delegate-beans
-build_bazel_module 935-access-control-decision
 build_bazel_module 940-feature-flag
 build_bazel_module 940-ng-audit-service
 build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 946-access-control-aggregator
+build_bazel_module 946-access-control-decision
 build_bazel_module 947-access-control-core
 build_bazel_module 948-access-control-admin-client
 build_bazel_module 948-access-control-sdk
@@ -436,6 +440,7 @@ build_bazel_module 955-filters-sdk
 build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 952-scm-java-client
+build_bazel_module 958-migration-sdk
 build_bazel_module 959-psql-database-models
 build_bazel_module 960-api-services
 build_bazel_module 960-continuous-features

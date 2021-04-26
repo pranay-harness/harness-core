@@ -28,6 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
 public class V1DaemonSetHandlerTest extends CategoryTest {
+  private static final Integer VERSION = 1;
   private EventPublisher eventPublisher;
   private final ClusterDetails clusterDetails = ClusterDetails.builder()
                                                     .clusterName("ce-test-cluster")
@@ -53,6 +54,7 @@ public class V1DaemonSetHandlerTest extends CategoryTest {
                                 .withNewMetadata()
                                 .withName("test-name")
                                 .withNamespace("test-namespace")
+                                .withUid("test-uid")
                                 .endMetadata()
                                 .withNewSpec()
                                 .withNewTemplate()
@@ -87,6 +89,8 @@ public class V1DaemonSetHandlerTest extends CategoryTest {
         .contains(K8sWorkloadSpec.newBuilder()
                       .setNamespace("test-namespace")
                       .setWorkloadName("test-name")
+                      .setUid("test-uid")
+                      .setVersion(VERSION)
                       .setClusterName("ce-test-cluster")
                       .setClusterId("cluster-id")
                       .setKubeSystemUid("kube-system-uid")
@@ -119,6 +123,7 @@ public class V1DaemonSetHandlerTest extends CategoryTest {
                                    .withNewMetadata()
                                    .withName("test-name")
                                    .withNamespace("test-namespace")
+                                   .withUid("test-uid")
                                    .endMetadata()
                                    .withNewSpec()
                                    .withNewTemplate()
@@ -185,6 +190,8 @@ public class V1DaemonSetHandlerTest extends CategoryTest {
         .isEqualTo(K8sWorkloadSpec.newBuilder()
                        .setNamespace("test-namespace")
                        .setWorkloadName("test-name")
+                       .setUid("test-uid")
+                       .setVersion(VERSION)
                        .setClusterName("ce-test-cluster")
                        .setClusterId("cluster-id")
                        .setKubeSystemUid("kube-system-uid")
@@ -219,6 +226,7 @@ public class V1DaemonSetHandlerTest extends CategoryTest {
                                    .withNewMetadata()
                                    .withName("test-name")
                                    .withNamespace("test-namespace")
+                                   .withUid("test-uid")
                                    .endMetadata()
                                    .withNewSpec()
                                    .withNewTemplate()

@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//:lombok",
@@ -25,7 +24,7 @@ shared_dependencies = [
     "@maven//:com_google_protobuf_protobuf_java_util",
     "@maven//:com_hazelcast_hazelcast",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_novemberain_quartz_mongodb",
+    "@maven//:com_novemberain_quartz_mongodb_harness_mongo_ssl",
     "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:commons_dbcp_commons_dbcp",
     "@maven//:de_bwaldvogel_mongo_java_server",
@@ -77,7 +76,6 @@ java_library(
 
 java_library(
     name = "supporter-test",
-    testonly = True,
     srcs = glob(["src/supporter-test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
@@ -110,6 +108,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

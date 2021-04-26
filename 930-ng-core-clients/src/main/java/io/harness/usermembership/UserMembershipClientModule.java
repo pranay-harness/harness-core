@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
-import io.harness.user.remote.UserHttpClientFactory;
 import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.usermembership.remote.UserMembershipHttpClientFactory;
 
@@ -28,8 +27,8 @@ public class UserMembershipClientModule extends AbstractModule {
   }
 
   @Provides
-  private UserHttpClientFactory userMembershipClientFactory(KryoConverterFactory kryoConverterFactory) {
-    return new UserHttpClientFactory(
+  private UserMembershipHttpClientFactory userMembershipClientFactory(KryoConverterFactory kryoConverterFactory) {
+    return new UserMembershipHttpClientFactory(
         serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 

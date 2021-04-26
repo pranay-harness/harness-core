@@ -77,7 +77,8 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
       jiraTaskNGResponse = (JiraTaskNGResponse) responseData;
       if (isNull(jiraTaskNGResponse.getIssue())) {
         log.info("Invalid issue key");
-        logCallback.saveExecutionLog(LogHelper.color("Invalid issue key", LogColor.Red));
+        logCallback.saveExecutionLog(
+            LogHelper.color("Invalid issue key", LogColor.Red), LogLevel.INFO, CommandExecutionStatus.FAILURE);
         approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.REJECTED);
         return;
       }

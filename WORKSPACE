@@ -8,6 +8,7 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
+    sha256 = "f45a40e132fb46f142d2ddc70ce86ac5eff17072034b221140fff0f3ad7021f9",
     strip_prefix = "buildtools-master",
     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
 )
@@ -1453,7 +1454,7 @@ maven_install(
         "com.nimbusds:nimbus-jose-jwt:8.19",
         "com.nimbusds:oauth2-oidc-sdk:7.4",
         "com.ning:async-http-client:1.9.40",
-        "com.novemberain:quartz-mongodb:2.1.1",
+        "com.novemberain:quartz-mongodb-harness-mongo-ssl:2.1.1-harness-mongo-ssl",
         "com.offbytwo.jenkins:jenkins-client:0.3.8",
         "com.openpojo:openpojo:0.8.3",
         "com.palominolabs.metrics:metrics-guice:3.2.0",
@@ -2036,6 +2037,7 @@ pinned_maven_install()
 
 http_jar(
     name = "jira_client",
+    sha256 = "4e733673d5ecfbd0f81f6adef1703a1c3d8975bb091ce6af8dc6ec1604a56112",
     url = "https://harness.jfrog.io/artifactory/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20210122.053103-1.jar",
 )
 
@@ -2044,7 +2046,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness:ff-java-server-sdk:0.0.2",
+        "io.harness:ff-java-server-sdk:0.0.7",
         "io.harness.cv:data-collection-dsl:0.21-RELEASE",
     ],
     repositories = [
@@ -5452,4 +5454,11 @@ go_repository(
     importpath = "gopkg.in/kyokomi/emoji.v1",
     sum = "h1:beetH5mWDMzFznJ+Qzd5KVHp79YKhVUMcdO8LpRLeGw=",
     version = "v1.5.1",
+)
+
+go_repository(
+    name = "com_github_blendle_zapdriver",
+    importpath = "github.com/blendle/zapdriver",
+    sum = "h1:C3dydBOWYRiOk+B8X9IVZ5IOe+7cl+tGOexN4QqHfpE=",
+    version = "v1.3.1",
 )

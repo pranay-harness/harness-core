@@ -6,17 +6,22 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerPara
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
-import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC;
+import static io.harness.common.CIExecutionConstants.ADDON_VOLUME;
+import static io.harness.common.CIExecutionConstants.ADDON_VOL_MOUNT_PATH;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS;
 import static io.harness.common.CIExecutionConstants.SHARED_VOLUME_PREFIX;
+import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
 import static io.harness.common.CIExecutionConstants.STEP_PREFIX;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
+import static io.harness.common.CIExecutionConstants.STEP_VOLUME;
+import static io.harness.common.CIExecutionConstants.STEP_WORK_DIR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -41,7 +46,6 @@ import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
-import io.harness.common.CICommonPodConstants;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
@@ -103,7 +107,7 @@ public class BuildJobEnvInfoBuilder {
         || infrastructure.getType() == Type.USE_FROM_STAGE) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(stageElementConfig, ciExecutionArgs, steps, isFirstPod, podName))
-          .workDir(CICommonPodConstants.STEP_EXEC_WORKING_DIR)
+          .workDir(STEP_WORK_DIR)
           .stepConnectorRefs(getStepConnectorRefs(stageElementConfig))
           .build();
     } else {
@@ -117,7 +121,7 @@ public class BuildJobEnvInfoBuilder {
 
     Set<Integer> usedPorts = new HashSet<>();
     PortFinder portFinder = PortFinder.builder().startingPort(PORT_STARTING_RANGE).usedPorts(usedPorts).build();
-    String workDirPath = getWorkingDirectoryPath(CICommonPodConstants.STEP_EXEC_WORKING_DIR);
+    String workDirPath = STEP_WORK_DIR;
     List<ContainerDefinitionInfo> serviceContainerDefinitionInfos =
         CIServiceBuilder.createServicesContainerDefinition(stageElementConfig, portFinder, ciExecutionServiceConfig);
     List<ContainerDefinitionInfo> stepContainerDefinitionInfos =
@@ -159,7 +163,7 @@ public class BuildJobEnvInfoBuilder {
     List<PVCParams> pvcParamsList = new ArrayList<>();
 
     for (String volumeName : volumeToMountPath.keySet()) {
-      String claimName = String.format("%s-%s", podName, volumeName);
+      String claimName = format("%s-%s", podName, volumeName);
       pvcParamsList.add(PVCParams.builder()
                             .claimName(claimName)
                             .volumeName(volumeName)
@@ -173,7 +177,8 @@ public class BuildJobEnvInfoBuilder {
 
   private Map<String, String> getVolumeToMountPath(List<String> sharedPaths) {
     Map<String, String> volumeToMountPath = new HashMap<>();
-    volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
+    volumeToMountPath.put(STEP_VOLUME, STEP_MOUNT_PATH);
+    volumeToMountPath.put(ADDON_VOLUME, ADDON_VOL_MOUNT_PATH);
 
     if (sharedPaths != null) {
       int index = 0;
@@ -182,7 +187,10 @@ public class BuildJobEnvInfoBuilder {
           continue;
         }
 
-        String volumeName = String.format("%s%d", SHARED_VOLUME_PREFIX, index);
+        String volumeName = format("%s%d", SHARED_VOLUME_PREFIX, index);
+        if (path.equals(STEP_MOUNT_PATH) || path.equals(ADDON_VOL_MOUNT_PATH)) {
+          throw new InvalidRequestException(format("Shared path: %s is a reserved keyword ", path));
+        }
         volumeToMountPath.put(volumeName, path);
         index++;
       }
@@ -277,7 +285,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier, String stepName, String stepType, long timeout) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -308,7 +316,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier, String name) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -347,7 +355,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -383,7 +391,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier, String name) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -706,9 +714,5 @@ public class BuildJobEnvInfoBuilder {
       default:
         return zeroCpu;
     }
-  }
-
-  private String getWorkingDirectoryPath(String workingDirectory) {
-    return String.format("/%s/%s", STEP_EXEC, workingDirectory);
   }
 }

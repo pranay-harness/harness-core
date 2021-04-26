@@ -85,15 +85,16 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     builder.currentStateFileId(helper.getLatestFileId(entityId))
         .taskType(TFTaskType.APPLY)
         .terraformCommand(TerraformCommand.APPLY)
+        .terraformCommandUnit(TerraformCommandUnit.Apply)
         .entityId(entityId)
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
             stepParameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFiles()));
-    if (EmptyPredicate.isNotEmpty(stepParameters.getRemoteVarFiles())) {
+        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFilesListContent()));
+    if (EmptyPredicate.isNotEmpty(stepParameters.getRemoteVarFileConfigs())) {
       List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
       int i = 1;
-      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFiles()) {
+      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFileConfigs()) {
         varFilesConfig.add(helper.getGitFetchFilesConfig(
             varFileWrapper.getStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
         i++;
@@ -121,6 +122,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder()
                                                    .taskType(TFTaskType.APPLY)
+                                                   .terraformCommandUnit(TerraformCommandUnit.Apply)
                                                    .entityId(stepParameters.getProvisionerIdentifier());
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
@@ -179,8 +181,8 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     }
   }
 
-  private StepResponse handleTaskResultInline(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
-      ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+  private StepResponseBuilder createStepResponseBuilder(ThrowingSupplier<TerraformTaskNGResponse> responseSupplier)
+      throws Exception {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
     List<UnitProgress> unitProgresses = terraformTaskNGResponse.getUnitProgressData() == null
@@ -206,22 +208,39 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
             "Unhandled type CommandExecutionStatus: " + terraformTaskNGResponse.getCommandExecutionStatus().name(),
             WingsException.USER);
     }
+    return stepResponseBuilder;
+  }
 
+  private void addStepOutcomeToStepResponse(
+      StepResponseBuilder stepResponseBuilder, TerraformTaskNGResponse terraformTaskNGResponse) {
+    stepResponseBuilder.stepOutcome(
+        StepResponse.StepOutcome.builder()
+            .name(OutcomeExpressionConstants.TERRAFORM_OUTPUT)
+            .outcome(TerraformApplyOutcome.builder()
+                         .outputs(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs()))
+                         .build())
+            .build());
+  }
+
+  private StepResponse handleTaskResultInline(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
+      ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+    StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
+    TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.saveRollbackDestroyConfigInline(stepParameters, terraformTaskNGResponse, ambiance);
-      stepResponseBuilder.stepOutcome(
-          StepResponse.StepOutcome.builder()
-              .name(OutcomeExpressionConstants.TERRAFORM_OUTPUT)
-              .outcome(TerraformApplyOutcome.builder()
-                           .outputs(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs()))
-                           .build())
-              .build());
+      addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
     }
     return stepResponseBuilder.build();
   }
 
   private StepResponse handleTaskResultInherited(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
-    return null;
+    StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
+    TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
+    if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
+      helper.saveRollbackDestroyConfigInherited(stepParameters, ambiance);
+      addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
+    }
+    return stepResponseBuilder.build();
   }
 }

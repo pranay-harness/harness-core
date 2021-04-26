@@ -3,6 +3,7 @@ package io.harness.signup;
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.signup.services.SignupService;
 import io.harness.signup.services.impl.SignupServiceImpl;
@@ -24,6 +25,7 @@ public class SignupModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(FeatureFlagModule.getInstance());
     install(UserClientModule.getInstance(serviceHttpClientConfig, managerServiceSecret, clientId));
     bind(SignupService.class).to(SignupServiceImpl.class);
   }

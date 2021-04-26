@@ -2,6 +2,7 @@ package io.harness.ng.accesscontrol.user;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.AUTHORIZED_USER;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.util.stream.Collectors.mapping;
@@ -65,6 +66,29 @@ public class UserServiceImpl implements UserService {
       return getFilteredUsers(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, aclAggregateFilter);
     }
     return getUnfilteredUsersPage(accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, pageRequest);
+  }
+
+  @Override
+  public UserAggregateDTO getUsers(
+      String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Optional<UserInfo> userInfoOptional = ngUserService.getUserById(userId);
+    if (!userInfoOptional.isPresent()) {
+      return null;
+    }
+    UserInfo userInfo = userInfoOptional.get();
+    UserSearchDTO user =
+        UserSearchDTO.builder().uuid(userInfo.getUuid()).name(userInfo.getName()).email(userInfo.getEmail()).build();
+    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
+        RoleAssignmentFilterDTO.builder()
+            .principalFilter(Collections.singleton(PrincipalDTO.builder().identifier(userId).type(USER).build()))
+            .build();
+    RoleAssignmentAggregateResponseDTO roleAssignmentResponse =
+        getResponse(accessControlAdminClient.getAggregatedFilteredRoleAssignments(
+            accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO));
+    List<RoleBinding> roleBindings =
+        getUserRoleAssignmentMap(roleAssignmentResponse).getOrDefault(userId, Collections.emptyList());
+
+    return UserAggregateDTO.builder().roleBindings(roleBindings).user(user).build();
   }
 
   private void validateRequest(String searchTerm, ACLAggregateFilter aclAggregateFilter) {
@@ -224,7 +248,7 @@ public class UserServiceImpl implements UserService {
       successfullyDeleted = successfullyDeleted && Objects.nonNull(roleAssignmentResponseDTO);
     }
     if (successfullyDeleted) {
-      ngUserService.removeUserFromScope(userId, accountIdentifier, orgIdentifier, projectIdentifier);
+      ngUserService.removeUserFromScope(userId, accountIdentifier, orgIdentifier, projectIdentifier, AUTHORIZED_USER);
     }
     return successfullyDeleted;
   }

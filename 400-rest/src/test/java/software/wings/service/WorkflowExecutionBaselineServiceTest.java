@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -11,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -652,6 +654,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetBaselineDetails() throws IllegalAccessException {
+    testUserProvider.setActiveUser(EmbeddedUser.builder().uuid(user.getUuid()).name(userName).email(userEmail).build());
+
     StateMachineExecutor stateMachineExecutor = Mockito.mock(StateMachineExecutor.class);
     int numOfWorkflowExecutions = 10;
     List<String> envIds = new ArrayList<>();

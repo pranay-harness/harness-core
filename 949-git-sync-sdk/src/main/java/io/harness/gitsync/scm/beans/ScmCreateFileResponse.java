@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)
 public class ScmCreateFileResponse implements ScmPushResponse {
+  String folderPath;
   String filePath;
   boolean pushToDefaultBranch;
   String yamlGitConfigId;

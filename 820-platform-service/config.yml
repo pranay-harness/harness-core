@@ -3,27 +3,16 @@ xxxxxxxx
     - type: http
       port: 9005
       maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: https
+      port: 9095
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
   rootPath: /api
-#    - type: https
-#      port: 7090
-#      keyStorePath: keystore.jks
-#      keyStorePassword: password
-#      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-#      certAlias: localhost
-#      validateCerts: false
-#      maxRequestHeaderSize: 100KiB
-
-#  adminConnectors:
-#    - type: https
-#      port: 7091
-#      keyStorePath: keystore.jks
-#      keyStorePassword: password
-#      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-#      certAlias: localhost
-#      validateCerts: false
-#  requestLog:
-#    appenders: []
-#  maxThreads: 1024
+  maxThreads: 1024
 
 allowedOrigins:
   - https://localhost:8181
@@ -63,7 +52,7 @@ managerClientConfig:
   readTimeOutSeconds: 15
 
 rbacServiceConfig:
-  baseUrl: http://localhost:7457/api/
+  baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
@@ -115,6 +104,7 @@ auditServiceConfig:
   enableAuditService: true
 
 resourceGroupServiceConfig:
+  enableResourceGroup: false
   resourceClients:
     ng-manager:
       baseUrl: http://localhost:7457/
@@ -149,7 +139,6 @@ resourceGroupServiceConfig:
       connectTimeOutSeconds: 15
       readTimeOutSeconds: 15
     accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-    mockAccessControlService: true
   mongo:
     uri: mongodb://localhost:27017/resourcegroup
     connectTimeout: 30000
@@ -164,3 +153,4 @@ resourceGroupServiceConfig:
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
 
+  distributedLockImplementation: ${DISTRIBUTED_LOCK_IMPLEMENTATION:-MONGO}

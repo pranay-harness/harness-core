@@ -2,6 +2,7 @@ package io.harness.ng.core.user.service.impl;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.util.stream.Collectors.toList;
@@ -14,40 +15,43 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.EventsFrameworkMetadataConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
-import io.harness.eventsframework.producer.Message;
-import io.harness.eventsframework.schemas.usermembership.UserMembershipDTO;
+import io.harness.ng.core.events.UserMembershipAddEvent;
+import io.harness.ng.core.events.UserMembershipRemoveEvent;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.UserMembershipUpdateMechanism;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.Scope;
 import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
+import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.user.spring.UserMembershipRepository;
 import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserSearchFilter;
+import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.protobuf.StringValue;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Singleton
 @Slf4j
@@ -60,16 +64,21 @@ public class NgUserServiceImpl implements NgUserService {
   private final UserClient userClient;
   private final UserMembershipRepository userMembershipRepository;
   private final AccessControlAdminClient accessControlAdminClient;
-  private final Producer eventProducer;
+  private final TransactionTemplate transactionTemplate;
+  private final OutboxService outboxService;
+
+  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
+      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
       AccessControlAdminClient accessControlAdminClient,
-      @Named(EventsFrameworkConstants.USERMEMBERSHIP) Producer producer) {
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService) {
     this.userClient = userClient;
     this.userMembershipRepository = userMembershipRepository;
     this.accessControlAdminClient = accessControlAdminClient;
-    this.eventProducer = producer;
+    this.transactionTemplate = transactionTemplate;
+    this.outboxService = outboxService;
   }
 
   @Override
@@ -118,6 +127,7 @@ public class NgUserServiceImpl implements NgUserService {
         .filter(
             roleAssignmentResponse -> roleAssignmentResponse.getRoleAssignment().getPrincipal().getType().equals(USER))
         .map(roleAssignmentResponse -> roleAssignmentResponse.getRoleAssignment().getPrincipal().getIdentifier())
+        .distinct()
         .collect(toList());
   }
 
@@ -127,23 +137,25 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public void addUserToScope(UserInfo user, Scope scope) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, true);
+  public void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateMechanism mechanism) {
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true, mechanism);
   }
 
   @Override
-  public void addUserToScope(UserInfo user, Scope scope, boolean postCreation) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, postCreation);
+  public void addUserToScope(
+      UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateMechanism mechanism) {
+    addUserToScope(user.getUuid(), user.getEmail(), scope, postCreation, mechanism);
   }
 
   @Override
-  public void addUserToScope(String userId, Scope scope, String roleIdentifier) {
+  public void addUserToScope(
+      String userId, Scope scope, String roleIdentifier, UserMembershipUpdateMechanism mechanism) {
     Optional<UserInfo> userOptional = getUserById(userId);
     if (!userOptional.isPresent()) {
       return;
     }
     UserInfo user = userOptional.get();
-    addUserToScope(user.getUuid(), user.getEmail(), scope, true);
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true, mechanism);
     if (!StringUtils.isBlank(roleIdentifier)) {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .roleIdentifier(roleIdentifier)
@@ -163,7 +175,8 @@ public class NgUserServiceImpl implements NgUserService {
     }
   }
 
-  private void addUserToScope(String userId, String emailId, Scope scope, boolean addUserToParentScope) {
+  private void addUserToScope(String userId, String emailId, Scope scope, boolean addUserToParentScope,
+      UserMembershipUpdateMechanism mechanism) {
     Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
     UserMembership userMembership = userMembershipOptional.orElseGet(
         () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
@@ -172,14 +185,19 @@ public class NgUserServiceImpl implements NgUserService {
       //    Adding user to the account for signin flow to work
       addUserToAccount(userId, scope);
     }
-    userMembership = userMembershipRepository.save(userMembership);
-    publishEvent(userId, scope, EventsFrameworkMetadataConstants.CREATE_ACTION);
+    UserMembership finalUserMembership = userMembership;
+    userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
+      outboxService.save(new UserMembershipAddEvent(scope.getAccountIdentifier(), scope, emailId, userId, mechanism));
+      return updatedUserMembership;
+    }));
     if (addUserToParentScope) {
-      addUserToParentScope(userMembership, userId, scope);
+      addUserToParentScope(userMembership, userId, scope, mechanism);
     }
   }
 
-  private void addUserToParentScope(UserMembership userMembership, String userId, Scope scope) {
+  private void addUserToParentScope(
+      UserMembership userMembership, String userId, Scope scope, UserMembershipUpdateMechanism mechanism) {
     //  Adding user to the parent scopes as well
     if (!isBlank(scope.getProjectIdentifier())) {
       Scope orgScope = Scope.builder()
@@ -188,8 +206,13 @@ public class NgUserServiceImpl implements NgUserService {
                            .build();
       if (!userMembership.getScopes().contains(orgScope)) {
         userMembership.getScopes().add(orgScope);
-        userMembership = userMembershipRepository.save(userMembership);
-        publishEvent(userId, orgScope, EventsFrameworkMetadataConstants.CREATE_ACTION);
+        UserMembership finalUserMembership = userMembership;
+        userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+          UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
+          outboxService.save(new UserMembershipAddEvent(scope.getAccountIdentifier(), orgScope,
+              finalUserMembership.getEmailId(), finalUserMembership.getUserId(), mechanism));
+          return updatedUserMembership;
+        }));
       }
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
@@ -210,8 +233,13 @@ public class NgUserServiceImpl implements NgUserService {
       Scope accountScope = Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build();
       if (!userMembership.getScopes().contains(accountScope)) {
         userMembership.getScopes().add(accountScope);
-        userMembershipRepository.save(userMembership);
-        publishEvent(userId, accountScope, EventsFrameworkMetadataConstants.CREATE_ACTION);
+        UserMembership finalUserMembership = userMembership;
+        Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+          UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
+          outboxService.save(new UserMembershipAddEvent(scope.getAccountIdentifier(), accountScope,
+              finalUserMembership.getEmailId(), finalUserMembership.getUserId(), mechanism));
+          return updatedUserMembership;
+        }));
       }
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
@@ -263,8 +291,8 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public void removeUserFromScope(
-      String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, UserMembershipUpdateMechanism mechanism) {
     Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
     if (!userMembershipOptional.isPresent()) {
       return;
@@ -280,40 +308,16 @@ public class NgUserServiceImpl implements NgUserService {
       return;
     }
     scopes.remove(scope);
-    userMembershipRepository.save(userMembership);
-    publishEvent(userId, scope, EventsFrameworkMetadataConstants.DELETE_ACTION);
+    Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      UserMembership updatedUserMembership = userMembershipRepository.save(userMembership);
+      outboxService.save(new UserMembershipRemoveEvent(
+          scope.getAccountIdentifier(), scope, userMembership.getEmailId(), userId, mechanism));
+      return updatedUserMembership;
+    }));
     boolean isUserRemovedFromAccount =
         scopes.stream().noneMatch(scope1 -> scope1.getAccountIdentifier().equals(accountIdentifier));
     if (isUserRemovedFromAccount) {
       RestClientUtils.getResponse(userClient.safeDeleteUser(userId, accountIdentifier));
-    }
-  }
-
-  private void publishEvent(String userId, Scope scope, String action) {
-    try {
-      io.harness.eventsframework.schemas.usermembership.Scope.Builder scopeBuilder =
-          io.harness.eventsframework.schemas.usermembership.Scope.newBuilder().setAccountIdentifier(
-              StringValue.of(scope.getAccountIdentifier()));
-      if (scope.getOrgIdentifier() != null) {
-        scopeBuilder.setOrgIdentifier(StringValue.of(scope.getOrgIdentifier()));
-      }
-      if (scope.getProjectIdentifier() != null) {
-        scopeBuilder.setProjectIdentifier(StringValue.of(scope.getProjectIdentifier()));
-      }
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", scope.getAccountIdentifier(),
-                                 EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkConstants.USERMEMBERSHIP,
-                                 EventsFrameworkMetadataConstants.ACTION, action))
-                             .setData(UserMembershipDTO.newBuilder()
-                                          .setAction(action)
-                                          .setUserId(userId)
-                                          .setScope(scopeBuilder.build())
-                                          .build()
-                                          .toByteString())
-                             .build());
-    } catch (ProducerShutdownException e) {
-      log.error("Failed to send event to events framework for {} on user {} and scope {}: ", action, userId,
-          ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()), e);
     }
   }
 }

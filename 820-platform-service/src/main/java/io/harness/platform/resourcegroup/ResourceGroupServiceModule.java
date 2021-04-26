@@ -30,7 +30,6 @@ import io.harness.platform.PlatformConfiguration;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
-import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.morphia.ResourceGroupSerializer;
 import io.harness.threading.ExecutorModule;
@@ -131,16 +130,18 @@ public class ResourceGroupServiceModule extends AbstractModule {
   }
 
   @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return appConfig.getResoureGroupServiceConfig().getDistributedLockImplementation() == null
+        ? MONGO
+        : appConfig.getResoureGroupServiceConfig().getDistributedLockImplementation();
+  }
+
+  @Provides
   @Named("lock")
   @Singleton
   RedisConfig redisLockConfig() {
     return appConfig.getResoureGroupServiceConfig().getRedisConfig();
-  }
-
-  @Provides
-  @Singleton
-  DistributedLockImplementation distributedLockImplementation() {
-    return MONGO;
   }
 
   @Provides
@@ -164,7 +165,7 @@ public class ResourceGroupServiceModule extends AbstractModule {
   }
 
   @Provides
-  @Named(ResourceGroupConstants.ENTITY_CRUD)
+  @Named(EventsFrameworkConstants.ENTITY_CRUD)
   Producer getProducer() {
     RedisConfig redisConfig = appConfig.getResoureGroupServiceConfig().getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
@@ -175,7 +176,7 @@ public class ResourceGroupServiceModule extends AbstractModule {
   }
 
   @Provides
-  @Named(ResourceGroupConstants.ENTITY_CRUD)
+  @Named(EventsFrameworkConstants.ENTITY_CRUD)
   Consumer getConsumer() {
     RedisConfig redisConfig = appConfig.getResoureGroupServiceConfig().getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {

@@ -5,10 +5,10 @@ import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
-import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.logging.ExceptionLogger;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
@@ -25,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ExceptionManager {
   @Inject private Map<Class<? extends Exception>, ExceptionHandler> exceptionHandler;
   @Inject private KryoSerializer kryoSerializer;
+
+  public final String DEFAULT_ERROR_MESSAGE = "NULL EXCEPTION";
 
   public WingsException processException(Exception exception) {
     WingsException processedException = handleException(exception);
@@ -48,6 +50,10 @@ public class ExceptionManager {
   }
 
   private WingsException handleException(Exception exception) {
+    if (exception == null) {
+      return new GeneralException(DEFAULT_ERROR_MESSAGE);
+    }
+
     try {
       WingsException handledException;
       if (exception instanceof WingsException) {
@@ -60,7 +66,8 @@ public class ExceptionManager {
         if (exceptionHandler != null) {
           handledException = exceptionHandler.handleException(exception);
         } else {
-          throw new ExceptionHandlerNotFoundException("Exception handler not registered for exception", exception);
+          log.error("Exception handler not registered for exception : ", exception);
+          handledException = prepareUnhandledExceptionResponse(exception);
         }
         if (exception.getCause() != null) {
           WingsException cascadedException = handledException;

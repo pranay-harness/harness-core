@@ -10,4 +10,5 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class AuditEventDataTypeConstants {
   public static final String USER_INVITE = "USER_INVITE";
+  public static final String USER_MEMBERSHIP = "USER_MEMBERSHIP";
 }

@@ -19,6 +19,7 @@ import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.helpers.ScmUserHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncConstants;
+import io.harness.gitsync.scm.beans.SCMNoOpResponse;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
 import io.harness.gitsync.scm.beans.ScmDeleteFileResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
@@ -48,6 +49,16 @@ public class SCMGitSyncHelper {
   public ScmPushResponse pushToGit(
       GitEntityInfo gitBranchInfo, String yaml, ChangeType changeType, EntityDetail entityDetail) {
     final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
+    if (gitBranchInfo.isSyncFromGit()) {
+      return SCMNoOpResponse.builder()
+          .filePath(gitBranchInfo.getFilePath())
+          .pushToDefaultBranch(infoForPush.isDefault())
+          .objectId(gitBranchInfo.getLastObjectId())
+          .yamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
+          .branch(gitBranchInfo.getBranch())
+          .folderPath(gitBranchInfo.getFolderPath())
+          .build();
+    }
     return pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
   }
 
@@ -63,6 +74,7 @@ public class SCMGitSyncHelper {
           throw new InvalidRequestException("Git push failed");
         }
         return ScmCreateFileResponse.builder()
+            .folderPath(infoForPush.getFolderPath())
             .filePath(infoForPush.getFilePath())
             .pushToDefaultBranch(infoForPush.isDefault())
             .yamlGitConfigId(infoForPush.getYamlGitConfigId())
@@ -81,6 +93,7 @@ public class SCMGitSyncHelper {
             .accountIdentifier(infoForPush.getAccountId())
             .orgIdentifier(infoForPush.getOrgIdentifier())
             .projectIdentifier(infoForPush.getProjectIdentifier())
+            .folderPath(infoForPush.getFolderPath())
             .filePath(infoForPush.getFilePath())
             .pushToDefaultBranch(infoForPush.isDefault())
             .yamlGitConfigId(infoForPush.getYamlGitConfigId())
@@ -94,6 +107,7 @@ public class SCMGitSyncHelper {
           throw new InvalidRequestException("Git push failed");
         }
         return ScmUpdateFileResponse.builder()
+            .folderPath(infoForPush.getFolderPath())
             .filePath(infoForPush.getFilePath())
             .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
             .oldObjectId(gitBranchInfo.getLastObjectId())
@@ -119,6 +133,7 @@ public class SCMGitSyncHelper {
         FileInfo.newBuilder()
             .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
             .setBranch(gitBranchInfo.getBranch())
+            .setFolderPath(gitBranchInfo.getFolderPath())
             .setFilePath(gitBranchInfo.getFilePath())
             .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
             .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
@@ -133,6 +148,7 @@ public class SCMGitSyncHelper {
         (ScmConnector) kryoSerializer.asObject(pushInfo.getConnector().getValue().toByteArray());
     return InfoForGitPush.builder()
         .filePath(pushInfo.getFilePath().getValue())
+        .folderPath(pushInfo.getFolderPath().getValue())
         .scmConnector(scmConnector)
         .projectIdentifier(pushInfo.getProjectIdentifier().getValue())
         .orgIdentifier(pushInfo.getOrgIdentifier().getValue())
@@ -164,13 +180,26 @@ public class SCMGitSyncHelper {
 
   private GitFileDetailsBuilder getGitFileDetails(GitEntityInfo gitEntityInfo, String yaml) {
     final EmbeddedUser currentUser = ScmUserHelper.getCurrentUser();
+    String filePath = createFilePath(gitEntityInfo.getFolderPath(), gitEntityInfo.getFilePath());
     return GitFileDetails.builder()
         .branch(gitEntityInfo.getBranch())
         .commitMessage(
             isEmpty(gitEntityInfo.getCommitMsg()) ? GitSyncConstants.COMMIT_MSG : gitEntityInfo.getCommitMsg())
         .fileContent(yaml)
-        .filePath(gitEntityInfo.getFilePath())
+        .filePath(filePath)
         .userEmail(currentUser.getEmail())
         .userName(currentUser.getName());
+  }
+
+  String createFilePath(String folderPath, String filePath) {
+    if (isEmpty(folderPath)) {
+      throw new InvalidRequestException("Folder path cannot be empty");
+    }
+    if (isEmpty(filePath)) {
+      throw new InvalidRequestException("File path cannot be empty");
+    }
+    String updatedFolderPath = folderPath.endsWith("/") ? folderPath : folderPath.concat("/");
+    String updatedFilePath = filePath.charAt(0) != '/' ? filePath : filePath.substring(1);
+    return updatedFolderPath + updatedFilePath;
   }
 }

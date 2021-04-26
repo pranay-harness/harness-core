@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 Deprecated = True
 
@@ -251,7 +250,7 @@ shared_dependencies = [
     "@maven//:com_nimbusds_lang_tag",
     "@maven//:com_nimbusds_nimbus_jose_jwt",
     "@maven//:com_nimbusds_oauth2_oidc_sdk",
-    "@maven//:com_novemberain_quartz_mongodb",
+    "@maven//:com_novemberain_quartz_mongodb_harness_mongo_ssl",
     "@maven//:com_offbytwo_jenkins_jenkins_client",
     "@maven//:com_palominolabs_metrics_metrics_guice",
     "@maven//:com_segment_analytics_java_analytics",
@@ -690,7 +689,6 @@ java_library(
 
 java_library(
     name = "supporter-test",
-    testonly = True,
     srcs = glob(
         ["src/supporter-test/**/*.java"],
     ),
@@ -762,6 +760,4 @@ java_library(
     deps = test_dependencies,
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

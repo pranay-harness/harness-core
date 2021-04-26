@@ -14,6 +14,7 @@ import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
@@ -21,10 +22,12 @@ import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.event.grpc.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 
@@ -52,10 +55,11 @@ public class K8sNodeInfoTasklet implements Tasklet {
   @Autowired private CloudProviderService cloudProviderService;
   @Autowired private InstanceResourceService instanceResourceService;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+  @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  @Autowired private FeatureFlagService featureFlagService;
 
   private static final String AWS_SPOT_INSTANCE = "spot";
   private static final String AZURE_SPOT_INSTANCE = "spot";
-  private static final boolean UPDATE_OLD_NODE_DATA = false;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -71,15 +75,19 @@ public class K8sNodeInfoTasklet implements Tasklet {
     List<PublishedMessage> publishedMessageList;
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      List<InstanceInfo> instanceInfoList =
-          publishedMessageList.stream()
-              .map(this::processNodeInfoMessage)
-              .filter(instanceInfo -> null != instanceInfo.getAccountId())
-              .filter(
-                  instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
-              .collect(Collectors.toList());
+      List<InstanceInfo> instanceInfoList = publishedMessageList.stream()
+                                                .map(this::processNodeInfoMessage)
+                                                .filter(x -> x.getAccountId() != null)
+                                                .collect(Collectors.toList());
 
-      instanceDataBulkWriteService.updateList(instanceInfoList);
+      instanceDataBulkWriteService.updateList(
+          instanceInfoList.stream()
+              .filter(x -> x.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
+              .collect(Collectors.toList()));
+
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
+        instanceInfoTimescaleDAO.insertIntoNodeInfo(instanceInfoList);
+      }
     } while (publishedMessageList.size() == batchSize);
     return null;
   }

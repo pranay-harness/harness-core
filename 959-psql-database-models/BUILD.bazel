@@ -1,12 +1,13 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 HarnessTeam = "CE"
 
 java_library(
     name = "module",
     srcs = glob([
+        "src/generated/**/*.java",
         "src/main/**/*.java",
     ]),
     tags = [
@@ -19,20 +20,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "tests",
-    testonly = True,
-    srcs = glob(["src/test/**/*.java"]),
-    tags = [
-        "aeriform",
-        "manual",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":module",
-    ],
+run_analysis(
+    run_checkstyle = False,
 )
-
-run_tests()
-
-pmd()

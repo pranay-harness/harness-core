@@ -65,7 +65,7 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
-    WebhookEventMappingResponseBuilder mappingResponseBuilder = WebhookEventMappingResponse.builder();
+    WebhookEventMappingResponseBuilder mappingResponseBuilder = initWebhookEventMappingResponse(filterRequestData);
 
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
     TriggerWebhookEvent originalEvent = webhookPayloadData.getOriginalEvent();
@@ -89,8 +89,8 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
     }
 
     if (isEmpty(eligibleTriggers)) {
-      String msg = format("No trigger found for repoUrl: %s for Project %s",
-          webhookPayloadData.getRepository().getLink(), filterRequestData.getProjectFqn());
+      String msg = format("No trigger found for repoUrl: %s for Account %s",
+          webhookPayloadData.getRepository().getLink(), filterRequestData.getAccountId());
       log.info(msg);
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(

@@ -27,7 +27,7 @@ public class RoleFilterValidator implements ConstraintValidator<ValidRoleFilter,
           .addConstraintViolation();
       return false;
     }
-    if (value.isIncludeChildScopes() && !value.getManagedFilter().equals(ManagedFilter.ONLY_CUSTOM)) {
+    if (value.isIncludeChildScopes() && !ManagedFilter.ONLY_CUSTOM.equals(value.getManagedFilter())) {
       context.disableDefaultConstraintViolation();
       context
           .buildConstraintViolationWithTemplate(
@@ -35,7 +35,8 @@ public class RoleFilterValidator implements ConstraintValidator<ValidRoleFilter,
           .addConstraintViolation();
       return false;
     }
-    if (isEmpty(value.getScopeIdentifier()) && !value.getManagedFilter().equals(ManagedFilter.ONLY_MANAGED)) {
+    if (isEmpty(value.getScopeIdentifier()) && !ManagedFilter.ONLY_MANAGED.equals(value.getManagedFilter())
+        && isEmpty(value.getAllowedScopeLevelsFilter())) {
       context.disableDefaultConstraintViolation();
       context
           .buildConstraintViolationWithTemplate(

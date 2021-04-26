@@ -25,7 +25,9 @@ public enum ExecutionNodeType {
   ROLLBACK_SECTION("ROLLBACK_SECTION", "rollbackSection"),
   GENERIC_SECTION("GENERIC_SECTION", "genericSection"),
   SHELL_SCRIPT("SHELL_SCRIPT", YamlTypes.SHELL_SCRIPT_STEP),
-  TERRAFORM_APPLY("TERRAFORM_APPLY", StepSpecTypeConstants.TERRAFORM_APPLY);
+  TERRAFORM_APPLY("TERRAFORM_APPLY", StepSpecTypeConstants.TERRAFORM_APPLY),
+  TERRAFORM_PLAN("TERRAFORM_PLAN", StepSpecTypeConstants.TERRAFORM_PLAN),
+  TERRAFORM_DESTROY("TERRAFORM_DESTROY", StepSpecTypeConstants.TERRAFORM_DESTROY);
 
   private final String name;
   private final String yamlType;

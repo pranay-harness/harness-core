@@ -5,6 +5,7 @@ import static io.harness.accesscontrol.permissions.persistence.PermissionDBOMapp
 
 import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionFilter;
+import io.harness.accesscontrol.permissions.PermissionFilter.IncludedInAllRolesFilter;
 import io.harness.accesscontrol.permissions.persistence.PermissionDBO.PermissionDBOKeys;
 import io.harness.accesscontrol.permissions.persistence.repositories.PermissionRepository;
 import io.harness.annotations.dev.HarnessTeam;
@@ -63,6 +64,14 @@ public class PermissionDaoImpl implements PermissionDao {
     if (!permissionFilter.getStatusFilter().isEmpty()) {
       criteria.and(PermissionDBOKeys.status).in(permissionFilter.getStatusFilter());
     }
+    if (IncludedInAllRolesFilter.PERMISSIONS_INCLUDED_IN_ALL_ROLES.equals(
+            permissionFilter.getIncludedInAllRolesFilter())) {
+      criteria.and(PermissionDBOKeys.includeInAllRoles).is(Boolean.TRUE);
+    } else if (IncludedInAllRolesFilter.PERMISSIONS_NOT_INCLUDED_IN_ALL_ROLES.equals(
+                   permissionFilter.getIncludedInAllRolesFilter())) {
+      criteria.and(PermissionDBOKeys.includeInAllRoles).is(Boolean.FALSE);
+    }
+
     List<PermissionDBO> permissionDBOList = permissionRepository.findAll(criteria);
     return permissionDBOList.stream().map(PermissionDBOMapper::fromDBO).collect(Collectors.toList());
   }

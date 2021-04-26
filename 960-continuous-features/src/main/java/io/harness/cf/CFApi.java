@@ -4,10 +4,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.openapi.ApiClient;
 import io.harness.cf.openapi.api.DefaultApi;
-import io.harness.cf.openapi.api.PatchInstruction;
-import io.harness.cf.openapi.api.PatchInstruction.PatchInstructionBuilder;
 import io.harness.cf.openapi.model.Clause;
 import io.harness.cf.openapi.model.FeatureState;
+import io.harness.cf.openapi.model.PatchInstruction;
 import io.harness.cf.openapi.model.Serve;
 
 import java.util.ArrayList;
@@ -29,9 +28,9 @@ public class CFApi extends DefaultApi {
     int priority = startPriority;
     List<PatchInstruction> patchInstructions = new ArrayList<>();
     for (String account : accountIDs) {
-      PatchInstruction patchInstruction = PatchInstructionBuilder.aPatchInstruction()
-                                              .withKind("addRule")
-                                              .withParameters(AddRuleParam.getParamsForAccountID(account, priority))
+      PatchInstruction patchInstruction = PatchInstruction.builder()
+                                              .kind("addRule")
+                                              .parameters(AddRuleParam.getParamsForAccountID(account, priority))
                                               .build();
       patchInstructions.add(patchInstruction);
       priority = priority + 100;
@@ -40,10 +39,7 @@ public class CFApi extends DefaultApi {
   }
 
   public PatchInstruction removeRule(String ruleID) {
-    return PatchInstructionBuilder.aPatchInstruction()
-        .withKind("removeRule")
-        .withParameters(new RemoveRuleParam(ruleID))
-        .build();
+    return PatchInstruction.builder().kind("removeRule").parameters(new RemoveRuleParam(ruleID)).build();
   }
 
   public PatchInstruction getFeatureFlagDefaultServePatchInstruction(boolean variation) {
@@ -54,9 +50,9 @@ public class CFApi extends DefaultApi {
       variationString = "false";
     }
 
-    return PatchInstructionBuilder.aPatchInstruction()
-        .withKind("updateDefaultServe")
-        .withParameters(new UpdateDefaultServeParams(variationString))
+    return PatchInstruction.builder()
+        .kind("updateDefaultServe")
+        .parameters(new UpdateDefaultServeParams(variationString))
         .build();
   }
 
@@ -68,9 +64,37 @@ public class CFApi extends DefaultApi {
       stateString = FeatureState.OFF.getValue();
     }
 
-    return PatchInstructionBuilder.aPatchInstruction()
-        .withKind("setFeatureFlagState")
-        .withParameters(new FeatureFlagStateParams(stateString))
+    return PatchInstruction.builder()
+        .kind("setFeatureFlagState")
+        .parameters(new FeatureFlagStateParams(stateString))
+        .build();
+  }
+
+  public PatchInstruction getAddTargetToVariationMapParams(String variation, List<String> targets) {
+    return PatchInstruction.builder()
+        .kind("addTargetsToVariationTargetMap")
+        .parameters(new AddTargetToVariationMapParams(variation, targets))
+        .build();
+  }
+
+  public PatchInstruction getRemoveTargetToVariationMapParams(String variation, List<String> targets) {
+    return PatchInstruction.builder()
+        .kind("removeTargetsToVariationTargetMap")
+        .parameters(new RemoveTargetToVariationMapParams(variation, targets))
+        .build();
+  }
+
+  public PatchInstruction getAddSegmentToVariationMapParams(String variation, List<String> segments) {
+    return PatchInstruction.builder()
+        .kind("addSegmentToVariationTargetMap")
+        .parameters(new AddSegmentToVariationMapParams(variation, segments))
+        .build();
+  }
+
+  public PatchInstruction getRemoveSegmentToVariationMapParams(String variation, List<String> segments) {
+    return PatchInstruction.builder()
+        .kind("removeSegmentToVariationTargetMap")
+        .parameters(new RemoveSegmentToVariationMapParams(variation, segments))
         .build();
   }
 }
@@ -87,6 +111,46 @@ class UpdateDefaultServeParams {
 
   UpdateDefaultServeParams(String variation) {
     this.variation = variation;
+  }
+}
+
+class AddTargetToVariationMapParams {
+  String variation;
+  List<String> targets;
+
+  AddTargetToVariationMapParams(String variation, List<String> targets) {
+    this.variation = variation;
+    this.targets = targets;
+  }
+}
+
+class RemoveTargetToVariationMapParams {
+  String variation;
+  List<String> targets;
+
+  RemoveTargetToVariationMapParams(String variation, List<String> targets) {
+    this.variation = variation;
+    this.targets = targets;
+  }
+}
+
+class AddSegmentToVariationMapParams {
+  String variation;
+  List<String> segments;
+
+  AddSegmentToVariationMapParams(String variation, List<String> segments) {
+    this.variation = variation;
+    this.segments = segments;
+  }
+}
+
+class RemoveSegmentToVariationMapParams {
+  String variation;
+  List<String> segments;
+
+  RemoveSegmentToVariationMapParams(String variation, List<String> segments) {
+    this.variation = variation;
+    this.segments = segments;
   }
 }
 

@@ -72,15 +72,16 @@ directories:
   930-ng-core-clients
   955-alert-beans
   955-delegate-beans
-  935-access-control-decision
   940-cg-audit-service
   940-feature-flag
   940-ng-audit-service
   940-notification-client
+  940-primary-version-manager
   940-resource-group-beans
   940-secret-manager-client
   945-ng-audit-client
   949-git-sync-sdk
+  946-access-control-decision
   946-access-control-aggregator
   947-access-control-core
   947-access-control-decision-commons
@@ -97,6 +98,7 @@ directories:
   950-ng-audit-commons
   950-ng-authentication-service
   950-ng-core
+  950-ng-license-manager
   950-ng-project-n-orgs
   950-telemetry
   950-timeout-engine
@@ -109,11 +111,14 @@ directories:
   955-filters-sdk
   955-outbox-sdk
   955-setup-usage-sdk
+  958-migration-sdk
   959-psql-database-models
   960-api-services
   960-continuous-features
   960-expression-service
   960-ng-core-beans
+  960-ng-signup-beans
+  960-ng-license-beans
   960-notification-beans
   960-persistence
   960-recaster

@@ -9,9 +9,13 @@ import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.entitysetupusage.dto.EntityReferencesDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import retrofit2.Call;
@@ -46,6 +50,13 @@ public interface EntitySetupUsageClient {
       @Query(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
       @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm);
+
+  @POST(INTERNAL_ENTITY_REFERENCE_API + "/listAllReferredUsagesBatch")
+  Call<ResponseDTO<EntityReferencesDTO>> listAllReferredUsagesBatch(
+      @NotNull @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Size(max = 50) @Body List<String> referredByEntityFQNList,
+      @NotNull @QueryParam(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType,
+      @NotNull @QueryParam(REFERRED_ENTITY_TYPE) EntityType referredEntityType);
 
   @Deprecated
   @POST(INTERNAL_ENTITY_REFERENCE_API)

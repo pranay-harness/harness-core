@@ -2,6 +2,7 @@ package io.harness.ng.accesscontrol.migrations.events;
 
 import static io.harness.beans.FeatureName.NG_ACCESS_CONTROL_MIGRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
@@ -177,15 +178,15 @@ public class AccessControlMigrationHandler implements MessageListener {
 
     // adding account level roles to users
     List<RoleAssignmentMetadata> roleAssignmentMetadataList = new ArrayList<>();
-    roleAssignmentMetadataList.add(createRoleAssignments(accountId, null, null, users));
     users.forEach(user -> upsertUserMembership(accountId, null, null, user));
+    roleAssignmentMetadataList.add(createRoleAssignments(accountId, null, null, users));
 
     // adding org level roles to users
     List<Organization> organizations =
         orgService.list(accountId, Pageable.unpaged(), OrganizationFilterDTO.builder().build()).getContent();
     for (Organization organization : organizations) {
-      roleAssignmentMetadataList.add(createRoleAssignments(accountId, organization.getIdentifier(), null, users));
       users.forEach(user -> upsertUserMembership(accountId, organization.getIdentifier(), null, user));
+      roleAssignmentMetadataList.add(createRoleAssignments(accountId, organization.getIdentifier(), null, users));
 
       // adding project level roles to users
       List<Project> projects = projectService
@@ -195,12 +196,12 @@ public class AccessControlMigrationHandler implements MessageListener {
                                            .build())
                                    .getContent();
       for (Project project : projects) {
-        roleAssignmentMetadataList.add(
-            createRoleAssignments(accountId, organization.getIdentifier(), project.getIdentifier(), users));
-
         // adding user project map
         users.forEach(
             user -> upsertUserMembership(accountId, organization.getIdentifier(), project.getIdentifier(), user));
+
+        roleAssignmentMetadataList.add(
+            createRoleAssignments(accountId, organization.getIdentifier(), project.getIdentifier(), users));
       }
     }
     accessControlMigrationService.save(
@@ -216,7 +217,7 @@ public class AccessControlMigrationHandler implements MessageListener {
                         .projectIdentifier(projectIdentifier)
                         .orgIdentifier(orgIdentifier)
                         .build();
-      ngUserService.addUserToScope(user, scope, false);
+      ngUserService.addUserToScope(user, scope, false, SYSTEM);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       log.info("Usermembership entry map already exists account: {}, org: {}, project: {}, principal: {}", accountId,
           orgIdentifier, projectIdentifier, user.getUuid());

@@ -14,6 +14,7 @@ package io.harness.cf.openapi.auth;
 
 import io.harness.cf.openapi.Pair;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import okhttp3.Credentials;

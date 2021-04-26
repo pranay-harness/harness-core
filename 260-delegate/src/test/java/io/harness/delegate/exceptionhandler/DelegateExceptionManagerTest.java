@@ -19,6 +19,7 @@ import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.rule.Owner;
 
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
@@ -31,6 +32,7 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(HarnessTeam.DX)
 public class DelegateExceptionManagerTest extends DelegateTestBase {
   @Inject DelegateExceptionManager delegateExceptionManager;
+  @Inject ExceptionManager exceptionManager;
 
   @Before
   public void setUp() throws Exception {
@@ -52,6 +54,7 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     assertThat(errorNotifyResponseData.getException() instanceof InvalidRequestException).isTrue();
     assertThat(errorNotifyResponseData.getException().getMessage().equals(amazonServiceException.getMessage()))
         .isTrue();
+    assertThat(errorNotifyResponseData.getException().getCause()).isNull();
   }
 
   @Test
@@ -67,6 +70,7 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     assertThat(errorNotifyResponseData.getException()).isNotNull();
     assertThat(errorNotifyResponseData.getException() instanceof GeneralException).isTrue();
     assertThat(errorNotifyResponseData.getException().getMessage().equals(errorMessage)).isTrue();
+    assertThat(errorNotifyResponseData.getException().getCause()).isNull();
   }
 
   @Test
@@ -121,6 +125,7 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     WingsException exception = errorNotifyResponseData.getException();
     assertThat(exception instanceof KryoHandlerNotFoundException).isTrue();
     assertThat(exception.getMessage().equals(errorMessage)).isTrue();
+    assertThat(exception.getCause()).isNull();
   }
 
   @Test
@@ -162,6 +167,61 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     exception = (WingsException) exception.getCause();
     assertThat(exception instanceof ExplanationException).isTrue();
     assertThat(exception.getMessage().equals(errorMessage3)).isTrue();
+    assertThat(exception.getCause()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testCommmonJavaException() {
+    String errorMessage = "Null Pointer Exception";
+    NullPointerException exception = new NullPointerException(errorMessage);
+    DelegateResponseData delegateResponseData = delegateExceptionManager.getResponseData(exception, null, true);
+    assertThat(delegateResponseData).isNotNull();
+
+    ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
+    assertThat(errorNotifyResponseData.getException()).isNotNull();
+    assertThat(errorNotifyResponseData.getException() instanceof GeneralException).isTrue();
+    assertThat(errorNotifyResponseData.getException().getMessage().equals(errorMessage)).isTrue();
+    assertThat(errorNotifyResponseData.getException().getCause()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testIfExceptionIsNull() {
+    WingsException exception = exceptionManager.processException(null);
+    assertThat(exception).isNotNull();
+
+    assertThat(exception instanceof GeneralException).isTrue();
+    assertThat(exception.getMessage().equals(exceptionManager.DEFAULT_ERROR_MESSAGE)).isTrue();
+    assertThat(exception.getCause()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testCascadedUnhandledException() {
+    String errorMessage1 = "Error Message 1";
+    String errorMessage2 = "Error Message 2";
+    String errorMessage3 = "Error Message 3";
+    RuntimeException ex1 = new RuntimeException(errorMessage1);
+    RuntimeException ex2 = new RuntimeException(errorMessage2, ex1);
+    RuntimeException ex3 = new RuntimeException(errorMessage3, ex2);
+
+    WingsException processedException = exceptionManager.processException(ex3);
+    assertThat(processedException).isNotNull();
+
+    assertThat(processedException instanceof GeneralException).isTrue();
+    assertThat(processedException.getMessage().equals(errorMessage3));
+    processedException = (WingsException) processedException.getCause();
+    assertThat(processedException instanceof GeneralException).isTrue();
+    assertThat(processedException.getMessage().equals(errorMessage2));
+    processedException = (WingsException) processedException.getCause();
+    assertThat(processedException instanceof GeneralException).isTrue();
+    assertThat(processedException.getMessage().equals(errorMessage3));
+    processedException = (WingsException) processedException.getCause();
+    assertThat(processedException).isNull();
   }
 
   public static class RandomRuntimeException extends RuntimeException {

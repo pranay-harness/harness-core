@@ -6,6 +6,7 @@ import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.UnexpectedException;
 import io.harness.remote.client.NGRestUtils;
@@ -81,7 +82,7 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
           String.format("You need %s permission on %s with identifier: %s to perform this action",
               permissionCheckDTO.getPermission(), permissionCheckDTO.getResourceType(),
               permissionCheckDTO.getResourceIdentifier()),
-          USER);
+          ErrorCode.NG_ACCESS_DENIED, USER);
     }
   }
 

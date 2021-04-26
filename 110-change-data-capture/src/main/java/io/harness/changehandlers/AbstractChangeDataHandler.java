@@ -23,13 +23,17 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
   @Override
   public boolean handleChange(ChangeEvent<?> changeEvent, String tableName, String[] fields) {
     log.info("In TimeScale Change Handler: {}, {}, {}", changeEvent, tableName, fields);
+    Map<String, String> columnValueMapping = getColumnValueMapping(changeEvent, fields);
     switch (changeEvent.getChangeType()) {
       case INSERT:
-        dbOperation(insertSQL(tableName, getColumnValueMapping(changeEvent, fields)));
+        if (columnValueMapping != null) {
+          dbOperation(insertSQL(tableName, columnValueMapping));
+        }
         break;
       case UPDATE:
-        dbOperation(updateSQL(tableName, getColumnValueMapping(changeEvent, fields),
-            Collections.singletonMap("id", changeEvent.getUuid())));
+        if (columnValueMapping != null) {
+          dbOperation(updateSQL(tableName, columnValueMapping, Collections.singletonMap("id", changeEvent.getUuid())));
+        }
         break;
       case DELETE:
         dbOperation(deleteSQL(tableName, Collections.singletonMap("id", changeEvent.getUuid())));
@@ -106,11 +110,17 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
 
   public static String updateSQL(String tableName, Map<String, String> columnValueMappingForSet,
       Map<String, String> columnValueMappingForCondition) {
-    StringBuilder updateQueryBuilder = new StringBuilder();
+    StringBuilder updateQueryBuilder = new StringBuilder(2048);
 
     /**
-     * Removing column that holds NULL value or Blank value...
+     * Adding insert statement
      */
+    if (insertSQL(tableName, columnValueMappingForSet) != null) {
+      updateQueryBuilder.append(insertSQL(tableName, columnValueMappingForSet));
+    }
+    // On conflict condition
+    updateQueryBuilder.append(" ON CONFLICT (id) Do ");
+
     if (!columnValueMappingForSet.isEmpty()) {
       for (Map.Entry<String, String> entry : columnValueMappingForSet.entrySet()) {
         if (entry.getValue() == null || entry.getValue().equals("")) {
@@ -131,19 +141,10 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
     }
 
     /* Making the UPDATE Query */
-    updateQueryBuilder.append(String.format("UPDATE %s SET ", tableName));
+    updateQueryBuilder.append(String.format("UPDATE  SET "));
 
     if (!columnValueMappingForSet.isEmpty()) {
       for (Map.Entry<String, String> entry : columnValueMappingForSet.entrySet()) {
-        updateQueryBuilder.append(String.format("%s=%s,", entry.getKey(), String.format("'%s'", entry.getValue())));
-      }
-    }
-
-    updateQueryBuilder = new StringBuilder(updateQueryBuilder.subSequence(0, updateQueryBuilder.length() - 1));
-    updateQueryBuilder.append(" WHERE ");
-
-    if (!columnValueMappingForCondition.isEmpty()) {
-      for (Map.Entry<String, String> entry : columnValueMappingForCondition.entrySet()) {
         updateQueryBuilder.append(String.format("%s=%s,", entry.getKey(), String.format("'%s'", entry.getValue())));
       }
     }

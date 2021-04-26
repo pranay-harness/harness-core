@@ -54,7 +54,7 @@ public class EcsServiceDeployCommandHandler extends EcsCommandTaskHandler {
       resizeCommandUnit.setName("ECS Service Deploy");
       injector.injectMembers(resizeCommandUnit);
       SettingAttribute settingAttribute = aSettingAttribute().withValue(request.getAwsConfig()).build();
-      CommandExecutionContext commandExecutionContext = aCommandExecutionContext(false)
+      CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                             .accountId(request.getAccountId())
                                                             .appId(request.getAppId())
                                                             .activityId(request.getActivityId())

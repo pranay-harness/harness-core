@@ -1,8 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 HarnessTeam = "CV"
 
@@ -17,9 +16,11 @@ shared_dependencies = [
     "//879-pms-sdk:module",
     "//950-wait-engine:module",
     "//940-notification-client:module",
+    "//940-primary-version-manager:module",
     "//940-secret-manager-client:module",
     "//953-events-api:module",
     "//954-connector-beans:module",
+    "//960-continuous-features:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//980-commons:module",
@@ -127,6 +128,8 @@ java_library(
         "//430-cv-nextgen-commons:module",
         "//876-orchestration-beans:module",
         "//940-notification-client:module",
+        "//940-primary-version-manager:module",
+        "//960-continuous-features:module",
         "//960-notification-beans:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
@@ -153,6 +156,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

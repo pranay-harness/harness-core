@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,16 +61,44 @@ public class PipelineRbacHelper {
                                                        .filter(accessControlDTO -> !accessControlDTO.isPermitted())
                                                        .collect(Collectors.toList());
     if (nonPermittedResources.size() != 0) {
-      Map<String, List<String>> errors = new HashMap<>();
-      for (AccessControlDTO accessControlDTO : nonPermittedResources) {
-        List<String> resourceTypeErrors = errors.getOrDefault(accessControlDTO.getResourceType(), new ArrayList<>());
-        resourceTypeErrors.add(accessControlDTO.getResourceIdentifier());
-        errors.put(accessControlDTO.getResourceType(), resourceTypeErrors);
-      }
-      throw new AccessDeniedException(
-          String.format("Access to the following resources missing: [%s]", errors.toString()),
-          ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+      throwAccessDeniedError(nonPermittedResources);
     }
+  }
+
+  public static void throwAccessDeniedError(List<AccessControlDTO> nonPermittedResources) {
+    /*
+      allErrors has resource type as key. For each resource type, the value is a map with keys as resource identifiers.
+      For each identifier, the value is a list of permissions
+       */
+    Map<String, Map<String, List<String>>> allErrors = new HashMap<>();
+    for (AccessControlDTO accessControlDTO : nonPermittedResources) {
+      if (allErrors.containsKey(accessControlDTO.getResourceType())) {
+        Map<String, List<String>> resourceToPermissions = allErrors.get(accessControlDTO.getResourceType());
+        if (resourceToPermissions.containsKey(accessControlDTO.getResourceIdentifier())) {
+          List<String> permissions = resourceToPermissions.get(accessControlDTO.getResourceIdentifier());
+          permissions.add(accessControlDTO.getPermission());
+        } else {
+          resourceToPermissions.put(
+              accessControlDTO.getResourceIdentifier(), Collections.singletonList(accessControlDTO.getPermission()));
+        }
+      } else {
+        Map<String, List<String>> resourceToPermissions = new HashMap<>();
+        List<String> permissions = new ArrayList<>();
+        permissions.add(accessControlDTO.getPermission());
+        resourceToPermissions.put(accessControlDTO.getResourceIdentifier(), permissions);
+        allErrors.put(accessControlDTO.getResourceType(), resourceToPermissions);
+      }
+    }
+
+    StringBuilder errors = new StringBuilder();
+    for (String resourceType : allErrors.keySet()) {
+      for (String resourceIdentifier : allErrors.get(resourceType).keySet()) {
+        errors.append(String.format("For %s with identifier %s, these permissions are not there: %s.\n", resourceType,
+            resourceIdentifier, allErrors.get(resourceType).get(resourceIdentifier).toString()));
+      }
+    }
+
+    throw new AccessDeniedException(errors.toString(), ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
   }
 
   public PermissionCheckDTO convertToPermissionCheckDTO(EntityDetail entityDetail) {

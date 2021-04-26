@@ -6,11 +6,13 @@ import io.harness.exception.GeneralException;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 import io.harness.ng.authenticationsettings.impl.AuthenticationSettingsService;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SSOConfig;
@@ -60,6 +62,15 @@ public class AuthenticationSettingsResource {
       @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
     AuthenticationSettingsResponse response =
         authenticationSettingsService.getAuthenticationSettings(accountIdentifier);
+    return new RestResponse<>(response);
+  }
+
+  @GET
+  @Path("/login-settings/password-strength")
+  @ApiOperation(value = "Get Password strength settings", nickname = "getPasswordStrengthSettings")
+  public RestResponse<PasswordStrengthPolicy> getPasswordStrengthSettings(
+      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier) {
+    PasswordStrengthPolicy response = authenticationSettingsService.getPasswordStrengthSettings(accountIdentifier);
     return new RestResponse<>(response);
   }
 
@@ -171,6 +182,17 @@ public class AuthenticationSettingsResource {
   @ApiOperation(value = "Get SAML Login Test", nickname = "getSamlLoginTest")
   public RestResponse<LoginTypeResponse> getSamlLoginTest(@QueryParam("accountId") @NotEmpty String accountId) {
     LoginTypeResponse response = authenticationSettingsService.getSAMLLoginTest(accountId);
+    return new RestResponse<>(response);
+  }
+
+  @PUT
+  @Path("/two-factor-admin-override-settings")
+  @ApiOperation(value = "Set account level two factor auth setting", nickname = "setTwoFactorAuthAtAccountLevel")
+  public RestResponse<Boolean> setTwoFactorAuthAtAccountLevel(
+      @QueryParam("accountIdentifier") @NotEmpty String accountIdentifier,
+      TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings) {
+    boolean response =
+        authenticationSettingsService.setTwoFactorAuthAtAccountLevel(accountIdentifier, twoFactorAdminOverrideSettings);
     return new RestResponse<>(response);
   }
 }

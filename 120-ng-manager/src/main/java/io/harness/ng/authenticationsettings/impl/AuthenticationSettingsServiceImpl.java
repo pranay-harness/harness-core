@@ -12,8 +12,10 @@ import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.SAMLSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.UsernamePasswordSettings;
 import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 
 import software.wings.beans.loginSettings.LoginSettings;
+import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
@@ -254,5 +256,16 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   @Override
   public LoginTypeResponse getSAMLLoginTest(@NotNull String accountIdentifier) {
     return getResponse(managerClient.getSAMLLoginTest(accountIdentifier));
+  }
+
+  @Override
+  public boolean setTwoFactorAuthAtAccountLevel(
+      String accountIdentifier, TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings) {
+    return getResponse(managerClient.setTwoFactorAuthAtAccountLevel(accountIdentifier, twoFactorAdminOverrideSettings));
+  }
+
+  @Override
+  public PasswordStrengthPolicy getPasswordStrengthSettings(String accountIdentifier) {
+    return getResponse(managerClient.getPasswordStrengthSettings(accountIdentifier));
   }
 }

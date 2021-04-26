@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
@@ -12,7 +11,6 @@ import static java.lang.String.format;
 
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.advise.AdviserResponseHandler;
@@ -20,15 +18,16 @@ import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.interrupts.InterruptCheck;
+import io.harness.engine.facilitation.InterruptPreFacilitationChecker;
+import io.harness.engine.facilitation.RunPreFacilitationChecker;
+import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.interrupts.PreFacilitationCheck;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
-import io.harness.engine.run.NodeRunCheck;
-import io.harness.engine.skip.SkipCheck;
-import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.ExceptionUtils;
+import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
@@ -41,9 +40,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.execution.failure.FailureType;
-import io.harness.pms.contracts.execution.run.NodeRunInfo;
-import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -79,6 +75,7 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
@@ -100,6 +97,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(CDC)
 public class OrchestrationEngine {
+  @Inject private Injector injector;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private ResolverRegistry resolverRegistry;
@@ -156,53 +154,14 @@ public class OrchestrationEngine {
   }
 
   // Start to Facilitators
-  // TODO (prashant) : Change this methos to adopt chain of responsibility pattern
   private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
-      log.info("Checking Interrupts before Node Start");
-      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(
-          ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+      PreFacilitationCheck check = performPreFacilitationChecks(nodeExecution);
       if (!check.isProceed()) {
-        log.info("Suspending Execution. Reason : {}", check.getReason());
+        log.info("Not Proceeding with  Execution. Reason : {}", check.getReason());
         return;
       }
-
-      log.info("Checking If Node should be Run with When Condition.");
-      String whenCondition = nodeExecution.getNode().getWhenCondition();
-      if (EmptyPredicate.isNotEmpty(whenCondition)) {
-        NodeRunCheck nodeRunCheck =
-            OrchestrationUtils.shouldRunExecution(ambiance, whenCondition, engineExpressionService);
-        if (nodeRunCheck.isSuccessful()) {
-          nodeExecution = updateRunInfoAttribute(nodeExecution.getUuid(), nodeRunCheck);
-        } else {
-          failNodeExecution(nodeExecution.getUuid(), nodeRunCheck.getErrorMessage());
-          return;
-        }
-        if (!nodeRunCheck.getEvaluatedWhenCondition()) {
-          skipNodeExecution(nodeExecution.getUuid(), nodeRunCheck);
-          return;
-        }
-      }
-
-      log.info("Checking If Node should be Skipped");
-      String skipCondition = nodeExecution.getNode().getSkipCondition();
-      if (EmptyPredicate.isNotEmpty(skipCondition)) {
-        SkipCheck skipCheck =
-            OrchestrationUtils.shouldSkipNodeExecution(ambiance, skipCondition, engineExpressionService);
-        if (skipCheck.isSuccessful()) {
-          nodeExecution = updateSkipInfoAttribute(nodeExecution.getUuid(), skipCheck);
-        } else {
-          failNodeExecution(nodeExecution.getUuid(), skipCheck.getErrorMessage());
-          return;
-        }
-        if (skipCheck.getEvaluatedSkipCondition()) {
-          skipNodeExecution(nodeExecution.getUuid(), skipCheck);
-          return;
-        }
-      }
-
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
-
       PlanNodeProto node = nodeExecution.getNode();
       String stepParameters = node.getStepParameters();
       Object resolvedStepParameters = stepParameters == null
@@ -230,24 +189,13 @@ public class OrchestrationEngine {
     }
   }
 
-  private NodeExecution updateSkipInfoAttribute(String nodeExecutionId, SkipCheck skipCheck) {
-    return nodeExecutionService.update(nodeExecutionId, ops -> {
-      setUnset(ops, NodeExecutionKeys.skipInfo,
-          SkipInfo.newBuilder()
-              .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
-              .setSkipCondition(skipCheck.getSkipCondition())
-              .build());
-    });
-  }
-
-  private NodeExecution updateRunInfoAttribute(String nodeExecutionId, NodeRunCheck nodeRunCheck) {
-    return nodeExecutionService.update(nodeExecutionId, ops -> {
-      setUnset(ops, NodeExecutionKeys.nodeRunInfo,
-          NodeRunInfo.newBuilder()
-              .setEvaluatedCondition(nodeRunCheck.getEvaluatedWhenCondition())
-              .setWhenCondition(nodeRunCheck.getWhenCondition())
-              .build());
-    });
+  private PreFacilitationCheck performPreFacilitationChecks(NodeExecution nodeExecution) {
+    InterruptPreFacilitationChecker iChecker = injector.getInstance(InterruptPreFacilitationChecker.class);
+    RunPreFacilitationChecker rChecker = injector.getInstance(RunPreFacilitationChecker.class);
+    SkipPreFacilitationChecker sChecker = injector.getInstance(SkipPreFacilitationChecker.class);
+    iChecker.setNextChecker(rChecker);
+    rChecker.setNextChecker(sChecker);
+    return iChecker.check(nodeExecution);
   }
 
   public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
@@ -328,7 +276,9 @@ public class OrchestrationEngine {
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
           ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
           ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
-          setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
+          if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
+            setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
+          }
         }, EnumSet.noneOf(Status.class)));
   }
 
@@ -468,42 +418,6 @@ public class OrchestrationEngine {
     } catch (RuntimeException ex) {
       log.error("Error when trying to obtain the advice ", ex);
     }
-  }
-
-  private void skipNodeExecution(String nodeExecutionId, NodeRunCheck nodeRunCheck) {
-    log.info(String.format("Skipping node: %s", nodeExecutionId));
-    StepResponseProto response =
-        StepResponseProto.newBuilder()
-            .setStatus(Status.SKIPPED)
-            .setNodeRunInfo(NodeRunInfo.newBuilder()
-                                .setWhenCondition(nodeRunCheck.getWhenCondition())
-                                .setEvaluatedCondition(nodeRunCheck.getEvaluatedWhenCondition())
-                                .build())
-            .build();
-    handleStepResponse(nodeExecutionId, response);
-  }
-
-  private void skipNodeExecution(String nodeExecutionId, SkipCheck skipCheck) {
-    log.info(String.format("Skipping node: %s", nodeExecutionId));
-    StepResponseProto response = StepResponseProto.newBuilder()
-                                     .setStatus(Status.SKIPPED)
-                                     .setSkipInfo(SkipInfo.newBuilder()
-                                                      .setSkipCondition(skipCheck.getSkipCondition())
-                                                      .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
-                                                      .build())
-                                     .build();
-    handleStepResponse(nodeExecutionId, response);
-  }
-
-  private void failNodeExecution(String nodeExecutionId, String errorMessage) {
-    StepResponseProto stepResponseProto = StepResponseProto.newBuilder()
-                                              .setStatus(FAILED)
-                                              .setFailureInfo(FailureInfo.newBuilder()
-                                                                  .setErrorMessage(errorMessage)
-                                                                  .addFailureTypes(FailureType.SKIPPING_FAILURE)
-                                                                  .build())
-                                              .build();
-    handleStepResponse(nodeExecutionId, stepResponseProto);
   }
 
   public void handleAdvise(String nodeExecutionId, AdviserResponse adviserResponse) {

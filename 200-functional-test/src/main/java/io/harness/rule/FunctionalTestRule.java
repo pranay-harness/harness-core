@@ -10,6 +10,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
@@ -317,6 +319,18 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     });
     modules.add(new GrpcServiceConfigurationModule(((MainConfiguration) configuration).getGrpcServerConfig(),
         ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+    });
+
     return modules;
   }
 
@@ -352,6 +366,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()
                                            .account("testAccount")
                                            .enabled(false)

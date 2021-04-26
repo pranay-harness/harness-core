@@ -23,6 +23,7 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
+import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.tasks.DecryptGitApiAccessHelper;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,16 +53,21 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final ConnectorService connectorService;
   private final DecryptGitApiAccessHelper decryptScmApiAccess;
   private final Producer gitSyncConfigEventProducer;
+  private final ExecutorService executorService;
+  private final GitBranchService gitBranchService;
 
   @Inject
   public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
       @Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptScmApiAccess,
-      @Named(EventsFrameworkConstants.GIT_CONFIG_STREAM) Producer gitSyncConfigEventProducer) {
+      @Named(EventsFrameworkConstants.GIT_CONFIG_STREAM) Producer gitSyncConfigEventProducer,
+      ExecutorService executorService, GitBranchService gitBranchService) {
     this.yamlGitConfigRepository = yamlGitConfigRepository;
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitSyncConfigEventProducer = gitSyncConfigEventProducer;
+    this.executorService = executorService;
+    this.gitBranchService = gitBranchService;
   }
 
   @Override
@@ -226,6 +233,11 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     }
     sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
         yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
+    executorService.submit(
+        ()
+            -> gitBranchService.createBranches(accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
+                gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getGitConnectorRef(),
+                gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getIdentifier()));
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
   }
 
@@ -251,6 +263,9 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     ensureFolderEndsWithDelimiter(ygs);
     validateFolderFollowsHarnessParadigm(ygs);
     validateFolderPathIsUnique(ygs);
+    // todo @deepak: Add validation that one folder should not be contained within another
+    // that's redundant. This will enable us to go ahead with the assumption of
+    // independent folders
   }
 
   private void validateFolderPathIsUnique(YamlGitConfigDTO ygs) {

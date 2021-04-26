@@ -23,6 +23,7 @@ import io.harness.accesscontrol.AccessControlAdminClientModule;
 import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -46,6 +47,7 @@ import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.licensing.LicenseModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -117,7 +119,6 @@ import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
-import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
@@ -270,6 +271,7 @@ public class NextGenModule extends AbstractModule {
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
     install(DelegateServiceDriverModule.getInstance(false));
     install(TimeModule.getInstance());
     bind(NextGenConfiguration.class).toInstance(appConfig);
@@ -375,25 +377,8 @@ public class NextGenModule extends AbstractModule {
         return ImmutableList.<YamlSchemaRootClass>builder().addAll(NextGenRegistrars.yamlSchemaRegistrars).build();
       }
     });
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
-
     install(OrchestrationModule.getInstance(getOrchestrationConfig()));
-    install(OrchestrationStepsModule.getInstance());
+    install(OrchestrationStepsModule.getInstance(null));
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
@@ -414,6 +399,7 @@ public class NextGenModule extends AbstractModule {
     }
     install(new MockRoleAssignmentModule());
     install(TelemetryModule.getInstance());
+    install(LicenseModule.getInstance());
     bind(UserService.class).to(UserServiceImpl.class);
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);

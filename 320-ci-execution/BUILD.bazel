@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//330-ci-beans:module",
@@ -159,7 +158,7 @@ shared_dependencies = [
     "@maven//:com_nimbusds_lang_tag",
     "@maven//:com_nimbusds_nimbus_jose_jwt",
     "@maven//:com_nimbusds_oauth2_oidc_sdk",
-    "@maven//:com_novemberain_quartz_mongodb",
+    "@maven//:com_novemberain_quartz_mongodb_harness_mongo_ssl",
     "@maven//:com_papertrail_profiler",
     "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:com_squareup_okhttp3_logging_interceptor",
@@ -450,6 +449,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

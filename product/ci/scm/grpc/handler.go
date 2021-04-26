@@ -5,6 +5,7 @@ import (
 	"github.com/wings-software/portal/product/ci/scm/git"
 	"github.com/wings-software/portal/product/ci/scm/parser"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
+	"github.com/wings-software/portal/product/ci/scm/repo"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -141,4 +142,14 @@ func (h *handler) ListBranches(ctx context.Context, in *pb.ListBranchesRequest) 
 // ListCommits is used to return a list of commit ids given a ref or branch.
 func (h *handler) ListCommits(ctx context.Context, in *pb.ListCommitsRequest) (*pb.ListCommitsResponse, error) {
 	return git.ListCommits(ctx, in, h.log)
+}
+
+// CreateWebhook is used to add a webhook to a repo.
+func (h *handler) CreateWebhook(ctx context.Context, in *pb.CreateWebhookRequest) (*pb.CreateWebhookResponse, error) {
+	return repo.CreateWebhook(ctx, in, h.log)
+}
+
+// DeleteWebhook is used to add a webhook to a repo.
+func (h *handler) DeleteWebhook(ctx context.Context, in *pb.DeleteWebhookRequest) (*pb.DeleteWebhookResponse, error) {
+	return repo.DeleteWebhook(ctx, in, h.log)
 }

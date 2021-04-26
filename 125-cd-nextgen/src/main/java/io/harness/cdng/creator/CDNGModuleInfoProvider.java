@@ -126,8 +126,11 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     if (isInfrastructureNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
       Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionProto);
       environmentOutcome.ifPresent(outcome
-          -> cdStageModuleInfoBuilder.infraExecutionSummary(
-              InfraExecutionSummary.builder().identifier(outcome.getIdentifier()).name(outcome.getName()).build()));
+          -> cdStageModuleInfoBuilder.infraExecutionSummary(InfraExecutionSummary.builder()
+                                                                .identifier(outcome.getIdentifier())
+                                                                .name(outcome.getName())
+                                                                .type(outcome.getEnvironmentType().name())
+                                                                .build()));
     }
     return cdStageModuleInfoBuilder.build();
   }

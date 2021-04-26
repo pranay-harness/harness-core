@@ -7,7 +7,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ACCOUNT_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.AWS_CODE_COMMIT_URL_REGEX;
 import static io.harness.common.CIExecutionConstants.BUILD_NUMBER_ATTR;
@@ -249,8 +248,6 @@ public class K8BuildSetupUtils {
         .labels(buildLabels)
         .annotations(annotations)
         .gitConnector(gitConnector)
-        .stepExecVolumeName(STEP_EXEC)
-        .stepExecWorkingDir(workDir)
         .containerParamsList(containerParamsList)
         .pvcParamList(pvcParamsList)
         .initContainerParamsList(singletonList(setupAddOnContainerParams))

@@ -7,6 +7,7 @@ import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.rest.RestResponse;
 
 import java.util.List;
@@ -32,6 +33,8 @@ public interface UserClient {
   String USER_TWO_FACTOR_AUTH_SETTINGS = "ng/user/two-factor-auth/{auth-mechanism}";
   String USER_ENABLE_TWO_FACTOR_AUTH = "ng/user/enable-two-factor-auth";
   String USER_DISABLE_TWO_FACTOR_AUTH = "ng/user/disable-two-factor-auth";
+
+  @POST(USERS_API) Call<RestResponse<UserInfo>> createNewUser(@Body UserRequestDTO userRequest);
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,

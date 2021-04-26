@@ -2,11 +2,13 @@ package io.harness.ccm;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderModule;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -15,6 +17,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
+import io.harness.redis.RedisConfig;
 import io.harness.serializer.CENextGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.threading.ExecutorModule;
@@ -22,6 +25,8 @@ import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -88,6 +93,7 @@ public class CENextGenModule extends AbstractModule {
     install(FeatureFlagModule.getInstance());
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(CENextGenConfiguration.class).toInstance(configuration);
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
 
     install(new AbstractModule() {
       @Override
@@ -112,6 +118,19 @@ public class CENextGenModule extends AbstractModule {
   @Named("morphiaClasses")
   Map<Class, String> morphiaCustomCollectionNames() {
     return ImmutableMap.<Class, String>builder().build();
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return MONGO;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  RedisConfig redisConfig() {
+    return RedisConfig.builder().build();
   }
 
   private ValidatorFactory getValidatorFactory() {

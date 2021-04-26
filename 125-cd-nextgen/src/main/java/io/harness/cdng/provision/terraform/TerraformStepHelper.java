@@ -1,6 +1,8 @@
 package io.harness.cdng.provision.terraform;
 
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
+import static io.harness.provision.TerraformConstants.TF_DESTROY_NAME_PREFIX;
+import static io.harness.provision.TerraformConstants.TF_NAME_PREFIX;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
@@ -18,6 +20,8 @@ import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigBuilder;
+import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigKeys;
+import io.harness.cdng.provision.terraform.TerraformInheritOutput.TerraformInheritOutputBuilder;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.data.structure.EmptyPredicate;
@@ -31,6 +35,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -42,7 +47,10 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptionConfig;
+import io.harness.steps.StepOutcomeGroup;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,10 +64,11 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.mongodb.morphia.query.Sort;
 
-@OwnedBy(HarnessTeam.CDP)
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CDP)
 public class TerraformStepHelper {
   private static final String INHERIT_OUTPUT_FORMAT = "tfInheritOutput_%s";
   public static final String TF_CONFIG_FILES = "TF_CONFIG_FILES";
@@ -70,6 +79,7 @@ public class TerraformStepHelper {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private FileServiceClientFactory fileService;
+  @Inject private SecretManagerClientService secretManagerClientService;
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
     return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),
@@ -141,6 +151,49 @@ public class TerraformStepHelper {
     return (TerraformInheritOutput) output.getOutput();
   }
 
+  public void saveTerraformInheritOutput(TerraformPlanStepParameters planStepParameters,
+      TerraformTaskNGResponse terraformTaskNGResponse, Ambiance ambiance) {
+    TerraformInheritOutputBuilder builder = TerraformInheritOutput.builder();
+    builder.workspace(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getWorkspace()));
+    Map<String, String> commitIdMap = terraformTaskNGResponse.getCommitIdForConfigFilesMap();
+    builder.configFiles(getStoreConfigAtCommitId(
+        planStepParameters.getConfigFilesWrapper().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES)));
+    List<StoreConfigWrapper> remoteVarFiles = planStepParameters.getRemoteVarFiles();
+    if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
+      int i = 1;
+      List<StoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
+      for (StoreConfigWrapper varFileWrapper : planStepParameters.getRemoteVarFiles()) {
+        remoteVarFilesAtCommitIds.add(
+            getStoreConfigAtCommitId(varFileWrapper.getStoreConfig(), commitIdMap.get(String.format(TF_VAR_FILES, i))));
+        i++;
+      }
+      builder.remoteVarFiles(remoteVarFilesAtCommitIds);
+    }
+    builder.inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getInlineVarFiles()))
+        .backendConfig(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getBackendConfig()))
+        .environmentVariables(getEnvironmentVariablesMap(planStepParameters.getEnvironmentVariables()))
+        .workspace(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getWorkspace()))
+        .targets(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getTargets()))
+        .encryptedTfPlan(terraformTaskNGResponse.getEncryptedTfPlan())
+        .encryptionConfig(getEncryptionConfig(ambiance, planStepParameters))
+        .planName(getTerraformPlanName(planStepParameters.getTerraformPlanCommand(), ambiance));
+    String fullEntityId = generateFullIdentifier(planStepParameters.getProvisionerIdentifier(), ambiance);
+    String inheritOutputName = String.format(INHERIT_OUTPUT_FORMAT, fullEntityId);
+    executionSweepingOutputService.consume(ambiance, inheritOutputName, builder.build(), StepOutcomeGroup.STAGE.name());
+  }
+
+  private String getTerraformPlanName(TerraformPlanCommand terraformPlanCommand, Ambiance ambiance) {
+    String prefix = TerraformPlanCommand.DESTROY == terraformPlanCommand ? TF_DESTROY_NAME_PREFIX : TF_NAME_PREFIX;
+    return String.format(prefix, ambiance.getPlanExecutionId());
+  }
+
+  public EncryptionConfig getEncryptionConfig(Ambiance ambiance, TerraformPlanStepParameters planStepParameters) {
+    return SecretManagerConfigMapper.fromDTO(
+        secretManagerClientService.getSecretManager(AmbianceHelper.getAccountId(ambiance),
+            AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance),
+            ParameterFieldHelper.getParameterFieldValue(planStepParameters.getSecretManagerId()), false));
+  }
+
   public Map<String, String> getEnvironmentVariablesMap(Map<String, Object> inputVariables) {
     if (EmptyPredicate.isEmpty(inputVariables)) {
       return new HashMap<>();
@@ -190,6 +243,25 @@ public class TerraformStepHelper {
     return gitStoreConfig;
   }
 
+  public void saveRollbackDestroyConfigInherited(TerraformApplyStepParameters stepParameters, Ambiance ambiance) {
+    TerraformInheritOutput inheritOutput = getSavedInheritOutput(stepParameters.getProvisionerIdentifier(), ambiance);
+    persistence.save(TerraformConfig.builder()
+                         .accountId(AmbianceHelper.getAccountId(ambiance))
+                         .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
+                         .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
+                         .entityId(generateFullIdentifier(stepParameters.getProvisionerIdentifier(), ambiance))
+                         .pipelineExecutionId(ambiance.getPlanExecutionId())
+                         .createdAt(System.currentTimeMillis())
+                         .configFiles(inheritOutput.getConfigFiles())
+                         .remoteVarFiles(inheritOutput.getRemoteVarFiles())
+                         .inlineVarFiles(inheritOutput.getInlineVarFiles())
+                         .backendConfig(inheritOutput.getBackendConfig())
+                         .environmentVariables(inheritOutput.getEnvironmentVariables())
+                         .workspace(inheritOutput.getWorkspace())
+                         .targets(inheritOutput.getTargets())
+                         .build());
+  }
+
   public void saveRollbackDestroyConfigInline(
       TerraformApplyStepParameters stepParameters, TerraformTaskNGResponse response, Ambiance ambiance) {
     TerraformConfigBuilder builder =
@@ -204,23 +276,48 @@ public class TerraformStepHelper {
     Map<String, String> commitIdMap = response.getCommitIdForConfigFilesMap();
     builder.configFiles(getStoreConfigAtCommitId(
         stepParameters.getConfigFilesWrapper().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES)));
-    List<StoreConfigWrapper> remoteVarFiles = stepParameters.getRemoteVarFiles();
+    List<StoreConfigWrapper> remoteVarFiles = stepParameters.getRemoteVarFileConfigs();
     if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
       int i = 1;
       List<StoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
-      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFiles()) {
+      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFileConfigs()) {
         remoteVarFilesAtCommitIds.add(
             getStoreConfigAtCommitId(varFileWrapper.getStoreConfig(), commitIdMap.get(String.format(TF_VAR_FILES, i))));
         i++;
       }
       builder.remoteVarFiles(remoteVarFilesAtCommitIds);
     }
-    builder.inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFiles()))
+    builder.inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFilesListContent()))
         .backendConfig(ParameterFieldHelper.getParameterFieldValue(stepParameters.getBackendConfig()))
         .environmentVariables(getEnvironmentVariablesMap(stepParameters.getEnvironmentVariables()))
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
         .targets(ParameterFieldHelper.getParameterFieldValue(stepParameters.getTargets()));
     persistence.save(builder.build());
+  }
+
+  public TerraformConfig getLastSuccessfulApplyConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
+    String entityId = generateFullIdentifier(parameters.getProvisionerIdentifier(), ambiance);
+    TerraformConfig terraformConfig =
+        persistence.createQuery(TerraformConfig.class)
+            .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
+            .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
+            .filter(TerraformConfigKeys.projectId, AmbianceHelper.getProjectIdentifier(ambiance))
+            .filter(TerraformConfigKeys.entityId, entityId)
+            .order(Sort.descending(TerraformConfigKeys.createdAt))
+            .get();
+    if (terraformConfig == null) {
+      throw new InvalidRequestException(String.format("Terraform config for Last Apply not found: [%s]", entityId));
+    }
+    return terraformConfig;
+  }
+
+  public void clearTerraformConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
+    String entityId = generateFullIdentifier(parameters.getProvisionerIdentifier(), ambiance);
+    persistence.delete(persistence.createQuery(TerraformConfig.class)
+                           .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
+                           .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
+                           .filter(TerraformConfigKeys.projectId, AmbianceHelper.getProjectIdentifier(ambiance))
+                           .filter(TerraformConfigKeys.entityId, entityId));
   }
 
   public Map<String, Object> parseTerraformOutputs(String terraformOutputString) {

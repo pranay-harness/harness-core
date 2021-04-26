@@ -18,7 +18,10 @@ import io.harness.filesystem.FileIo;
 import com.google.common.base.Throwables;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -70,5 +73,17 @@ public class TerraformHelperUtils {
         : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, workspace)).toFile();
 
     return tfStateFile.exists() ? tfStateFile : null;
+  }
+
+  public List<String> createFileFromStringContent(List<String> varFilesListContent, String scriptDirectory)
+      throws IOException {
+    ArrayList<String> varFilesList = new ArrayList();
+
+    for (int i = 0; i < varFilesListContent.size(); i++) {
+      Path filePath = Files.createFile(Paths.get(scriptDirectory + "/varFile-" + i + ".var"));
+      Files.write(filePath, varFilesListContent.get(i).getBytes());
+      varFilesList.add(filePath.toString());
+    }
+    return varFilesList;
   }
 }

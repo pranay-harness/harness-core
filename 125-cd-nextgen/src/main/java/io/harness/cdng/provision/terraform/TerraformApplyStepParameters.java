@@ -29,8 +29,9 @@ public class TerraformApplyStepParameters extends TerraformApplyBaseStepInfo imp
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> workspace;
   StoreConfigWrapper configFilesWrapper;
-  List<StoreConfigWrapper> remoteVarFiles;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> inlineVarFiles;
+  List<StoreConfigWrapper> remoteVarFileConfigs;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<String>> inlineVarFilesListContent;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> backendConfig;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> targets;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
@@ -39,8 +40,8 @@ public class TerraformApplyStepParameters extends TerraformApplyBaseStepInfo imp
   @Builder(builderMethodName = "infoBuilder")
   public TerraformApplyStepParameters(String provisionerIdentifier, String name, String identifier,
       TerraformStepConfigurationType stepConfigurationType, ParameterField<String> workspace,
-      StoreConfigWrapper configFilesWrapper, List<StoreConfigWrapper> remoteVarFiles,
-      ParameterField<List<String>> inlineVarFiles, ParameterField<String> backendConfig,
+      StoreConfigWrapper configFilesWrapper, List<StoreConfigWrapper> remoteVarFileConfigs,
+      ParameterField<List<String>> inlineVarFilesListContent, ParameterField<String> backendConfig,
       ParameterField<List<String>> targets, Map<String, Object> environmentVariables, ParameterField<String> timeout) {
     super(provisionerIdentifier);
     this.name = name;
@@ -48,8 +49,8 @@ public class TerraformApplyStepParameters extends TerraformApplyBaseStepInfo imp
     this.stepConfigurationType = stepConfigurationType;
     this.workspace = workspace;
     this.configFilesWrapper = configFilesWrapper;
-    this.remoteVarFiles = remoteVarFiles;
-    this.inlineVarFiles = inlineVarFiles;
+    this.remoteVarFileConfigs = remoteVarFileConfigs;
+    this.inlineVarFilesListContent = inlineVarFilesListContent;
     this.backendConfig = backendConfig;
     this.targets = targets;
     this.environmentVariables = environmentVariables;

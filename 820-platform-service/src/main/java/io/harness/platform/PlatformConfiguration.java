@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.Path;
 import lombok.Getter;
+import lombok.Setter;
 import org.reflections.Reflections;
 
 @Getter
@@ -38,7 +39,7 @@ public class PlatformConfiguration extends Configuration {
   public static final String FILTER_RESOURCE_PACKAGE = "io.harness.filter";
   public static final String RESOURCEGROUP_PACKAGE = "io.harness.resourcegroup";
 
-  @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
+  @Setter @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
   @JsonProperty("auditServiceConfig") private AuditServiceConfiguration auditServiceConfig;
   @JsonProperty("resourceGroupServiceConfig") private ResourceGroupServiceConfig resoureGroupServiceConfig;
 

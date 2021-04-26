@@ -28,8 +28,10 @@ public class GitSyncMsvcHelper {
             .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
             .setCommitId(scmResponse.getObjectId())
             .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
+            .setFolderPath(scmResponse.getFolderPath())
             .setFilePath(scmResponse.getFilePath())
             .setYamlGitConfigId(scmResponse.getYamlGitConfigId())
+            .setBranchName(gitBranchInfo.getBranch())
             .setIsNewBranch(checkIfItsANewBranch(gitBranchInfo))
             .build());
   }

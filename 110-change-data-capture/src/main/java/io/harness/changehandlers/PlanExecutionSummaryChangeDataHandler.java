@@ -52,8 +52,13 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     if (dbObject.get("moduleInfo") != null) {
       if (((BasicDBObject) dbObject.get("moduleInfo")).get("ci") != null) {
         columnValueMapping.put("moduleInfo_type", "CI");
-        DBObject ciExecutionInfo = (DBObject) ((BasicDBObject) ((BasicDBObject) dbObject.get("moduleInfo")).get("ci"))
-                                       .get("ciExecutionInfoDTO");
+        DBObject ciObject = (DBObject) (((BasicDBObject) dbObject.get("moduleInfo")).get("ci"));
+        DBObject ciExecutionInfo = (DBObject) ciObject.get("ciExecutionInfoDTO");
+
+        if (ciObject.get("repoName") != null) {
+          columnValueMapping.put("moduleInfo_repository", ciObject.get("repoName").toString());
+        }
+
         if (ciExecutionInfo != null) {
           DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
 
@@ -74,13 +79,19 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
             columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
           }
         }
+      } else {
+        return null;
       }
+    } else {
+      // no information mention related to moduleInfo
+      return null;
     }
     columnValueMapping.put(
         "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
     if (dbObject.get("endTs") != null) {
       columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
     }
+
     return columnValueMapping;
   }
 }

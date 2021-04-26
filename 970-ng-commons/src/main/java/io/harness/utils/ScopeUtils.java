@@ -1,11 +1,11 @@
 package io.harness.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.Scope.ORGANIZATION;
-import static io.harness.beans.Scope.PROJECT;
+import static io.harness.beans.ScopeLevel.ORGANIZATION;
+import static io.harness.beans.ScopeLevel.PROJECT;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
@@ -26,14 +26,14 @@ public class ScopeUtils {
     return String.format(ACCOUNT_ADDR, accountIdentifier);
   }
 
-  public static Scope getMostSignificantScope(
+  public static ScopeLevel getMostSignificantScope(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return Scope.of(accountIdentifier, orgIdentifier, projectIdentifier);
+    return ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
-  public static Scope getImmediateNextScope(String accountIdentifier, String orgIdentifier) {
-    Scope scope = Scope.of(accountIdentifier, orgIdentifier, null);
-    if (scope.equals(ORGANIZATION)) {
+  public static ScopeLevel getImmediateNextScope(String accountIdentifier, String orgIdentifier) {
+    ScopeLevel scopeLevel = ScopeLevel.of(accountIdentifier, orgIdentifier, null);
+    if (scopeLevel.equals(ORGANIZATION)) {
       return PROJECT;
     }
     return ORGANIZATION;

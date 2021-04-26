@@ -14,13 +14,11 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.time.Clock;
 import java.time.Duration;
 @Singleton
 public class CVNGStepTaskHandler implements MongoPersistenceIterator.Handler<CVNGStepTask> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MorphiaPersistenceProvider<CVNGStepTask> persistenceProvider;
-  @Inject private Clock clock;
   @Inject private CVNGStepTaskService cvngStepTaskService;
 
   public void registerIterator() {
@@ -28,7 +26,7 @@ public class CVNGStepTaskHandler implements MongoPersistenceIterator.Handler<CVN
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("cvngStepTask")
             .poolSize(3)
-            .interval(Duration.ofSeconds(30))
+            .interval(Duration.ofSeconds(10))
             .build(),
         CVNGStepTaskHandler.class,
         MongoPersistenceIterator.<CVNGStepTask, MorphiaFilterExpander<CVNGStepTask>>builder()
@@ -44,6 +42,6 @@ public class CVNGStepTaskHandler implements MongoPersistenceIterator.Handler<CVN
   }
   @Override
   public void handle(CVNGStepTask entity) {
-    cvngStepTaskService.notifyCVNGStepIfDone(entity);
+    cvngStepTaskService.notifyCVNGStep(entity);
   }
 }
