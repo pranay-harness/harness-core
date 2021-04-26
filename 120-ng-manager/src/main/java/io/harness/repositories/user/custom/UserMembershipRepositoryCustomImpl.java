@@ -11,11 +11,16 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -45,6 +50,24 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
         userMemberships, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), UserMembership.class));
   }
 
+  @Override
+  public Set<String> filterUsersWithMembership(List<String> userIds, String accountIdentifier,
+      @Nullable String orgIdentifier, @Nullable String projectIdentifier) {
+    Query query = new Query();
+    query.addCriteria(where(UserMembershipKeys.userId).in(userIds));
+    query.addCriteria(where(UserMembershipKeys.scopes)
+                          .elemMatch(where(ScopeKeys.accountIdentifier)
+                                         .is(accountIdentifier)
+                                         .and(ScopeKeys.orgIdentifier)
+                                         .is(orgIdentifier)
+                                         .and(ScopeKeys.projectIdentifier)
+                                         .is(projectIdentifier)));
+    query.fields().include(UserMembershipKeys.userId);
+    List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
+    return userMemberships.stream().map(UserMembership::getUserId).filter(Objects::nonNull).collect(Collectors.toSet());
+  }
+
+  @Override
   public Long getProjectCount(String userId) {
     TypedAggregation<UserMembership> aggregation = newAggregation(UserMembership.class,
         match(where(UserMembershipKeys.userId).is(userId)), unwind(UserMembershipKeys.scopes),

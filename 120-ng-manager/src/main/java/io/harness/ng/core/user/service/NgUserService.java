@@ -12,6 +12,8 @@ import io.harness.ng.core.user.entities.UserMembership.Scope;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import javax.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -54,6 +56,9 @@ public interface NgUserService {
 
   void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier,
       UserMembershipUpdateMechanism mechanism);
+
+  Set<String> filterUsersWithScopeMembership(List<String> userIds, String accountIdentifier,
+      @Nullable String orgIdentifier, @Nullable String projectIdentifier);
 
   Page<ProjectDTO> listProjects(String accountId, PageRequest pageRequest);
 }
