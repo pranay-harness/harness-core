@@ -10,7 +10,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.beans.security.HarnessUserGroupDTO;
+import software.wings.security.HarnessUserGroupDTO;
 import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.service.intfc.HarnessUserGroupService;
 

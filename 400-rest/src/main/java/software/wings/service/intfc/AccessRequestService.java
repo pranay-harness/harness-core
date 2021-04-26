@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.security.AccessRequest;
-import software.wings.beans.security.AccessRequestDTO;
+import software.wings.security.AccessRequestDTO;
 
 import java.util.List;
 

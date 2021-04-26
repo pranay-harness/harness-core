@@ -10,7 +10,7 @@ import io.harness.beans.PageResponse;
 
 import software.wings.beans.Account;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.beans.security.HarnessUserGroupDTO;
+import software.wings.security.HarnessUserGroupDTO;
 
 import java.util.List;
 import java.util.Set;

@@ -27,7 +27,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.security.AccessRequest;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.beans.security.HarnessUserGroupDTO;
+import software.wings.security.HarnessUserGroupDTO;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccessRequestService;
 import software.wings.service.intfc.AccountService;

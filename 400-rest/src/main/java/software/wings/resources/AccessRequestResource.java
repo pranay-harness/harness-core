@@ -10,7 +10,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.security.AccessRequest;
-import software.wings.beans.security.AccessRequestDTO;
+import software.wings.security.AccessRequestDTO;
 import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.service.intfc.AccessRequestService;
 
