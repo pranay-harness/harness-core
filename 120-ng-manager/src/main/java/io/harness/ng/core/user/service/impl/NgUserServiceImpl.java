@@ -15,8 +15,12 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.events.UserMembershipAddEvent;
 import io.harness.ng.core.events.UserMembershipRemoveEvent;
+import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateMechanism;
 import io.harness.ng.core.user.entities.UserMembership;
@@ -28,8 +32,11 @@ import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.user.spring.UserMembershipRepository;
+import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.PrincipalType;
 import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserSearchFilter;
+import io.harness.utils.PageUtils;
 import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
 
@@ -42,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -319,5 +327,27 @@ public class NgUserServiceImpl implements NgUserService {
     if (isUserRemovedFromAccount) {
       RestClientUtils.getResponse(userClient.safeDeleteUser(userId, accountIdentifier));
     }
+  }
+
+  @Override
+  public Page<ProjectDTO> listProjects(String accountId, PageRequest pageRequest) {
+    Optional<String> userId = getUserIdentifier();
+    if (userId.isPresent()) {
+      Pageable pageable = PageUtils.getPageRequest(pageRequest);
+      List<Project> projects = userMembershipRepository.findProjectList(userId.get(), pageable);
+      List<ProjectDTO> projectDTOList = projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
+      return new PageImpl<>(projectDTOList, pageable, userMembershipRepository.getProjectCount(userId.get()));
+    } else {
+      throw new IllegalStateException("user login required");
+    }
+  }
+
+  private Optional<String> getUserIdentifier() {
+    Optional<String> userId = Optional.empty();
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      userId = Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
+    }
+    return userId;
   }
 }

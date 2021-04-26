@@ -3,6 +3,8 @@ package io.harness.ng.core.user.service;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateMechanism;
 import io.harness.ng.core.user.entities.UserMembership;
@@ -52,4 +54,6 @@ public interface NgUserService {
 
   void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier,
       UserMembershipUpdateMechanism mechanism);
+
+  Page<ProjectDTO> listProjects(String accountId, PageRequest pageRequest);
 }

@@ -1,4 +1,3 @@
-
 package io.harness.ng.userprofile.services.api;
 
 import io.harness.annotations.dev.HarnessTeam;

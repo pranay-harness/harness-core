@@ -15,4 +15,6 @@ public interface UserMembershipRepositoryCustom {
   List<UserMembership> findAll(Criteria criteria);
 
   Page<UserMembership> findAll(Criteria criteria, Pageable pageable);
+
+  Long getProjectCount(String userId);
 }
