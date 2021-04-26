@@ -13,7 +13,9 @@ import static io.harness.persistence.HPersistence.upToOne;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.settings.SettingVariableTypes.KMS;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
@@ -41,9 +43,10 @@ import org.mongodb.morphia.query.Query;
 /**
  * Created by rsingh on 9/29/17.
  */
-@OwnedBy(PL)
 @Singleton
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
   public static final String ACCESS_KEY_SUFFIX = "_accessKey";
   public static final String SECRET_KEY_SUFFIX = "_secretKey";

@@ -30,8 +30,11 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.entity.ServiceSecretKey.ServiceType;
@@ -43,6 +46,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidTokenException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.security.dto.UserPrincipal;
@@ -136,9 +140,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.Key;
 
-@OwnedBy(PL)
 @Singleton
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AuthServiceImpl implements AuthService {
   private GenericDbCache dbCache;
   private HPersistence persistence;
@@ -160,6 +165,7 @@ public class AuthServiceImpl implements AuthService {
   @Inject private ApiKeyService apiKeyService;
   @Inject @Nullable private SegmentHandler segmentHandler;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
@@ -697,10 +703,17 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private Optional<UserGroup> getHarnessUserGroupsByAccountId(String accountId, User user) {
-    if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-        || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
-      return Optional.empty();
+    if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, "")) {
+      if (!harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
+        return Optional.empty();
+      }
+    } else {
+      if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
+          || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
+        return Optional.empty();
+      }
     }
+
     AppPermission appPermission =
         AppPermission.builder()
             .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())

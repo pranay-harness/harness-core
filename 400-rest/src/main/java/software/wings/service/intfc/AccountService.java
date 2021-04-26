@@ -217,4 +217,8 @@ public interface AccountService {
   void ensureDataRetention(List<Class<? extends AccountDataRetentionEntity>> entityClasses);
 
   boolean updateAccountPreference(String accountId, String preferenceKey, Object value);
+
+  boolean enableHarnessUserGroupAccess(String accountId);
+
+  boolean disableHarnessUserGroupAccess(String accountId);
 }
