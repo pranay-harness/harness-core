@@ -1,12 +1,27 @@
 package io.harness.migration.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.migration.entities.NGSchema.NG_SCHEMA_ID;
+
+import static software.wings.beans.Schema.SCHEMA_ID;
+
+import static java.time.Duration.ofMinutes;
+
+import io.harness.Microservice;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.GeneralException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.migration.MigrationDetails;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigration;
 import io.harness.migration.beans.MigrationType;
+import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.migration.entities.NGSchema;
 import io.harness.migration.entities.NGSchema.NGSchemaKeys;
 import io.harness.migration.service.NGMigrationService;
+
+import software.wings.beans.Schema;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -26,79 +41,100 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class NGMigrationServiceImpl implements NGMigrationService {
-  @Inject private MigrationProvider migrationProvider;
+  @Inject private PersistentLocker persistentLocker;
   @Inject private ExecutorService executorService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private Injector injector;
   @Inject MongoTemplate mongoTemplate;
-  //  @Inject private MigrationDetails migrationDetails;
   final String SCHEMA_PREFIX = "schema_";
 
   @Override
-  public void runMigrations() {
-    String serviceName = migrationProvider.getServiceName();
-    String collectionName = SCHEMA_PREFIX + serviceName;
-    List<? extends MigrationDetails> migrationDetailsList = migrationProvider.getMigrationDetailsList();
+  public void runMigrations(NGMigrationConfiguration configuration) {
+    List<MigrationProvider> migrationProviderList = configuration.getMigrationProviderList();
+    Microservice microservice = configuration.getMicroservice();
 
-    log.info("[Migration] - Checking for new migrations");
-    NGSchema schema = mongoTemplate.findOne(new Query(), NGSchema.class, collectionName);
-    List<MigrationType> migrationTypes = migrationProvider.getMigrationDetailsList()
-                                             .stream()
-                                             .map(MigrationDetails::getMigrationTypeName)
-                                             .collect(Collectors.toList());
+    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             NGSchema.class, NG_SCHEMA_ID + microservice, ofMinutes(25), ofMinutes(27))) {
+      if (lock == null) {
+        throw new GeneralException("The persistent lock was not acquired. That very unlikely, but yet it happened.");
+      }
 
-    if (schema == null) {
-      Map<MigrationType, Integer> migrationTypesWithVersion =
-          migrationTypes.stream().collect(Collectors.toMap(Function.identity(), e -> 0));
-      schema = NGSchema.builder()
-                   .name(migrationProvider.getServiceName())
-                   .migrationDetails(migrationTypesWithVersion)
-                   .build();
-      mongoTemplate.save(schema, collectionName);
-    }
+      for (MigrationProvider migrationProvider : migrationProviderList) {
+        String serviceName = migrationProvider.getServiceName();
+        String collectionName = SCHEMA_PREFIX + serviceName;
+        List<? extends MigrationDetails> migrationDetailsList = migrationProvider.getMigrationDetailsList();
 
-    for (MigrationDetails migrationDetail : migrationDetailsList) {
-      List<Pair<Integer, Class<? extends NGMigration>>> migrationsList = migrationDetail.getMigrations();
-      Map<Integer, Class<? extends NGMigration>> migrations =
-          migrationsList.stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        log.info("[Migration] - Checking for new migrations");
+        NGSchema schema = mongoTemplate.findOne(new Query(), NGSchema.class, collectionName);
+        List<MigrationType> migrationTypes = migrationProvider.getMigrationDetailsList()
+                                                 .stream()
+                                                 .map(MigrationDetails::getMigrationTypeName)
+                                                 .collect(Collectors.toList());
 
-      int maxVersion = migrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        if (schema == null) {
+          Map<MigrationType, Integer> migrationTypesWithVersion =
+              migrationTypes.stream().collect(Collectors.toMap(Function.identity(), e -> 0));
+          schema = NGSchema.builder()
+                       .name(migrationProvider.getServiceName())
+                       .migrationDetails(migrationTypesWithVersion)
+                       .build();
+          mongoTemplate.save(schema, collectionName);
+        }
 
-      Map<MigrationType, Integer> allSchemaMigrations = schema.getMigrationDetails();
-      int currentVersion = allSchemaMigrations.getOrDefault(migrationDetail.getMigrationTypeName(), 0);
+        for (MigrationDetails migrationDetail : migrationDetailsList) {
+          List<Pair<Integer, Class<? extends NGMigration>>> migrationsList = migrationDetail.getMigrations();
+          Map<Integer, Class<? extends NGMigration>> migrations =
+              migrationsList.stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
-      boolean isBackground = migrationDetail.isBackground();
-      if (isBackground) {
-        migrateBackgroundMigrations(
-            currentVersion, maxVersion, migrations, migrationDetail, collectionName, serviceName);
-      } else {
-        if (currentVersion < maxVersion) {
-          executorService.submit(() -> {
-            doMigration(currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), collectionName,
-                serviceName);
-          });
+          int maxVersion = migrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
-        } else if (currentVersion > maxVersion) {
-          // If the current version is bigger than the max version we are downgrading. Restore to the previous version
-          log.info("[Migration] - {} : Rolling back {} version from {} to {}", serviceName,
-              migrationDetail.getMigrationTypeName(), currentVersion, maxVersion);
-          Update update = new Update().setOnInsert(
-              NGSchemaKeys.migrationDetails + migrationDetail.getMigrationTypeName(), maxVersion);
-          mongoTemplate.updateFirst(new Query(), update, collectionName);
-        } else {
-          log.info("[Migration] - {} : NGSchema {} is up to date", serviceName, migrationDetail.getMigrationTypeName());
+          Map<MigrationType, Integer> allSchemaMigrations = schema.getMigrationDetails();
+          int currentVersion = allSchemaMigrations.getOrDefault(migrationDetail.getMigrationTypeName(), 0);
+
+          boolean isBackground = migrationDetail.isBackground();
+          if (isBackground) {
+            runBackgroundMigrations(
+                currentVersion, maxVersion, migrations, migrationDetail, collectionName, serviceName, microservice);
+          } else {
+            runForegroundMigrations(
+                serviceName, collectionName, migrationDetail, migrations, maxVersion, currentVersion);
+          }
         }
       }
+    } catch (Exception e) {
+      log.error("[Migration] - {} : Migration failed.", microservice, e);
     }
   }
 
-  private void migrateBackgroundMigrations(int currentVersion, int maxVersion,
+  private void runForegroundMigrations(String serviceName, String collectionName, MigrationDetails migrationDetail,
+      Map<Integer, Class<? extends NGMigration>> migrations, int maxVersion, int currentVersion) {
+    if (currentVersion < maxVersion) {
+      doMigration(
+          currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), collectionName, serviceName);
+
+    } else if (currentVersion > maxVersion) {
+      // If the current version is bigger than the max version we are downgrading. Restore to the previous version
+      log.info("[Migration] - {} : Rolling back {} version from {} to {}", serviceName,
+          migrationDetail.getMigrationTypeName(), currentVersion, maxVersion);
+      Update update =
+          new Update().setOnInsert(NGSchemaKeys.migrationDetails + migrationDetail.getMigrationTypeName(), maxVersion);
+      mongoTemplate.updateFirst(new Query(), update, collectionName);
+    } else {
+      log.info("[Migration] - {} : NGSchema {} is up to date", serviceName, migrationDetail.getMigrationTypeName());
+    }
+  }
+
+  private void runBackgroundMigrations(int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail, String collectionName,
-      String serviceName) {
+      String serviceName, Microservice microservice) {
     if (currentVersion < maxVersion) {
       executorService.submit(() -> {
-        try {
+        migrationDetail.getMigrationTypeName();
+        try (AcquiredLock ignore = persistentLocker.acquireLock(Schema.class,
+                 "Background-" + SCHEMA_ID + microservice + migrationDetail.getMigrationTypeName(),
+                 ofMinutes(120 + 1))) {
           timeLimiter.<Boolean>callWithTimeout(() -> {
             doMigration(currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), collectionName,
                 serviceName);
