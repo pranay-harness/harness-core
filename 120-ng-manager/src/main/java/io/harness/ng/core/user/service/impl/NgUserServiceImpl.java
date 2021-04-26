@@ -127,6 +127,7 @@ public class NgUserServiceImpl implements NgUserService {
         .filter(
             roleAssignmentResponse -> roleAssignmentResponse.getRoleAssignment().getPrincipal().getType().equals(USER))
         .map(roleAssignmentResponse -> roleAssignmentResponse.getRoleAssignment().getPrincipal().getIdentifier())
+        .distinct()
         .collect(toList());
   }
 
