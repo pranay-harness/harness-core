@@ -18,6 +18,7 @@ import lombok.Data;
 public class VisitorTestParent implements Visitable {
   String name;
   VisitorTestChild visitorTestChild;
+  ConnectorRefChild connectorRefChild;
 
   @Override
   public LevelNode getLevelNode() {
@@ -28,6 +29,7 @@ public class VisitorTestParent implements Visitable {
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren visitableChildren = VisitableChildren.builder().build();
     visitableChildren.add("visitorTestChild", visitorTestChild);
+    visitableChildren.add("connectorRefChild", connectorRefChild);
     return visitableChildren;
   }
 }
