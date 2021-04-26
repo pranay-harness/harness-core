@@ -176,6 +176,10 @@ spec:
           value: "${grpcServiceConnectorPort}"
         - name: MANAGER_SERVICE_SECRET
           value: "${managerServiceSecret}"
+        - name: DELEGATE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
       restartPolicy: Always
 
 <#if ciEnabled == "true">

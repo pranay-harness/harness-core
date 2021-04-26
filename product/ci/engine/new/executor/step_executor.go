@@ -28,15 +28,18 @@ type StepExecutor interface {
 }
 
 type stepExecutor struct {
-	tmpFilePath string // File path to store generated temporary files
-	log         *zap.SugaredLogger
+	tmpFilePath         string // File path to store generated temporary files
+	delegateSvcEndpoint string // Delegate service endpoint
+	log                 *zap.SugaredLogger
 }
 
 // NewStepExecutor creates a unit step executor
-func NewStepExecutor(tmpFilePath string, log *zap.SugaredLogger) StepExecutor {
+func NewStepExecutor(tmpFilePath, delegateSvcEndpoint string,
+	log *zap.SugaredLogger) StepExecutor {
 	return &stepExecutor{
-		tmpFilePath: tmpFilePath,
-		log:         log,
+		tmpFilePath:         tmpFilePath,
+		delegateSvcEndpoint: delegateSvcEndpoint,
+		log:                 log,
 	}
 }
 
@@ -118,11 +121,11 @@ func (e *stepExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep,
 		}
 	}
 
-	err := sendStepStatus(ctx, stepID, accountID, callbackToken, taskID, int32(1),
-		timeTaken, stepStatus, errMsg, so, e.log)
+	err := sendStepStatus(ctx, stepID, e.delegateSvcEndpoint, accountID, callbackToken,
+		taskID, int32(1), timeTaken, stepStatus, errMsg, so, e.log)
 	if err != nil {
 		e.log.Errorw("Failed to send step status. Failing execution of step",
-			"step_id", stepID, zap.Error(err))
+			"step_id", stepID, "endpoint", e.delegateSvcEndpoint, zap.Error(err))
 		return err
 	}
 	return nil
