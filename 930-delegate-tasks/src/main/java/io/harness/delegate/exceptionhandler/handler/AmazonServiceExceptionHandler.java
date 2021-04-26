@@ -61,9 +61,8 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
     } else if (amazonServiceException instanceof AmazonCloudFormationException) {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
         log.info("Nothing to update on stack" + amazonServiceException.getMessage());
-      } else {
-        return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
       }
+      return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     } else {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     }
