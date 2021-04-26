@@ -102,7 +102,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
   private void runMigrationsInner(boolean isBackground, int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail, String collectionName,
-      String serviceName, Microservice microservice) {
+      String serviceName, Microservice microservice) throws Exception {
     if (currentVersion < maxVersion) {
       if (isBackground) {
         runForegroundMigrations(currentVersion, maxVersion, migrations, migrationDetail, collectionName, serviceName);
@@ -125,7 +125,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
   private void runForegroundMigrations(int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail, String collectionName,
-      String serviceName) {
+      String serviceName) throws Exception {
     doMigration(false, currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), collectionName,
         serviceName);
   }
