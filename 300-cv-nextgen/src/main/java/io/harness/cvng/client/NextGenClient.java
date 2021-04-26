@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
@@ -58,4 +59,8 @@ public interface NextGenClient {
   @GET("projects/{projectIdentifier}")
   Call<ResponseDTO<ProjectResponse>> getProject(@Path("projectIdentifier") String projectIdentifier,
       @Query("accountIdentifier") String accountId, @Query("orgIdentifier") String orgIdentifier);
+
+  @GET("organizations/{orgIdentifier}")
+  Call<ResponseDTO<OrganizationResponse>> getOrganization(
+      @Path("orgIdentifier") String orgIdentifier, @Query("accountIdentifier") String accountId);
 }
