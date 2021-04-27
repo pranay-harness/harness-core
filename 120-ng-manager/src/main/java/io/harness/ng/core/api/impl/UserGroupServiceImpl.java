@@ -18,6 +18,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.UserGroupDTO;
@@ -29,6 +30,7 @@ import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.notification.NotificationChannelType;
@@ -38,7 +40,9 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.ng.core.spring.UserGroupRepository;
 import io.harness.user.remote.UserClient;
-import io.harness.user.remote.UserSearchFilter;
+import io.harness.user.remote.UserFilterNG;
+import io.harness.utils.PageUtils;
+import io.harness.utils.PaginationUtils;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -48,6 +52,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -153,6 +158,24 @@ public class UserGroupServiceImpl implements UserGroupService {
     return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
   }
 
+  public PageResponse<UserInfo> listUsersInUserGroup(
+      UserMembership.Scope scope, String userGroupIdentifier, PageRequest pageRequest) {
+    Optional<UserGroup> userGroupOptional =
+        get(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroupIdentifier);
+    if (!userGroupOptional.isPresent()) {
+      return PageResponse.getEmptyPageResponse(pageRequest);
+    }
+    List<String> userIds = new ArrayList<>(userGroupOptional.get().getUsers());
+    Collections.sort(userIds);
+    PageResponse<String> userIdsPage = PaginationUtils.getPage(userIds, pageRequest);
+    if (userIdsPage.isEmpty()) {
+      return PageResponse.getEmptyPageResponse(pageRequest);
+    }
+    List<UserInfo> userInfos = RestClientUtils.getResponse(userClient.listUsers(
+        UserFilterNG.builder().userIds(userIdsPage.getContent()).build(), scope.getAccountIdentifier()));
+    return PageUtils.getNGPageResponse(userIdsPage, userInfos);
+  }
+
   @Override
   public UserGroup delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Criteria criteria = createUserGroupFetchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
@@ -254,8 +277,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   private void validateUsers(List<String> usersIds, String accountId) {
     Failsafe.with(retryPolicy).run(() -> {
       Set<String> returnedUsersIds =
-          RestClientUtils
-              .getResponse(userClient.listUsers(UserSearchFilter.builder().userIds(usersIds).build(), accountId))
+          RestClientUtils.getResponse(userClient.listUsers(UserFilterNG.builder().userIds(usersIds).build(), accountId))
               .stream()
               .map(UserInfo::getUuid)
               .collect(Collectors.toSet());

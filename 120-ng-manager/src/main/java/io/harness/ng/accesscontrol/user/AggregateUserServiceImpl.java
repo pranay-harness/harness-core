@@ -2,7 +2,6 @@ package io.harness.ng.accesscontrol.user;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.AUTHORIZED_USER;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.util.stream.Collectors.mapping;
@@ -13,13 +12,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentAggregateResponseDTO;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.invites.api.InviteService;
@@ -27,10 +23,10 @@ import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.invites.remote.RoleBinding;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.utils.PageUtils;
-import io.harness.utils.ScopeUtils;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -38,20 +34,18 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(PL)
-public class UserServiceImpl implements UserService {
+public class AggregateUserServiceImpl implements AggregateUserService {
   private static final int DEFAULT_PAGE_SIZE = 1000;
   AccessControlAdminClient accessControlAdminClient;
   NgUserService ngUserService;
@@ -59,7 +53,7 @@ public class UserServiceImpl implements UserService {
   ResourceGroupClient resourceGroupClient;
 
   @Override
-  public PageResponse<UserAggregateDTO> getUsers(String accountIdentifier, String orgIdentifier,
+  public PageResponse<UserAggregateDTO> getAggregatedUsers(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, PageRequest pageRequest, ACLAggregateFilter aclAggregateFilter) {
     validateRequest(searchTerm, aclAggregateFilter);
     if (ACLAggregateFilter.isFilterApplied(aclAggregateFilter)) {
@@ -69,7 +63,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public UserAggregateDTO getUsers(
+  public UserAggregateDTO getAggregatedUser(
       String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Optional<UserInfo> userInfoOptional = ngUserService.getUserById(userId);
     if (!userInfoOptional.isPresent()) {
@@ -154,7 +148,7 @@ public class UserServiceImpl implements UserService {
   private PageResponse<UserAggregateDTO> getUnfilteredUsersPage(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, PageRequest pageRequest) {
     PageResponse<UserSearchDTO> userPage =
-        getUsersFromUnfilteredUsersPage(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, searchTerm);
+        getUsersForUnfilteredUsersPage(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, searchTerm);
     Set<PrincipalDTO> principalDTOs =
         userPage.getContent()
             .stream()
@@ -180,10 +174,14 @@ public class UserServiceImpl implements UserService {
     return PageUtils.getNGPageResponse(userPage, userAggregateDTOS);
   }
 
-  private PageResponse<UserSearchDTO> getUsersFromUnfilteredUsersPage(String accountIdentifier, String orgIdentifier,
+  private PageResponse<UserSearchDTO> getUsersForUnfilteredUsersPage(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, PageRequest pageRequest, String searchTerm) {
-    List<String> userIds = ngUserService.listUsersAtScope(accountIdentifier, orgIdentifier, projectIdentifier);
-    Page<UserInfo> users = ngUserService.list(
+    List<String> userIds = ngUserService.listUserIds(UserMembership.Scope.builder()
+                                                         .accountIdentifier(accountIdentifier)
+                                                         .orgIdentifier(orgIdentifier)
+                                                         .projectIdentifier(projectIdentifier)
+                                                         .build());
+    Page<UserInfo> users = ngUserService.listCurrentGenUsers(
         accountIdentifier, searchTerm, org.springframework.data.domain.PageRequest.of(0, DEFAULT_PAGE_SIZE));
     Set<String> userIdsSet = new HashSet<>(userIds);
     List<UserSearchDTO> allFilteredUsers =
@@ -215,55 +213,6 @@ public class UserServiceImpl implements UserService {
         .pageIndex(pageRequest.getPageIndex())
         .empty(usersPage.isEmpty())
         .build();
-  }
-
-  @Override
-  public boolean deleteUser(String accountIdentifier, String orgIdentifier, String projectIdentifier, String userId) {
-    Optional<UserMembership> userMembershipOptional = ngUserService.getUserMembership(userId);
-    if (!userMembershipOptional.isPresent()) {
-      return false;
-    }
-    UserMembership userMembership = userMembershipOptional.get();
-    if (isUserPartofChildScope(accountIdentifier, orgIdentifier, projectIdentifier, userMembership)) {
-      String errorMessage = String.format("Please delete the user from the %ss in this %s and try again",
-          StringUtils.capitalize(
-              ScopeUtils.getImmediateNextScope(accountIdentifier, orgIdentifier).toString().toLowerCase()),
-          StringUtils.capitalize(ScopeUtils.getMostSignificantScope(accountIdentifier, orgIdentifier, projectIdentifier)
-                                     .toString()
-                                     .toLowerCase()));
-      throw new InvalidRequestException(errorMessage);
-    }
-    List<RoleAssignmentResponseDTO> roleAssignments = getResponse(
-        accessControlAdminClient.getFilteredRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, 0,
-            DEFAULT_PAGE_SIZE,
-            RoleAssignmentFilterDTO.builder()
-                .principalFilter(Collections.singleton(PrincipalDTO.builder().identifier(userId).type(USER).build()))
-                .build()))
-                                                          .getContent();
-    boolean successfullyDeleted = true;
-    for (RoleAssignmentResponseDTO assignment : roleAssignments) {
-      RoleAssignmentDTO roleAssignment = assignment.getRoleAssignment();
-      RoleAssignmentResponseDTO roleAssignmentResponseDTO = getResponse(accessControlAdminClient.deleteRoleAssignment(
-          roleAssignment.getIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier));
-      successfullyDeleted = successfullyDeleted && Objects.nonNull(roleAssignmentResponseDTO);
-    }
-    if (successfullyDeleted) {
-      ngUserService.removeUserFromScope(userId, accountIdentifier, orgIdentifier, projectIdentifier, AUTHORIZED_USER);
-    }
-    return successfullyDeleted;
-  }
-
-  private boolean isUserPartofChildScope(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, UserMembership userMembership) {
-    if (!isBlank(projectIdentifier)) {
-      return false;
-    }
-    if (!isBlank(orgIdentifier)) {
-      return userMembership.getScopes().stream().anyMatch(
-          scope -> orgIdentifier.equals(scope.getOrgIdentifier()) && !isBlank(scope.getProjectIdentifier()));
-    }
-    return userMembership.getScopes().stream().anyMatch(
-        scope -> accountIdentifier.equals(scope.getAccountIdentifier()) && !isBlank(scope.getOrgIdentifier()));
   }
 
   private Map<String, List<RoleBinding>> getUserRoleAssignmentMap(

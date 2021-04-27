@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
-import static io.harness.ng.core.user.remote.UserSearchMapper.writeDTO;
+import static io.harness.ng.core.user.remote.mapper.UserSearchMapper.writeDTO;
 
 import static java.util.stream.Collectors.toList;
 
@@ -118,7 +118,7 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
 
   private List<UserSearchDTO> getAdmins(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, Map<String, UserSearchDTO> userMap) {
-    List<String> userIds = ngUserService.getUsersHavingRole(UserMembership.Scope.builder()
+    List<String> userIds = ngUserService.getUserIdsWithRole(UserMembership.Scope.builder()
                                                                 .accountIdentifier(accountIdentifier)
                                                                 .orgIdentifier(orgIdentifier)
                                                                 .projectIdentifier(projectIdentifier)

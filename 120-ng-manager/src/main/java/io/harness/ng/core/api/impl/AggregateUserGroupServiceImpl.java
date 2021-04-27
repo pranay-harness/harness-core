@@ -26,7 +26,7 @@ import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
-import io.harness.ng.core.user.remote.UserSearchMapper;
+import io.harness.ng.core.user.remote.mapper.UserSearchMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.utils.UserGroupMapper;
 import io.harness.utils.PageUtils;
@@ -101,6 +101,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
           .userGroupDTO(UserGroupMapper.toDTO(userGroup))
           .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroup.getIdentifier()))
           .users(users)
+          .lastModifiedAt(userGroup.getLastModifiedAt())
           .build();
     }));
   }
@@ -155,6 +156,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
               .userGroupDTO(UserGroupMapper.toDTO(userGroup))
               .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroup.getIdentifier()))
               .users(users)
+              .lastModifiedAt(userGroup.getLastModifiedAt())
               .build();
         })
         .collect(toList());
@@ -187,6 +189,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
         .userGroupDTO(UserGroupMapper.toDTO(userGroupOpt.get()))
         .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroupIdentifier))
         .users(users)
+        .lastModifiedAt(userGroupOpt.get().getLastModifiedAt())
         .build();
   }
 

@@ -10,7 +10,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PL)
-public class UserSearchFilter {
+public class UserFilterNG {
   List<String> emailIds;
   List<String> userIds;
 }
