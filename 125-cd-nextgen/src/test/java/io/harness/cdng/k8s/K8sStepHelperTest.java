@@ -18,6 +18,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
@@ -41,6 +42,7 @@ import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
+import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -61,6 +63,9 @@ import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.git.GitFetchFilesConfig;
+import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
@@ -74,13 +79,19 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.contracts.refobjects.RefType;
+import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -91,6 +102,7 @@ import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -104,9 +116,11 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Mock private EngineExpressionService engineExpressionService;
   @Mock private OutcomeService outcomeService;
+  @Mock private K8sStepExecutor k8sStepExecutor;
+  @Mock private KryoSerializer kryoSerializer;
   @InjectMocks private K8sStepHelper k8sStepHelper;
 
-  private final Ambiance ambiance = Ambiance.newBuilder().build();
+  private final Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions("accountId", "test-account").build();
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -450,16 +464,18 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldConvertGitAccountRepoWithRepoName() {
+    List<String> paths = Arrays.asList("path/to");
     GitStoreConfig gitStoreConfig = GithubStore.builder()
                                         .repoName(ParameterField.createValueField("parent-repo/module"))
-                                        .paths(ParameterField.createValueField(Arrays.asList("path/to")))
+                                        .paths(ParameterField.createValueField(paths))
                                         .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
-    GitStoreDelegateConfig gitStoreDelegateConfig = k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig,
-        connectorInfoDTO, Collections.emptyList(), sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name());
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
+            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
     GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
@@ -471,17 +487,19 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldNotConvertGitRepoWithRepoName() {
+    List<String> paths = Arrays.asList("path/to");
     GitStoreConfig gitStoreConfig = GithubStore.builder()
                                         .repoName(ParameterField.createValueField("parent-repo/module"))
-                                        .paths(ParameterField.createValueField(Arrays.asList("path/to")))
+                                        .paths(ParameterField.createValueField(paths))
                                         .build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
     GitConfigDTO gitConfigDTO =
         GitConfigDTO.builder().gitConnectionType(GitConnectionType.REPO).url("http://localhost/repository").build();
 
-    GitStoreDelegateConfig gitStoreDelegateConfig = k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig,
-        connectorInfoDTO, Collections.emptyList(), sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name());
+    GitStoreDelegateConfig gitStoreDelegateConfig =
+        k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
+            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
     GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
@@ -493,8 +511,8 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldFailGitRepoConversionIfRepoNameIsMissing() {
-    GitStoreConfig gitStoreConfig =
-        GithubStore.builder().paths(ParameterField.createValueField(Arrays.asList("path/to"))).build();
+    List<String> paths = Arrays.asList("path/to");
+    GitStoreConfig gitStoreConfig = GithubStore.builder().paths(ParameterField.createValueField(paths)).build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
     GitConfigDTO gitConfigDTO =
@@ -502,7 +520,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
     try {
       k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(), sshKeySpecDTO,
-          gitConfigDTO, ManifestType.K8S_MANIFEST.name());
+          gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
     } catch (Exception thrown) {
       assertThat(thrown).isNotNull();
       assertThat(thrown).isInstanceOf(InvalidRequestException.class);
@@ -734,5 +752,136 @@ public class K8sStepHelperTest extends CategoryTest {
     StepElementParameters value =
         StepElementParameters.builder().timeout(ParameterField.createValueField("15m")).build();
     assertThat(K8sStepHelper.getTimeoutInMillis(value)).isEqualTo(900000);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldAutomaticallyFetchValuesYamlForK8sGit() {
+    K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
+        K8sDirectInfrastructureOutcome.builder().namespace("default").build();
+    GitStore gitStore = GitStore.builder()
+                            .branch(ParameterField.createValueField("master"))
+                            .paths(ParameterField.createValueField(Arrays.asList("path/to/k8s/manifest")))
+                            .connectorRef(ParameterField.createValueField("git-connector"))
+                            .build();
+    K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder().identifier("k8s").store(gitStore).build();
+    Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", k8sManifestOutcome);
+    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
+    RefObject service = RefObject.newBuilder()
+                            .setName(OutcomeExpressionConstants.SERVICE)
+                            .setKey(OutcomeExpressionConstants.SERVICE)
+                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                            .build();
+
+    RefObject infra = RefObject.newBuilder()
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                          .build();
+
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
+
+    doReturn(
+        Optional.of(
+            ConnectorResponseDTO.builder()
+                .connector(
+                    ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).name("test").build())
+                .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    TaskChainResponse taskChainResponse =
+        k8sStepHelper.startChainLink(k8sStepExecutor, ambiance, rollingStepElementParams);
+    assertThat(taskChainResponse).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isInstanceOf(K8sStepPassThroughData.class);
+    K8sStepPassThroughData k8sStepPassThroughData = (K8sStepPassThroughData) taskChainResponse.getPassThroughData();
+    assertThat(k8sStepPassThroughData.getValuesManifestOutcomes()).isNotEmpty();
+    assertThat(k8sStepPassThroughData.getValuesManifestOutcomes().size()).isEqualTo(1);
+    ValuesManifestOutcome valuesManifestOutcome = k8sStepPassThroughData.getValuesManifestOutcomes().get(0);
+    assertThat(valuesManifestOutcome.getIdentifier()).isEqualTo(k8sManifestOutcome.getIdentifier());
+    assertThat(valuesManifestOutcome.getStore()).isEqualTo(k8sManifestOutcome.getStore());
+    ArgumentCaptor<TaskParameters> taskParametersArgumentCaptor = ArgumentCaptor.forClass(TaskParameters.class);
+    verify(kryoSerializer).asDeflatedBytes(taskParametersArgumentCaptor.capture());
+    TaskParameters taskParameters = taskParametersArgumentCaptor.getValue();
+    assertThat(taskParameters).isInstanceOf(GitFetchRequest.class);
+    GitFetchRequest gitFetchRequest = (GitFetchRequest) taskParameters;
+    assertThat(gitFetchRequest.getGitFetchFilesConfigs()).isNotEmpty();
+    assertThat(gitFetchRequest.getGitFetchFilesConfigs().size()).isEqualTo(1);
+    GitFetchFilesConfig gitFetchFilesConfig = gitFetchRequest.getGitFetchFilesConfigs().get(0);
+    assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths()).isNotEmpty();
+    assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().size()).isEqualTo(1);
+    assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().get(0))
+        .isEqualTo("path/to/k8s/manifest/values.yaml");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldAutomaticallyFetchValuesYamlForHelmGit() {
+    K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
+        K8sDirectInfrastructureOutcome.builder().namespace("default").build();
+    GitStore gitStore = GitStore.builder()
+                            .branch(ParameterField.createValueField("master"))
+                            .folderPath(ParameterField.createValueField("path/to/helm/chart"))
+                            .connectorRef(ParameterField.createValueField("git-connector"))
+                            .build();
+    HelmChartManifestOutcome helmChartManifestOutcome =
+        HelmChartManifestOutcome.builder().identifier("helm").store(gitStore).build();
+    Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
+    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
+    RefObject service = RefObject.newBuilder()
+                            .setName(OutcomeExpressionConstants.SERVICE)
+                            .setKey(OutcomeExpressionConstants.SERVICE)
+                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                            .build();
+
+    RefObject infra = RefObject.newBuilder()
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                          .build();
+
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
+
+    doReturn(
+        Optional.of(
+            ConnectorResponseDTO.builder()
+                .connector(
+                    ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).name("test").build())
+                .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    TaskChainResponse taskChainResponse =
+        k8sStepHelper.startChainLink(k8sStepExecutor, ambiance, rollingStepElementParams);
+    assertThat(taskChainResponse).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isInstanceOf(K8sStepPassThroughData.class);
+    K8sStepPassThroughData k8sStepPassThroughData = (K8sStepPassThroughData) taskChainResponse.getPassThroughData();
+    assertThat(k8sStepPassThroughData.getValuesManifestOutcomes()).isNotEmpty();
+    assertThat(k8sStepPassThroughData.getValuesManifestOutcomes().size()).isEqualTo(1);
+    ValuesManifestOutcome valuesManifestOutcome = k8sStepPassThroughData.getValuesManifestOutcomes().get(0);
+    assertThat(valuesManifestOutcome.getIdentifier()).isEqualTo(helmChartManifestOutcome.getIdentifier());
+    assertThat(valuesManifestOutcome.getStore()).isEqualTo(helmChartManifestOutcome.getStore());
+    ArgumentCaptor<TaskParameters> taskParametersArgumentCaptor = ArgumentCaptor.forClass(TaskParameters.class);
+    verify(kryoSerializer).asDeflatedBytes(taskParametersArgumentCaptor.capture());
+    TaskParameters taskParameters = taskParametersArgumentCaptor.getValue();
+    assertThat(taskParameters).isInstanceOf(GitFetchRequest.class);
+    GitFetchRequest gitFetchRequest = (GitFetchRequest) taskParameters;
+    assertThat(gitFetchRequest.getGitFetchFilesConfigs()).isNotEmpty();
+    assertThat(gitFetchRequest.getGitFetchFilesConfigs().size()).isEqualTo(1);
+    GitFetchFilesConfig gitFetchFilesConfig = gitFetchRequest.getGitFetchFilesConfigs().get(0);
+    assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths()).isNotEmpty();
+    assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().size()).isEqualTo(1);
+    assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().get(0))
+        .isEqualTo("path/to/helm/chart/values.yaml");
   }
 }
