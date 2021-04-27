@@ -19,5 +19,5 @@ public interface HarnessToGitHelperService {
   Boolean isGitSyncEnabled(EntityScopeInfo entityScopeInfo);
 
   void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier, String orgIdentifier,
-      String branch, String filePathToBeExcluded);
+      String branch, String filePathToBeExcluded, String repoURL);
 }
