@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.acl.daos;
 
+import static io.harness.accesscontrol.acl.models.ACL.getAclQueryString;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.Principal;
@@ -18,6 +19,7 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -68,28 +70,31 @@ public class ACLDAOImpl implements ACLDAO {
 
       if (scopeOptional.isPresent()) {
         Scope scope = scopeOptional.get();
-        queryStrings.add(ACL.getAclQueryString(scope.toString(),
+        queryStrings.add(getAclQueryString(scope.toString(),
             getResourceSelector(permissionCheckDTO.getResourceType(), permissionCheckDTO.getResourceIdentifier()),
             principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
             permissionCheckDTO.getPermission()));
 
-        queryStrings.add(ACL.getAclQueryString(scope.toString(),
+        queryStrings.add(getAclQueryString(scope.toString(),
             getResourceSelector(permissionCheckDTO.getResourceType(), ALL_RESOURCES_IDENTIFIER),
             principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
             permissionCheckDTO.getPermission()));
 
         String currentResourceType = permissionCheckDTO.getResourceType();
         Scope currentScope = scope;
-        while (!resourceTypes.contains(currentResourceType) && currentScope.getParentScope() != null) {
-          queryStrings.add(ACL.getAclQueryString(currentScope.getParentScope().toString(),
+        while (currentScope != null && !resourceTypes.contains(currentResourceType)) {
+          queryStrings.add(getAclQueryString(
+              Objects.isNull(currentScope.getParentScope()) ? "" : currentScope.getParentScope().toString(),
               getResourceSelector(currentScope.getLevel().getResourceType(), currentScope.getInstanceId()),
               principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
               permissionCheckDTO.getPermission()));
           currentScope = currentScope.getParentScope();
-          currentResourceType = currentScope.getLevel().getResourceType();
+          if (currentScope != null) {
+            currentResourceType = currentScope.getLevel().getResourceType();
+          }
         }
       } else {
-        queryStrings.add(ACL.getAclQueryString("",
+        queryStrings.add(getAclQueryString("",
             getResourceSelector(permissionCheckDTO.getResourceType(), permissionCheckDTO.getResourceIdentifier()),
             principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
             permissionCheckDTO.getPermission()));
