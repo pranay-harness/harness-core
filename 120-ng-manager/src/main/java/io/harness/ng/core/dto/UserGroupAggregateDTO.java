@@ -17,4 +17,5 @@ public class UserGroupAggregateDTO {
   @NotNull UserGroupDTO userGroupDTO;
   List<UserSearchDTO> users;
   List<RoleAssignmentMetadataDTO> roleAssignmentsMetadataDTO;
+  long lastModifiedAt;
 }

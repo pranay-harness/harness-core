@@ -62,8 +62,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
-import io.harness.ng.accesscontrol.user.UserService;
-import io.harness.ng.accesscontrol.user.UserServiceImpl;
+import io.harness.ng.accesscontrol.user.AggregateUserService;
+import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
@@ -420,7 +420,7 @@ public class NextGenModule extends AbstractModule {
       }
     });
     install(LicenseModule.getInstance());
-    bind(UserService.class).to(UserServiceImpl.class);
+    bind(AggregateUserService.class).to(AggregateUserServiceImpl.class);
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);

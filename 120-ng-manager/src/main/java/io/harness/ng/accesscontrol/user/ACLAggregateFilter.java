@@ -1,4 +1,4 @@
-package io.harness.ng.accesscontrol.user.remote;
+package io.harness.ng.accesscontrol.user;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;

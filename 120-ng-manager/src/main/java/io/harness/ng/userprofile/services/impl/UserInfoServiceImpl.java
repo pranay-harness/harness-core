@@ -27,7 +27,7 @@ public class UserInfoServiceImpl implements UserInfoService {
   @Inject private UserMembershipRepository userMembershipRepository;
 
   @Override
-  public UserInfo get() {
+  public UserInfo getCurrentUser() {
     Optional<String> userEmail = getUserEmail();
     if (userEmail.isPresent()) {
       Optional<UserInfo> userInfo = RestClientUtils.getResponse(userClient.getUserByEmailId(userEmail.get()));

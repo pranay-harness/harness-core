@@ -1,4 +1,4 @@
-package io.harness.ng.core.user.remote;
+package io.harness.ng.core.user.remote.mapper;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

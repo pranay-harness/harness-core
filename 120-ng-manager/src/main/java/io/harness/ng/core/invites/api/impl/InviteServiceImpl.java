@@ -28,7 +28,7 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
-import io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter;
+import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.AccountDTO;
@@ -45,7 +45,6 @@ import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.invites.remote.RoleBinding;
 import io.harness.ng.core.invites.remote.RoleBinding.RoleBindingKeys;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.Scope;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.channeldetails.EmailChannel;
@@ -173,16 +172,15 @@ public class InviteServiceImpl implements InviteService {
 
   private boolean checkIfUserAlreadyAdded(Invite invite) {
     Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail());
-    if (!userOptional.isPresent()) {
-      return false;
-    }
-    Optional<UserMembership> userMembershipOptional = ngUserService.getUserMembership(userOptional.get().getUuid());
-    Scope scope = Scope.builder()
-                      .accountIdentifier(invite.getAccountIdentifier())
-                      .orgIdentifier(invite.getOrgIdentifier())
-                      .projectIdentifier(invite.getProjectIdentifier())
-                      .build();
-    return userMembershipOptional.isPresent() && userMembershipOptional.get().getScopes().contains(scope);
+    return userOptional
+        .filter(user
+            -> ngUserService.isUserAtScope(user.getUuid(),
+                Scope.builder()
+                    .accountIdentifier(invite.getAccountIdentifier())
+                    .orgIdentifier(invite.getOrgIdentifier())
+                    .projectIdentifier(invite.getProjectIdentifier())
+                    .build()))
+        .isPresent();
   }
 
   private InviteOperationResponse createInvite(Invite newInvite, Invite existingInvite) {
@@ -493,12 +491,12 @@ public class InviteServiceImpl implements InviteService {
       }
     }
     if (!isBlank(searchTerm)) {
-      Page<UserInfo> userInfos = ngUserService.list(
+      Page<UserInfo> userInfos = ngUserService.listCurrentGenUsers(
           accountIdentifier, searchTerm, org.springframework.data.domain.PageRequest.of(0, DEFAULT_PAGE_SIZE));
-      List<String> userIds = userInfos.stream().map(UserInfo::getEmail).collect(toList());
+      List<String> emailIds = userInfos.stream().map(UserInfo::getEmail).collect(toList());
       Criteria searchTermCriteria = new Criteria();
       searchTermCriteria.orOperator(
-          Criteria.where(InviteKeys.email).regex(quote(searchTerm)), Criteria.where(InviteKeys.email).in(userIds));
+          Criteria.where(InviteKeys.email).regex(quote(searchTerm)), Criteria.where(InviteKeys.email).in(emailIds));
       criteria = new Criteria().andOperator(criteria, searchTermCriteria);
     }
     return getInvites(criteria, pageRequest);
