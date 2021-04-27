@@ -40,7 +40,6 @@ public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelega
       ErrorHandlingGlobalContextData globalContextData =
           GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
       if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
-        GlobalContextManager.unset(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
         throw amazonServiceException;
       }
       handleAmazonServiceException(amazonServiceException);
@@ -48,7 +47,6 @@ public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelega
       ErrorHandlingGlobalContextData globalContextData =
           GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
       if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
-        GlobalContextManager.unset(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
         throw amazonClientException;
       }
       handleAmazonClientException(amazonClientException);

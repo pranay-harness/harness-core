@@ -2,7 +2,6 @@ package io.harness.delegate.task.artifacts.ecr;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.context.GlobalContext;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -10,8 +9,6 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
-import io.harness.globalcontex.ErrorHandlingGlobalContextData;
-import io.harness.manage.GlobalContextManager;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
@@ -39,11 +36,6 @@ public class EcrArtifactTaskNG extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    if (!GlobalContextManager.isAvailable()) {
-      GlobalContextManager.set(new GlobalContext());
-    }
-    GlobalContextManager.upsertGlobalContextRecord(
-        ErrorHandlingGlobalContextData.builder().isSupportedErrorFramework(isSupportingErrorFramework()).build());
     ArtifactTaskParameters taskParameters = (ArtifactTaskParameters) parameters;
     return ecrArtifactTaskHelper.getArtifactCollectResponse(taskParameters);
     //      log.error("Exception in processing EcrArtifactTaskNG task [{}]", exception);
