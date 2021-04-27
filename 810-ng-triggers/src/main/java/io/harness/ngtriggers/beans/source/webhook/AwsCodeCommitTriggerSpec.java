@@ -20,7 +20,7 @@ public class AwsCodeCommitTriggerSpec implements WebhookTriggerSpec {
   List<WebhookAction> actions;
   List<WebhookCondition> payloadConditions;
   String jexlCondition;
-  List<String> pathFilters;
+  List<WebhookCondition> pathFilters;
 
   @Override
   public WebhookSourceRepo getType() {

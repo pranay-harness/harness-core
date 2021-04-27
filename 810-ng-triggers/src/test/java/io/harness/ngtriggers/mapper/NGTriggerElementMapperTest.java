@@ -96,7 +96,7 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     WebhookTriggerSpec webhookTriggerConfigSpec = webhookTriggerConfig.getSpec();
     assertThat(webhookTriggerConfigSpec.getEvent()).isEqualTo(PULL_REQUEST);
     assertThat(webhookTriggerConfigSpec.getActions()).containsExactlyInAnyOrder(OPENED, CLOSED);
-    assertThat(webhookTriggerConfigSpec.getPathFilters()).containsExactlyInAnyOrder("path1", "path2");
+    // assertThat(webhookTriggerConfigSpec.getPathFilters()).containsExactlyInAnyOrder("path1", "path2");
     assertThat(webhookTriggerConfigSpec.getJexlCondition()).isEqualTo("true");
     assertThat(webhookTriggerConfigSpec.getPayloadConditions()).isNotNull();
     assertThat(webhookTriggerConfigSpec.getPayloadConditions().size()).isEqualTo(3);
