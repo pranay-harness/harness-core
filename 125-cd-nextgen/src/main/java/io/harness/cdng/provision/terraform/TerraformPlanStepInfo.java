@@ -36,7 +36,8 @@ public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements 
   @JsonProperty("configuration") TerraformPlanExecutionData terraformPlanExecutionData;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformPlanStepInfo(String provisionerIdentifier, TerraformPlanExecutionData terraformPlanExecutionData) {
+  public TerraformPlanStepInfo(
+      ParameterField<String> provisionerIdentifier, TerraformPlanExecutionData terraformPlanExecutionData) {
     super(provisionerIdentifier);
     this.terraformPlanExecutionData = terraformPlanExecutionData;
   }

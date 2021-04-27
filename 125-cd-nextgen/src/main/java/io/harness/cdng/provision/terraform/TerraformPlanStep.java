@@ -65,7 +65,8 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
-    String entityId = helper.generateFullIdentifier(planStepParameters.getProvisionerIdentifier(), ambiance);
+    String entityId = helper.generateFullIdentifier(
+        ParameterFieldHelper.getParameterFieldValue(planStepParameters.getProvisionerIdentifier()), ambiance);
     builder.taskType(TFTaskType.PLAN)
         .terraformCommandUnit(TerraformCommandUnit.Plan)
         .entityId(entityId)
@@ -137,6 +138,10 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
 
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.saveTerraformInheritOutput(planStepParameters, terraformTaskNGResponse, ambiance);
+      helper.updateParentEntityIdAndVersion(
+          helper.generateFullIdentifier(
+              ParameterFieldHelper.getParameterFieldValue(planStepParameters.getProvisionerIdentifier()), ambiance),
+          terraformTaskNGResponse.getStateFileId());
     }
     return stepResponseBuilder.build();
   }

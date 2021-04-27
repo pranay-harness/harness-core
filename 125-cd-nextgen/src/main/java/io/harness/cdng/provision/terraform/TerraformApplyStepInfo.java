@@ -39,7 +39,8 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
   @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformApplyStepInfo(String provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
+  public TerraformApplyStepInfo(
+      ParameterField<String> provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
     super(provisionerIdentifier);
     this.terrformStepConfiguration = terrformStepConfiguration;
   }

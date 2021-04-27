@@ -14,6 +14,7 @@ import io.swagger.annotations.Api;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -34,5 +35,14 @@ public class FileServiceResourceNG {
       @QueryParam("entityId") @NotNull String entityId, @QueryParam("fileBucket") @NotNull FileBucket fileBucket) {
     String latestFileId = fileService.getLatestFileId(entityId, fileBucket);
     return new RestResponse<>(latestFileId);
+  }
+
+  @POST
+  @Path("parentEntityIdAndVersion")
+  public RestResponse<Boolean> updateParentEntityIdAndVersion(@QueryParam("entityId") @NotNull String entityId,
+      @QueryParam("stateFileId") @NotNull String stateFileId,
+      @QueryParam("fileBucket") @NotNull FileBucket fileBucket) {
+    boolean updated = fileService.updateParentEntityIdAndVersion(null, entityId, null, stateFileId, null, fileBucket);
+    return new RestResponse<>(updated);
   }
 }

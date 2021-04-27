@@ -39,7 +39,8 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
   @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformDestroyStepInfo(String provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
+  public TerraformDestroyStepInfo(
+      ParameterField<String> provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
     super(provisionerIdentifier);
     this.terrformStepConfiguration = terrformStepConfiguration;
   }
