@@ -112,7 +112,7 @@ func TestStepValidations(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -153,7 +153,7 @@ func TestStepRunError(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -204,7 +204,7 @@ func TestStepRunSuccess(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -250,7 +250,7 @@ func TestStepPluginSuccess(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -296,7 +296,7 @@ func TestStepSaveCacheError(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -352,7 +352,7 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -401,7 +401,7 @@ func TestStepRestoreCacheErr(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -450,7 +450,7 @@ func TestStepRestoreCacheSuccess(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -500,7 +500,7 @@ func TestPublishArtifactsSuccess(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -550,7 +550,7 @@ func TestPublishArtifactsErr(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -749,7 +749,7 @@ func TestStepSkipSuccess(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -789,7 +789,7 @@ func TestStepInvalidSkipCondition(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -829,7 +829,7 @@ func TestStepInvalidJEXLSkipCondition(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
@@ -871,7 +871,7 @@ func TestStepJEXLSkipCondition(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}

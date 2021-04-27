@@ -37,8 +37,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 
 @OwnedBy(PL)
@@ -46,15 +44,21 @@ import org.springframework.data.domain.Page;
 @Path("audits")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
-@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 public class AuditResource {
-  @Inject private final AuditService auditService;
-  @Inject private final AuditPermissionValidator auditPermissionValidator;
+  private final AuditService auditService;
+
+  @Inject
+  public AuditResource(AuditService auditService, AuditPermissionValidator auditPermissionValidator) {
+    this.auditService = auditService;
+    this.auditPermissionValidator = auditPermissionValidator;
+  }
+
+  private final AuditPermissionValidator auditPermissionValidator;
 
   @POST
   @ApiOperation(hidden = true, value = "Create an Audit", nickname = "postAudit")

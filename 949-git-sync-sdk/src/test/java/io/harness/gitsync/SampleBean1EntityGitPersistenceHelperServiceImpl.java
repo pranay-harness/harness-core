@@ -59,4 +59,24 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   public boolean delete(EntityReference entityReference) {
     return false;
   }
+
+  @Override
+  public String getObjectIdOfYamlKey() {
+    return "objectIdOfYaml";
+  }
+
+  @Override
+  public String getIsFromDefaultBranchKey() {
+    return "isFromDefaultBranch";
+  }
+
+  @Override
+  public String getYamlGitConfigRefKey() {
+    return "yamlGitConfigRef";
+  }
+
+  @Override
+  public String getUuidKey() {
+    return "uuid";
+  }
 }

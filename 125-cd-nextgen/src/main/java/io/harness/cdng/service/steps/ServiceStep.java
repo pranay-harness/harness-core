@@ -57,6 +57,7 @@ import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.logstreaming.NGLogCallback;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
@@ -317,7 +318,7 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
             .identifier(serviceEntity.getIdentifier())
             .description(serviceEntity.getDescription() != null ? serviceEntity.getDescription() : "")
             .type(serviceConfig.getServiceDefinition().getServiceSpec().getType())
-            .tags(serviceConfig.getTags())
+            .tags(TagMapper.convertToMap(serviceEntity.getTags()))
             .variables(NGVariablesUtils.getMapOfVariables(
                 serviceConfig.getServiceDefinition().getServiceSpec().getVariables(), expressionFunctorToken));
 
@@ -592,7 +593,7 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
         .projectIdentifier(projectIdentifier)
         .orgIdentifier(orgIdentifier)
         .accountId(accountId)
-        .tags(convertToList(serviceConfig.getTags()))
+        .tags(convertToList(serviceConfig.getService().getTags()))
         .build();
   }
 

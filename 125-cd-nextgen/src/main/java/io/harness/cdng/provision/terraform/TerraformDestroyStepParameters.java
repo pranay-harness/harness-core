@@ -29,18 +29,19 @@ public class TerraformDestroyStepParameters extends TerraformDestroyBaseStepInfo
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> workspace;
   StoreConfigWrapper configFilesWrapper;
-  List<StoreConfigWrapper> remoteVarFiles;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> inlineVarFiles;
+  List<StoreConfigWrapper> remoteVarFileConfigs;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<String>> inlineVarFilesListContent;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> backendConfig;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> targets;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   Map<String, Object> environmentVariables;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformDestroyStepParameters(String provisionerIdentifier, String name, String identifier,
+  public TerraformDestroyStepParameters(ParameterField<String> provisionerIdentifier, String name, String identifier,
       TerraformStepConfigurationType stepConfigurationType, ParameterField<String> workspace,
-      StoreConfigWrapper configFilesWrapper, List<StoreConfigWrapper> remoteVarFiles,
-      ParameterField<List<String>> inlineVarFiles, ParameterField<String> backendConfig,
+      StoreConfigWrapper configFilesWrapper, List<StoreConfigWrapper> remoteVarFileConfigs,
+      ParameterField<List<String>> inlineVarFilesListContent, ParameterField<String> backendConfig,
       ParameterField<List<String>> targets, ParameterField<String> timeout, Map<String, Object> environmentVariables) {
     super(provisionerIdentifier);
     this.name = name;
@@ -48,8 +49,8 @@ public class TerraformDestroyStepParameters extends TerraformDestroyBaseStepInfo
     this.stepConfigurationType = stepConfigurationType;
     this.workspace = workspace;
     this.configFilesWrapper = configFilesWrapper;
-    this.remoteVarFiles = remoteVarFiles;
-    this.inlineVarFiles = inlineVarFiles;
+    this.remoteVarFileConfigs = remoteVarFileConfigs;
+    this.inlineVarFilesListContent = inlineVarFilesListContent;
     this.backendConfig = backendConfig;
     this.targets = targets;
     this.timeout = timeout;

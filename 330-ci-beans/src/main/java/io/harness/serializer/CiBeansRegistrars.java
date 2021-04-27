@@ -1,6 +1,8 @@
 package io.harness.serializer;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.morphia.MorphiaRegistrar;
@@ -13,6 +15,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.CI)
 @UtilityClass
 public class CiBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
@@ -55,6 +58,5 @@ public class CiBeansRegistrars {
                    .availableAtAccountLevel(false)
                    .clazz(CIStepInfo.class)
                    .build())
-          .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
           .build();
 }

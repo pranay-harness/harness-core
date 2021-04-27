@@ -40,6 +40,6 @@ public class SecretNGManagerClientServiceImpl implements SecretManagerClientServ
   public SecretManagerConfigDTO getSecretManager(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, boolean maskSecrets) {
     return getResponse(secretManagerClient.getSecretManager(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, maskSecrets));
+        identifier, accountIdentifier, orgIdentifier, projectIdentifier, maskSecrets));
   }
 }

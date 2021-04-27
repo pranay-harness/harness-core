@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
@@ -20,11 +21,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("sampleBean1")
 @FieldNameConstants(innerTypeName = "SampleBean1Keys")
 @OwnedBy(HarnessTeam.DX)
-public class SampleBean1 extends GitSyncableEntity implements PersistentEntity, YamlDTO {
+public class SampleBean1 implements PersistentEntity, YamlDTO, GitSyncableEntity {
+  @Id String uuid;
   String test1;
   String accountIdentifier;
   String projectIdentifier;
   String orgIdentifier;
   String identifier;
   String name;
+  String objectIdOfYaml;
+  Boolean isFromDefaultBranch;
+  transient String branch;
+  String yamlGitConfigRef;
 }

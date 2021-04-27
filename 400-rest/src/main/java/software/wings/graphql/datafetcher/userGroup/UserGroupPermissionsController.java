@@ -17,6 +17,7 @@ import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -229,6 +230,8 @@ public class UserGroupPermissionsController {
         return EXECUTE_WORKFLOW;
       case EXECUTE_PIPELINE:
         return EXECUTE_PIPELINE;
+      case ROLLBACK_WORKFLOW:
+        return EXECUTE_WORKFLOW_ROLLBACK;
       default:
         log.error("Invalid Action {} given by the user", action.toString());
     }
@@ -530,6 +533,8 @@ public class UserGroupPermissionsController {
         return QLActions.EXECUTE_PIPELINE;
       case EXECUTE_WORKFLOW:
         return QLActions.EXECUTE_WORKFLOW;
+      case EXECUTE_WORKFLOW_ROLLBACK:
+        return QLActions.ROLLBACK_WORKFLOW;
       default:
         log.error("Invalid Action {} given by the user", action.toString());
     }

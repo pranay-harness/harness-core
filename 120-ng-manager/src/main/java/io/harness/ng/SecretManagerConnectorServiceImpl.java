@@ -20,6 +20,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
@@ -107,6 +108,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         return ((VaultConnectorDTO) connector.getConnectorConfig()).isDefault();
       case GCP_KMS:
         return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isDefault();
+      case AWS_KMS:
+        return ((AwsKmsConnectorDTO) connector.getConnectorConfig()).isDefault();
       case LOCAL:
         return ((LocalConnectorDTO) connector.getConnectorConfig()).isDefault();
       default:

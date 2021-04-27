@@ -51,6 +51,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.datahandler.models.AccountDetails;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.InvalidArgumentsException;
@@ -953,6 +954,53 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(accountUpdated).isTrue();
     account = accountService.get(account.getUuid());
     assertThat(account.getCompanyName()).isEqualTo(newCompanyName);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_enableHarnessUserGroupAccess() {
+    String accountId = UUIDGenerator.generateUuid();
+    Account account = anAccount()
+                          .withUuid(accountId)
+                          .withCompanyName("CompanyName")
+                          .withAccountName("Account Name 1")
+                          .withAccountKey("ACCOUNT_KEY")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withWhitelistedDomains(new HashSet<>())
+                          .build();
+    account.setHarnessSupportAccessAllowed(false);
+    Account savedAccount = accountService.save(account, false);
+
+    assertThat(savedAccount.isHarnessSupportAccessAllowed()).isFalse();
+
+    boolean accountUpdated = accountService.enableHarnessUserGroupAccess(account.getUuid());
+    assertThat(accountUpdated).isTrue();
+    savedAccount = accountService.get(savedAccount.getUuid());
+    assertThat(savedAccount.isHarnessSupportAccessAllowed()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_disableHarnessUserGroupAccess() {
+    String accountId = UUIDGenerator.generateUuid();
+    Account account = anAccount()
+                          .withUuid(accountId)
+                          .withCompanyName("CompanyName")
+                          .withAccountName("Account Name 1")
+                          .withAccountKey("ACCOUNT_KEY")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withWhitelistedDomains(new HashSet<>())
+                          .build();
+    Account savedAccount = accountService.save(account, false);
+
+    assertThat(savedAccount.isHarnessSupportAccessAllowed()).isTrue();
+
+    boolean accountUpdated = accountService.disableHarnessUserGroupAccess(account.getUuid());
+    assertThat(accountUpdated).isTrue();
+    savedAccount = accountService.get(savedAccount.getUuid());
+    assertThat(savedAccount.isHarnessSupportAccessAllowed()).isFalse();
   }
 
   @Test

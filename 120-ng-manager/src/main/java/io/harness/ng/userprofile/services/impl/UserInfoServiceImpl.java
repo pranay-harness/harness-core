@@ -8,6 +8,7 @@ import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.repositories.user.spring.UserMembershipRepository;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 import io.harness.security.dto.UserPrincipal;
@@ -15,10 +16,15 @@ import io.harness.user.remote.UserClient;
 
 import com.google.inject.Inject;
 import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(HarnessTeam.PL)
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserInfoServiceImpl implements UserInfoService {
   @Inject private UserClient userClient;
+  @Inject private UserMembershipRepository userMembershipRepository;
 
   @Override
   public UserInfo get() {

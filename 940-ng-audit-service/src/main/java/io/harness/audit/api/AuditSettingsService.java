@@ -1,4 +1,4 @@
-package io.harness.audit.retention;
+package io.harness.audit.api;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

@@ -45,6 +45,7 @@ import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.ServiceInstanceUsageCheckerJob;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.impl.analysis.CVEnabledService;
@@ -502,5 +503,35 @@ public class AccountResource {
       }
       return response;
     }
+  }
+
+  @PUT
+  @Path("{accountId}/enableHarnessUserGroupAccess")
+  public RestResponse<Boolean> enableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.enableHarnessUserGroupAccess(accountId));
+  }
+
+  @PUT
+  @Path("{accountId}/disableHarnessUserGroupAccess")
+  public RestResponse<Boolean> disableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.disableHarnessUserGroupAccess(accountId));
+  }
+
+  // TODO: EndPoint to be deleted once UI is created for AccessRequest
+  @PUT
+  @Path("{accountId}/enableHarnessUserGroupAccessWorkflow/{enableAccountId}")
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Boolean> enableHarnessUserGroupAccessWorkflow(
+      @PathParam("accountId") String accountId, @PathParam("enableAccountId") String enableAccountId) {
+    return new RestResponse<>(accountService.enableHarnessUserGroupAccess(enableAccountId));
+  }
+
+  // TODO: EndPoint to be deleted once UI is created for AccessRequest
+  @PUT
+  @Path("{accountId}/disableHarnessUserGroupAccessWorkflow/{disableAccountId}")
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Boolean> disableHarnessUserGroupAccessWorkflow(
+      @PathParam("accountId") String accountId, @PathParam("disableAccountId") String disableAccountId) {
+    return new RestResponse<>(accountService.disableHarnessUserGroupAccess(disableAccountId));
   }
 }

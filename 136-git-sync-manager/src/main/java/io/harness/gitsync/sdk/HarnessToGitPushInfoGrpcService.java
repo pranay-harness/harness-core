@@ -52,6 +52,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
       final ByteString connector = ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getScmConnector()));
       pushInfoBuilder.setConnector(BytesValue.newBuilder().setValue(connector).build())
           .setFilePath(StringValue.newBuilder().setValue(infoForPush.getFilePath()).build())
+          .setFolderPath(StringValue.newBuilder().setValue(request.getFolderPath()).build())
           .setOrgIdentifier(StringValue.of(infoForPush.getOrgIdentifier()))
           .setProjectIdentifier(StringValue.of(infoForPush.getProjectIdentifier()))
           .setAccountId(infoForPush.getAccountId())
@@ -60,8 +61,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
           .setDefaultBranchName(infoForPush.getDefaultBranchName());
 
     } catch (WingsException e) {
-      final ByteString exceptionBytes =
-          ByteString.copyFrom(kryoSerializer.asBytes(new InvalidRequestException("Failed to get git sync config", e)));
+      final ByteString exceptionBytes = ByteString.copyFrom(kryoSerializer.asBytes(e));
       pushInfoBuilder.setException(BytesValue.newBuilder().setValue(exceptionBytes).build());
       pushInfoBuilder.setStatus(false);
     } catch (Exception e) {

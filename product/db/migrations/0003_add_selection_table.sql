@@ -47,7 +47,7 @@ comment on column selection.updated_test is 'Total count of updated tests';
 
 
 
--- distributed hypertable is supported only in 2.0. As we are using TSDB 1.7, using create_hypertable for now
-SELECT create_hypertable('selection', 'created_at');
+-- distributed hypertable is supported only in 2.0. for TSDB 1.7, use create_hypertable
+SELECT create_distributed_hypertable('selection', 'created_at');
 
 CREATE INDEX IF NOT EXISTS selection_idx1 ON selection(account_id, org_id, project_id, pipeline_id, build_id, created_at DESC);

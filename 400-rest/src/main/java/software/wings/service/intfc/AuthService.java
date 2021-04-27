@@ -1,5 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 
 import software.wings.beans.AuthToken;
@@ -20,6 +24,8 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 8/18/16.
  */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public interface AuthService {
   /**
    * Validate token auth token.

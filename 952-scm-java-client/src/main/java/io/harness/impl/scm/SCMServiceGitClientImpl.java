@@ -33,6 +33,7 @@ import io.harness.product.ci.scm.proto.ListBranchesRequest;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsRequest;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
+import io.harness.product.ci.scm.proto.PageRequest;
 import io.harness.product.ci.scm.proto.Provider;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.product.ci.scm.proto.Signature;
@@ -172,8 +173,26 @@ public class SCMServiceGitClientImpl implements ScmClient {
 
   @Override
   public ListBranchesResponse listBranches(ScmConnector scmConnector) {
-    ListBranchesRequest listBranchesRequest = getListBranchesRequest(scmConnector);
-    return scmBlockingStub.listBranches(listBranchesRequest);
+    final String slug = scmGitProviderHelper.getSlug(scmConnector);
+    final Provider provider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    int pageNumber = 1;
+    ListBranchesResponse branchList = null;
+    List<String> branchesList = new ArrayList<>();
+    do {
+      ListBranchesRequest listBranchesRequest = ListBranchesRequest.newBuilder()
+                                                    .setSlug(slug)
+                                                    .setProvider(provider)
+                                                    .setPagination(PageRequest.newBuilder().setPage(pageNumber).build())
+                                                    .build();
+      branchList = scmBlockingStub.listBranches(listBranchesRequest);
+      branchesList.addAll(branchList.getBranchesList());
+      pageNumber = branchList.getPagination().getNext();
+    } while (hasMoreBranches(branchList));
+    return ListBranchesResponse.newBuilder().addAllBranches(branchesList).build();
+  }
+
+  private boolean hasMoreBranches(ListBranchesResponse branchList) {
+    return branchList != null && branchList.getPagination() != null && branchList.getPagination().getNext() != 0;
   }
 
   @Override
@@ -245,13 +264,6 @@ public class SCMServiceGitClientImpl implements ScmClient {
     return GetLatestCommitRequest.newBuilder()
         .setSlug(scmGitProviderHelper.getSlug(scmConnector))
         .setBranch(branch)
-        .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
-        .build();
-  }
-
-  private ListBranchesRequest getListBranchesRequest(ScmConnector scmConnector) {
-    return ListBranchesRequest.newBuilder()
-        .setSlug(scmGitProviderHelper.getSlug(scmConnector))
         .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
         .build();
   }

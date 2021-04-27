@@ -16,13 +16,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.GenericStagePlanCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
-import io.harness.plancreator.steps.common.StageElementParameters.StageElementParametersBuilder;
-import io.harness.plancreator.steps.common.StepParametersUtils;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -54,10 +52,8 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
   }
 
   @Override
-  public StepParameters getStepParameters(StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
-    StageElementParametersBuilder stageParameters = StepParametersUtils.getStageParameters(stageElementConfig);
-    stageParameters.spec(DeploymentStageStepParameters.getStepParameters(childrenNodeIds.get(0)));
-    return stageParameters.build();
+  public SpecParameters getSpecParameters(String childNodeId) {
+    return DeploymentStageStepParameters.getStepParameters(childNodeId);
   }
 
   @Override

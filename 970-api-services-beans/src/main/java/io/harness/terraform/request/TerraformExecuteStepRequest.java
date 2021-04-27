@@ -28,7 +28,7 @@ public class TerraformExecuteStepRequest {
   Map<String, String> envVars;
   List<String> targets;
   String workspace;
-  boolean isRunPlanOnly;
+  boolean isRunPlanOnly; // Needed to send inline variable values in CG
   EncryptedRecordData encryptedTfPlan;
   EncryptionConfig encryptionConfig;
   boolean isSkipRefreshBeforeApplyingPlan;

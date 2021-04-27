@@ -43,14 +43,14 @@ public class CDNGPipelineConfigurationHelper {
             serviceDefinitionType -> serviceDefinitionType, ServiceDefinitionType::getExecutionStrategies));
   }
 
-  public String getExecutionStrategyYaml(
-      ServiceDefinitionType serviceDefinitionType, ExecutionStrategyType executionStrategyType) throws IOException {
+  public String getExecutionStrategyYaml(ServiceDefinitionType serviceDefinitionType,
+      ExecutionStrategyType executionStrategyType, boolean includeVerify) throws IOException {
     if (ServiceDefinitionType.getExecutionStrategies(serviceDefinitionType).contains(executionStrategyType)) {
       ClassLoader classLoader = this.getClass().getClassLoader();
       return Resources.toString(
           Objects.requireNonNull(classLoader.getResource(
-              String.format("executionStrategyYaml/%s-%s.yaml", serviceDefinitionType.getYamlName().toLowerCase(),
-                  executionStrategyType.getDisplayName().toLowerCase()))),
+              String.format("executionStrategyYaml/%s-%s%s.yaml", serviceDefinitionType.getYamlName().toLowerCase(),
+                  executionStrategyType.getDisplayName().toLowerCase(), includeVerify ? "-with-verify" : ""))),
           StandardCharsets.UTF_8);
     } else {
       throw new GeneralException("Execution Strategy Not supported for given deployment type");

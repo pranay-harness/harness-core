@@ -120,6 +120,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
   @Inject AuditServiceHelper auditServiceHelper;
+  @Inject FeatureFlagService featureFlagService;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -130,7 +131,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private HarnessUserGroupService harnessUserGroupService;
   private GraphQLUtils graphQLUtils;
   private ApiKeyService apiKeyService;
-  private FeatureFlagService featureFlagService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -317,10 +317,17 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
       }
 
-      if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-          || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
-        throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+      if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, "")) {
+        if (!harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
+          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+        }
+      } else {
+        if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
+            || !harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId)) {
+          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
+        }
       }
+
       harnessSupportUser = true;
     }
 

@@ -132,7 +132,7 @@ public class InfrastructureStepTest extends CategoryTest {
                                                 .name("test-id")
                                                 .description("")
                                                 .environmentType(EnvironmentType.PreProduction)
-                                                .tags(Collections.emptyList())
+                                                .tags(Collections.emptyMap())
                                                 .build();
     doReturn(expectedEnv).when(environmentService).upsert(expectedEnv);
   }

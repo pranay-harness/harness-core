@@ -9,6 +9,7 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.user.UserInfo;
@@ -70,5 +71,13 @@ public class NgUserResource {
                       .projectIdentifier(projectIdentifier)
                       .build();
     return ResponseDTO.newResponse(ngUserService.isUserAtScope(userId, scope));
+  }
+
+  @GET
+  @Path("projects")
+  @ApiOperation(value = "get user project information", nickname = "getUserProjectInfo")
+  public ResponseDTO<PageResponse<ProjectDTO>> getUserProjectInfo(
+      @QueryParam("accountId") String accountId, @BeanParam PageRequest pageRequest) {
+    return ResponseDTO.newResponse(PageUtils.getNGPageResponse(ngUserService.listProjects(accountId, pageRequest)));
   }
 }

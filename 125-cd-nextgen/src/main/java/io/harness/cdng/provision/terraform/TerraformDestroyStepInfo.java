@@ -39,7 +39,8 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
   @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformDestroyStepInfo(String provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
+  public TerraformDestroyStepInfo(
+      ParameterField<String> provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
     super(provisionerIdentifier);
     this.terrformStepConfiguration = terrformStepConfiguration;
   }
@@ -95,10 +96,10 @@ public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo imple
         });
       }
       if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
-        builder.remoteVarFiles(remoteVarFiles);
+        builder.remoteVarFileConfigs(remoteVarFiles);
       }
       if (EmptyPredicate.isNotEmpty(inlineVarFiles)) {
-        builder.inlineVarFiles(ParameterField.createValueField(inlineVarFiles));
+        builder.inlineVarFilesListContent(ParameterField.createValueField(inlineVarFiles));
       }
     }
     return builder.build();

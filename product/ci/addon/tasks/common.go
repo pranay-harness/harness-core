@@ -32,10 +32,10 @@ var (
 )
 
 func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []string, retryCount int32, startTime time.Time,
-	logMetrics bool, log *zap.SugaredLogger, metricLog *zap.SugaredLogger) error {
+	logMetrics bool, addonLogger *zap.SugaredLogger) error {
 	err := cmd.Start()
 	if err != nil {
-		log.Errorw(
+		addonLogger.Errorw(
 			"error encountered while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,
@@ -47,19 +47,19 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 
 	if logMetrics {
 		pid := cmd.Pid()
-		mlog(int32(pid), stepID, metricLog)
+		mlog(int32(pid), stepID, addonLogger)
 	}
 
 	err = cmd.Wait()
 	if rusage, e := cmd.ProcessState().SysUsageUnit(); e == nil {
-		metricLog.Infow(
+		addonLogger.Infow(
 			"max RSS memory used by step",
 			"step_id", stepID,
 			"max_rss_memory_kb", rusage.Maxrss)
 	}
 
 	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
-		log.Errorw(
+		addonLogger.Errorw(
 			"timeout while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,
@@ -70,7 +70,7 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 	}
 
 	if err != nil {
-		log.Errorw(
+		addonLogger.Errorw(
 			"error encountered while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,

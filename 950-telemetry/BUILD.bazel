@@ -3,6 +3,8 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "test_targets_list")
 
+HarnessTeam = "GTM"
+
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),

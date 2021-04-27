@@ -36,7 +36,8 @@ public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements 
   @JsonProperty("configuration") TerraformPlanExecutionData terraformPlanExecutionData;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformPlanStepInfo(String provisionerIdentifier, TerraformPlanExecutionData terraformPlanExecutionData) {
+  public TerraformPlanStepInfo(
+      ParameterField<String> provisionerIdentifier, TerraformPlanExecutionData terraformPlanExecutionData) {
     super(provisionerIdentifier);
     this.terraformPlanExecutionData = terraformPlanExecutionData;
   }
@@ -91,7 +92,7 @@ public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements 
         builder.inlineVarFiles(ParameterField.createValueField(inlineVarFiles));
       }
       builder.terraformPlanCommand(terraformPlanExecutionData.getCommand());
-      builder.secretManagerId(terraformPlanExecutionData.getSecretManagerId());
+      builder.secretManagerId(terraformPlanExecutionData.getSecretManagerRef());
     }
     return builder.build();
   }

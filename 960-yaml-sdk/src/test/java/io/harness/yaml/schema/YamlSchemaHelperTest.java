@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
@@ -28,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+@OwnedBy(HarnessTeam.DX)
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({YamlSchemaUtils.class, IOUtils.class})
 public class YamlSchemaHelperTest extends CategoryTest {
@@ -49,7 +52,7 @@ public class YamlSchemaHelperTest extends CategoryTest {
     final JsonNode jsonNode = objectMapper.readTree(schema);
 
     YamlSchemaGenerator yamlSchemaGenerator = new YamlSchemaGenerator(
-        new JacksonClassHelper(), new SwaggerGenerator(Jackson.newObjectMapper()), yamlSchemaRootClasses);
+        new JacksonClassHelper(objectMapper), new SwaggerGenerator(Jackson.newObjectMapper()), yamlSchemaRootClasses);
     Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     yamlSchemaHelper.initializeSchemaMaps(entityTypeJsonNodeMap);
     final YamlSchemaWithDetails schemaForEntityType =

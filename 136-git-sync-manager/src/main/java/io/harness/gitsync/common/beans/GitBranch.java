@@ -2,10 +2,12 @@ package io.harness.gitsync.common.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
@@ -22,6 +24,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -30,9 +33,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "GitBranchKeys")
-@Document("GitBranches")
+@Document("gitBranches")
 @TypeAlias("io.harness.gitsync.common.beans.GitBranch")
-@Entity(value = "GitBranch", noClassnameStored = true)
+@Entity(value = "gitBranches", noClassnameStored = true)
+@StoreIn(DbAliases.NG_MANAGER)
+@Persistent
 @OwnedBy(DX)
 public class GitBranch {
   @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String uuid;

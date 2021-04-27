@@ -74,12 +74,12 @@ func TestStepValidations(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 	for _, tc := range tests {
-		e := NewStepExecutor(tmpFilePath, log.Sugar())
+		e := NewStepExecutor(tmpFilePath, "", log.Sugar())
 		got := e.Run(ctx, tc.step)
 		if tc.expectedErr == (got == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
@@ -120,12 +120,12 @@ func TestStepError(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
-	e := NewStepExecutor(tmpFilePath, log.Sugar())
+	e := NewStepExecutor(tmpFilePath, "foo", log.Sugar())
 	err := e.Run(ctx, stepProto)
 	assert.NotEqual(t, err, nil)
 }
@@ -176,12 +176,12 @@ func TestStepRunSuccess(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}
 
-	e := NewStepExecutor(tmpFilePath, log.Sugar())
+	e := NewStepExecutor(tmpFilePath, "foo", log.Sugar())
 	err := e.Run(ctx, stepProto)
 	assert.Equal(t, err, nil)
 }
