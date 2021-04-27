@@ -9,10 +9,12 @@ import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfig;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -22,11 +24,13 @@ import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
+import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.tasks.DecryptGitApiAccessHelper;
+import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.utils.CryptoUtils;
 
@@ -55,19 +59,22 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final Producer gitSyncConfigEventProducer;
   private final ExecutorService executorService;
   private final GitBranchService gitBranchService;
+  private final GitSyncConnectorHelper gitSyncConnectorHelper;
 
   @Inject
   public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
       @Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptScmApiAccess,
       @Named(EventsFrameworkConstants.GIT_CONFIG_STREAM) Producer gitSyncConfigEventProducer,
-      ExecutorService executorService, GitBranchService gitBranchService) {
+      ExecutorService executorService, GitBranchService gitBranchService,
+      GitSyncConnectorHelper gitSyncConnectorHelper) {
     this.yamlGitConfigRepository = yamlGitConfigRepository;
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitSyncConfigEventProducer = gitSyncConfigEventProducer;
     this.executorService = executorService;
     this.gitBranchService = gitBranchService;
+    this.gitSyncConnectorHelper = gitSyncConnectorHelper;
   }
 
   @Override
@@ -201,18 +208,10 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
-  public Optional<ConnectorInfoDTO> getGitConnector(
-      YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName) {
+  public Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO ygs, String gitConnectorId) {
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(
         ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier(), gitConnectorId);
-
-    if (connectorDTO.isPresent()) {
-      ConnectorInfoDTO connectorInfo = connectorDTO.get().getConnector();
-      if (connectorInfo.getConnectorType() == ConnectorType.GIT) {
-        return connectorDTO.map(ConnectorResponseDTO::getConnector);
-      }
-    }
-    return Optional.empty();
+    return connectorDTO.map(ConnectorResponseDTO::getConnector);
   }
 
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs, String accountId, boolean performFullSync) {
@@ -263,9 +262,46 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     ensureFolderEndsWithDelimiter(ygs);
     validateFolderFollowsHarnessParadigm(ygs);
     validateFolderPathIsUnique(ygs);
-    // todo @deepak: Add validation that one folder should not be contained within another
-    // that's redundant. This will enable us to go ahead with the assumption of
-    // independent folders
+    validateFoldersAreIndependant(ygs);
+    validateAPIAccessFieldPresence(ygs);
+  }
+
+  private void validateAPIAccessFieldPresence(YamlGitConfigDTO ygs) {
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(ygs.getGitConnectorRef(),
+        ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier());
+    Optional<ConnectorInfoDTO> gitConnectorOptional = getGitConnector(ygs, identifierRef.getIdentifier());
+    if (gitConnectorOptional.isPresent()) {
+      ConnectorConfigDTO connectorConfig = gitConnectorOptional.get().getConnectorConfig();
+      if (connectorConfig instanceof ScmConnector) {
+        gitSyncConnectorHelper.validateTheAPIAccessPresence((ScmConnector) connectorConfig);
+      } else {
+        throw new InvalidRequestException(
+            String.format("The connector reference %s is not a git connector", ygs.getGitConnectorRef()));
+      }
+    } else {
+      throw new InvalidRequestException(
+          String.format("No connector found for the connector reference %s", ygs.getGitConnectorRef()));
+    }
+  }
+
+  /**
+   * Checks that one folder should not be contained within other
+   * for eg portal/.harness, portal/.harness/ci/.harness is an
+   * invalid folder pair.
+   *
+   */
+  private void validateFoldersAreIndependant(YamlGitConfigDTO ygs) {
+    final List<YamlGitConfigDTO.RootFolder> rootFolders = ygs.getRootFolders();
+    for (int i = 0; i < rootFolders.size(); i++) {
+      for (int j = 0; j < rootFolders.size() && j != i; j++) {
+        String firstFolder = rootFolders.get(i).getRootFolder();
+        String secondFolder = rootFolders.get(j).getRootFolder();
+        if (firstFolder.startsWith(secondFolder)) {
+          throw new InvalidRequestException(
+              String.format("The folder %s is already contained in %s", firstFolder, secondFolder));
+        }
+      }
+    }
   }
 
   private void validateFolderPathIsUnique(YamlGitConfigDTO ygs) {
