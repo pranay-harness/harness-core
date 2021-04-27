@@ -93,6 +93,7 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
@@ -267,5 +268,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(NewRelicConnectorDTO.class, 19664);
     kryo.register(AppDynamicsAuthType.class, 19665);
     kryo.register(GcpCloudCostConnectorDTO.class, 19666);
+    kryo.register(BitbucketSshCredentialsDTO.class, 19667);
   }
 }
