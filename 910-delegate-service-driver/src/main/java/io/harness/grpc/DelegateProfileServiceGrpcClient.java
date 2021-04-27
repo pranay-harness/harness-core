@@ -2,6 +2,8 @@ package io.harness.grpc;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.AccountId;
@@ -26,6 +28,8 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.exception.DelegateServiceDriverException;
+import io.harness.owner.OrgIdentifier;
+import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.serializer.KryoSerializer;
 import io.harness.virtualstack.VirtualStackUtils;
@@ -50,10 +54,21 @@ public class DelegateProfileServiceGrpcClient {
     this.delegateProfileServiceBlockingStub = delegateProfileServiceBlockingStub;
     this.kryoSerializer = kryoSerializer;
   }
-  public DelegateProfilePageResponseGrpc listProfiles(AccountId accountId, PageRequestGrpc pageRequest) {
+  public DelegateProfilePageResponseGrpc listProfiles(AccountId accountId, PageRequestGrpc pageRequest, boolean isNg,
+      OrgIdentifier orgIdentifier, ProjectIdentifier projectIdentifier) {
     try {
-      ListProfilesResponse listProfilesResponse = delegateProfileServiceBlockingStub.listProfiles(
-          ListProfilesRequest.newBuilder().setAccountId(accountId).setPageRequest(pageRequest).build());
+      ListProfilesRequest.Builder builder =
+          ListProfilesRequest.newBuilder().setAccountId(accountId).setPageRequest(pageRequest).setNg(isNg);
+
+      if (projectIdentifier != null && isNotBlank(projectIdentifier.getId())) {
+        builder.setProjectId(projectIdentifier);
+      }
+
+      if (orgIdentifier != null && isNotBlank(orgIdentifier.getId())) {
+        builder.setOrgId(orgIdentifier);
+      }
+
+      ListProfilesResponse listProfilesResponse = delegateProfileServiceBlockingStub.listProfiles(builder.build());
 
       return listProfilesResponse.getResponse();
     } catch (StatusRuntimeException ex) {

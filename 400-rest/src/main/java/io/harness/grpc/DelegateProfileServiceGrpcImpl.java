@@ -16,9 +16,11 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegate.utils.DelegateEntityOwnerMapper;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
 import io.harness.delegateprofile.DelegateProfileGrpc;
@@ -42,6 +44,8 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
+import io.harness.owner.OrgIdentifier;
+import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.serializer.KryoSerializer;
 
@@ -84,6 +88,26 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     try {
       PageRequest<DelegateProfile> pageRequest = convertGrpcPageRequest(request.getPageRequest());
       pageRequest.addFilter(DelegateProfileKeys.accountId, SearchFilter.Operator.EQ, request.getAccountId().getId());
+
+      if (request.getNg()) {
+        pageRequest.addFilter(DelegateProfileKeys.ng, SearchFilter.Operator.EQ, request.getNg());
+      } else {
+        // This is required to collect records having flag set to false, but also to collect the ones having no flag set
+        // at all
+        pageRequest.addFilter(DelegateProfileKeys.ng, SearchFilter.Operator.NOT_EQ, true);
+      }
+
+      String orgId = request.getOrgId() != null ? request.getOrgId().getId() : null;
+      String projectId = request.getProjectId() != null ? request.getProjectId().getId() : null;
+      DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+
+      if (owner != null) {
+        pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.EQ, owner);
+      } else {
+        // Account level delegates
+        pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.NOT_EXISTS);
+      }
+
       PageResponse<DelegateProfile> pageResponse = delegateProfileService.list(pageRequest);
       if (pageResponse != null) {
         DelegateProfilePageResponseGrpc response = convertPageResponse(pageResponse);
@@ -224,7 +248,10 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     DelegateProfileGrpc.Builder delegateProfileGrpcBuilder =
         DelegateProfileGrpc.newBuilder()
             .setPrimary(delegateProfile.isPrimary())
-            .setApprovalRequired(delegateProfile.isApprovalRequired());
+            .setApprovalRequired(delegateProfile.isApprovalRequired())
+            .setNg(delegateProfile.isNg())
+            .setCreatedAt(delegateProfile.getCreatedAt())
+            .setLastUpdatedAt(delegateProfile.getLastUpdatedAt());
 
     if (delegateProfile.getCreatedBy() != null) {
       delegateProfileGrpcBuilder.setCreatedBy(EmbeddedUserDetails.newBuilder()
@@ -285,6 +312,21 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       delegateProfileGrpcBuilder.setIdentifier(delegateProfile.getIdentifier());
     }
 
+    if (delegateProfile.getOwner() != null) {
+      String orgId =
+          DelegateEntityOwnerMapper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+      String projectId =
+          DelegateEntityOwnerMapper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+
+      if (isNotBlank(orgId)) {
+        delegateProfileGrpcBuilder.setOrgIdentifier(OrgIdentifier.newBuilder().setId(orgId).build());
+      }
+
+      if (isNotBlank(projectId)) {
+        delegateProfileGrpcBuilder.setProjectIdentifier(ProjectIdentifier.newBuilder().setId(projectId).build());
+      }
+    }
+
     List<String> delegatesForProfile =
         delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
 
@@ -302,7 +344,8 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .description(delegateProfileGrpc.getDescription())
                                                         .primary(delegateProfileGrpc.getPrimary())
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
-                                                        .startupScript(delegateProfileGrpc.getStartupScript());
+                                                        .startupScript(delegateProfileGrpc.getStartupScript())
+                                                        .ng(delegateProfileGrpc.getNg());
 
     if (delegateProfileGrpc.hasCreatedBy() && isNotEmpty(delegateProfileGrpc.getCreatedBy().getUuid())) {
       delegateProfileBuilder.createdBy(EmbeddedUser.builder()
@@ -343,6 +386,12 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     if (isNotEmpty(delegateProfileGrpc.getIdentifier())) {
       delegateProfileBuilder.identifier(delegateProfileGrpc.getIdentifier());
     }
+
+    String orgId = delegateProfileGrpc.hasOrgIdentifier() ? delegateProfileGrpc.getOrgIdentifier().getId() : null;
+    String projectId =
+        delegateProfileGrpc.hasProjectIdentifier() ? delegateProfileGrpc.getProjectIdentifier().getId() : null;
+    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    delegateProfileBuilder.owner(owner);
 
     return delegateProfileBuilder.build();
   }

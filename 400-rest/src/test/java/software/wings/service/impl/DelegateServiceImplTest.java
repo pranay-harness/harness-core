@@ -30,6 +30,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -105,6 +109,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String APP_ID = "APP_ID";
@@ -279,7 +285,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     DelegateBuilder delegateBuilder = Delegate.builder();
 
-    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+    when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(DelegateProfile.builder().uuid(TEST_DELEGATE_PROFILE_ID).build());
     delegateService.add(delegateBuilder.uuid(delegateId).accountId(ACCOUNT_ID).build());
     assertThat(delegateService.obtainDelegateName("accountId", delegateId, true)).isEqualTo(delegateId);

@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
-public class CreatePrimiryProfileForAllAccounts implements Migration {
+public class CreateNgPrimaryProfileForExistingAccounts implements Migration {
   @Inject private DelegateProfileService delegateProfileService;
   @Inject private WingsPersistence wingsPersistence;
   @Override
@@ -23,7 +23,7 @@ public class CreatePrimiryProfileForAllAccounts implements Migration {
     try (HKeyIterator<Account> keys = new HKeyIterator(wingsPersistence.createQuery(Account.class).fetchKeys())) {
       while (keys.hasNext()) {
         String accountId = keys.next().getId().toString();
-        delegateProfileService.fetchCgPrimaryProfile(accountId);
+        delegateProfileService.fetchNgPrimaryProfile(accountId);
       }
     }
   }
