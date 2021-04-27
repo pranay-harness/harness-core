@@ -27,12 +27,12 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
   private final ACLService aclService;
 
   @Override
-  public long consumeUpdateEvent(String id, ResourceGroupDBO resourceGroupDBO) {
-    if (Optional.ofNullable(resourceGroupDBO.getResourceSelectors()).filter(x -> !x.isEmpty()).isPresent()) {
-      List<ACL> aclsWithThisResourceGroup = aclService.getByResourceGroup(resourceGroupDBO.getScopeIdentifier(),
-          resourceGroupDBO.getIdentifier(), Boolean.TRUE.equals(resourceGroupDBO.getManaged()));
+  public long consumeUpdateEvent(String id, ResourceGroupDBO updatedEntity) {
+    if (Optional.ofNullable(updatedEntity.getResourceSelectors()).filter(x -> !x.isEmpty()).isPresent()) {
+      List<ACL> aclsWithThisResourceGroup = aclService.getByResourceGroup(updatedEntity.getScopeIdentifier(),
+          updatedEntity.getIdentifier(), Boolean.TRUE.equals(updatedEntity.getManaged()));
 
-      Set<String> currentResourceSelectors = resourceGroupDBO.getResourceSelectors();
+      Set<String> currentResourceSelectors = updatedEntity.getResourceSelectors();
       Set<String> resourceSelectorsInAcls =
           aclsWithThisResourceGroup.stream().map(ACL::getResourceSelector).collect(Collectors.toSet());
 
@@ -62,7 +62,7 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
           }));
       long count = 0;
       if (!aclsToCreate.isEmpty()) {
-        count = aclService.insertAllIgnoringDuplicates(aclsToCreate);
+        count = aclService.saveAll(aclsToCreate);
       }
       log.info("{} ACLs created", count);
       return count;
@@ -76,7 +76,7 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
   }
 
   @Override
-  public long consumeCreateEvent(String id, ResourceGroupDBO accessControlEntity) {
+  public long consumeCreateEvent(String id, ResourceGroupDBO createdEntity) {
     return 0;
   }
 }

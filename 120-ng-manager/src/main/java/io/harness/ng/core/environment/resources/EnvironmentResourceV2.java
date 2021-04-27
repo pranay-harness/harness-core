@@ -47,6 +47,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -174,12 +175,17 @@ public class EnvironmentResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
-    boolean hasAccess = accessControlClient.hasAccess(CDNGRbacUtility.getPermissionDTO(
-        accountId, orgIdentifier, projectIdentifier, CDNGRbacPermissions.ENVIRONMENT_VIEW_PERMISSION));
+    boolean hasAccess = accessControlClient
+                            .checkForAccess(Collections.singletonList(CDNGRbacUtility.getPermissionDTO(accountId,
+                                orgIdentifier, projectIdentifier, CDNGRbacPermissions.ENVIRONMENT_VIEW_PERMISSION)))
+                            .getAccessControlList()
+                            .get(0)
+                            .isPermitted();
     if (!hasAccess) {
       throw new AccessDeniedException(
           "Unauthorized to list environments", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
     }
+
     Criteria criteria =
         EnvironmentFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     Pageable pageRequest;

@@ -3,7 +3,6 @@ package io.harness.accesscontrol.clients;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.accesscontrol.Principal;
-import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
@@ -36,54 +35,30 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public AccessCheckResponseDTO checkForAccess(
-      String principal, PrincipalType principalType, List<PermissionCheckDTO> permissionCheckRequestList) {
+  public AccessCheckResponseDTO checkForAccess(Principal principal, List<PermissionCheckDTO> permissionCheckDTOList) {
     AccessCheckRequestDTO accessCheckRequestDTO =
-        AccessCheckRequestDTO.builder()
-            .principal(Principal.builder().principalType(principalType).principalIdentifier(principal).build())
-            .permissions(permissionCheckRequestList)
-            .build();
+        AccessCheckRequestDTO.builder().principal(principal).permissions(permissionCheckDTOList).build();
     return NGRestUtils.getResponse(this.accessControlHttpClient.getAccessControlList(accessCheckRequestDTO));
-  }
-
-  @Override
-  public AccessControlDTO checkForAccess(
-      String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO) {
-    return checkForAccess(principal, principalType, Collections.singletonList(permissionCheckDTO))
-        .getAccessControlList()
-        .get(0);
-  }
-
-  @Override
-  public boolean hasAccess(String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO) {
-    return checkForAccess(principal, principalType, permissionCheckDTO).isPermitted();
   }
 
   @Override
   public AccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
-    AccessCheckRequestDTO accessCheckRequestDTO =
-        AccessCheckRequestDTO.builder().principal(null).permissions(permissionCheckDTOList).build();
-    return NGRestUtils.getResponse(this.accessControlHttpClient.getAccessControlList(accessCheckRequestDTO));
+    return checkForAccess(null, permissionCheckDTOList);
   }
 
   @Override
-  public AccessControlDTO checkForAccess(PermissionCheckDTO permissionCheckDTO) {
-    return checkForAccess(Collections.singletonList(permissionCheckDTO)).getAccessControlList().get(0);
-  }
-
-  @Override
-  public boolean hasAccess(PermissionCheckDTO permissionCheckDTO) {
-    return checkForAccess(permissionCheckDTO).isPermitted();
-  }
-
-  private void checkForAccessOrThrow(PermissionCheckDTO permissionCheckDTO) {
-    if (!hasAccess(permissionCheckDTO)) {
-      throw new AccessDeniedException(
-          String.format("You need %s permission on %s with identifier: %s to perform this action",
-              permissionCheckDTO.getPermission(), permissionCheckDTO.getResourceType(),
-              permissionCheckDTO.getResourceIdentifier()),
-          ErrorCode.NG_ACCESS_DENIED, USER);
+  public boolean hasAccess(Principal principal, ResourceScope resourceScope, Resource resource, String permission) {
+    try {
+      checkForAccessOrThrowInternal(principal, resourceScope, resource, permission, "");
+      return true;
+    } catch (AccessDeniedException accessDeniedException) {
+      return false;
     }
+  }
+
+  @Override
+  public boolean hasAccess(ResourceScope resourceScope, Resource resource, String permission) {
+    return hasAccess(null, resourceScope, resource, permission);
   }
 
   private PermissionCheckDTO getParentPermissionCheckDTO(
@@ -112,19 +87,48 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
   @Override
   public void checkForAccessOrThrow(
       @Nullable ResourceScope resourceScope, @Nullable Resource resource, @NotNull String permission) {
-    if (resource == null || StringUtils.isEmpty(resource.getResourceIdentifier())) {
-      if (resourceScope == null) {
-        throw new UnexpectedException("Both resource scope and resource cannot be null simultaneously");
-      }
-      checkForAccessOrThrow(getParentPermissionCheckDTO(resourceScope.getAccountIdentifier(),
-          resourceScope.getOrgIdentifier(), resourceScope.getProjectIdentifier(), permission));
-    } else {
-      checkForAccessOrThrow(PermissionCheckDTO.builder()
-                                .permission(permission)
-                                .resourceType(resource.getResourceType())
-                                .resourceIdentifier(resource.getResourceIdentifier())
-                                .resourceScope(resourceScope)
-                                .build());
+    checkForAccessOrThrowInternal(null, resourceScope, resource, permission, null);
+  }
+
+  @Override
+  public void checkForAccessOrThrow(
+      ResourceScope resourceScope, Resource resource, String permission, String exceptionMessage) {
+    checkForAccessOrThrowInternal(null, resourceScope, resource, permission, exceptionMessage);
+  }
+
+  private void checkForAccessOrThrowInternal(
+      Principal principal, ResourceScope resourceScope, Resource resource, String permission, String exceptionMessage) {
+    PermissionCheckDTO permissionCheckDTO;
+    if (resource == null && resourceScope == null) {
+      throw new UnexpectedException("Both resource scope and resource cannot be null simultaneously");
     }
+    if (resource == null) {
+      permissionCheckDTO = getParentPermissionCheckDTO(resourceScope.getAccountIdentifier(),
+          resourceScope.getOrgIdentifier(), resourceScope.getProjectIdentifier(), permission);
+    } else {
+      permissionCheckDTO = PermissionCheckDTO.builder()
+                               .permission(permission)
+                               .resourceType(resource.getResourceType())
+                               .resourceIdentifier(resource.getResourceIdentifier())
+                               .resourceScope(resourceScope)
+                               .build();
+    }
+    AccessCheckResponseDTO accessCheckResponseDTO =
+        checkForAccess(principal, Collections.singletonList(permissionCheckDTO));
+    AccessControlDTO accessControlDTO = accessCheckResponseDTO.getAccessControlList().get(0);
+    if (!accessControlDTO.isPermitted()) {
+      throw new AccessDeniedException(StringUtils.isEmpty(exceptionMessage)
+              ? String.format("Principal [%s] does not have permission [%s] on resource [%s]",
+                  accessCheckResponseDTO.getPrincipal().getPrincipalIdentifier(), permission,
+                  accessControlDTO.getResourceIdentifier())
+              : exceptionMessage,
+          ErrorCode.NG_ACCESS_DENIED, USER);
+    }
+  }
+
+  @Override
+  public void checkForAccessOrThrow(
+      Principal principal, ResourceScope resourceScope, Resource resource, String permission, String exceptionMessage) {
+    checkForAccessOrThrowInternal(principal, resourceScope, resource, permission, exceptionMessage);
   }
 }

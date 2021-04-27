@@ -9,6 +9,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.daos.ACLDAO;
 import io.harness.accesscontrol.acl.models.ACL;
+import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
@@ -122,8 +123,10 @@ public class ACLServiceImpl implements ACLService {
   }
 
   @Override
-  public AccessCheckResponseDTO checkAccess(io.harness.security.dto.Principal principalInContext,
-      Principal principalToCheckPermissions, List<PermissionCheckDTO> permissions) {
+  public AccessCheckResponseDTO checkAccess(
+      io.harness.security.dto.Principal contextPrincipal, AccessCheckRequestDTO accessCheckRequestDTO) {
+    List<PermissionCheckDTO> permissions = accessCheckRequestDTO.getPermissions();
+    Principal principalToCheckPermissions = accessCheckRequestDTO.getPrincipal();
     String accountIdentifier = validateAndGetAccountIdentifierOrThrow(permissions);
     if (!accessControlPreferenceService.isAccessControlEnabled(accountIdentifier)) {
       return AccessCheckResponseDTO.builder()
@@ -134,13 +137,13 @@ public class ACLServiceImpl implements ACLService {
           .build();
     }
 
-    checkForValidContextOrThrow(principalInContext);
+    checkForValidContextOrThrow(contextPrincipal);
 
-    if (serviceContextAndNoPrincipalInBody(principalInContext, principalToCheckPermissions)) {
+    if (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissions)) {
       return AccessCheckResponseDTO.builder()
           .principal(Principal.builder()
                          .principalType(io.harness.accesscontrol.principals.PrincipalType.SERVICE)
-                         .principalIdentifier(principalInContext.getName())
+                         .principalIdentifier(contextPrincipal.getName())
                          .build())
           .accessControlList(permissions.stream()
                                  .map(permission -> getAccessControlDTO(permission, true))
@@ -148,7 +151,7 @@ public class ACLServiceImpl implements ACLService {
           .build();
     }
 
-    if (userContextAndDifferentPrincipalInBody(principalInContext, principalToCheckPermissions)) {
+    if (userContextAndDifferentPrincipalInBody(contextPrincipal, principalToCheckPermissions)) {
       // a user principal needs elevated permissions to check for permissions of another principal
       // TODO{phoenikx} Apply access check here
       log.debug("checking for access control checks here...");
@@ -157,9 +160,9 @@ public class ACLServiceImpl implements ACLService {
     if (notPresent(principalToCheckPermissions)) {
       principalToCheckPermissions =
           Principal.builder()
-              .principalIdentifier(principalInContext.getName())
+              .principalIdentifier(contextPrincipal.getName())
               .principalType(io.harness.accesscontrol.principals.PrincipalType.fromSecurityPrincipalType(
-                  principalInContext.getType()))
+                  contextPrincipal.getType()))
               .build();
     }
 
@@ -181,11 +184,6 @@ public class ACLServiceImpl implements ACLService {
   }
 
   @Override
-  public long insertAllIgnoringDuplicates(List<ACL> acls) {
-    return aclDAO.insertAllIgnoringDuplicates(acls);
-  }
-
-  @Override
   public long saveAll(List<ACL> acls) {
     return aclDAO.saveAll(acls);
   }
@@ -196,27 +194,27 @@ public class ACLServiceImpl implements ACLService {
   }
 
   @Override
-  public long deleteByRoleAssignmentId(String roleAssignmentId) {
-    return aclDAO.deleteByRoleAssignmentId(roleAssignmentId);
+  public long deleteByRoleAssignment(String roleAssignmentId) {
+    return aclDAO.deleteByRoleAssignment(roleAssignmentId);
   }
 
   @Override
-  public List<ACL> getByUserGroup(String scopeIdentifier, String userGroupIdentifier) {
-    return aclDAO.getByUserGroup(scopeIdentifier, userGroupIdentifier);
+  public List<ACL> getByUserGroup(String scope, String userGroupIdentifier) {
+    return aclDAO.getByUserGroup(scope, userGroupIdentifier);
   }
 
   @Override
-  public List<ACL> getByRole(String scopeIdentifier, String identifier, boolean managed) {
-    return aclDAO.getByRole(scopeIdentifier, identifier, managed);
+  public List<ACL> getByRole(String scope, String roleIdentifier, boolean managed) {
+    return aclDAO.getByRole(scope, roleIdentifier, managed);
   }
 
   @Override
-  public List<ACL> getByResourceGroup(String scopeIdentifier, String identifier, boolean managed) {
-    return aclDAO.getByResourceGroup(scopeIdentifier, identifier, managed);
+  public List<ACL> getByResourceGroup(String scope, String resourceGroupIdentifier, boolean managed) {
+    return aclDAO.getByResourceGroup(scope, resourceGroupIdentifier, managed);
   }
 
   @Override
-  public List<ACL> getByRoleAssignmentId(String id) {
-    return aclDAO.getByRoleAssignmentId(id);
+  public List<ACL> getByRoleAssignment(String roleAssignmentId) {
+    return aclDAO.getByRoleAssignment(roleAssignmentId);
   }
 }

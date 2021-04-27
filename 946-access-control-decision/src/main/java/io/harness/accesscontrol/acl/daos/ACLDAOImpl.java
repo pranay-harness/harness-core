@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.dao.DuplicateKeyException;
 
 @OwnedBy(PL)
 @Singleton
@@ -117,22 +116,8 @@ public class ACLDAOImpl implements ACLDAO {
   }
 
   @Override
-  public ACL save(ACL acl) {
-    return aclRepository.save(acl);
-  }
-
-  @Override
-  public long insertAllIgnoringDuplicates(List<ACL> acls) {
-    try {
-      return aclRepository.insertAllIgnoringDuplicates(acls);
-    } catch (DuplicateKeyException duplicateKeyException) {
-      return 0;
-    }
-  }
-
-  @Override
   public long saveAll(List<ACL> acls) {
-    return aclRepository.saveAll(acls).spliterator().estimateSize();
+    return aclRepository.insertAllIgnoringDuplicates(acls);
   }
 
   @Override
@@ -141,27 +126,27 @@ public class ACLDAOImpl implements ACLDAO {
   }
 
   @Override
-  public long deleteByRoleAssignmentId(String roleAssignmentId) {
+  public long deleteByRoleAssignment(String roleAssignmentId) {
     return aclRepository.deleteByRoleAssignmentId(roleAssignmentId);
   }
 
   @Override
-  public List<ACL> getByUserGroup(String scopeIdentifier, String userGroupIdentifier) {
-    return aclRepository.findByUserGroup(scopeIdentifier, userGroupIdentifier);
+  public List<ACL> getByUserGroup(String scope, String userGroupIdentifier) {
+    return aclRepository.findByUserGroup(scope, userGroupIdentifier);
   }
 
   @Override
-  public List<ACL> getByRole(String scopeIdentifier, String identifier, boolean managed) {
-    return aclRepository.findByRole(scopeIdentifier, identifier, managed);
+  public List<ACL> getByRole(String scope, String roleIdentifier, boolean managed) {
+    return aclRepository.findByRole(scope, roleIdentifier, managed);
   }
 
   @Override
-  public List<ACL> getByResourceGroup(String scopeIdentifier, String identifier, boolean managed) {
-    return aclRepository.findByResourceGroup(scopeIdentifier, identifier, managed);
+  public List<ACL> getByResourceGroup(String scope, String resourceGroupIdentifier, boolean managed) {
+    return aclRepository.findByResourceGroup(scope, resourceGroupIdentifier, managed);
   }
 
   @Override
-  public List<ACL> getByRoleAssignmentId(String id) {
-    return aclRepository.getByRoleAssignmentId(id);
+  public List<ACL> getByRoleAssignment(String roleAssignmentId) {
+    return aclRepository.getByRoleAssignmentId(roleAssignmentId);
   }
 }
