@@ -6,7 +6,9 @@ import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtils.oneAndOnlyOne;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.steps.StepUtils.prepareTaskRequest;
 import static io.harness.validation.Validator.notEmptyCheck;
@@ -44,6 +46,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
+import io.harness.data.structure.ListUtils.OneAndOnlyOne;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -102,6 +105,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.ExpressionUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -113,6 +117,7 @@ import io.harness.utils.IdentifierRefHelper;
 import software.wings.beans.TaskType;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -135,6 +140,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class K8sStepHelper {
   private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
       ManifestType.K8Manifest, ManifestType.HelmChart, ManifestType.Kustomize, ManifestType.OpenshiftTemplate);
+
+  private static final Set<String> VALUES_YAML_SUPPORTED_MANIFEST_TYPES =
+      ImmutableSet.of(ManifestType.K8Manifest, ManifestType.HelmChart);
 
   public static final String MISSING_INFRASTRUCTURE_ERROR = "Infrastructure section is missing or is not configured";
   public static final String RELEASE_NAME_VALIDATION_REGEX =
@@ -297,8 +305,10 @@ public class K8sStepHelper {
       SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
       List<EncryptedDataDetail> encryptedDataDetails =
           gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
+
+      List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestType);
       return getGitStoreDelegateConfig(
-          gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType);
+          gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
     }
 
     if (ManifestStoreType.HTTP.equals(storeConfig.getKind())) {
@@ -353,7 +363,7 @@ public class K8sStepHelper {
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStoreConfig gitstoreConfig,
       @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList,
-      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, String manifestType) {
+      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, String manifestType, List<String> paths) {
     convertToRepoGitConfig(gitstoreConfig, gitConfigDTO);
     return GitStoreDelegateConfig.builder()
         .gitConfigDTO(gitConfigDTO)
@@ -362,7 +372,7 @@ public class K8sStepHelper {
         .fetchType(gitstoreConfig.getGitFetchType())
         .branch(getParameterFieldValue(gitstoreConfig.getBranch()))
         .commitId(getParameterFieldValue(gitstoreConfig.getCommitId()))
-        .paths(getPathsBasedOnManifest(gitstoreConfig, manifestType))
+        .paths(paths)
         .connectorName(connectorDTO.getName())
         .build();
   }
@@ -396,6 +406,26 @@ public class K8sStepHelper {
 
       default:
         paths.addAll(getParameterFieldValue(gitstoreConfig.getPaths()));
+    }
+
+    return paths;
+  }
+
+  private List<String> getValuesPathsBasedOnManifest(GitStoreConfig gitstoreConfig, String manifestType) {
+    List<String> paths = new ArrayList<>();
+    switch (manifestType) {
+      case ManifestType.HelmChart:
+        String folderPath = getParameterFieldValue(gitstoreConfig.getFolderPath());
+        paths.add(getValuesYamlGitFilePath(folderPath));
+        break;
+      case ManifestType.K8Manifest:
+        List<String> filePaths = getParameterFieldValue(gitstoreConfig.getPaths());
+        for (String filePath : filePaths) {
+          paths.add(getValuesYamlGitFilePath(filePath));
+        }
+        break;
+      default:
+        throw new UnsupportedOperationException(format("Unsupported Manifest type: [%s]", manifestType));
     }
 
     return paths;
@@ -555,6 +585,43 @@ public class K8sStepHelper {
       }
     }
 
+    return getGitFetchFileTaskChainResponse(ambiance, gitFetchFilesConfigs, stepElementParameters, infrastructure,
+        k8sManifestOutcome, aggregatedValuesManifests, openshiftParamManifests);
+  }
+
+  public TaskChainResponse executeAutomaticValuesFetchTask(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
+      StepElementParameters stepElementParameters, InfrastructureOutcome infrastructure,
+      ManifestOutcome k8sManifestOutcome) {
+    StoreConfig storeConfig = extractStoreConfigFromK8sOrHelmChartManifestOutcome(k8sManifestOutcome);
+    if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
+      GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
+      if (ManifestType.K8Manifest.equals(k8sManifestOutcome.getType())
+          && hasZeroOrMultiplePaths(gitStoreConfig.getPaths())) {
+        return k8sStepExecutor.executeK8sTask(
+            k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructure);
+      }
+
+      ValuesManifestOutcome valuesManifestOutcome =
+          ValuesManifestOutcome.builder().identifier(k8sManifestOutcome.getIdentifier()).store(storeConfig).build();
+
+      String validationMessage = format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier());
+      GitFetchFilesConfig gitFetchFilesConfig =
+          getAutomaticValuesGitFetchFilesConfig(ambiance, valuesManifestOutcome.getIdentifier(),
+              valuesManifestOutcome.getStore(), validationMessage, k8sManifestOutcome.getType());
+
+      return getGitFetchFileTaskChainResponse(ambiance, ImmutableList.of(gitFetchFilesConfig), stepElementParameters,
+          infrastructure, k8sManifestOutcome, ImmutableList.of(valuesManifestOutcome), Collections.emptyList());
+    }
+
+    return k8sStepExecutor.executeK8sTask(
+        k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructure);
+  }
+
+  private TaskChainResponse getGitFetchFileTaskChainResponse(Ambiance ambiance,
+      List<GitFetchFilesConfig> gitFetchFilesConfigs, StepElementParameters stepElementParameters,
+      InfrastructureOutcome infrastructure, ManifestOutcome k8sManifestOutcome,
+      List<ValuesManifestOutcome> aggregatedValuesManifests,
+      List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     GitFetchRequest gitFetchRequest =
         GitFetchRequest.builder().gitFetchFilesConfigs(gitFetchFilesConfigs).accountId(accountId).build();
@@ -584,6 +651,24 @@ public class K8sStepHelper {
         .build();
   }
 
+  private boolean hasZeroOrMultiplePaths(ParameterField<List<String>> pathsParameter) {
+    List<String> paths = getParameterFieldValue(pathsParameter);
+    return isEmpty(paths) || !oneAndOnlyOne(paths).equals(OneAndOnlyOne.ONE);
+  }
+
+  private StoreConfig extractStoreConfigFromK8sOrHelmChartManifestOutcome(ManifestOutcome manifestOutcome) {
+    switch (manifestOutcome.getType()) {
+      case ManifestType.K8Manifest:
+        K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
+        return k8sManifestOutcome.getStore();
+      case ManifestType.HelmChart:
+        HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
+        return helmChartManifestOutcome.getStore();
+      default:
+        throw new UnsupportedOperationException(format("Unsupported Manifest type: [%s]", manifestOutcome.getType()));
+    }
+  }
+
   private GitFetchFilesConfig getGitFetchFilesConfig(
       Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
@@ -597,13 +682,39 @@ public class K8sStepHelper {
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
+    List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestType);
     GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType);
+        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
         .manifestType(manifestType)
         .succeedIfFileNotFound(false)
+        .gitStoreDelegateConfig(gitStoreDelegateConfig)
+        .build();
+  }
+
+  private GitFetchFilesConfig getAutomaticValuesGitFetchFilesConfig(
+      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
+    GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
+    String connectorId = gitStoreConfig.getConnectorRef().getValue();
+    ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
+    validateManifest(store.getKind(), connectorDTO, validationMessage);
+
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
+    NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+    SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
+
+    List<String> gitFilePaths = getValuesPathsBasedOnManifest(gitStoreConfig, manifestType);
+    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
+        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
+
+    return GitFetchFilesConfig.builder()
+        .identifier(identifier)
+        .manifestType(ManifestType.VALUES)
+        .succeedIfFileNotFound(true)
         .gitStoreDelegateConfig(gitStoreDelegateConfig)
         .build();
   }
@@ -636,6 +747,12 @@ public class K8sStepHelper {
         ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType())
         ? getOpenshiftParamManifests(new LinkedList<>(manifestOutcomeMap.values()))
         : Collections.emptyList();
+
+    if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())
+        && aggregatedValuesManifests.isEmpty()) {
+      return executeAutomaticValuesFetchTask(
+          k8sStepExecutor, ambiance, stepElementParameters, infrastructureOutcome, k8sManifestOutcome);
+    }
 
     if (isEmpty(aggregatedValuesManifests) && isEmpty(openshiftParamManifests)) {
       return k8sStepExecutor.executeK8sTask(
@@ -737,7 +854,9 @@ public class K8sStepHelper {
     K8sStepPassThroughData k8sStepPassThroughData = (K8sStepPassThroughData) passThroughData;
 
     ManifestOutcome k8sManifest = k8sStepPassThroughData.getK8sManifestOutcome();
-    List<String> valuesFileContents = getFileContents(gitFetchFilesResultMap, k8sStepPassThroughData);
+    List<String> valuesFileContents = !gitFetchFilesResultMap.isEmpty()
+        ? getFileContents(gitFetchFilesResultMap, k8sStepPassThroughData)
+        : Collections.emptyList();
 
     return k8sStepExecutor.executeK8sTask(
         k8sManifest, ambiance, stepElementParameters, valuesFileContents, k8sStepPassThroughData.getInfrastructure());
