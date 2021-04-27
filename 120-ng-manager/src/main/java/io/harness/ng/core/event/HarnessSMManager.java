@@ -2,6 +2,7 @@ package io.harness.ng.core.event;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.delegate.beans.connector.ConnectorType.AWS_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
@@ -9,7 +10,9 @@ import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.mappers.secretmanagermapper.AwsKmsMappingHelper;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.eraro.ErrorCode;
@@ -22,6 +25,7 @@ import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 
 import com.google.inject.Inject;
@@ -110,6 +114,20 @@ public class HarnessSMManager {
                             .connectorConfig(gcpKmsConnectorDTO)
                             .build();
         break;
+      case KMS:
+        AwsKmsConfigDTO configDTO = (AwsKmsConfigDTO) secretManagerConfigDTO;
+        AwsKmsConnectorDTO awsKmsConnectorDTO = AwsKmsMappingHelper.configDTOToConnectorDTO(configDTO);
+        awsKmsConnectorDTO.setHarnessManaged(true);
+        connectorInfo = ConnectorInfoDTO.builder()
+                            .connectorType(AWS_KMS)
+                            .identifier(secretManagerConfigDTO.getIdentifier())
+                            .name(secretManagerConfigDTO.getName())
+                            .orgIdentifier(secretManagerConfigDTO.getOrgIdentifier())
+                            .projectIdentifier(secretManagerConfigDTO.getProjectIdentifier())
+                            .description(secretManagerConfigDTO.getDescription())
+                            .connectorConfig(awsKmsConnectorDTO)
+                            .build();
+        break;
       case LOCAL:
         LocalConnectorDTO localConnectorDTO =
             LocalConnectorDTO.builder().isDefault(secretManagerConfigDTO.isDefault()).build();
@@ -135,6 +153,8 @@ public class HarnessSMManager {
     switch (encryptionType) {
       case GCP_KMS:
         return "Harness Secrets Manager Google KMS";
+      case KMS:
+        return "Harness Secrets Manager AWS KMS";
       case LOCAL:
         return "Harness Vault";
       default:

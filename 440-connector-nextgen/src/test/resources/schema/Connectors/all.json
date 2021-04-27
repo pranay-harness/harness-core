@@ -407,6 +407,186 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AwsKmsConnectorCredential": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "AssumeIAMRole",
+            "AssumeSTSRole",
+            "ManualConfig"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeIAMRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecAssumeIAM"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeSTSRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecAssumeSTS"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ManualConfig"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecManualConfig"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsKmsConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "credential": {
+              "$ref": "#/definitions/AwsKmsConnectorCredential"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "kmsArn": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecAssumeIAM": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "delegateSelectors"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecAssumeSTS": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "delegateSelectors",
+            "roleArn"
+          ],
+          "properties": {
+            "assumeStsRoleDuration": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
+            },
+            "externalName": {
+              "type": "string"
+            },
+            "roleArn": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecManualConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessKey",
+            "secretKey"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AwsManualConfigSpec": {
       "allOf": [
         {
@@ -881,6 +1061,7 @@
             "Vault",
             "DockerRegistry",
             "Local",
+            "AwsKms",
             "GcpKms",
             "Gcp",
             "Aws",
@@ -946,6 +1127,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AwsConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AwsKms"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsConnectorDTO"
               }
             }
           }

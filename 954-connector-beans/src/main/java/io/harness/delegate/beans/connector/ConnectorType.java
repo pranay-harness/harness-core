@@ -18,7 +18,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Vault") VAULT("Vault"),
   @JsonProperty("DockerRegistry") DOCKER("DockerRegistry"),
   @JsonProperty("Local") LOCAL("Local"),
-  //  @JsonProperty("AwsKms") KMS("AwsKms"),
+  @JsonProperty("AwsKms") AWS_KMS("AwsKms"),
   @JsonProperty("GcpKms") GCP_KMS("GcpKms"),
   //  @JsonProperty("Awssecretsmanager") AWS_SECRETS_MANAGER("Awssecretsmanager"),
   //  @JsonProperty("Azurevault") AZURE_VAULT("Azurevault"),

@@ -21,6 +21,14 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConstants;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecAssumeIAMDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecAssumeSTSDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
@@ -220,6 +228,16 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BitbucketUsernamePasswordDTO.class, 19530);
     kryo.register(LocalConnectorDTO.class, 543237);
     kryo.register(GcpKmsConnectorDTO.class, 543238);
+
+    kryo.register(AwsKmsConnectorDTO.class, 543286);
+    kryo.register(AwsKmsConnectorCredentialDTO.class, 543288);
+    kryo.register(AwsKmsCredentialType.class, 543289);
+    kryo.register(AwsKmsCredentialSpecDTO.class, 543290);
+    kryo.register(AwsKmsConstants.class, 543291);
+    kryo.register(AwsKmsCredentialSpecManualConfigDTO.class, 543292);
+    kryo.register(AwsKmsCredentialSpecAssumeIAMDTO.class, 543293);
+    kryo.register(AwsKmsCredentialSpecAssumeSTSDTO.class, 543294);
+
     kryo.register(CEAzureConnectorDTO.class, 19540);
     kryo.register(CEAzureFeatures.class, 19541);
     kryo.register(BillingExportSpecDTO.class, 19542);

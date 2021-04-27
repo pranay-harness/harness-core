@@ -16,6 +16,13 @@ import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigUpdateDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsCredentialSpecConfig;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsIamCredentialConfig;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsManualCredentialConfig;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsStsCredentialConfig;
+import io.harness.secretmanagerclient.dto.awskms.BaseAwsKmsConfigDTO;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -40,5 +47,14 @@ public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
 
     kryo.register(SampleEncryptableSettingImplementation.class, 54322);
     kryo.register(NGAccessWithEncryptionConsumer.class, 54323);
+
+    kryo.register(AwsKmsConfigDTO.class, 643283);
+    kryo.register(AwsKmsConfigUpdateDTO.class, 643284);
+    kryo.register(BaseAwsKmsConfigDTO.class, 543287);
+
+    kryo.register(AwsKmsCredentialSpecConfig.class, 543295);
+    kryo.register(AwsKmsIamCredentialConfig.class, 543296);
+    kryo.register(AwsKmsManualCredentialConfig.class, 543297);
+    kryo.register(AwsKmsStsCredentialConfig.class, 543298);
   }
 }
