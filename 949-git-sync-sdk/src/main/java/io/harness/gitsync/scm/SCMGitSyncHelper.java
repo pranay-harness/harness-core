@@ -199,7 +199,9 @@ public class SCMGitSyncHelper {
       throw new InvalidRequestException("File path cannot be empty");
     }
     String updatedFolderPath = folderPath.endsWith("/") ? folderPath : folderPath.concat("/");
+    String folderPathWithoutStartingSlash =
+        updatedFolderPath.charAt(0) != '/' ? updatedFolderPath : updatedFolderPath.substring(1);
     String updatedFilePath = filePath.charAt(0) != '/' ? filePath : filePath.substring(1);
-    return updatedFolderPath + updatedFilePath;
+    return folderPathWithoutStartingSlash + updatedFilePath;
   }
 }
