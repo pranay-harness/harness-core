@@ -23,6 +23,7 @@ import io.harness.steps.approval.step.beans.ApprovalType;
 import io.harness.timeout.TimeoutParameters;
 import io.harness.yaml.core.timeout.Timeout;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
@@ -85,6 +86,11 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
   @Version Long version;
 
   long nextIteration;
+
+  @JsonIgnore
+  public boolean hasExpired() {
+    return deadline < System.currentTimeMillis();
+  }
 
   public AutoLogContext autoLogContext() {
     return new AutoLogContext(logContextMap(), OVERRIDE_NESTS);
