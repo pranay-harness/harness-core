@@ -6,6 +6,7 @@ import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -40,6 +41,12 @@ public final class AnalysisStateMachine implements PersistentEntity, UuidAware, 
                  .name("execute_query_idx")
                  .field(AnalysisStateMachineKeys.verificationTaskId)
                  .field(AnalysisStateMachineKeys.status)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("verificationTaskIdQueryIdx")
+                 .unique(false)
+                 .field(AnalysisStateMachineKeys.verificationTaskId)
+                 .descSortField(AnalysisStateMachineKeys.createdAt)
                  .build())
         .build();
   }
