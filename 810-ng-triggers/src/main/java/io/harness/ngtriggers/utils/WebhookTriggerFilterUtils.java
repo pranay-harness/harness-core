@@ -134,6 +134,23 @@ public class WebhookTriggerFilterUtils {
     return allConditionsMatched;
   }
 
+  public boolean checkIfFilepathConditionsMatch(
+      WebhookPayloadData webhookPayloadData, List<WebhookCondition> filepathConditions) {
+    if (isEmpty(filepathConditions)) {
+      return true;
+    }
+
+    List<String> files = new ArrayList<>();
+    for (String filepath : files) {
+      for (WebhookCondition condition : filepathConditions) {
+        if (ConditionEvaluator.evaluate(filepath, condition.getValue(), condition.getOperator())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   public boolean checkIfJexlConditionsMatch(String payload, String jexlExpression) {
     if (isBlank(jexlExpression)) {
       return true;

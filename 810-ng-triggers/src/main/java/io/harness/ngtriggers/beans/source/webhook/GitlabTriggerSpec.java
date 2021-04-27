@@ -21,7 +21,7 @@ public class GitlabTriggerSpec implements WebhookTriggerSpec {
   List<WebhookCondition> payloadConditions;
   List<WebhookCondition> headerConditions;
   String jexlCondition;
-  List<String> pathFilters;
+  List<WebhookCondition> pathFilters;
 
   @Override
   public WebhookSourceRepo getType() {
