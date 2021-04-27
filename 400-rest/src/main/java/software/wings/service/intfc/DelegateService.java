@@ -111,6 +111,8 @@ public interface DelegateService extends OwnedByAccount {
 
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
 
+  void deleteDelegateGroup(String accountId, String delegateGroupId);
+
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
   DelegateRegisterResponse register(@Valid DelegateParams delegateParams);

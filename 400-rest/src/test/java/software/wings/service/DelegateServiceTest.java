@@ -97,6 +97,7 @@ import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateGroup;
+import io.harness.delegate.beans.DelegateGroupStatus;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateParams;
@@ -798,9 +799,94 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDelete() {
+    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String id = persistence.save(createDelegateBuilder().build());
     delegateService.delete(ACCOUNT_ID, id);
-    assertThat(persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, ACCOUNT_ID).asList()).hasSize(0);
+    assertThat(persistence.get(Delegate.class, id)).isNull();
+    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldMarkDelegateAsDeleted() {
+    String id = persistence.save(createDelegateBuilder().build());
+    delegateService.delete(ACCOUNT_ID, id);
+    Delegate deletedDelegate = persistence.get(Delegate.class, id);
+    assertThat(deletedDelegate).isNotNull();
+    assertThat(deletedDelegate.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
+    assertThat(deletedDelegate.getValidUntil()).isAfter(Date.from(Instant.now()));
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldDeleteDelegateGroup() {
+    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
+    String accountId = generateUuid();
+
+    DelegateGroup delegateGroup = DelegateGroup.builder().accountId(accountId).name("groupname").build();
+    persistence.save(delegateGroup);
+
+    Delegate d1 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .build();
+    persistence.save(d1);
+    Delegate d2 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .build();
+    persistence.save(d2);
+
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
+
+    assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
+    assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
+    assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
+    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldMarkDelegateGroupAsDeleted() {
+    String accountId = generateUuid();
+
+    DelegateGroup delegateGroup = DelegateGroup.builder().accountId(accountId).name("groupname2").build();
+    persistence.save(delegateGroup);
+
+    Delegate d1 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname2")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .build();
+    persistence.save(d1);
+    Delegate d2 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname2")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .build();
+    persistence.save(d2);
+
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
+
+    DelegateGroup deletedDelegateGroup = persistence.get(DelegateGroup.class, delegateGroup.getUuid());
+    assertThat(deletedDelegateGroup).isNotNull();
+    assertThat(deletedDelegateGroup.getStatus()).isEqualTo(DelegateGroupStatus.DELETED);
+    assertThat(deletedDelegateGroup.getValidUntil()).isAfter(Date.from(Instant.now()));
+
+    Delegate deletedDelegate1 = persistence.get(Delegate.class, d1.getUuid());
+    assertThat(deletedDelegate1).isNotNull();
+    assertThat(deletedDelegate1.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
+    assertThat(deletedDelegate1.getValidUntil()).isAfter(Date.from(Instant.now()));
+
+    Delegate deletedDelegate2 = persistence.get(Delegate.class, d2.getUuid());
+    assertThat(deletedDelegate2).isNotNull();
+    assertThat(deletedDelegate2.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
+    assertThat(deletedDelegate2.getValidUntil()).isAfter(Date.from(Instant.now()));
   }
 
   @Test
@@ -828,6 +914,10 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldRegisterDelegateParams() {
     String accountId = generateUuid();
 
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder().accountId(accountId).name(generateUuid()).status(DelegateGroupStatus.ENABLED).build();
+    persistence.save(delegateGroup);
+
     DelegateSizeDetails sizeDetails = DelegateSizeDetails.builder()
                                           .size(DelegateSize.EXTRA_SMALL)
                                           .label("Extra Small")
@@ -846,7 +936,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateType(DOCKER_DELEGATE)
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
-                                .delegateGroupId(generateUuid())
+                                .delegateGroupId(delegateGroup.getUuid())
                                 .version(VERSION)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -1350,6 +1440,53 @@ public class DelegateServiceTest extends WingsBaseTest {
                                         .lastHeartBeat(System.currentTimeMillis())
                                         .build();
     when(licenseService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
+    DelegateRegisterResponse registerResponse = delegateService.register(delegateParams);
+    assertThat(registerResponse.getAction()).isEqualTo(DelegateRegisterResponse.Action.SELF_DESTRUCT);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotRegisterNewDelegateForDeletedDelegateGroup() {
+    String accountId = generateUuid();
+
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder().accountId(accountId).name(generateUuid()).status(DelegateGroupStatus.DELETED).build();
+    persistence.save(delegateGroup);
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(accountId)
+                            .ip("127.0.0.1")
+                            .hostName("localhost")
+                            .version(VERSION)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .delegateGroupId(delegateGroup.getUuid())
+                            .build();
+
+    DelegateRegisterResponse registerResponse = delegateService.register(delegate);
+    assertThat(registerResponse.getAction()).isEqualTo(DelegateRegisterResponse.Action.SELF_DESTRUCT);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotRegisterDelegateParamsNewDelegateForDeletedDelegateGroup() {
+    String accountId = generateUuid();
+
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder().accountId(accountId).name(generateUuid()).status(DelegateGroupStatus.DELETED).build();
+    persistence.save(delegateGroup);
+
+    DelegateParams delegateParams = DelegateParams.builder()
+                                        .accountId(accountId)
+                                        .ip("127.0.0.1")
+                                        .hostName("localhost")
+                                        .version(VERSION)
+                                        .lastHeartBeat(System.currentTimeMillis())
+                                        .delegateGroupId(delegateGroup.getUuid())
+                                        .build();
+
     DelegateRegisterResponse registerResponse = delegateService.register(delegateParams);
     assertThat(registerResponse.getAction()).isEqualTo(DelegateRegisterResponse.Action.SELF_DESTRUCT);
   }

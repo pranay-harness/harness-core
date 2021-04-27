@@ -6,6 +6,7 @@ import static io.harness.beans.DelegateTask.Status.ERROR;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
+import static io.harness.beans.FeatureName.DO_DELEGATE_PHYSICAL_DELETE;
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
@@ -105,6 +106,7 @@ import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
+import io.harness.delegate.beans.DelegateGroupStatus;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
@@ -1999,7 +2001,6 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void delete(String accountId, String delegateId) {
-    log.info("Deleting delegate: {}", delegateId);
     Delegate existingDelegate = persistence.createQuery(Delegate.class)
                                     .filter(DelegateKeys.accountId, accountId)
                                     .filter(DelegateKeys.uuid, delegateId)
@@ -2023,9 +2024,27 @@ public class DelegateServiceImpl implements DelegateService {
               .build());
     }
 
-    persistence.delete(persistence.createQuery(Delegate.class)
-                           .filter(DelegateKeys.accountId, accountId)
-                           .filter(DelegateKeys.uuid, delegateId));
+    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId)) {
+      persistence.delete(persistence.createQuery(Delegate.class)
+                             .filter(DelegateKeys.accountId, accountId)
+                             .filter(DelegateKeys.uuid, delegateId));
+      log.info("Delegate: {} deleted.", delegateId);
+    } else {
+      Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.uuid, delegateId);
+
+      UpdateOperations<Delegate> updateOperations =
+          persistence.createUpdateOperations(Delegate.class)
+              .set(DelegateKeys.status, DelegateInstanceStatus.DELETED)
+              .set(
+                  DelegateKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant()));
+
+      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      log.info("Delegate: {} marked as deleted.", delegateId);
+
+      broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
+    }
   }
 
   @Override
@@ -2041,10 +2060,58 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public void deleteDelegateGroup(String accountId, String delegateGroupId) {
+    log.info("Deleting delegate group: {} and all belonging delegates.", delegateGroupId);
+    Set<String> groupDelegateIds = persistence.createQuery(Delegate.class)
+                                       .filter(DelegateKeys.accountId, accountId)
+                                       .filter(DelegateKeys.delegateGroupId, delegateGroupId)
+                                       .asKeyList()
+                                       .stream()
+                                       .map(key -> (String) key.getId())
+                                       .collect(Collectors.toSet());
+
+    for (String delegateId : groupDelegateIds) {
+      delete(accountId, delegateId);
+    }
+
+    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId)) {
+      persistence.delete(persistence.createQuery(DelegateGroup.class)
+                             .filter(DelegateGroupKeys.accountId, accountId)
+                             .filter(DelegateGroupKeys.uuid, delegateGroupId));
+      log.info("Delegate group: {} and all belonging delegates have been deleted.", delegateGroupId);
+    } else {
+      Query<DelegateGroup> updateQuery = persistence.createQuery(DelegateGroup.class)
+                                             .filter(DelegateGroupKeys.accountId, accountId)
+                                             .filter(DelegateGroupKeys.uuid, delegateGroupId);
+
+      UpdateOperations<DelegateGroup> updateOperations =
+          persistence.createUpdateOperations(DelegateGroup.class)
+              .set(DelegateGroupKeys.status, DelegateGroupStatus.DELETED)
+              .set(DelegateGroupKeys.validUntil,
+                  Date.from(OffsetDateTime.now()
+                                .plusDays(Delegate.TTL.toDays()) // Delegate.TTL is used to make sure TTL duration is
+                                                                 // aligned between group and delegate
+                                .toInstant()));
+
+      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", delegateGroupId);
+    }
+  }
+
+  @Override
   public DelegateRegisterResponse register(Delegate delegate) {
     if (licenseService.isAccountDeleted(delegate.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+    }
+
+    if (isNotBlank(delegate.getDelegateGroupId())) {
+      DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
+
+      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+        broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
+        return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+      }
     }
 
     boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
@@ -2099,6 +2166,15 @@ public class DelegateServiceImpl implements DelegateService {
     if (licenseService.isAccountDeleted(delegateParams.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+    }
+
+    if (isNotBlank(delegateParams.getDelegateGroupId())) {
+      DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
+
+      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+        broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
+        return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+      }
     }
 
     boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegateParams.getAccountId());

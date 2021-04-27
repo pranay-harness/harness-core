@@ -490,6 +490,19 @@ public class DelegateSetupResource {
     }
   }
 
+  @DELETE
+  @Path("groups/{delegateGroupId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
+  public RestResponse<Void> deleteDelegateGroup(@PathParam("delegateGroupId") @NotEmpty String delegateGroupId,
+      @QueryParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      delegateService.deleteDelegateGroup(accountId, delegateGroupId);
+      return new RestResponse<>();
+    }
+  }
+
   @GET
   @Path(DOWNLOAD_URL)
   @Timed
