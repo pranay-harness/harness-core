@@ -37,9 +37,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@Slf4j
-@Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Singleton
+@Slf4j
 @OwnedBy(DX)
 public class NGMigrationServiceImpl implements NGMigrationService {
   private PersistentLocker persistentLocker;
