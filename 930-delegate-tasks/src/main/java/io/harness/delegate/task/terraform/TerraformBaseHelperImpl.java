@@ -308,7 +308,12 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     } else {
       if (terraformExecuteStepRequest.getEncryptedTfPlan() == null) {
         TerraformDestroyCommandRequest terraformDestroyCommandRequest =
-            TerraformDestroyCommandRequest.builder().targets(terraformExecuteStepRequest.getTargets()).build();
+            TerraformDestroyCommandRequest.builder()
+                .varFilePaths(terraformExecuteStepRequest.getTfVarFilePaths())
+                .varParams(terraformExecuteStepRequest.getVarParams())
+                .uiLogs(terraformExecuteStepRequest.getUiLogs())
+                .targets(terraformExecuteStepRequest.getTargets())
+                .build();
         response = terraformClient.destroy(terraformDestroyCommandRequest, terraformExecuteStepRequest.getEnvVars(),
             terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback());
       } else {
@@ -492,7 +497,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     }
   }
 
-  public void uploadTfStateFile(String accountId, String delegateId, String taskId, String entityId, File tfStateFile)
+  public String uploadTfStateFile(String accountId, String delegateId, String taskId, String entityId, File tfStateFile)
       throws IOException {
     final DelegateFile delegateFile = aDelegateFile()
                                           .withAccountId(accountId)
@@ -512,6 +517,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
         delegateFileManager.upload(delegateFile, nullInputStream);
       }
     }
+    return delegateFile.getFileId();
   }
 
   public void copyConfigFilestoWorkingDirectory(

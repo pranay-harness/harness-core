@@ -27,7 +27,7 @@ public class CDPMSStepPlanCreator extends GenericStepPMSPlanCreator {
   public Set<String> getSupportedStepTypes() {
     return Sets.newHashSet("K8sRollingDeploy", "K8sRollingRollback", "ShellScript", "K8sScale", "K8sCanaryDeploy",
         "K8sBlueGreenDeploy", "K8sBGSwapServices", "K8sDelete", "K8sCanaryDelete", "K8sApply", "TerraformApply",
-        "TerraformPlan");
+        "TerraformPlan", "TerraformDestroy");
   }
 
   @Override
