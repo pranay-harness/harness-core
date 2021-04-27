@@ -76,6 +76,7 @@ public class ExceptionManager {
             cascadedException = (WingsException) cascadedException.getCause();
           }
           setExceptionCause(cascadedException, handleException((Exception) exception.getCause()));
+          setExceptionStacktrace(cascadedException, exception.getStackTrace());
         }
       }
       return handledException;
@@ -92,6 +93,12 @@ public class ExceptionManager {
 
   private void setExceptionCause(WingsException exception, Exception cause) throws IllegalAccessException {
     ReflectionUtils.setObjectField(ReflectionUtils.getFieldByName(exception.getClass(), "cause"), exception, cause);
+  }
+
+  private void setExceptionStacktrace(WingsException exception, StackTraceElement[] stackTraceElements)
+      throws IllegalAccessException {
+    ReflectionUtils.setObjectField(
+        ReflectionUtils.getFieldByName(exception.getClass(), "stackTrace"), exception, stackTraceElements);
   }
 
   private boolean isExceptionKryoRegistered(WingsException wingsException) {
