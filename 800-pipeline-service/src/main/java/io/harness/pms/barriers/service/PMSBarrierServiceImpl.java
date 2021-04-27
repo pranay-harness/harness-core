@@ -10,11 +10,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.barriers.beans.BarrierExecutionInfo;
 import io.harness.pms.barriers.beans.BarrierExecutionInfo.BarrierExecutionInfoBuilder;
+import io.harness.repositories.TimeoutInstanceRepository;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.service.BarrierService;
+import io.harness.timeout.TimeoutInstance;
 
 import com.google.common.collect.Sets;
+import com.google.common.collect.Streams;
 import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PMSBarrierServiceImpl implements PMSBarrierService {
   private final NodeExecutionService nodeExecutionService;
   private final BarrierService barrierService;
+  private final TimeoutInstanceRepository timeoutInstanceRepository;
 
   @Override
   public List<BarrierSetupInfo> getBarrierSetupInfoList(String yaml) {
@@ -50,13 +54,13 @@ public class PMSBarrierServiceImpl implements PMSBarrierService {
                      BarrierExecutionInfoBuilder builder = BarrierExecutionInfo.builder()
                                                                .name(instance.getName())
                                                                .identifier(instance.getIdentifier())
-                                                               .stages(instance.getSetupInfo().getStages())
-                                                               .timeoutIn(instance.getSetupInfo().getTimeout());
+                                                               .stages(instance.getSetupInfo().getStages());
 
                      try {
                        NodeExecution barrierNode = nodeExecutionService.get(position.getStepRuntimeId());
-                       builder.started(true);
-                       builder.startedAt(barrierNode.getStartTs());
+                       builder.started(true)
+                           .startedAt(barrierNode.getStartTs())
+                           .timeoutIn(obtainTimeoutIn(barrierNode));
                      } catch (InvalidRequestException ignore) {
                        builder.started(false);
                      }
@@ -71,11 +75,22 @@ public class PMSBarrierServiceImpl implements PMSBarrierService {
   public BarrierExecutionInfo getBarrierExecutionInfo(String barrierSetupId, String planExecutionId) {
     BarrierExecutionInstance barrierInstance =
         barrierService.findByPlanNodeIdAndPlanExecutionId(barrierSetupId, planExecutionId);
+    NodeExecution barrierNode = nodeExecutionService.getByPlanNodeUuid(barrierSetupId, planExecutionId);
     return BarrierExecutionInfo.builder()
         .name(barrierInstance.getName())
         .identifier(barrierInstance.getIdentifier())
         .stages(barrierInstance.getSetupInfo().getStages())
-        .timeoutIn(barrierInstance.getSetupInfo().getTimeout())
+        .timeoutIn(obtainTimeoutIn(barrierNode))
         .build();
+  }
+
+  private long obtainTimeoutIn(NodeExecution barrierNode) {
+    Iterable<TimeoutInstance> timeoutInstances =
+        timeoutInstanceRepository.findAllById(barrierNode.getTimeoutInstanceIds());
+    long expiryTime = Streams.stream(timeoutInstances)
+                          .mapToLong(timeoutInstance -> timeoutInstance.getTracker().getExpiryTime())
+                          .max()
+                          .orElse(-1L);
+    return expiryTime < 0 ? expiryTime : expiryTime - System.currentTimeMillis();
   }
 }

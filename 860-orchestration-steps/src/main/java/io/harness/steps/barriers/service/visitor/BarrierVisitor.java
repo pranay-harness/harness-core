@@ -13,7 +13,6 @@ import io.harness.steps.barriers.beans.StageDetail;
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.visitor.DummyVisitableElement;
 import io.harness.walktree.visitor.SimpleVisitor;
-import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.api.client.util.Preconditions;
 import com.google.inject.Inject;
@@ -24,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import lombok.Getter;
 
 @Singleton
@@ -120,7 +118,6 @@ public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
                    .name(Preconditions.checkNotNull(stageName, "Stage name should not be null"))
                    .identifier(Preconditions.checkNotNull(stageIdentifier, "Stage identifier should not be null"))
                    .build());
-      barrierIdentifierMap.get(identifier).setTimeout(obtainBarrierTimeoutFromStep(element));
 
       barrierPositionInfoMap.get(identifier)
           .add(BarrierPositionInfo.BarrierPosition.builder()
@@ -139,11 +136,6 @@ public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
   private String obtainBarrierIdentifierFromStep(YamlNode currentElement) {
     return Preconditions.checkNotNull(currentElement.getField(SPEC_FIELD).getNode().getStringValue(BARRIER_REF_FIELD),
         String.format(BARRIER_REF_FIELD + " cannot be null -> %s", currentElement.asText()));
-  }
-
-  private Long obtainBarrierTimeoutFromStep(YamlNode currentElement) {
-    return Objects.requireNonNull(Timeout.fromString(currentElement.getCurrJsonNode().get("timeout").asText()))
-        .getTimeoutInMillis();
   }
 
   public Map<String, BarrierSetupInfo> getBarrierIdentifierMap() {

@@ -61,8 +61,13 @@ public class BarrierStep implements AsyncExecutable<BarrierStepParameters> {
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     BarrierResponseData responseData = (BarrierResponseData) responseDataMap.get(barrierExecutionInstance.getUuid());
     if (responseData.isFailed()) {
-      stepResponseBuilder.status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
+      BarrierResponseData.BarrierError barrierError = responseData.getBarrierError();
+      if (barrierError.isTimedOut()) {
+        stepResponseBuilder.status(Status.EXPIRED);
+      } else {
+        stepResponseBuilder.status(Status.FAILED);
+      }
+      stepResponseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage(barrierError.getErrorMessage()).build());
     } else {
       stepResponseBuilder.status(Status.SUCCEEDED);
     }
