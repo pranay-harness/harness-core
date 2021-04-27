@@ -22,7 +22,7 @@ public class TelemetryModule extends AbstractModule {
 
   private TelemetryModule() {}
 
-  public static TelemetryModule getInstance() {
+  static TelemetryModule getInstance() {
     if (instance == null) {
       instance = new TelemetryModule();
     }
@@ -45,7 +45,5 @@ public class TelemetryModule extends AbstractModule {
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(SendTrackEvents.class), trackEventInterceptor);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(SendIdentifyEvent.class), identifyEventInterceptor);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(SendGroupEvent.class), groupEventInterceptor);
-
-    requireBinding(TelemetryConfiguration.class);
   }
 }

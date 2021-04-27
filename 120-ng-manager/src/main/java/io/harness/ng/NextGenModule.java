@@ -130,8 +130,8 @@ import io.harness.serializer.NextGenRegistrars;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.signup.SignupModule;
+import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
-import io.harness.telemetry.TelemetryModule;
 import io.harness.time.TimeModule;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
@@ -198,12 +198,6 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
     return appConfig.getLogStreamingServiceConfig();
-  }
-
-  @Provides
-  @Singleton
-  TelemetryConfiguration getTelemetryConfiguration() {
-    return appConfig.getSegmentConfiguration();
   }
 
   @Provides
@@ -401,7 +395,12 @@ public class NextGenModule extends AbstractModule {
           appConfig.getAccessControlAdminClientConfiguration(), NG_MANAGER.getServiceId()));
     }
     install(new MockRoleAssignmentModule());
-    install(TelemetryModule.getInstance());
+    install(new AbstractTelemetryModule() {
+      @Override
+      public TelemetryConfiguration telemetryConfiguration() {
+        return appConfig.getSegmentConfiguration();
+      }
+    });
     install(LicenseModule.getInstance());
     bind(UserService.class).to(UserServiceImpl.class);
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
