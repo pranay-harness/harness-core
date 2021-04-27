@@ -7,10 +7,7 @@ import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +24,9 @@ public class TelemetrySdkTestRule implements InjectorRuleMixin, MethodRule {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
     List<Module> modules = new ArrayList<>();
-    modules.add(TelemetryModule.getInstance());
-    modules.add(new AbstractModule() {
-      @Provides
-      @Singleton
-      TelemetryConfiguration getTelemetryConfiguration() {
+    modules.add(new AbstractTelemetryModule() {
+      @Override
+      public TelemetryConfiguration telemetryConfiguration() {
         return SegmentConfiguration.builder().build();
       }
     });
