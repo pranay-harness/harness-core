@@ -2,7 +2,6 @@ package software.wings.helpers.ext.pcf.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
-import static io.harness.pcf.model.CfCliVersion.V6;
 
 import static java.lang.String.format;
 
