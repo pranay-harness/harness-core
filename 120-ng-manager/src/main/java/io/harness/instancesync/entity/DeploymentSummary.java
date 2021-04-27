@@ -2,6 +2,7 @@ package io.harness.instancesync.entity;
 
 import io.harness.instancesync.entity.deploymentinfo.DeploymentInfo;
 import io.harness.instancesync.entity.deploymentinfo.OnDemandRollbackInfo;
+import io.harness.instancesync.entity.infrastructureMapping.InfrastructureMapping;
 
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class DeploymentSummary {
   private String deployedById;
   private String deployedByName;
   private long deployedAt;
+  private InfrastructureMapping infrastructureMapping;
   private DeploymentInfo deploymentInfo;
 
   private boolean isRollback;
