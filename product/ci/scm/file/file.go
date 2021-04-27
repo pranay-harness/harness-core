@@ -54,7 +54,10 @@ func BatchFindFile(ctx context.Context, fileRequests *pb.GetBatchFileRequest, lo
 		if err != nil {
 			log.Errorw("BatchFindFile failure. Unable to get this file", "provider", request.GetProvider(), "slug", request.GetSlug(), "path", request.GetPath(),
 				"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-			return nil, err
+			file = &pb.FileContent{
+				Path:  request.GetPath(),
+				Error: err.Error(),
+			}
 		}
 		store = append(store, file)
 	}
