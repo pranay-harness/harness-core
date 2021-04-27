@@ -38,6 +38,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
@@ -51,7 +52,9 @@ import static software.wings.security.UserRequestContext.EntityInfo;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -143,6 +146,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * @author rktummala on 3/7/18
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule.UNDEFINED)
 @Singleton
 @Slf4j
 public class AuthHandler {
@@ -1569,7 +1573,7 @@ public class AuthHandler {
         MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES, MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES,
         MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS, MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS,
         MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES, MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS,
-        MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS);
+        MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS, MANAGE_SSH_AND_WINRM);
   }
 
   private Set<Action> getAllActions() {
