@@ -1517,7 +1517,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       if (isBlank(delegateProfile) || delegateProfileService.get(accountId, delegateProfile) == null) {
-        delegateProfile = delegateProfileService.fetchPrimaryProfile(accountId).getUuid();
+        delegateProfile = delegateProfileService.fetchCgPrimaryProfile(accountId).getUuid();
       }
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
@@ -1638,7 +1638,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       if (isBlank(delegateProfile) || delegateProfileService.get(accountId, delegateProfile) == null) {
-        delegateProfile = delegateProfileService.fetchPrimaryProfile(accountId).getUuid();
+        delegateProfile = delegateProfileService.fetchCgPrimaryProfile(accountId).getUuid();
       }
 
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
@@ -1929,7 +1929,11 @@ public class DelegateServiceImpl implements DelegateService {
 
     DelegateProfile delegateProfile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
     if (delegateProfile == null) {
-      delegateProfile = delegateProfileService.fetchPrimaryProfile(accountId);
+      if (delegate.isNg()) {
+        delegateProfile = delegateProfileService.fetchNgPrimaryProfile(accountId);
+      } else {
+        delegateProfile = delegateProfileService.fetchCgPrimaryProfile(accountId);
+      }
       delegate.setDelegateProfileId(delegateProfile.getUuid());
     }
 

@@ -5,8 +5,8 @@ import static io.harness.audit.mapper.AuditSettingsMapper.toDTO;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.api.AuditSettingsService;
 import io.harness.audit.beans.AuditSettingsDTO;
-import io.harness.audit.retention.AuditSettingsService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;

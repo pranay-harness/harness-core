@@ -14,6 +14,7 @@ import io.harness.plan.PlanNodeUtils;
 import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.advisers.RetryInterruptConfig;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -42,8 +43,11 @@ public class RetryHelper {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNodeProto node = nodeExecution.getNode();
     String newUuid = generateUuid();
-    Ambiance ambiance = AmbianceUtils.cloneForFinish(nodeExecution.getAmbiance());
-    ambiance = ambiance.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(newUuid, node)).build();
+    Ambiance oldAmbiance = nodeExecution.getAmbiance();
+    Level currentLevel = AmbianceUtils.obtainCurrentLevel(oldAmbiance);
+    Ambiance ambiance = AmbianceUtils.cloneForFinish(oldAmbiance);
+    int newRetryIndex = currentLevel != null ? currentLevel.getRetryIndex() + 1 : 0;
+    ambiance = ambiance.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(newUuid, newRetryIndex, node)).build();
     NodeExecution newNodeExecution =
         cloneForRetry(nodeExecution, parameters, newUuid, ambiance, interruptConfig, interruptId);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);

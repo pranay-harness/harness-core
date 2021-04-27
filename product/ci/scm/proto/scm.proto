@@ -215,8 +215,8 @@ message BitbucketCloudProvider {
 }
 
 message BitbucketServerProvider {
-  string access_token = 1;
-  string personal_token = 2;
+  string username = 1;
+  string personal_access_token = 2;
 }
 
 message CodecommitProvider {
@@ -307,6 +307,7 @@ message FileContent {
   string path = 3;
   string commit_id = 4;
   string blob_id = 5;
+  string error = 6;
 }
 
 message FileBatchContentResponse {

@@ -35,4 +35,26 @@ java_library(
     ],
 )
 
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_process",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_springframework_spring_beans",
+    ],
+)
+
+run_tests()
+
 run_analysis()

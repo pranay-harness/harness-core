@@ -20,7 +20,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.GlobalContext;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
@@ -69,9 +71,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-@OwnedBy(PL)
 @Singleton
 @Priority(AUTHENTICATION)
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AuthenticationFilter implements ContainerRequestFilter {
   @VisibleForTesting public static final String API_KEY_HEADER = "X-Api-Key";
   @VisibleForTesting public static final String HARNESS_API_KEY_HEADER = "X-Harness-Api-Key";

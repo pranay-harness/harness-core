@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.http.HttpStepInfo;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
 import io.harness.steps.approval.step.harness.HarnessApprovalResponseData;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
@@ -14,6 +13,7 @@ import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
+import io.harness.steps.barriers.beans.BarrierResponseData.BarrierError;
 import io.harness.steps.cf.FeatureUpdateStepParameters;
 import io.harness.steps.dummy.DummySectionOutcome;
 import io.harness.steps.dummy.DummySectionStepParameters;
@@ -58,13 +58,13 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(SectionChainPassThroughData.class, 3217);
 
-    kryo.register(ApprovalStageStepParameters.class, 3218);
     kryo.register(HarnessApprovalResponseData.class, 3220);
     kryo.register(HarnessApprovalOutcome.class, 3221);
     kryo.register(JiraApprovalResponseData.class, 3223);
     kryo.register(JiraApprovalOutcome.class, 3224);
     kryo.register(JiraIssueOutcome.class, 3225);
     kryo.register(FeatureUpdateStepParameters.class, 3226);
+    kryo.register(BarrierError.class, 3227);
 
     // made it same as which was in CD
     kryo.register(HttpStepInfo.class, 8048);

@@ -158,5 +158,9 @@ spec:
           value: "0"
         - name: MANAGER_SERVICE_SECRET
           value: "**********"
+        - name: DELEGATE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
       restartPolicy: Always
 

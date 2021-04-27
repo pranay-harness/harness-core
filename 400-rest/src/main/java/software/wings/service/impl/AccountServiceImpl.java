@@ -1780,4 +1780,22 @@ public class AccountServiceImpl implements AccountService {
     });
     return accounts;
   }
+
+  @Override
+  public boolean enableHarnessUserGroupAccess(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    account.setHarnessSupportAccessAllowed(true);
+    wingsPersistence.save(account);
+    return true;
+  }
+
+  @Override
+  public boolean disableHarnessUserGroupAccess(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    account.setHarnessSupportAccessAllowed(false);
+    wingsPersistence.save(account);
+    return true;
+  }
 }

@@ -6,14 +6,28 @@ import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
+import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.ASSUME_IAM_ROLE;
+import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.ASSUME_STS_ROLE;
+import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.MANUAL_CONFIG;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorCredentialDTO.AwsKmsConnectorCredentialDTOBuilder;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecAssumeIAMDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecAssumeSTSDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
@@ -27,6 +41,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.utils.RestCallToNGManagerClientUtils;
 
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.VaultConfig;
 import software.wings.service.intfc.security.NGSecretManagerService;
@@ -44,6 +59,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(DX)
+@TargetModule(_890_SM_CORE)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
@@ -97,6 +114,12 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
               ((GcpKmsValidationParams) connectorValidationParams).getGcpKmsConnectorDTO();
           gcpKmsConnectorDTO.setCredentials(gcpKmsConfig.getCredentials());
           return;
+        case AWS_KMS:
+          KmsConfig kmsConfig = (KmsConfig) secretManagerConfig.get();
+          AwsKmsConnectorDTO kmsConnectorDTO =
+              ((AwsKmsValidationParams) connectorValidationParams).getAwsKmsConnectorDTO();
+          kmsConnectorDTO.setCredential(populateKmsCredential(kmsConfig));
+          return;
         default:
       }
     }
@@ -138,5 +161,31 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
           accountIdentifier, orgIdentifier, projectIdentifier));
     }
     return connectorValidationParams;
+  }
+
+  private AwsKmsConnectorCredentialDTO populateKmsCredential(KmsConfig kmsConfig) {
+    AwsKmsConnectorCredentialDTOBuilder builder = AwsKmsConnectorCredentialDTO.builder();
+
+    if (kmsConfig.isAssumeIamRoleOnDelegate()) {
+      AwsKmsCredentialSpecAssumeIAMDTO iam =
+          AwsKmsCredentialSpecAssumeIAMDTO.builder().delegateSelectors(kmsConfig.getDelegateSelectors()).build();
+      builder.credentialType(ASSUME_IAM_ROLE).config(iam);
+    } else if (kmsConfig.isAssumeStsRoleOnDelegate()) {
+      AwsKmsCredentialSpecAssumeSTSDTO sts = AwsKmsCredentialSpecAssumeSTSDTO.builder()
+                                                 .delegateSelectors(kmsConfig.getDelegateSelectors())
+                                                 .roleArn(kmsConfig.getRoleArn())
+                                                 .externalName(kmsConfig.getExternalName())
+                                                 .assumeStsRoleDuration(kmsConfig.getAssumeStsRoleDuration())
+                                                 .build();
+      builder.credentialType(ASSUME_STS_ROLE).config(sts);
+
+    } else {
+      AwsKmsCredentialSpecManualConfigDTO manual = AwsKmsCredentialSpecManualConfigDTO.builder()
+                                                       .accessKey(kmsConfig.getAccessKey())
+                                                       .secretKey(kmsConfig.getSecretKey())
+                                                       .build();
+      builder.credentialType(MANUAL_CONFIG).config(manual);
+    }
+    return builder.build();
   }
 }

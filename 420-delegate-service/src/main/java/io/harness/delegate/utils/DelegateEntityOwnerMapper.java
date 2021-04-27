@@ -28,4 +28,24 @@ public class DelegateEntityOwnerMapper {
 
     return DelegateEntityOwner.builder().identifier(ownerIdentifier.toString()).build();
   }
+
+  public static String extractOrgIdFromOwnerIdentifier(String identifier) {
+    if (isBlank(identifier)) {
+      return null;
+    }
+
+    String[] identifierElements = identifier.split("/");
+
+    return identifierElements.length >= 1 ? identifierElements[0] : null;
+  }
+
+  public static String extractProjectIdFromOwnerIdentifier(String identifier) {
+    if (isBlank(identifier)) {
+      return null;
+    }
+
+    String[] identifierElements = identifier.split("/");
+
+    return identifierElements.length >= 2 ? identifierElements[1] : null;
+  }
 }

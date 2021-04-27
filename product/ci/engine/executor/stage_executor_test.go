@@ -148,7 +148,7 @@ func TestStageRun(t *testing.T) {
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
-	sendStepStatus = func(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
 		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
 		return nil
 	}

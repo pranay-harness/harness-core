@@ -719,7 +719,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     DelegateProfile primaryDelegateProfile =
         createDelegateProfileBuilder().accountId(delegateWithoutProfile.getAccountId()).primary(true).build();
-    when(delegateProfileService.fetchPrimaryProfile(delegateWithoutProfile.getAccountId()))
+    when(delegateProfileService.fetchCgPrimaryProfile(delegateWithoutProfile.getAccountId()))
         .thenReturn(primaryDelegateProfile);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
@@ -747,6 +747,25 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(savedDelegate)
         .isEqualToIgnoringGivenFields(delegateWithNonExistingProfile, DelegateKeys.delegateProfileId);
     assertThat(savedDelegate.getDelegateProfileId()).isEqualTo(primaryDelegateProfile.getUuid());
+
+    // Test Ng primary profile
+    Delegate ngDelegateWithoutProfile = createDelegateBuilder().build();
+    ngDelegateWithoutProfile.setAccountId(accountId);
+    ngDelegateWithoutProfile.setUuid(generateUuid());
+    ngDelegateWithoutProfile.setNg(true);
+
+    DelegateProfile ngPrimaryDelegateProfile = createDelegateProfileBuilder()
+                                                   .accountId(ngDelegateWithoutProfile.getAccountId())
+                                                   .ng(true)
+                                                   .primary(true)
+                                                   .build();
+    when(delegateProfileService.fetchNgPrimaryProfile(ngDelegateWithoutProfile.getAccountId()))
+        .thenReturn(ngPrimaryDelegateProfile);
+
+    ngDelegateWithoutProfile = delegateService.add(ngDelegateWithoutProfile);
+
+    savedDelegate = persistence.get(Delegate.class, ngDelegateWithoutProfile.getUuid());
+    assertThat(savedDelegate.getDelegateProfileId()).isEqualTo(ngPrimaryDelegateProfile.getUuid());
   }
 
   @Test
@@ -763,7 +782,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
     IntStream.range(0, maxDelegatesAllowed).forEach(i -> delegateService.add(delegate));
     try {
@@ -795,7 +814,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(delegate);
@@ -835,7 +854,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
@@ -880,7 +899,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
@@ -913,7 +932,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
@@ -940,7 +959,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .sampleDelegate(false)
                                 .build();
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchCgPrimaryProfile(accountId)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
@@ -970,7 +989,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
@@ -1001,7 +1020,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
@@ -1057,7 +1076,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
@@ -1168,7 +1187,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
     when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
     delegateService.add(delegate);
     DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
@@ -1212,7 +1231,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
       delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
       when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
-      when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+      when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
       delegateService.add(delegate);
 
       DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
@@ -1260,7 +1279,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
@@ -1308,7 +1327,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
 
     delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
-    when(delegateProfileService.fetchPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
 
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
@@ -1640,14 +1659,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadScriptsWithPrimaryProfile() throws IOException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+    when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     File gzipFile = delegateService.downloadScripts(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null);
     verifyDownloadScriptsResult(gzipFile, "/expectedStartOpenJdk.sh", "/expectedDelegateOpenJdk.sh");
 
     when(delegateProfileService.get(ACCOUNT_ID, "invalidProfile")).thenReturn(null);
-    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+    when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     gzipFile = delegateService.downloadScripts(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile");
@@ -1726,7 +1745,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadScriptsForOpenJdk() throws IOException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+    when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     File gzipFile = delegateService.downloadScripts(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, DELEGATE_PROFILE_ID);
@@ -1817,14 +1836,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadDockerWithPrimaryProfile() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+    when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     File gzipFile = delegateService.downloadDocker(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, null);
     verifyDownloadDockerResult(gzipFile, "/expectedLaunchHarnessDelegate.sh");
 
     when(delegateProfileService.get(ACCOUNT_ID, "invalidProfile")).thenReturn(null);
-    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+    when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(createDelegateProfileBuilder().uuid(DELEGATE_PROFILE_ID).build());
     gzipFile = delegateService.downloadDocker(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, DELEGATE_NAME, "invalidProfile");

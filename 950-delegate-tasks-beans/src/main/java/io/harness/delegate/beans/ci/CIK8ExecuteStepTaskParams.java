@@ -18,6 +18,7 @@ import lombok.Data;
 public class CIK8ExecuteStepTaskParams implements CIExecuteStepTaskParams, ExecutionCapabilityDemander {
   @NotNull private String ip;
   @NotNull private int port;
+  @NotNull private String delegateSvcEndpoint;
   private boolean isLocal;
   @NotNull private byte[] serializedStep;
 

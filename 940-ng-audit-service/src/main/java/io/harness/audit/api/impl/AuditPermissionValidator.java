@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.ResourceScopeDTO;
@@ -45,37 +45,24 @@ public class AuditPermissionValidator {
     if (isEmpty(accountIdentifier)) {
       return false;
     }
-    return accessControlClient.hasAccess(PermissionCheckDTO.builder()
-                                             .resourceScope(ResourceScope.of(accountIdentifier, null, null))
-                                             .resourceType(ACCOUNT_RESOURCE_TYPE)
-                                             .resourceIdentifier(accountIdentifier)
-                                             .permission(AUDIT_VIEW_PERMISSION)
-                                             .build());
+    return accessControlClient.hasAccess(
+        null, Resource.of(ACCOUNT_RESOURCE_TYPE, accountIdentifier), AUDIT_VIEW_PERMISSION);
   }
 
   private boolean hasOrganizationLevelPermission(String accountIdentifier, String orgIdentifier) {
     if (isEmpty(accountIdentifier) || isEmpty(orgIdentifier)) {
       return false;
     }
-    return accessControlClient.hasAccess(PermissionCheckDTO.builder()
-                                             .resourceScope(ResourceScope.of(accountIdentifier, orgIdentifier, null))
-                                             .resourceType(ORGANIZATION_RESOURCE_TYPE)
-                                             .resourceIdentifier(orgIdentifier)
-                                             .permission(AUDIT_VIEW_PERMISSION)
-                                             .build());
+    return accessControlClient.hasAccess(ResourceScope.of(accountIdentifier, null, null),
+        Resource.of(ORGANIZATION_RESOURCE_TYPE, orgIdentifier), AUDIT_VIEW_PERMISSION);
   }
 
   private boolean hasProjectLevelPermission(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     if (isEmpty(accountIdentifier) || isEmpty(orgIdentifier) || isEmpty(projectIdentifier)) {
       return false;
     }
-    return accessControlClient.hasAccess(
-        PermissionCheckDTO.builder()
-            .resourceScope(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier))
-            .resourceType(PROJECT_RESOURCE_TYPE)
-            .resourceIdentifier(projectIdentifier)
-            .permission(AUDIT_VIEW_PERMISSION)
-            .build());
+    return accessControlClient.hasAccess(ResourceScope.of(accountIdentifier, orgIdentifier, null),
+        Resource.of(PROJECT_RESOURCE_TYPE, projectIdentifier), AUDIT_VIEW_PERMISSION);
   }
 
   private String getAccessDeniedExceptionMessage(

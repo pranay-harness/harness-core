@@ -11,6 +11,7 @@ import (
 	"github.com/drone/go-scm/scm/driver/gitea"
 	"github.com/drone/go-scm/scm/driver/github"
 	"github.com/drone/go-scm/scm/driver/gitlab"
+	"github.com/drone/go-scm/scm/driver/stash"
 	"github.com/drone/go-scm/scm/transport"
 
 	"github.com/drone/go-scm/scm/transport/oauth2"
@@ -44,7 +45,7 @@ func giteaTransport(token string, skip bool) http.RoundTripper {
 	}
 }
 
-func bitbucketCloudTransport(username, password string, skip bool) http.RoundTripper {
+func bitbucketTransport(username, password string, skip bool) http.RoundTripper {
 	return &transport.BasicAuth{
 		Base:     defaultTransport(skip),
 		Username: username,
@@ -52,8 +53,7 @@ func bitbucketCloudTransport(username, password string, skip bool) http.RoundTri
 	}
 }
 
-// defaultTransport provides a default http.Transport. If
-// skip verify is true, the transport will skip ssl verification.
+// defaultTransport provides a default http.Transport. If skip verify is true, the transport will skip ssl verification.
 func defaultTransport(skip bool) http.RoundTripper {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -78,7 +78,7 @@ func GetValidRef(p pb.Provider, inputRef, inputBranch string) (string, error) {
 	}
 }
 
-func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, err error) {
+func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, err error) { //nolint:gocyclo,funlen
 	switch p.GetHook().(type) {
 	case *pb.Provider_Github:
 		if p.GetEndpoint() == "" {
@@ -95,7 +95,6 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 		case *pb.GithubProvider_AccessToken:
 			token = p.GetGithub().GetAccessToken()
 		default:
-			// generate oauth token from app and private key
 			return nil, status.Errorf(codes.Unimplemented, "Github Application not implemented yet")
 		}
 		client.Client = &http.Client{
@@ -122,13 +121,13 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 			Transport: oauthTransport(token, p.GetSkipVerify()),
 		}
 	case *pb.Provider_Gitea:
-		if p.Endpoint == "" {
+		if p.GetEndpoint() == "" {
 			log.Error("getGitClient failure Gitea, endpoint is empty")
 			return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Must provide an endpoint for %s", p.String()))
 		}
-		client, err = gitea.New(p.Endpoint)
+		client, err = gitea.New(p.GetEndpoint())
 		if err != nil {
-			log.Errorw("GetGitClient failure Gitea", "endpoint", p.Endpoint, zap.Error(err))
+			log.Errorw("GetGitClient failure Gitea", "endpoint", p.GetEndpoint(), zap.Error(err))
 			return nil, err
 		}
 		client.Client = &http.Client{
@@ -137,7 +136,20 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 	case *pb.Provider_BitbucketCloud:
 		client = bitbucket.NewDefault()
 		client.Client = &http.Client{
-			Transport: bitbucketCloudTransport(p.GetBitbucketCloud().GetUsername(), p.GetBitbucketCloud().GetAppPassword(), p.GetSkipVerify()),
+			Transport: bitbucketTransport(p.GetBitbucketCloud().GetUsername(), p.GetBitbucketCloud().GetAppPassword(), p.GetSkipVerify()),
+		}
+	case *pb.Provider_BitbucketServer:
+		if p.GetEndpoint() == "" {
+			log.Error("getGitClient failure Bitbucket Server, endpoint is empty")
+			return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Must provide an endpoint for %s", p.String()))
+		}
+		client, err = stash.New(p.GetEndpoint())
+		if err != nil {
+			log.Errorw("GetGitClient failure Bitbucket Server", "endpoint", p.GetEndpoint(), zap.Error(err))
+			return nil, err
+		}
+		client.Client = &http.Client{
+			Transport: bitbucketTransport(p.GetBitbucketServer().GetUsername(), p.GetBitbucketServer().GetPersonalAccessToken(), p.GetSkipVerify()),
 		}
 	default:
 		log.Errorw("GetGitClient unsupported git provider", "endpoint", p.GetEndpoint())
@@ -153,6 +165,5 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 			return nil, nil
 		}
 	}
-
 	return client, nil
 }

@@ -51,7 +51,6 @@ public class NextGenRegistrars {
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
       ImmutableList.<YamlSchemaRootClass>builder()
           .addAll(ConnectorNextGenRegistrars.yamlSchemaRegistrars)
-          .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
           .addAll(CDNGRegistrars.yamlSchemaRegistrars)
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.SECRETS)

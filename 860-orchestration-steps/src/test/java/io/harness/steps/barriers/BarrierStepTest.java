@@ -99,6 +99,70 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  public void shouldHandleAsyncResponse_Expired() {
+    String uuid = generateUuid();
+    String barrierIdentifier = "barrierIdentifier";
+    BarrierExecutionInstance barrier =
+        BarrierExecutionInstance.builder().uuid(uuid).identifier(barrierIdentifier).barrierState(STANDING).build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .addAllLevels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).build()))
+                            .setPlanExecutionId(generateUuid())
+                            .build();
+    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
+
+    when(barrierService.findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId()))
+        .thenReturn(barrier);
+    when(barrierService.update(barrier)).thenReturn(barrier);
+
+    StepResponse stepResponse = barrierStep.handleAsyncResponse(ambiance, stepParameters,
+        ImmutableMap.of(uuid,
+            BarrierResponseData.builder()
+                .failed(true)
+                .barrierError(BarrierResponseData.BarrierError.builder().errorMessage("Error").timedOut(true).build())
+                .build()));
+
+    assertThat(stepResponse).isNotNull();
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.EXPIRED);
+
+    verify(barrierService).findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId());
+    verify(barrierService).update(barrier);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldHandleAsyncResponse_Failed() {
+    String uuid = generateUuid();
+    String barrierIdentifier = "barrierIdentifier";
+    BarrierExecutionInstance barrier =
+        BarrierExecutionInstance.builder().uuid(uuid).identifier(barrierIdentifier).barrierState(STANDING).build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .addAllLevels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).build()))
+                            .setPlanExecutionId(generateUuid())
+                            .build();
+    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
+
+    when(barrierService.findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId()))
+        .thenReturn(barrier);
+    when(barrierService.update(barrier)).thenReturn(barrier);
+
+    StepResponse stepResponse = barrierStep.handleAsyncResponse(ambiance, stepParameters,
+        ImmutableMap.of(uuid,
+            BarrierResponseData.builder()
+                .failed(true)
+                .barrierError(BarrierResponseData.BarrierError.builder().errorMessage("Error").timedOut(false).build())
+                .build()));
+
+    assertThat(stepResponse).isNotNull();
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
+
+    verify(barrierService).findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId());
+    verify(barrierService).update(barrier);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
   public void shouldHandleAbort() {
     String uuid = generateUuid();
     String barrierIdentifier = "barrierIdentifier";

@@ -3,9 +3,11 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//954-connector-beans:module",
         "//980-commons:module",
         "//product/ci/scm/proto:ciscm_java_proto",
@@ -14,6 +16,10 @@ java_library(
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
+        "@maven//:io_grpc_grpc_core",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_netty_netty_transport_native_kqueue_osx_x86_64",
+        "@maven//:io_netty_netty_transport_native_unix_common",
         "@maven//:javax_validation_validation_api",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_slf4j_slf4j_api",
@@ -21,16 +27,6 @@ java_library(
         "@maven//:org_springframework_data_spring_data_mongodb",
         "@maven//:org_springframework_spring_beans",
         "@maven//:org_springframework_spring_tx",
-    ],
-)
-
-java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
     ],
 )
 

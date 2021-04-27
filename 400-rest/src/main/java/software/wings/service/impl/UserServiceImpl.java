@@ -119,7 +119,9 @@ import software.wings.beans.marketplace.MarketPlaceConstants;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.security.AccessRequest;
 import software.wings.beans.security.AccountPermissions;
+import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.OauthSettings;
@@ -150,6 +152,7 @@ import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AccessRequestService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -293,6 +296,7 @@ public class UserServiceImpl implements UserService {
   @Inject private ConfigurationController configurationController;
   @Inject private HtmlInputSanitizer userNameSanitizer;
   @Inject private NgInviteClient NGInviteClient;
+  @Inject private AccessRequestService accessRequestService;
 
   private Cache<String, User> getUserCache() {
     if (configurationController.isPrimary()) {
@@ -2374,7 +2378,27 @@ public class UserServiceImpl implements UserService {
     if (harnessUserGroupService.isHarnessSupportUser(user.getUuid())) {
       Set<String> excludeAccounts = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
       List<Account> accountList = harnessUserGroupService.listAllowedSupportAccounts(excludeAccounts);
-      user.setSupportAccounts(accountList);
+
+      Set<String> restrictedAcccountsIds = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
+      restrictedAcccountsIds.forEach(restrictedAccountId -> {
+        List<AccessRequest> accessRequestList =
+            accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
+        accessRequestList.forEach(accessRequest -> {
+          if (accessRequest.getAccessType().equals(AccessRequest.AccessType.MEMBER_ACCESS)) {
+            if (accessRequest.getMemberIds().contains(user.getUuid())) {
+              accountList.add(accountService.get(restrictedAccountId));
+            }
+          } else {
+            HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequest.getHarnessUserGroupId());
+            if (harnessUserGroup.getMemberIds().contains(user.getUuid())) {
+              accountList.add(accountService.get(restrictedAccountId));
+            }
+          }
+        });
+      });
+
+      List<Account> finalAccountList = new ArrayList<>(Sets.newHashSet(accountList));
+      user.setSupportAccounts(finalAccountList);
     }
   }
 

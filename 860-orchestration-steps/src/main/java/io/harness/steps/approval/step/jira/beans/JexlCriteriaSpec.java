@@ -21,7 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName("JexlCriteriaSpec")
+@JsonTypeName(CriteriaSpecTypeConstants.JEXL)
 @TypeAlias("jexlCriteriaSpec")
 public class JexlCriteriaSpec implements CriteriaSpec {
   @NotNull

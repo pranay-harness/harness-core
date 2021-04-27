@@ -55,6 +55,7 @@ import io.harness.migrations.all.CleanupOrphanInfraMappings;
 import io.harness.migrations.all.CleanupOrphanInstances;
 import io.harness.migrations.all.CleanupSyncStatusForDeletedEntities;
 import io.harness.migrations.all.ConvertHttpHeadersStringTypeToList;
+import io.harness.migrations.all.CreateNgPrimaryProfileForExistingAccounts;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
@@ -320,6 +321,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(190, InstanceSyncPerpetualTaskInfoMigration.class))
         .add(Pair.of(191, GcpConfigMultipleDelegateMigration.class))
         .add(Pair.of(192, DelegatesWithoutGroupMigration.class))
+        .add(Pair.of(193, CreateNgPrimaryProfileForExistingAccounts.class))
         .build();
   }
 }

@@ -33,6 +33,7 @@ public class GcpKmsConfigMapper {
     gcpKmsConfig.setKeyName(gcpKmsConfigDTO.getKeyName());
     gcpKmsConfig.setKeyRing(gcpKmsConfigDTO.getKeyRing());
     gcpKmsConfig.setDefault(gcpKmsConfigDTO.isDefault());
+    gcpKmsConfig.setName(gcpKmsConfigDTO.getName());
     gcpKmsConfig.setRegion(gcpKmsConfigDTO.getRegion());
     if (!Optional.ofNullable(gcpKmsConfig.getNgMetadata()).isPresent()) {
       gcpKmsConfig.setNgMetadata(NGSecretManagerMetadata.builder().build());

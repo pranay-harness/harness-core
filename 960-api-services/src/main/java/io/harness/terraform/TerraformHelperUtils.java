@@ -80,7 +80,7 @@ public class TerraformHelperUtils {
     ArrayList<String> varFilesList = new ArrayList();
 
     for (int i = 0; i < varFilesListContent.size(); i++) {
-      Path filePath = Files.createFile(Paths.get(scriptDirectory + "/varFile-" + i + ".var"));
+      Path filePath = Files.createFile(Paths.get(scriptDirectory + "/varFile-" + i + ".tfvars"));
       Files.write(filePath, varFilesListContent.get(i).getBytes());
       varFilesList.add(filePath.toString());
     }

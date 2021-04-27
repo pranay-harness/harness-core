@@ -124,3 +124,54 @@ func TestFindFilesInBranchGithub(t *testing.T) {
 	assert.Nil(t, err, "no errors")
 	assert.LessOrEqual(t, 2, len(got.File), "More than 2 files in branch")
 }
+
+func TestBatchFindFilesGithub(t *testing.T) {
+	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+		t.Skip("Skipping, Acceptance test")
+	}
+	in1 := &pb.GetFileRequest{
+		Slug: "tphoney/scm-test",
+		Path: "README.md",
+		Type: &pb.GetFileRequest_Ref{
+			Ref: "main",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+					},
+				},
+			},
+			Debug: true,
+		},
+	}
+
+	in2 := &pb.GetFileRequest{
+		Slug: "tphoney/scm-test",
+		Path: "NOTHING",
+		Type: &pb.GetFileRequest_Ref{
+			Ref: "main",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+					},
+				},
+			},
+			Debug: true,
+		},
+	}
+	in := &pb.GetBatchFileRequest{
+		FindRequest: []*pb.GetFileRequest{in1, in2},
+	}
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := BatchFindFile(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Contains(t, got.FileContents[0].Content, "test repo for source control operations")
+	assert.Equal(t, "", got.FileContents[1].Content, "missing file has no content")
+	assert.Equal(t, "Not Found", got.FileContents[1].Error, "missing file has error of 'Not Found'")
+}

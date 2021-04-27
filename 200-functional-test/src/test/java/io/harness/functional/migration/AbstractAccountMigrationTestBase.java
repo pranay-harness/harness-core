@@ -6,6 +6,8 @@ import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
@@ -42,6 +44,7 @@ import java.util.Arrays;
 import java.util.Map;
 import org.junit.Before;
 
+@OwnedBy(HarnessTeam.PL)
 public abstract class AbstractAccountMigrationTestBase extends AbstractFunctionalTest {
   private static final String testUserPassword = "testPassword";
 
@@ -79,7 +82,7 @@ public abstract class AbstractAccountMigrationTestBase extends AbstractFunctiona
   }
 
   private void addUserToHarnessUserGroup() {
-    accountGenerator.addUserToHarnessUserGroup(user);
+    accountGenerator.addUserToHarnessUserGroup(account.getUuid(), user);
   }
 
   private void loginUser() {

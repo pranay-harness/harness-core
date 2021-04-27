@@ -1,6 +1,7 @@
 package io.harness.migrations.timescaledb;
 
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.TimeScaleDBMigration;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.jdbc.ScriptRunner;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public abstract class AbstractTimeScaleDBMigration implements TimeScaleDBMigration {
   @Inject TimeScaleDBService timeScaleDBService;
 

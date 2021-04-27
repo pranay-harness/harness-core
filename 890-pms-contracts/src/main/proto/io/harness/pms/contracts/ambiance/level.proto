@@ -12,4 +12,5 @@ message Level {
   string identifier = 3;
   io.harness.pms.contracts.steps.StepType stepType = 4;
   string group = 5;
+  int32 retryIndex = 6;
 }
