@@ -50,7 +50,7 @@ public interface TerraformBaseHelper {
 
   void fetchConfigFileAndCloneLocally(GitBaseRequest gitBaseRequestForConfigFile, LogCallback logCallback);
 
-  void uploadTfStateFile(String accountId, String delegateId, String taskId, String entityId, File tfStateFile)
+  String uploadTfStateFile(String accountId, String delegateId, String taskId, String entityId, File tfStateFile)
       throws IOException;
 
   void copyConfigFilestoWorkingDirectory(
