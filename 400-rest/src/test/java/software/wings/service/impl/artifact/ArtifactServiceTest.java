@@ -376,7 +376,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
       savedArtifact.setStatus(READY);
       persistence.save(savedArtifact);
       when(fileService.download(anyString(), any(File.class), any(FileBucket.class))).thenAnswer(invocation -> {
-        File inputFile = invocation.getArgumentAt(1, File.class);
+        File inputFile = invocation.getArgument(1, File.class);
         Files.write("Dummy".getBytes(), inputFile);
         return inputFile;
       });

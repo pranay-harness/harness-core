@@ -105,10 +105,10 @@ public class TerragruntRollbackStateTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    Answer<String> doReturnSameValue = invocation -> invocation.getArgumentAt(0, String.class);
+    Answer<String> doReturnSameValue = invocation -> invocation.getArgument(0, String.class);
     BiFunction<String, Collector, Answer> extractVariablesOfType = (type, collector) -> {
       return invocation -> {
-        List<NameValuePair> input = invocation.getArgumentAt(0, List.class);
+        List<NameValuePair> input = invocation.getArgument(0, List.class);
         return input.stream().filter(value -> type.equals(value.getValueType())).collect(collector);
       };
     };

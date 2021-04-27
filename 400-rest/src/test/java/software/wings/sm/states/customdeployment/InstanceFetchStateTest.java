@@ -166,12 +166,12 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             eq(CommandUnitType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES.getName()), anyList());
     doReturn("some-string").when(context).appendStateExecutionId(anyString());
     doReturn(SweepingOutputInstance.builder()).when(context).prepareSweepingOutputBuilder(WORKFLOW);
-    doAnswer(invocation -> invocation.getArgumentAt(0, String.class)).when(context).renderExpression(anyString());
-    doAnswer(invocation -> invocation.getArgumentAt(0, String.class))
+    doAnswer(invocation -> invocation.getArgument(0, String.class)).when(context).renderExpression(anyString());
+    doAnswer(invocation -> invocation.getArgument(0, String.class))
         .when(context)
         .renderExpression(anyString(), any(StateExecutionContext.class));
     doReturn("5").when(context).renderExpression(timeoutExpr);
-    doAnswer(invocation -> invocation.getArgumentAt(0, String.class))
+    doAnswer(invocation -> invocation.getArgument(0, String.class))
         .when(expressionEvaluator)
         .substitute(anyString(), anyMap());
   }

@@ -339,7 +339,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     when(appdynamicsRestClient.getMetricDataTimeRange(
              anyString(), anyLong(), anyString(), anyLong(), anyLong(), anyBoolean()))
         .thenAnswer(invocationOnMock -> {
-          final String metricPath = invocationOnMock.getArgumentAt(2, String.class);
+          final String metricPath = invocationOnMock.getArgument(2, String.class);
           if (metricPath.contains("Exceptions")) {
             return metricDataNoDataCall;
           }

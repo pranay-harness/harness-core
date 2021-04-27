@@ -1882,7 +1882,7 @@ maven_install(
         "org.jvnet.staxex:stax-ex:1.8.1",
         "org.ldaptive:ldaptive:1.2.3",
         "org.mindrot:jbcrypt:0.3m",
-        "org.mockito:mockito-core:1.10.19",
+        "org.mockito:mockito-core:3.9.0",
         "org.modelmapper:modelmapper:0.7.5",
         "org.mongodb.morphia:morphia-logging-slf4j:1.3.2",
         "org.mongodb.morphia:morphia:1.3.2",

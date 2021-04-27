@@ -181,7 +181,7 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
     state.setLogCollectionInfos(collectionInfos);
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     when(executionContext.renderExpression(anyString()))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+        .thenAnswer(invocation -> invocation.getArgument(0, String.class));
     Map<String, Map<String, ResponseMapper>> logDefinitions =
         constructLogDefinitions(executionContext, collectionInfos);
     assertThat(logDefinitions).isNotNull();
@@ -212,7 +212,7 @@ public class CustomLogVerificationStateTest extends WingsBaseTest {
     state.setLogCollectionInfos(collectionInfos);
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     when(executionContext.renderExpression(anyString()))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+        .thenAnswer(invocation -> invocation.getArgument(0, String.class));
     when(executionContext.renderExpression("body${workflow.variable.bodyDetails}")).thenReturn("renderedBodyDetails");
     Map<String, Map<String, ResponseMapper>> logDefinitions =
         constructLogDefinitions(executionContext, collectionInfos);

@@ -1346,7 +1346,7 @@ public class ContinuousVerificationServiceTest extends VerificationBase {
   public void testTriggerTimeSeriesAlertIfNecessary() throws Exception {
     ExecutorService spyExecutorService = spy(executorService);
     doAnswer(invocationOnMock -> {
-      invocationOnMock.getArgumentAt(0, Runnable.class).run();
+      invocationOnMock.getArgument(0, Runnable.class).run();
       return null;
     })
         .when(spyExecutorService)

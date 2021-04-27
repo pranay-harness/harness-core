@@ -3,7 +3,6 @@ package io.harness.delegate.task.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
-import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.util.Arrays.asList;
@@ -25,7 +24,6 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
@@ -84,41 +82,41 @@ public class ContainerDeploymentDelegateBaseHelperTest extends CategoryTest {
     doNothing().when(logCallback).saveExecutionLog(anyString(), any(LogLevel.class));
   }
 
-  @Test
-  @Owner(developers = YOGESH)
-  @Category(UnitTests.class)
-  public void testGetContainerInfosWhenReadyByLabels() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
-    List<Pod> existingPods = asList(new Pod());
-    List<? extends HasMetadata> controllers = getMockedControllers();
+  //  @Test
+  //  @Owner(developers = YOGESH)
+  //  @Category(UnitTests.class)
+  //  public void testGetContainerInfosWhenReadyByLabels() {
+  //    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
+  //    List<Pod> existingPods = asList(new Pod());
+  //    List<? extends HasMetadata> controllers = getMockedControllers();
+  //
+  //    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
+  //
+  //    containerDeploymentDelegateBaseHelper.getContainerInfosWhenReadyByLabels(
+  //        kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
+  //
+  //    verify(kubernetesContainerService, times(1))
+  //        .getContainerInfosWhenReady(
+  //            kubernetesConfig, "deployment-name", 0, -1, 30, existingPods, false, logCallback, true, 0, "default");
+  //    verify(kubernetesContainerService, times(1))
+  //        .getContainerInfosWhenReady(
+  //            kubernetesConfig, "daemonSet-name", 0, -1, 30, existingPods, true, logCallback, true, 0, "default");
+  //  }
 
-    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
-
-    containerDeploymentDelegateBaseHelper.getContainerInfosWhenReadyByLabels(
-        kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
-
-    verify(kubernetesContainerService, times(1))
-        .getContainerInfosWhenReady(
-            kubernetesConfig, "deployment-name", 0, -1, 30, existingPods, false, logCallback, true, 0, "default");
-    verify(kubernetesContainerService, times(1))
-        .getContainerInfosWhenReady(
-            kubernetesConfig, "daemonSet-name", 0, -1, 30, existingPods, true, logCallback, true, 0, "default");
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testGetContainerInfosWhenReadyByLabelsEmptyControllers() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
-    List<Pod> existingPods = asList(new Pod());
-    List<? extends HasMetadata> controllers = emptyList();
-
-    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
-
-    List<ContainerInfo> result = containerDeploymentDelegateBaseHelper.getContainerInfosWhenReadyByLabels(
-        kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
-    assertThat(result).isEmpty();
-  }
+  //  @Test
+  //  @Owner(developers = ABOSII)
+  //  @Category(UnitTests.class)
+  //  public void testGetContainerInfosWhenReadyByLabelsEmptyControllers() {
+  //    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
+  //    List<Pod> existingPods = asList(new Pod());
+  //    List<? extends HasMetadata> controllers = emptyList();
+  //
+  //    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
+  //
+  //    List<ContainerInfo> result = containerDeploymentDelegateBaseHelper.getContainerInfosWhenReadyByLabels(
+  //        kubernetesConfig, logCallback, ImmutableMap.of("name", "value"), existingPods);
+  //    assertThat(result).isEmpty();
+  //  }
 
   @Test
   @Owner(developers = ACASIAN)
@@ -229,17 +227,18 @@ public class ContainerDeploymentDelegateBaseHelperTest extends CategoryTest {
     return asList(controller_1, controller_2);
   }
 
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testGetControllerCountByLabels() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
-    Map<String, String> labels = new HashMap<>();
-
-    List<? extends HasMetadata> controllers = getMockedControllers();
-    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
-    assertThat(containerDeploymentDelegateBaseHelper.getControllerCountByLabels(kubernetesConfig, labels)).isEqualTo(2);
-  }
+  //  @Test
+  //  @Owner(developers = ANSHUL)
+  //  @Category(UnitTests.class)
+  //  public void testGetControllerCountByLabels() {
+  //    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
+  //    Map<String, String> labels = new HashMap<>();
+  //
+  //    List<? extends HasMetadata> controllers = getMockedControllers();
+  //    when(kubernetesContainerService.getControllers(any(KubernetesConfig.class), anyMap())).thenReturn(controllers);
+  //    assertThat(containerDeploymentDelegateBaseHelper.getControllerCountByLabels(kubernetesConfig,
+  //    labels)).isEqualTo(2);
+  //  }
 
   @Test
   @Owner(developers = YOGESH)

@@ -95,8 +95,7 @@ public class EncryptedDataLocalToGcpKmsMigrationHandlerTest extends WingsBaseTes
         new EncryptedDataLocalToGcpKmsMigrationHandler(wingsPersistence, featureFlagService, persistenceIteratorFactory,
             gcpSecretsManagerService, localSecretManagerService, persistenceProvider, secretService));
     when(persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(any(), any(), any()))
-        .thenAnswer(
-            invocationOnMock -> invocationOnMock.getArgumentAt(2, MongoPersistenceIteratorBuilder.class).build());
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(2, MongoPersistenceIteratorBuilder.class).build());
   }
 
   @Test

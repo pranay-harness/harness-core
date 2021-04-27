@@ -145,7 +145,7 @@ public class TerragruntProvisionStateTest extends WingsBaseTest {
   @InjectMocks private TerragruntProvisionState state = new TerragruntApplyState("tg");
   @InjectMocks private TerragruntProvisionState destroyProvisionState = new TerragruntDestroyState("tg");
 
-  private final Answer<String> answer = invocation -> invocation.getArgumentAt(0, String.class) + "-rendered";
+  private final Answer<String> answer = invocation -> invocation.getArgument(0, String.class) + "-rendered";
   private final GitConfig gitConfig = GitConfig.builder().branch("master").build();
   @Captor private ArgumentCaptor<Map<String, Object>> argCaptor;
 
@@ -155,7 +155,7 @@ public class TerragruntProvisionStateTest extends WingsBaseTest {
 
     BiFunction<String, Collector, Answer> extractVariablesOfType = (type, collector) -> {
       return invocation -> {
-        List<NameValuePair> input = invocation.getArgumentAt(0, List.class);
+        List<NameValuePair> input = invocation.getArgument(0, List.class);
         return input.stream().filter(value -> type.equals(value.getValueType())).collect(collector);
       };
     };
@@ -163,7 +163,7 @@ public class TerragruntProvisionStateTest extends WingsBaseTest {
         extractVariablesOfType.apply("TEXT", toMap(NameValuePair::getName, NameValuePair::getValue));
     Answer doExtractEncryptedVariables = extractVariablesOfType.apply("ENCRYPTED_TEXT",
         toMap(NameValuePair::getName, entry -> EncryptedDataDetail.builder().fieldName(entry.getName()).build()));
-    Answer<String> doReturnSameValue = invocation -> invocation.getArgumentAt(0, String.class);
+    Answer<String> doReturnSameValue = invocation -> invocation.getArgument(0, String.class);
 
     doAnswer(doExtractTextVariables)
         .when(infrastructureProvisionerService)
@@ -268,7 +268,7 @@ public class TerragruntProvisionStateTest extends WingsBaseTest {
     doReturn(fileMetadata).when(fileService).getFileMetadata("fileId", FileBucket.TERRAFORM_STATE);
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
     doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
-    doAnswer(invocation -> invocation.getArgumentAt(0, String.class) + "-rendered")
+    doAnswer(invocation -> invocation.getArgument(0, String.class) + "-rendered")
         .when(executionContext)
         .renderExpression(anyString());
     ExecutionResponse response = destroyProvisionState.execute(executionContext);

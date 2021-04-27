@@ -121,7 +121,7 @@ public class TerragruntStateHelperTest extends CategoryTest {
   private static final String PATH_TO_MODULE = "aws-module";
   private static final String ENTITY_ID = "ENTITY_ID";
 
-  private final Answer<String> answer = invocation -> invocation.getArgumentAt(0, String.class) + "-rendered";
+  private final Answer<String> answer = invocation -> invocation.getArgument(0, String.class) + "-rendered";
 
   String multiModuleOutput = "{\n"
       + "  \"regiona\": {\n"
@@ -219,7 +219,7 @@ public class TerragruntStateHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testResolveTargest() {
     List<String> targets = Arrays.asList("target1", "target2");
-    doAnswer(invocation -> invocation.getArgumentAt(0, String.class) + "-rendered")
+    doAnswer(invocation -> invocation.getArgument(0, String.class) + "-rendered")
         .when(executionContext)
         .renderExpression(anyString());
     assertThat(resolveTargets(targets, executionContext)).contains("target1-rendered", "target2-rendered");

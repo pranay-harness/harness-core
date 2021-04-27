@@ -154,7 +154,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
 
   @Before
   public void setup() throws Exception {
-    doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
+    doAnswer(invocation -> invocation.getArgument(0, Callable.class).call())
         .when(mockTimeLimiter)
         .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
   }

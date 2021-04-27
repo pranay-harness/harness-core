@@ -154,7 +154,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     when(mockContext.getApp()).thenReturn(application);
     when(mockContext.getEnv()).thenReturn(env);
 
-    Answer<String> doReturnSameValue = invocation -> invocation.getArgumentAt(0, String.class);
+    Answer<String> doReturnSameValue = invocation -> invocation.getArgument(0, String.class);
     doAnswer(doReturnSameValue).when(mockContext).renderExpression(anyString());
 
     SettingAttribute settingAttribute = aSettingAttribute().withValue(awsConfig).build();

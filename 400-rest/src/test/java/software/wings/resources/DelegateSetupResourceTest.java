@@ -274,7 +274,7 @@ public class DelegateSetupResourceTest {
     Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
 
     when(delegateService.update(any(Delegate.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
+        .thenAnswer(invocation -> invocation.getArgument(0, Delegate.class));
     RestResponse<Delegate> restResponse =
         RESOURCES.client()
             .target("/setup/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID)

@@ -194,9 +194,9 @@ public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
 
     when(workflowYAMLHelper.getWorkflowVariableValueBean(
              anyString(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any()))
-        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(4, String.class));
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(4, String.class));
     when(workflowYAMLHelper.getWorkflowVariableValueYaml(anyString(), anyString(), any(), anyBoolean()))
-        .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(1, String.class));
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(1, String.class));
   }
 
   @Test
@@ -428,7 +428,7 @@ public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
     when(workflowService.readWorkflow(any(), any())).thenReturn(workflow);
 
     when(pipelineService.update(any(), eq(false), eq(true))).thenAnswer(invocationOnMock -> {
-      Pipeline pipeline = invocationOnMock.getArgumentAt(0, Pipeline.class);
+      Pipeline pipeline = invocationOnMock.getArgument(0, Pipeline.class);
       pipeline.getPipelineStages().get(0).setName("Original name");
       pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).setWorkflowVariables(
           Collections.emptyMap());
@@ -463,7 +463,7 @@ public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
     changeContext.setYaml(yamlObject);
 
     when(pipelineService.save(any())).thenAnswer(invocationOnMock -> {
-      Pipeline pipeline = invocationOnMock.getArgumentAt(0, Pipeline.class);
+      Pipeline pipeline = invocationOnMock.getArgument(0, Pipeline.class);
       pipeline.getPipelineStages()
           .stream()
           .flatMap(ps -> ps.getPipelineStageElements().stream())
@@ -499,7 +499,7 @@ public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
     changeContext.setYaml(yamlObject);
 
     when(pipelineService.save(any())).thenAnswer(invocationOnMock -> {
-      Pipeline pipeline = invocationOnMock.getArgumentAt(0, Pipeline.class);
+      Pipeline pipeline = invocationOnMock.getArgument(0, Pipeline.class);
       pipeline.getPipelineStages()
           .stream()
           .flatMap(ps -> ps.getPipelineStageElements().stream())

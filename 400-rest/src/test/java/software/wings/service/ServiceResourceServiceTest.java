@@ -722,7 +722,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand command = invocation.getArgument(1, ServiceCommand.class);
           command.setUuid(ID_KEY);
           return command;
         });
@@ -833,7 +833,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand command = invocation.getArgument(1, ServiceCommand.class);
           command.setUuid(ID_KEY);
           return command;
         });
@@ -909,7 +909,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand command = invocation.getArgument(1, ServiceCommand.class);
           command.setUuid(ID_KEY);
           return command;
         });
@@ -995,7 +995,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand command = invocation.getArgument(1, ServiceCommand.class);
           command.setUuid(ID_KEY);
           return command;
         });
@@ -1199,7 +1199,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldAddCommand() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand command = invocation.getArgument(1, ServiceCommand.class);
           command.setServiceId(SERVICE_ID);
           command.setUuid(ID_KEY);
           return command;
@@ -1248,7 +1248,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldAddCommandWithTemplateVariables() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand serviceCommand = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand serviceCommand = invocation.getArgument(1, ServiceCommand.class);
           serviceCommand.setServiceId(SERVICE_ID);
           serviceCommand.setUuid(ID_KEY);
           Command command = serviceCommand.getCommand();
@@ -1314,7 +1314,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldAddCommandWithCommandUnits() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand command = invocation.getArgument(1, ServiceCommand.class);
           command.setUuid(ID_KEY);
           return command;
         });
@@ -2573,7 +2573,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldAddCommandFromTemplate() {
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand command = invocation.getArgument(1, ServiceCommand.class);
           command.setUuid(ID_KEY);
           return command;
         });
@@ -3180,7 +3180,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(anEntityVersion().withVersion(2).build());
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand command = invocation.getArgument(1, ServiceCommand.class);
           command.setUuid(ID_KEY);
           assertThat(command.getAccountId()).isEqualTo(ACCOUNT_ID);
           return command;
@@ -3218,7 +3218,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     doReturn(service).when(spyServiceResourceService).getServiceWithServiceCommands(APP_ID, SERVICE_ID);
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
-          ServiceCommand svccommand = invocation.getArgumentAt(1, ServiceCommand.class);
+          ServiceCommand svccommand = invocation.getArgument(1, ServiceCommand.class);
           svccommand.setServiceId(SERVICE_ID);
           svccommand.setUuid(ID_KEY);
           return svccommand;

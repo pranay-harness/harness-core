@@ -360,7 +360,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
              anyMapOf(String.class, String.class), anyMapOf(String.class, String.class),
              anyMapOf(String.class, Object.class), any(String[].class), any(ApiCallback.class)))
         .thenReturn(k8sApiCall);
-    when(k8sApiClient.escapeString(anyString())).thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+    when(k8sApiClient.escapeString(anyString())).thenAnswer(invocation -> invocation.getArgument(0, String.class));
     when(k8sApiClient.parameterToPair(anyString(), any())).thenCallRealMethod();
     when(k8sApiClient.parameterToString(any())).thenCallRealMethod();
 

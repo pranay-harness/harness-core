@@ -202,7 +202,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
         .thenReturn(serviceInstanceArtifactParam);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(hostService.getHostsByHostIds(anyString(), anyString(), anyList())).thenAnswer(invocationOnMock -> {
-      return invocationOnMock.getArgumentAt(2, List.class)
+      return invocationOnMock.getArgument(2, List.class)
           .stream()
           .map(item -> Host.Builder.aHost().withUuid((String) item).build())
           .collect(Collectors.toList());

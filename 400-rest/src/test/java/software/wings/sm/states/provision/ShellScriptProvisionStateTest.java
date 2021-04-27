@@ -211,7 +211,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     doReturn(WORKFLOW_EXECUTION_ID).when(executionContext).getWorkflowExecutionId();
     doReturn(WORKFLOW_NAME).when(executionContext).getWorkflowExecutionName();
     doReturn(Application.Builder.anApplication().uuid(APP_ID).build()).when(executionContext).getApp();
-    doAnswer(invocation -> invocation.getArgumentAt(0, Activity.class)).when(activityService).save(any(Activity.class));
+    doAnswer(invocation -> invocation.getArgument(0, Activity.class)).when(activityService).save(any(Activity.class));
     doReturn(provisioner).when(infrastructureProvisionerService).getShellScriptProvisioner(APP_ID, PROVISIONER_ID);
     ArgumentCaptor<Activity> activityCaptor = ArgumentCaptor.forClass(Activity.class);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);

@@ -2,7 +2,6 @@ package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -743,7 +742,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().build();
 
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
-    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+    doAnswer(invocationOnMock -> invocationOnMock.getArgument(0, String.class))
         .when(helmTaskHelper)
         .createDirectory("dir");
     doReturn(processExecutor)
@@ -780,7 +779,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().build();
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
-    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+    doAnswer(invocationOnMock -> invocationOnMock.getArgument(0, String.class))
         .when(helmTaskHelper)
         .createDirectory("dir");
     doReturn(getHelmCollectionResult(""))
@@ -828,7 +827,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
             helmChartConfigParams.getBasePath());
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
-    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+    doAnswer(invocationOnMock -> invocationOnMock.getArgument(0, String.class))
         .when(helmTaskHelper)
         .createNewDirectoryAtPath(RESOURCE_DIR_BASE);
     doReturn(getHelmCollectionResult(""))
@@ -872,10 +871,10 @@ public class HelmTaskHelperTest extends WingsBaseTest {
                                                               .build();
 
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
-    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+    doAnswer(invocationOnMock -> invocationOnMock.getArgument(0, String.class))
         .when(helmTaskHelper)
         .createDirectory("dir");
-    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+    doAnswer(invocationOnMock -> invocationOnMock.getArgument(0, String.class))
         .when(helmTaskHelperBase)
         .applyHelmHomePath("v2/helm search repoName/chartName -l ${HELM_HOME_PATH_FLAG} --col-width 300", "dir");
     doReturn(getHelmCollectionResult(""))
@@ -915,7 +914,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(chartMuseumClient)
         .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
             helmChartConfigParams.getBasePath());
-    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+    doAnswer(invocationOnMock -> invocationOnMock.getArgument(0, String.class))
         .when(helmTaskHelper)
         .createNewDirectoryAtPath(RESOURCE_DIR_BASE);
     doAnswer(new Answer() {

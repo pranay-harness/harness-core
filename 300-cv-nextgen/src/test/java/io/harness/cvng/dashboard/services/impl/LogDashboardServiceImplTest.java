@@ -79,10 +79,10 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(logDashboardService, "activityService", mockActivityService, true);
     FieldUtils.writeField(logDashboardService, "verificationTaskService", mockVerificationTaskService, true);
     when(mockVerificationTaskService.getServiceGuardVerificationTaskId(anyString(), anyString()))
-        .thenAnswer(invocation -> invocation.getArgumentAt(1, String.class));
+        .thenAnswer(invocation -> invocation.getArgument(1, String.class));
 
     when(mockVerificationTaskService.create(anyString(), anyString()))
-        .thenAnswer(invocation -> invocation.getArgumentAt(1, String.class));
+        .thenAnswer(invocation -> invocation.getArgument(1, String.class));
   }
 
   @Test

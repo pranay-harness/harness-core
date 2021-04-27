@@ -229,7 +229,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     workflowStandardParams.setAppId(APP_ID);
     workflowStandardParams.setArtifactIds(asList(ARTIFACT_ID_1, ARTIFACT_ID_2));
     when(artifactService.get(anyString())).thenAnswer(invocation -> {
-      if (invocation.getArgumentAt(0, String.class).equals(ARTIFACT_ID_1)) {
+      if (invocation.getArgument(0, String.class).equals(ARTIFACT_ID_1)) {
         return Artifact.Builder.anArtifact()
             .withUuid(ARTIFACT_ID_1)
             .withDisplayName("artifact1")

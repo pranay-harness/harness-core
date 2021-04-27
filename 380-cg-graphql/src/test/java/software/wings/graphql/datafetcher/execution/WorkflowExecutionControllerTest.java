@@ -137,8 +137,8 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
             -> Service.builder()
                    .appId(APP_ID)
                    .accountId(ACCOUNT_ID)
-                   .name(invocationOnMock.getArgumentAt(1, String.class))
-                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .name(invocationOnMock.getArgument(1, String.class))
+                   .uuid(invocationOnMock.getArgument(1, String.class))
                    .build());
     ArtifactStream artifactStream = CustomArtifactStream.builder().build();
     when(artifactService.get(ACCOUNT_ID, ARTIFACT_ID + 2))
@@ -224,8 +224,8 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
         .thenAnswer(invocationOnMock
             -> Service.builder()
                    .appId(APP_ID)
-                   .name(invocationOnMock.getArgumentAt(1, String.class))
-                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .name(invocationOnMock.getArgument(1, String.class))
+                   .uuid(invocationOnMock.getArgument(1, String.class))
                    .build());
     assertThatThrownBy(()
                            -> workflowExecutionController.startWorkflowExecution(

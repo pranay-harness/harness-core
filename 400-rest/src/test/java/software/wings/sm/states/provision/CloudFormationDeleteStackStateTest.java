@@ -87,7 +87,7 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    Answer<String> doReturnSameValue = invocation -> invocation.getArgumentAt(0, String.class);
+    Answer<String> doReturnSameValue = invocation -> invocation.getArgument(0, String.class);
     doAnswer(doReturnSameValue).when(mockContext).renderExpression(anyString());
 
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);

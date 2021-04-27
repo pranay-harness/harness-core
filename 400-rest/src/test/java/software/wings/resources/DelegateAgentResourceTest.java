@@ -185,7 +185,7 @@ public class DelegateAgentResourceTest {
   public void shouldClearCache() {
     Delegate delegate = Delegate.builder().build();
     when(delegateService.update(any(Delegate.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
+        .thenAnswer(invocation -> invocation.getArgument(0, Delegate.class));
 
     RESOURCES.client()
         .target(
@@ -218,8 +218,7 @@ public class DelegateAgentResourceTest {
   public void shouldAddDelegate() {
     Delegate delegate = Delegate.builder().build();
 
-    when(delegateService.add(any(Delegate.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
+    when(delegateService.add(any(Delegate.class))).thenAnswer(invocation -> invocation.getArgument(0, Delegate.class));
     RestResponse<Delegate> restResponse =
         RESOURCES.client()
             .target("/agent/delegates?accountId=" + ACCOUNT_ID)
