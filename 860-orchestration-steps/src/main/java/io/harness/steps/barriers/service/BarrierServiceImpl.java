@@ -48,6 +48,7 @@ import io.harness.steps.barriers.beans.BarrierPositionInfo;
 import io.harness.steps.barriers.beans.BarrierPositionInfo.BarrierPosition.BarrierPositionKeys;
 import io.harness.steps.barriers.beans.BarrierPositionInfo.BarrierPosition.BarrierPositionType;
 import io.harness.steps.barriers.beans.BarrierResponseData;
+import io.harness.steps.barriers.beans.BarrierResponseData.BarrierError;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.beans.StageDetail.StageDetailKeys;
 import io.harness.steps.barriers.service.visitor.BarrierVisitor;
@@ -160,11 +161,17 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         break;
       case ENDURE:
         waitNotifyEngine.doneWith(barrierExecutionInstance.getUuid(),
-            BarrierResponseData.builder().failed(true).errorMessage("The barrier was abandoned").build());
+            BarrierResponseData.builder()
+                .failed(true)
+                .barrierError(BarrierError.builder().timedOut(false).errorMessage("The barrier was abandoned").build())
+                .build());
         break;
       case TIMED_OUT:
         waitNotifyEngine.doneWith(barrierExecutionInstance.getUuid(),
-            BarrierResponseData.builder().failed(true).errorMessage("The barrier timed out").build());
+            BarrierResponseData.builder()
+                .failed(true)
+                .barrierError(BarrierError.builder().timedOut(true).errorMessage("The barrier timed out").build())
+                .build());
         break;
       default:
         unhandled(state);

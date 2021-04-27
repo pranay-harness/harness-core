@@ -13,6 +13,7 @@ import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
+import io.harness.steps.barriers.beans.BarrierResponseData.BarrierError;
 import io.harness.steps.cf.FeatureUpdateStepParameters;
 import io.harness.steps.dummy.DummySectionOutcome;
 import io.harness.steps.dummy.DummySectionStepParameters;
@@ -63,6 +64,7 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraApprovalOutcome.class, 3224);
     kryo.register(JiraIssueOutcome.class, 3225);
     kryo.register(FeatureUpdateStepParameters.class, 3226);
+    kryo.register(BarrierError.class, 3227);
 
     // made it same as which was in CD
     kryo.register(HttpStepInfo.class, 8048);
