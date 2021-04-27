@@ -241,7 +241,7 @@ public class LiteEngineTaskStep implements TaskExecutable<StepElementParameters,
   }
 
   private String getLogPrefix(Ambiance ambiance) {
-    LinkedHashMap<String, String> logAbstractions = StepUtils.generateStageLogAbstractions(ambiance);
+    LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance, "STAGE");
     return LogStreamingHelper.generateLogBaseKey(logAbstractions);
   }
 }
