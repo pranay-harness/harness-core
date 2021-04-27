@@ -9,6 +9,6 @@ import java.util.List;
 public interface IInstanceSyncPerpetualTaskCreator {
   List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping);
 
-  List<String> createPerpetualTasksForNewDeployment(List<DeploymentSummary> deploymentSummaries,
+  List<String> createPerpetualTasksForNewDeployment(DeploymentSummary deploymentSummary,
       List<PerpetualTaskRecord> existingPerpetualTasks, InfrastructureMapping infrastructureMapping);
 }

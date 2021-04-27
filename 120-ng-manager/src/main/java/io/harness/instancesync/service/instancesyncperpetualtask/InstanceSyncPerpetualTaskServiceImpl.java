@@ -1,33 +1,33 @@
 package io.harness.instancesync.service.instancesyncperpetualtask;
 
-import static java.util.Optional.ofNullable;
+import static java.util.Collections.emptyList;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ff.FeatureFlagService;
+import io.harness.instancesync.dto.InstanceSyncPerpetualTaskInfo;
 import io.harness.instancesync.entity.DeploymentSummary;
 import io.harness.instancesync.entity.infrastructureMapping.InfrastructureMapping;
+import io.harness.instancesync.repository.instancesyncperpetualtask.InstanceSyncPerpetualTaskRepository;
 import io.harness.instancesync.service.IInstanceSyncByPerpetualTaskhandler;
 import io.harness.instancesync.service.InstanceHandler;
 import io.harness.instancesync.service.instance.InstanceService;
 import io.harness.instancesync.service.instancehandlerfactory.InstanceHandlerFactoryService;
 import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.InstanceSyncByPerpetualTaskHandler;
-import software.wings.service.impl.instance.InstanceSyncPerpetualTaskInfo;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
-import org.mongodb.morphia.query.Query;
+import java.util.stream.Collectors;
 
 public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetualTaskService {
   @Inject private InstanceService instanceService;
   @Inject private PerpetualTaskService perpetualTaskService;
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private InstanceHandlerFactoryService instanceHandlerFactory;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private InstanceSyncPerpetualTaskRepository instanceSyncPerpetualTaskRepository;
 
   @Override
   public void createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
@@ -43,25 +43,72 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
     List<String> perpetualTaskIds =
         handler.getInstanceSyncPerpetualTaskCreator().createPerpetualTasks(infrastructureMapping);
     if (!perpetualTaskIds.isEmpty()) {
-      save(infrastructureMapping.getAccountId(), infrastructureMapping.getId(), perpetualTaskIds);
+      instanceSyncPerpetualTaskRepository.save(
+          infrastructureMapping.getAccountId(), infrastructureMapping.getId(), perpetualTaskIds);
     }
   }
 
   @Override
   public void createPerpetualTasksForNewDeployment(
-      InfrastructureMapping infrastructureMapping, DeploymentSummary deploymentSummary) {}
+      InfrastructureMapping infrastructureMapping, DeploymentSummary deploymentSummary) {
+    InstanceHandler handler = getInstanceHandler(infrastructureMapping);
+
+    List<PerpetualTaskRecord> existingTasks = getExistingPerpetualTasks(infrastructureMapping);
+
+    List<String> newPerpetualTaskIds =
+        handler.getInstanceSyncPerpetualTaskCreator().createPerpetualTasksForNewDeployment(
+            deploymentSummary, existingTasks, infrastructureMapping);
+
+    if (EmptyPredicate.isNotEmpty(newPerpetualTaskIds)) {
+      instanceSyncPerpetualTaskRepository.save(
+          infrastructureMapping.getAccountId(), infrastructureMapping.getId(), newPerpetualTaskIds);
+    }
+  }
 
   @Override
-  public void deletePerpetualTasks(InfrastructureMapping infrastructureMapping) {}
+  public void deletePerpetualTasks(InfrastructureMapping infrastructureMapping) {
+    deletePerpetualTasks(infrastructureMapping.getAccountId(), infrastructureMapping.getId());
+  }
 
   @Override
-  public void deletePerpetualTasks(String accountId, String infrastructureMappingId) {}
+  public void deletePerpetualTasks(String accountId, String infrastructureMappingId) {
+    Optional<InstanceSyncPerpetualTaskInfo> info =
+        instanceSyncPerpetualTaskRepository.getByAccountIdAndInfrastructureMappingId(
+            accountId, infrastructureMappingId);
+    if (!info.isPresent()) {
+      return;
+    }
+
+    for (String taskId : info.get().getPerpetualTaskIds()) {
+      deletePerpetualTask(accountId, infrastructureMappingId, taskId);
+    }
+  }
+
+  public void resetPerpetualTask(String accountId, String perpetualTaskId) {
+    perpetualTaskService.resetTask(accountId, perpetualTaskId, null);
+  }
 
   @Override
-  public void resetPerpetualTask(String accountId, String perpetualTaskId) {}
+  public void deletePerpetualTask(String accountId, String infrastructureMappingId, String perpetualTaskId) {
+    perpetualTaskService.deleteTask(accountId, perpetualTaskId);
 
-  @Override
-  public void deletePerpetualTask(String accountId, String infrastructureMappingId, String perpetualTaskId) {}
+    Optional<InstanceSyncPerpetualTaskInfo> optionalInfo =
+        instanceSyncPerpetualTaskRepository.getByAccountIdAndInfrastructureMappingId(
+            accountId, infrastructureMappingId);
+    if (!optionalInfo.isPresent()) {
+      return;
+    }
+    InstanceSyncPerpetualTaskInfo info = optionalInfo.get();
+    boolean wasFound = info.getPerpetualTaskIds().remove(perpetualTaskId);
+    if (!wasFound) {
+      return;
+    }
+    if (info.getPerpetualTaskIds().isEmpty()) {
+      instanceSyncPerpetualTaskRepository.delete(infrastructureMappingId);
+    } else {
+      instanceSyncPerpetualTaskRepository.save(info);
+    }
+  }
 
   @Override
   public boolean isInstanceSyncByPerpetualTaskEnabled(InfrastructureMapping infrastructureMapping) {
@@ -98,42 +145,21 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
   private boolean perpetualTasksAlreadyExists(InfrastructureMapping infrastructureMapping) {
     Optional<InstanceSyncPerpetualTaskInfo> info =
-        getByAccountIdAndInfrastructureMappingId(infrastructureMapping.getAccountId(), infrastructureMapping.getId());
+        instanceSyncPerpetualTaskRepository.getByAccountIdAndInfrastructureMappingId(
+            infrastructureMapping.getAccountId(), infrastructureMapping.getId());
     return info.isPresent() && !info.get().getPerpetualTaskIds().isEmpty();
   }
 
-  private Optional<InstanceSyncPerpetualTaskInfo> getByAccountIdAndInfrastructureMappingId(
-      String accountId, String infrastructureMappingId) {
-    Query<InstanceSyncPerpetualTaskInfo> query = getInfoQuery(accountId, infrastructureMappingId);
-    return ofNullable(query.get());
-  }
-
-  private Query<InstanceSyncPerpetualTaskInfo> getInfoQuery(String accountId, String infrastructureMappingId) {
-    return wingsPersistence.createQuery(InstanceSyncPerpetualTaskInfo.class)
-        .filter(InstanceSyncPerpetualTaskInfo.InstanceSyncPerpetualTaskInfoKeys.accountId, accountId)
-        .filter(InstanceSyncPerpetualTaskInfo.InstanceSyncPerpetualTaskInfoKeys.infrastructureMappingId,
-            infrastructureMappingId);
-  }
-
-  private void save(String accountId, String infrastructureMappingId, List<String> perpetualTaskIds) {
-    Preconditions.checkArgument(
-        EmptyPredicate.isNotEmpty(perpetualTaskIds), "perpetualTaskIds must not be empty or null");
-    Optional<InstanceSyncPerpetualTaskInfo> infoOptional =
-        getByAccountIdAndInfrastructureMappingId(accountId, infrastructureMappingId);
-    if (!infoOptional.isPresent()) {
-      save(InstanceSyncPerpetualTaskInfo.builder()
-               .accountId(accountId)
-               .infrastructureMappingId(infrastructureMappingId)
-               .perpetualTaskIds(perpetualTaskIds)
-               .build());
-    } else {
-      InstanceSyncPerpetualTaskInfo info = infoOptional.get();
-      info.getPerpetualTaskIds().addAll(perpetualTaskIds);
-      save(info);
-    }
-  }
-
-  private void save(InstanceSyncPerpetualTaskInfo info) {
-    wingsPersistence.save(info);
+  private List<PerpetualTaskRecord> getExistingPerpetualTasks(InfrastructureMapping infrastructureMapping) {
+    Optional<InstanceSyncPerpetualTaskInfo> info =
+        instanceSyncPerpetualTaskRepository.getByAccountIdAndInfrastructureMappingId(
+            infrastructureMapping.getAccountId(), infrastructureMapping.getId());
+    return info
+        .map(instanceSyncPerpetualTaskInfo
+            -> instanceSyncPerpetualTaskInfo.getPerpetualTaskIds()
+                   .stream()
+                   .map(id -> perpetualTaskService.getTaskRecord(id))
+                   .collect(Collectors.toList()))
+        .orElse(emptyList());
   }
 }
