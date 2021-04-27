@@ -78,6 +78,7 @@ public class VaultConfigMapper {
     vaultConfig.setRenewalInterval(updateDTO.getRenewalIntervalMinutes());
     vaultConfig.setReadOnly(updateDTO.isReadOnly());
     vaultConfig.setDefault(updateDTO.isDefault());
+    vaultConfig.setName(updateDTO.getName());
 
     if (!Optional.ofNullable(vaultConfig.getNgMetadata()).isPresent()) {
       vaultConfig.setNgMetadata(NGSecretManagerMetadata.builder().build());

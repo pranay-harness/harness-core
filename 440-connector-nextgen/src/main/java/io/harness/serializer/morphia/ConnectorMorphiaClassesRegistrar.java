@@ -14,6 +14,10 @@ import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeComm
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsIamCredential;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsManualCredential;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsStsCredential;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication;
@@ -78,6 +82,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(KubernetesClusterConfig.class);
     set.add(GitConfig.class);
     set.add(VaultConnector.class);
+    set.add(AwsKmsConnector.class);
     set.add(GcpKmsConnector.class);
     set.add(LocalConnector.class);
     set.add(AppDynamicsConnector.class);
@@ -115,6 +120,9 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.gcpconnector.GcpServiceAccountKey", GcpServiceAccountKey.class);
     h.put("connector.entities.embedded.awsconnector.AwsIamCredential", AwsIamCredential.class);
     h.put("connector.entities.embedded.awsconnector.AwsAccessKeyCredential", AwsAccessKeyCredential.class);
+    h.put("connector.entities.embedded.awskmsconnector.AwsKmsIamCredential", AwsKmsIamCredential.class);
+    h.put("connector.entities.embedded.awskmsconnector.AwsKmsStsCredential", AwsKmsStsCredential.class);
+    h.put("connector.entities.embedded.awskmsconnector.AwsKmsManualCredential", AwsKmsManualCredential.class);
     h.put("connector.entities.embedded.ceawsconnector.CURAttributes", CURAttributes.class);
     h.put("connector.entities.embedded.ceawsconnector.S3BucketDetails", S3BucketDetails.class);
     h.put("connector.entities.embedded.docker.DockerUserNamePasswordAuthentication",
