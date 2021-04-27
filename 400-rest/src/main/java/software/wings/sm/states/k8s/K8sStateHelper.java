@@ -346,7 +346,7 @@ public class K8sStateHelper {
     return (K8sElement) kryoSerializer.asInflatedObject(result.getOutput());
   }
 
-  public Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context, List<String> delegateSelectors) {
+  public static Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context, List<String> delegateSelectors) {
     if (isEmpty(delegateSelectors)) {
       return emptySet();
     }

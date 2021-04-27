@@ -27,6 +27,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -100,12 +101,13 @@ public class K8sRollingDeployTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() {
+    ExecutionContext context = mock(ExecutionContextImpl.class);
     k8sRollingDeploy.setDelegateSelectors(Collections.singletonList("${workflow.variables.abc}"));
     final String runTimeValueAbc = "runTimeValueAbc";
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
     when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
-    //    when(context.renderExpression(any())).thenReturn(runTimeValueAbc);
+    when(context.renderExpression(any())).thenReturn(runTimeValueAbc);
 
     doReturn(RELEASE_NAME).when(k8sRollingDeploy).fetchReleaseName(any(), any());
     doReturn(K8sDelegateManifestConfig.builder().build())
