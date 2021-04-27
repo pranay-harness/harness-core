@@ -81,7 +81,9 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
-    String entityId = helper.generateFullIdentifier(stepParameters.getProvisionerIdentifier(), ambiance);
+    String provisionerIdentifier =
+        ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier());
+    String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
     builder.currentStateFileId(helper.getLatestFileId(entityId))
         .taskType(TFTaskType.APPLY)
         .terraformCommand(TerraformCommand.APPLY)
@@ -120,17 +122,16 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
 
   private TaskRequest obtainInheritedTask(
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
-    TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder()
-                                                   .taskType(TFTaskType.APPLY)
-                                                   .terraformCommandUnit(TerraformCommandUnit.Apply)
-                                                   .entityId(stepParameters.getProvisionerIdentifier());
+    TerraformTaskNGParametersBuilder builder =
+        TerraformTaskNGParameters.builder().taskType(TFTaskType.APPLY).terraformCommandUnit(TerraformCommandUnit.Apply);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
-    String entityId = helper.generateFullIdentifier(stepParameters.getProvisionerIdentifier(), ambiance);
+    String provisionerIdentifier =
+        ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier());
+    String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
     builder.entityId(entityId);
     builder.currentStateFileId(helper.getLatestFileId(entityId));
-    TerraformInheritOutput inheritOutput =
-        helper.getSavedInheritOutput(stepParameters.getProvisionerIdentifier(), ambiance);
+    TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput(provisionerIdentifier, ambiance);
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
@@ -229,6 +230,10 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.saveRollbackDestroyConfigInline(stepParameters, terraformTaskNGResponse, ambiance);
       addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
+      helper.updateParentEntityIdAndVersion(
+          helper.generateFullIdentifier(
+              ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance),
+          terraformTaskNGResponse.getStateFileId());
     }
     return stepResponseBuilder.build();
   }
@@ -240,6 +245,10 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.saveRollbackDestroyConfigInherited(stepParameters, ambiance);
       addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
+      helper.updateParentEntityIdAndVersion(
+          helper.generateFullIdentifier(
+              ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance),
+          terraformTaskNGResponse.getStateFileId());
     }
     return stepResponseBuilder.build();
   }

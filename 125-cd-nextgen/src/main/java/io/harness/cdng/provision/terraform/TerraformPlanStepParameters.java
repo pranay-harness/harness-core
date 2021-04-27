@@ -38,7 +38,7 @@ public class TerraformPlanStepParameters extends TerraformPlanBaseStepInfo imple
   TerraformPlanCommand terraformPlanCommand;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformPlanStepParameters(String provisionerIdentifier, String name, String identifier,
+  public TerraformPlanStepParameters(ParameterField<String> provisionerIdentifier, String name, String identifier,
       ParameterField<String> workspace, StoreConfigWrapper configFilesWrapper, List<StoreConfigWrapper> remoteVarFiles,
       ParameterField<List<String>> inlineVarFiles, ParameterField<String> backendConfig,
       ParameterField<List<String>> targets, ParameterField<String> timeout, Map<String, Object> environmentVariables,

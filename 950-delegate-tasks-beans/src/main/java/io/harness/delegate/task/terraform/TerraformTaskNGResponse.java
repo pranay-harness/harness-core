@@ -25,4 +25,5 @@ public class TerraformTaskNGResponse implements DelegateResponseData {
   Map<String, String> commitIdForConfigFilesMap;
   EncryptedRecordData encryptedTfPlan;
   String outputs;
+  String stateFileId;
 }

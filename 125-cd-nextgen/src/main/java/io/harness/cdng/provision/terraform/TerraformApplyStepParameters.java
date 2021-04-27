@@ -38,7 +38,7 @@ public class TerraformApplyStepParameters extends TerraformApplyBaseStepInfo imp
   Map<String, Object> environmentVariables;
 
   @Builder(builderMethodName = "infoBuilder")
-  public TerraformApplyStepParameters(String provisionerIdentifier, String name, String identifier,
+  public TerraformApplyStepParameters(ParameterField<String> provisionerIdentifier, String name, String identifier,
       TerraformStepConfigurationType stepConfigurationType, ParameterField<String> workspace,
       StoreConfigWrapper configFilesWrapper, List<StoreConfigWrapper> remoteVarFileConfigs,
       ParameterField<List<String>> inlineVarFilesListContent, ParameterField<String> backendConfig,

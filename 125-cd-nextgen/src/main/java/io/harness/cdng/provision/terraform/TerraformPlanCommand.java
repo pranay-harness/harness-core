@@ -5,11 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @OwnedBy(CDP)
 public enum TerraformPlanCommand {
-  APPLY("Apply"),
-  DESTROY("Destroy");
+  @JsonProperty("Apply") APPLY("Apply"),
+  @JsonProperty("Destroy") DESTROY("Destroy");
 
   private final String displayName;
   TerraformPlanCommand(String displayName) {
