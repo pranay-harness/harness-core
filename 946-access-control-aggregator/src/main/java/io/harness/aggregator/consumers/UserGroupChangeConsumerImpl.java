@@ -27,10 +27,10 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
   private final ACLService aclService;
 
   @Override
-  public long consumeUpdateEvent(String id, UserGroupDBO userGroupDBO) {
-    if (Optional.ofNullable(userGroupDBO.getUsers()).isPresent()) {
-      Set<String> currentUsersInUserGroup = userGroupDBO.getUsers();
-      List<ACL> acls = aclService.getByUserGroup(userGroupDBO.getScopeIdentifier(), userGroupDBO.getIdentifier());
+  public long consumeUpdateEvent(String id, UserGroupDBO updatedEntity) {
+    if (Optional.ofNullable(updatedEntity.getUsers()).isPresent()) {
+      Set<String> currentUsersInUserGroup = updatedEntity.getUsers();
+      List<ACL> acls = aclService.getByUserGroup(updatedEntity.getScopeIdentifier(), updatedEntity.getIdentifier());
 
       Set<String> oldUsersInUserGroup = acls.stream().map(ACL::getPrincipalIdentifier).collect(Collectors.toSet());
 
@@ -58,7 +58,7 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
 
       long count = 0;
       if (!aclsToCreate.isEmpty()) {
-        count = aclService.insertAllIgnoringDuplicates(aclsToCreate);
+        count = aclService.saveAll(aclsToCreate);
       }
       log.info("{} ACLs created", count);
       return count;
@@ -72,7 +72,7 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
   }
 
   @Override
-  public long consumeCreateEvent(String id, UserGroupDBO accessControlEntity) {
+  public long consumeCreateEvent(String id, UserGroupDBO createdEntity) {
     return 0;
   }
 }

@@ -74,11 +74,11 @@ public class RoleChangeConsumerImplTest extends CategoryTest {
   public void testRoleUpdateWithPermissionsChanged() {
     when(aclService.getByRole(anyString(), anyString(), anyBoolean())).thenReturn(getAlreadyExistingACLS());
     doNothing().when(aclService).deleteAll(any());
-    when(aclService.insertAllIgnoringDuplicates(anyList())).thenReturn(2L);
+    when(aclService.saveAll(anyList())).thenReturn(2L);
     long count = roleChangeConsumer.consumeUpdateEvent("some_random_id", getRoleWithPermissionsChanged());
 
     Assertions.assertThat(count).isEqualTo(2);
-    verify(aclService).insertAllIgnoringDuplicates(any());
+    verify(aclService).saveAll(any());
     verify(aclService).deleteAll(any());
   }
 

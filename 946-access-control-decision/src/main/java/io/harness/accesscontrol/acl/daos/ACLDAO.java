@@ -13,21 +13,17 @@ import java.util.List;
 public interface ACLDAO {
   List<ACL> get(Principal principal, List<PermissionCheckDTO> permissionsRequired);
 
-  ACL save(ACL acl);
-
-  long insertAllIgnoringDuplicates(List<ACL> acls);
-
   long saveAll(List<ACL> acls);
 
   void deleteAll(List<ACL> acls);
 
-  long deleteByRoleAssignmentId(String roleAssignmentId);
+  long deleteByRoleAssignment(String roleAssignmentId);
 
-  List<ACL> getByUserGroup(String scopeIdentifier, String userGroupIdentifier);
+  List<ACL> getByUserGroup(String scope, String userGroupIdentifier);
 
-  List<ACL> getByRole(String scopeIdentifier, String identifier, boolean managed);
+  List<ACL> getByRole(String scope, String roleIdentifier, boolean managed);
 
-  List<ACL> getByResourceGroup(String scopeIdentifier, String identifier, boolean managed);
+  List<ACL> getByResourceGroup(String scope, String resourceGroupIdentifier, boolean managed);
 
-  List<ACL> getByRoleAssignmentId(String id);
+  List<ACL> getByRoleAssignment(String roleAssignmentId);
 }

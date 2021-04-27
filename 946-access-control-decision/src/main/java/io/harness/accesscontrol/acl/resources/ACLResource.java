@@ -44,7 +44,6 @@ public class ACLResource {
   @POST
   @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
   public ResponseDTO<AccessCheckResponseDTO> get(@Valid @NotNull AccessCheckRequestDTO dto) {
-    return ResponseDTO.newResponse(
-        aclService.checkAccess(SecurityContextBuilder.getPrincipal(), dto.getPrincipal(), dto.getPermissions()));
+    return ResponseDTO.newResponse(aclService.checkAccess(SecurityContextBuilder.getPrincipal(), dto));
   }
 }
