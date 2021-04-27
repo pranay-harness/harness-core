@@ -1272,6 +1272,13 @@ maven_install(
         "com.github.dikhan:pagerduty-client:3.0.3",
         "com.github.dirkraft.dropwizard-file-assets:dropwizard-file-assets:0.0.2",
         "com.github.fge:json-schema-core:1.0.1",
+        "io.netty:netty-transport-native-kqueue:4.1.63_Final",
+        maven.artifact(
+            group = "io.netty",
+            artifact = "netty-transport-native-kqueue",
+            version = "4.1.63.Final",
+            classifier = "osx-x86_64",
+        ),
         "com.github.mifmif:generex:1.0.1",
         maven.artifact(
             group = "com.github.reinert",
