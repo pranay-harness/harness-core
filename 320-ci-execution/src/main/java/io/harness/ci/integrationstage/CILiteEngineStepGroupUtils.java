@@ -2,7 +2,6 @@ package io.harness.ci.integrationstage;
 
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment;
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment.CI_MANAGER;
-import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
@@ -199,13 +198,11 @@ public class CILiteEngineStepGroupUtils {
   }
 
   private ExecutionWrapperConfig getGitCloneStep(CIExecutionArgs ciExecutionArgs) {
-    Integer cloneDepth = GIT_CLONE_DEPTH;
+    Map<String, String> settings = new HashMap<>();
     if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.MANUAL) {
-      cloneDepth = GIT_CLONE_MANUAL_DEPTH;
+      settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, GIT_CLONE_MANUAL_DEPTH.toString());
     }
 
-    Map<String, String> settings = new HashMap<>();
-    settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, cloneDepth.toString());
     PluginStepInfo step = PluginStepInfo.builder()
                               .identifier(GIT_CLONE_STEP_ID)
                               .image(ParameterField.createValueField(
