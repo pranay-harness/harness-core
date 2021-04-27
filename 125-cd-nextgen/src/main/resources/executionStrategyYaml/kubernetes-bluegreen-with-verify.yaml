@@ -1,0 +1,37 @@
+failureStrategies:
+  - onFailure:
+      errors:
+        - AnyOther
+      action:
+        type: StageRollback
+spec:
+  execution:
+    steps:
+      - step:
+          name: "Stage Deployment"
+          identifier: stageDeployment
+          type: K8sBlueGreenDeploy
+          timeout: 10m
+          spec:
+            skipDryRun: false
+      - step:
+          type: Verify
+          name: Verify
+          identifier: Verify
+          timeout: 120m
+          spec: {}
+      - step:
+          name: "Swap primary with stage service"
+          identifier: bgSwapServices
+          type: K8sBGSwapServices
+          timeout: 10m
+          spec:
+            skipDryRun: false
+    rollbackSteps:
+      - step:
+          name: "Swap primary with stage service"
+          identifier: rollbackBgSwapServices
+          type: K8sBGSwapServices
+          timeout: 10m
+          spec:
+            skipDryRun: false
