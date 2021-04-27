@@ -50,7 +50,7 @@ comment on column coverage.file_path is 'Path of the changed file in the PR.';
 comment on column coverage.status is 'Whether the file was modified/added/deleted';
 
 
--- distributed hypertable is supported only in 2.0. As we are using TSDB 1.7, using create_hypertable for now
-SELECT create_hypertable('coverage', 'created_at');
+-- distributed hypertable is supported only in 2.0. for TSDB 1.7, use create_hypertable
+SELECT create_distributed_hypertable('coverage', 'created_at');
 
 CREATE INDEX IF NOT EXISTS coverage_idx1 ON coverage(account_id, org_id, project_id, pipeline_id, build_id, created_at DESC);
