@@ -27,8 +27,13 @@ public class DelegateProfileDetailsNg {
 
   private EmbeddedUserDetails createdBy;
   private EmbeddedUserDetails lastUpdatedBy;
+  private long createdAt;
+  private long lastUpdatedAt;
 
   private String identifier;
 
   private long numberOfDelegates;
+
+  private String orgIdentifier;
+  private String projectIdentifier;
 }

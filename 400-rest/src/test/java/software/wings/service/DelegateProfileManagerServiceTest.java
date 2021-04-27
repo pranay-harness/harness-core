@@ -19,6 +19,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -57,9 +61,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = generateUuid();
   private static final String DELEGATE_PROFILE_ID = generateUuid();
@@ -84,7 +91,8 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc =
         DelegateProfilePageResponseGrpc.newBuilder().build();
 
-    when(delegateProfileServiceGrpcClient.listProfiles(any(AccountId.class), any(PageRequestGrpc.class)))
+    when(delegateProfileServiceGrpcClient.listProfiles(
+             any(AccountId.class), any(PageRequestGrpc.class), eq(false), eq(null), eq(null)))
         .thenReturn(null)
         .thenReturn(delegateProfilePageResponseGrpc);
 
@@ -236,10 +244,14 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
             .setIdentifier(TEST_DELEGATE_PROFILE_IDENTIFIER)
             .build();
 
-    when(delegateProfileServiceGrpcClient.addProfile(any(DelegateProfileGrpc.class))).thenReturn(delegateProfileGrpc);
+    ArgumentCaptor<DelegateProfileGrpc> argumentCaptor = ArgumentCaptor.forClass(DelegateProfileGrpc.class);
+    when(delegateProfileServiceGrpcClient.addProfile(argumentCaptor.capture())).thenReturn(delegateProfileGrpc);
 
     DelegateProfileDetails result = delegateProfileManagerService.add(profileDetail);
     assertThat(result).isNotNull().isEqualToIgnoringGivenFields(profileDetail, "uuid");
+
+    DelegateProfileGrpc capturedGrpc = argumentCaptor.getValue();
+    assertThat(capturedGrpc.getNg()).isFalse();
   }
 
   @Test
