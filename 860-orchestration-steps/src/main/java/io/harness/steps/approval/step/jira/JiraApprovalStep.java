@@ -9,7 +9,6 @@ import io.harness.plancreator.steps.common.rollback.AsyncExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -17,7 +16,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
 import io.harness.steps.approval.step.ApprovalInstanceService;
-import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.tasks.ResponseData;
@@ -53,7 +51,7 @@ public class JiraApprovalStep extends AsyncExecutableWithRollback {
     JiraApprovalInstance instance =
         (JiraApprovalInstance) approvalInstanceService.get(jiraApprovalResponseData.getInstanceId());
     return StepResponse.builder()
-        .status(instance.getStatus() == ApprovalStatus.APPROVED ? Status.SUCCEEDED : Status.FAILED)
+        .status(instance.getStatus().toFinalExecutionStatus())
         .stepOutcome(
             StepResponse.StepOutcome.builder().name("output").outcome(instance.toJiraApprovalOutcome()).build())
         .build();

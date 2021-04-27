@@ -24,4 +24,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class Principal {
   @NotEmpty String principalIdentifier;
   @NotNull PrincipalType principalType;
+
+  public static Principal of(PrincipalType principalType, String principalIdentifier) {
+    return Principal.builder().principalIdentifier(principalIdentifier).principalType(principalType).build();
+  }
 }

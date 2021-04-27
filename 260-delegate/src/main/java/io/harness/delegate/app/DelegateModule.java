@@ -133,6 +133,8 @@ import io.harness.delegate.task.k8s.KubernetesValidationHandler;
 import io.harness.delegate.task.manifests.CustomManifestValuesFetchTask;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.nexus.NexusValidationHandler;
+import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.delegate.task.scm.ScmDelegateClientImpl;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.delegate.task.terraform.TFTaskType;
@@ -173,6 +175,7 @@ import io.harness.git.GitClientV2Impl;
 import io.harness.helpers.EncryptDecryptHelperImpl;
 import io.harness.http.HttpService;
 import io.harness.http.HttpServiceImpl;
+import io.harness.impl.scm.ScmServiceClientImpl;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
@@ -192,6 +195,7 @@ import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.service.ScmServiceClient;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
@@ -980,6 +984,8 @@ public class DelegateModule extends AbstractModule {
     bind(AzureBlueprintClient.class).to(AzureBlueprintClientImpl.class);
     bind(AzureAuthorizationClient.class).to(AzureAuthorizationClientImpl.class);
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
+    bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
+    bind(ScmServiceClient.class).to(ScmServiceClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =

@@ -75,12 +75,12 @@ public class ResourceGroupChangeConsumerImplTest extends CategoryTest {
   public void testResourceGroupUpdateWithPermissionsChanged() {
     when(aclService.getByResourceGroup(anyString(), anyString(), anyBoolean())).thenReturn(getAlreadyExistingACLS());
     doNothing().when(aclService).deleteAll(any());
-    when(aclService.insertAllIgnoringDuplicates(anyList())).thenReturn(2L);
+    when(aclService.saveAll(anyList())).thenReturn(2L);
     long count = resourceGroupChangeConsumer.consumeUpdateEvent(
         "some_random_id", getResourceGroupWithResourceSelectorsChanged());
 
     Assertions.assertThat(count).isEqualTo(2);
-    verify(aclService).insertAllIgnoringDuplicates(any());
+    verify(aclService).saveAll(any());
     verify(aclService).deleteAll(any());
   }
 
