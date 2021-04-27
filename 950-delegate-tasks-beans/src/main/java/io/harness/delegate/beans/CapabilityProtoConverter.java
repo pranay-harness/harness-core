@@ -1,5 +1,7 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.AwsRegionParameters;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
@@ -33,6 +35,7 @@ import io.harness.delegate.beans.executioncapability.SocketConnectivityExecution
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.k8s.model.HelmVersion;
 
+@OwnedBy(HarnessTeam.DEL)
 public class CapabilityProtoConverter {
   public static boolean shouldCompareResults(CapabilityParameters parameters) {
     if (parameters == null) {

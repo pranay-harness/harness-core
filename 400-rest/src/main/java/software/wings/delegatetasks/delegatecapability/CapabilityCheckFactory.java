@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.delegatecapability;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.task.executioncapability.AlwaysFalseValidationCapabilityCheck;
@@ -34,6 +36,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.DEL)
 public class CapabilityCheckFactory {
   @Inject SocketConnectivityCapabilityCheck socketConnectivityCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;

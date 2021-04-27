@@ -1,9 +1,12 @@
 package io.harness.capability.internal;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.CapabilityParameters;
 
 import java.time.Duration;
 
+@OwnedBy(HarnessTeam.DEL)
 public class CapabilityAttributes {
   public static Duration getValidityPeriod(CapabilityParameters parameters) {
     switch (parameters.getCapabilityCase()) {

@@ -1,5 +1,7 @@
 package io.harness.delegate.task.executioncapability;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.CapabilityParameters;
 import io.harness.exception.GeneralException;
 
@@ -7,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(HarnessTeam.DEL)
 public class ProtoCapabilityCheckFactory {
   @Inject AwsRegionCapabilityCheck awsRegionCapabilityCheck;
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
