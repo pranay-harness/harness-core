@@ -351,7 +351,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
-    "@maven//:io_grpc_grpc_testing",
     "@maven//:io_gsonfire_gson_fire",
     "@maven//:io_jsonwebtoken_jjwt",
     "@maven//:io_kubernetes_client_java",
@@ -725,6 +724,7 @@ java_library(
     deps = test_dependencies +
            shared_dependencies + [
         ":module",
+        "@maven//:io_grpc_grpc_testing",
     ],
 )
 
