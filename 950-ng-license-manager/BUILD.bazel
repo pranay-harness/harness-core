@@ -1,8 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 HarnessTeam = "GTM"
 
@@ -44,6 +43,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()
