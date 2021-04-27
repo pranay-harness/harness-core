@@ -7,7 +7,11 @@ import static java.util.Collections.singletonList;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.beans.AwsInternalConfig;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.AmazonECRClientBuilder;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
@@ -27,18 +31,29 @@ public class AwsEcrApiHelperServiceDelegate extends AwsEcrApiHelperServiceDelega
     return (AmazonECRClient) builder.build();
   }
 
-  // TODO: separate out for CG
   private DescribeRepositoriesResult listRepositories(
       AwsInternalConfig awsConfig, DescribeRepositoriesRequest describeRepositoriesRequest, String region) {
-    //    try {
-    tracker.trackECRCall("List Repositories");
-    return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
-    //    } catch (AmazonServiceException amazonServiceException) {
-    //      handleAmazonServiceException(amazonServiceException);
-    //    } catch (AmazonClientException amazonClientException) {
-    //      handleAmazonClientException(amazonClientException);
-    //    }
-    //    return new DescribeRepositoriesResult();
+    try {
+      tracker.trackECRCall("List Repositories");
+      return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (globalContextData.isSupportedErrorFramework()) {
+        GlobalContextManager.unset(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+        throw amazonServiceException;
+      }
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (globalContextData.isSupportedErrorFramework()) {
+        GlobalContextManager.unset(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+        throw amazonClientException;
+      }
+      handleAmazonClientException(amazonClientException);
+    }
+    return new DescribeRepositoriesResult();
   }
   private Repository getRepository(AwsInternalConfig awsConfig, String region, String repositoryName) {
     DescribeRepositoriesRequest describeRepositoriesRequest = new DescribeRepositoriesRequest();
