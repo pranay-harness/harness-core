@@ -384,7 +384,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
 
   private static final int WATCHER_RAM_IN_MB = 500;
-  // Calculated as 30% of total RAM for delegate + watcher, in EXTRA_SMALL delegate which was 1250 (500 watcher + 250
+  // Calculated as 30% of total RAM for delegate + watcher, in LAPTOP delegate which was 1250 (500 watcher + 250
   // base delegate memory + 250 to handle 50 tasks + 250 for ramp down for old version delegate during release)
   private static final int POD_BASE_RAM_IN_MB = 400;
 
@@ -969,6 +969,7 @@ public class DelegateServiceImpl implements DelegateService {
         accountId, currentDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
 
     if (DelegateInstanceStatus.DELETED == newDelegateStatus) {
+      log.warn("self destruct sent from updateApprovalStatus");
       broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
     }
 
@@ -2043,6 +2044,7 @@ public class DelegateServiceImpl implements DelegateService {
       persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
       log.info("Delegate: {} marked as deleted.", delegateId);
 
+      log.warn("self destruct sent from delete");
       broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
     }
   }
@@ -2101,6 +2103,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateRegisterResponse register(Delegate delegate) {
     if (licenseService.isAccountDeleted(delegate.getAccountId())) {
+      log.warn("self destruct sent from register-delegate-acct");
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
@@ -2109,6 +2112,7 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
 
       if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+        log.warn("self destruct sent from register-delegate-grp");
         broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
@@ -2146,6 +2150,7 @@ public class DelegateServiceImpl implements DelegateService {
                                     .project(DelegateKeys.description, true)
                                     .get();
     if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
+      log.warn("self destruct sent from register-delegate-existing");
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
 
@@ -2164,6 +2169,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateRegisterResponse register(DelegateParams delegateParams) {
     if (licenseService.isAccountDeleted(delegateParams.getAccountId())) {
+      log.warn("self destruct sent from register-params-acct");
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
     }
@@ -2172,6 +2178,7 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
 
       if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+        log.warn("self destruct sent from register-params-grp");
         broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
@@ -2209,6 +2216,7 @@ public class DelegateServiceImpl implements DelegateService {
                                     .project(DelegateKeys.description, true)
                                     .get();
     if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
+      log.warn("self destruct sent from register-params-existing");
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
 
@@ -4535,6 +4543,7 @@ public class DelegateServiceImpl implements DelegateService {
       case POLLING:
         throw new DuplicateDelegateException(delegateId, delegateConnectionId);
       case STREAMING:
+        log.warn("self destruct sent from destroyTheCurrentDelegate");
         broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true)
             .broadcast(SELF_DESTRUCT + delegateId + "-" + delegateConnectionId);
         break;
