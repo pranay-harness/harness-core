@@ -99,6 +99,9 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
                       : commandRollbackRequest.getTimeoutIntervalInMin())
               .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .useCFCLI(commandRollbackRequest.isUseCfCLI())
+              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(
+                  pcfCommandRequest.isUseCfCLI(), pcfCommandRequest.getCfCliVersion()))
+              .cfCliVersion(pcfCommandRequest.getCfCliVersion())
               .limitPcfThreads(commandRollbackRequest.isLimitPcfThreads())
               .ignorePcfConnectionContextCache(commandRollbackRequest.isIgnorePcfConnectionContextCache())
               .build();

@@ -13,7 +13,6 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 import java.util.List;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,7 +43,7 @@ public class PcfCommandRollbackRequest extends PcfCommandRequest {
       boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads,
-        ignorePcfConnectionContextCache, Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6));
+        ignorePcfConnectionContextCache, cfCliVersion);
     this.instanceData = instanceData;
     this.resizeStrategy = resizeStrategy;
     this.routeMaps = routeMaps;

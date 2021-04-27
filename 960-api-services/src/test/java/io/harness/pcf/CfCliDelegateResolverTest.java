@@ -16,6 +16,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.rule.Owner;
 
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,6 +41,47 @@ public class CfCliDelegateResolverTest extends CategoryTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetAvailableCfCliPathOnDelegateWhenCli6OnlyInstalled() {
+    cli6OnlyInstalledOnDelegateByPkgManager();
+
+    Optional<String> availableCfCliPathOnDelegate =
+        cfCliDelegateResolver.getAvailableCfCliPathOnDelegate(CfCliVersion.V6);
+
+    String cfCliPath = availableCfCliPathOnDelegate.orElse(null);
+    assertThat(cfCliPath).isNotEmpty();
+    assertThat(cfCliPath).isEqualTo("cf");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetAvailableCfCliPathOnDelegateWhenBinaryInstalled() {
+    binaryCli6OnlyInstalledOnDelegate();
+
+    Optional<String> availableCfCliPathOnDelegate =
+        cfCliDelegateResolver.getAvailableCfCliPathOnDelegate(CfCliVersion.V6);
+
+    String cfCliPath = availableCfCliPathOnDelegate.orElse(null);
+    assertThat(cfCliPath).isNotEmpty();
+    assertThat(cfCliPath).isEqualTo(PATH_TO_CLI6);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetAvailableCfCli7PathOnDelegateWhenCli6OnlyInstalled() {
+    cli6OnlyInstalledOnDelegateByPkgManager();
+
+    Optional<String> availableCfCliPathOnDelegate =
+        cfCliDelegateResolver.getAvailableCfCliPathOnDelegate(CfCliVersion.V7);
+
+    String cfCliPath = availableCfCliPathOnDelegate.orElse(null);
+    assertThat(cfCliPath).isNull();
   }
 
   // CF version 6

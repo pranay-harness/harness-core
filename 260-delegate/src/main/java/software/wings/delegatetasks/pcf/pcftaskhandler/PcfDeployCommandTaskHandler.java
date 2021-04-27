@@ -99,6 +99,9 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
               .spaceName(pcfCommandDeployRequest.getSpace())
               .timeOutIntervalInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin())
               .useCFCLI(pcfCommandDeployRequest.isUseCfCLI())
+              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(
+                  pcfCommandDeployRequest.isUseCfCLI(), pcfCommandDeployRequest.getCfCliVersion()))
+              .cfCliVersion(pcfCommandDeployRequest.getCfCliVersion())
               .limitPcfThreads(pcfCommandDeployRequest.isLimitPcfThreads())
               .ignorePcfConnectionContextCache(pcfCommandDeployRequest.isIgnorePcfConnectionContextCache())
               .build();

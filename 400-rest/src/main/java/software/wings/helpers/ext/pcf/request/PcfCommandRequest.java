@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.pcf.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.pcf.model.CfCliVersion.V6;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -11,7 +10,6 @@ import io.harness.pcf.model.CfCliVersion;
 import software.wings.beans.PcfConfig;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -35,7 +33,7 @@ public class PcfCommandRequest {
   private boolean useAppAutoscalar;
   private boolean limitPcfThreads;
   private boolean ignorePcfConnectionContextCache;
-  @Builder.Default private CfCliVersion cfCliVersion = V6;
+  private CfCliVersion cfCliVersion;
 
   public enum PcfCommandType {
     SETUP,

@@ -9,7 +9,6 @@ import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.beans.PcfConfig;
 
-import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,7 +27,7 @@ public class PcfInstanceSyncRequest extends PcfCommandRequest {
       boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, false, false, limitPcfThreads,
-        ignorePcfConnectionContextCache, Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6));
+        ignorePcfConnectionContextCache, cfCliVersion);
     this.pcfApplicationName = pcfApplicationName;
   }
 }

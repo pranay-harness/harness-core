@@ -14,6 +14,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
@@ -107,6 +108,7 @@ public class Service
   private boolean isK8sV2;
   private boolean isPcfV2;
   private HelmVersion helmVersion;
+  private CfCliVersion cfCliVersion;
   @FdIndex private String accountId;
   @FdIndex private List<String> artifactStreamIds;
   @Transient private List<ArtifactStreamBinding> artifactStreamBindings;
@@ -125,7 +127,7 @@ public class Service
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
       List<String> artifactStreamIds, boolean sample, boolean isPcfV2, HelmVersion helmVersion,
-      String deploymentTypeTemplateId, String customDeploymentName) {
+      CfCliVersion cfCliVersion, String deploymentTypeTemplateId, String customDeploymentName) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -149,6 +151,7 @@ public class Service
     this.artifactStreamIds = artifactStreamIds;
     this.sample = sample;
     this.helmVersion = helmVersion;
+    this.cfCliVersion = cfCliVersion;
     this.deploymentTypeTemplateId = deploymentTypeTemplateId;
     this.customDeploymentName = customDeploymentName;
   }
@@ -168,6 +171,7 @@ public class Service
         .isK8sV2(isK8sV2)
         .isPcfV2(isPcfV2)
         .helmVersion(helmVersion)
+        .cfCliVersion(cfCliVersion)
         .deploymentTypeTemplateId(deploymentTypeTemplateId)
         .customDeploymentName(customDeploymentName)
         .build();
@@ -198,6 +202,7 @@ public class Service
     private String configMapYaml;
     private String applicationStack;
     private String helmVersion;
+    private String cfCliVersion;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     /*
@@ -209,7 +214,7 @@ public class Service
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String artifactType, String deploymentType,
         String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables, String helmVersion,
-        String deploymentTypeTemplateUri, String deploymentTypeTemplateVersion) {
+        String cfCliVersion, String deploymentTypeTemplateUri, String deploymentTypeTemplateVersion) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
@@ -218,6 +223,7 @@ public class Service
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
       this.helmVersion = helmVersion;
+      this.cfCliVersion = cfCliVersion;
       this.deploymentTypeTemplateUri = deploymentTypeTemplateUri;
       this.deploymentTypeTemplateVersion = deploymentTypeTemplateVersion;
     }

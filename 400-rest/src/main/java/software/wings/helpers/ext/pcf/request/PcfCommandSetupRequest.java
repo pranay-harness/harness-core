@@ -14,7 +14,6 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -61,7 +60,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
-        limitPcfThreads, ignorePcfConnectionContextCache, Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6));
+        limitPcfThreads, ignorePcfConnectionContextCache, cfCliVersion);
     this.releaseNamePrefix = releaseNamePrefix;
     this.manifestYaml = manifestYaml;
     this.artifactFiles = artifactFiles;

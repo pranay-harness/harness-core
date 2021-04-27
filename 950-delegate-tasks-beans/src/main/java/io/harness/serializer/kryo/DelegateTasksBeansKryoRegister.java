@@ -711,6 +711,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(TerraformTaskNGParameters.class, 543283);
     kryo.register(TFTaskType.class, 543284);
     kryo.register(TerraformTaskNGResponse.class, 543285);
-    kryo.register(PcfInstallationCapability.class, 543286);
+
+    kryo.register(PcfInstallationCapability.class, 543299);
   }
 }

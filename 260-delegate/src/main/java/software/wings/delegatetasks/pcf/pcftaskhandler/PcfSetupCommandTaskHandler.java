@@ -104,6 +104,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .endpointUrl(pcfConfig.getEndpointUrl())
               .timeOutIntervalInMins(pcfCommandSetupRequest.getTimeoutIntervalInMin())
               .useCFCLI(pcfCommandSetupRequest.isUseCfCLI())
+              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(
+                  pcfCommandRequest.isUseCfCLI(), pcfCommandRequest.getCfCliVersion()))
+              .cfCliVersion(pcfCommandRequest.getCfCliVersion())
               .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .limitPcfThreads(pcfCommandSetupRequest.isLimitPcfThreads())
               .ignorePcfConnectionContextCache(pcfCommandSetupRequest.isIgnorePcfConnectionContextCache())

@@ -109,6 +109,8 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
               .endpointUrl(pcfConfig.getEndpointUrl())
               .timeOutIntervalInMins(pluginCommandRequest.getTimeoutIntervalInMin())
               .limitPcfThreads(pluginCommandRequest.isLimitPcfThreads())
+              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(true, pcfCommandRequest.getCfCliVersion()))
+              .cfCliVersion(pcfCommandRequest.getCfCliVersion())
               .ignorePcfConnectionContextCache(pluginCommandRequest.isIgnorePcfConnectionContextCache())
               .build();
 

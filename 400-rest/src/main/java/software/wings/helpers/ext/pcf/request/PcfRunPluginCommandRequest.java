@@ -25,7 +25,6 @@ import software.wings.beans.PcfConfig;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -41,7 +40,7 @@ public class PcfRunPluginCommandRequest
   private List<FileData> fileDataList;
   private List<EncryptedDataDetail> encryptedDataDetails;
   private String repoRoot;
-  @Builder.Default private CfCliVersion cfCliVersion = V6;
+  private CfCliVersion cfCliVersion;
 
   @Builder
   public PcfRunPluginCommandRequest(String accountId, String appId, String commandName, String activityId,
@@ -52,13 +51,13 @@ public class PcfRunPluginCommandRequest
       boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
-        limitPcfThreads, ignorePcfConnectionContextCache, Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6));
+        limitPcfThreads, ignorePcfConnectionContextCache, cfCliVersion);
     this.renderedScriptString = renderedScriptString;
     this.filePathsInScript = filePathsInScript;
     this.fileDataList = fileDataList;
     this.encryptedDataDetails = encryptedDataDetails;
     this.repoRoot = repoRoot;
-    this.cfCliVersion = Optional.ofNullable(cfCliVersion).orElse(CfCliVersion.V6);
+    this.cfCliVersion = cfCliVersion;
   }
 
   @Override
