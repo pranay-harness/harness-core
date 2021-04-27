@@ -296,10 +296,15 @@ func TestFindFilesInCommit(t *testing.T) {
 
 func TestBatchFindFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		content, _ := ioutil.ReadFile("testdata/FileFindSource.json")
-		fmt.Fprint(w, string(content))
+		if r.URL.Path == "/repos/tphoney/scm-test/contents/README.md" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			content, _ := ioutil.ReadFile("testdata/FileFindSource.json")
+			fmt.Fprint(w, string(content))
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(404)
+		}
 	}))
 	defer ts.Close()
 
@@ -321,12 +326,31 @@ func TestBatchFindFile(t *testing.T) {
 		},
 	}
 
+	in2 := &pb.GetFileRequest{
+		Slug: "tphoney/scm-test",
+		Path: "NOTHING",
+		Type: &pb.GetFileRequest_Branch{
+			Branch: "main",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
 	in := &pb.GetBatchFileRequest{
-		FindRequest: []*pb.GetFileRequest{in1},
+		FindRequest: []*pb.GetFileRequest{in1, in2},
 	}
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	got, err := BatchFindFile(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
 	assert.Contains(t, got.FileContents[0].Content, "test repo for source control operations")
+	assert.Equal(t, "", got.FileContents[1].Content, "missing file has no content")
 }
