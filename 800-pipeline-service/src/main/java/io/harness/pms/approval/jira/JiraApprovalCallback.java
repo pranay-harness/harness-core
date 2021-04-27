@@ -66,6 +66,13 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
     Ambiance ambiance = instance.getAmbiance();
     NGLogCallback logCallback = new NGLogCallback(logStreamingStepClientFactory, ambiance, null, false);
 
+    if (instance.hasExpired()) {
+      log.info("Approval instance has expired");
+      logCallback.saveExecutionLog(LogHelper.color("Approval step timed out before completion", LogColor.Red),
+          LogLevel.INFO, CommandExecutionStatus.FAILURE);
+      approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.EXPIRED);
+    }
+
     JiraTaskNGResponse jiraTaskNGResponse;
     try {
       ResponseData responseData = response.values().iterator().next();
@@ -79,7 +86,7 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
         log.info("Invalid issue key");
         logCallback.saveExecutionLog(
             LogHelper.color("Invalid issue key", LogColor.Red), LogLevel.INFO, CommandExecutionStatus.FAILURE);
-        approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.REJECTED);
+        approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.FAILED);
         return;
       }
 

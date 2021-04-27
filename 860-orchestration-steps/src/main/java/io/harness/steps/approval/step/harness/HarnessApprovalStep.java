@@ -8,7 +8,6 @@ import io.harness.plancreator.steps.common.rollback.AsyncExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -16,7 +15,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.ApprovalInstanceService;
-import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
 import io.harness.tasks.ResponseData;
 
@@ -51,7 +49,7 @@ public class HarnessApprovalStep extends AsyncExecutableWithRollback {
     HarnessApprovalInstance instance =
         (HarnessApprovalInstance) approvalInstanceService.get(responseData.getApprovalInstanceId());
     return StepResponse.builder()
-        .status(instance.getStatus() == ApprovalStatus.APPROVED ? Status.SUCCEEDED : Status.FAILED)
+        .status(instance.getStatus().toFinalExecutionStatus())
         .stepOutcome(
             StepResponse.StepOutcome.builder().name("output").outcome(instance.toHarnessApprovalOutcome()).build())
         .build();
