@@ -122,7 +122,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
       log.info("[Migration] - {} : Rolling back {} version from {} to {}", serviceName,
           migrationDetail.getMigrationTypeName(), currentVersion, maxVersion);
       Update update =
-          new Update().setOnInsert(NGSchemaKeys.migrationDetails + migrationDetail.getMigrationTypeName(), maxVersion);
+          new Update().set(NGSchemaKeys.migrationDetails + "." + migrationDetail.getMigrationTypeName(), maxVersion);
       mongoTemplate.updateFirst(new Query(), update, collectionName);
     } else {
       log.info("[Migration] - {} : NGSchema {} is up to date", serviceName, migrationDetail.getMigrationTypeName());
@@ -179,7 +179,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
         }
       }
 
-      Update update = new Update().set(NGSchemaKeys.migrationDetails + ".MongoMigration", i);
+      Update update = new Update().set(NGSchemaKeys.migrationDetails + "." + migrationTypeName, i);
       mongoTemplate.updateFirst(new Query(), update, collectionName);
     }
 

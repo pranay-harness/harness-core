@@ -2,6 +2,7 @@ package io.harness.migration.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -16,7 +17,6 @@ import io.harness.migration.NGMigrationTestBase;
 import io.harness.migration.beans.MigrationType;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.migration.entities.NGSchema;
-import io.harness.migration.entities.NGSchema.NGSchemaKeys;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +36,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(DX)
 public class NGMigrationServiceImplTest extends NGMigrationTestBase {
@@ -73,9 +71,6 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
   public void testDoMigration() throws Exception {
     when(injector.getInstance(TestNGMigrationClass.class)).thenReturn(new TestNGMigrationClass());
     NGSchema ngSchema = NGSchema.builder()
-                            .id("dhgjhd")
-                            .createdAt(Long.valueOf(0))
-                            .lastUpdatedAt(Long.valueOf(0))
                             .name("ngschema")
                             .migrationDetails(new HashMap<MigrationType, Integer>() {
                               { put(MigrationType.MongoMigration, 1); }
@@ -87,10 +82,31 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
       { put(2, TestNGMigrationClass.class); };
     };
     ngMigrationService.doMigration(false, 1, 2, migrations, MigrationType.MongoMigration, "ngschema", "ngschema");
-    UpdateResult updateResult =
-        mongoTemplate.updateFirst(new Query(), new Update().set(NGSchemaKeys.name, "hello"), "ngschema");
-    mongoTemplate.save(updateResult);
-    mongoTemplate.findOne(new Query(), NGSchema.class, "ngchema");
+    NGSchema ngchema2 = mongoTemplate.findOne(new Query(), NGSchema.class, "ngschema");
+
+    assertThat(ngchema2.getMigrationDetails().get(MigrationType.MongoMigration)).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.MEENAKSHI)
+  @Category(UnitTests.class)
+  public void testDoMigrationWhenFieldIsNotPresent() throws Exception {
+    when(injector.getInstance(TestNGMigrationClass.class)).thenReturn(new TestNGMigrationClass());
+    NGSchema ngSchema = NGSchema.builder()
+                            .name("ngschema")
+                            .migrationDetails(new HashMap<MigrationType, Integer>() {
+                              { put(MigrationType.MongoMigration, 1); }
+                            })
+                            .build();
+
+    mongoTemplate.save(ngSchema, "ngschema");
+    Map<Integer, Class<? extends NGMigration>> migrations = new HashMap<Integer, Class<? extends NGMigration>>() {
+      { put(1, TestNGMigrationClass.class); };
+    };
+    ngMigrationService.doMigration(false, 0, 1, migrations, MigrationType.TimeScaleMigration, "ngschema", "ngschema");
+    NGSchema ngchema2 = mongoTemplate.findOne(new Query(), NGSchema.class, "ngschema");
+
+    assertThat(ngchema2.getMigrationDetails().get(MigrationType.TimeScaleMigration)).isEqualTo(1);
   }
 
   public static class TestMigrationProviderClass implements MigrationProvider {
