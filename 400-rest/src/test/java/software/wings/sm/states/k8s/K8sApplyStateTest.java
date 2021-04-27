@@ -55,6 +55,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.utils.ApplicationManifestUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,10 +101,12 @@ public class K8sApplyStateTest extends WingsBaseTest {
   public void testExecute() {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-
+    k8sApplyState.setDelegateSelectors(Collections.singletonList("${workflow.variables.abc}"));
+    final String runTimeValueAbc = "runTimeValueAbc";
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
     when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
+    when(context.renderExpression(anyString())).thenReturn(runTimeValueAbc);
     doReturn(RELEASE_NAME).when(k8sApplyState).fetchReleaseName(any(), any());
     doReturn(K8sDelegateManifestConfig.builder().build())
         .when(k8sApplyState)
@@ -126,6 +129,7 @@ public class K8sApplyStateTest extends WingsBaseTest {
     assertThat(taskParams.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(taskParams.isSkipDryRun()).isTrue();
     assertThat(taskParams.getFilePaths()).isEqualTo(FILE_PATHS);
+    assertThat(taskParams.getDelegateSelectors()).isEqualTo(runTimeValueAbc);
   }
 
   @Test

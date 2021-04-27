@@ -62,6 +62,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,12 +202,15 @@ public class K8sDeleteTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecute() {
     k8sDelete.setFilePaths(FILE_PATHS);
+    k8sDelete.setDelegateSelectors(Collections.singletonList("${workflow.variables.abc}"));
+    final String runTimeValueAbc = "runTimeValueAbc";
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
 
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
     when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
+    when(context.renderExpression(anyString())).thenReturn(runTimeValueAbc);
 
     doReturn(RELEASE_NAME).when(k8sDelete).fetchReleaseName(any(), any());
     doReturn(K8sDelegateManifestConfig.builder().build()).when(k8sDelete).createDelegateManifestConfig(any(), any());
@@ -234,6 +238,7 @@ public class K8sDeleteTest extends WingsBaseTest {
     assertThat(taskParams.getFilePaths()).isEqualTo(FILE_PATHS);
     assertThat(taskParams.isDeleteNamespacesForRelease()).isEqualTo(true);
     assertThat(taskParams.getResources()).isEqualTo(RESOURCES);
+    assertThat(taskParams.getDelegateSelectors()).isEqualTo(runTimeValueAbc);
   }
 
   @Test

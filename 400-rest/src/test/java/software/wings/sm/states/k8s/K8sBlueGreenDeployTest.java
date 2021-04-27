@@ -23,6 +23,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -59,6 +60,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.utils.ApplicationManifestUtils;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,10 +99,12 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
   public void testExecute() {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-
+    k8sBlueGreenDeploy.setDelegateSelectors(Collections.singletonList("${workflow.variables.abc}"));
+    final String runTimeValueAbc = "runTimeValueAbc";
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
     when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
+    when(context.renderExpression(anyString())).thenReturn(runTimeValueAbc);
     doReturn(RELEASE_NAME).when(k8sBlueGreenDeploy).fetchReleaseName(any(), any());
     doReturn(K8sDelegateManifestConfig.builder().build())
         .when(k8sBlueGreenDeploy)
@@ -127,6 +131,7 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
     assertThat(taskParams.getCommandName()).isEqualTo(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME);
     assertThat(taskParams.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(taskParams.isSkipDryRun()).isTrue();
+    assertThat(taskParams.getDelegateSelectors()).isEqualTo(runTimeValueAbc);
   }
 
   @Test

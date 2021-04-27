@@ -68,6 +68,7 @@ import software.wings.utils.ApplicationManifestUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,9 +113,12 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() {
+    k8sCanaryDeploy.setDelegateSelectors(Collections.singletonList("${workflow.variables.abc}"));
+    final String runTimeValueAbc = "runTimeValueAbc";
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
     when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
+    when(context.renderExpression(anyString())).thenReturn(runTimeValueAbc);
     doReturn(RELEASE_NAME).when(k8sCanaryDeploy).fetchReleaseName(any(), any());
     doReturn(K8sDelegateManifestConfig.builder().build())
         .when(k8sCanaryDeploy)
@@ -141,6 +145,7 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
     assertThat(taskParams.getInstanceUnitType()).isEqualTo(InstanceUnitType.COUNT);
     assertThat(taskParams.getInstances()).isEqualTo(5);
     assertThat(taskParams.isSkipDryRun()).isTrue();
+    assertThat(taskParams.getDelegateSelectors()).isEqualTo(runTimeValueAbc);
   }
 
   @Test
