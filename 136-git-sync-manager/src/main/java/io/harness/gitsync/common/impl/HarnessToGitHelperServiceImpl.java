@@ -118,7 +118,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
           ()
               -> processFilesInBranch(entityRef.getAccountIdentifier(), yamlGitConfigDTO.getIdentifier(),
                   yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
-                  pushInfo.getBranchName(), pushInfo.getFilePath()));
+                  pushInfo.getBranchName(), pushInfo.getFilePath(), yamlGitConfigDTO.getRepo()));
     }
     // todo(abhinav): record git commit and git file activity.
   }
@@ -131,14 +131,12 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
 
   @Override
   public void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
-      String orgIdentifier, String branch, String filePathToBeExcluded) {
-    gitBranchService.updateBranchSyncStatus(
-        accountId, orgIdentifier, projectIdentifier, gitSyncConfigId, branch, SYNCING);
+      String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
+    gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCING);
     final YamlGitConfigDTO yamlGitConfigDTO =
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
     gitToHarnessProcessorService.readFilesFromBranchAndProcess(
         yamlGitConfigDTO, branch, accountId, yamlGitConfigDTO.getBranch(), filePathToBeExcluded);
-    gitBranchService.updateBranchSyncStatus(
-        accountId, orgIdentifier, projectIdentifier, gitSyncConfigId, branch, SYNCED);
+    gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
   }
 }

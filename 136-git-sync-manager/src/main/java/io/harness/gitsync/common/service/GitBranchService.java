@@ -25,8 +25,8 @@ public interface GitBranchService {
   Boolean syncNewBranch(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, String branchName);
 
-  void updateBranchSyncStatus(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String identifier, String branchName, BranchSyncStatus branchSyncStatus);
+  void updateBranchSyncStatus(
+      String accountIdentifier, String repoURL, String branchName, BranchSyncStatus branchSyncStatus);
 
   void createBranches(String accountId, String organizationIdentifier, String projectIdentifier, String gitConnectorRef,
       String repoUrl, String yamlGitConfigIdentifier);
