@@ -17,7 +17,7 @@ var (
 // delegate agent service after execution of step finishes.
 func ExecuteStepInAsync(ctx context.Context, in *pb.ExecuteStepRequest,
 	log *zap.SugaredLogger) {
-
+	log.Infow("Received step for execution", "in", in)
 	go func() {
 		s := state.ExecutionState()
 		executionID := in.GetExecutionId()
@@ -33,7 +33,7 @@ func ExecuteStepInAsync(ctx context.Context, in *pb.ExecuteStepRequest,
 // Execute a step
 func executeStep(in *pb.ExecuteStepRequest, log *zap.SugaredLogger) {
 	ctx := context.Background()
-	e := newStepExecutor(in.GetTmpFilePath(), log)
+	e := newStepExecutor(in.GetTmpFilePath(), in.GetDelegateSvcEndpoint(), log)
 	err := e.Run(ctx, in.GetStep())
 	if err != nil {
 		log.Errorw("Job failed with execution ID",

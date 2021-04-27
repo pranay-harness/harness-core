@@ -30,7 +30,12 @@ import com.google.inject.Inject;
 
 @OwnedBy(PL)
 public class AuditClientServiceImpl implements AuditClientService {
-  @Inject private AuditClient auditClient;
+  private final AuditClient auditClient;
+
+  @Inject
+  public AuditClientServiceImpl(AuditClient auditClient) {
+    this.auditClient = auditClient;
+  }
 
   public boolean publishAudit(AuditEntry auditEntry, GlobalContext globalContext) {
     AuditEventDTO auditEventDTO = getAuditEventDTO(auditEntry, globalContext);

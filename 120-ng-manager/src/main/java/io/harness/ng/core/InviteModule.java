@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.NextGenConfiguration;
 import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.api.impl.InviteServiceImpl;
-import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.persistence.HPersistence;
 
@@ -29,7 +28,7 @@ public class InviteModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(InviteService.class).to(InviteServiceImpl.class);
-    bind(NgUserService.class).to(NgUserServiceImpl.class);
+    bind(io.harness.ng.core.user.service.NgUserService.class).to(NgUserServiceImpl.class);
     registerRequiredBindings();
   }
 

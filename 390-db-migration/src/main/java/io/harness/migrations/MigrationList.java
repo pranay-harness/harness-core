@@ -1,7 +1,9 @@
 
 package io.harness.migrations;
 
-import io.harness.annotations.dev.HarnessModule;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.accountpermission.AddManageTagsPermission;
 import io.harness.migrations.accountpermission.AlertNotificationAccountPermissionMigration;
 import io.harness.migrations.accountpermission.CreateCustomDashboardPermissionMigration;
@@ -151,6 +153,7 @@ import io.harness.migrations.all.SetNamespaceInContainerInstanceInfo;
 import io.harness.migrations.all.SetNamespaceToKubernetesInstanceInfo;
 import io.harness.migrations.all.SetRollbackFlagToWorkflows;
 import io.harness.migrations.all.SettingAttributesCategoryMigration;
+import io.harness.migrations.all.SshAndWinRmAccountPermissionMigration;
 import io.harness.migrations.all.StackdriverMetricServiceGuardJsonMigration;
 import io.harness.migrations.all.StackdriverServiceGuardMetricsGroupingMigration;
 import io.harness.migrations.all.SweepingPhaseMigration;
@@ -180,6 +183,7 @@ import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(PL)
 @UtilityClass
 public class MigrationList {
   /**
@@ -416,6 +420,7 @@ public class MigrationList {
         .add(Pair.of(354, BaseMigration.class))
         .add(Pair.of(355, BaseMigration.class))
         .add(Pair.of(356, CECloudAccountMigration.class))
+        .add(Pair.of(357, SshAndWinRmAccountPermissionMigration.class))
         .build();
   }
 }

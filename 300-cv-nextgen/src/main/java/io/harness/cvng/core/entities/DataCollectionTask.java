@@ -9,6 +9,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -50,6 +51,12 @@ public abstract class DataCollectionTask
                  .field(DataCollectionTaskKeys.accountId)
                  .field(DataCollectionTaskKeys.verificationTaskId)
                  .field(DataCollectionTaskKeys.startTime)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("verificationTaskIdQueryIdx")
+                 .unique(false)
+                 .field(DataCollectionTaskKeys.verificationTaskId)
+                 .descSortField(DataCollectionTaskKeys.startTime)
                  .build())
         .build();
   }

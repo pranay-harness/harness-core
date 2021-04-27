@@ -18,6 +18,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.UserGroupDTO;
@@ -29,6 +30,9 @@ import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.service.NgUserService;
+import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.notification.NotificationChannelType;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.NGObjectMapperHelper;
@@ -36,7 +40,9 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.ng.core.spring.UserGroupRepository;
 import io.harness.user.remote.UserClient;
-import io.harness.user.remote.UserSearchFilter;
+import io.harness.user.remote.UserFilterNG;
+import io.harness.utils.PageUtils;
+import io.harness.utils.PaginationUtils;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -72,6 +78,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   private final OutboxService outboxService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final TransactionTemplate transactionTemplate;
+  private final NgUserService ngUserService;
 
   private static final RetryPolicy<Object> retryPolicy =
       RetryUtils.getRetryPolicy("Could not find the user with the given identifier on attempt %s",
@@ -84,12 +91,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject
   public UserGroupServiceImpl(UserGroupRepository userGroupRepository, UserClient userClient,
       OutboxService outboxService, AccessControlAdminClient accessControlAdminClient,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, UserInfoService userInfoService,
+      NgUserService ngUserService) {
     this.userGroupRepository = userGroupRepository;
     this.userClient = userClient;
     this.outboxService = outboxService;
     this.accessControlAdminClient = accessControlAdminClient;
     this.transactionTemplate = transactionTemplate;
+    this.ngUserService = ngUserService;
   }
 
   @Override
@@ -147,6 +156,24 @@ public class UserGroupServiceImpl implements UserGroupService {
       criteria.and(UserGroupKeys.users).in(userGroupFilterDTO.getUserIdentifierFilter());
     }
     return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
+  }
+
+  public PageResponse<UserInfo> listUsersInUserGroup(
+      UserMembership.Scope scope, String userGroupIdentifier, PageRequest pageRequest) {
+    Optional<UserGroup> userGroupOptional =
+        get(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroupIdentifier);
+    if (!userGroupOptional.isPresent()) {
+      return PageResponse.getEmptyPageResponse(pageRequest);
+    }
+    List<String> userIds = new ArrayList<>(userGroupOptional.get().getUsers());
+    Collections.sort(userIds);
+    PageResponse<String> userIdsPage = PaginationUtils.getPage(userIds, pageRequest);
+    if (userIdsPage.isEmpty()) {
+      return PageResponse.getEmptyPageResponse(pageRequest);
+    }
+    List<UserInfo> userInfos = RestClientUtils.getResponse(userClient.listUsers(
+        UserFilterNG.builder().userIds(userIdsPage.getContent()).build(), scope.getAccountIdentifier()));
+    return PageUtils.getNGPageResponse(userIdsPage, userInfos);
   }
 
   @Override
@@ -228,6 +255,16 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
     if (userGroup.getUsers() != null) {
       validateUsers(userGroup.getUsers(), userGroup.getAccountIdentifier());
+      validateScopeMembership(userGroup);
+    }
+  }
+
+  private void validateScopeMembership(UserGroup userGroup) {
+    Set<String> filteredUserIds = ngUserService.filterUsersWithScopeMembership(userGroup.getUsers(),
+        userGroup.getAccountIdentifier(), userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier());
+    Sets.SetView<String> invalidUserIds = Sets.difference(new HashSet<>(userGroup.getUsers()), filteredUserIds);
+    if (isNotEmpty(invalidUserIds)) {
+      throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
     }
   }
 
@@ -237,21 +274,23 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  private void validateUsers(Set<String> usersIds, String accountId) {
+  private void validateUsers(List<String> usersIds, String accountId) {
     Failsafe.with(retryPolicy).run(() -> {
       Set<String> returnedUsersIds =
-          RestClientUtils
-              .getResponse(userClient.listUsers(
-                  UserSearchFilter.builder().userIds(new ArrayList<>(usersIds)).build(), accountId))
+          RestClientUtils.getResponse(userClient.listUsers(UserFilterNG.builder().userIds(usersIds).build(), accountId))
               .stream()
               .map(UserInfo::getUuid)
               .collect(Collectors.toSet());
-      Set<String> invalidUserIds = Sets.difference(usersIds, returnedUsersIds);
+      Set<String> invalidUserIds = Sets.difference(new HashSet<>(usersIds), returnedUsersIds);
       if (!invalidUserIds.isEmpty()) {
-        throw new InvalidArgumentsException(
-            String.format("The following users are not valid %s", String.join(",", invalidUserIds)));
+        throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
       }
     });
+  }
+
+  private String getInvalidUserMessage(Set<String> invalidUserIds) {
+    return String.format("The following user%s not valid: [%s]", invalidUserIds.size() > 1 ? "s are" : " is",
+        String.join(", ", invalidUserIds));
   }
 
   private void validateNotificationSettings(List<NotificationSettingConfig> notificationSettingConfigs) {

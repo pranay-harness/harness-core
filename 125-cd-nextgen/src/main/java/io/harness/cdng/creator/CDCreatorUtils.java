@@ -12,6 +12,7 @@ import lombok.experimental.UtilityClass;
 public class CDCreatorUtils {
   public Set<String> getSupportedSteps() {
     return Sets.newHashSet("K8sRollingDeploy", "K8sRollingRollback", "ShellScript", "K8sScale", "K8sCanaryDeploy",
-        "K8sBlueGreenDeploy", "K8sBGSwapServices", "K8sDelete", "K8sCanaryDelete", "K8sApply", "TerraformApply");
+        "K8sBlueGreenDeploy", "K8sBGSwapServices", "K8sDelete", "K8sCanaryDelete", "K8sApply", "TerraformApply",
+        "TerraformPlan");
   }
 }

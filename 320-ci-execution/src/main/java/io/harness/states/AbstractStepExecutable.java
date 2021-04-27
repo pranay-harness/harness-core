@@ -217,18 +217,21 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<StepElem
 
     ExecuteStepRequest executeStepRequest =
         ExecuteStepRequest.newBuilder().setExecutionId(executionId).setStep(unitStep).setTmpFilePath(TMP_PATH).build();
-    final TaskData taskData = TaskData.builder()
-                                  .async(true)
-                                  .parked(false)
-                                  .taskType(CI_EXECUTE_STEP)
-                                  .parameters(new Object[] {CIK8ExecuteStepTaskParams.builder()
-                                                                .ip(ip)
-                                                                .port(LITE_ENGINE_PORT)
-                                                                .serializedStep(executeStepRequest.toByteArray())
-                                                                .isLocal(ciExecutionServiceConfig.isLocal())
-                                                                .build()})
-                                  .timeout(timeout)
-                                  .build();
+    final TaskData taskData =
+        TaskData.builder()
+            .async(true)
+            .parked(false)
+            .taskType(CI_EXECUTE_STEP)
+            .parameters(new Object[] {
+                CIK8ExecuteStepTaskParams.builder()
+                    .ip(ip)
+                    .port(LITE_ENGINE_PORT)
+                    .serializedStep(executeStepRequest.toByteArray())
+                    .isLocal(ciExecutionServiceConfig.isLocal())
+                    .delegateSvcEndpoint(ciExecutionServiceConfig.getDelegateServiceEndpointVariableValue())
+                    .build()})
+            .timeout(timeout)
+            .build();
 
     HDelegateTask task =
         (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap());

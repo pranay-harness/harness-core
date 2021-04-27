@@ -1,11 +1,9 @@
 package io.harness.serializer.morphia;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
@@ -25,7 +23,7 @@ import io.harness.steps.section.chain.SectionChainStepParameters;
 
 import java.util.Set;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -48,7 +46,6 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
     h.put("steps.section.chain.SectionStepParameters", SectionChainStepParameters.class);
     h.put("steps.section.SectionStepParameters", SectionStepParameters.class);
-    h.put("steps.approval.ApprovalStageStepParameters", ApprovalStageStepParameters.class);
 
     // Feature Flag
     h.put("steps.cf.FeatureUpdateStepParameters", FeatureUpdateStepParameters.class);

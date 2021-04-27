@@ -9,7 +9,6 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.ng.core.notification.NotificationSettingConfigDTO;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
@@ -38,6 +37,4 @@ public class UserGroupDTO {
 
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
-  long lastModifiedAt;
-  @JsonIgnore long version;
 }

@@ -21,7 +21,6 @@ import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
-import io.harness.gitsync.persistance.GitSyncableEntity.GitSyncableEntityKeys;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.gitsync.scm.SCMGitSyncHelper;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
@@ -98,7 +97,7 @@ public class GitAwarePersistenceImplTest extends GitSdkTestBase {
   }
 
   private void assertFindReturnsObject(SampleBean sampleBean_saved) {
-    final Criteria criteria = Criteria.where(GitSyncableEntityKeys.id).is(sampleBean_saved.getId());
+    final Criteria criteria = Criteria.where("uuid").is(sampleBean_saved.getUuid());
     final Optional<SampleBean> retObject =
         gitAwarePersistence.findOne(criteria, projectIdentifier, orgIdentifier, accountIdentifier, SampleBean.class);
     assertThat(retObject.isPresent()).isTrue();

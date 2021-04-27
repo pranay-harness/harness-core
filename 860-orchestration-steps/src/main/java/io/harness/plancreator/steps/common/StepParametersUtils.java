@@ -50,6 +50,7 @@ public class StepParametersUtils {
     stageBuilder.type(stageElementConfig.getType());
     stageBuilder.uuid(stageElementConfig.getUuid());
     stageBuilder.originalVariables(stageElementConfig.getVariables());
+    stageBuilder.tags(stageElementConfig.getTags());
 
     return stageBuilder;
   }

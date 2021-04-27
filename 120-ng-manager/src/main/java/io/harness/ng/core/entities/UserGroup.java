@@ -15,7 +15,6 @@ import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -59,7 +58,7 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @EntityIdentifier String identifier;
 
   @NGEntityName String name;
-  @NotNull @Singular Set<String> users;
+  @NotNull @Singular List<String> users;
   @NotNull List<NotificationSettingConfig> notificationConfigs;
   boolean harnessManaged;
 

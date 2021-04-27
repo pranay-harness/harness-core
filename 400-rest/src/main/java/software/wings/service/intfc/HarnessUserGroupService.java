@@ -1,10 +1,16 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
 import software.wings.beans.Account;
 import software.wings.beans.security.HarnessUserGroup;
+import software.wings.beans.security.HarnessUserGroupDTO;
 
 import java.util.List;
 import java.util.Set;
@@ -13,6 +19,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * @author rktummala on 05/06/18
  */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(_970_RBAC_CORE)
 public interface HarnessUserGroupService {
   /**
    * Save.
@@ -47,8 +55,9 @@ public interface HarnessUserGroupService {
    * @param memberIds the memberIds
    * @return the userGroup
    */
-  HarnessUserGroup updateMembers(@NotEmpty String uuid, Set<String> memberIds);
+  HarnessUserGroup updateMembers(@NotEmpty String uuid, String accountId, Set<String> memberIds);
 
+  HarnessUserGroup updateMembers(@NotEmpty String uuid, String accountId, HarnessUserGroupDTO harnessUserGroupDTO);
   /**
    * Check if user is part of harness support.
    * @param userId
@@ -56,7 +65,18 @@ public interface HarnessUserGroupService {
    */
   boolean isHarnessSupportUser(String userId);
 
-  boolean delete(@NotEmpty String uuid);
+  boolean delete(String accountId, @NotEmpty String uuid);
 
   boolean isHarnessSupportEnabledForAccount(String accountId);
+
+  boolean isHarnessSupportEnabled(String accountId, String userId);
+
+  HarnessUserGroup createHarnessUserGroup(String accountId, HarnessUserGroupDTO harnessUserGroupDTO);
+
+  HarnessUserGroup createHarnessUserGroup(String name, String description, Set<String> memberIds,
+      Set<String> accountIds, HarnessUserGroup.GroupType groupType);
+
+  List<HarnessUserGroup> listHarnessUserGroupForAccount(String accountId);
+
+  List<HarnessUserGroup> listHarnessUserGroup(String accountId, String memberId, HarnessUserGroup.GroupType groupType);
 }

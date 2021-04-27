@@ -59,9 +59,10 @@ public class CDNGPipelineConfigurationResource {
       nickname = "getExecutionStrategyYaml")
   public ResponseDTO<String>
   getExecutionStrategyYaml(@NotNull @QueryParam("serviceDefinitionType") ServiceDefinitionType serviceDefinitionType,
-      @NotNull @QueryParam("strategyType") ExecutionStrategyType executionStrategyType) throws IOException {
-    return ResponseDTO.newResponse(
-        cdngPipelineConfigurationHelper.getExecutionStrategyYaml(serviceDefinitionType, executionStrategyType));
+      @NotNull @QueryParam("strategyType") ExecutionStrategyType executionStrategyType,
+      @QueryParam("includeVerify") boolean includeVerify) throws IOException {
+    return ResponseDTO.newResponse(cdngPipelineConfigurationHelper.getExecutionStrategyYaml(
+        serviceDefinitionType, executionStrategyType, includeVerify));
   }
 
   @GET

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.http.HttpStepInfo;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
 import io.harness.steps.approval.step.harness.HarnessApprovalResponseData;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
@@ -58,7 +57,6 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(SectionChainPassThroughData.class, 3217);
 
-    kryo.register(ApprovalStageStepParameters.class, 3218);
     kryo.register(HarnessApprovalResponseData.class, 3220);
     kryo.register(HarnessApprovalOutcome.class, 3221);
     kryo.register(JiraApprovalResponseData.class, 3223);

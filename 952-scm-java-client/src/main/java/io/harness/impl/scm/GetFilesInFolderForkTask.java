@@ -1,13 +1,16 @@
 package io.harness.impl.scm;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.product.ci.scm.proto.ContentType;
 import io.harness.product.ci.scm.proto.FileChange;
 import io.harness.product.ci.scm.proto.FindFilesInBranchRequest;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
+import io.harness.product.ci.scm.proto.PageRequest;
 import io.harness.product.ci.scm.proto.Provider;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 
@@ -21,6 +24,7 @@ import lombok.Builder;
  * This is a fork and join task which we are using to get all files belonging in
  * the folders.
  */
+@OwnedBy(DX)
 public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
   SCMGrpc.SCMBlockingStub scmBlockingStub;
   private String folderPath;
@@ -48,12 +52,13 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
   @Override
   protected List<FileChange> compute() {
     List<FileChange> filesList = new ArrayList<>();
-    FindFilesInBranchRequest findFilesInBranchRequest = FindFilesInBranchRequest.newBuilder()
-                                                            .setBranch(branch)
-                                                            .setSlug(slug)
-                                                            .setProvider(provider)
-                                                            .setPath(folderPath)
-                                                            .build();
+    FindFilesInBranchRequest.Builder findFilesInBranchRequest =
+        FindFilesInBranchRequest.newBuilder()
+            .setBranch(branch)
+            .setSlug(slug)
+            .setProvider(provider)
+            .setPath(folderPath)
+            .setPagination(PageRequest.newBuilder().setPage(1).build());
     List<FileChange> filesInBranch = getAllFilesPresentInFolder(findFilesInBranchRequest);
     List<String> newFoldersToBeProcessed = getListOfNewFoldersToBeProcessed(filesInBranch);
     List<GetFilesInFolderForkTask> tasksForSubFolders = createTasksForSubFolders(newFoldersToBeProcessed);
@@ -62,19 +67,21 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
     return filesList;
   }
 
-  List<FileChange> getAllFilesPresentInFolder(FindFilesInBranchRequest findFilesInBranchRequest) {
+  List<FileChange> getAllFilesPresentInFolder(FindFilesInBranchRequest.Builder findFilesInBranchRequest) {
     FindFilesInBranchResponse filesInBranchResponse = null;
     List<FileChange> allFilesInThisFolder = new ArrayList<>();
     do {
-      filesInBranchResponse = scmBlockingStub.findFilesInBranch(findFilesInBranchRequest);
+      filesInBranchResponse = scmBlockingStub.findFilesInBranch(findFilesInBranchRequest.build());
       allFilesInThisFolder.addAll(filesInBranchResponse.getFileList());
+      findFilesInBranchRequest.setPagination(
+          PageRequest.newBuilder().setPage(filesInBranchResponse.getPagination().getNext()).build());
     } while (hasMoreFiles(filesInBranchResponse));
     return allFilesInThisFolder;
   }
 
   private boolean hasMoreFiles(FindFilesInBranchResponse filesInBranchResponse) {
     return filesInBranchResponse != null && filesInBranchResponse.getPagination() != null
-        && filesInBranchResponse.getPagination().getNext() == 1;
+        && filesInBranchResponse.getPagination().getNext() != 0;
   }
 
   private List<GetFilesInFolderForkTask> createTasksForSubFolders(List<String> newFoldersToBeProcessed) {
