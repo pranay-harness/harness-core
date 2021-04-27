@@ -703,7 +703,7 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private Optional<UserGroup> getHarnessUserGroupsByAccountId(String accountId, User user) {
-    if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, "")) {
+    if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
       if (!harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
         return Optional.empty();
       }
