@@ -71,6 +71,9 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       properties.setProperty("org.quartz.jobStore.mongoOptionTrustStorePath", mongoSSLConfig.getMongoTrustStorePath());
       properties.setProperty(
           "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
+      properties.setProperty(
+          "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
+      properties.setProperty("org.quartz.jobStore.mongoOptionSslInvalidHostNameAllowed", String.valueOf(true));
     }
     StdSchedulerFactory factory = new StdSchedulerFactory(properties);
     Scheduler newScheduler = factory.getScheduler();
@@ -143,6 +146,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
         props.setProperty("org.quartz.jobStore.mongoOptionTrustStorePath", mongoSSLConfig.getMongoTrustStorePath());
         props.setProperty(
             "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
+        props.setProperty("org.quartz.jobStore.mongoOptionSslInvalidHostNameAllowed", String.valueOf(true));
       }
 
       props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobStoreClass());
