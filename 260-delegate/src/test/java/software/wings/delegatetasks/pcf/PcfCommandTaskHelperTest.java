@@ -25,6 +25,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
@@ -91,6 +93,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class PcfCommandTaskHelperTest extends WingsBaseTest {
   public static final String MANIFEST_YAML = "  applications:\n"
       + "  - name: ${APPLICATION_NAME}\n"
