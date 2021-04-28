@@ -18,6 +18,7 @@ import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_AD
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_INVITED;
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
 import static software.wings.app.ManagerCacheRegistrar.USER_CACHE;
@@ -2379,17 +2380,20 @@ public class UserServiceImpl implements UserService {
       Set<String> excludeAccounts = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
       List<Account> accountList = harnessUserGroupService.listAllowedSupportAccounts(excludeAccounts);
 
-      Set<String> restrictedAcccountsIds = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
-      restrictedAcccountsIds.forEach(restrictedAccountId -> {
+      Set<String> restrictedAccountsIds = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
+      restrictedAccountsIds.forEach(restrictedAccountId -> {
         List<AccessRequest> accessRequestList =
             accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
         accessRequestList.forEach(accessRequest -> {
-          if (accessRequest.getAccessType().equals(AccessRequest.AccessType.MEMBER_ACCESS)) {
+          if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
             if (accessRequest.getMemberIds().contains(user.getUuid())) {
               accountList.add(accountService.get(restrictedAccountId));
             }
           } else {
             HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequest.getHarnessUserGroupId());
+            notNullCheck("Invalid harnessUserGroupId: " + accessRequest.getHarnessUserGroupId()
+                    + "associated with accessRequestId: " + accessRequest.getUuid(),
+                harnessUserGroup);
             if (harnessUserGroup.getMemberIds().contains(user.getUuid())) {
               accountList.add(accountService.get(restrictedAccountId));
             }
