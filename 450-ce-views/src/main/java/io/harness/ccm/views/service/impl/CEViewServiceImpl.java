@@ -1,5 +1,8 @@
 package io.harness.ccm.views.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.dao.CEReportScheduleDao;
 import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.dto.ViewTimeRangeDto;
@@ -46,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class CEViewServiceImpl implements CEViewService {
   @Inject private CEViewDao ceViewDao;
   @Inject private CEReportScheduleDao ceReportScheduleDao;
@@ -55,7 +59,7 @@ public class CEViewServiceImpl implements CEViewService {
   @Inject private ViewFilterBuilderHelper viewFilterBuilderHelper;
 
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
-  private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(50) has been reached";
+  private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(100) has been reached";
   private static final String DEFAULT_AZURE_VIEW_NAME = "Azure";
   private static final String DEFAULT_AZURE_FIELD_ID = "azureServiceName";
   private static final String DEFAULT_AZURE_FIELD_NAME = "Service name";
