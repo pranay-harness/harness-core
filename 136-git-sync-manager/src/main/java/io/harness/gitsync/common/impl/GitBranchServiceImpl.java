@@ -73,17 +73,23 @@ public class GitBranchServiceImpl implements GitBranchService {
 
   @Override
   public List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String connectorIdentifier, String repoURL, io.harness.ng.beans.PageRequest pageRequest,
-      String searchTerm) {
+      String projectIdentifier, String connectorIdentifierRef, String repoURL,
+      io.harness.ng.beans.PageRequest pageRequest, String searchTerm) {
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
+        connectorIdentifierRef, accountIdentifier, orgIdentifier, projectIdentifier);
     ScmConnector scmConnector =
-        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)
+        connectorService
+            .get(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
+                identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())
             .map(connectorResponseDTO
                 -> decryptGitApiAccessHelper.decryptScmApiAccess(
-                    (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig(), accountIdentifier,
-                    projectIdentifier, orgIdentifier))
+                    (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig(),
+                    identifierRef.getAccountIdentifier(), identifierRef.getProjectIdentifier(),
+                    identifierRef.getOrgIdentifier()))
             .orElseThrow(()
                              -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-                                 accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)));
+                                 identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
+                                 identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())));
     scmConnector.setUrl(repoURL);
     ListBranchesResponse listBranchesResponse = scmClient.listBranches(scmConnector);
     return listBranchesResponse.getBranchesList();

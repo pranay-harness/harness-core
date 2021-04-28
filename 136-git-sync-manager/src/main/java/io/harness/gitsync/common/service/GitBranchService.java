@@ -14,7 +14,7 @@ import java.util.List;
 @OwnedBy(DX)
 public interface GitBranchService {
   List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String connectorIdentifier, String repoURL, PageRequest pageRequest, String searchTerm);
+      String connectorIdentifierRef, String repoURL, PageRequest pageRequest, String searchTerm);
 
   List<String> listBranchesForRepoByGitSyncConfig(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String yamlGitConfigIdentifier, PageRequest pageRequest, String searchTerm);

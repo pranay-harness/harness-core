@@ -37,6 +37,7 @@ public class NGCommonEntityConstants {
   public static final String PAGE = "page";
   public static final String SIZE = "size";
   public static final String MASK_SECRETS = "maskSecrets";
+  public static final String CONNECTOR_IDENTIFIER_REF = "connectorIdentifierRef";
 
   // TODO(UTSAV): Move to 340-ce-nextgen
   public static final String IS_EVENTS_ENABLED = "eventsEnabled";

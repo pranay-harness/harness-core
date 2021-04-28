@@ -54,7 +54,7 @@ public class GitBranchResource {
   @Path("listRepoBranches")
   @ApiOperation(value = "Gets list of branches by Connector Identifier", nickname = "getListOfBranchesByConnector")
   public ResponseDTO<List<String>> listBranchesForRepo(
-      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
+      @QueryParam(NGCommonEntityConstants.CONNECTOR_IDENTIFIER_REF) String connectorIdentifierRef,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
@@ -63,7 +63,7 @@ public class GitBranchResource {
       @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue("50") int pageSize,
       @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
     return ResponseDTO.newResponse(gitBranchService.listBranchesForRepoByConnector(accountIdentifier, orgIdentifier,
-        projectIdentifier, connectorIdentifier, URLDecoderUtility.getDecodedString(repoURL),
+        projectIdentifier, connectorIdentifierRef, URLDecoderUtility.getDecodedString(repoURL),
         PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
   }
 
