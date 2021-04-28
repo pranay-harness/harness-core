@@ -124,18 +124,33 @@ public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
                    .stageSetupId(stageSetupId)
                    .stepGroupSetupId(obtainStepGroupSetupIdOrNull(element))
                    .stepSetupId(element.getUuid())
+                   .stepGroupRollback(isInsideStepGroupRollback(element))
                    .build());
     }
   }
 
   private String obtainStepGroupSetupIdOrNull(YamlNode currentElement) {
-    YamlNode stepGroup = YamlUtils.findParentNode(currentElement, YAMLFieldNameConstants.STEP_GROUP);
+    YamlNode stepGroup = findStepGroupBottomUp(currentElement);
     return stepGroup != null ? stepGroup.getUuid() : null;
   }
 
   private String obtainBarrierIdentifierFromStep(YamlNode currentElement) {
     return Preconditions.checkNotNull(currentElement.getField(SPEC_FIELD).getNode().getStringValue(BARRIER_REF_FIELD),
         String.format(BARRIER_REF_FIELD + " cannot be null -> %s", currentElement.asText()));
+  }
+
+  private boolean isInsideStepGroupRollback(YamlNode currentElement) {
+    YamlNode rollbackSteps = YamlUtils.findParentNode(currentElement, YAMLFieldNameConstants.ROLLBACK_STEPS);
+    if (rollbackSteps == null) {
+      return false;
+    }
+
+    YamlNode stepGroup = findStepGroupBottomUp(rollbackSteps);
+    return stepGroup != null;
+  }
+
+  private YamlNode findStepGroupBottomUp(YamlNode currentElement) {
+    return YamlUtils.findParentNode(currentElement, YAMLFieldNameConstants.STEP_GROUP);
   }
 
   public Map<String, BarrierSetupInfo> getBarrierIdentifierMap() {
