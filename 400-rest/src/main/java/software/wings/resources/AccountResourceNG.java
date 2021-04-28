@@ -13,12 +13,15 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.security.UserGroup;
 import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.UserGroupService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,6 +53,7 @@ public class AccountResourceNG {
   private final AccountService accountService;
   private SubdomainUrlHelper subdomainUrlHelper;
   private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  private UserGroupService userGroupService;
 
   @POST
   public RestResponse<AccountDTO> create(@NotNull AccountDTO dto) {
@@ -85,6 +89,13 @@ public class AccountResourceNG {
   @Path("/baseUrl")
   public RestResponse<String> getBaseUrl(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId, null));
+  }
+
+  @GET
+  @Path("/account-admins")
+  public RestResponse<List<String>> getAccountAdmins(@QueryParam("accountId") String accountId) {
+    UserGroup userGroup = userGroupService.getAdminUserGroup(accountId);
+    return new RestResponse<>(userGroup != null ? userGroup.getMemberIds() : Collections.emptyList());
   }
 
   @GET

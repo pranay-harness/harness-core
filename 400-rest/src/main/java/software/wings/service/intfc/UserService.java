@@ -543,7 +543,7 @@ public interface UserService extends OwnedByAccount {
 
   boolean canEnableOrDisable(User user);
 
-  User save(User user, String accountId);
+  User createUser(User user, String accountId);
 
   String saveUserInvite(UserInvite userInvite);
 
@@ -555,8 +555,6 @@ public interface UserService extends OwnedByAccount {
   InviteOperationResponse checkInviteStatus(UserInvite userInvite, Generation gen);
 
   void loadUserGroupsForUsers(List<User> users, String accountId);
-
-  void setNewDefaultAccountId(User user);
 
   boolean isUserPresent(String userId);
 

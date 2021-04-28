@@ -114,9 +114,11 @@ public class SpotInstServiceSetup extends State {
         spotInstTaskParameters.getAppId(), TaskType.SPOTINST_COMMAND_TASK, spotInstTaskParameters.getActivityId(),
         spotinstSetupStateExecutionData.getEnvId(), spotinstSetupStateExecutionData.getInfraMappingId(),
         spotinstSetupStateExecutionData.getSpotinstCommandRequest(),
-        spotinstSetupStateExecutionData.getEnvironmentType(), spotinstSetupStateExecutionData.getServiceId());
+        spotinstSetupStateExecutionData.getEnvironmentType(), spotinstSetupStateExecutionData.getServiceId(),
+        isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(spotInstTaskParameters.getActivityId()))
@@ -273,5 +275,10 @@ public class SpotInstServiceSetup extends State {
       invalidFields.put("targetInstances", "Target Instances is needed");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

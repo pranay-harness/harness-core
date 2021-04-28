@@ -34,6 +34,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -48,6 +49,7 @@ import io.harness.beans.TriggeredBy;
 import io.harness.container.ContainerInfo;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.TaskData;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
@@ -125,6 +127,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -166,6 +169,7 @@ import org.slf4j.Logger;
 public class EcsStateHelper {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private StateExecutionService stateExecutionService;
 
   public ContainerSetupParams buildContainerSetupParams(
       ExecutionContext context, EcsSetupStateConfig ecsSetupStateConfig) {
@@ -353,7 +357,8 @@ public class EcsStateHelper {
   public ExecutionResponse queueDelegateTaskForEcsListenerUpdate(Application app, AwsConfig awsConfig,
       DelegateService delegateService, EcsInfrastructureMapping ecsInfrastructureMapping, String activityId,
       Environment environment, String commandName, EcsListenerUpdateRequestConfigData requestConfigData,
-      List<EncryptedDataDetail> encryptedDataDetails, int serviceSteadyStateTimeout) {
+      List<EncryptedDataDetail> encryptedDataDetails, int serviceSteadyStateTimeout,
+      boolean selectionLogsTrackingForTasksEnabled, String stateExecutionInstanceId) {
     EcsCommandRequest ecsCommandRequest = getEcsCommandListenerUpdateRequest(commandName, app.getUuid(),
         app.getAccountId(), activityId, awsConfig, requestConfigData, serviceSteadyStateTimeout);
 
@@ -363,15 +368,31 @@ public class EcsStateHelper {
     DelegateTask delegateTask = getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.ECS_COMMAND_TASK,
         activityId, environment, ecsInfrastructureMapping, new Object[] {ecsCommandRequest, encryptedDataDetails},
         serviceSteadyStateTimeout);
+    delegateTask.setSelectionLogsTrackingEnabled(selectionLogsTrackingForTasksEnabled);
+    delegateTask.setDescription("ECS Listener Update task execution");
     delegateTask.setTags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null);
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(delegateTask, stateExecutionInstanceId);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activityId))
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
+  }
+
+  private void appendDelegateTaskDetails(DelegateTask delegateTask, String stateExecutionInstanceId) {
+    if (isBlank(delegateTask.getUuid())) {
+      delegateTask.setUuid(generateUuid());
+    }
+
+    stateExecutionService.appendDelegateTaskDetails(stateExecutionInstanceId,
+        DelegateTaskDetails.builder()
+            .delegateTaskId(delegateTask.getUuid())
+            .taskDescription(delegateTask.calcDescription())
+            .setupAbstractions(delegateTask.getSetupAbstractions())
+            .build());
   }
 
   public Activity createActivity(ExecutionContext executionContext, String commandName, String stateType,
@@ -714,15 +735,15 @@ public class EcsStateHelper {
         .build();
   }
 
-  public String createAndQueueDelegateTaskForEcsServiceSetUp(
-      EcsCommandRequest request, EcsSetUpDataBag dataBag, Activity activity, DelegateService delegateService) {
-    DelegateTask task =
-        createAndQueueDelegateTaskForEcsServiceSetUp(request, dataBag, activity.getUuid(), delegateService);
-    return task.getUuid();
+  public DelegateTask createAndQueueDelegateTaskForEcsServiceSetUp(EcsCommandRequest request, EcsSetUpDataBag dataBag,
+      Activity activity, DelegateService delegateService, boolean selectionLogsEnabled) {
+    return createAndQueueDelegateTaskForEcsServiceSetUp(
+        request, dataBag, activity.getUuid(), delegateService, selectionLogsEnabled);
   }
 
   public DelegateTask createAndQueueDelegateTaskForEcsServiceSetUp(EcsCommandRequest ecsCommandRequest,
-      EcsSetUpDataBag ecsSetUpDataBag, String activityId, DelegateService delegateService) {
+      EcsSetUpDataBag ecsSetUpDataBag, String activityId, DelegateService delegateService,
+      boolean selectionLogsEnabled) {
     DelegateTask task =
         DelegateTask.builder()
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ecsSetUpDataBag.getApplication().getUuid())
@@ -744,6 +765,8 @@ public class EcsStateHelper {
                 Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, ecsSetUpDataBag.getEcsInfrastructureMapping().getUuid())
             .setupAbstraction(
                 Cd1SetupFields.SERVICE_ID_FIELD, ecsSetUpDataBag.getEcsInfrastructureMapping().getServiceId())
+            .description("ECS command task execution")
+            .selectionLogsTrackingEnabled(selectionLogsEnabled)
             .build();
     delegateService.queueTask(task);
     return task;
@@ -1025,8 +1048,9 @@ public class EcsStateHelper {
     return allInstanceElements;
   }
 
-  public String createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,
-      EcsServiceDeployRequest request, Activity activity, DelegateService delegateService) {
+  public DelegateTask createAndQueueDelegateTaskForEcsServiceDeploy(EcsDeployDataBag deployDataBag,
+      EcsServiceDeployRequest request, Activity activity, DelegateService delegateService,
+      boolean selectionLogsEnabled) {
     DelegateTask task =
         DelegateTask.builder()
             .accountId(deployDataBag.getApp().getAccountId())
@@ -1047,14 +1071,17 @@ public class EcsStateHelper {
                 Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, deployDataBag.getEcsInfrastructureMapping().getUuid())
             .setupAbstraction(
                 Cd1SetupFields.SERVICE_ID_FIELD, deployDataBag.getEcsInfrastructureMapping().getServiceId())
+            .selectionLogsTrackingEnabled(selectionLogsEnabled)
+            .description("ECS Command task execution")
             .build();
-    return delegateService.queueTask(task);
+    delegateService.queueTask(task);
+    return task;
   }
 
   public DelegateTask createAndQueueDelegateTaskForEcsRunTaskDeploy(EcsRunTaskDataBag ecsRunTaskDataBag,
       InfrastructureMappingService infrastructureMappingService, SecretManager secretManager, Application application,
       ExecutionContext executionContext, EcsRunTaskDeployRequest request, String activityId,
-      DelegateService delegateService) {
+      DelegateService delegateService, boolean selectionLogsEnabled) {
     String waitId = generateUuid();
 
     EcsInfrastructureMapping ecsInfrastructureMapping = getInfrastructureMappingFromInfraMappingService(
@@ -1082,6 +1109,8 @@ public class EcsStateHelper {
                 Cd1SetupFields.ENV_TYPE_FIELD, executionContext.fetchRequiredEnvironment().getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, ecsInfrastructureMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, ecsInfrastructureMapping.getServiceId())
+            .selectionLogsTrackingEnabled(selectionLogsEnabled)
+            .description("ECS Run task deploy execution")
             .build();
     delegateService.queueTask(task);
     return task;

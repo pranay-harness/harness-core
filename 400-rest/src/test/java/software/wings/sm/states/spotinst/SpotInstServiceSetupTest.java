@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -33,6 +35,7 @@ import software.wings.WingsBaseTest;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
@@ -53,6 +56,7 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
   @Mock private DelegateService mockDelegateService;
   @Mock private SpotInstStateHelper mockSpotinstStateHelper;
   @Mock private SweepingOutputService mockSweepingOutputService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks SpotInstServiceSetup state = new SpotInstServiceSetup("stateName");
 
@@ -75,11 +79,12 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
                                         .build())
             .build();
     doReturn(data).when(mockSpotinstStateHelper).prepareStateExecutionData(any(), any());
-    DelegateTask task = DelegateTask.builder().build();
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    DelegateTask task = DelegateTask.builder().description("desc").build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(
-            anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(), anyString());
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(),
+            anyString(), eq(true));
     state.execute(mockContext);
     verify(mockDelegateService).queueTask(any());
   }

@@ -213,6 +213,7 @@ public class InstanceFetchState extends State {
                 Cd1SetupFields.ENV_TYPE_FIELD, workflowStandardParams.getEnv().getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .tags(getRenderedTags(context))
             .data(TaskData.builder()
                       .async(true)
@@ -447,5 +448,10 @@ public class InstanceFetchState extends State {
           .collect(Collectors.toList());
     }
     return Collections.emptyList();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

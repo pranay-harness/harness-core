@@ -30,6 +30,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -143,8 +144,8 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
     ArgumentCaptor<EcsListenerUpdateRequestConfigData> captor =
         ArgumentCaptor.forClass(EcsListenerUpdateRequestConfigData.class);
     verify(mockEcsStateHelper)
-        .queueDelegateTaskForEcsListenerUpdate(
-            any(), any(), any(), any(), anyString(), any(), anyString(), captor.capture(), anyList(), anyInt());
+        .queueDelegateTaskForEcsListenerUpdate(any(), any(), any(), any(), anyString(), any(), anyString(),
+            captor.capture(), anyList(), anyInt(), eq(true), anyString());
     EcsListenerUpdateRequestConfigData config = captor.getValue();
     assertThat(config).isNotNull();
     assertThat(config.getProdListenerArn()).isEqualTo("ProdLArn");

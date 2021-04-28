@@ -489,7 +489,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
     ExecutionResponse response = pcfStateHelper.queueDelegateTaskForRouteUpdate(requestData,
         SetupSweepingOutputPcf.builder()
             .pcfCommandRequest(PcfCommandSetupRequest.builder().organization("org").space("space").build())
-            .build());
+            .build(),
+        null, false);
     assertThat(response).isNotNull();
     assertThat(response.isAsync()).isTrue();
     assertThat(response.getCorrelationIds()).containsExactly(ACTIVITY_ID);
