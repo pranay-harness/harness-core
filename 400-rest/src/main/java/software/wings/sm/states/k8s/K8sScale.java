@@ -1,7 +1,12 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.sm.StateType.K8S_SCALE;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -52,6 +57,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
 public class K8sScale extends AbstractK8sState {
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
@@ -108,7 +115,7 @@ public class K8sScale extends AbstractK8sState {
                                                 .timeoutIntervalInMin(stateTimeoutInMinutes)
                                                 .build();
 
-      return queueK8sDelegateTask(context, k8sTaskParameters);
+      return queueK8sDelegateTask(context, k8sTaskParameters, null);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {

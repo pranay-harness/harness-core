@@ -9,11 +9,14 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.filters.WithConnectorRef;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
@@ -23,6 +26,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -37,7 +42,7 @@ import org.springframework.data.annotation.TypeAlias;
 @YamlSchemaIgnoreSubtype
 @TypeAlias("liteEngineTaskStepInfo")
 @OwnedBy(CI)
-public class LiteEngineTaskStepInfo implements CIStepInfo {
+public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 600 * 1000;
   public static final String CALLBACK_IDS = "callbackIds";
@@ -99,5 +104,21 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.TASK;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
+      connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF,
+          ParameterField.createValueField(((K8sDirectInfraYaml) infrastructure).getSpec().getConnectorRef()));
+    }
+
+    if (!skipGitClone) {
+      connectorRefMap.put(
+          YAMLFieldNameConstants.CODEBASE_CONNECTOR_REF, ParameterField.createValueField(ciCodebase.getConnectorRef()));
+    }
+
+    return connectorRefMap;
   }
 }

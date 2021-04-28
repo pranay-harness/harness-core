@@ -32,4 +32,8 @@ public interface GitBranchService {
       String repoUrl, String yamlGitConfigIdentifier);
 
   void save(GitBranch gitBranch);
+
+  GitBranch get(String accountIdentifier, String repoURL, String branchName);
+
+  void checkBranchIsNotAlreadyShortlisted(String repoURL, String accountId, String branch);
 }

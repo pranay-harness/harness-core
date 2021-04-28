@@ -10,13 +10,15 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
-import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.ServiceEntityService;
+import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
@@ -33,6 +35,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceResourceTest extends CategoryTest {
   private ServiceResource serviceResource;
   private ServiceEntityService serviceEntityService;
@@ -141,13 +144,15 @@ public class ServiceResourceTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testListServicesWithDESCSort() {
-    Criteria criteria = ServiceFilterHelper.createCriteriaForGetList("", "", "", false);
+    Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
     Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, ServiceKeys.createdAt));
     final Page<ServiceEntity> serviceList = new PageImpl<>(Collections.singletonList(serviceEntity), pageable, 1);
     doReturn(serviceList).when(serviceEntityService).list(criteria, pageable);
 
     List<ServiceResponseDTO> content =
-        serviceResource.listServicesForProject(0, 10, "", "", "", null, null).getData().getContent();
+        serviceResource.listServicesForProject(0, 10, "ACCOUNT_ID", "ORG_ID", "PROJECT_ID", null, null)
+            .getData()
+            .getContent();
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
     assertThat(content.get(0)).isEqualTo(serviceResponseDTO);

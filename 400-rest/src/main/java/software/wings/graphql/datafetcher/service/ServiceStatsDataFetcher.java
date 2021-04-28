@@ -64,6 +64,8 @@ public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
         return "appId";
       case ArtifactType:
         return "artifactType";
+      case DeploymentType:
+        return "deploymentType";
       default:
         log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);

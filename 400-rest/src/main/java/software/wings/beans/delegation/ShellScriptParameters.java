@@ -1,11 +1,13 @@
 package software.wings.beans.delegation;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -54,6 +56,7 @@ import org.apache.commons.lang3.StringUtils;
 @Value
 @Builder
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDC)
 public class ShellScriptParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final String CommandUnit = "Execute";
 
@@ -189,11 +192,9 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
         SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
         if (settingAttribute != null) {
           SettingValue value = settingAttribute.getValue();
-          boolean useKubernetesDelegate =
-              value instanceof KubernetesClusterConfig && ((KubernetesClusterConfig) value).isUseKubernetesDelegate();
           boolean isKubernetes =
               value instanceof GcpConfig || value instanceof AzureConfig || value instanceof KubernetesClusterConfig;
-          if (useKubernetesDelegate || (isKubernetes && script.contains(HARNESS_KUBE_CONFIG_PATH))) {
+          if (isKubernetes && script.contains(HARNESS_KUBE_CONFIG_PATH)) {
             return containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator);
           }
         }

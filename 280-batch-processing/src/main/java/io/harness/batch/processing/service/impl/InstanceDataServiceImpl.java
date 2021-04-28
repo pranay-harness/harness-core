@@ -3,7 +3,6 @@ package io.harness.batch.processing.service.impl;
 import io.harness.batch.processing.billing.timeseries.data.InstanceLifecycleInfo;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.CacheUtils;
 import io.harness.ccm.commons.beans.InstanceState;
@@ -91,12 +90,6 @@ public class InstanceDataServiceImpl extends CacheUtils implements InstanceDataS
     List<InstanceState> instanceStates =
         new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
     return instanceDataDao.fetchClusterActiveInstanceIds(accountId, clusterId, instanceStates, startTime);
-  }
-
-  @Override
-  public InstanceData getActiveInstance(
-      String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider) {
-    return instanceDataDao.getActiveInstance(accountId, startTime, endTime, cloudProvider);
   }
 
   @Override

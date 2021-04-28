@@ -497,7 +497,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
         .getPropertyNameEvaluatedMap(
-            properties, contextMap, true, TerraformInfrastructureProvisioner.INFRASTRUCTURE_PROVISIONER_TYPE_KEY);
+            properties, contextMap, TerraformInfrastructureProvisioner.INFRASTRUCTURE_PROVISIONER_TYPE_KEY);
 
     verify(evaluator, times(1)).evaluate(workflowVariable, contextMap);
   }
@@ -515,7 +515,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     when(evaluator.evaluate(provisionerVariable, contextMap)).thenReturn(null);
 
     ((InfrastructureProvisionerServiceImpl) infrastructureProvisionerService)
-        .getPropertyNameEvaluatedMap(properties, contextMap, true, TerraformInfrastructureProvisioner.VARIABLE_KEY);
+        .getPropertyNameEvaluatedMap(properties, contextMap, TerraformInfrastructureProvisioner.VARIABLE_KEY);
   }
 
   @Test
