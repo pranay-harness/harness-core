@@ -198,7 +198,7 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
                                                                                  .value("main")
                                                                                  .build(),
                                                 WebhookCondition.builder()
-                                                    .key("<+eventPayload.Type>")
+                                                    .key("<+trigger.payload.Type>")
                                                     .operator("equals")
                                                     .value("Notification")
                                                     .build()))
