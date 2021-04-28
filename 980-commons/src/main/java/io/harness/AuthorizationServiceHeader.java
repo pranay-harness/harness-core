@@ -11,6 +11,7 @@ public enum AuthorizationServiceHeader {
   NG_MANAGER("NextGenManager"),
   CI_MANAGER("CIManager"),
   CV_NEXT_GEN("CVNextGen"),
+  CE_NEXT_GEN("CENextGen"),
   IDENTITY_SERVICE("IdentityService"),
   ADMIN_PORTAL("AdminPortal"),
   NOTIFICATION_SERVICE("NotificationService"),
