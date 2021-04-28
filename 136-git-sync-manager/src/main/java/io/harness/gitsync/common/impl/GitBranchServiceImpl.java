@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCED;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -121,6 +122,7 @@ public class GitBranchServiceImpl implements GitBranchService {
       String yamlGitConfigIdentifier, String branchName) {
     YamlGitConfigDTO yamlGitConfig =
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
+    checkBranchIsNotAlreadyShortlisted(yamlGitConfig.getRepo(), accountIdentifier, branchName);
     executorService.submit(
         ()
             -> harnessToGitHelperService.processFilesInBranch(accountIdentifier, yamlGitConfigIdentifier,
@@ -183,5 +185,24 @@ public class GitBranchServiceImpl implements GitBranchService {
       criteria.and(GitBranchKeys.branchName).regex(searchTerm, "i");
     }
     return criteria;
+  }
+
+  @Override
+  public GitBranch get(String accountIdentifier, String repoURL, String branchName) {
+    Criteria criteria = Criteria.where(GitBranchKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(GitBranchKeys.repoURL)
+                            .is(repoURL)
+                            .and(GitBranchKeys.branchName)
+                            .is(branchName);
+    return gitBranchesRepository.findOne(criteria);
+  }
+
+  @Override
+  public void checkBranchIsNotAlreadyShortlisted(String repoURL, String accountId, String branch) {
+    GitBranch gitBranch = get(accountId, repoURL, branch);
+    if (gitBranch.getBranchSyncStatus() == SYNCED) {
+      throw new InvalidRequestException(String.format("The branch %s in repo %s is already synced", branch, repoURL));
+    }
   }
 }
