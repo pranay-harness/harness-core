@@ -9,5 +9,5 @@ import io.harness.signup.dto.SignupDTO;
 
 @OwnedBy(GTM)
 public interface SignupService {
-  UserInfo signup(SignupDTO dto) throws WingsException;
+  UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException;
 }

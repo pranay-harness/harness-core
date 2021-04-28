@@ -225,9 +225,12 @@ public class PcfDeployState extends State {
                                            .timeout(setupSweepingOutputPcf.getTimeoutIntervalInMinutes() == null
                                                    ? DEFAULT_PCF_TASK_TIMEOUT_MIN
                                                    : setupSweepingOutputPcf.getTimeoutIntervalInMinutes())
+                                           .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                           .taskDescription("PCF Deploy task execution")
                                            .build());
 
     delegateService.queueTask(task);
+    appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activity.getUuid()))
@@ -530,5 +533,10 @@ public class PcfDeployState extends State {
         .uuid(pcfInstanceElement.getUuid())
         .displayName(pcfInstanceElement.getDisplayName())
         .build();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

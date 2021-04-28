@@ -16,5 +16,5 @@ public interface MigrationProvider {
   /**
    * @return list of all the Migrations for a service
    */
-  List<MigrationDetails> getMigrationDetailsList();
+  List<Class<? extends MigrationDetails>> getMigrationDetailsList();
 }

@@ -169,7 +169,7 @@ public class MapRouteState extends State {
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDetails)
             .build(),
-        setupSweepingOutputPcf);
+        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled());
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
@@ -289,6 +289,11 @@ public class MapRouteState extends State {
   }
 
   public boolean checkIfMapRouteOperation() {
+    return true;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
     return true;
   }
 }

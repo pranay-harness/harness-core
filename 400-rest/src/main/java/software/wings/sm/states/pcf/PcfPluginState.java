@@ -253,8 +253,8 @@ public class PcfPluginState extends State {
       String activityId, List<String> pathsFromScript, String rawScriptString, String repoRoot) {
     final Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         prepareManifestForGitFetchTask(serviceManifest, pathsFromScript);
-    final DelegateTask gitFetchFileTask =
-        pcfStateHelper.createGitFetchFileAsyncTask(context, appManifestMap, activityId);
+    final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
+        context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
     gitFetchFileTask.setTags(resolveTags(getTags(), null));
 
     PcfPluginStateExecutionData stateExecutionData =
@@ -274,6 +274,8 @@ public class PcfPluginState extends State {
     stateExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
+    appendDelegateTaskDetails(context, gitFetchFileTask);
+
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(gitFetchFileTask.getWaitId()))
@@ -397,6 +399,8 @@ public class PcfPluginState extends State {
                                            .timeout(timeoutIntervalInMin)
                                            .tagList(renderedTags)
                                            .serviceTemplateId(getServiceTemplateId(pcfInfrastructureMapping))
+                                           .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                           .taskDescription("PCF Plugin task execution")
                                            .build());
     delegateTask.getData().setExpressionFunctorToken(expressionFunctorToken);
     StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
@@ -407,6 +411,7 @@ public class PcfPluginState extends State {
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(Collections.singletonList(activityId))
@@ -632,5 +637,10 @@ public class PcfPluginState extends State {
 
   private String getActivityId(ExecutionContext context) {
     return ((PcfPluginStateExecutionData) context.getStateExecutionData()).getActivityId();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

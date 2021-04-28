@@ -30,6 +30,7 @@ import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
+import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
@@ -91,7 +92,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
       updatePipelineInfo(pipelineEntity);
 
-      return pmsPipelineRepository.save(pipelineEntity);
+      return pmsPipelineRepository.save(pipelineEntity, PipelineYamlDtoMapper.toDto(pipelineEntity));
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),

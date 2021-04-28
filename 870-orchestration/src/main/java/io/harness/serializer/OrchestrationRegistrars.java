@@ -7,7 +7,7 @@ import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
-import io.harness.serializer.kryo.OrchestrationKryoRegister;
+import io.harness.serializer.kryo.OrchestrationKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
@@ -108,7 +108,7 @@ public class OrchestrationRegistrars {
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
-          .add(OrchestrationKryoRegister.class)
+          .add(OrchestrationKryoRegistrar.class)
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
           .build();
@@ -147,7 +147,7 @@ public class OrchestrationRegistrars {
           .add(InterruptConfigMorphiaConverter.class)
           .build();
 
-  public static final List<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
+  public static final List<Class<? extends Converter<?, ?>>> orchestrationConverters = ImmutableList.of(
       SweepingOutputReadMongoConverter.class, SweepingOutputWriteMongoConverter.class, AmbianceReadConverter.class,
       AmbianceWriteConverter.class, LevelReadConverter.class, LevelWriteConverter.class, AdviserTypeReadConverter.class,
       AdviserTypeWriteConverter.class, AdviserObtainmentReadConverter.class, AdviserObtainmentWriteConverter.class,
@@ -171,4 +171,10 @@ public class OrchestrationRegistrars {
       SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
       NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
       ExecutionPrincipalInfoWriteConverter.class);
+
+  public static final List<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+          .addAll(orchestrationConverters)
+          .addAll(WaitEngineRegistrars.springConverters)
+          .build();
 }

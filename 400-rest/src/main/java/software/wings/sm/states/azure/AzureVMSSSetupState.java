@@ -161,9 +161,12 @@ public class AzureVMSSSetupState extends AbstractAzureState {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, azureVMSSInfrastructureMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, azureVMSSInfrastructureMapping.getServiceId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Azure VMSS Setup task execution")
             .build();
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(singletonList(activityId))
@@ -395,5 +398,10 @@ public class AzureVMSSSetupState extends AbstractAzureState {
       }
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

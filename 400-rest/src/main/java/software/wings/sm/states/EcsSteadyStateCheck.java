@@ -139,8 +139,12 @@ public class EcsSteadyStateCheck extends State {
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
               .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("ECS Steady state check task execution")
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
+
+      appendDelegateTaskDetails(context, delegateTask);
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(activity.getUuid()))
@@ -253,5 +257,10 @@ public class EcsSteadyStateCheck extends State {
     }
     Activity activity = activityBuilder.build();
     return activityService.save(activity);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

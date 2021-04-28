@@ -222,7 +222,7 @@ public abstract class ContainerServiceDeploy extends State {
       }
 
       String waitId = UUID.randomUUID().toString();
-      String delegateTaskId = delegateService.queueTask(
+      DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(contextData.app.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, contextData.appId)
@@ -238,8 +238,12 @@ public abstract class ContainerServiceDeploy extends State {
               .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, contextData.env.getEnvironmentType().name())
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, contextData.infrastructureMappingId)
               .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, contextData.service.getUuid())
-              .build());
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("Kubernetes deploy task execution")
+              .build();
+      String delegateTaskId = delegateService.queueTask(delegateTask);
 
+      appendDelegateTaskDetails(context, delegateTask);
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(waitId))
@@ -466,5 +470,10 @@ public abstract class ContainerServiceDeploy extends State {
           ? Integer.valueOf(context.renderExpression(containerServiceDeploy.getDownsizeInstanceCount()))
           : null;
     }
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }
