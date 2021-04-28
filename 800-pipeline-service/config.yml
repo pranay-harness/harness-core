@@ -135,9 +135,6 @@ accessControlClient:
 
 pipelineServiceBaseUrl: https://localhost:8181/#
 
-scmConnectionConfig:
-  url: localhost:8091
-
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
@@ -151,3 +148,19 @@ enableAuth: false
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
+
+shouldDeployWithGitSync: false
+
+gitSdkConfiguration:
+  gitSdkGrpcServerConfig:
+    connectors:
+      - port: 14001
+        secure: true
+        keyFilePath: key.pem
+        certFilePath: cert.pem
+      - port: 14002
+  gitManagerGrpcClientConfig:
+    target: localhost:13001
+    authority: localhost
+  scmConnectionConfig:
+    url: localhost:8091
