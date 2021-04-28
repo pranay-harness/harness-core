@@ -360,7 +360,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
-    "@maven//:io_grpc_grpc_testing",
     "@maven//:io_gsonfire_gson_fire",
     "@maven//:io_jsonwebtoken_jjwt",
     "@maven//:io_kubernetes_client_java",
@@ -734,6 +733,7 @@ test_dependencies = shared_dependencies + [
     "@maven//:org_mockito_mockito_core",
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
+    "@maven//:io_grpc_grpc_testing",
 ]
 
 run_package_tests(

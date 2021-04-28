@@ -6,6 +6,7 @@ import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.eventframework.CENGEventConsumerService;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -113,6 +114,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     registerExceptionMappers(environment.jersey());
     registerCorrelationFilter(environment, injector);
     MaintenanceController.forceMaintenance(false);
+    createConsumerThreadsToListenToEvents(environment, injector);
   }
 
   private void registerExceptionMappers(JerseyEnvironment jersey) {
@@ -170,5 +172,9 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
   private void initializeFeatureFlags(CENextGenConfiguration configuration, Injector injector) {
     injector.getInstance(FeatureFlagService.class)
         .initializeFeatureFlags(configuration.getDeployMode(), configuration.getFeatureFlagsEnabled());
+  }
+
+  private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(CENGEventConsumerService.class));
   }
 }

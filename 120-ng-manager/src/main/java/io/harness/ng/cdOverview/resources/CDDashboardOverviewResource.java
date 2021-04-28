@@ -2,6 +2,7 @@ package io.harness.ng.cdOverview.resources;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -59,5 +60,17 @@ public class CDDashboardOverviewResource {
     LocalDate previousStartDate = startDate.minusDays(interval);
     return ResponseDTO.newResponse(cdOverviewDashboardService.getHealthDeploymentDashboard(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartDate.toString()));
+  }
+
+  @GET
+  @Path("/deploymentExecution")
+  @ApiOperation(value = "Get deployment execution", nickname = "getDeploymentExecution")
+  public ResponseDTO<ExecutionDeploymentInfo> getDeploymentExecution(
+      @NotNull @QueryParam("accountId") String accountIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getExecutionDeploymentDashboard(
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
   }
 }

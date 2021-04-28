@@ -10,11 +10,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
+import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.dtos.GitBranchDTO;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.repositories.gitBranches.GitBranchesRepository;
+import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -29,6 +31,7 @@ import org.mockito.MockitoAnnotations;
 public class GitBranchServiceImplTest extends GitSyncTestBase {
   @Inject GitBranchServiceImpl gitBranchServiceImpl;
   @Inject GitBranchesRepository gitBranchesRepository;
+  @Inject YamlGitConfigRepository yamlGitConfigRepository;
 
   @Before
   public void setup() {
@@ -44,14 +47,17 @@ public class GitBranchServiceImplTest extends GitSyncTestBase {
     final String orgIdentifier = "orgId";
     final String accountIdentifier = "accountId";
     final String yamlGitConfigIdentifier = "yamlGitConfigId";
-    final GitBranch gitBranch1 = buildGitBranch(
-        accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier, "Z", BranchSyncStatus.SYNCED);
-    final GitBranch gitBranch2 = buildGitBranch(
-        accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier, "C", BranchSyncStatus.SYNCING);
-    final GitBranch gitBranch3 = buildGitBranch(
-        accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier, "A", BranchSyncStatus.UNSYNCED);
-    final GitBranch gitBranch4 = buildGitBranch(
-        accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier, "B", BranchSyncStatus.UNSYNCED);
+    yamlGitConfigRepository.save(YamlGitConfig.builder()
+                                     .accountId(accountIdentifier)
+                                     .orgIdentifier(orgIdentifier)
+                                     .projectIdentifier(projectIdentifier)
+                                     .identifier(yamlGitConfigIdentifier)
+                                     .repo("repoURL")
+                                     .build());
+    final GitBranch gitBranch1 = buildGitBranch(accountIdentifier, "repoURL", "Z", BranchSyncStatus.SYNCED);
+    final GitBranch gitBranch2 = buildGitBranch(accountIdentifier, "repoURL", "C", BranchSyncStatus.SYNCING);
+    final GitBranch gitBranch3 = buildGitBranch(accountIdentifier, "repoURL", "A", BranchSyncStatus.UNSYNCED);
+    final GitBranch gitBranch4 = buildGitBranch(accountIdentifier, "repoURL", "B", BranchSyncStatus.UNSYNCED);
     gitBranchesRepository.saveAll(Arrays.asList(gitBranch1, gitBranch2, gitBranch3, gitBranch4));
     PageResponse<GitBranchDTO> gitBranchPageResponse =
         gitBranchServiceImpl.listBranchesWithStatus(accountIdentifier, orgIdentifier, projectIdentifier,
@@ -63,13 +69,11 @@ public class GitBranchServiceImplTest extends GitSyncTestBase {
         && gitBranchPageResponse.getContent().get(1).getBranchSyncStatus() == BranchSyncStatus.SYNCING);
   }
 
-  private GitBranch buildGitBranch(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String yamlGitConfigIdentifier, String branchName, BranchSyncStatus branchSyncStatus) {
+  private GitBranch buildGitBranch(
+      String accountIdentifier, String repoURL, String branchName, BranchSyncStatus branchSyncStatus) {
     return GitBranch.builder()
         .accountIdentifier(accountIdentifier)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .yamlGitConfigIdentifier(yamlGitConfigIdentifier)
+        .repoURL(repoURL)
         .branchName(branchName)
         .branchSyncStatus(branchSyncStatus)
         .build();

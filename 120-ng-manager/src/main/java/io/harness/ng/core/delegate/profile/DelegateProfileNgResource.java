@@ -4,6 +4,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATE_PROFILES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
@@ -36,6 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Scope(DELEGATE_SCOPE)
 @AuthRule(permissionType = LOGGED_IN)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateProfileNgResource {
   private final DelegateProfileManagerNgService delegateProfileManagerNgService;
 
@@ -107,9 +110,9 @@ public class DelegateProfileNgResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<DelegateProfileDetailsNg>> list(
-      @BeanParam PageRequest<DelegateProfileDetailsNg> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateProfileManagerNgService.list(accountId, pageRequest));
+      @BeanParam PageRequest<DelegateProfileDetailsNg> pageRequest, @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("orgId") String orgId, @QueryParam("projectId") String projectId) {
+    return new RestResponse<>(delegateProfileManagerNgService.list(accountId, pageRequest, orgId, projectId));
   }
 
   @PUT

@@ -15,6 +15,7 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagType;
@@ -56,6 +57,12 @@ public class WorkflowQueryHelper {
         field = query.field("_id");
         QLIdFilter workflowFilter = filter.getWorkflow();
         utils.setIdFilter(field, workflowFilter);
+      }
+
+      if (filter.getOrchestrationWorkflowType() != null) {
+        field = query.field("orchestration.orchestrationWorkflowType");
+        QLOrchestrationWorkflowTypeFilter orchestrationWorkflowType = filter.getOrchestrationWorkflowType();
+        utils.setEnumFilter(field, orchestrationWorkflowType);
       }
 
       if (filter.getTag() != null) {

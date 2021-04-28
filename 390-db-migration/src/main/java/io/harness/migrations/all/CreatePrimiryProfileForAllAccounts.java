@@ -1,6 +1,7 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HKeyIterator;
 
@@ -12,6 +13,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class CreatePrimiryProfileForAllAccounts implements Migration {
   @Inject private DelegateProfileService delegateProfileService;
   @Inject private WingsPersistence wingsPersistence;
@@ -21,7 +23,7 @@ public class CreatePrimiryProfileForAllAccounts implements Migration {
     try (HKeyIterator<Account> keys = new HKeyIterator(wingsPersistence.createQuery(Account.class).fetchKeys())) {
       while (keys.hasNext()) {
         String accountId = keys.next().getId().toString();
-        delegateProfileService.fetchPrimaryProfile(accountId);
+        delegateProfileService.fetchCgPrimaryProfile(accountId);
       }
     }
   }

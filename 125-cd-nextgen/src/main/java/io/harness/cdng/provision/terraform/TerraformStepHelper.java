@@ -61,6 +61,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -363,8 +364,8 @@ public class TerraformStepHelper {
 
   public void updateParentEntityIdAndVersion(String entityId, String stateFileId) {
     try {
-      RestClientUtils.getResponse(
-          fileService.get().updateParentEntityIdAndVersion(entityId, stateFileId, FileBucket.TERRAFORM_STATE));
+      RestClientUtils.getResponse(fileService.get().updateParentEntityIdAndVersion(
+          URLEncoder.encode(entityId, "UTF-8"), stateFileId, FileBucket.TERRAFORM_STATE));
     } catch (Exception ex) {
       throw new InvalidRequestException(
           String.format("Unable to update entityId and Version for entityId: [%s]", entityId));

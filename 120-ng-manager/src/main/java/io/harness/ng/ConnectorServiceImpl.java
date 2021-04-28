@@ -135,6 +135,9 @@ public class ConnectorServiceImpl implements ConnectorService {
         if (connectorResponse != null) {
           ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
           createConnectorCreationActivity(accountIdentifier, savedConnector);
+          publishEvent(accountIdentifier, savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier(),
+              savedConnector.getIdentifier(), savedConnector.getConnectorType(),
+              EventsFrameworkMetadataConstants.CREATE_ACTION);
           runTestConnectionAsync(connector, accountIdentifier);
           if (connectorHeartbeatTaskId != null) {
             defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier,
@@ -186,13 +189,14 @@ public class ConnectorServiceImpl implements ConnectorService {
       ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
       createConnectorUpdateActivity(accountIdentifier, savedConnector);
       publishEvent(accountIdentifier, savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier(),
-          savedConnector.getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
+          savedConnector.getIdentifier(), savedConnector.getConnectorType(),
+          EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return connectorResponse;
     }
   }
 
-  private void publishEvent(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String action) {
+  private void publishEvent(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      ConnectorType connectorType, String action) {
     try {
       EntityChangeDTO.Builder connectorUpdateDTOBuilder = EntityChangeDTO.newBuilder()
                                                               .setAccountIdentifier(StringValue.of(accountIdentifier))
@@ -205,9 +209,10 @@ public class ConnectorServiceImpl implements ConnectorService {
       }
       eventProducer.send(
           Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.CONNECTOR_ENTITY,
-                  EventsFrameworkMetadataConstants.ACTION, action))
+              .putAllMetadata(
+                  ImmutableMap.of("accountId", accountIdentifier, EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                      EventsFrameworkMetadataConstants.CONNECTOR_ENTITY, EventsFrameworkMetadataConstants.ACTION,
+                      action, EventsFrameworkMetadataConstants.CONNECTOR_ENTITY_TYPE, connectorType.getDisplayName()))
               .setData(connectorUpdateDTOBuilder.build().toByteString())
               .build());
     } catch (Exception ex) {
@@ -243,7 +248,7 @@ public class ConnectorServiceImpl implements ConnectorService {
               getConnectorService(connector.getType())
                   .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
           if (isConnectorDeleted) {
-            publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier,
+            publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, connector.getType(),
                 EventsFrameworkMetadataConstants.DELETE_ACTION);
             return true;
           } else {
