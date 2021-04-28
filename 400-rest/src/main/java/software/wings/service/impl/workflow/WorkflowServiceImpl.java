@@ -2018,7 +2018,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                 USER);
           }
         }
-        setCloudProviderForPhaseInfraRefactor(infrastructureDefinition, workflowPhase);
+        setCloudProviderForPhase(infrastructureDefinition, workflowPhase);
       }
 
       WorkflowPhase rollbackWorkflowPhase =
@@ -2027,7 +2027,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         rollbackWorkflowPhase.setServiceId(serviceId);
         rollbackWorkflowPhase.setInfraDefinitionId(infraDefinitionId);
         if (infrastructureDefinition != null) {
-          setCloudProviderForPhaseInfraRefactor(infrastructureDefinition, rollbackWorkflowPhase);
+          setCloudProviderForPhase(infrastructureDefinition, rollbackWorkflowPhase);
         }
         preAppendRollbackProvisionInfrastructure(workflowPhase, rollbackWorkflowPhase);
         orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
@@ -2069,7 +2069,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           || orchestrationWorkflow.getOrchestrationWorkflowType() == BLUE_GREEN) {
         WorkflowServiceTemplateHelper.setTemplateExpresssionsFromPhase(workflow, workflowPhase);
       } else {
-        WorkflowServiceTemplateHelper.validateTemplateExpressionsInfraRefactor(workflowPhase.getTemplateExpressions());
+        WorkflowServiceTemplateHelper.validateTemplateExpressions(workflowPhase.getTemplateExpressions());
       }
     }
 
@@ -2083,7 +2083,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
   }
 
-  private void setCloudProviderForPhaseInfraRefactor(
+  private void setCloudProviderForPhase(
       InfrastructureDefinition infrastructureDefinition, WorkflowPhase rollbackWorkflowPhase) {
     rollbackWorkflowPhase.setComputeProviderId(infrastructureDefinition.getInfrastructure().getCloudProviderId());
     rollbackWorkflowPhase.setDeploymentType(infrastructureDefinition.getDeploymentType());
