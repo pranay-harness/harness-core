@@ -90,21 +90,17 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         log.warn("Orchestration Graph not yet generated. Passing on to next iteration");
         return;
       }
-      log.info("Getting Unprocessed orchestrationEventLogs for planExecutionId [{}]", planExecution.getUuid());
 
       long lastUpdatedAt = orchestrationGraph.getLastUpdatedAt();
       List<OrchestrationEventLog> unprocessedEventLogs =
           orchestrationEventLogRepository.findUnprocessedEvents(planExecution.getUuid(), lastUpdatedAt);
-      log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
       if (!unprocessedEventLogs.isEmpty()) {
+        log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
         for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
           orchestrationGraph =
               graphStatusUpdateHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
           lastUpdatedAt = orchestrationEventLog.getCreatedAt();
         }
-      }
-      if (unprocessedEventLogs.size() > 5) {
-        log.warn("More than 5 Events Processed at a time for given planExecutionId:[{}]", planExecution.getUuid());
       }
       orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
