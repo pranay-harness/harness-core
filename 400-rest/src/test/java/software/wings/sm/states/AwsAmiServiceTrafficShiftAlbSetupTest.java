@@ -23,6 +23,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -57,6 +58,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionResponse;
@@ -81,6 +83,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private AwsStateHelper awsStateHelper;
+  @Mock private StateExecutionService stateExecutionService;
   @Captor private ArgumentCaptor<SweepingOutputInstance> sweepingOutputInstanceArgumentCaptor;
 
   @Test
@@ -182,6 +185,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
     on(state).set("delegateService", delegateService);
     on(state).set("awsAmiServiceHelper", awsAmiServiceHelper);
     on(state).set("awsStateHelper", awsStateHelper);
+    on(state).set("stateExecutionService", stateExecutionService);
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();
@@ -213,6 +217,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
         .when(serviceResourceService)
         .getCommandByName(any(), any(), any(), any());
     doReturn(emptyList()).when(serviceResourceService).getFlattenCommandUnitList(any(), any(), any(), any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     if (!isSuccess) {
       doThrow(Exception.class).when(delegateService).queueTask(any());
     }

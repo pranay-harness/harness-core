@@ -144,8 +144,12 @@ public class KubernetesSteadyStateCheck extends State {
               .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
               .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("Kubernetes steady state check")
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
+
+      appendDelegateTaskDetails(context, delegateTask);
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(activity.getUuid()))
@@ -252,5 +256,10 @@ public class KubernetesSteadyStateCheck extends State {
         .infrastructureMappingId(containerInfrastructureMapping.getUuid())
         .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
         .build();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

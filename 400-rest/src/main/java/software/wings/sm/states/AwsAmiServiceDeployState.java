@@ -347,7 +347,7 @@ public class AwsAmiServiceDeployState extends State {
             .context(context)
             .build();
 
-    createAndQueueResizeTask(amiResizeTaskRequestData);
+    createAndQueueResizeTask(amiResizeTaskRequestData, context);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -357,7 +357,7 @@ public class AwsAmiServiceDeployState extends State {
         .build();
   }
 
-  protected void createAndQueueResizeTask(AmiResizeTaskRequestData amiResizeTaskRequestData) {
+  protected void createAndQueueResizeTask(AmiResizeTaskRequestData amiResizeTaskRequestData, ExecutionContext context) {
     String accountId = amiResizeTaskRequestData.getAccountId();
     String appId = amiResizeTaskRequestData.getAppId();
     String envId = amiResizeTaskRequestData.getEnvId();
@@ -405,8 +405,11 @@ public class AwsAmiServiceDeployState extends State {
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, amiResizeTaskRequestData.getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("AWS AMI service deploy task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
   }
 
   @VisibleForTesting
@@ -707,5 +710,10 @@ public class AwsAmiServiceDeployState extends State {
 
   public void setCommandName(String commandName) {
     this.commandName = commandName;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

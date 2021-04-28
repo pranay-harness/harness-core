@@ -51,6 +51,7 @@ import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
@@ -72,6 +73,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest {
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private DelegateService delegateService;
   @Mock private ActivityService activityService;
+  @Mock private StateExecutionService stateExecutionService;
 
   private final List<LbDetailsForAlbTrafficShift> lbDetails = getLbDetailsForAlbTrafficShifts();
   @InjectMocks

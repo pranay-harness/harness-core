@@ -220,7 +220,7 @@ public class AwsCodeDeployState extends State {
                                                           .codeDeployParams(codeDeployParams)
                                                           .build();
 
-    String delegateTaskId = delegateService.queueTask(
+    DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getAppId())
@@ -236,7 +236,12 @@ public class AwsCodeDeployState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
-            .build());
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Aws code deploy task execution")
+            .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -530,5 +535,10 @@ public class AwsCodeDeployState extends State {
     stateDefaults.put("key", ARTIFACT_S3_KEY_EXPRESSION);
     stateDefaults.put("bundleType", "zip");
     return stateDefaults;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }
