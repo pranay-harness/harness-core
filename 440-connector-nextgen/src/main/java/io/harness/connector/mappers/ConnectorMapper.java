@@ -12,6 +12,7 @@ import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.DelegateSelectable;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.localconnector.LocalConnector;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
@@ -146,6 +147,8 @@ public class ConnectorMapper {
     switch (connector.getType()) {
       case GCP_KMS:
         return Boolean.TRUE.equals(((GcpKmsConnector) connector).getHarnessManaged());
+      case AWS_KMS:
+        return Boolean.TRUE.equals(((AwsKmsConnector) connector).getHarnessManaged());
       case LOCAL:
         return Boolean.TRUE.equals(((LocalConnector) connector).getHarnessManaged());
       default:

@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionInterruptType.MARK_FAILED;
 import static io.harness.beans.ExecutionInterruptType.PAUSE_FOR_INPUTS;
 import static io.harness.beans.ExecutionStatus.FAILED;
@@ -11,6 +12,9 @@ import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
 import static software.wings.sm.StateType.ENV_STATE;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 
 import software.wings.api.EnvStateExecutionData;
@@ -30,7 +34,9 @@ import com.google.inject.Inject;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineStageExecutionAdvisor implements ExecutionEventAdvisor {
   @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Inject private transient WorkflowService workflowService;
@@ -47,14 +53,6 @@ public class PipelineStageExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
 
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    if (workflowStandardParams != null && workflowStandardParams.isContinueWithDefaultValues()) {
-      log.info(String.format(
-          "Continue With defaults option is selection for execution: %s. Hence not pausing the stage for inputs",
-          workflowExecution.getUuid()));
-      return null;
-    }
-
     WorkflowState workflowState = (WorkflowState) state;
     if (stateExecutionInstance.isContinued()) {
       return null;
@@ -65,6 +63,14 @@ public class PipelineStageExecutionAdvisor implements ExecutionEventAdvisor {
           .withExecutionInterruptType(executionResponse.getExecutionStatus() == FAILED ? MARK_FAILED : null)
           .withExecutionResponse(executionResponse)
           .build();
+    }
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    if (workflowStandardParams != null && workflowStandardParams.isContinueWithDefaultValues()) {
+      log.info(String.format(
+          "Continue With defaults option is selection for execution: %s. Hence not pausing the stage for inputs",
+          workflowExecution.getUuid()));
+      return null;
     }
 
     List<String> runtimeInputsVariables = workflowState.getRuntimeInputVariables();

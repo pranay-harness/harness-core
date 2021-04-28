@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
@@ -25,6 +27,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.DX)
 public class YamlSchemaGeneratorTest extends CategoryTest {
   YamlSchemaGenerator yamlSchemaGenerator;
 
@@ -70,9 +73,23 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
     assertThat(s).isEqualTo(expectedOutput);
   }
 
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testGenerateYamlSchemaFilesWithInternalValuesAsList() throws IOException {
+    setup(TestClass.ClassWhichContainsInterfaceWithInternalWithList.class);
+    final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
+    assertThat(entityTypeJsonNodeMap.size()).isEqualTo(1);
+    final String expectedOutput = IOUtils.resourceToString(
+        "testSchema/testJsonWithInternalSubtypeList.json", StandardCharsets.UTF_8, this.getClass().getClassLoader());
+    ObjectWriter jsonWriter = yamlSchemaGenerator.getObjectWriter();
+    final String s = jsonWriter.writeValueAsString(entityTypeJsonNodeMap.get(EntityType.CONNECTORS));
+    assertThat(s).isEqualTo(expectedOutput);
+  }
+
   private void setup(Class<?> clazz) {
     SwaggerGenerator swaggerGenerator = new SwaggerGenerator(Jackson.newObjectMapper());
-    JacksonClassHelper jacksonClassHelper = new JacksonClassHelper();
+    JacksonClassHelper jacksonClassHelper = new JacksonClassHelper(Jackson.newObjectMapper());
     final List<YamlSchemaRootClass> yamlSchemaRootClasses =
         Collections.singletonList(YamlSchemaRootClass.builder().entityType(EntityType.CONNECTORS).clazz(clazz).build());
 

@@ -4,6 +4,8 @@ import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
@@ -31,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 
+@OwnedBy(HarnessTeam.CDP)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private static final String DEPLOYMENT_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(DeploymentStageConfig.class);
@@ -48,27 +51,22 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     JsonNode deploymentStepsSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
 
-    JsonNode pipelineStepsSchema =
-        yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
-
     JsonNode definitions = deploymentStageSchema.get(DEFINITIONS_NODE);
     JsonNode deploymentStepDefinitions = deploymentStepsSchema.get(DEFINITIONS_NODE);
-    JsonNode pipelineStepDefinitions = pipelineStepsSchema.get(DEFINITIONS_NODE);
 
-    JsonNode stepDefinitions = JsonNodeUtils.merge(deploymentStepDefinitions, pipelineStepDefinitions);
-    JsonNode mergedDefinitions = JsonNodeUtils.merge(definitions, stepDefinitions);
+    JsonNodeUtils.merge(definitions, deploymentStepDefinitions);
 
-    JsonNode jsonNode = mergedDefinitions.get(StepElementConfig.class.getSimpleName());
+    JsonNode jsonNode = definitions.get(StepElementConfig.class.getSimpleName());
     modifyStepElementSchema((ObjectNode) jsonNode);
 
-    jsonNode = mergedDefinitions.get(ParallelStepElementConfig.class.getSimpleName());
+    jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
     }
 
     yamlSchemaGenerator.modifyRefsNamespace(deploymentStageSchema, CD_NAMESPACE);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    JsonNode node = mapper.createObjectNode().set(CD_NAMESPACE, mergedDefinitions);
+    JsonNode node = mapper.createObjectNode().set(CD_NAMESPACE, definitions);
 
     JsonNode partialCdSchema = ((ObjectNode) deploymentStageSchema).set(DEFINITIONS_NODE, node);
 

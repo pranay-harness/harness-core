@@ -75,6 +75,7 @@ public abstract class VerificationJob
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("unique_query_idx")
+                 .unique(true)
                  .field(VerificationJobKeys.accountId)
                  .field(VerificationJobKeys.orgIdentifier)
                  .field(VerificationJobKeys.projectIdentifier)
@@ -100,6 +101,7 @@ public abstract class VerificationJob
   @NotNull private RuntimeParameter envIdentifier;
   @Deprecated private List<DataSourceType> dataSources;
   private List<String> monitoringSources;
+  private boolean allMonitoringSourcesEnabled;
 
   private RuntimeParameter duration;
   private boolean isDefaultJob;
@@ -124,6 +126,10 @@ public abstract class VerificationJob
     if (!duration.isRuntimeParam()) {
       Preconditions.checkArgument(getDuration().toMinutes() >= 5,
           "Minimum allowed duration is 5 mins. Current value(mins): %s", getDuration().toMinutes());
+    }
+    if (isAllMonitoringSourcesEnabled()) {
+      Preconditions.checkArgument(monitoringSources == null || monitoringSources.size() == 0,
+          "Monitoring Sources should be null or empty if allMonitoringSources is enabled");
     }
     Preconditions.checkNotNull(type, generateErrorMessageFromParam(VerificationJobKeys.type));
     this.validateParams();
@@ -151,6 +157,7 @@ public abstract class VerificationJob
     verificationJobDTO.setActivitySourceIdentifier(activitySourceIdentifier);
     verificationJobDTO.setMonitoringSources(monitoringSources);
     verificationJobDTO.setVerificationJobUrl(getVerificationJobUrl());
+    verificationJobDTO.setAllMonitoringSourcesEnabled(this.allMonitoringSourcesEnabled);
   }
 
   public abstract void fromDTO(VerificationJobDTO verificationJobDTO);
@@ -171,6 +178,7 @@ public abstract class VerificationJob
     this.setActivitySourceIdentifier(verificationJobDTO.getActivitySourceIdentifier());
     this.setType(verificationJobDTO.getType());
     this.setDefaultJob(verificationJobDTO.isDefaultJob());
+    this.setAllMonitoringSourcesEnabled(verificationJobDTO.isAllMonitoringSourcesEnabled());
   }
 
   protected List<TimeRange> getTimeRangesForDuration(Instant startTime) {

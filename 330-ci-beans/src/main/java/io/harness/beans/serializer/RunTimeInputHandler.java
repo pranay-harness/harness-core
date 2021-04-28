@@ -1,10 +1,14 @@
 package io.harness.beans.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.NGExpressionUtils.matchesInputSetPattern;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.pms.yaml.YamlNode.UUID_FIELD_NAME;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
@@ -19,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(CI)
 public class RunTimeInputHandler {
   public static String UNRESOLVED_PARAMETER = "UNRESOLVED_PARAMETER";
   public boolean resolveGitClone(ParameterField<Boolean> cloneRepository) {
@@ -164,7 +169,11 @@ public class RunTimeInputHandler {
       }
     }
 
-    return parameterField.getValue();
+    Map<String, String> m = parameterField.getValue();
+    if (isNotEmpty(m)) {
+      m.remove(UUID_FIELD_NAME);
+    }
+    return m;
   }
 
   public List<String> resolveListParameter(String fieldName, String stepType, String stepIdentifier,

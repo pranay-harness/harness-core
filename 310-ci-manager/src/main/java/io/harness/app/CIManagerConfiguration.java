@@ -3,6 +3,7 @@ package io.harness.app;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
@@ -45,7 +46,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
-
+  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   private String ngManagerServiceSecret;
   private LogServiceConfig logServiceConfig;
   private TIServiceConfig tiServiceConfig;

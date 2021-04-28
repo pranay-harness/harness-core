@@ -5,6 +5,7 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDE
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,6 +66,16 @@ public class VerificationJobTest extends CategoryTest {
     verificationJob = spy(verificationJob);
     verificationJob.validate();
     verify(verificationJob, times(1)).validateParams();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testValidate_allMonitoringSourcesEnabled() {
+    VerificationJob verificationJob = createVerificationJob();
+    verificationJob.setAllMonitoringSourcesEnabled(true);
+    assertThatThrownBy(() -> verificationJob.validate())
+        .hasMessage("Monitoring Sources should be null or empty if allMonitoringSources is enabled");
   }
 
   @Test

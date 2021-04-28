@@ -31,6 +31,7 @@ import io.harness.platform.remote.HealthResource;
 import io.harness.platform.resourcegroup.ResourceGroupServiceModule;
 import io.harness.platform.resourcegroup.ResourceGroupServiceSetup;
 import io.harness.remote.NGObjectMapperHelper;
+import io.harness.request.RequestContextFilter;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
@@ -132,6 +133,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     registerJerseyProviders(environment);
     registerJerseyFeatures(environment);
     registerAuthFilters(appConfig, environment);
+    registerRequestContextFilter(environment);
 
     new NotificationServiceSetup().setup(
         appConfig.getNotificationServiceConfig(), environment, godInjector.get(NOTIFICATION_SERVICE));
@@ -191,6 +193,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
     defaultSwaggerBundleConfiguration.setTitle("Platform Service API Reference");
     return defaultSwaggerBundleConfiguration;
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void registerAuthFilters(PlatformConfiguration configuration, Environment environment) {

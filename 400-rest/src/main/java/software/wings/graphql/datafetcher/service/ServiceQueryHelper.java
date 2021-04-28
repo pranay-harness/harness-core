@@ -14,6 +14,8 @@ import software.wings.beans.Service;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentType;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceTagFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceTagType;
@@ -21,7 +23,9 @@ import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FieldEnd;
@@ -56,6 +60,19 @@ public class ServiceQueryHelper {
         field = query.field("_id");
         QLIdFilter serviceFilter = filter.getService();
         utils.setIdFilter(field, serviceFilter);
+      }
+
+      if (filter.getDeploymentType() != null) {
+        field = query.field("deploymentType");
+        QLDeploymentTypeFilter deploymentTypeFilter = filter.getDeploymentType();
+        QLDeploymentTypeFilter deploymentTypeFilterWithoutNull =
+            QLDeploymentTypeFilter.builder()
+                .operator(deploymentTypeFilter.getOperator())
+                .values(Arrays.stream(deploymentTypeFilter.getValues())
+                            .filter(Objects::nonNull)
+                            .toArray(QLDeploymentType[] ::new))
+                .build();
+        utils.setEnumFilter(field, deploymentTypeFilterWithoutNull);
       }
 
       if (filter.getTag() != null) {

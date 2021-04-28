@@ -3,23 +3,21 @@ package io.harness.waiter;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogRemoveContext;
-import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
-import io.harness.waiter.WaitInstance.WaitInstanceKeys;
+import io.harness.waiter.persistence.PersistenceWrapper;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -32,8 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.
@@ -41,8 +37,9 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class WaitNotifyEngine {
-  @Inject private HPersistence persistence;
+  @Inject private PersistenceWrapper presistenceWrapper;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private NotifyQueuePublisherRegister publisherRegister;
 
@@ -84,32 +81,14 @@ public class WaitNotifyEngine {
 
     waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list);
 
-    final String waitInstanceId = persistence.save(waitInstanceBuilder.build());
+    final String waitInstanceId = presistenceWrapper.save(waitInstanceBuilder.build());
 
-    // We cannot combine the logic of obtaining the responses before the save, because this will create a race with
-    // storing the responses.
-
-    final List<String> keys = persistence.createQuery(NotifyResponse.class, excludeAuthority)
-                                  .field(NotifyResponseKeys.uuid)
-                                  .in(list)
-                                  .asKeyList()
-                                  .stream()
-                                  .map(key -> (String) key.getId())
-                                  .collect(toList());
-
-    if (isNotEmpty(keys)) {
-      final Query<WaitInstance> query =
-          persistence.createQuery(WaitInstance.class, excludeAuthority).filter(WaitInstanceKeys.uuid, waitInstanceId);
-
-      final UpdateOperations<WaitInstance> operations = persistence.createUpdateOperations(WaitInstance.class)
-                                                            .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, keys);
-
-      WaitInstance waitInstance;
-      if ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
-        if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
-            && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
-          sendNotification(waitInstance);
-        }
+    WaitInstance waitInstance;
+    if ((waitInstance = presistenceWrapper.modifyAndFetchWaitInstanceForExistingResponse(waitInstanceId, list))
+        != null) {
+      if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
+          && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
+        sendNotification(waitInstance);
       }
     }
 
@@ -124,12 +103,12 @@ public class WaitNotifyEngine {
     }
 
     try {
-      persistence.save(ProgressUpdate.builder()
-                           .uuid(generateUuid())
-                           .correlationId(correlationId)
-                           .createdAt(currentTimeMillis())
-                           .progressData(kryoSerializer.asDeflatedBytes(progressData))
-                           .build());
+      presistenceWrapper.save(ProgressUpdate.builder()
+                                  .uuid(generateUuid())
+                                  .correlationId(correlationId)
+                                  .createdAt(currentTimeMillis())
+                                  .progressData(kryoSerializer.asDeflatedBytes(progressData))
+                                  .build());
     } catch (Exception exception) {
       log.error("Failed to notify for progress of type " + progressData.getClass().getSimpleName(), exception);
     }
@@ -147,12 +126,12 @@ public class WaitNotifyEngine {
     }
 
     try {
-      persistence.save(NotifyResponse.builder()
-                           .uuid(correlationId)
-                           .createdAt(currentTimeMillis())
-                           .responseData(kryoSerializer.asDeflatedBytes(response))
-                           .error(error || response instanceof ErrorResponseData)
-                           .build());
+      presistenceWrapper.save(NotifyResponse.builder()
+                                  .uuid(correlationId)
+                                  .createdAt(currentTimeMillis())
+                                  .responseData(kryoSerializer.asDeflatedBytes(response))
+                                  .error(error || response instanceof ErrorResponseData)
+                                  .build());
       handleNotifyResponse(correlationId);
       return correlationId;
     } catch (DuplicateKeyException exception) {
@@ -181,14 +160,8 @@ public class WaitNotifyEngine {
   }
 
   public void handleNotifyResponse(String uuid) {
-    final Query<WaitInstance> query = persistence.createQuery(WaitInstance.class, excludeAuthority)
-                                          .filter(WaitInstanceKeys.waitingOnCorrelationIds, uuid);
-
-    final UpdateOperations<WaitInstance> operations = persistence.createUpdateOperations(WaitInstance.class)
-                                                          .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, uuid);
-
     WaitInstance waitInstance;
-    while ((waitInstance = persistence.findAndModify(query, operations, HPersistence.returnNewOptions)) != null) {
+    while ((waitInstance = presistenceWrapper.modifyAndFetchWaitInstance(uuid)) != null) {
       if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
         sendNotification(waitInstance);
       }

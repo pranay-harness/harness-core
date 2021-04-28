@@ -16,6 +16,9 @@ import io.harness.gitsync.persistance.EntityKeySource;
 import io.harness.gitsync.persistance.EntityLookupHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
+import io.harness.gitsync.scm.ScmDelegateGitHelper;
+import io.harness.gitsync.scm.ScmGitHelper;
+import io.harness.gitsync.scm.ScmManagerGitHelper;
 import io.harness.gitsync.sdk.GitSyncGrpcClientModule;
 import io.harness.gitsync.sdk.GitSyncSdkGrpcServerModule;
 import io.harness.ng.core.event.MessageListener;
@@ -25,6 +28,9 @@ import com.google.inject.name.Names;
 
 @OwnedBy(DX)
 public class GitSyncSdkModule extends AbstractModule {
+  public static final String SCM_ON_DELEGATE = "scmOnDelegate";
+  public static final String SCM_ON_MANAGER = "scmOnManager";
+
   private static volatile GitSyncSdkModule instance;
 
   static GitSyncSdkModule getInstance() {
@@ -49,6 +55,8 @@ public class GitSyncSdkModule extends AbstractModule {
         .annotatedWith(Names.named(GIT_CONFIG_STREAM))
         .to(GitSyncConfigEventMessageListener.class);
     bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
+    bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_MANAGER)).to(ScmManagerGitHelper.class);
+    bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_DELEGATE)).to(ScmDelegateGitHelper.class);
     //    AnnotationConfigApplicationContext context =
     //            new AnnotationConfigApplicationContext(GitAwarePersistenceBean.class);
     //    Injector injector = new SpringInjector(context);

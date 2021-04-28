@@ -185,7 +185,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   @Getter @Setter private List<String> delegateSelectors;
 
   public List<String> getDelegateSelectors(ExecutionContext context) {
-    return getDelegateSelectors();
+    return delegateSelectors;
   }
 
   public AbstractK8sState(String name, String stateType) {
@@ -311,7 +311,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
     fetchFilesTaskParams.setActivityId(activityId);
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);
-    fetchFilesTaskParams.setDelegateSelectors(getRenderedAndTrimmedSelectors(context));
+    fetchFilesTaskParams.setDelegateSelectors(
+        getDelegateSelectors(appManifestMap.get(K8sValuesLocation.Service), context));
 
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
@@ -350,13 +351,15 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Arrays.asList(waitId))
-        .stateExecutionData(K8sStateExecutionData.builder()
-                                .activityId(activityId)
-                                .commandName(commandName)
-                                .currentTaskType(TaskType.GIT_COMMAND)
-                                .valuesFiles(valuesFiles)
-                                .applicationManifestMap(appManifestMap)
-                                .build())
+        .stateExecutionData(
+            K8sStateExecutionData.builder()
+                .activityId(activityId)
+                .commandName(commandName)
+                .currentTaskType(TaskType.GIT_COMMAND)
+                .valuesFiles(valuesFiles)
+                .applicationManifestMap(appManifestMap)
+                .delegateSelectors(getDelegateSelectors(appManifestMap.get(K8sValuesLocation.Service), context))
+                .build())
         .delegateTaskId(delegateTaskId)
         .build();
   }
@@ -369,6 +372,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     fetchValuesParams.setActivityId(activityId);
     fetchValuesParams.setCommandUnitName(FetchFiles);
     fetchValuesParams.setAppId(context.getAppId());
+    fetchValuesParams.setDelegateSelectors(
+        getDelegateSelectors(appManifestMap.get(K8sValuesLocation.Service), context));
 
     Environment env = K8sStateHelper.fetchEnvFromExecutionContext(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
@@ -407,13 +412,15 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTaskId))
-        .stateExecutionData(K8sStateExecutionData.builder()
-                                .activityId(activityId)
-                                .commandName(k8sStateExecutor.commandName())
-                                .currentTaskType(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK)
-                                .valuesFiles(valuesFiles)
-                                .applicationManifestMap(appManifestMap)
-                                .build())
+        .stateExecutionData(
+            K8sStateExecutionData.builder()
+                .activityId(activityId)
+                .commandName(k8sStateExecutor.commandName())
+                .currentTaskType(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK)
+                .valuesFiles(valuesFiles)
+                .applicationManifestMap(appManifestMap)
+                .delegateSelectors(getDelegateSelectors(appManifestMap.get(K8sValuesLocation.Service), context))
+                .build())
         .build();
   }
 
@@ -507,7 +514,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
                                    .build());
   }
 
-  public ExecutionResponse queueK8sDelegateTask(ExecutionContext context, K8sTaskParameters k8sTaskParameters) {
+  public ExecutionResponse queueK8sDelegateTask(ExecutionContext context, K8sTaskParameters k8sTaskParameters,
+      Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
     Application app = appService.get(context.getAppId());
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     notNullCheck("WorkflowStandardParams should not be null", workflowStandardParams);
@@ -530,7 +538,9 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
     k8sTaskParameters.setHelmVersion(serviceResourceService.getHelmVersionWithDefault(context.getAppId(), serviceId));
-    k8sTaskParameters.setDelegateSelectors(getRenderedAndTrimmedSelectors(context));
+
+    k8sTaskParameters.setDelegateSelectors(getDelegateSelectors(
+        (applicationManifestMap == null) ? null : applicationManifestMap.get(K8sValuesLocation.Service), context));
 
     long taskTimeoutInMillis = DEFAULT_ASYNC_CALL_TIMEOUT;
 
@@ -582,7 +592,9 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             .cloudProvider(k8sTaskParameters.getK8sClusterConfig().getCloudProviderName())
             .releaseName(k8sTaskParameters.getReleaseName())
             .currentTaskType(TaskType.K8S_COMMAND_TASK)
-            .delegateSelectors(getRenderedAndTrimmedSelectors(context))
+            .delegateSelectors(getDelegateSelectors(
+                (applicationManifestMap == null) ? null : applicationManifestMap.get(K8sValuesLocation.Service),
+                context))
             .build();
 
     prepareDelegateTask(context, stateExecutionData, delegateTask, expressionFunctorToken);
@@ -867,6 +879,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         .workflowExecutionId(context.getWorkflowExecutionId())
         .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(applicationManifest.getHelmCommandFlag()))
         .mergeCapabilities(featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
+        .delegateSelectors(getDelegateSelectors(applicationManifest, context))
         .build();
   }
 
@@ -910,7 +923,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     Application app = appService.get(context.getAppId());
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
         fetchHelmValuesFetchTaskParameters(context, activityId, timeoutInMillis);
-    helmValuesFetchTaskParameters.setDelegateSelectors(getRenderedAndTrimmedSelectors(context));
 
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
@@ -939,12 +951,13 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
                                     .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
                                     .build();
 
-    K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder()
-                                                   .activityId(activityId)
-                                                   .commandName(commandName)
-                                                   .currentTaskType(TaskType.HELM_VALUES_FETCH)
-                                                   .delegateSelectors(getRenderedAndTrimmedSelectors(context))
-                                                   .build();
+    K8sStateExecutionData stateExecutionData =
+        K8sStateExecutionData.builder()
+            .activityId(activityId)
+            .commandName(commandName)
+            .currentTaskType(TaskType.HELM_VALUES_FETCH)
+            .delegateSelectors(helmValuesFetchTaskParameters.getDelegateSelectors())
+            .build();
 
     prepareDelegateTask(context, stateExecutionData, delegateTask, expressionFunctorToken);
 
@@ -1062,12 +1075,25 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
                                      .build());
   }
 
+  private Set<String> getDelegateSelectors(ApplicationManifest applicationManifest, ExecutionContext context) {
+    final Set<String> result = new HashSet<>();
+    result.addAll(getRenderedAndTrimmedSelectors(context));
+
+    if (applicationManifest == null || applicationManifest.getCustomSourceConfig() == null) {
+      return result;
+    }
+
+    result.addAll(k8sStateHelper.getRenderedAndTrimmedSelectors(
+        context, applicationManifest.getCustomSourceConfig().getDelegateSelectors()));
+    return result;
+  }
+
   @Override public abstract ExecutionResponse execute(ExecutionContext context);
 
   @Override public abstract void handleAbortEvent(ExecutionContext context);
 
   protected Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {
-    return k8sStateHelper.getRenderedAndTrimmedSelectors(context, getDelegateSelectors(context));
+    return k8sStateHelper.getRenderedAndTrimmedSelectors(context, getDelegateSelectors());
   }
 
   @Override

@@ -1,5 +1,9 @@
 package io.harness.repositories.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.pipeline.PipelineEntity;
 
 import com.mongodb.client.result.UpdateResult;
@@ -9,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(PIPELINE)
 public interface PMSPipelineRepositoryCustom {
   PipelineEntity update(Criteria criteria, PipelineEntity pipelineEntity);
 
@@ -20,4 +25,9 @@ public interface PMSPipelineRepositoryCustom {
 
   Optional<PipelineEntity> incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted);
+
+  PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO);
+
+  Optional<PipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean notDeleted);
 }

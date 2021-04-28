@@ -1,5 +1,7 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -8,6 +10,7 @@ import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -44,6 +47,10 @@ public class K8sApplyStep extends TaskChainExecutableWithRollback implements K8s
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
+    if (k8sApplyStepParameters.getFilePaths() == null || isEmpty(k8sApplyStepParameters.getFilePaths().getValue())) {
+      throw new InvalidRequestException("File/Folder path must be present");
+    }
     return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
   }
 

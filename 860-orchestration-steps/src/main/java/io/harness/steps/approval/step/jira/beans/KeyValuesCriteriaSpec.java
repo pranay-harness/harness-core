@@ -23,7 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName("KeyValuesCriteriaSpec")
+@JsonTypeName(CriteriaSpecTypeConstants.KEY_VALUES)
 @TypeAlias("keyValuesCriteriaSpec")
 public class KeyValuesCriteriaSpec implements CriteriaSpec {
   @YamlSchemaTypes({string})

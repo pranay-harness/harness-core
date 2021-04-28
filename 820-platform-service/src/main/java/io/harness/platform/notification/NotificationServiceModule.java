@@ -54,6 +54,9 @@ import io.harness.threading.ExecutorModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionModule;
+import io.harness.waiter.AbstractWaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -147,6 +150,12 @@ public class NotificationServiceModule extends AbstractModule {
     });
 
     install(ExecutorModule.getInstance());
+    install(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.MORPHIA).build();
+      }
+    });
     bind(ManagedScheduledExecutorService.class)
         .annotatedWith(Names.named("delegate-response"))
         .toInstance(new ManagedScheduledExecutorService("delegate-response"));

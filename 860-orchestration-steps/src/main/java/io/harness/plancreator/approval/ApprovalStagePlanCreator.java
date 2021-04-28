@@ -1,29 +1,27 @@
 package io.harness.plancreator.approval;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.GenericStagePlanCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
+import io.harness.steps.approval.stage.ApprovalStageSpecParameters;
 import io.harness.steps.approval.stage.ApprovalStageStep;
-import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-@OwnedBy(PIPELINE)
+@OwnedBy(HarnessTeam.CDC)
 public class ApprovalStagePlanCreator extends GenericStagePlanCreator {
   @Override
   public Set<String> getSupportedStageTypes() {
@@ -36,8 +34,8 @@ public class ApprovalStagePlanCreator extends GenericStagePlanCreator {
   }
 
   @Override
-  public StepParameters getStepParameters(StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
-    return ApprovalStageStepParameters.getStepParameters(stageElementConfig, childrenNodeIds.get(0));
+  public SpecParameters getSpecParameters(String childNodeId) {
+    return ApprovalStageSpecParameters.getStepParameters(childNodeId);
   }
 
   @Override

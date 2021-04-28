@@ -2,9 +2,12 @@ package io.harness.ccm;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderModule;
@@ -13,6 +16,7 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
@@ -31,6 +35,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.Validation;
@@ -91,9 +96,11 @@ public class CENextGenModule extends AbstractModule {
     install(VersionModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
     install(FeatureFlagModule.getInstance());
+    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(CENextGenConfiguration.class).toInstance(configuration);
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    registerEventsFrameworkMessageListeners();
 
     install(new AbstractModule() {
       @Override
@@ -138,5 +145,11 @@ public class CENextGenModule extends AbstractModule {
         .configure()
         .parameterNameProvider(new ReflectionParameterNameProvider())
         .buildValidatorFactory();
+  }
+
+  private void registerEventsFrameworkMessageListeners() {
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(CONNECTOR_ENTITY + ENTITY_CRUD))
+        .to(ConnectorEntityCRUDStreamListener.class);
   }
 }

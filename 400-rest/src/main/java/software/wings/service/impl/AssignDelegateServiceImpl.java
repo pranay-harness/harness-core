@@ -216,24 +216,20 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
     DelegateEntityOwner delegateOwner = delegate.getOwner();
 
-    // Account level delegate and task. This is equivalent to CG behavior.
-    if (delegateOwner == null
-        && (isEmpty(taskSetupAbstractions) || taskSetupAbstractions.get(NgSetupFields.OWNER) == null)) {
-      return true;
-    }
-
-    // Account level delegate and task with an owner defined
+    // Account level delegate can handle anything. This is equivalent to CG behavior.
     if (delegateOwner == null) {
-      return false;
+      return true;
     }
 
     // Account level task and delegate with an owner defined
     if (isEmpty(taskSetupAbstractions) || taskSetupAbstractions.get(NgSetupFields.OWNER) == null) {
+      delegateSelectionLogsService.logOwnerRuleNotMatched(
+          batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
       return false;
     }
 
     // Delegate and task having owners that have to be matched
-    boolean canAssign = delegateOwner.getIdentifier().equals(taskSetupAbstractions.get(NgSetupFields.OWNER));
+    boolean canAssign = taskSetupAbstractions.get(NgSetupFields.OWNER).startsWith(delegateOwner.getIdentifier());
     if (!canAssign) {
       delegateSelectionLogsService.logOwnerRuleNotMatched(
           batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);

@@ -289,6 +289,7 @@ import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountC
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.EcrClassicBuildServiceImpl;
+import software.wings.service.impl.AccessRequestServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
@@ -497,6 +498,7 @@ import software.wings.service.impl.yaml.YamlSuccessfulChangeServiceImpl;
 import software.wings.service.impl.yaml.service.YamlCloneServiceImpl;
 import software.wings.service.impl.yaml.sync.GitSyncErrorServiceImpl;
 import software.wings.service.impl.yaml.sync.YamlGitConfigServiceImpl;
+import software.wings.service.intfc.AccessRequestService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.ActivityService;
@@ -1059,6 +1061,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(ErrorReporter.class).to(BugsnagErrorReporter.class);
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
+    bind(AccessRequestService.class).to(AccessRequestServiceImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
 

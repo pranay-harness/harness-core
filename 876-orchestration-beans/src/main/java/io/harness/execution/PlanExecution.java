@@ -96,9 +96,11 @@ public class PlanExecution implements PersistentRegularIterable, UuidAccess {
     Map<String, String> logContext = new HashMap<>();
     logContext.put("planExecutionId", uuid);
     logContext.putAll(setupAbstractions != null ? setupAbstractions : new HashMap<>());
-    logContext.put("pipelineIdentifier", metadata.getPipelineIdentifier());
-    logContext.put("triggerType", metadata.getTriggerInfo().getTriggerType().toString());
-    logContext.put("triggeredBy", metadata.getTriggerInfo().getTriggeredBy().getIdentifier());
+    if (metadata != null) {
+      logContext.put("pipelineIdentifier", metadata.getPipelineIdentifier());
+      logContext.put("triggerType", metadata.getTriggerInfo().getTriggerType().toString());
+      logContext.put("triggeredBy", metadata.getTriggerInfo().getTriggeredBy().getIdentifier());
+    }
     return logContext;
   }
 }

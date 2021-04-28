@@ -19,7 +19,10 @@ import java.util.List;
 public interface DelegateProfileService extends OwnedByAccount {
   PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest);
   DelegateProfile get(String accountId, String delegateProfileId);
-  DelegateProfile fetchPrimaryProfile(String accountId);
+  DelegateProfile fetchCgPrimaryProfile(String accountId);
+
+  DelegateProfile fetchNgPrimaryProfile(String accountId);
+
   DelegateProfile update(DelegateProfile delegateProfile);
   DelegateProfile updateScopingRules(
       String accountId, String delegateProfileId, List<DelegateProfileScopingRule> scopingRules);

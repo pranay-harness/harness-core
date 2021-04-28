@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -20,6 +22,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -54,6 +58,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
 public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ActivityService activityService;
@@ -107,12 +113,13 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
         .when(k8sRollingState)
         .createK8sActivity(
             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
-    doReturn(ExecutionResponse.builder().build()).when(k8sRollingState).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sRollingState).queueK8sDelegateTask(any(), any(), any());
     ExecutionResponse response = k8sRollingState.execute(context);
     verify(k8sRollingState, times(1))
         .createK8sActivity(
             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
-    verify(k8sRollingState, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+    verify(k8sRollingState, times(1))
+        .queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class), any());
   }
 
   @Test(expected = InvalidRequestException.class)

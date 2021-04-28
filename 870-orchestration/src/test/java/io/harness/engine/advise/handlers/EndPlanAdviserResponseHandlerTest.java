@@ -1,5 +1,6 @@
 package io.harness.engine.advise.handlers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ARCHIT;
 
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -38,6 +40,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PIPELINE)
 public class EndPlanAdviserResponseHandlerTest extends OrchestrationTestBase {
   @Mock private InterruptManager interruptManager;
   @InjectMocks @Inject private EndPlanAdviserResponseHandler endPlanAdviserResponseHandler;
@@ -102,6 +105,7 @@ public class EndPlanAdviserResponseHandlerTest extends OrchestrationTestBase {
             InterruptPackage.builder()
                 .planExecutionId(PLAN_EXECUTION_ID)
                 .interruptType(InterruptType.ABORT_ALL)
+                .nodeExecutionId(nodeExecution.getUuid())
                 .interruptConfig(
                     InterruptConfig.newBuilder()
                         .setIssuedBy(IssuedBy.newBuilder()

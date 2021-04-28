@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDP)
 public enum TerraformCommandUnit {
+  Plan,
   Apply,
   Adjust,
   Destroy,

@@ -17,6 +17,7 @@ shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "//950-delegate-tasks-beans:module",
     "//950-events-framework:module",
     "//959-psql-database-models:module",
+    "//960-continuous-features:module",
     "//960-persistence:module",
     "//970-grpc:module",
     "//970-rbac-core:module",

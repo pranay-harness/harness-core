@@ -118,6 +118,7 @@ public class ACL implements PersistentEntity {
         .principalType(acl.getPrincipalType())
         .principalIdentifier(acl.getPrincipalIdentifier())
         .aclQueryString(acl.getAclQueryString())
+        .enabled(acl.isEnabled())
         .build();
   }
 

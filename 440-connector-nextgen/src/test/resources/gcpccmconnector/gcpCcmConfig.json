@@ -1,0 +1,23 @@
+{
+  "connector": {
+    "type": "GcpCloudCost",
+    "name": "name_ph",
+    "identifier": "identifier_ph",
+    "orgIdentifier": "orgIdentifier_ph",
+    "description": "description_ph",
+    "projectIdentifier": "projectIdentifier_ph",
+    "tags": {
+      "company": "Harness",
+      "env": "dev"
+    },
+    "spec": {
+      "featuresEnabled": [
+        "BILLING"
+      ],
+      "billingExportSpec": {
+        "projectId": "projectId",
+        "datasetId": "datasetId"
+      }
+    }
+  }
+}

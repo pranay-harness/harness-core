@@ -1,5 +1,7 @@
 package io.harness.batch.processing.config;
 
+import static io.harness.lock.DistributedLockImplementation.MONGO;
+
 import io.harness.batch.processing.metrics.CeCloudMetricsService;
 import io.harness.batch.processing.metrics.CeCloudMetricsServiceImpl;
 import io.harness.batch.processing.metrics.ProductMetricsService;
@@ -16,10 +18,11 @@ import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
-import io.harness.ff.FeatureFlagService;
-import io.harness.ff.FeatureFlagServiceImpl;
+import io.harness.ff.FeatureFlagModule;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.redis.RedisConfig;
 
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -32,9 +35,12 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -55,12 +61,26 @@ public class BatchProcessingModule extends AbstractModule {
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
-    bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
+    install(FeatureFlagModule.getInstance());
+    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
   }
 
   @Provides
   @Singleton
   MongoConfig mongoConfig(BatchMainConfig batchMainConfig) {
     return batchMainConfig.getHarnessMongo();
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return MONGO;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  RedisConfig redisConfig() {
+    return RedisConfig.builder().build();
   }
 }

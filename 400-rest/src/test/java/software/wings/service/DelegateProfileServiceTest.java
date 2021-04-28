@@ -10,8 +10,9 @@ import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.service.impl.DelegateProfileServiceImpl.CG_PRIMARY_PROFILE_NAME;
+import static software.wings.service.impl.DelegateProfileServiceImpl.NG_PRIMARY_PROFILE_NAME;
 import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_DESCRIPTION;
-import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_NAME;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +23,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -52,6 +57,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateProfileServiceTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = generateUuid();
   public static final String DELEGATE_PROFILE_NAME = "DELEGATE_PROFILE_NAME";
@@ -131,19 +138,37 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     delegateProfileService.onAccountCreated(account);
 
-    DelegateProfile primaryProfile = persistence.createQuery(DelegateProfile.class)
-                                         .field(DelegateProfileKeys.accountId)
-                                         .equal(account.getUuid())
-                                         .field(DelegateProfileKeys.primary)
-                                         .equal(true)
-                                         .get();
+    DelegateProfile cgPrimaryProfile = persistence.createQuery(DelegateProfile.class)
+                                           .field(DelegateProfileKeys.accountId)
+                                           .equal(account.getUuid())
+                                           .field(DelegateProfileKeys.primary)
+                                           .equal(true)
+                                           .filter(DelegateProfileKeys.ng, false)
+                                           .get();
 
-    assertThat(primaryProfile).isNotNull();
-    assertThat(primaryProfile.getUuid()).isNotNull();
-    assertThat(primaryProfile.getAccountId()).isEqualTo(account.getUuid());
-    assertThat(primaryProfile.getName()).isEqualTo(PRIMARY_PROFILE_NAME);
-    assertThat(primaryProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
-    assertThat(primaryProfile.isPrimary()).isTrue();
+    assertThat(cgPrimaryProfile).isNotNull();
+    assertThat(cgPrimaryProfile.getUuid()).isNotNull();
+    assertThat(cgPrimaryProfile.getAccountId()).isEqualTo(account.getUuid());
+    assertThat(cgPrimaryProfile.getName()).isEqualTo(CG_PRIMARY_PROFILE_NAME);
+    assertThat(cgPrimaryProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
+    assertThat(cgPrimaryProfile.isPrimary()).isTrue();
+    assertThat(cgPrimaryProfile.isNg()).isFalse();
+
+    DelegateProfile ngPrimaryProfile = persistence.createQuery(DelegateProfile.class)
+                                           .field(DelegateProfileKeys.accountId)
+                                           .equal(account.getUuid())
+                                           .field(DelegateProfileKeys.primary)
+                                           .equal(true)
+                                           .filter(DelegateProfileKeys.ng, true)
+                                           .get();
+
+    assertThat(ngPrimaryProfile).isNotNull();
+    assertThat(ngPrimaryProfile.getUuid()).isNotNull();
+    assertThat(ngPrimaryProfile.getAccountId()).isEqualTo(account.getUuid());
+    assertThat(ngPrimaryProfile.getName()).isEqualTo(NG_PRIMARY_PROFILE_NAME);
+    assertThat(ngPrimaryProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
+    assertThat(ngPrimaryProfile.isPrimary()).isTrue();
+    assertThat(ngPrimaryProfile.isNg()).isTrue();
   }
 
   @Test
@@ -175,43 +200,91 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testFetchPrimaryProfileShouldFetchFromDb() {
+  public void testFetchCgPrimaryProfileShouldFetchFromDb() {
     String accountId = "existingAccountId";
 
     DelegateProfile primaryProfile = DelegateProfile.builder()
                                          .uuid(generateUuid())
                                          .accountId(accountId)
-                                         .name(PRIMARY_PROFILE_NAME)
+                                         .name(CG_PRIMARY_PROFILE_NAME)
                                          .description(PRIMARY_PROFILE_DESCRIPTION)
                                          .primary(true)
+                                         .ng(false)
                                          .build();
 
     persistence.save(primaryProfile);
 
-    DelegateProfile fetchedProfile = delegateProfileService.fetchPrimaryProfile(accountId);
+    DelegateProfile fetchedProfile = delegateProfileService.fetchCgPrimaryProfile(accountId);
 
     assertThat(fetchedProfile).isNotNull();
     assertThat(fetchedProfile.getUuid()).isNotNull();
     assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
-    assertThat(fetchedProfile.getName()).isEqualTo(PRIMARY_PROFILE_NAME);
+    assertThat(fetchedProfile.getName()).isEqualTo(CG_PRIMARY_PROFILE_NAME);
     assertThat(fetchedProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
     assertThat(fetchedProfile.isPrimary()).isTrue();
+    assertThat(fetchedProfile.isNg()).isFalse();
   }
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testFetchPrimaryProfileShouldCreateProfile() {
+  public void testFetchCgPrimaryProfileShouldCreateProfile() {
     String accountId = "nonExistingAccountId";
 
-    DelegateProfile fetchedProfile = delegateProfileService.fetchPrimaryProfile(accountId);
+    DelegateProfile fetchedProfile = delegateProfileService.fetchCgPrimaryProfile(accountId);
 
     assertThat(fetchedProfile).isNotNull();
     assertThat(fetchedProfile.getUuid()).isNotNull();
     assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
-    assertThat(fetchedProfile.getName()).isEqualTo(PRIMARY_PROFILE_NAME);
+    assertThat(fetchedProfile.getName()).isEqualTo(CG_PRIMARY_PROFILE_NAME);
     assertThat(fetchedProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
     assertThat(fetchedProfile.isPrimary()).isTrue();
+    assertThat(fetchedProfile.isNg()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testFetchNgPrimaryProfileShouldFetchFromDb() {
+    String accountId = "existingAccountId";
+
+    DelegateProfile primaryProfile = DelegateProfile.builder()
+                                         .uuid(generateUuid())
+                                         .accountId(accountId)
+                                         .name(NG_PRIMARY_PROFILE_NAME)
+                                         .description(PRIMARY_PROFILE_DESCRIPTION)
+                                         .primary(true)
+                                         .ng(true)
+                                         .build();
+
+    persistence.save(primaryProfile);
+
+    DelegateProfile fetchedProfile = delegateProfileService.fetchNgPrimaryProfile(accountId);
+
+    assertThat(fetchedProfile).isNotNull();
+    assertThat(fetchedProfile.getUuid()).isNotNull();
+    assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
+    assertThat(fetchedProfile.getName()).isEqualTo(NG_PRIMARY_PROFILE_NAME);
+    assertThat(fetchedProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
+    assertThat(fetchedProfile.isPrimary()).isTrue();
+    assertThat(fetchedProfile.isNg()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testFetchNgPrimaryProfileShouldCreateProfile() {
+    String accountId = "nonExistingAccountId";
+
+    DelegateProfile fetchedProfile = delegateProfileService.fetchNgPrimaryProfile(accountId);
+
+    assertThat(fetchedProfile).isNotNull();
+    assertThat(fetchedProfile.getUuid()).isNotNull();
+    assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
+    assertThat(fetchedProfile.getName()).isEqualTo(NG_PRIMARY_PROFILE_NAME);
+    assertThat(fetchedProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
+    assertThat(fetchedProfile.isPrimary()).isTrue();
+    assertThat(fetchedProfile.isNg()).isTrue();
   }
 
   @Test

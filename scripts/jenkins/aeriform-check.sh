@@ -89,10 +89,8 @@ if [ ! -z "$TRACK_FILES" ]
 then
 	scripts/bazel/aeriform.sh analyze \
     ${TRACK_FILES} \
-    --kind-filter AutoAction \
     --kind-filter Critical \
     --kind-filter ToDo \
-    --kind-filter Warning \
     --exit-code
 
 	scripts/bazel/aeriform.sh analyze \
@@ -100,7 +98,6 @@ then
     --team-filter ${HARNESS_TEAM} \
     --kind-filter AutoAction \
     --kind-filter Critical \
-    --kind-filter DevAction \
     --kind-filter Error \
     --kind-filter ToDo \
     --kind-filter Warning \

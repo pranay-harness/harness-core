@@ -1,6 +1,7 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateProfile;
@@ -20,6 +21,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegatesWithoutProfileMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateService delegateService;
@@ -47,7 +49,7 @@ public class DelegatesWithoutProfileMigration implements Migration {
   private void updateDelegate(Delegate delegate) {
     try {
       log.info("Fetching primary delegate profile.");
-      DelegateProfile primaryProfile = delegateProfileService.fetchPrimaryProfile(delegate.getAccountId());
+      DelegateProfile primaryProfile = delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId());
 
       log.info("Updating delegate.");
       Query<Delegate> updateQuery = wingsPersistence.createQuery(Delegate.class)

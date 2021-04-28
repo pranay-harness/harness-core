@@ -98,7 +98,7 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
         new Query(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING))
             .addCriteria(Criteria.where(ApprovalInstanceKeys.deadline).lt(System.currentTimeMillis())),
         new Update().set(ApprovalInstanceKeys.status, ApprovalStatus.EXPIRED));
-    log.info(String.format("No of approval instance expired: %d", result.getModifiedCount()));
+    log.info(String.format("No. of approval instances expired: %d", result.getModifiedCount()));
   }
 
   @Override
@@ -109,8 +109,10 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
         new Query(Criteria.where(Mapper.ID_KEY).is(approvalInstanceId))
             .addCriteria(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING)),
         new Update().set(ApprovalInstanceKeys.status, status));
-    waitNotifyEngine.doneWith(
-        approvalInstanceId, JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build());
+    if (status.isFinalStatus()) {
+      waitNotifyEngine.doneWith(
+          approvalInstanceId, JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build());
+    }
   }
 
   @Override
@@ -118,7 +120,7 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
       @NotNull EmbeddedUser user, @NotNull @Valid HarnessApprovalActivityRequestDTO request) {
     HarnessApprovalInstance instance =
         doTransaction(status -> addHarnessApprovalActivityInTransaction(approvalInstanceId, user, request));
-    if (instance.getStatus() == ApprovalStatus.APPROVED || instance.getStatus() == ApprovalStatus.REJECTED) {
+    if (instance.getStatus().isFinalStatus()) {
       waitNotifyEngine.doneWith(
           instance.getId(), HarnessApprovalResponseData.builder().approvalInstanceId(instance.getId()).build());
     }
@@ -128,7 +130,7 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   private HarnessApprovalInstance addHarnessApprovalActivityInTransaction(@NotNull String approvalInstanceId,
       @NotNull EmbeddedUser user, @NotNull @Valid HarnessApprovalActivityRequestDTO request) {
     HarnessApprovalInstance instance = fetchWaitingHarnessApproval(approvalInstanceId);
-    if (System.currentTimeMillis() > instance.getDeadline()) {
+    if (instance.hasExpired()) {
       throw new InvalidRequestException("Harness approval instance has already expired");
     }
 

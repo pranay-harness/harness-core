@@ -19,7 +19,7 @@ import io.harness.notification.repositories.NotificationSettingRepository;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.user.remote.UserClient;
-import io.harness.user.remote.UserSearchFilter;
+import io.harness.user.remote.UserFilterNG;
 import io.harness.usergroups.UserGroupClient;
 
 import com.google.common.collect.ImmutableList;
@@ -92,8 +92,8 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     }
     List<UserInfo> users = new ArrayList<>();
     try {
-      users = RestClientUtils.getResponse(
-          userClient.listUsers(UserSearchFilter.builder().userIds(userIds).build(), accountId));
+      users =
+          RestClientUtils.getResponse(userClient.listUsers(UserFilterNG.builder().userIds(userIds).build(), accountId));
     } catch (Exception exception) {
       log.error("Failure while fetching emails of users from userIds", exception);
     }

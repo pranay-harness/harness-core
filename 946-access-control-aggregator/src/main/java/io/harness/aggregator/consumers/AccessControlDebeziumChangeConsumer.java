@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.springframework.dao.DuplicateKeyException;
@@ -50,25 +49,13 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
 
   private boolean handleEvent(ChangeEvent<String, String> changeEvent) {
     String id = idDeserializer.deserialize(null, changeEvent.key().getBytes());
-    Optional<String> collectionNameOptional = getCollectionName(changeEvent.destination());
-    Optional<OpType> opTypeOptional =
-        getOperationType(((EmbeddedEngineChangeEvent<String, String>) changeEvent).sourceRecord());
-    if (StringUtils.isEmpty(id) || !collectionNameOptional.isPresent() || !opTypeOptional.isPresent()) {
-      log.error("Unable to get entity id / collection name / operation type from event: {}, ignoring it", changeEvent);
-      return true;
-    }
-
-    String collectionName = collectionNameOptional.get();
-    OpType opType = opTypeOptional.get();
-    Deserializer<? extends AccessControlEntity> deserializer = collectionToDeserializerMap.get(collectionName);
+    String collectionName = getCollectionName(changeEvent.destination());
+    OpType opType = getOperationType(((EmbeddedEngineChangeEvent<String, String>) changeEvent).sourceRecord());
 
     log.info("Received {} event for entity: {} in collection: {}", opType, id, collectionName);
 
-    Optional.ofNullable(deserializer).ifPresent(des -> {
-      ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName);
-      Optional.ofNullable(changeConsumer)
-          .ifPresent(consumer -> consumer.consumeEvent(opType, id, deserialize(changeEvent)));
-    });
+    ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName);
+    changeConsumer.consumeEvent(opType, id, deserialize(changeEvent));
     return true;
   }
 
@@ -90,10 +77,8 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
   }
 
   private <T extends AccessControlEntity> T deserialize(ChangeEvent<String, String> changeEvent) {
-    Optional<String> collectionNameOptional = getCollectionName(changeEvent.destination());
-    Deserializer<? extends AccessControlEntity> deserializer =
-        collectionToDeserializerMap.get(collectionNameOptional.orElseThrow(
-            () -> new IllegalStateException("No deserializer found for collection: " + changeEvent.destination())));
+    String collectionName = getCollectionName(changeEvent.destination());
+    Deserializer<? extends AccessControlEntity> deserializer = collectionToDeserializerMap.get(collectionName);
     return (T) deserializer.deserialize(null, getValue(changeEvent));
   }
 
@@ -101,12 +86,16 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
     return changeEvent.value() == null ? null : changeEvent.value().getBytes();
   }
 
-  private Optional<OpType> getOperationType(SourceRecord sourceRecord) {
+  private OpType getOperationType(SourceRecord sourceRecord) {
     return Optional.ofNullable(sourceRecord.headers().lastWithName(OP_FIELD))
-        .flatMap(x -> OpType.fromString((String) x.value()));
+        .flatMap(x -> OpType.fromString((String) x.value()))
+        .orElseThrow(() -> new IllegalArgumentException("Unsupported operation type "));
   }
 
-  private Optional<String> getCollectionName(String sourceRecordTopic) {
-    return Optional.of(sourceRecordTopic.split("\\.")).filter(x -> x.length >= 2).map(x -> x[2]);
+  private String getCollectionName(String sourceRecordTopic) {
+    return Optional.of(sourceRecordTopic.split("\\."))
+        .filter(x -> x.length >= 2)
+        .map(x -> x[2])
+        .orElseThrow(() -> new IllegalArgumentException("Unknown collection name: " + sourceRecordTopic));
   }
 }

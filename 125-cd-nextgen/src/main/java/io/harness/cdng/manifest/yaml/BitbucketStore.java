@@ -4,10 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestStoreType;
-import io.harness.cdng.visitor.helper.BitbucketStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
@@ -16,7 +18,9 @@ import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,10 +33,10 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.BITBUCKET)
 @OneOfField(fields = {"paths", "folderPath"})
 @OneOfField(fields = {"branch", "commitId"})
-@SimpleVisitorHelper(helperClass = BitbucketStoreVisitorHelper.class)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("bitbucketStore")
 @OwnedBy(CDP)
-public class BitbucketStore implements GitStoreConfig, Visitable {
+public class BitbucketStore implements GitStoreConfig, Visitable, WithConnectorRef {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
 
   @Wither private FetchType gitFetchType;
@@ -102,5 +106,12 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
   @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName("spec").isPartOfFQN(false).build();
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

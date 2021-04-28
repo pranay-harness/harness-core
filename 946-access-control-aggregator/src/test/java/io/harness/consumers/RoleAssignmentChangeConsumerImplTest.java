@@ -71,12 +71,12 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
         .thenReturn(Optional.of(ResourceGroup.builder()
                                     .resourceSelectors(Sets.newHashSet(ImmutableList.of("/SECRET/abc", "/SECRET/xyz")))
                                     .build()));
-    when(aclService.insertAllIgnoringDuplicates(any())).thenReturn(10L);
+    when(aclService.saveAll(any())).thenReturn(10L);
     long count = roleAssignmentChangeConsumer.consumeCreateEvent(SOME_RANDOM_ID, roleAssignmentDBO);
     assertThat(count).isEqualTo(10L);
     verify(roleService).get(any(), any(), any());
     verify(resourceGroupService).get(any(), any());
-    verify(aclService).insertAllIgnoringDuplicates(any());
+    verify(aclService).saveAll(any());
   }
 
   @Test
@@ -125,11 +125,11 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testRoleAssignmentUpdationWithRelevantFieldsChanged() {
     RoleAssignmentDBO roleAssignmentDBO = RoleAssignmentDBO.builder().id("xyz").disabled(true).build();
-    when(aclService.getByRoleAssignmentId("xyz")).thenReturn(getAlreadyExistingACLS());
+    when(aclService.getByRoleAssignment("xyz")).thenReturn(getAlreadyExistingACLS());
     when(aclService.saveAll(anyList())).thenReturn(1L);
     long count = roleAssignmentChangeConsumer.consumeUpdateEvent("xyz", roleAssignmentDBO);
     assertThat(count).isEqualTo(1L);
-    verify(aclService).getByRoleAssignmentId(any());
+    verify(aclService).getByRoleAssignment(any());
     verify(aclService).saveAll(any());
   }
 
@@ -146,9 +146,9 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testRoleAssignmentDeletion() {
-    when(aclService.deleteByRoleAssignmentId(any())).thenReturn(100L);
+    when(aclService.deleteByRoleAssignment(any())).thenReturn(100L);
     long count = roleAssignmentChangeConsumer.consumeDeleteEvent(SOME_RANDOM_ID);
     assertThat(count).isEqualTo(100L);
-    verify(aclService).deleteByRoleAssignmentId(any());
+    verify(aclService).deleteByRoleAssignment(any());
   }
 }
