@@ -6,11 +6,9 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.persistence.HQuery.excludeCount;
 
-import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.support.ActiveInstanceIterator;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
@@ -28,9 +26,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -57,12 +53,6 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
     instanceData.setInstanceState(InstanceState.STOPPED);
     instanceData.setTtl(new Date(stopTime.plus(30, ChronoUnit.DAYS).toEpochMilli()));
     return hPersistence.save(instanceData) != null;
-  }
-
-  private Map<String, List<InstanceData>> getInstanceData(List<InstanceEvent> instanceEvents) {
-    Set<String> instanceIds = instanceEvents.stream().map(InstanceEvent::getInstanceId).collect(Collectors.toSet());
-    List<InstanceData> instanceData = fetchInstanceData(instanceIds);
-    return instanceData.stream().collect(Collectors.groupingBy(InstanceData::getInstanceId));
   }
 
   @Override
@@ -223,20 +213,6 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   }
 
   @Override
-  public InstanceData getActiveInstance(
-      String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider) {
-    Query<InstanceData> query =
-        hPersistence.createQuery(InstanceData.class).filter(InstanceDataKeys.accountId, accountId);
-    query.and(query.or(query.and(query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(startTime),
-                           query.or(query.criteria(InstanceDataKeys.usageStopTime).doesNotExist(),
-                               query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime))),
-        query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(startTime),
-            query.criteria(InstanceDataKeys.usageStartTime).lessThan(endTime))));
-    query.filter(InstanceDataKeys.CLOUD_PROVIDER, cloudProvider);
-    return query.get();
-  }
-
-  @Override
   public InstanceData getK8sPodInstance(String accountId, String clusterId, String namespace, String podName) {
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class)
                                     .field(InstanceDataKeys.accountId)
@@ -262,47 +238,18 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
   }
 
   @Override
-  public List<InstanceData> getInstanceDataLists(
-      String accountId, int batchSize, Instant startTime, Instant endTime, Instant seekingDate) {
-    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class, excludeCount)
-                                    .filter(InstanceDataKeys.accountId, accountId)
-                                    .order(InstanceDataKeys.usageStartTime);
-
-    query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(seekingDate),
-        query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(endTime),
-        query.or(query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime),
-            query.criteria(InstanceDataKeys.usageStopTime).doesNotExist()));
-    return query.asList(new FindOptions().limit(batchSize));
-  }
-
-  @Override
-  public List<InstanceData> getInstanceDataListsOfType(String accountId, int batchSize, Instant startTime,
-      Instant endTime, Instant seekingDate, InstanceType instanceType) {
-    Query<InstanceData> query = hPersistence.createQuery(InstanceData.class, excludeCount)
-                                    .filter(InstanceDataKeys.accountId, accountId)
-                                    .filter(InstanceDataKeys.instanceType, instanceType)
-                                    .order(InstanceDataKeys.usageStartTime);
-
-    query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(seekingDate),
-        query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(endTime),
-        query.or(query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime),
-            query.criteria(InstanceDataKeys.usageStopTime).doesNotExist()));
-    return query.asList(new FindOptions().limit(batchSize));
-  }
-
-  @Override
-  public List<InstanceData> getInstanceDataListsOtherThanPV(
-      String accountId, int batchSize, Instant startTime, Instant endTime, Instant seekingDate) {
+  public List<InstanceData> getInstanceDataListsOfTypes(
+      String accountId, int batchSize, Instant startTime, Instant endTime, List<InstanceType> instanceTypes) {
     Query<InstanceData> query = hPersistence.createQuery(InstanceData.class, excludeCount)
                                     .filter(InstanceDataKeys.accountId, accountId)
                                     .field(InstanceDataKeys.instanceType)
-                                    .notEqual(K8S_PV)
-                                    .order(InstanceDataKeys.usageStartTime);
+                                    .in(instanceTypes)
+                                    .field(InstanceDataKeys.activeInstanceIterator)
+                                    .greaterThanOrEq(startTime)
+                                    .field(InstanceDataKeys.usageStartTime)
+                                    .lessThanOrEq(endTime)
+                                    .order("accountId,instanceType,activeInstanceIterator");
 
-    query.and(query.criteria(InstanceDataKeys.usageStartTime).greaterThanOrEq(seekingDate),
-        query.criteria(InstanceDataKeys.usageStartTime).lessThanOrEq(endTime),
-        query.or(query.criteria(InstanceDataKeys.usageStopTime).greaterThan(startTime),
-            query.criteria(InstanceDataKeys.usageStopTime).doesNotExist()));
     return query.asList(new FindOptions().limit(batchSize));
   }
 
