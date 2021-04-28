@@ -61,14 +61,21 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
   }
 
   protected Scheduler createScheduler(Properties properties) throws SchedulerException {
+    MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
+    MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
+    if (mongoSSLConfig != null && mongoSSLConfig.isMongoSSLEnabled()) {
+      properties.setProperty(
+          "org.quartz.jobStore.mongoOptionEnableSSL", String.valueOf(mongoSSLConfig.isMongoSSLEnabled()));
+      Preconditions.checkArgument(StringUtils.isNotBlank(mongoSSLConfig.getMongoTrustStorePath()),
+          "mongoTrustStorePath must be set if mongoSSLEnabled is set to true");
+      properties.setProperty("org.quartz.jobStore.mongoOptionTrustStorePath", mongoSSLConfig.getMongoTrustStorePath());
+      properties.setProperty(
+          "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
+    }
     StdSchedulerFactory factory = new StdSchedulerFactory(properties);
     Scheduler newScheduler = factory.getScheduler();
-
     // by default newScheduler does not create all needed mongo indexes.
     // it is a bit hack but we are going to add them from here
-
-    MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
-
     if (schedulerConfig.getJobStoreClass().equals(
             com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName())) {
       MongoClientURI uri = new MongoClientURI(
