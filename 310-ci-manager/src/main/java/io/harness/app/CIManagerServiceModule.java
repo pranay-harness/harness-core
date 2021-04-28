@@ -1,5 +1,8 @@
 package io.harness.app;
 
+import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
+
+import io.harness.AccessControlClientModule;
 import io.harness.CIExecutionServiceModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -28,6 +31,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.remote.client.ClientMode;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
@@ -173,12 +177,14 @@ public class CIManagerServiceModule extends AbstractModule {
       }
     });
 
+    install(AccessControlClientModule.getInstance(
+        ciManagerConfiguration.getAccessControlClientConfiguration(), CI_MANAGER.getServiceId()));
     install(new SecretManagementClientModule(ciManagerConfiguration.getManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "NextGenManager"));
     install(new EntitySetupUsageClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new ConnectorResourceClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
+        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager", ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new CILogServiceClientModule(ciManagerConfiguration.getLogServiceConfig()));

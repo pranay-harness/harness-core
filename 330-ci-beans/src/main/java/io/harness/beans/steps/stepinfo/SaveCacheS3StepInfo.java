@@ -13,9 +13,11 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,7 +25,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -38,7 +42,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("saveCacheS3StepInfo")
 @OwnedBy(CI)
-public class SaveCacheS3StepInfo implements PluginCompatibleStep {
+public class SaveCacheS3StepInfo implements PluginCompatibleStep, WithConnectorRef {
   public static final int DEFAULT_RETRY = 1;
 
   @JsonIgnore
@@ -105,5 +109,12 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.ASYNC;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }
