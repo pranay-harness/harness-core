@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
@@ -20,6 +22,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
@@ -70,6 +74,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@TargetModule(_930_DELEGATE_TASKS)
+@OwnedBy(CDC)
 public class NexusServiceTest extends WingsBaseTest {
   private static final String XML_RESPONSE = "<indexBrowserTreeViewResponse>\n"
       + "  <data>\n"
@@ -1899,66 +1905,6 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldGetGroupIdsForMavenNexus3xUsingPrivateApis() {
-    assertThat(nexusService.getGroupIdPathsUsingPrivateApis(
-                   nexusThreeConfig, null, "maven-releases", RepositoryFormat.maven.name()))
-        .hasSize(1)
-        .contains("mygroup");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldGetArtifactNamesForMavenNexus3xUsingPrivateApis() {
-    assertThat(nexusService.getArtifactNamesUsingPrivateApis(
-                   nexusThreeConfig, null, "maven-releases", "mygroup", RepositoryFormat.maven.name()))
-        .hasSize(1)
-        .contains("myartifact");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldGetPackageNamesForNugetNexus3xUsingPrivateApis() {
-    assertThat(nexusService.getGroupIdPathsUsingPrivateApis(
-                   nexusThreeConfig, null, "nuget-hosted", RepositoryFormat.nuget.name()))
-        .hasSize(3)
-        .contains("AdamsLair.Duality.Samples.BasicMenu", "NuGet.Package.Sample", "NuGet.Sample.Package");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldGetPackageNamesForNPMNexus3xUsingPrivateApis() {
-    assertThat(
-        nexusService.getGroupIdPathsUsingPrivateApis(nexusThreeConfig, null, "npm-hosted", RepositoryFormat.npm.name()))
-        .hasSize(1)
-        .contains("npm-app1");
-  }
-
-  @Test
-  @Owner(developers = DEEPAK_PUTHRAYA)
-  @Category(UnitTests.class)
-  public void shouldHandleExceptionsWhenGettingGroupsIdPathsUsingPrivateApis() throws Exception {
-    wireMockRule.stubFor(
-        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(401)));
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
-        .isInstanceOf(WingsException.class);
-
-    wireMockRule.stubFor(
-        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(405)));
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
-        .isInstanceOf(WingsException.class);
-
-    wireMockRule.stubFor(
-        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(502)));
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
-        .isInstanceOf(WingsException.class);
-  }
-
-  @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldHandleExceptionsWhenGetGroupIdPaths() {
@@ -1976,36 +1922,6 @@ public class NexusServiceTest extends WingsBaseTest {
         post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(502)));
     assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, null, null))
         .isInstanceOf(WingsException.class);
-  }
-
-  @Test
-  @Owner(developers = DEEPAK_PUTHRAYA)
-  @Category(UnitTests.class)
-  public void shouldReturnCorrectErrorMessagesForGetGroupIdPathsUsingPrivateApis() throws Exception {
-    NexusThreeServiceImpl nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
-    Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
-    TimeLimiter timeLimiter = new FakeTimeLimiter();
-    Reflect.on(nexusService).set("timeLimiter", timeLimiter);
-
-    RuntimeException e = new RuntimeException(new TimeoutException());
-    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo1"), any(), eq(null))).thenThrow(e);
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo1", null))
-        .isInstanceOf(ArtifactServerException.class);
-
-    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo2"), any(), eq(null)))
-        .thenThrow(new RuntimeException());
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo2", null))
-        .isInstanceOf(ArtifactServerException.class);
-
-    e = new RuntimeException(new XMLStreamException());
-    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo3"), any(), eq(null))).thenThrow(e);
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo3", null))
-        .isInstanceOf(InvalidArtifactServerException.class);
-
-    e = new RuntimeException(new SocketTimeoutException());
-    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo4"), any(), eq(null))).thenThrow(e);
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo4", null))
-        .isInstanceOf(ArtifactServerException.class);
   }
 
   @Test

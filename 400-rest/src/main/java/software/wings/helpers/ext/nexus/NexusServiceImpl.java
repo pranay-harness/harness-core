@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -9,6 +10,7 @@ import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
@@ -33,10 +35,8 @@ import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLHandshakeException;
@@ -50,6 +50,7 @@ import retrofit2.Retrofit;
 /**
  * Created by srinivas on 3/28/17.
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
@@ -198,45 +199,6 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public List<String> getGroupIdPathsUsingPrivateApis(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat) {
-    List<String> groupIds = new ArrayList<>();
-    try {
-      return timeLimiter.callWithTimeout(
-          ()
-              -> nexusThreeService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat),
-          5L, TimeUnit.MINUTES, true);
-    } catch (WingsException e) {
-      throw e;
-    } catch (SocketTimeoutException e) {
-      throw new ArtifactServerException(
-          "Timed out while connecting to the nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e,
-          USER);
-    } catch (TimeoutException e) {
-      throw new ArtifactServerException("Timed out while fetching images/groups from Nexus server "
-              + nexusConfig.getNexusUrl() + " under repo " + repoId,
-          e, USER);
-    } catch (Exception e) {
-      log.error(
-          "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
-      if (e.getCause() instanceof XMLStreamException) {
-        throw new InvalidArtifactServerException("Nexus may not be running", e);
-      } else if (e.getCause() instanceof SocketTimeoutException) {
-        throw new ArtifactServerException(
-            "Timed out while connecting to the nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId,
-            e.getCause(), USER);
-      } else if (e.getCause() instanceof TimeoutException) {
-        throw new ArtifactServerException("Timed out while fetching images/groups from Nexus server "
-                + nexusConfig.getNexusUrl() + " under repo " + repoId,
-            e.getCause(), USER);
-      } else {
-        throw new ArtifactServerException(
-            "Failed to fetch images/groups from Nexus xxxxxxxx " + e.getMessage(), e.getCause(), USER);
-      }
-    }
-  }
-
-  @Override
   public List<String> getArtifactPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
     try {
@@ -312,25 +274,6 @@ public class NexusServiceImpl implements NexusService {
               nexusConfig.getNexusUrl(), repoId, path),
           e);
       handleException(e);
-    }
-    return new ArrayList<>();
-  }
-
-  @Override
-  public List<String> getArtifactNamesUsingPrivateApis(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String path, String repositoryFormat) {
-    Set<String> artifactIds = new HashSet<>();
-    try {
-      if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
-        return timeLimiter.callWithTimeout(
-            ()
-                -> new ArrayList<>(nexusThreeService.getArtifactNamesUsingPrivateApis(
-                    nexusConfig, encryptionDetails, repoId, path, artifactIds, repositoryFormat)),
-            5L, TimeUnit.MINUTES, true);
-      }
-    } catch (final Exception e) {
-      throw new ArtifactServerException(
-          format("Failed to fetch artifactIds for Repository %s under path %s", repoId, path), e);
     }
     return new ArrayList<>();
   }
