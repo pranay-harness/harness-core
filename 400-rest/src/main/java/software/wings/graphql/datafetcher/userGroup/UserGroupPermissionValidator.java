@@ -1,11 +1,13 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * to the UserController is correct
  * */
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
@@ -136,7 +139,7 @@ public class UserGroupPermissionValidator {
       } else {
         // All other PermissionType doesn't support the execute operation
         if (actions.contains(QLActions.EXECUTE) || actions.contains(QLActions.EXECUTE_PIPELINE)
-            || actions.contains(QLActions.EXECUTE_WORKFLOW)) {
+            || actions.contains(QLActions.EXECUTE_WORKFLOW) || actions.contains(QLActions.ROLLBACK_WORKFLOW)) {
           throw new InvalidRequestException(
               String.format("Invalid action EXECUTE  for the %s permission type", permissionType.getStringValue()));
         }

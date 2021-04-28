@@ -10,6 +10,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -56,6 +60,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class DelegateProfileManagerServiceImpl implements DelegateProfileManagerService {
   public static final String APPLICATION = "Application";
   public static final String SERVICE = "Service";
@@ -71,7 +77,7 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   @Override
   public PageResponse<DelegateProfileDetails> list(String accountId, PageRequest<DelegateProfileDetails> pageRequest) {
     DelegateProfilePageResponseGrpc pageResponse = delegateProfileServiceGrpcClient.listProfiles(
-        AccountId.newBuilder().setId(accountId).build(), convert(pageRequest));
+        AccountId.newBuilder().setId(accountId).build(), convert(pageRequest), false, null, null);
 
     if (pageResponse == null) {
       return null;
@@ -260,7 +266,8 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
             .setAccountId(AccountId.newBuilder().setId(delegateProfile.getAccountId()).build())
             .setName(delegateProfile.getName())
             .setPrimary(delegateProfile.isPrimary())
-            .setApprovalRequired(delegateProfile.isApprovalRequired());
+            .setApprovalRequired(delegateProfile.isApprovalRequired())
+            .setNg(false);
 
     if (delegateProfile.getCreatedBy() != null) {
       delegateProfileGrpcBuilder.setCreatedBy(EmbeddedUserDetails.newBuilder()

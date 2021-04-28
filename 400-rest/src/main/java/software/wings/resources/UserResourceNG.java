@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -9,12 +10,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.mappers.AccountMapper;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.rest.RestResponse;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.user.remote.UserSearchFilter;
+import io.harness.security.dto.UserPrincipal;
+import io.harness.user.remote.UserFilterNG;
 
 import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
@@ -106,14 +111,13 @@ public class UserResourceNG {
 
   @POST
   @Path("/batch")
-  public RestResponse<List<UserInfo>> listUsers(
-      @QueryParam("accountId") String accountId, UserSearchFilter userSearchFilter) {
+  public RestResponse<List<UserInfo>> listUsers(@QueryParam("accountId") String accountId, UserFilterNG userFilterNG) {
     Set<User> userSet = new HashSet<>();
-    if (!isEmpty(userSearchFilter.getUserIds())) {
-      userSet.addAll(userService.getUsers(userSearchFilter.getUserIds(), accountId));
+    if (!isEmpty(userFilterNG.getUserIds())) {
+      userSet.addAll(userService.getUsers(userFilterNG.getUserIds(), accountId));
     }
-    if (!isEmpty(userSearchFilter.getEmailIds())) {
-      userSet.addAll(userService.getUsersByEmail(userSearchFilter.getEmailIds(), accountId));
+    if (!isEmpty(userFilterNG.getEmailIds())) {
+      userSet.addAll(userService.getUsersByEmail(userFilterNG.getEmailIds(), accountId));
     }
     return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet)));
   }
@@ -249,5 +253,31 @@ public class UserResourceNG {
     User user = userService.getUserByEmail(userInfo.getEmail());
     user.setName(userInfo.getName());
     return user;
+  }
+
+  @PUT
+  @Path("two-factor-admin-override-settings")
+  public RestResponse<Boolean> setTwoFactorAuthAtAccountLevel(
+      @QueryParam("accountId") @NotEmpty String accountId, @NotNull TwoFactorAdminOverrideSettings settings) {
+    // Trying Override = true
+    if (settings.isAdminOverrideTwoFactorEnabled()) {
+      if (SourcePrincipalContextBuilder.getSourcePrincipal() == null
+          || !USER.equals(SourcePrincipalContextBuilder.getSourcePrincipal().getType())) {
+        throw new InvalidRequestException("Unable to fetch current user");
+      }
+
+      UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
+      User user = userService.getUserByEmail(userPrincipal.getEmail());
+
+      if (twoFactorAuthenticationManager.isTwoFactorEnabled(accountId, user)) {
+        return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
+      } else {
+        throw new InvalidRequestException("Admin has 2FA disabled. Please enable to enforce 2FA on users.");
+      }
+    }
+    // Trying Override = false
+    else {
+      return new RestResponse(twoFactorAuthenticationManager.overrideTwoFactorAuthentication(accountId, settings));
+    }
   }
 }

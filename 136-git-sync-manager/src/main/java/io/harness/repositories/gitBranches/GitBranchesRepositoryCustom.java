@@ -16,4 +16,6 @@ public interface GitBranchesRepositoryCustom {
   Page<GitBranch> findAll(Criteria criteria, Pageable pageable);
 
   GitBranch update(Query query, Update update);
+
+  GitBranch findOne(Criteria criteria);
 }

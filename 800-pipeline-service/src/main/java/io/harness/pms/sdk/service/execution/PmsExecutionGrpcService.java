@@ -124,6 +124,9 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
           PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".startTs",
           nodeExecution.getStartTs());
+      update.set(
+          PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".nodeRunInfo",
+          nodeExecution.getNodeRunInfo());
       if (ExecutionStatus.isTerminal(status)) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
             nodeExecution.getEndTs());
@@ -137,9 +140,6 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         update.set(
             PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".skipInfo",
             nodeExecution.getSkipInfo());
-        update.set(
-            PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".nodeRunInfo",
-            nodeExecution.getNodeRunInfo());
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
             nodeExecution.getEndTs());
       }

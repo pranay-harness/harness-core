@@ -429,6 +429,7 @@ import software.wings.beans.marketplace.gcp.GCPBillingJobEntity;
 import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 import software.wings.beans.marketplace.gcp.GCPUsageReport;
 import software.wings.beans.peronalization.Personalization;
+import software.wings.beans.security.AccessRequest;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.access.Whitelist;
@@ -1095,6 +1096,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DeletedEntity.class);
     set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
+    set.add(AccessRequest.class);
   }
 
   @Override

@@ -1,6 +1,8 @@
 package io.harness.serializer;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.morphia.MorphiaRegistrar;
@@ -12,6 +14,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.CDP)
 @UtilityClass
 public class CDNGRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =

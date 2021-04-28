@@ -79,13 +79,19 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
             columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
           }
         }
+      } else {
+        return null;
       }
+    } else {
+      // no information mention related to moduleInfo
+      return null;
     }
     columnValueMapping.put(
         "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
     if (dbObject.get("endTs") != null) {
       columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
     }
+
     return columnValueMapping;
   }
 }

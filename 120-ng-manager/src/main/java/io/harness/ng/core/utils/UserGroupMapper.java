@@ -1,12 +1,15 @@
 package io.harness.ng.core.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.UserGroupDTO;
+import io.harness.ng.core.dto.UserGroupResponse;
 import io.harness.ng.core.entities.EmailConfig;
 import io.harness.ng.core.entities.MicrosoftTeamsConfig;
 import io.harness.ng.core.entities.NotificationSettingConfig;
@@ -19,12 +22,12 @@ import io.harness.ng.core.notification.NotificationSettingConfigDTO;
 import io.harness.ng.core.notification.PagerDutyConfigDTO;
 import io.harness.ng.core.notification.SlackConfigDTO;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PL)
 public class UserGroupMapper {
   public static UserGroupDTO toDTO(UserGroup userGroup) {
     return (userGroup == null)
@@ -39,9 +42,7 @@ public class UserGroupMapper {
               .name(userGroup.getName())
               .notificationConfigs(
                   userGroup.getNotificationConfigs().stream().map(UserGroupMapper::toDTO).collect(Collectors.toList()))
-              .users(userGroup.getUsers() == null ? emptyList() : new ArrayList<>(userGroup.getUsers()))
-              .lastModifiedAt(userGroup.getLastModifiedAt())
-              .version(userGroup.getVersion())
+              .users(userGroup.getUsers() == null ? emptyList() : userGroup.getUsers())
               .build();
   }
 
@@ -102,5 +103,13 @@ public class UserGroupMapper {
       default:
         throw new IllegalArgumentException("This is not a valid Notification Setting Type: " + entity.getType());
     }
+  }
+
+  public static UserGroupResponse toResponseWrapper(UserGroup userGroup) {
+    return UserGroupResponse.builder()
+        .createdAt(userGroup.getCreatedAt())
+        .lastModifiedAt(userGroup.getLastModifiedAt())
+        .userGroup(toDTO(userGroup))
+        .build();
   }
 }

@@ -3,10 +3,11 @@ package io.harness.delegate.task.artifacts.gcr;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
-import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
@@ -25,6 +26,7 @@ import lombok.Value;
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class GcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest {
   /** Images in repos need to be referenced via a path. */
   String imagePath;
@@ -47,10 +49,8 @@ public class GcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (gcpConnectorDTO.getCredential() != null) {
       if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.INHERIT_FROM_DELEGATE) {
-        GcpDelegateDetailsDTO delegateDetailsDTO = (GcpDelegateDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
-        if (EmptyPredicate.isNotEmpty(delegateDetailsDTO.getDelegateSelectors())) {
-          return singletonList(
-              SelectorCapability.builder().selectors(delegateDetailsDTO.getDelegateSelectors()).build());
+        if (EmptyPredicate.isNotEmpty(gcpConnectorDTO.getDelegateSelectors())) {
+          return singletonList(SelectorCapability.builder().selectors(gcpConnectorDTO.getDelegateSelectors()).build());
         }
         return emptyList();
       } else if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {

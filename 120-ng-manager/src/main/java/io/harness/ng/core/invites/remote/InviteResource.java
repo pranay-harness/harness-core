@@ -11,7 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.invites.remote.InviteAcceptResponse;
-import io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter;
+import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.BaseNGAccess;

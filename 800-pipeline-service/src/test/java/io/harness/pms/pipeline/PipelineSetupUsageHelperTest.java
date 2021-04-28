@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -63,6 +64,7 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
   @Mock private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
   @Mock private EntitySetupUsageClient entitySetupUsageClient;
   @Mock private Producer eventProducer;
+  @Mock private InternalReferredEntityExtractor internalReferredEntityExtractor;
   @InjectMocks private PipelineSetupUsageHelper pipelineSetupUsageHelper;
 
   @Before
@@ -70,6 +72,7 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
     MockitoAnnotations.initMocks(this);
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO("accountId", null, null, null))
         .thenReturn(IdentifierRefProtoDTO.newBuilder().build());
+    when(internalReferredEntityExtractor.extractInternalEntities(any(), anyList())).thenReturn(new ArrayList());
   }
 
   @After

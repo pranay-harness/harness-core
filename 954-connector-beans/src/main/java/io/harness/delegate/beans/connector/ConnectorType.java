@@ -1,11 +1,15 @@
 package io.harness.delegate.beans.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.EntitySubtype;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+@OwnedBy(DX)
 public enum ConnectorType implements EntitySubtype {
   @JsonProperty("K8sCluster") KUBERNETES_CLUSTER("K8sCluster"),
   @JsonProperty("Git") GIT("Git"),
@@ -14,7 +18,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Vault") VAULT("Vault"),
   @JsonProperty("DockerRegistry") DOCKER("DockerRegistry"),
   @JsonProperty("Local") LOCAL("Local"),
-  //  @JsonProperty("AwsKms") KMS("AwsKms"),
+  @JsonProperty("AwsKms") AWS_KMS("AwsKms"),
   @JsonProperty("GcpKms") GCP_KMS("GcpKms"),
   //  @JsonProperty("Awssecretsmanager") AWS_SECRETS_MANAGER("Awssecretsmanager"),
   //  @JsonProperty("Azurevault") AZURE_VAULT("Azurevault"),
@@ -31,6 +35,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Codecommit") CODECOMMIT("Codecommit"),
   @JsonProperty("CEAws") CE_AWS("CEAws"),
   @JsonProperty("CEAzure") CE_AZURE("CEAzure"),
+  @JsonProperty("GcpCloudCost") GCP_CLOUD_COST("GcpCloudCost"),
   @JsonProperty("CEK8sCluster") CE_KUBERNETES_CLUSTER("CEK8sCluster"),
   @JsonProperty("HttpHelmRepo") HTTP_HELM_REPO("HttpHelmRepo"),
   @JsonProperty("NewRelic") NEW_RELIC("NewRelic");

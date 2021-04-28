@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.AccessControlDTO;
@@ -82,7 +83,7 @@ public class PipelineRbacHelperTest extends CategoryTest {
             .accessControlList(Collections.singletonList(AccessControlDTO.builder().permitted(true).build()))
             .build();
     when(accessControlClient.checkForAccess(
-             Mockito.eq("princ"), Mockito.eq(io.harness.accesscontrol.principals.PrincipalType.USER), anyList()))
+             Mockito.eq(Principal.of(io.harness.accesscontrol.principals.PrincipalType.USER, "princ")), anyList()))
         .thenReturn(accessCheckResponseDTO);
 
     pipelineRbacHelper.checkRuntimePermissions(ambiance, new HashSet<>());
@@ -90,7 +91,7 @@ public class PipelineRbacHelperTest extends CategoryTest {
     verify(entityDetailProtoToRestMapper).createEntityDetailsDTO(Mockito.anyList());
     verify(accessControlClient)
         .checkForAccess(
-            Mockito.eq("princ"), Mockito.eq(io.harness.accesscontrol.principals.PrincipalType.USER), anyList());
+            Mockito.eq(Principal.of(io.harness.accesscontrol.principals.PrincipalType.USER, "princ")), anyList());
   }
 
   @Test

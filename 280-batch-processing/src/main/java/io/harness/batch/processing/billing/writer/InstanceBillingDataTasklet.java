@@ -1,13 +1,19 @@
 package io.harness.batch.processing.billing.writer;
 
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
+import static io.harness.ccm.commons.beans.InstanceType.ECS_CONTAINER_INSTANCE;
+import static io.harness.ccm.commons.beans.InstanceType.ECS_TASK_EC2;
+import static io.harness.ccm.commons.beans.InstanceType.ECS_TASK_FARGATE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD_FARGATE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
+import io.harness.batch.processing.billing.reader.InstanceDataReader;
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
 import io.harness.batch.processing.billing.service.UtilizationData;
@@ -39,7 +45,6 @@ import com.google.inject.Singleton;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -84,8 +89,6 @@ public class InstanceBillingDataTasklet implements Tasklet {
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
     batchJobType = CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
-    // Instant of 1-1-2018
-    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
     // bill PV first
     List<InstanceBillingData> pvInstanceBillingDataList = billPVInstances(accountId, startTime, endTime);
     Map<String, InstanceBillingData> claimRefToPVInstanceBillingData =
@@ -95,18 +98,13 @@ public class InstanceBillingDataTasklet implements Tasklet {
 
     Map<String, MutableInt> pvcClaimCount = getPvcClaimCount(accountId, startTime, endTime);
     List<InstanceData> instanceDataLists;
+    InstanceDataReader instanceDataReader = new InstanceDataReader(instanceDataDao, accountId,
+        ImmutableList.of(
+            ECS_TASK_FARGATE, ECS_TASK_EC2, ECS_CONTAINER_INSTANCE, K8S_POD, K8S_POD_FARGATE, K8S_NODE, K8S_PVC),
+        startTime, endTime, batchSize);
+
     do {
-      instanceDataLists =
-          instanceDataDao.getInstanceDataListsOtherThanPV(accountId, batchSize, startTime, endTime, seekingDate);
-      if (!instanceDataLists.isEmpty()) {
-        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
-          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
-              parameters.toString());
-          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
-        }
-      }
+      instanceDataLists = instanceDataReader.getNext();
       try {
         createBillingData(accountId, startTime, endTime, batchJobType, instanceDataLists,
             claimRefToPVInstanceBillingData, pvcClaimCount);
@@ -119,22 +117,13 @@ public class InstanceBillingDataTasklet implements Tasklet {
   }
 
   private Map<String, MutableInt> getPvcClaimCount(String accountId, Instant startTime, Instant endTime) {
-    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
     List<InstanceData> instanceDataLists;
     Map<String, MutableInt> result = new HashMap<>();
+    InstanceDataReader instanceDataReader =
+        new InstanceDataReader(instanceDataDao, accountId, ImmutableList.of(K8S_POD), startTime, endTime, batchSize);
     do {
       // TODO change here
-      instanceDataLists =
-          instanceDataDao.getInstanceDataListsOfType(accountId, batchSize, startTime, endTime, seekingDate, K8S_POD);
-      if (!instanceDataLists.isEmpty()) {
-        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
-          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
-              parameters.toString());
-          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
-        }
-      }
+      instanceDataLists = instanceDataReader.getNext();
       for (InstanceData instanceData : instanceDataLists) {
         List<String> pvcClaimNames = firstNonNull(instanceData.getPvcClaimNames(), Collections.emptyList());
         String namespace = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData);
@@ -151,20 +140,11 @@ public class InstanceBillingDataTasklet implements Tasklet {
 
   private List<InstanceBillingData> billPVInstances(String accountId, Instant startTime, Instant endTime) {
     List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
-    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
     List<InstanceData> instanceDataLists;
+    InstanceDataReader instanceDataReader =
+        new InstanceDataReader(instanceDataDao, accountId, ImmutableList.of(K8S_PV), startTime, endTime, batchSize);
     do {
-      instanceDataLists =
-          instanceDataDao.getInstanceDataListsOfType(accountId, batchSize, startTime, endTime, seekingDate, K8S_PV);
-      if (!instanceDataLists.isEmpty()) {
-        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
-          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
-              parameters.toString());
-          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
-        }
-      }
+      instanceDataLists = instanceDataReader.getNext();
       try {
         instanceBillingDataList.addAll(createBillingData(
             accountId, startTime, endTime, batchJobType, instanceDataLists, ImmutableMap.of(), ImmutableMap.of()));
@@ -253,7 +233,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
         InstanceMetaDataConstants.COMPUTE_TYPE, instanceData.getMetaData());
     boolean validInstance = true;
     if ((instanceData.getInstanceType() == null)
-        || (instanceData.getInstanceType() == InstanceType.K8S_NODE
+        || (instanceData.getInstanceType() == K8S_NODE
             && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType))) {
       validInstance = false;
     }
@@ -452,8 +432,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
     String cloudServiceName =
         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData);
     InstanceType instanceType = instanceData.getInstanceType();
-    if (null == cloudServiceName
-        && ImmutableSet.of(InstanceType.ECS_TASK_FARGATE, InstanceType.ECS_TASK_EC2).contains(instanceType)) {
+    if (null == cloudServiceName && ImmutableSet.of(ECS_TASK_FARGATE, ECS_TASK_EC2).contains(instanceType)) {
       cloudServiceName = "none";
     }
     return cloudServiceName;

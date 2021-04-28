@@ -46,8 +46,7 @@ public interface UserClient {
   Call<RestResponse<Optional<UserInfo>>> getUserByEmailId(@Path("emailId") String emailId);
 
   @POST(USER_BATCH_LIST_API)
-  Call<RestResponse<List<UserInfo>>> listUsers(
-      @Body UserSearchFilter userSearchFilter, @Query("accountId") String accountId);
+  Call<RestResponse<List<UserInfo>>> listUsers(@Body UserFilterNG userFilterNG, @Query("accountId") String accountId);
 
   @PUT(UPDATE_USER_API) Call<RestResponse<Optional<UserInfo>>> updateUser(@Body UserInfo userInfo);
 

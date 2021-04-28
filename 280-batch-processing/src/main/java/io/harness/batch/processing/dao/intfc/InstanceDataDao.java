@@ -1,6 +1,5 @@
 package io.harness.batch.processing.dao.intfc;
 
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.entities.InstanceData;
@@ -40,18 +39,10 @@ public interface InstanceDataDao {
   List<InstanceData> fetchClusterActiveInstanceData(
       String accountId, String clusterName, List<InstanceType> instanceTypes, InstanceState instanceState);
 
-  InstanceData getActiveInstance(String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider);
-
   InstanceData getK8sPodInstance(String accountId, String clusterId, String namespace, String podName);
 
   List<InstanceData> fetchInstanceDataForGivenInstances(String accountId, String clusterId, List<String> instanceIds);
 
-  List<InstanceData> getInstanceDataLists(
-      String accountId, int batchSize, Instant startTime, Instant endTime, Instant seekingDate);
-
-  List<InstanceData> getInstanceDataListsOfType(String accountId, int batchSize, Instant startTime, Instant endTime,
-      Instant seekingDate, InstanceType instanceType);
-
-  List<InstanceData> getInstanceDataListsOtherThanPV(
-      String accountId, int batchSize, Instant startTime, Instant endTime, Instant seekingDate);
+  List<InstanceData> getInstanceDataListsOfTypes(
+      String accountId, int batchSize, Instant startTime, Instant endTime, List<InstanceType> instanceTypes);
 }

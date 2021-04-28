@@ -79,10 +79,10 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   }
 
   @Override
-  public long consumeUpdateEvent(String id, RoleAssignmentDBO roleAssignmentDBO) {
-    if (roleAssignmentDBO.getDisabled() != null) {
-      List<ACL> acls = aclService.getByRoleAssignmentId(id);
-      acls.forEach(acl -> acl.setEnabled(!roleAssignmentDBO.getDisabled()));
+  public long consumeUpdateEvent(String id, RoleAssignmentDBO updatedEntity) {
+    if (updatedEntity.getDisabled() != null) {
+      List<ACL> acls = aclService.getByRoleAssignment(id);
+      acls.forEach(acl -> acl.setEnabled(!updatedEntity.getDisabled()));
       long count = aclService.saveAll(acls);
       log.info("Updated {} ACLs", count);
       return count;
@@ -92,7 +92,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
 
   @Override
   public long consumeDeleteEvent(String id) {
-    long count = aclService.deleteByRoleAssignmentId(id);
+    long count = aclService.deleteByRoleAssignment(id);
     log.info("{} ACLs deleted", count);
     return count;
   }
@@ -102,20 +102,14 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   }
 
   @Override
-  public long consumeCreateEvent(String id, RoleAssignmentDBO roleAssignmentDBO) {
-    Optional<Role> roleOptional = roleService.get(
-        roleAssignmentDBO.getRoleIdentifier(), roleAssignmentDBO.getScopeIdentifier(), ManagedFilter.NO_FILTER);
-    Optional<ResourceGroup> resourceGroupOptional = resourceGroupService.get(
-        roleAssignmentDBO.getResourceGroupIdentifier(), roleAssignmentDBO.getScopeIdentifier());
+  public long consumeCreateEvent(String id, RoleAssignmentDBO createdEntity) {
+    Optional<Role> roleOptional =
+        roleService.get(createdEntity.getRoleIdentifier(), createdEntity.getScopeIdentifier(), ManagedFilter.NO_FILTER);
+    Optional<ResourceGroup> resourceGroupOptional =
+        resourceGroupService.get(createdEntity.getResourceGroupIdentifier(), createdEntity.getScopeIdentifier());
 
     if (!roleOptional.isPresent() || !resourceGroupOptional.isPresent()) {
-      log.error("Role/Resource group not found, Unable to process creation of role assignment: {}", roleAssignmentDBO);
-      return 0;
-    }
-
-    if (!roleAssignmentDBO.getPrincipalType().equals(USER_GROUP)
-        && !roleAssignmentDBO.getPrincipalType().equals(USER)) {
-      log.error("We only have support for USER_GROUP and USER as role assignment principal: {}", roleAssignmentDBO);
+      log.error("Role/Resource group not found, Unable to process creation of role assignment: {}", createdEntity);
       return 0;
     }
 
@@ -126,19 +120,18 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
     role.getPermissions().forEach(permission -> {
       if (resourceGroup.isFullScopeSelected()) {
         Scope scope = scopeService.buildScopeFromScopeIdentifier(resourceGroup.getScopeIdentifier());
-        acls.addAll(getACLs(roleAssignmentDBO, permission,
+        acls.addAll(getACLs(createdEntity, permission,
             getResourceSelector(scope.getLevel().getResourceType(), scope.getInstanceId()),
             Optional.ofNullable(scope.getParentScope()).map(Scope::toString).orElse("")));
       } else {
         resourceGroup.getResourceSelectors().forEach(resourceSelector
-            -> acls.addAll(
-                getACLs(roleAssignmentDBO, permission, resourceSelector, roleAssignmentDBO.getScopeIdentifier())));
+            -> acls.addAll(getACLs(createdEntity, permission, resourceSelector, createdEntity.getScopeIdentifier())));
       }
     });
 
     long count = 0;
     if (!acls.isEmpty()) {
-      count = aclService.insertAllIgnoringDuplicates(acls);
+      count = aclService.saveAll(acls);
     }
     log.info("{} ACLs created", count);
     return count;

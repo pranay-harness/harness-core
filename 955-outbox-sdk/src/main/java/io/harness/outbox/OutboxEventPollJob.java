@@ -75,7 +75,10 @@ public class OutboxEventPollJob implements Runnable {
       }
 
       for (OutboxEvent outbox : outboxEvents) {
+        long startTime = System.currentTimeMillis();
         boolean success = handle(outbox);
+        log.info(String.format("Took %d milliseconds for outbox event handling for id %s and eventType %s.",
+            System.currentTimeMillis() - startTime, outbox.getId(), outbox.getEventType()));
         try {
           if (success) {
             outboxService.delete(outbox.getId());

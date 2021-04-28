@@ -49,6 +49,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -192,8 +193,12 @@ public class ServiceResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
-    boolean hasAccess = accessControlClient.hasAccess(CDNGRbacUtility.getPermissionDTO(
-        accountId, orgIdentifier, projectIdentifier, CDNGRbacPermissions.SERVICE_VIEW_PERMISSION));
+    boolean hasAccess = accessControlClient
+                            .checkForAccess(Collections.singletonList(CDNGRbacUtility.getPermissionDTO(accountId,
+                                orgIdentifier, projectIdentifier, CDNGRbacPermissions.SERVICE_VIEW_PERMISSION)))
+                            .getAccessControlList()
+                            .get(0)
+                            .isPermitted();
     if (!hasAccess) {
       throw new AccessDeniedException("Unauthorized to list services", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
     }

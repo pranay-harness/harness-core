@@ -12,7 +12,7 @@ import retrofit2.http.Query;
 
 @OwnedBy(PL)
 public interface UserMembershipClient {
-  String USER_MEMBERSHIP_API = "users/usermembership";
+  String USER_MEMBERSHIP_API = "user/usermembership";
 
   @GET(USER_MEMBERSHIP_API)
   Call<ResponseDTO<Boolean>> isUserInScope(@Query(NGCommonEntityConstants.USER_ID) String userId,

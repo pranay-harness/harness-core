@@ -155,6 +155,7 @@ message ExecuteStepRequest {
   string execution_id = 1;
   UnitStep step = 2;
   string tmp_file_path = 3;
+  string delegate_svc_endpoint = 4;
 }
 
 message ExecuteStepResponse {}

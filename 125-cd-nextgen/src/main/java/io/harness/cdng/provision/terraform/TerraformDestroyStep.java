@@ -81,19 +81,21 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
-    String entityId = helper.generateFullIdentifier(parameters.getProvisionerIdentifier(), ambiance);
+    String entityId = helper.generateFullIdentifier(
+        ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);
     builder.currentStateFileId(helper.getLatestFileId(entityId))
         .taskType(TFTaskType.DESTROY)
         .terraformCommand(TerraformCommand.DESTROY)
+        .terraformCommandUnit(TerraformCommandUnit.Destroy)
         .entityId(entityId)
         .workspace(ParameterFieldHelper.getParameterFieldValue(parameters.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
             parameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(parameters.getInlineVarFiles()));
-    if (EmptyPredicate.isNotEmpty(parameters.getRemoteVarFiles())) {
+        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(parameters.getInlineVarFilesListContent()));
+    if (EmptyPredicate.isNotEmpty(parameters.getRemoteVarFileConfigs())) {
       List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
       int i = 1;
-      for (StoreConfigWrapper varFileWrapper : parameters.getRemoteVarFiles()) {
+      for (StoreConfigWrapper varFileWrapper : parameters.getRemoteVarFileConfigs()) {
         varFilesConfig.add(helper.getGitFetchFilesConfig(
             varFileWrapper.getStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
         i++;
@@ -118,16 +120,14 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   }
 
   private TaskRequest obtainInheritedTask(Ambiance ambiance, TerraformDestroyStepParameters parameters) {
-    TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder()
-                                                   .taskType(TFTaskType.DESTROY)
-                                                   .entityId(parameters.getProvisionerIdentifier());
+    TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
-    String entityId = helper.generateFullIdentifier(parameters.getProvisionerIdentifier(), ambiance);
+    String provisionerIdentifier = ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier());
+    String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
     builder.entityId(entityId);
     builder.currentStateFileId(helper.getLatestFileId(entityId));
-    TerraformInheritOutput inheritOutput =
-        helper.getSavedInheritOutput(parameters.getProvisionerIdentifier(), ambiance);
+    TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput(provisionerIdentifier, ambiance);
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
@@ -163,12 +163,11 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   }
 
   private TaskRequest obtainLastApplyTask(Ambiance ambiance, TerraformDestroyStepParameters parameters) {
-    TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder()
-                                                   .taskType(TFTaskType.DESTROY)
-                                                   .entityId(parameters.getProvisionerIdentifier());
+    TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
-    String entityId = helper.generateFullIdentifier(parameters.getProvisionerIdentifier(), ambiance);
+    String entityId = helper.generateFullIdentifier(
+        ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);
     builder.entityId(entityId);
     builder.currentStateFileId(helper.getLatestFileId(entityId));
     TerraformConfig terraformConfig = helper.getLastSuccessfulApplyConfig(parameters, ambiance);
@@ -235,6 +234,10 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
 
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.clearTerraformConfig(parameters, ambiance);
+      helper.updateParentEntityIdAndVersion(
+          helper.generateFullIdentifier(
+              ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance),
+          terraformTaskNGResponse.getStateFileId());
     }
     return stepResponseBuilder.build();
   }

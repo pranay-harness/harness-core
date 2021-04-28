@@ -270,7 +270,7 @@ public class AccountGenerator {
     users.add(default2faUser);
     addUsersToUserGroup(users, account.getUuid(), UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
     addUserToUserGroup(readOnlyUser, account.getUuid(), UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME);
-    addUserToHarnessUserGroup(adminUser);
+    addUserToHarnessUserGroup(account.getUuid(), adminUser);
 
     return account;
   }
@@ -312,9 +312,13 @@ public class AccountGenerator {
     }
   }
 
-  public void addUserToHarnessUserGroup(User user) {
-    HarnessUserGroup harnessUserGroup =
-        HarnessUserGroup.builder().memberIds(Sets.newHashSet(user.getUuid())).name("harnessUserGroup").build();
+  public void addUserToHarnessUserGroup(String accountId, User user) {
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
+                                            .memberIds(Sets.newHashSet(user.getUuid()))
+                                            .accountIds(Sets.newHashSet(accountId))
+                                            .name("harnessUserGroup")
+                                            .groupType(HarnessUserGroup.GroupType.DEFAULT)
+                                            .build();
     harnessUserGroupService.save(harnessUserGroup);
   }
 

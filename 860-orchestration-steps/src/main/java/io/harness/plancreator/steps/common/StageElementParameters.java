@@ -11,12 +11,16 @@ import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
+import java.util.Map;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stageElementParameters")
 @OwnedBy(CDC)
 public class StageElementParameters implements StepParameters {
@@ -30,6 +34,7 @@ public class StageElementParameters implements StepParameters {
 
   List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> originalVariables;
+  Map<String, String> tags;
   String type;
   SpecParameters spec;
 
@@ -51,6 +56,7 @@ public class StageElementParameters implements StepParameters {
         .when(this.when)
         .skipCondition(this.skipCondition)
         .originalVariables(this.originalVariables)
+        .tags(this.tags)
         .build();
   }
 }

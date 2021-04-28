@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -35,6 +36,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
@@ -52,6 +54,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -102,6 +107,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule.UNDEFINED)
 public class AuthHandlerTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -273,7 +280,7 @@ public class AuthHandlerTest extends WingsBaseTest {
         MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
         MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
         MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
-        MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS);
+        MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS, MANAGE_SSH_AND_WINRM);
 
     Set<PermissionType> accountPermissions = authHandler.getAllAccountPermissions();
     permissionTypes.forEach(permissionType -> assertThat(accountPermissions.contains(permissionType)).isTrue());

@@ -56,6 +56,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = true)
 @ChangeDataCapture(table = "pipeline_execution_summary_ci", dataStore = "pms-harness", fields = {},
     handler = "PipelineExecutionSummaryEntity")
+@ChangeDataCapture(table = "pipeline_execution_summary_cd", dataStore = "pms-harness", fields = {},
+    handler = "PipelineExecutionSummaryEntityCD")
+@ChangeDataCapture(table = "service_infra_info", dataStore = "pms-harness", fields = {},
+    handler = "PipelineExecutionSummaryEntityServiceAndInfra")
 @StoreIn(DbAliases.PMS)
 public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;

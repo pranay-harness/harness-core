@@ -8,13 +8,10 @@ import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.threading.ExecutorModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
@@ -22,11 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 public class AggregatorModule extends AbstractModule {
   private static AggregatorModule instance;
   private final AggregatorConfiguration configuration;
-  private final ExecutorService executorService;
 
   public AggregatorModule(AggregatorConfiguration configuration) {
     this.configuration = configuration;
-    this.executorService = Executors.newFixedThreadPool(5);
   }
 
   public static synchronized AggregatorModule getInstance(AggregatorConfiguration aggregatorConfiguration) {
@@ -44,8 +39,6 @@ public class AggregatorModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    ExecutorModule.getInstance().setExecutorService(this.executorService);
-    install(ExecutorModule.getInstance());
     registerRequiredBindings();
   }
 

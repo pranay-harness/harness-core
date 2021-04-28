@@ -32,6 +32,8 @@ import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
+import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
+import io.harness.cdng.service.dashboard.CDOverviewDashboardServiceImpl;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -60,8 +62,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
-import io.harness.ng.accesscontrol.user.UserService;
-import io.harness.ng.accesscontrol.user.UserServiceImpl;
+import io.harness.ng.accesscontrol.user.AggregateUserService;
+import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
@@ -122,6 +124,7 @@ import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventLis
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -129,9 +132,12 @@ import io.harness.serializer.NextGenRegistrars;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.signup.SignupModule;
+import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
-import io.harness.telemetry.TelemetryModule;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
@@ -197,12 +203,6 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
     return appConfig.getLogStreamingServiceConfig();
-  }
-
-  @Provides
-  @Singleton
-  TelemetryConfiguration getTelemetryConfiguration() {
-    return appConfig.getSegmentConfiguration();
   }
 
   @Provides
@@ -284,6 +284,19 @@ public class NextGenModule extends AbstractModule {
       }
     });
 
+    bind(CDOverviewDashboardService.class).to(CDOverviewDashboardServiceImpl.class);
+
+    try {
+      bind(TimeScaleDBService.class)
+          .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
+    } catch (NoSuchMethodException e) {
+      log.error("TimeScaleDbServiceImpl Initialization Failed in due to missing constructor", e);
+    }
+    bind(TimeScaleDBConfig.class)
+        .annotatedWith(Names.named("TimeScaleDBConfig"))
+        .toInstance(appConfig.getTimeScaleDBConfig() != null ? appConfig.getTimeScaleDBConfig()
+                                                             : TimeScaleDBConfig.builder().build());
+
     /*
     [secondary-db]: To use another DB, uncomment this and add @Named("primaryMongoConfig") to the above one
 
@@ -328,6 +341,8 @@ public class NextGenModule extends AbstractModule {
     install(new AccountClientModule(appConfig.getManagerClientConfig(),
         appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.toString()));
     install(new SecretManagementClientModule(this.appConfig.getManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(new SecretNGManagerClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
@@ -398,9 +413,14 @@ public class NextGenModule extends AbstractModule {
           appConfig.getAccessControlAdminClientConfiguration(), NG_MANAGER.getServiceId()));
     }
     install(new MockRoleAssignmentModule());
-    install(TelemetryModule.getInstance());
+    install(new AbstractTelemetryModule() {
+      @Override
+      public TelemetryConfiguration telemetryConfiguration() {
+        return appConfig.getSegmentConfiguration();
+      }
+    });
     install(LicenseModule.getInstance());
-    bind(UserService.class).to(UserServiceImpl.class);
+    bind(AggregateUserService.class).to(AggregateUserServiceImpl.class);
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);

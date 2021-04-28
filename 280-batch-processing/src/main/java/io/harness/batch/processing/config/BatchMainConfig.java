@@ -1,5 +1,7 @@
 package io.harness.batch.processing.config;
 
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -30,7 +32,8 @@ public class BatchMainConfig {
   @JsonProperty("reportScheduleConfig") private ReportScheduleConfig reportScheduleConfig;
   @JsonProperty("baseUrl") private String baseUrl;
   @JsonProperty("scheduler-jobs-config") private SchedulerJobsConfig schedulerJobsConfig;
-  @JsonProperty("cfConfig") private CfConfig cfConfig;
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
   @JsonProperty("cePythonService") private CEPythonServiceConfig cePythonServiceConfig;
   @JsonProperty("banzaiConfig") private BanzaiConfig banzaiConfig;
 }

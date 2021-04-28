@@ -30,10 +30,11 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
   }
 
   @Override
-  public long consumeUpdateEvent(String id, RoleDBO roleDBO) {
-    if (Optional.ofNullable(roleDBO.getPermissions()).filter(x -> !x.isEmpty()).isPresent()) {
-      Set<String> currentPermissionsInRole = roleDBO.getPermissions();
-      List<ACL> acls = aclService.getByRole(roleDBO.getScopeIdentifier(), roleDBO.getIdentifier(), roleDBO.isManaged());
+  public long consumeUpdateEvent(String id, RoleDBO updatedEntity) {
+    if (Optional.ofNullable(updatedEntity.getPermissions()).filter(x -> !x.isEmpty()).isPresent()) {
+      Set<String> currentPermissionsInRole = updatedEntity.getPermissions();
+      List<ACL> acls = aclService.getByRole(
+          updatedEntity.getScopeIdentifier(), updatedEntity.getIdentifier(), updatedEntity.isManaged());
 
       Set<String> oldPermissionsInACLs = acls.stream().map(ACL::getPermissionIdentifier).collect(Collectors.toSet());
 
@@ -63,7 +64,7 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
 
       long count = 0;
       if (!aclsToCreate.isEmpty()) {
-        count = aclService.insertAllIgnoringDuplicates(aclsToCreate);
+        count = aclService.saveAll(aclsToCreate);
       }
       log.info("{} ACLs created", count);
       return count;
@@ -77,7 +78,7 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
   }
 
   @Override
-  public long consumeCreateEvent(String id, RoleDBO roleDBO) {
+  public long consumeCreateEvent(String id, RoleDBO createdEntity) {
     return 0;
   }
 }

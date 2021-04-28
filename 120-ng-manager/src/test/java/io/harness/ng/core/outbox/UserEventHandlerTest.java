@@ -6,6 +6,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.ACCEPTED_INVITE;
 import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import static io.harness.rule.OwnerRule.KARAN;
@@ -193,7 +194,7 @@ public class UserEventHandlerTest extends CategoryTest {
     String email = randomAlphabetic(10);
     UserMembershipAddEvent userMembershipAddEvent = new UserMembershipAddEvent(accountIdentifier,
         UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
-        randomAlphabetic(10), SYSTEM);
+        randomAlphabetic(10), ACCEPTED_INVITE);
     String eventData = objectMapper.writeValueAsString(userMembershipAddEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .id(randomAlphabetic(10))
@@ -224,7 +225,7 @@ public class UserEventHandlerTest extends CategoryTest {
 
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
-    assertEquals(Action.ADD_MEMBERSHIP, auditEntry.getAction());
+    assertEquals(Action.ADD_COLLABORATOR, auditEntry.getAction());
     assertNotNull(auditEntry.getAuditEventData());
     assertNull(auditEntry.getOldYaml());
   }
@@ -269,8 +270,7 @@ public class UserEventHandlerTest extends CategoryTest {
 
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
-    assertEquals(Action.REMOVE_MEMBERSHIP, auditEntry.getAction());
-    assertNotNull(auditEntry.getAuditEventData());
+    assertEquals(Action.REMOVE_COLLABORATOR, auditEntry.getAction());
     assertNull(auditEntry.getNewYaml());
   }
 

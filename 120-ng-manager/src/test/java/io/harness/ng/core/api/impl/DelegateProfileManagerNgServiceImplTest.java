@@ -16,11 +16,14 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
 import io.harness.delegate.beans.ScopingRuleDetailsNg;
 import io.harness.delegateprofile.DelegateProfileGrpc;
@@ -30,6 +33,8 @@ import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
+import io.harness.owner.OrgIdentifier;
+import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -50,9 +55,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
   private static final String TEST_ACCOUNT_ID = generateUuid();
   private static final String TEST_DELEGATE_PROFILE_ID = generateUuid();
@@ -78,15 +85,19 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc =
         DelegateProfilePageResponseGrpc.newBuilder().build();
 
-    when(delegateProfileServiceGrpcClient.listProfiles(any(AccountId.class), any(PageRequestGrpc.class)))
-        .thenReturn(null)
+    when(delegateProfileServiceGrpcClient.listProfiles(
+             any(AccountId.class), any(PageRequestGrpc.class), eq(true), any(OrgIdentifier.class), eq(null)))
+        .thenReturn(null);
+    when(delegateProfileServiceGrpcClient.listProfiles(
+             any(AccountId.class), any(PageRequestGrpc.class), eq(true), eq(null), any(ProjectIdentifier.class)))
         .thenReturn(delegateProfilePageResponseGrpc);
 
     PageResponse<DelegateProfileDetailsNg> delegateProfileDetailsPageResponse =
-        delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest);
+        delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest, "orgId", null);
     assertThat(delegateProfileDetailsPageResponse).isNull();
 
-    delegateProfileDetailsPageResponse = delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest);
+    delegateProfileDetailsPageResponse =
+        delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest, null, "projectId");
     assertThat(delegateProfileDetailsPageResponse).isNotNull();
   }
 
@@ -183,6 +194,9 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.NICOLAS)
   @Category(UnitTests.class)
   public void shouldAdd() {
+    long createdAt = System.currentTimeMillis();
+    long updatedAt = System.currentTimeMillis();
+
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
     scopingEntities.put(Cd1SetupFields.APP_ID_FIELD, ScopingValues.newBuilder().addValue("appId").build());
     scopingEntities.put(ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
@@ -192,6 +206,10 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
                                                  .name("test")
                                                  .description("description")
                                                  .startupScript("startupScript")
+                                                 .orgIdentifier("orgId")
+                                                 .projectIdentifier("projectId")
+                                                 .createdAt(createdAt)
+                                                 .lastUpdatedAt(updatedAt)
                                                  .build();
     ScopingRuleDetailsNg scopingRuleDetail = ScopingRuleDetailsNg.builder()
                                                  .description("test")
@@ -209,12 +227,23 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
             .addScopingRules(
                 ProfileScopingRule.newBuilder().setDescription("test").putAllScopingEntities(scopingEntities).build())
             .setProfileId(ProfileId.newBuilder().setId(generateUuid()).build())
+            .setCreatedAt(createdAt)
+            .setLastUpdatedAt(updatedAt)
+            .setProjectIdentifier(ProjectIdentifier.newBuilder().setId("projectId").build())
+            .setOrgIdentifier(OrgIdentifier.newBuilder().setId("orgId").build())
             .build();
 
-    when(delegateProfileServiceGrpcClient.addProfile(any(DelegateProfileGrpc.class))).thenReturn(delegateProfileGrpc);
+    ArgumentCaptor<DelegateProfileGrpc> captor = ArgumentCaptor.forClass(DelegateProfileGrpc.class);
+
+    when(delegateProfileServiceGrpcClient.addProfile(captor.capture())).thenReturn(delegateProfileGrpc);
 
     DelegateProfileDetailsNg result = delegateProfileManagerNgService.add(profileDetail);
-    assertThat(result).isNotNull().isEqualToIgnoringGivenFields(profileDetail, "uuid");
+    assertThat(result).isNotNull().isEqualToIgnoringGivenFields(profileDetail, DelegateProfileKeys.uuid);
+
+    DelegateProfileGrpc capturedProfile = captor.getValue();
+    assertThat(capturedProfile.getNg()).isTrue();
+    assertThat(capturedProfile.getOrgIdentifier().getId()).isEqualTo("orgId");
+    assertThat(capturedProfile.getProjectIdentifier().getId()).isEqualTo("projectId");
   }
 
   @Test

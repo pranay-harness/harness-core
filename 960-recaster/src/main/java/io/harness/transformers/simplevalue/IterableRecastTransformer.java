@@ -2,6 +2,8 @@ package io.harness.transformers.simplevalue;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
 import io.harness.core.Transformer;
 import io.harness.exceptions.RecasterException;
@@ -15,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class IterableRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
   @Override
   public Object decode(final Class<?> targetClass, final Object fromDBObject, final CastedField castedField) {
@@ -115,7 +118,7 @@ public class IterableRecastTransformer extends RecastTransformer implements Simp
       }
     } else {
       for (final Object o : iterableValues) {
-        if (getRecaster().getTransformer().hasSimpleValueTransformer(o.getClass())) {
+        if (o != null && getRecaster().getTransformer().hasSimpleValueTransformer(o.getClass())) {
           values.add(getRecaster().getTransformer().encode(o));
         } else if (o instanceof Iterable) {
           encode(o, mf);

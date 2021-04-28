@@ -26,6 +26,7 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_ABORT_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PAUSE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_RESUME_NOTIFICATION;
 import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createSlackApprovalMessage;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -41,6 +42,7 @@ import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
+import static software.wings.utils.WingsTestConstants.JIRA_ISSUE_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
@@ -50,6 +52,7 @@ import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
@@ -79,9 +82,11 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.WingsBaseTest;
@@ -91,6 +96,7 @@ import software.wings.api.ApprovalStateExecutionData.ApprovalStateExecutionDataK
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.WorkflowElement;
 import software.wings.api.jira.JiraExecutionData;
+import software.wings.beans.Activity;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
@@ -111,6 +117,7 @@ import software.wings.beans.approval.ConditionalOperator;
 import software.wings.beans.approval.Criteria;
 import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
+import software.wings.beans.approval.ShellScriptApprovalParams;
 import software.wings.beans.approval.SlackApprovalParams;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -123,6 +130,7 @@ import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.notifications.SlackApprovalMessageKeys;
 import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
 import software.wings.service.intfc.NotificationService;
@@ -207,6 +215,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   @Mock private State state;
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ActivityService activityService;
   @InjectMocks private ApprovalState approvalState = new ApprovalState("ApprovalState");
 
   @Inject KryoSerializer kryoSerializer;
@@ -243,6 +252,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(context.getWorkflowExecutionName()).thenReturn(BUILD_JOB_NAME);
     when(context.getWorkflowId()).thenReturn(WORKFLOW_ID);
     when(secretManager.getJWTSecret(EXTERNAL_SERVICE_SECRET)).thenReturn("secret");
+    when(activityService.save(any())).thenReturn(Activity.builder().uuid(UUID).build());
     writeField(approvalState, "secretManager", secretManager, true);
 
     PipelineStageElement pipelineStageElement = PipelineStageElement.builder().name("ApprovalState").build();
@@ -1601,6 +1611,223 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getArtifactsInvolved());
     assertThat(trimmedMessage).contains("*Infrastructure Definitions*: first, second, third... 25 more");
     assertThat(trimmedMessage).doesNotContain(slackApprovalParams.getInfraDefinitionsInvolved());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldExecuteShellScriptApproval() {
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ShellScriptApprovalParams shellScriptApprovalParams = new ShellScriptApprovalParams();
+    shellScriptApprovalParams.setScriptString("script");
+    shellScriptApprovalParams.setRetryInterval(30000);
+    approvalStateParams.setShellScriptApprovalParams(shellScriptApprovalParams);
+    approvalState.setApprovalStateType(ApprovalStateType.SHELL_SCRIPT);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(workflowNotificationHelper)
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.SHELL_SCRIPT));
+    verify(alertService)
+        .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
+    verify(approvalPolingService).save(any());
+    assertThat(executionResponse.isAsync()).isTrue();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFailApprovalWhenExceptionThrownOnSavingPollingJob() {
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ShellScriptApprovalParams shellScriptApprovalParams = new ShellScriptApprovalParams();
+    shellScriptApprovalParams.setScriptString("script");
+    shellScriptApprovalParams.setRetryInterval(30000);
+    approvalStateParams.setShellScriptApprovalParams(shellScriptApprovalParams);
+    approvalState.setApprovalStateType(ApprovalStateType.SHELL_SCRIPT);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    when(approvalPolingService.save(any())).thenThrow(new InvalidArgumentsException(""));
+
+    ExecutionResponse executionResponse = approvalState.execute(context);
+
+    verify(workflowNotificationHelper)
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.SHELL_SCRIPT));
+    verify(alertService)
+        .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Failed to schedule Approval");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldHandleAsyncResponseForJiraApproval() {
+    approvalState.setApprovalStateType(ApprovalStateType.JIRA);
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    JiraApprovalParams jiraApprovalParams = new JiraApprovalParams();
+    jiraApprovalParams.setIssueId(JIRA_ISSUE_ID);
+    approvalStateParams.setJiraApprovalParams(jiraApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ResponseData responseData = ApprovalStateExecutionData.builder()
+                                    .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                    .approvalId(UUID)
+                                    .build();
+    ((StateExecutionData) responseData).setStatus(SUCCESS);
+    Map<String, ResponseData> response = Collections.singletonMap("key", responseData);
+    ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder().build();
+    approvalStateExecutionData.setStartTs(123456L);
+    approvalStateExecutionData.setApprovalStateType(ApprovalStateType.JIRA);
+
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
+        .thenReturn(builder()
+                        .status(ExecutionStatus.NEW)
+                        .appId(APP_ID)
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .createdAt(70L)
+                        .build());
+
+    ExecutionResponse executionResponse = approvalState.handleAsyncResponse(context, response);
+    verify(alertService).closeAlert(any(), any(), any(), any());
+    verify(workflowNotificationHelper)
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_RESUME_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.JIRA));
+    verify(approvalPolingService).delete(any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldHandleAsyncResponseForSnowApproval() {
+    approvalState.setApprovalStateType(ApprovalStateType.SERVICENOW);
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ServiceNowApprovalParams serviceNowApprovalParams = new ServiceNowApprovalParams();
+    serviceNowApprovalParams.setIssueNumber(UUID);
+    approvalStateParams.setServiceNowApprovalParams(serviceNowApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ResponseData responseData = ApprovalStateExecutionData.builder()
+                                    .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                    .approvalId(UUID)
+                                    .build();
+    ((StateExecutionData) responseData).setStatus(SUCCESS);
+    Map<String, ResponseData> response = Collections.singletonMap("key", responseData);
+    ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder().build();
+    approvalStateExecutionData.setStartTs(123456L);
+    approvalStateExecutionData.setApprovalStateType(ApprovalStateType.SERVICENOW);
+
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
+        .thenReturn(builder()
+                        .status(ExecutionStatus.NEW)
+                        .appId(APP_ID)
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .createdAt(70L)
+                        .build());
+
+    ExecutionResponse executionResponse = approvalState.handleAsyncResponse(context, response);
+    verify(alertService).closeAlert(any(), any(), any(), any());
+    verify(workflowNotificationHelper)
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_RESUME_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.SERVICENOW));
+    verify(approvalPolingService).delete(any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldHandleAsyncResponseShellScriptApproval() {
+    approvalState.setApprovalStateType(ApprovalStateType.SHELL_SCRIPT);
+    ApprovalStateParams approvalStateParams = new ApprovalStateParams();
+    ShellScriptApprovalParams shellScriptApprovalParams = new ShellScriptApprovalParams();
+    shellScriptApprovalParams.setScriptString("script");
+    shellScriptApprovalParams.setRetryInterval(30000);
+    approvalStateParams.setShellScriptApprovalParams(shellScriptApprovalParams);
+    approvalState.setApprovalStateParams(approvalStateParams);
+    ResponseData responseData = ApprovalStateExecutionData.builder()
+                                    .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                    .approvalId(UUID)
+                                    .build();
+    ((StateExecutionData) responseData).setStatus(SUCCESS);
+    Map<String, ResponseData> response = Collections.singletonMap("key", responseData);
+    ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder().build();
+    approvalStateExecutionData.setStartTs(123456L);
+    approvalStateExecutionData.setApprovalStateType(ApprovalStateType.SHELL_SCRIPT);
+
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
+        .thenReturn(builder()
+                        .status(ExecutionStatus.NEW)
+                        .appId(APP_ID)
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .createdAt(70L)
+                        .build());
+
+    ExecutionResponse executionResponse = approvalState.handleAsyncResponse(context, response);
+    verify(alertService).closeAlert(any(), any(), any(), any());
+    verify(workflowNotificationHelper)
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_RESUME_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.SHELL_SCRIPT));
+    verify(approvalPolingService).delete(any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldHandleAsyncResponseUserGroupApproval() {
+    approvalState.setApprovalStateType(ApprovalStateType.USER_GROUP);
+    ResponseData responseData = ApprovalStateExecutionData.builder()
+                                    .approvedBy(EmbeddedUser.builder().name(USER_NAME).build())
+                                    .approvalId(UUID)
+                                    .build();
+    ((StateExecutionData) responseData).setStatus(SUCCESS);
+    Map<String, ResponseData> response = Collections.singletonMap("key", responseData);
+    ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder().build();
+    approvalStateExecutionData.setStartTs(123456L);
+    approvalStateExecutionData.setApprovalStateType(ApprovalStateType.USER_GROUP);
+
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionType(WorkflowType.ORCHESTRATION).build());
+    when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
+    when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
+             WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status))
+        .thenReturn(builder()
+                        .status(ExecutionStatus.NEW)
+                        .appId(APP_ID)
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .createdAt(70L)
+                        .build());
+
+    ExecutionResponse executionResponse = approvalState.handleAsyncResponse(context, response);
+    verify(alertService).closeAlert(any(), any(), any(), any());
+    verify(workflowNotificationHelper)
+        .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_RESUME_NOTIFICATION), Mockito.anyMap(),
+            Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
+    verify(notificationService).sendNotificationAsync(any(), any());
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
   }
 
   private void assertPlaceholdersAddedForEmailNotification(Map<String, String> placeholderValues) {

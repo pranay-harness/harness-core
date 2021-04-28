@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 
@@ -71,13 +72,13 @@ public class AggregatorApplication {
   public AggregatorApplication(RoleChangeConsumerImpl roleChangeConsumer,
       RoleAssignmentChangeConsumerImpl roleAssignmentChangeConsumer,
       ResourceGroupChangeConsumerImpl resourceGroupChangeConsumer, UserGroupChangeConsumerImpl userGroupChangeConsumer,
-      AggregatorConfiguration aggregatorConfiguration, ExecutorService executorService) {
+      AggregatorConfiguration aggregatorConfiguration) {
     this.roleChangeConsumer = roleChangeConsumer;
     this.roleAssignmentChangeConsumer = roleAssignmentChangeConsumer;
     this.resourceGroupChangeConsumer = resourceGroupChangeConsumer;
     this.userGroupChangeConsumer = userGroupChangeConsumer;
     this.aggregatorConfiguration = aggregatorConfiguration;
-    this.executorService = executorService;
+    this.executorService = Executors.newFixedThreadPool(5);
   }
 
   public void run() {
