@@ -1,6 +1,5 @@
 package software.wings.helpers.ext.nexus;
 
-import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -13,6 +12,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactUtilities;
@@ -66,8 +66,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import retrofit2.Response;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
 @Singleton
 @Slf4j
 public class NexusThreeServiceImpl {
@@ -241,7 +241,7 @@ public class NexusThreeServiceImpl {
   }
 
   public List<BuildDetails> getPackageVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repositoryName, String packageName, boolean supportForNexusGroupReposEnabled) throws IOException {
+      String repositoryName, String packageName) throws IOException {
     log.info("Retrieving package versions for repository {} package {} ", repositoryName, packageName);
     List<String> versions = new ArrayList<>();
     Map<String, Asset> versionToArtifactUrls = new HashMap<>();
@@ -272,7 +272,7 @@ public class NexusThreeServiceImpl {
 
               if (isNotEmpty(component.getAssets())) {
                 Asset asset = component.getAssets().get(0);
-                if (supportForNexusGroupReposEnabled && !asset.getRepository().equals(repositoryName)) {
+                if (!asset.getRepository().equals(repositoryName)) {
                   // For nuget, Eg. repository/nuget-hosted-group-repo/NuGet.Sample.Package/1.0.0.0
                   // For npm,  Eg. repository/harness-npm-group/npm-app1/-/npm-app1-1.0.0.tgz
                   String artifactUrl = asset.getDownloadUrl().replace(asset.getRepository(), repositoryName);
@@ -583,8 +583,7 @@ public class NexusThreeServiceImpl {
   }
 
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactName, String extension, String classifier,
-      boolean supportForNexusGroupReposEnabled) throws IOException {
+      String repoId, String groupId, String artifactName, String extension, String classifier) throws IOException {
     log.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
     List<String> versions = new ArrayList<>();
     Map<String, String> versionToArtifactUrls = new HashMap<>();
@@ -612,8 +611,7 @@ public class NexusThreeServiceImpl {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
               String version = component.getVersion();
               versions.add(version);
-              List<ArtifactFileMetadata> artifactFileMetadata =
-                  getArtifactMetadata(component.getAssets(), repoId, supportForNexusGroupReposEnabled);
+              List<ArtifactFileMetadata> artifactFileMetadata = getArtifactMetadata(component.getAssets(), repoId);
 
               if (isNotEmpty(artifactFileMetadata)) {
                 versionToArtifactUrls.put(version, artifactFileMetadata.get(0).getUrl());
@@ -636,8 +634,7 @@ public class NexusThreeServiceImpl {
         versionToArtifactDownloadUrls, extension, classifier);
   }
 
-  private List<ArtifactFileMetadata> getArtifactMetadata(
-      List<Asset> assets, String repoId, boolean supportForNexusGroupReposEnabled) {
+  private List<ArtifactFileMetadata> getArtifactMetadata(List<Asset> assets, String repoId) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
     if (isEmpty(assets)) {
       return artifactFileMetadata;
@@ -648,10 +645,7 @@ public class NexusThreeServiceImpl {
       if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5") || artifactFileName.endsWith("sha1")) {
         continue;
       }
-      // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
-      // Replacing the repository name in url with group repo name if the repotype is group
-      // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
-      if (supportForNexusGroupReposEnabled && !item.getRepository().equals(repoId)) {
+      if (!item.getRepository().equals(repoId)) {
         url = url.replace(item.getRepository(), repoId);
       }
       artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(url).build());
