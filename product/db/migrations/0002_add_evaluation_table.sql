@@ -99,7 +99,6 @@ comment on column evaluation.criterion is 'why was this test selected/not_select
 
 
 -- distributed hypertable is supported only in 2.0 with multi-node. for TSDB 1.7, or 2.0 with single-node use create_hypertable
--- SELECT create_distributed_hypertable('evaluation', 'created_at');
 SELECT create_hypertable('evaluation', 'created_at');
 
 CREATE INDEX IF NOT EXISTS evaluation_idx1 ON evaluation(account_id, org_id, project_id, pipeline_id, build_id, created_at DESC);

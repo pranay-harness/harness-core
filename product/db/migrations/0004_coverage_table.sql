@@ -51,7 +51,6 @@ comment on column coverage.status is 'Whether the file was modified/added/delete
 
 
 -- distributed hypertable is supported only in 2.0 with multi-node. for TSDB 1.7, or 2.0 with single-node use create_hypertable
--- SELECT create_distributed_hypertable('coverage', 'created_at');
 SELECT create_hypertable('coverage', 'created_at');
 
 CREATE INDEX IF NOT EXISTS coverage_idx1 ON coverage(account_id, org_id, project_id, pipeline_id, build_id, created_at DESC);
