@@ -150,7 +150,8 @@ public class EcrServiceImpl implements EcrService {
         getBuilds(awsInternalConfig, imageUrl, region, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
     builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
     if (builds.size() != 1) {
-      throw new InvalidTagException("Didn't get build number");
+      throw new InvalidTagException("Image tag: '" + tag + "' is not available in the repository: '" + imageName
+          + "' in the region: '" + region + "'");
     }
     return builds.get(0);
   }

@@ -3,13 +3,17 @@ package io.harness.delegate.exceptionhandler.handler;
 import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
+import static io.harness.eraro.ErrorCode.IMAGE_NOT_FOUND;
+import static io.harness.eraro.ErrorCode.IMAGE_TAG_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.HintException;
+import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 
@@ -46,7 +50,7 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
 
     AmazonServiceException amazonServiceException = (AmazonServiceException) exception;
     if (amazonServiceException instanceof InvalidTagException) {
-      return new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
+      return new ImageNotFoundException(amazonServiceException.getMessage(), IMAGE_TAG_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof AmazonCodeDeployException) {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
@@ -56,8 +60,9 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
     } else if (amazonServiceException instanceof ServiceNotFoundException) {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof RepositoryNotFoundException) {
-      return new HintException(HintException.HINT_ECR_IMAGE_NAME,
-          new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER));
+      return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_ECR_IMAGE_NAME,
+          "Check that ECR image is available in specified region",
+          new ImageNotFoundException(amazonServiceException.getMessage(), IMAGE_NOT_FOUND, USER));
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {
