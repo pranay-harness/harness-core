@@ -1,13 +1,10 @@
 package io.harness.gitsync.scm;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.gitsync.GitSyncSdkModule.SCM_ON_DELEGATE;
+import static io.harness.gitsync.GitSyncSdkModule.SCM_ON_MANAGER;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
-import io.harness.beans.gitsync.GitFileDetails;
-import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
-import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -16,26 +13,19 @@ import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.gitsync.InfoForPush;
 import io.harness.gitsync.common.beans.InfoForGitPush;
-import io.harness.gitsync.helpers.ScmUserHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
-import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.scm.beans.SCMNoOpResponse;
-import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
-import io.harness.gitsync.scm.beans.ScmDeleteFileResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
-import io.harness.gitsync.scm.beans.ScmUpdateFileResponse;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
-import io.harness.product.ci.scm.proto.CreateFileResponse;
-import io.harness.product.ci.scm.proto.DeleteFileResponse;
-import io.harness.product.ci.scm.proto.UpdateFileResponse;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import io.harness.service.ScmClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
 @Slf4j
@@ -44,7 +34,8 @@ public class SCMGitSyncHelper {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;
   @Inject private EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
-  @Inject private ScmClient scmClient;
+  @Inject @Named(SCM_ON_MANAGER) private ScmGitHelper scmManagerGitHelper;
+  @Inject @Named(SCM_ON_DELEGATE) private ScmGitHelper scmDelegateGitHelper;
 
   public ScmPushResponse pushToGit(
       GitEntityInfo gitBranchInfo, String yaml, ChangeType changeType, EntityDetail entityDetail) {
@@ -59,75 +50,12 @@ public class SCMGitSyncHelper {
           .folderPath(gitBranchInfo.getFolderPath())
           .build();
     }
-    return pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
-  }
-
-  private ScmPushResponse pushToGitBasedOnChangeType(
-      String yaml, ChangeType changeType, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
-    if (infoForPush.isNewBranch()) {
-      createNewBranchInGit(infoForPush, gitBranchInfo);
-    }
-    switch (changeType) {
-      case ADD:
-        final CreateFileResponse createFileResponse = doScmCreateFile(yaml, gitBranchInfo, infoForPush);
-        if (createFileResponse.getStatus() == 0) {
-          throw new InvalidRequestException("Git push failed");
-        }
-        return ScmCreateFileResponse.builder()
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-            .branch(infoForPush.getBranch())
-            .build();
-      case DELETE:
-        final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
-        if (deleteFileResponse.getStatus() == 0) {
-          throw new InvalidRequestException("Git push failed");
-        }
-        return ScmDeleteFileResponse.builder()
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .branch(infoForPush.getBranch())
-            .build();
-      case RENAME:
-        throw new NotImplementedException("Not implemented");
-      case MODIFY:
-        final UpdateFileResponse updateFileResponse = doScmUpdateFile(yaml, gitBranchInfo, infoForPush);
-        if (updateFileResponse.getStatus() == 0) {
-          throw new InvalidRequestException("Git push failed");
-        }
-        return ScmUpdateFileResponse.builder()
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-            .oldObjectId(gitBranchInfo.getLastObjectId())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .branch(infoForPush.getBranch())
-            .build();
-      default:
-        throw new EnumConstantNotPresentException(changeType.getClass(), "Incorrect changeType");
+    if (infoForPush.isExecuteOnDelegate()) {
+      return scmDelegateGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
+    } else {
+      return scmManagerGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
     }
   }
-
-  private void createNewBranchInGit(InfoForGitPush infoForPush, GitEntityInfo gitBranchInfo) {
-    scmClient.createNewBranch(
-        infoForPush.getScmConnector(), infoForPush.getBranch(), infoForPush.getDefaultBranchName());
-  }
-
   private InfoForGitPush getInfoForPush(GitEntityInfo gitBranchInfo, EntityDetail entityDetail) {
     final InfoForPush pushInfo = harnessToGitPushInfoServiceBlockingStub.getConnectorInfo(
         FileInfo.newBuilder()
@@ -146,6 +74,11 @@ public class SCMGitSyncHelper {
     }
     final ScmConnector scmConnector =
         (ScmConnector) kryoSerializer.asObject(pushInfo.getConnector().getValue().toByteArray());
+    List<EncryptedDataDetail> encryptedDataDetailList = null;
+    if (pushInfo.getExecuteOnDelegate()) {
+      encryptedDataDetailList = (List<EncryptedDataDetail>) kryoSerializer.asObject(
+          pushInfo.getEncryptedDataDetails().getValue().toByteArray());
+    }
     return InfoForGitPush.builder()
         .filePath(pushInfo.getFilePath().getValue())
         .folderPath(pushInfo.getFolderPath().getValue())
@@ -158,50 +91,8 @@ public class SCMGitSyncHelper {
         .yamlGitConfigId(pushInfo.getYamlGitConfigId())
         .isNewBranch(gitBranchInfo.isNewBranch())
         .defaultBranchName(pushInfo.getDefaultBranchName())
+        .executeOnDelegate(pushInfo.getExecuteOnDelegate())
+        .encryptedDataDetailList(encryptedDataDetailList)
         .build();
-  }
-
-  private DeleteFileResponse doScmDeleteFile(GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
-    final GitFilePathDetails gitFilePathDetails =
-        GitFilePathDetails.builder().branch(infoForPush.getBranch()).filePath(infoForPush.getFilePath()).build();
-    return scmClient.deleteFile(infoForPush.getScmConnector(), gitFilePathDetails);
-  }
-
-  private CreateFileResponse doScmCreateFile(String yaml, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
-    final GitFileDetails gitFileDetails = getGitFileDetails(gitBranchInfo, yaml).build();
-    return scmClient.createFile(infoForPush.getScmConnector(), gitFileDetails);
-  }
-
-  private UpdateFileResponse doScmUpdateFile(String yaml, GitEntityInfo gitBranchInfo, InfoForGitPush infoForPush) {
-    final GitFileDetails gitFileDetails =
-        getGitFileDetails(gitBranchInfo, yaml).oldFileSha(gitBranchInfo.getLastObjectId()).build();
-    return scmClient.updateFile(infoForPush.getScmConnector(), gitFileDetails);
-  }
-
-  private GitFileDetailsBuilder getGitFileDetails(GitEntityInfo gitEntityInfo, String yaml) {
-    final EmbeddedUser currentUser = ScmUserHelper.getCurrentUser();
-    String filePath = createFilePath(gitEntityInfo.getFolderPath(), gitEntityInfo.getFilePath());
-    return GitFileDetails.builder()
-        .branch(gitEntityInfo.getBranch())
-        .commitMessage(
-            isEmpty(gitEntityInfo.getCommitMsg()) ? GitSyncConstants.COMMIT_MSG : gitEntityInfo.getCommitMsg())
-        .fileContent(yaml)
-        .filePath(filePath)
-        .userEmail(currentUser.getEmail())
-        .userName(currentUser.getName());
-  }
-
-  String createFilePath(String folderPath, String filePath) {
-    if (isEmpty(folderPath)) {
-      throw new InvalidRequestException("Folder path cannot be empty");
-    }
-    if (isEmpty(filePath)) {
-      throw new InvalidRequestException("File path cannot be empty");
-    }
-    String updatedFolderPath = folderPath.endsWith("/") ? folderPath : folderPath.concat("/");
-    String folderPathWithoutStartingSlash =
-        updatedFolderPath.charAt(0) != '/' ? updatedFolderPath : updatedFolderPath.substring(1);
-    String updatedFilePath = filePath.charAt(0) != '/' ? filePath : filePath.substring(1);
-    return folderPathWithoutStartingSlash + updatedFilePath;
   }
 }

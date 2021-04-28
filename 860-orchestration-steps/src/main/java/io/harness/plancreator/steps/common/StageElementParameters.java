@@ -12,12 +12,15 @@ import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
 import java.util.Map;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stageElementParameters")
 @OwnedBy(CDC)
 public class StageElementParameters implements StepParameters {

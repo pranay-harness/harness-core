@@ -12,7 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -148,12 +148,6 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public List<String> getArtifactPathsUsingPrivateApis(String repoId, String groupId, NexusConfig config,
-      List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
-    return nexusService.getArtifactNamesUsingPrivateApis(config, encryptionDetails, repoId, groupId, repositoryFormat);
-  }
-
-  @Override
   public List<String> getGroupIds(
       String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, null);
@@ -163,12 +157,6 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   public List<String> getGroupIds(
       String repositoryName, String repositoryFormat, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, repositoryFormat);
-  }
-
-  @Override
-  public List<String> getGroupIdsUsingPrivateApis(
-      String repositoryName, String repositoryFormat, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return nexusService.getGroupIdPathsUsingPrivateApis(config, encryptionDetails, repositoryName, repositoryFormat);
   }
 
   @Override
@@ -184,8 +172,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public boolean validateArtifactServer(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(nexusConfig.getNexusUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not reach Nexus Server at : " + nexusConfig.getNexusUrl());
+      throw new InvalidArtifactServerException("Could not reach Nexus Server at : " + nexusConfig.getNexusUrl(), USER);
     }
     return nexusService.isRunning(nexusConfig, encryptedDataDetails);
   }

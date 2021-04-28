@@ -412,6 +412,7 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
 
             int i = 0;
             Set<Integer> collectionMinuteSet = new HashSet<>();
+            collectionMinuteSet.add(logCollectionMinute);
             for (LogElement logObject : logs) {
               long timestamp = logObject.getTimeStamp();
 
@@ -419,7 +420,9 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
                 int collectionMin =
                     (int) ((Timestamp.minuteBoundary(timestamp) - collectionStartTime) / TimeUnit.MINUTES.toMillis(1));
                 logObject.setLogCollectionMinute(collectionMin);
-                collectionMinuteSet.add(collectionMin);
+                if (collectionMin >= 0) {
+                  collectionMinuteSet.add(collectionMin);
+                }
               } else {
                 logObject.setLogCollectionMinute(logCollectionMinute);
                 collectionMinuteSet.add(logCollectionMinute);

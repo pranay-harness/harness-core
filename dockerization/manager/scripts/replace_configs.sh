@@ -110,6 +110,26 @@ if [[ "" != "$CF_CLIENT_API_KEY" ]]; then
   yq write -i $CONFIG_FILE cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 fi
 
+if [[ "" != "$CF_CLIENT_CONFIG_URL" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
+fi
+
+if [[ "" != "$CF_CLIENT_EVENT_URL" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
+fi
+
+if [[ "" != "$CF_CLIENT_ANALYTICS_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.analyticsEnabled "$CF_CLIENT_ANALYTICS_ENABLED"
+fi
+
+if [[ "" != "$CF_CLIENT_CONNECTION_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.connectionTimeout "$CF_CLIENT_CONNECTION_TIMEOUT"
+fi
+
+if [[ "" != "$CF_CLIENT_READ_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
+fi
+
 if [[ "" != "$CF_MIGRATION_ENABLED" ]]; then
   yq write -i $CONFIG_FILE cfMigrationConfig.enabled "$CF_MIGRATION_ENABLED"
 fi

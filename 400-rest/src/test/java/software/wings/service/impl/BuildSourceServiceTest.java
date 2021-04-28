@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
@@ -30,9 +32,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -109,6 +112,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@TargetModule(_930_DELEGATE_TASKS)
+@OwnedBy(CDC)
 public class BuildSourceServiceTest extends WingsBaseTest {
   public static final String DELEGATE_SELECTOR = "delegateSelector";
   private final SettingsService settingsService = Mockito.mock(SettingsServiceImpl.class);
@@ -1208,70 +1213,6 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionOnNullSettingValue() {
     when(settingsService.get(SETTING_ID)).thenReturn(new SettingAttribute());
     buildSourceService.getGcbTriggers(SETTING_ID);
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testGetGroupIdsForMavenUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    List<String> groupIds = new ArrayList<>();
-    groupIds.add("group1");
-    groupIds.add("group2");
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(nexusBuildService.getGroupIdsUsingPrivateApis(anyString(), anyString(), any(), any())).thenReturn(groupIds);
-    Set<String> ids =
-        buildSourceService.getGroupIds(APP_ID, "harness-maven", SETTING_ID, RepositoryFormat.maven.name());
-    assertThat(ids).isNotEmpty();
-    assertThat(ids.size()).isEqualTo(2);
-    assertThat(ids).contains("group1", "group2");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testGetArtifactPathsUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    when(nexusBuildService.getArtifactPathsUsingPrivateApis(anyString(), anyString(), any(), anyList(), anyString()))
-        .thenReturn(asList("myartifact"));
-    Set<String> artifactPaths = buildSourceService.getArtifactPaths(APP_ID, "maven-releases", SETTING_ID, "mygroup",
-        ArtifactStreamType.NEXUS.name(), RepositoryFormat.maven.name());
-    assertThat(artifactPaths).isNotEmpty();
-    assertThat(artifactPaths.size()).isEqualTo(1);
-    assertThat(artifactPaths).contains("myartifact");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testFetchNexusPackageNamesUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    List<String> groupIds = new ArrayList<>();
-    groupIds.add("group1");
-    groupIds.add("group2");
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(nexusBuildService.getGroupIdsUsingPrivateApis(anyString(), anyString(), any(), any())).thenReturn(groupIds);
-    Set<String> packageNames =
-        buildSourceService.fetchNexusPackageNames(APP_ID, REPO_NAME, RepositoryFormat.npm.name(), SETTING_ID);
-    assertThat(packageNames).isNotEmpty();
-    assertThat(packageNames.size()).isEqualTo(2);
-    assertThat(packageNames).contains("group1", "group2");
   }
 
   @Test

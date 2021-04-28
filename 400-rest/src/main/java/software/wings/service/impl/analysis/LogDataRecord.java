@@ -11,8 +11,11 @@ import static io.harness.persistence.GoogleDataStoreAware.readLong;
 import static io.harness.persistence.GoogleDataStoreAware.readString;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
@@ -55,6 +58,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "logDataRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @OwnedBy(CV)
+@TargetModule(HarnessModule._270_VERIFICATION)
 public class LogDataRecord extends Base implements GoogleDataStoreAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -96,6 +100,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
             SortCompoundMongoIndex.builder()
                 .name("cvBumpIdx")
                 .field(LogDataRecordKeys.cvConfigId)
+                .field(LogDataRecordKeys.clusterLevel)
                 .field(LogDataRecordKeys.logCollectionMinute)
                 .field(LogDataRecordKeys.host)
                 .descSortField(CREATED_AT_KEY)
@@ -108,7 +113,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
 
   @NotEmpty private String workflowExecutionId;
 
-  @NotEmpty private String serviceId;
+  @NotEmpty @FdIndex private String serviceId;
 
   @NotEmpty private String stateExecutionId;
 
@@ -129,7 +134,7 @@ public class LogDataRecord extends Base implements GoogleDataStoreAware, Account
   @NotEmpty private ClusterLevel clusterLevel;
   @NotEmpty private long logCollectionMinute;
 
-  private String accountId;
+  @FdIndex private String accountId;
 
   @JsonIgnore
   @SchemaIgnore

@@ -52,12 +52,13 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
   @Override
   protected List<FileChange> compute() {
     List<FileChange> filesList = new ArrayList<>();
+    String updatedFolderPath = folderPath.endsWith("/") ? folderPath.substring(0, folderPath.length() - 1) : folderPath;
     FindFilesInBranchRequest.Builder findFilesInBranchRequest =
         FindFilesInBranchRequest.newBuilder()
             .setBranch(branch)
             .setSlug(slug)
             .setProvider(provider)
-            .setPath(folderPath)
+            .setPath(updatedFolderPath)
             .setPagination(PageRequest.newBuilder().setPage(1).build());
     List<FileChange> filesInBranch = getAllFilesPresentInFolder(findFilesInBranchRequest);
     List<String> newFoldersToBeProcessed = getListOfNewFoldersToBeProcessed(filesInBranch);

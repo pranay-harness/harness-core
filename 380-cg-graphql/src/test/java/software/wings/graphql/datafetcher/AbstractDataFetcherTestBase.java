@@ -252,6 +252,19 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
     return service;
   }
 
+  public Service createService(String accountId, String appId, String serviceId, String serviceName, String tagKey,
+      String tagValue, DeploymentType deploymentType) {
+    Service service = serviceResourceService.save(Service.builder()
+                                                      .name(serviceName)
+                                                      .uuid(serviceId)
+                                                      .appId(appId)
+                                                      .accountId(accountId)
+                                                      .deploymentType(deploymentType)
+                                                      .build());
+    setTagToEntity(tagKey, tagValue, accountId, appId, serviceId, EntityType.SERVICE);
+    return service;
+  }
+
   public InfrastructureDefinition createInfrastructureDefinition(
       String accountId, String envId, String appId, String infrastructureId, String infrastructureName) {
     InfraMappingInfrastructureProvider infraMappingInfrastructureProvider = AwsAmiInfrastructure.builder().build();

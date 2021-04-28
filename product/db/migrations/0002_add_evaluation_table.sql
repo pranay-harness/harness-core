@@ -98,8 +98,8 @@ comment on column evaluation.stderr is 'stderr of the the test run and it could 
 comment on column evaluation.criterion is 'why was this test selected/not_selected to run?. It could be one of full_run/source_code_changes/new_test/updated_test/flaky_test';
 
 
--- distributed hypertable is supported only in 2.0. for TSDB 1.7, use create_hypertable
-SELECT create_distributed_hypertable('evaluation', 'created_at');
+-- distributed hypertable is supported only in 2.0 with multi-node. for TSDB 1.7, or 2.0 with single-node use create_hypertable
+SELECT create_hypertable('evaluation', 'created_at');
 
 CREATE INDEX IF NOT EXISTS evaluation_idx1 ON evaluation(account_id, org_id, project_id, pipeline_id, build_id, created_at DESC);
 

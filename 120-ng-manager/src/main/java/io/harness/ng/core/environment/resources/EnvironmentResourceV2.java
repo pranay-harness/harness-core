@@ -34,9 +34,9 @@ import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
-import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
 import io.harness.ng.core.environment.mappers.EnvironmentMapper;
 import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -185,9 +185,7 @@ public class EnvironmentResourceV2 {
       throw new AccessDeniedException(
           "Unauthorized to list environments", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
     }
-
-    Criteria criteria =
-        EnvironmentFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
+    Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     Pageable pageRequest;
 
     if (isNotEmpty(envIdentifiers)) {

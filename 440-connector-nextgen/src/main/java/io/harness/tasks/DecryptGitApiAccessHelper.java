@@ -11,12 +11,8 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.gitapi.DecryptGitAPIAccessTaskResponse;
 import io.harness.delegate.beans.gitapi.DecryptGitAPiAccessTaskParams;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -37,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 public class DecryptGitApiAccessHelper {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject private EncryptionHelper encryptionHelper;
-  @Inject private GitApiAccessDecryptionHelper gitApiAccessDecryptionHelper;
 
   public ScmConnector decryptScmApiAccess(
       ScmConnector scmConnector, String accountId, String projectIdentifier, String orgIdentifier) {
@@ -46,22 +41,11 @@ public class DecryptGitApiAccessHelper {
                                           .orgIdentifier(orgIdentifier)
                                           .projectIdentifier(projectIdentifier)
                                           .build();
-    if (scmConnector instanceof GitlabConnectorDTO) {
-      return decryptGitlabApiAccess((GitlabConnectorDTO) scmConnector, baseNGAccess);
-    } else if (scmConnector instanceof GithubConnectorDTO) {
-      return decryptGithubApiAccess((GithubConnectorDTO) scmConnector, baseNGAccess);
-    } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return decryptBitBucketApiAccess((BitbucketConnectorDTO) scmConnector, baseNGAccess);
-    } else {
-      throw new InvalidRequestException("Invalid Scm Connector type.");
-    }
-  }
-
-  public GithubConnectorDTO decryptGithubApiAccess(GithubConnectorDTO githubConnectorDTO, NGAccess ngAccess) {
-    List<EncryptedDataDetail> encryptedDataDetailsForAPIAccess = getEncryptedDataDetailsForAPIAccess(
-        gitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(githubConnectorDTO), ngAccess);
-    return (GithubConnectorDTO) executeDecryptionTask(
-        githubConnectorDTO, ngAccess.getAccountIdentifier(), encryptedDataDetailsForAPIAccess);
+    final DecryptableEntity apiAccessDecryptableEntity =
+        GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
+    List<EncryptedDataDetail> encryptedDataDetailsForAPIAccess =
+        getEncryptedDataDetailsForAPIAccess(apiAccessDecryptableEntity, baseNGAccess);
+    return executeDecryptionTask(scmConnector, accountId, encryptedDataDetailsForAPIAccess);
   }
 
   private ScmConnector executeDecryptionTask(
@@ -89,20 +73,5 @@ public class DecryptGitApiAccessHelper {
       DecryptableEntity decryptableEntity, NGAccess ngAccess) {
     return encryptionHelper.getEncryptionDetail(decryptableEntity, ngAccess.getAccountIdentifier(),
         ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-  }
-
-  public BitbucketConnectorDTO decryptBitBucketApiAccess(
-      BitbucketConnectorDTO bitbucketConnectorDTO, NGAccess ngAccess) {
-    List<EncryptedDataDetail> encryptedDataDetailsForAPIAccess = getEncryptedDataDetailsForAPIAccess(
-        gitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(bitbucketConnectorDTO), ngAccess);
-    return (BitbucketConnectorDTO) executeDecryptionTask(
-        bitbucketConnectorDTO, ngAccess.getAccountIdentifier(), encryptedDataDetailsForAPIAccess);
-  }
-
-  public GitlabConnectorDTO decryptGitlabApiAccess(GitlabConnectorDTO gitlabConnectorDTO, NGAccess ngAccess) {
-    List<EncryptedDataDetail> encryptedDataDetailsForAPIAccess = getEncryptedDataDetailsForAPIAccess(
-        gitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(gitlabConnectorDTO), ngAccess);
-    return (GitlabConnectorDTO) executeDecryptionTask(
-        gitlabConnectorDTO, ngAccess.getAccountIdentifier(), encryptedDataDetailsForAPIAccess);
   }
 }

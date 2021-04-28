@@ -3,10 +3,14 @@ package io.harness.cdng.service.dashboard;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.Deployment.Deployment;
+import io.harness.cdng.Deployment.DeploymentCount;
 import io.harness.cdng.Deployment.DeploymentDateAndCount;
 import io.harness.cdng.Deployment.DeploymentInfo;
+import io.harness.cdng.Deployment.ExecutionDeployment;
+import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.Deployment.HealthDeploymentInfo;
+import io.harness.cdng.Deployment.TimeAndStatusDeployment;
 import io.harness.cdng.Deployment.TotalDeploymentInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.pms.execution.ExecutionStatus;
@@ -96,18 +100,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return rate;
   }
 
-  @Override
-  public HealthDeploymentDashboard getHealthDeploymentDashboard(String accountId, String orgId, String projectId,
-      String startInterval, String endInterval, String previousStartInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    LocalDate previousStartDate = LocalDate.parse(previousStartInterval);
-    String query = queryBuilderSelectStatusTime(
-        accountId, orgId, projectId, previousStartInterval, endDate.plusDays(1).toString());
-
+  public TimeAndStatusDeployment queryCalculatorTimeAndStatus(String query) {
     List<String> time = new ArrayList<>();
     List<String> status = new ArrayList<>();
-    List<String> envType = new ArrayList<>();
 
     int totalTries = 0;
     boolean successfulOperation = false;
@@ -127,6 +122,27 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
+
+    return TimeAndStatusDeployment.builder().status(status).time(time).build();
+  }
+
+  @Override
+  public HealthDeploymentDashboard getHealthDeploymentDashboard(String accountId, String orgId, String projectId,
+      String startInterval, String endInterval, String previousStartInterval) {
+    LocalDate startDate = LocalDate.parse(startInterval);
+    LocalDate endDate = LocalDate.parse(endInterval);
+    LocalDate previousStartDate = LocalDate.parse(previousStartInterval);
+    String query = queryBuilderSelectStatusTime(
+        accountId, orgId, projectId, previousStartInterval, endDate.plusDays(1).toString());
+
+    List<String> time = new ArrayList<>();
+    List<String> status = new ArrayList<>();
+    List<String> envType = new ArrayList<>();
+
+    TimeAndStatusDeployment timeAndStatusDeployment = queryCalculatorTimeAndStatus(query);
+    time = timeAndStatusDeployment.getTime();
+    status = timeAndStatusDeployment.getStatus();
+
     long total = 0;
     long currentSuccess = 0;
     long currentFailed = 0;
@@ -171,8 +187,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     String queryEnvironmentType =
         queryBuilderEnvironmentType(accountId, orgId, projectId, startInterval, endDate.plusDays(1).toString());
-    totalTries = 0;
-    successfulOperation = false;
+    int totalTries = 0;
+    boolean successfulOperation = false;
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
       ResultSet resultSet = null;
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -237,5 +253,62 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
                                                .build())
                                   .build())
         .build();
+  }
+
+  private ExecutionDeployment getExecutionDeployment(String time, long total, long success, long failed) {
+    return ExecutionDeployment.builder()
+        .time(time)
+        .deployments(DeploymentCount.builder().total(total).success(success).failure(failed).build())
+        .build();
+  }
+
+  @Override
+  public ExecutionDeploymentInfo getExecutionDeploymentDashboard(
+      String accountId, String orgId, String projectId, String startInterval, String endInterval) {
+    LocalDate startDate = LocalDate.parse(startInterval);
+    LocalDate endDate = LocalDate.parse(endInterval);
+    String query =
+        queryBuilderSelectStatusTime(accountId, orgId, projectId, startInterval, endDate.plusDays(1).toString());
+
+    HashMap<String, Integer> totalCountMap = new HashMap<>();
+    HashMap<String, Integer> successCountMap = new HashMap<>();
+    HashMap<String, Integer> failedCountMap = new HashMap<>();
+
+    LocalDate startDateCopy = startDate;
+    LocalDate endDateCopy = endDate;
+
+    while (!startDateCopy.isAfter(endDateCopy)) {
+      totalCountMap.put(startDateCopy.toString(), 0);
+      successCountMap.put(startDateCopy.toString(), 0);
+      failedCountMap.put(startDateCopy.toString(), 0);
+      startDateCopy = startDateCopy.plusDays(1);
+    }
+
+    TimeAndStatusDeployment timeAndStatusDeployment = queryCalculatorTimeAndStatus(query);
+    List<String> time = timeAndStatusDeployment.getTime();
+    List<String> status = timeAndStatusDeployment.getStatus();
+
+    List<ExecutionDeployment> executionDeployments = new ArrayList<>();
+
+    for (int i = 0; i < time.size(); i++) {
+      String variableDate = time.get(i).substring(0, time.get(i).indexOf(' '));
+      totalCountMap.put(variableDate, totalCountMap.get(variableDate) + 1);
+      if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
+        successCountMap.put(variableDate, successCountMap.get(variableDate) + 1);
+      } else if (status.get(i).contentEquals(ExecutionStatus.FAILED.name())) {
+        failedCountMap.put(variableDate, failedCountMap.get(variableDate) + 1);
+      }
+    }
+
+    startDateCopy = startDate;
+    endDateCopy = endDate;
+
+    while (!startDateCopy.isAfter(endDateCopy)) {
+      executionDeployments.add(
+          getExecutionDeployment(startDateCopy.toString(), totalCountMap.get(startDateCopy.toString()),
+              successCountMap.get(startDateCopy.toString()), failedCountMap.get(startDateCopy.toString())));
+      startDateCopy = startDateCopy.plusDays(1);
+    }
+    return ExecutionDeploymentInfo.builder().executionDeploymentList(executionDeployments).build();
   }
 }
