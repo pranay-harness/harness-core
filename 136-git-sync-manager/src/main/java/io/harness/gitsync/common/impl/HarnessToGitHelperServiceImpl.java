@@ -19,6 +19,8 @@ import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.PushInfo;
+import io.harness.gitsync.common.beans.BranchSyncStatus;
+import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
@@ -154,14 +156,29 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     gitEntityService.save(pushInfo.getAccountId(), entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail),
         yamlGitConfigDTO, pushInfo.getFolderPath(), pushInfo.getFilePath(), pushInfo.getCommitId(),
         pushInfo.getBranchName());
+    shortListTheBranch(
+        yamlGitConfigDTO, entityRef.getAccountIdentifier(), pushInfo.getBranchName(), pushInfo.getIsNewBranch());
     if (pushInfo.getIsNewBranch()) {
       executorService.submit(
           ()
-              -> processFilesInBranch(entityRef.getAccountIdentifier(), yamlGitConfigDTO.getIdentifier(),
+              -> syncNewlyCreatedBranch(entityRef.getAccountIdentifier(), yamlGitConfigDTO.getIdentifier(),
                   yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
                   pushInfo.getBranchName(), pushInfo.getFilePath(), yamlGitConfigDTO.getRepo()));
     }
     // todo(abhinav): record git commit and git file activity.
+  }
+
+  private void shortListTheBranch(
+      YamlGitConfigDTO yamlGitConfigDTO, String accountIdentifier, String branchName, boolean isNewBranch) {
+    GitBranch gitBranch = gitBranchService.get(accountIdentifier, yamlGitConfigDTO.getRepo(), branchName);
+    BranchSyncStatus branchSyncStatus = isNewBranch ? SYNCING : SYNCED;
+    if (gitBranch == null) {
+      createGitBranch(yamlGitConfigDTO, accountIdentifier, branchName, branchSyncStatus);
+    }
+    if (gitBranch.getBranchSyncStatus() != SYNCED) {
+      gitBranchService.updateBranchSyncStatus(
+          accountIdentifier, yamlGitConfigDTO.getOrganizationIdentifier(), branchName, branchSyncStatus);
+    }
   }
 
   @Override
@@ -170,14 +187,31 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         entityScopeInfo.getProjectId().getValue());
   }
 
+  private void syncNewlyCreatedBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
+      String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
+    gitBranchService.checkBranchIsNotAlreadyShortlisted(repoURL, accountId, branch);
+    processFilesInBranch(
+        accountId, gitSyncConfigId, projectIdentifier, orgIdentifier, branch, filePathToBeExcluded, repoURL);
+  }
+
   @Override
   public void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
       String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
-    gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCING);
     final YamlGitConfigDTO yamlGitConfigDTO =
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
     gitToHarnessProcessorService.readFilesFromBranchAndProcess(
         yamlGitConfigDTO, branch, accountId, yamlGitConfigDTO.getBranch(), filePathToBeExcluded);
     gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
+  }
+
+  private void createGitBranch(
+      YamlGitConfigDTO yamlGitConfigDTO, String accountId, String branch, BranchSyncStatus synced) {
+    GitBranch gitBranch = GitBranch.builder()
+                              .accountIdentifier(accountId)
+                              .branchName(branch)
+                              .branchSyncStatus(synced)
+                              .repoURL(yamlGitConfigDTO.getRepo())
+                              .build();
+    gitBranchService.save(gitBranch);
   }
 }

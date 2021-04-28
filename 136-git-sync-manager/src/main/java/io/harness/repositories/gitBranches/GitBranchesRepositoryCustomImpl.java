@@ -2,6 +2,8 @@ package io.harness.repositories.gitBranches;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.GitBranch;
 
@@ -35,5 +37,10 @@ public class GitBranchesRepositoryCustomImpl implements GitBranchesRepositoryCus
   @Override
   public GitBranch update(Query query, Update update) {
     return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), GitBranch.class);
+  }
+
+  @Override
+  public GitBranch findOne(Criteria criteria) {
+    return mongoTemplate.findOne(query(criteria), GitBranch.class);
   }
 }
