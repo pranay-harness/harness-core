@@ -6,9 +6,12 @@ import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.helper.EncryptionHelper;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -24,16 +27,20 @@ import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
+import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 @OwnedBy(DX)
@@ -46,13 +53,14 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitToHarnessProcessorService gitToHarnessProcessorService;
   private final ExecutorService executorService;
   private final GitBranchService gitBranchService;
+  private final EncryptionHelper encryptionHelper;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       GitToHarnessProcessorService gitToHarnessProcessorService, ExecutorService executorService,
-      GitBranchService gitBranchService) {
+      GitBranchService gitBranchService, EncryptionHelper encryptionHelper) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
@@ -61,6 +69,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.gitToHarnessProcessorService = gitToHarnessProcessorService;
     this.executorService = executorService;
     this.gitBranchService = gitBranchService;
+    this.encryptionHelper = encryptionHelper;
   }
 
   @Override
@@ -77,8 +86,15 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         }
       }
     }
-    return infoForGitPushBuilder.scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig))
-        .filePath(filePath)
+    if (yamlGitConfig.isExecuteOnDelegate()) {
+      final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =
+          getConnectorWithEncryptionDetails(accountId, yamlGitConfig);
+      infoForGitPushBuilder.encryptedDataDetailList(connectorWithEncryptionDetails.getRight())
+          .scmConnector(connectorWithEncryptionDetails.getLeft());
+    } else {
+      infoForGitPushBuilder.scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig));
+    }
+    return infoForGitPushBuilder.filePath(filePath)
         .branch(branch)
         .isDefault(branch.equals(yamlGitConfig.getBranch()))
         .yamlGitConfigId(yamlGitConfig.getIdentifier())
@@ -89,17 +105,42 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         .build();
   }
 
+  private Pair<ScmConnector, List<EncryptedDataDetail>> getConnectorWithEncryptionDetails(
+      String accountId, YamlGitConfigDTO yamlGitConfig) {
+    final Optional<ConnectorResponseDTO> connectorResponseDTO = getConnector(accountId, yamlGitConfig);
+    return connectorResponseDTO
+        .map(connector -> {
+          final DecryptableEntity apiAccessDecryptableEntity =
+              GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(
+                  (ScmConnector) connector.getConnector().getConnectorConfig());
+          final BaseNGAccess ngAccess = BaseNGAccess.builder()
+                                            .accountIdentifier(accountId)
+                                            .orgIdentifier(connector.getConnector().getOrgIdentifier())
+                                            .projectIdentifier(connector.getConnector().getProjectIdentifier())
+                                            .build();
+          final List<EncryptedDataDetail> encryptionDetail =
+              encryptionHelper.getEncryptionDetail(apiAccessDecryptableEntity, ngAccess.getAccountIdentifier(),
+                  ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+          return Pair.of((ScmConnector) connector.getConnector().getConnectorConfig(), encryptionDetail);
+        })
+        .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist."));
+  }
+
   private ScmConnector getDecryptedScmConnector(String accountId, YamlGitConfigDTO yamlGitConfig) {
-    final String gitConnectorId = yamlGitConfig.getGitConnectorRef();
-    final IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(gitConnectorId, accountId,
-        yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier(), null);
-    final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(accountId,
-        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+    final Optional<ConnectorResponseDTO> connectorResponseDTO = getConnector(accountId, yamlGitConfig);
     return connectorResponseDTO
         .map(connector
             -> decryptScmApiAccess.decryptScmApiAccess((ScmConnector) connector.getConnector().getConnectorConfig(),
                 accountId, yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier()))
         .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist."));
+  }
+
+  private Optional<ConnectorResponseDTO> getConnector(String accountId, YamlGitConfigDTO yamlGitConfig) {
+    final String gitConnectorId = yamlGitConfig.getGitConnectorRef();
+    final IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(gitConnectorId, accountId,
+        yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier(), null);
+    return connectorService.get(accountId, identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(),
+        identifierRef.getIdentifier());
   }
 
   @Override
