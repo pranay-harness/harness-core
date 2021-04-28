@@ -13,7 +13,6 @@ import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.HintException;
 import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 
@@ -60,8 +59,7 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
     } else if (amazonServiceException instanceof ServiceNotFoundException) {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof RepositoryNotFoundException) {
-      return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_ECR_IMAGE_NAME,
-          "Check that ECR image is available in specified region",
+      return new HintException(HintException.HINT_ECR_IMAGE_NAME,
           new ImageNotFoundException(amazonServiceException.getMessage(), IMAGE_NOT_FOUND, USER));
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
