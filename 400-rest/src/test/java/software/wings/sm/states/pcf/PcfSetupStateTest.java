@@ -146,6 +146,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -209,6 +210,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
@@ -376,6 +378,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     doReturn("artifact-name").when(pcfSetupState).artifactFileNameForSource(any(), any());
     doReturn("artifact-path").when(pcfSetupState).artifactPathForSource(any(), any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test

@@ -372,11 +372,14 @@ public class PcfSetupState extends State {
             .environmentType(env.getEnvironmentType())
             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
             .parameters(new Object[] {pcfCommandSetupRequest, encryptedDataDetails})
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .taskDescription("PCF setup task execution")
             .serviceId(pcfInfrastructureMapping.getServiceId())
             .timeout(timeoutIntervalInMinutes == null ? DEFAULT_PCF_TASK_TIMEOUT_MIN : timeoutIntervalInMinutes)
             .build());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(waitId))
@@ -758,9 +761,10 @@ public class PcfSetupState extends State {
 
   private ExecutionResponse executeGitTask(
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
-    final DelegateTask gitFetchFileTask =
-        pcfStateHelper.createGitFetchFileAsyncTask(context, appManifestMap, activityId);
+    final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
+        context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
+    appendDelegateTaskDetails(context, gitFetchFileTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(gitFetchFileTask.getWaitId()))
@@ -826,5 +830,10 @@ public class PcfSetupState extends State {
     canaryCommandUnits.add(new PcfDummyCommandUnit(PcfSetup));
     canaryCommandUnits.add(new PcfDummyCommandUnit(Wrapup));
     return canaryCommandUnits;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

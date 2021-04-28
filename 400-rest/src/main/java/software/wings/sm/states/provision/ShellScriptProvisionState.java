@@ -131,6 +131,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .accountId(context.getAccountId())
                                     .waitId(activityId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                    .description("Shell script provision task")
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.toString())
@@ -141,6 +143,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
@@ -262,6 +265,11 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                     .adoptDelegateDecryption(true)
                     .expressionFunctorToken(expressionFunctorToken)
                     .build()));
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   private List<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {

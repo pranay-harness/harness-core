@@ -213,7 +213,7 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
             .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
-        request, ecsSetUpDataBag, activityId, delegateService);
+        request, ecsSetUpDataBag, activityId, delegateService, isSelectionLogsTrackingForTasksEnabled());
     appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
@@ -299,6 +299,8 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -466,5 +468,10 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
     this.parentRecordHostedZoneId = stateExecutionData.getParentRecordHostedZoneId();
     this.serviceDiscoveryService1JSON = stateExecutionData.getServiceDiscoveryService1JSON();
     this.serviceDiscoveryService2JSON = stateExecutionData.getServiceDiscoveryService2JSON();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

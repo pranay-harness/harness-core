@@ -235,7 +235,7 @@ public abstract class ContainerServiceSetup extends State {
         allTaskTags.addAll(awsConfigTags);
       }
 
-      String delegateTaskId = delegateService.queueTask(
+      DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(app.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
@@ -251,8 +251,12 @@ public abstract class ContainerServiceSetup extends State {
               .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
               .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
-              .build());
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("Kubernetes service setup task execution")
+              .build();
+      String delegateTaskId = delegateService.queueTask(delegateTask);
 
+      appendDelegateTaskDetails(context, delegateTask);
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(activity.getUuid()))
@@ -476,4 +480,9 @@ public abstract class ContainerServiceSetup extends State {
 
   protected abstract ContainerServiceElement buildContainerServiceElement(ExecutionContext context,
       CommandExecutionResult executionResult, ExecutionStatus status, ImageDetails imageDetails);
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
 }
