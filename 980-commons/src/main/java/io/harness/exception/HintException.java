@@ -4,8 +4,12 @@ import static io.harness.eraro.ErrorCode.EXPLANATION;
 import static io.harness.eraro.ErrorCode.HINT;
 import static io.harness.eraro.Level.INFO;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.EnumSet;
 
+@OwnedBy(HarnessTeam.DX)
 public class HintException extends WingsException {
   public static final String HINT_EMPTY_ACCESS_KEY = "Check if access key is empty";
   public static final String HINT_EMPTY_SECRET_KEY = "Check if secret key is empty";

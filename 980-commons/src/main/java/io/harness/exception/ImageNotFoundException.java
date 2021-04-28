@@ -2,11 +2,14 @@ package io.harness.exception;
 
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 
 import java.util.EnumSet;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ImageNotFoundException extends WingsException {
   private static final String MESSAGE_ARG = "message";
 
