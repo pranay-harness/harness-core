@@ -38,7 +38,7 @@ public class PcfInstallationCapabilityCheck implements CapabilityCheck, ProtoCap
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
 
-    CfCliVersion cfCliVersion = convertPcfCliProtoVersion(parameters.getPcfInstallationParameters().getPcfCliVersion());
+    CfCliVersion cfCliVersion = convertPcfCliProtoVersion(parameters.getPcfInstallationParameters().getCfCliVersion());
     return builder
         .permissionResult(cfCliDelegateResolver.isDelegateEligibleToExecuteCfCliCommand(cfCliVersion)
                 ? PermissionResult.ALLOWED
@@ -46,7 +46,7 @@ public class PcfInstallationCapabilityCheck implements CapabilityCheck, ProtoCap
         .build();
   }
 
-  private static CfCliVersion convertPcfCliProtoVersion(PcfInstallationParameters.PcfCliVersion protoVersion) {
+  private static CfCliVersion convertPcfCliProtoVersion(PcfInstallationParameters.CfCliVersion protoVersion) {
     switch (protoVersion) {
       case V6:
         return CfCliVersion.V6;

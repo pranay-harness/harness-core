@@ -122,12 +122,12 @@ message PcfConnectivityParameters {
 // Whether the specified version of CF CLI is installed or not
 message PcfInstallationParameters {
   // Next ID: 3
-  enum PcfCliVersion {
-    HELM_VERSION_UNSPECIFIED = 0;
+  enum CfCliVersion {
+    CF_VERSION_UNSPECIFIED = 0;
     V6 = 1;
     V7 = 2;
   }
-  PcfCliVersion pcf_cli_version = 1;
+  CfCliVersion cf_cli_version = 1;
 }
 
 // A testing method for capabilities
