@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -9,6 +10,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -73,6 +75,10 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
 
       if (containerServiceParams != null) {
         capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
+      }
+
+      if (isNotEmpty(delegateSelectors)) {
+        capabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
       }
     }
 
