@@ -29,7 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +42,9 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private String tableName = "pipeline_execution_summary_ci";
   private String staticQuery = "select * from " + tableName + " where ";
+  private List<String> failedList =
+      Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
+
   private static final int MAX_RETRY_COUNT = 5;
 
   private String queryBuilder(
@@ -142,8 +145,14 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
     }
 
-    totalBuildSqlBuilder.append(
-        String.format("status='%s' ORDER BY startts DESC LIMIT %s;", ExecutionStatus.FAILED.name(), limit));
+    totalBuildSqlBuilder.append("status in (");
+    for (String failed : failedList) {
+      totalBuildSqlBuilder.append(String.format("'%s',", failed));
+    }
+
+    totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
+
+    totalBuildSqlBuilder.append(String.format(") ORDER BY startts DESC LIMIT %s;", limit));
 
     return totalBuildSqlBuilder.toString();
   }
@@ -334,18 +343,6 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   @Override
-  public BuildCount getBuildCountFromDate(String accountId, String orgId, String projectId, String date) {
-    LocalDate endIntervalNextDay = LocalDate.parse(date).plusDays(1);
-    String query = queryBuilderSelectStatus(accountId, orgId, projectId, date, endIntervalNextDay.toString());
-    List<String> statusList = queryCalculatorForStatus(query);
-    return BuildCount.builder()
-        .total(statusList.size())
-        .success(Collections.frequency(statusList, ExecutionStatus.SUCCESS.name()))
-        .failed(Collections.frequency(statusList, ExecutionStatus.FAILED.name()))
-        .build();
-  }
-
-  @Override
   public DashboardBuildsHealthInfo getDashBoardBuildHealthInfoWithRate(String accountId, String orgId, String projectId,
       String startInterval, String endInterval, String previousStartInterval) {
     LocalDate startDate = LocalDate.parse(startInterval);
@@ -366,7 +363,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         currentTotal++;
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           currentSuccess++;
-        } else if (status.get(i).contentEquals(ExecutionStatus.FAILED.name())) {
+        } else if (failedList.contains(status.get(i))) {
           currentFailed++;
         }
       }
@@ -376,7 +373,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         previousTotal++;
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           previousSuccess++;
-        } else if (status.get(i).contentEquals(ExecutionStatus.FAILED.name())) {
+        } else if (failedList.contains(status.get(i))) {
           previousFailed++;
         }
       }
@@ -411,7 +408,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           total++;
           if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
             success++;
-          } else if (status.get(i).contentEquals(ExecutionStatus.FAILED.name())) {
+          } else if (failedList.contains(status.get(i))) {
             failed++;
           }
         }
@@ -540,6 +537,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       long previousSuccess = 0;
       String lastCommit = null;
       String lastCommitTime = null;
+      String lastStatus = null;
 
       HashMap<String, Integer> buildCountMap = new HashMap<>();
       LocalDate startDateCopy = startDate;
@@ -565,10 +563,12 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
             if (lastCommit == null) {
               lastCommit = commitMessage.get(i);
               lastCommitTime = time.get(i);
+              lastStatus = status.get(i);
             } else {
               if (lastCommitTime.compareTo(variableDate.toString()) <= 0) {
                 lastCommitTime = time.get(i);
                 lastCommit = commitMessage.get(i);
+                lastStatus = status.get(i);
               }
             }
           } else if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
@@ -591,14 +591,14 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       }
 
       repositoryInfoList.add(getRepositoryInfo(
-          repositoryName, totalBuild, success, previousSuccess, lastCommit, lastCommitTime, buildCount));
+          repositoryName, totalBuild, success, previousSuccess, lastCommit, lastCommitTime, buildCount, lastStatus));
     }
 
     return DashboardBuildRepositoryInfo.builder().repositoryInfo(repositoryInfoList).build();
   }
 
   private RepositoryInfo getRepositoryInfo(String repoName, long totalBuild, long success, long previousSuccess,
-      String lastCommit, String lastCommitTime, List<RepositoryBuildInfo> buildCount) {
+      String lastCommit, String lastCommitTime, List<RepositoryBuildInfo> buildCount, String lastStatus) {
     // percentOfSuccess
     double percentOfSuccess = 0.0;
     if (totalBuild != 0) {
@@ -621,6 +621,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .lastCommit(lastCommit)
         .time(lastCommitTime)
         .countList(buildCount)
+        .lastStatus(lastStatus)
         .build();
   }
 }
