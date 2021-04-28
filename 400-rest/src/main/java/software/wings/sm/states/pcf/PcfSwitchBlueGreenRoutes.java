@@ -166,7 +166,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .downsizeOldApps(downsizeOldApps)
             .useCfCli(true)
             .build(),
-        setupSweepingOutputPcf);
+        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled());
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
@@ -254,5 +254,10 @@ public class PcfSwitchBlueGreenRoutes extends State {
   protected Activity createActivity(ExecutionContext executionContext) {
     return pcfStateHelper.createActivity(executionContext, PCF_BG_SWAP_ROUTE_COMMAND, getStateType(),
         CommandUnitType.PCF_BG_SWAP_ROUTE, activityService);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

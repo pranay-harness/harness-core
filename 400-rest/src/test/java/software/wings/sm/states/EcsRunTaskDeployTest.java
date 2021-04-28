@@ -62,6 +62,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -94,6 +95,7 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private GitConfigHelperService mockGitConfigHelperService;
   @Mock private FeatureFlagService mockFeatureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -151,8 +153,9 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
         .getInfrastructureMappingFromInfraMappingService(any(), any(), any());
     doReturn(emptyList()).when(mockSecretManager).getEncryptionDetails(any(), any(), any());
     when(mockEcsStateHelper.createAndQueueDelegateTaskForEcsRunTaskDeploy(
-             eq(bag), any(), any(), eq(application), eq(mockContext), any(), eq(ACTIVITY_ID), any()))
+             eq(bag), any(), any(), eq(application), eq(mockContext), any(), eq(ACTIVITY_ID), any(), eq(true)))
         .thenCallRealMethod();
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     PhaseElement phaseElement =
         PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
     doReturn(phaseElement).when(mockContext).getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
@@ -168,7 +171,7 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
 
     verify(mockEcsStateHelper)
         .createAndQueueDelegateTaskForEcsRunTaskDeploy(
-            eq(bag), any(), any(), any(), any(), captor.capture(), any(), any());
+            eq(bag), any(), any(), any(), any(), captor.capture(), any(), any(), eq(true));
     EcsRunTaskDeployRequest request = captor.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getRunTaskFamilyName()).isEqualTo(runTaskFamilyName);
@@ -303,6 +306,7 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
     doReturn(true)
         .when(mockFeatureFlagService)
         .isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, application.getAccountId());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);

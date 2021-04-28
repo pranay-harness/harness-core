@@ -52,7 +52,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -165,9 +164,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!userGroupOptional.isPresent()) {
       return PageResponse.getEmptyPageResponse(pageRequest);
     }
-    List<String> userIds = new ArrayList<>(userGroupOptional.get().getUsers());
-    Collections.sort(userIds);
-    PageResponse<String> userIdsPage = PaginationUtils.getPage(userIds, pageRequest);
+    PageResponse<String> userIdsPage = PaginationUtils.getPage(userGroupOptional.get().getUsers(), pageRequest);
     if (userIdsPage.isEmpty()) {
       return PageResponse.getEmptyPageResponse(pageRequest);
     }

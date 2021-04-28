@@ -176,9 +176,9 @@ public class EcsRunTaskDeploy extends State {
     EcsRunTaskDeployRequest ecsRunTaskDeployRequest = createEcsRunTaskRequest(context, activityId, ecsRunTaskDataBag);
 
     Application application = ecsStateHelper.getApplicationFromExecutionContext(context);
-    DelegateTask delegateTask =
-        ecsStateHelper.createAndQueueDelegateTaskForEcsRunTaskDeploy(ecsRunTaskDataBag, infrastructureMappingService,
-            secretManager, application, context, ecsRunTaskDeployRequest, activityId, delegateService);
+    DelegateTask delegateTask = ecsStateHelper.createAndQueueDelegateTaskForEcsRunTaskDeploy(ecsRunTaskDataBag,
+        infrastructureMappingService, secretManager, application, context, ecsRunTaskDeployRequest, activityId,
+        delegateService, isSelectionLogsTrackingForTasksEnabled());
     appendDelegateTaskDetails(context, delegateTask);
 
     EcsRunTaskStateExecutionData stateExecutionData =
@@ -292,6 +292,8 @@ public class EcsRunTaskDeploy extends State {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -478,4 +480,9 @@ public class EcsRunTaskDeploy extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
 }

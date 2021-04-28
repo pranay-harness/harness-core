@@ -181,7 +181,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
         } else {
           PaginationUtils.forEachElement(counter
               -> NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
-                  accountIdentifier, orgIdentifier, projectIdentifier, counter, 20, roleAssignmentFilterDTO)),
+                  accountIdentifier, orgIdentifier, projectIdentifier, 0, 20, roleAssignmentFilterDTO)),
               roleAssignmentResponseDTO
               -> NGRestUtils.getResponse(accessControlAdminClient.deleteRoleAssignment(
                   roleAssignmentResponseDTO.getRoleAssignment().getIdentifier(), accountIdentifier, orgIdentifier,

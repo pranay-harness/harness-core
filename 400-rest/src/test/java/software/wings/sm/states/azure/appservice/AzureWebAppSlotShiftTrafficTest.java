@@ -13,6 +13,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -43,6 +44,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -69,6 +71,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock protected ActivityService activityService;
   @Mock AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Mock protected StateExecutionService stateExecutionService;
   @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
   @Spy @InjectMocks AzureWebAppSlotShiftTraffic state = new AzureWebAppSlotShiftTraffic("Slot Traffic shift state");
 
@@ -210,6 +213,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
         .when(azureVMSSStateHelper)
         .getStateTimeOutFromContext(eq(mockContext), eq(ContextElementType.AZURE_WEBAPP_SETUP));
     doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();

@@ -14,6 +14,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.DelegateTask;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -150,14 +151,15 @@ public class EcsServiceDeploy extends State {
 
     ecsStateHelper.createSweepingOutputForRollback(deployDataBag, activity, delegateService, resizeParams, context);
 
-    String delegateTaskId =
-        ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(deployDataBag, request, activity, delegateService);
+    DelegateTask delegateTask = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(
+        deployDataBag, request, activity, delegateService, isSelectionLogsTrackingForTasksEnabled());
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(executionData)
-        .delegateTaskId(delegateTaskId)
+        .delegateTaskId(delegateTask.getUuid())
         .build();
   }
 
@@ -186,5 +188,10 @@ public class EcsServiceDeploy extends State {
       invalidFields.put("instanceCount", "Instance count must not be blank");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

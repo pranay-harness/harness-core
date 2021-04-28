@@ -27,4 +27,6 @@ public class PcfDelegateTaskCreationData {
   private long timeout;
   private List<String> tagList;
   private String serviceTemplateId;
+  private boolean selectionLogsTrackingEnabled;
+  private String taskDescription;
 }

@@ -659,6 +659,8 @@ public abstract class TerraformProvisionState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD,
                 executionContext.getEnv() != null ? executionContext.getEnv().getEnvironmentType().name() : null)
             .tags(getRenderedTaskTags(delegateTag, executionContext))
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Terraform provision task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TERRAFORM_PROVISION_TASK.name())
@@ -677,6 +679,8 @@ public abstract class TerraformProvisionState extends State {
     renderDelegateTask(executionContext, delegateTask, stateExecutionContext);
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(executionContext, delegateTask);
+
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activityId))
@@ -1080,5 +1084,10 @@ public abstract class TerraformProvisionState extends State {
   SecretManagerConfig getSecretManagerContainingTfPlan(String secretManagerId, String accountId) {
     return isEmpty(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
                                     : secretManagerConfigService.getSecretManager(accountId, secretManagerId, false);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -1,9 +1,10 @@
 package io.harness.migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
@@ -23,7 +24,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * Migration script for updating default account ids for users which are not part of that account anymore
  */
-
+@OwnedBy(PL)
 @Slf4j
 public class UpdateStaleDefaultAccountIds implements Migration {
   @Inject private WingsPersistence persistence;
@@ -49,7 +50,7 @@ public class UpdateStaleDefaultAccountIds implements Migration {
           if (!accountIds.contains(user.getDefaultAccountId())) {
             log.info("User {} has stale default account id: {}", user.getEmail(), user.getDefaultAccountId());
 
-            userService.setNewDefaultAccountId(user);
+            user.setDefaultAccountId(user.getDefaultAccountCandidate());
 
             log.info("New default account for user {} set to: {}", user.getEmail(), user.getDefaultAccountId());
 

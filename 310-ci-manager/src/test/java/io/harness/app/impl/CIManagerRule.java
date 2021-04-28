@@ -2,6 +2,7 @@ package io.harness.app.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.CIManagerConfiguration;
 import io.harness.app.CIManagerServiceModule;
@@ -123,6 +124,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         CIManagerConfiguration.builder()
             .managerAuthority("localhost")
             .managerTarget("localhost:9880")
+            .accessControlClientConfiguration(AccessControlClientConfiguration.builder().build())
             .ciExecutionServiceConfig(CIExecutionServiceConfig.builder()
                                           .addonImageTag("v1.4-alpha")
                                           .defaultCPULimit(200)
