@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsCapab
 import io.harness.delegate.beans.connector.gcp.GcpCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.connector.newrelicconnector.NewRelicCapabilityHelper;
+import io.harness.delegate.beans.connector.prometheusconnector.PrometheusCapabilityHelper;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkCapabilityHelper;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -87,6 +88,10 @@ public abstract class DataCollectionRequest<T extends ConnectorConfigDTO> implem
             connectorInfoDTO.getConnectorConfig(), maskingEvaluator);
       case NEW_RELIC:
         return NewRelicCapabilityHelper.fetchRequiredExecutionCapabilities(
+            maskingEvaluator, connectorInfoDTO.getConnectorConfig());
+      case PROMETHEUS:
+
+        return PrometheusCapabilityHelper.fetchRequiredExecutionCapabilities(
             maskingEvaluator, connectorInfoDTO.getConnectorConfig());
       default:
         throw new InvalidRequestException("Connector capability not found");
