@@ -14,7 +14,6 @@ import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollback;
@@ -107,19 +106,20 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
       return k8sStepHelper.handleHelmValuesFetchFailure((HelmValuesFetchResponsePassThroughData) passThroughData);
     }
 
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
+    K8sDeployResponse k8sTaskExecutionResponse;
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
     K8sRollingOutcomeBuilder k8sRollingOutcomeBuilder =
         K8sRollingOutcome.builder().releaseName(k8sStepHelper.getReleaseName(infrastructure));
-
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+    try {
+      k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
+    } catch (Exception ex) {
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT,
           k8sRollingOutcomeBuilder.build(), StepOutcomeGroup.STAGE.name());
-      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+      throw ex;
     }
+
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
     K8sRollingDeployResponse k8sTaskResponse =
         (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();

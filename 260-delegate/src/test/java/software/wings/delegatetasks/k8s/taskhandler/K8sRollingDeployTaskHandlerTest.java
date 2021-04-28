@@ -26,6 +26,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -656,7 +657,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     doReturn(emptyList())
         .when(k8sRollingBaseHandler)
         .getExistingPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString(),
-            any(LogCallback.class));
+            any(LogCallback.class), eq(true));
     doThrow(thrownException)
         .when(k8sRollingBaseHandler)
         .getPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString());

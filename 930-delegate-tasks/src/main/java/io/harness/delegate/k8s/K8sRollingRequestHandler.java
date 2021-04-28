@@ -117,7 +117,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     prepareForRolling(k8sDelegateTaskParams, getCurrentLogCallback(), k8sRollingDeployRequest.isInCanaryWorkflow(),
         k8sRollingDeployRequest.isSkipResourceVersioning());
     List<K8sPod> existingPodList = k8sRollingBaseHandler.getExistingPods(
-        steadyStateTimeoutInMillis, managedWorkloads, kubernetesConfig, releaseName, getCurrentLogCallback());
+        steadyStateTimeoutInMillis, managedWorkloads, kubernetesConfig, releaseName, getCurrentLogCallback(), false);
 
     startNewCommandUnit(Apply, true);
     success = k8sTaskHelperBase.applyManifests(

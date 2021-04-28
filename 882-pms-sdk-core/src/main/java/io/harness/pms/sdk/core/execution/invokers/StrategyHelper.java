@@ -6,7 +6,9 @@ import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.pms.contracts.execution.Status;
@@ -65,6 +67,12 @@ public class StrategyHelper {
       failureInfoBuilder.setErrorMessage(emptyIfNull(failureData.getMessage()))
           .addAllFailureTypes(failureData.getFailureTypesList());
     }
+
+    TaskNGDataException taskFailureData = ExceptionUtils.cause(TaskNGDataException.class, ex);
+    if (taskFailureData != null) {
+      stepResponseBuilder.unitProgressList(taskFailureData.getCommandUnitsProgress().getUnitProgresses());
+    }
+
     return stepResponseBuilder.failureInfo(failureInfoBuilder.build()).build();
   }
 }
