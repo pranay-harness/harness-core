@@ -1,9 +1,13 @@
 package io.harness;
 
+import static io.harness.OrchestrationPublisherName.PERSISTENCE_LAYER;
+import static io.harness.OrchestrationPublisherName.PUBLISHER_NAME;
+
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delay.AbstractOrchestrationDelayModule;
 import io.harness.engine.NoopTaskExecutor;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
@@ -32,9 +36,11 @@ import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationResolverRegistrar;
 import io.harness.threading.ThreadPool;
+import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.AsyncWaitEngineImpl;
 import io.harness.waiter.WaitNotifyEngine;
-import io.harness.waiter.WaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -66,8 +72,18 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
   @Override
   protected void configure() {
-    install(WaiterModule.getInstance());
-    install(OrchestrationDelayModule.getInstance());
+    install(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.SPRING).build();
+      }
+    });
+    install(new AbstractOrchestrationDelayModule() {
+      @Override
+      public boolean forNG() {
+        return true;
+      }
+    });
     install(OrchestrationBeansModule.getInstance());
     install(OrchestrationQueueModule.getInstance(config));
 
@@ -98,6 +114,12 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   }
 
   @Provides
+  @Named(PERSISTENCE_LAYER)
+  PersistenceLayer usedPersistenceLayer() {
+    return PersistenceLayer.SPRING;
+  }
+
+  @Provides
   @Singleton
   @Named("EngineExecutorService")
   public ExecutorService engineExecutionServiceThreadPool() {
@@ -112,7 +134,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   }
 
   @Provides
-  @Named(OrchestrationPublisherName.PUBLISHER_NAME)
+  @Named(PUBLISHER_NAME)
   public String publisherName() {
     return config.getPublisherName();
   }
@@ -120,7 +142,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Provides
   @Singleton
   public AsyncWaitEngine asyncWaitEngine(
-      WaitNotifyEngine waitNotifyEngine, @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName) {
+      WaitNotifyEngine waitNotifyEngine, @Named(PUBLISHER_NAME) String publisherName) {
     return new AsyncWaitEngineImpl(waitNotifyEngine, publisherName);
   }
 

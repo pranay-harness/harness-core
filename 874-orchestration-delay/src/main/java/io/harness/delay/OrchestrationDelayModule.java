@@ -1,10 +1,11 @@
-package io.harness;
+package io.harness.delay;
 
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.PublisherConfiguration;
-import io.harness.delay.DelayEvent;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -16,13 +17,16 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationDelayModule extends AbstractModule {
   private static OrchestrationDelayModule instance;
 
-  public static OrchestrationDelayModule getInstance() {
+  static OrchestrationDelayModule getInstance() {
     if (instance == null) {
       instance = new OrchestrationDelayModule();
     }
@@ -31,22 +35,31 @@ public class OrchestrationDelayModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<QueueListener<io.harness.delay.DelayEvent>>() {
-    }).to(io.harness.delay.DelayEventListener.class);
+    bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
   }
 
   @Provides
   @Singleton
-  QueuePublisher<io.harness.delay.DelayEvent> delayQueuePublisher(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+  QueuePublisher<DelayEvent> delayQueuePublisher(Injector injector, VersionInfoManager versionInfoManager,
+      PublisherConfiguration config, @Named("forNG") boolean forNG) {
+    if (forNG) {
+      return QueueFactory.createNgQueuePublisher(injector, DelayEvent.class,
+          singletonList(versionInfoManager.getVersionInfo().getVersion()), config,
+          injector.getInstance(MongoTemplate.class));
+    }
     return QueueFactory.createQueuePublisher(injector, io.harness.delay.DelayEvent.class,
         singletonList(versionInfoManager.getVersionInfo().getVersion()), config);
   }
 
   @Provides
   @Singleton
-  QueueConsumer<DelayEvent> delayQueueConsumer(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
+  QueueConsumer<DelayEvent> delayQueueConsumer(Injector injector, VersionInfoManager versionInfoManager,
+      PublisherConfiguration config, @Named("forNG") boolean forNG) {
+    if (forNG) {
+      return QueueFactory.createNgQueueConsumer(injector, io.harness.delay.DelayEvent.class, ofSeconds(5),
+          singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config,
+          injector.getInstance(MongoTemplate.class));
+    }
     return QueueFactory.createQueueConsumer(injector, io.harness.delay.DelayEvent.class, ofSeconds(5),
         singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config);
   }

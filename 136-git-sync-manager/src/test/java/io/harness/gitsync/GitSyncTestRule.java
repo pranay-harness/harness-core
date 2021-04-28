@@ -35,7 +35,9 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
-import io.harness.waiter.WaiterModule;
+import io.harness.waiter.AbstractWaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -146,7 +148,12 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(NGCoreModule.getInstance());
-    modules.add(new WaiterModule());
+    modules.add(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.MORPHIA).build();
+      }
+    });
     modules.add(new EntitySetupUsageModule());
     modules.add(new SCMGrpcClientModule(ScmConnectionConfig.builder().url("dummyurl").build()));
     modules.add(GitSyncModule.getInstance());

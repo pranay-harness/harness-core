@@ -4,7 +4,7 @@ import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
@@ -75,6 +75,7 @@ import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
+import io.harness.waiter.PmsNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
@@ -354,6 +355,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
     queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 5);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -362,7 +364,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-        NG_ORCHESTRATION, payload -> publisher.send(singletonList(NG_ORCHESTRATION), payload));
+        PMS_ORCHESTRATION, payload -> publisher.send(singletonList(PMS_ORCHESTRATION), payload));
   }
 
   private void registerScheduledJobs(Injector injector) {

@@ -15,6 +15,9 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+// TODO : Lot of upper modules are using this listener for their use they should not do that as this belonged to the PMS
+// Have added a new listener for PMS this listener should be deleted the individual services either need to write their
+// own listener Or they should put this listener in their own module
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
 public final class NgOrchestrationNotifyEventListener extends NotifyEventListener {
