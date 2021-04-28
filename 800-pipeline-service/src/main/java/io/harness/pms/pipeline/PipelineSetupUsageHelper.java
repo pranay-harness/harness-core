@@ -48,6 +48,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
   @Inject @Named(EventsFrameworkConstants.SETUP_USAGE) private Producer eventProducer;
   @Inject private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
   @Inject private EntitySetupUsageClient entitySetupUsageClient;
+  @Inject private InternalReferredEntityExtractor internalReferredEntityExtractor;
   private static final int PAGE = 0;
   private static final int SIZE = 100;
 
@@ -107,6 +108,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
                               .build());
       }
     }
+    entityDetails.addAll(internalReferredEntityExtractor.extractInternalEntities(accountIdentifier, entityDetails));
     return entityDetails;
   }
 
