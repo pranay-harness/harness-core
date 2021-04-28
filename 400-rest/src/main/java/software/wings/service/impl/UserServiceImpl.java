@@ -2454,7 +2454,7 @@ public class UserServiceImpl implements UserService {
         List<AccessRequest> accessRequestList =
             accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
         accessRequestList.forEach(accessRequest -> {
-          if (accessRequest.getAccessType().equals(AccessRequest.AccessType.MEMBER_ACCESS)) {
+          if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
             if (accessRequest.getMemberIds() != null && accessRequest.getMemberIds().contains(user.getUuid())) {
               accountList.add(accountService.get(restrictedAccountId));
             }
