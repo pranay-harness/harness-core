@@ -1,4 +1,4 @@
-package software.wings.security.authentication.recaptcha;
+package io.harness.authenticationservice.recaptcha;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

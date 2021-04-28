@@ -16,10 +16,12 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import javax.annotation.Nullable;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -46,8 +48,8 @@ public class SignupResource {
    */
   @POST
   @PublicApi
-  public RestResponse<UserInfo> signup(SignupDTO dto) {
-    return new RestResponse<>(signupService.signup(dto));
+  public RestResponse<UserInfo> signup(SignupDTO dto, @QueryParam("captchaToken") @Nullable String captchaToken) {
+    return new RestResponse<>(signupService.signup(dto, captchaToken));
   }
 
   /**

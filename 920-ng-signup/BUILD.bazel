@@ -6,7 +6,7 @@ load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 shared_dependencies = [
     "//:lombok",
     "//930-ng-core-clients:module",
-    "//940-feature-flag:module",
+    "//950-ng-authentication-service:module",
     "//955-account-mgmt:module",
     "//960-ng-core-beans:module",
     "@maven//:org_mindrot_jbcrypt",
