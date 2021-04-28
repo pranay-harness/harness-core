@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.AwsAutoScaleException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
@@ -16,8 +17,10 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
+import com.amazonaws.services.codedeploy.model.InvalidTagException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ecr.model.AmazonECRException;
+import com.amazonaws.services.ecr.model.RepositoryNotFoundException;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClientException;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
@@ -42,7 +45,9 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
     // TODO this is just a sample handler, doesn't cover exhaustive list of AWS exceptions
 
     AmazonServiceException amazonServiceException = (AmazonServiceException) exception;
-    if (amazonServiceException instanceof AmazonCodeDeployException) {
+    if (amazonServiceException instanceof InvalidTagException) {
+      return new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
+    } else if (amazonServiceException instanceof AmazonCodeDeployException) {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
     } else if (amazonServiceException instanceof AmazonEC2Exception) {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
@@ -50,6 +55,9 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_CLUSTER_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof ServiceNotFoundException) {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
+    } else if (amazonServiceException instanceof RepositoryNotFoundException) {
+      return new HintException(HintException.HINT_ECR_IMAGE_NAME,
+          new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER));
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {

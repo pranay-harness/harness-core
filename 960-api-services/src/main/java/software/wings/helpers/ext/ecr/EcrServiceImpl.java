@@ -12,7 +12,6 @@ import io.harness.artifacts.beans.BuildDetailsInternal.BuildDetailsInternalMetad
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.aws.beans.AwsInternalConfig;
-import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArtifactServerException;
@@ -20,6 +19,7 @@ import io.harness.expression.RegexFunctor;
 
 import software.wings.service.impl.AwsApiHelperService;
 
+import com.amazonaws.services.codedeploy.model.InvalidTagException;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.ListImagesRequest;
@@ -146,16 +146,12 @@ public class EcrServiceImpl implements EcrService {
   @Override
   public BuildDetailsInternal verifyBuildNumber(
       AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag) {
-    try {
-      List<BuildDetailsInternal> builds =
-          getBuilds(awsInternalConfig, imageUrl, region, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
-      builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
-      if (builds.size() != 1) {
-        throw new InvalidArtifactServerException("Didn't get build number", USER);
-      }
-      return builds.get(0);
-    } catch (Exception e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+    List<BuildDetailsInternal> builds =
+        getBuilds(awsInternalConfig, imageUrl, region, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+    builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
+    if (builds.size() != 1) {
+      throw new InvalidTagException("Didn't get build number");
     }
+    return builds.get(0);
   }
 }
