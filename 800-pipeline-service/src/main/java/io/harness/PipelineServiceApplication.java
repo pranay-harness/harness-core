@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -16,6 +17,13 @@ import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.GeneralException;
 import io.harness.execution.SdkResponseEventListener;
+import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSdkConfiguration;
+import io.harness.gitsync.GitSyncEntitiesConfiguration;
+import io.harness.gitsync.GitSyncSdkConfiguration;
+import io.harness.gitsync.GitSyncSdkInitHelper;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
@@ -25,13 +33,16 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
+import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.exception.WingsExceptionMapper;
+import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
+import io.harness.pms.pipeline.gitsync.PipelineEntityGitSyncHelper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
@@ -70,6 +81,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
@@ -90,14 +102,18 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -171,9 +187,31 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     });
     modules.add(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
     modules.add(PipelineServiceModule.getInstance(appConfig));
-    modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
+    if (appConfig.isShouldDeployWithGitSync()) {
+      GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
+      modules.add(new AbstractGitSyncSdkModule() {
+        @Override
+        public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
+          return gitSyncSdkConfiguration;
+        }
+      });
+    } else {
+      modules.add(new SCMGrpcClientModule(appConfig.getGitSdkConfiguration().getScmConnectionConfig()));
+      modules.add(new AbstractGitSyncSdkModule() {
+        @Override
+        protected void configure() {
+          bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
+        }
+
+        @Override
+        public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
+          return null;
+        }
+      });
+    }
+
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
     registerWaitEnginePublishers(injector);
@@ -203,6 +241,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerPmsSdk(appConfig, injector);
     registerYamlSdk(injector);
+    if (appConfig.isShouldDeployWithGitSync()) {
+      registerGitSyncSdk(appConfig, injector, environment);
+    }
+
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
     createConsumerThreadsToListenToEvents(environment, injector);
@@ -255,7 +297,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     try {
       PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
     } catch (Exception ex) {
-      throw new GeneralException("Fail to start pipeline service because pms sdk registration failed", ex);
+      throw new GeneralException("Failed to start pipeline service because pms sdk registration failed", ex);
     }
   }
 
@@ -271,6 +313,40 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
+        .build();
+  }
+
+  private void registerGitSyncSdk(PipelineServiceConfiguration config, Injector injector, Environment environment) {
+    GitSyncSdkConfiguration sdkConfig = getGitSyncConfiguration(config);
+    try {
+      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, sdkConfig);
+    } catch (Exception ex) {
+      throw new GeneralException("Failed to start pipeline service because git sync registration failed", ex);
+    }
+  }
+
+  private GitSyncSdkConfiguration getGitSyncConfiguration(PipelineServiceConfiguration config) {
+    final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.PIPELINES);
+    ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+    configureObjectMapper(objectMapper);
+    Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
+    gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .yamlClass(PipelineConfig.class)
+                                          .entityClass(PipelineEntity.class)
+                                          .entityHelperClass(PipelineEntityGitSyncHelper.class)
+                                          .build());
+    final GitSdkConfiguration gitSdkConfiguration = config.getGitSdkConfiguration();
+    return GitSyncSdkConfiguration.builder()
+        .gitSyncSortOrder(sortOrder)
+        .grpcClientConfig(gitSdkConfiguration.getGitManagerGrpcClientConfig())
+        .grpcServerConfig(gitSdkConfiguration.getGitSdkGrpcServerConfig())
+        .deployMode(GitSyncSdkConfiguration.DeployMode.REMOTE)
+        .microservice(Microservice.PMS)
+        .scmConnectionConfig(gitSdkConfiguration.getScmConnectionConfig())
+        .eventsRedisConfig(config.getEventsFrameworkConfiguration().getRedisConfig())
+        .serviceHeader(PIPELINE_SERVICE)
+        .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
+        .objectMapper(objectMapper)
         .build();
   }
 

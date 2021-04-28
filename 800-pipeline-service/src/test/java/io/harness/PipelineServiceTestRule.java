@@ -1,14 +1,18 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -55,6 +59,7 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(PIPELINE)
 @Slf4j
 public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -115,12 +120,14 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
         bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
+        bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
       }
     });
 
     modules.add(PrimaryVersionManagerModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
+    //    modules.add(new GitSyncablePersistenceTestModule());
     modules.add(new SpringPersistenceTestModule());
     modules.add(
         OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()

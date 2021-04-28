@@ -25,6 +25,10 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
+import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -58,6 +62,7 @@ import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -108,7 +113,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectId,
-      @NotNull @ApiParam(hidden = true) String yaml) {
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating pipeline");
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
@@ -141,7 +146,8 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId) {
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get pipeline");
 
     Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
@@ -161,7 +167,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
-      @NotNull @ApiParam(hidden = true) String yaml) {
+      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Updating pipeline");
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
@@ -183,8 +189,8 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId)
-      throws ProducerShutdownException {
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
+      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) throws ProducerShutdownException {
     log.info("Deleting pipeline");
 
     return ResponseDTO.newResponse(pmsPipelineService.delete(
@@ -202,7 +208,7 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("module") String module, @QueryParam("filterIdentifier") String filterIdentifier,
-      FilterPropertiesDTO filterProperties) {
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, FilterPropertiesDTO filterProperties) {
     log.info("Get List of pipelines");
     Criteria criteria = pmsPipelineService.formCriteria(accountId, orgId, projectId, filterIdentifier,
         (PipelineFilterPropertiesDto) filterProperties, false, module, searchTerm);

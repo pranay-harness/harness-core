@@ -124,7 +124,7 @@ if [[ "" != "$CI_MANAGER_AUTHORITY" ]]; then
 fi
 
 if [[ "" != "$SCM_SERVICE_URI" ]]; then
-  yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
+  yq write -i $CONFIG_FILE gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URI"
 fi
 
 if [[ "" != "$PIPELINE_SERVICE_BASE_URL" ]]; then
