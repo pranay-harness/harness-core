@@ -53,6 +53,8 @@ message InfoForPush {
   google.protobuf.StringValue project_identifier = 9;
   string defaultBranchName = 10;
   google.protobuf.StringValue folder_path = 11;
+  bool execute_on_delegate = 12;
+  google.protobuf.BytesValue encrypted_data_details = 13;
 }
 
 message IsGitSyncEnabled {

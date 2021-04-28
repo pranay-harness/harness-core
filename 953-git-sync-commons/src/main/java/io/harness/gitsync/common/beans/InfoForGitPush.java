@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.security.encryption.EncryptedDataDetail;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
@@ -23,4 +25,6 @@ public class InfoForGitPush {
   String accountId;
   String projectIdentifier;
   String orgIdentifier;
+  boolean executeOnDelegate;
+  List<EncryptedDataDetail> encryptedDataDetailList;
 }
