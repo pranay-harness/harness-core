@@ -8,14 +8,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
-import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
 import io.harness.ng.core.environment.services.impl.EnvironmentServiceImpl;
+import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Environment.EnvironmentKeys;
@@ -36,6 +38,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.CDC)
 public class EnvironmentResourceTest extends CategoryTest {
   @Mock EnvironmentServiceImpl environmentService;
   EnvironmentResource environmentResource;
@@ -150,13 +153,15 @@ public class EnvironmentResourceTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testListEnvironmentsWithDESCSort() {
-    Criteria criteria = EnvironmentFilterHelper.createCriteriaForGetList("", "", "", false);
+    Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
     Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, EnvironmentKeys.createdAt));
     final Page<Environment> environments = new PageImpl<>(Collections.singletonList(environmentEntity), pageable, 1);
     doReturn(environments).when(environmentService).list(criteria, pageable);
 
     List<EnvironmentResponseDTO> content =
-        environmentResource.listEnvironmentsForProject(0, 10, "", "", "", null, null).getData().getContent();
+        environmentResource.listEnvironmentsForProject(0, 10, "ACCOUNT_ID", "ORG_ID", "PROJECT_ID", null, null)
+            .getData()
+            .getContent();
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
     assertThat(content.get(0)).isEqualTo(environmentResponseDTO);

@@ -6,13 +6,15 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.mappers.ServiceElementMapper;
-import io.harness.ng.core.service.mappers.ServiceFilterHelper;
+import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
 
@@ -27,6 +29,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceEntityServiceImplTest extends NGCoreTestBase {
   @Inject ServiceEntityServiceImpl serviceEntityService;
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -110,7 +113,7 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
 
     // List services operations.
     Criteria criteriaFromServiceFilter =
-        ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
+        CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
     Pageable pageRequest = PageUtils.getPageRequest(0, 10, null);
     Page<ServiceEntity> list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
@@ -118,7 +121,7 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
     assertThat(ServiceElementMapper.writeDTO(list.getContent().get(0)))
         .isEqualTo(ServiceElementMapper.writeDTO(updatedServiceResponse));
 
-    criteriaFromServiceFilter = ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
+    criteriaFromServiceFilter = CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
 
     list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();

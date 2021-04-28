@@ -285,11 +285,12 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/execution/{planExecutionId}")
   @ApiOperation(value = "Gets Execution Detail", nickname = "getExecutionDetail")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<PipelineExecutionDetailDTO> getExecutionDetail(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("filter") String filter,
-      @QueryParam("stageNodeId") String stageNodeId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectId,
+      @QueryParam("filter") String filter, @QueryParam("stageNodeId") String stageNodeId,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     log.info("Get Execution Detail");
 
@@ -313,9 +314,11 @@ public class PipelineResource implements YamlSchemaResource {
   @Produces({"application/yaml"})
   @Path("/execution/{planExecutionId}/inputset")
   @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
-  public String getInputsetYaml(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  public String getInputsetYaml(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     return pmsExecutionService.getInputsetYaml(accountId, orgId, projectId, planExecutionId);
   }
@@ -346,10 +349,11 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/getExecutionNode")
   @ApiOperation(value = "get execution node", nickname = "getExecutionNode")
+  @NGAccessControlCheck(resourceType = "PROJECT", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<ExecutionNode> getExecutionNode(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectId,
       @NotNull @QueryParam("nodeExecutionId") String nodeExecutionId) {
     if (nodeExecutionId == null) {
       return null;
