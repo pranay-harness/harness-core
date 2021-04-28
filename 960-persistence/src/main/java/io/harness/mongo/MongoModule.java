@@ -216,7 +216,8 @@ public class MongoModule extends AbstractModule {
     SSLContext sslContext = null;
     try {
       KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-
+      log.info("Keystore File Path:", keystoreFile);
+      log.info("KeyStore File Password:", password);
       InputStream in = new FileInputStream(keystoreFile);
       keystore.load(in, password.toCharArray());
 
