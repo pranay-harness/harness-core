@@ -57,4 +57,7 @@ public class PipelineInfoConfig {
 
   @Singular List<StageElementWrapperConfig> stages;
   List<NotificationRules> notificationRules;
+
+  String orgIdentifier;
+  String projectIdentifier;
 }

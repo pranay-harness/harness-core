@@ -122,7 +122,8 @@ public class EcsBGUpdateListnerState extends State {
 
     return ecsStateHelper.queueDelegateTaskForEcsListenerUpdate(application, awsConfig, delegateService,
         infrastructureMapping, activity.getUuid(), environment, ECS_UPDATE_LISTENER_COMMAND, requestConfigData,
-        encryptedDetails, containerElement.getServiceSteadyStateTimeout());
+        encryptedDetails, containerElement.getServiceSteadyStateTimeout(), isSelectionLogsTrackingForTasksEnabled(),
+        context.getStateExecutionInstanceId());
   }
 
   protected EcsListenerUpdateRequestConfigData getEcsListenerUpdateRequestConfigData(
@@ -192,5 +193,10 @@ public class EcsBGUpdateListnerState extends State {
 
   public void setDownsizeOldService(boolean downsizeOldService) {
     this.downsizeOldService = downsizeOldService;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -42,6 +42,7 @@ shared_dependencies = [
     "@maven//:org_json_json_20160810",
     "@maven//:org_slf4j_slf4j_api",
     "@maven//:org_zeroturnaround_zt_exec",
+    "@maven//:io_netty_netty_transport_native_epoll",
 ]
 
 java_library(

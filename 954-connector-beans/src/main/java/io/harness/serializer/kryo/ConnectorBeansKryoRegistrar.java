@@ -77,6 +77,7 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConstants;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
+import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
@@ -269,5 +270,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AppDynamicsAuthType.class, 19665);
     kryo.register(GcpCloudCostConnectorDTO.class, 19666);
     kryo.register(BitbucketSshCredentialsDTO.class, 19667);
+    kryo.register(PrometheusConnectorDTO.class, 19668);
   }
 }

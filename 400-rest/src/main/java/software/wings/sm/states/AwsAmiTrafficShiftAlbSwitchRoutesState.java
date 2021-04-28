@@ -176,8 +176,11 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, awsAmiTrafficShiftAlbData.getEnv().getUuid())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, awsAmiTrafficShiftAlbData.getEnv().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("AWS AMI Traffic shift ALB switch routes task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return executionData;
   }
@@ -271,5 +274,10 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
         .executionStatus(ExecutionStatus.SUCCESS)
         .correlationId(activity.getUuid())
         .build();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

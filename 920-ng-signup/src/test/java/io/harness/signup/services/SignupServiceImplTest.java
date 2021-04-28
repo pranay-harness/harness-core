@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 import static io.harness.rule.OwnerRule.NATHAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -16,10 +16,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
+import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.UnavailableFeatureException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.services.OrganizationService;
@@ -46,11 +44,11 @@ import retrofit2.Response;
 @OwnedBy(GTM)
 public class SignupServiceImplTest extends SignupTestBase {
   @Inject @InjectMocks SignupServiceImpl signupServiceImpl;
-  @Mock FeatureFlagService featureFlagService;
   @Mock SignupValidator signupValidator;
   @Mock AccountService accountService;
   @Mock OrganizationService organizationService;
   @Mock UserClient userClient;
+  @Mock ReCaptchaVerifier reCaptchaVerifier;
 
   @Before
   public void setUp() {
@@ -68,30 +66,15 @@ public class SignupServiceImplTest extends SignupTestBase {
 
     doNothing().when(signupValidator).validateSignup(any(SignupDTO.class));
     when(accountService.createAccount(signupDTO)).thenReturn(accountDTO);
-    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(true);
 
     Call<RestResponse<UserInfo>> createUserCall = mock(Call.class);
     when(createUserCall.execute()).thenReturn(Response.success(new RestResponse<>(newUser)));
     when(userClient.createNewUser(any(UserRequestDTO.class))).thenReturn(createUserCall);
 
-    UserInfo returnedUser = signupServiceImpl.signup(signupDTO);
+    UserInfo returnedUser = signupServiceImpl.signup(signupDTO, null);
 
     verify(organizationService, times(1)).create(eq(accountDTO.getIdentifier()), any(OrganizationDTO.class));
+    verify(reCaptchaVerifier, times(1)).verifyInvisibleCaptcha(anyString());
     assertThat(returnedUser.getEmail()).isEqualTo(newUser.getEmail());
-  }
-
-  @Test
-  @Owner(developers = NATHAN)
-  @Category(UnitTests.class)
-  public void testSignup_feature_flag_off() {
-    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(false);
-
-    try {
-      signupServiceImpl.signup(SignupDTO.builder().build());
-
-      fail("Feature unavailable flag not thrown");
-    } catch (Exception exception) {
-      assertThat(exception.getClass()).isEqualTo(UnavailableFeatureException.class);
-    }
   }
 }

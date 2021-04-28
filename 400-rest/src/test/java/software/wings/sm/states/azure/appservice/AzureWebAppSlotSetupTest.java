@@ -59,6 +59,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
@@ -95,6 +96,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Mock private StateExecutionService stateExecutionService;
   @Spy @InjectMocks private AzureAppServiceManifestUtils azureAppServiceManifestUtils;
   @Spy @InjectMocks private AzureVMSSStateHelper azureVMSSStateHelper;
   @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
@@ -191,6 +193,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
         .when(secretManager)
         .getSecretMappedToAppByName(anyString(), anyString(), anyString(), anyString());
     doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     mockArtifactoryData(artifact, context);
     mockUserDataSpecification();
@@ -225,6 +228,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
     assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
     assertThat(state.skipMessage()).isNotNull();
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   private void mockArtifactoryData(Artifact artifact, ExecutionContextImpl context) {

@@ -310,7 +310,7 @@ public class SpotInstStateHelper {
 
   public DelegateTask getDelegateTask(String accountId, String appId, TaskType taskType, String waitId, String envId,
       String infrastructureMappingId, SpotInstCommandRequest spotInstCommandRequest, EnvironmentType environmentType,
-      String serviceId) {
+      String serviceId, boolean selectionLogsEnabled) {
     return DelegateTask.builder()
         .accountId(accountId)
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
@@ -327,6 +327,8 @@ public class SpotInstStateHelper {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, environmentType.name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
+        .selectionLogsTrackingEnabled(selectionLogsEnabled)
+        .description("SpotInst command execution")
         .build();
   }
 

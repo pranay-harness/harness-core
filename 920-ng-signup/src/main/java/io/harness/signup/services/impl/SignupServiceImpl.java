@@ -6,11 +6,9 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
-import io.harness.exception.UnavailableFeatureException;
+import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WingsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.services.OrganizationService;
@@ -34,15 +32,13 @@ import org.mindrot.jbcrypt.BCrypt;
 public class SignupServiceImpl implements SignupService {
   private AccountService accountService;
   private UserClient userClient;
-  private FeatureFlagService featureFlagService;
   private SignupValidator signupValidator;
   private OrganizationService organizationService;
+  private ReCaptchaVerifier reCaptchaVerifier;
 
   @Override
-  public UserInfo signup(SignupDTO dto) throws WingsException {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)) {
-      throw new UnavailableFeatureException("NG signup is not available.");
-    }
+  public UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException {
+    reCaptchaVerifier.verifyInvisibleCaptcha(captchaToken);
 
     signupValidator.validateSignup(dto);
 

@@ -2,24 +2,41 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 
+shared_dependencies = [
+    "//:lombok",
+    "//955-delegate-beans:module",
+    "//960-persistence:module",
+    "@maven//:com_esotericsoftware_kryo",
+    "@maven//:com_google_code_findbugs_annotations",
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_google_inject_guice",
+    "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_mongodb_mongo_java_driver",
+    "@maven//:org_mongodb_morphia_morphia",
+    "@maven//:org_slf4j_slf4j_api",
+]
+
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resources = [
     ],
     visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)
+
+java_library(
+    name = "supporter-test",
+    srcs = glob(["src/supporter-test/**/*.java"]),
+    visibility = ["//visibility:public"],
     deps = [
+        ":module",
         "//:lombok",
-        "//955-delegate-beans:module",
-        "//960-persistence:module",
-        "@maven//:com_esotericsoftware_kryo",
-        "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
-        "@maven//:com_google_inject_guice",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_mongodb_mongo_java_driver",
-        "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_slf4j_slf4j_api",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 
@@ -30,12 +47,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         ":module",
+        ":supporter-test",
         "//:lombok",
-        "//960-persistence:supporter-test",
-        "//990-commons-test:module",
-        "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
-        "@maven//:org_mockito_mockito_core",
     ],
 )
 

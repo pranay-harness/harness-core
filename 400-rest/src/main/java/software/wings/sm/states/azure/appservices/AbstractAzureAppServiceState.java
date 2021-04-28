@@ -173,6 +173,8 @@ public abstract class AbstractAzureAppServiceState extends State {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Fetch remote git manifests")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(GIT_FETCH_FILES_TASK.name())
@@ -181,6 +183,7 @@ public abstract class AbstractAzureAppServiceState extends State {
                       .build())
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
@@ -239,6 +242,8 @@ public abstract class AbstractAzureAppServiceState extends State {
             .setupAbstraction(
                 Cd1SetupFields.SERVICE_ID_FIELD, azureAppServiceStateData.getInfrastructureMapping().getServiceId())
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Azure app service task execution")
             .build();
     StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
                                                       .stateExecutionData(stateExecutionData)
@@ -248,6 +253,7 @@ public abstract class AbstractAzureAppServiceState extends State {
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return stateExecutionData;
   }
 
@@ -362,5 +368,10 @@ public abstract class AbstractAzureAppServiceState extends State {
       String activityId = response.keySet().iterator().next();
       azureVMSSStateHelper.updateActivityStatus(appId, activityId, executionStatus);
     }
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

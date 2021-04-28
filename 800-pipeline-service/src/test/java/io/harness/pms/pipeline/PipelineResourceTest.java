@@ -95,7 +95,8 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreatePipeline() {
     doReturn(entityWithVersion).when(pmsPipelineService).create(entity);
-    ResponseDTO<String> identifier = pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+    ResponseDTO<String> identifier =
+        pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml);
     assertThat(identifier.getData()).isNotEmpty();
     assertThat(identifier.getData()).isEqualTo(PIPELINE_IDENTIFIER);
   }
@@ -107,8 +108,8 @@ public class PipelineResourceTest extends CategoryTest {
     doReturn(Optional.of(entityWithVersion))
         .when(pmsPipelineService)
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false);
-    ResponseDTO<PMSPipelineResponseDTO> responseDTO =
-        pipelineResource.getPipelineByIdentifier(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER);
+    ResponseDTO<PMSPipelineResponseDTO> responseDTO = pipelineResource.getPipelineByIdentifier(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
     assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getData().getYamlPipeline()).isEqualTo(yaml);
   }
@@ -119,8 +120,8 @@ public class PipelineResourceTest extends CategoryTest {
   public void testUpdatePipelineWithWrongIdentifier() {
     String incorrectPipelineIdentifier = "notTheIdentifierWeNeed";
     assertThatThrownBy(()
-                           -> pipelineResource.updatePipeline(
-                               null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, incorrectPipelineIdentifier, yaml))
+                           -> pipelineResource.updatePipeline(null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
+                               incorrectPipelineIdentifier, null, yaml))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Pipeline identifier in URL does not match pipeline identifier in yaml");
   }
@@ -130,8 +131,8 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdatePipeline() {
     doReturn(entityWithVersion).when(pmsPipelineService).update(entity);
-    ResponseDTO<String> responseDTO =
-        pipelineResource.updatePipeline(null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, yaml);
+    ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
+        null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData()).isEqualTo(PIPELINE_IDENTIFIER);
   }
 
@@ -143,7 +144,7 @@ public class PipelineResourceTest extends CategoryTest {
         .when(pmsPipelineService)
         .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
     ResponseDTO<Boolean> deleteResponse =
-        pipelineResource.deletePipeline(null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER);
+        pipelineResource.deletePipeline(null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
     assertThat(deleteResponse.getData()).isEqualTo(true);
   }
 
@@ -174,7 +175,7 @@ public class PipelineResourceTest extends CategoryTest {
     doReturn(pipelineEntities).when(pmsPipelineService).list(any(), any());
     List<PMSPipelineSummaryResponseDTO> content =
         pipelineResource
-            .getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, 0, 25, null, null, null, null, null)
+            .getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, 0, 25, null, null, null, null, null, null)
             .getData()
             .getContent();
     assertThat(content).isNotEmpty();
