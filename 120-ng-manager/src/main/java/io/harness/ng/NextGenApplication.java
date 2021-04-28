@@ -40,6 +40,10 @@ import io.harness.health.HealthService;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.migration.MigrationProvider;
+import io.harness.migration.NGMigrationSdkInitHelper;
+import io.harness.migration.NGMigrationSdkModule;
+import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -198,6 +202,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       }
     });
     modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(NGMigrationSdkModule.getInstance());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
     modules.add(new AbstractCfModule() {
@@ -246,6 +251,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerIterators(injector);
     registerJobs(injector);
+    registerMigrations(injector);
 
     intializeGitSync(injector, appConfig);
     //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
@@ -253,6 +259,20 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerManagedBeans(environment, injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerMigrations(Injector injector) {
+    NGMigrationConfiguration config = getMigrationSdkConfiguration();
+    NGMigrationSdkInitHelper.initialize(injector, config);
+  }
+
+  private NGMigrationConfiguration getMigrationSdkConfiguration() {
+    return NGMigrationConfiguration.builder()
+        .microservice(Microservice.CORE)
+        .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
+          { add(NoOpNGCoreMigrationProvider.class); } // Add all migration provider classes here
+        })
+        .build();
   }
 
   private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
@@ -268,11 +288,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     configureObjectMapper(ngObjectMapper);
     Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
     gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
-                                          .entityType(EntityType.CONNECTORS)
-                                          .yamlClass(ConnectorDTO.class)
-                                          .entityClass(Connector.class)
-                                          .entityHelperClass(ConnectorGitSyncHelper.class)
-                                          .build());
+        .entityType(EntityType.CONNECTORS)
+        .yamlClass(ConnectorDTO.class)
+        .entityClass(Connector.class)
+        .entityHelperClass(ConnectorGitSyncHelper.class)
+        .build());
     final GitSdkConfiguration gitSdkConfiguration = config.getGitSdkConfiguration();
     return GitSyncSdkConfiguration.builder()
         .gitSyncSortOrder(sortOrder)
@@ -323,10 +343,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerYamlSdk(Injector injector) {
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
-                                                    .requireSchemaInit(true)
-                                                    .requireSnippetInit(true)
-                                                    .requireValidatorInit(true)
-                                                    .build();
+        .requireSchemaInit(true)
+        .requireSnippetInit(true)
+        .requireValidatorInit(true)
+        .build();
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
 
@@ -476,18 +496,18 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     return getAuthFilterPredicate(PublicApi.class)
         .or(resourceInfoAndRequest
             -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
-                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
-                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json")
-                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
-                    "/swagger.yaml"));
+            || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+            || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json")
+            || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
+            "/swagger.yaml"));
   }
 
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
       Class<? extends Annotation> annotation) {
     return resourceInfoAndRequest
         -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
-               && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
+        && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
         || (resourceInfoAndRequest.getKey().getResourceClass() != null
-            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
+        && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
   }
 }
