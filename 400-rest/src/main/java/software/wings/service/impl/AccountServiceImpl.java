@@ -841,6 +841,10 @@ public class AccountServiceImpl implements AccountService {
       updateOperations.set(AccountKeys.serviceGuardLimit, account.getServiceGuardLimit());
     }
 
+    if (account.getDefaultExperience() != null) {
+      updateOperations.set(AccountKeys.defaultExperience, account.getDefaultExperience());
+    }
+
     wingsPersistence.update(account, updateOperations);
     dbCache.invalidate(Account.class, account.getUuid());
     authService.evictUserPermissionCacheForAccount(account.getUuid(), true);
