@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.k8s.K8sTaskType.DELETE;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.SAHIL;
@@ -29,6 +31,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -73,6 +77,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
 public class K8sDeleteTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
   private static final String FILE_PATHS = "abc/xyz";
@@ -115,7 +121,7 @@ public class K8sDeleteTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void executeWithoutManifestDeleteNamespace() {
     doReturn("Deployment/test").when(context).renderExpression("${workflow.variables.resources}");
-    doReturn(ExecutionResponse.builder().build()).when(k8sDelete).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sDelete).queueK8sDelegateTask(any(), any(), any());
 
     k8sDelete.setResources("${workflow.variables.resources}");
     k8sDelete.setFilePaths(null);
@@ -144,7 +150,8 @@ public class K8sDeleteTest extends WingsBaseTest {
                     .k8sTaskType(DELETE)
                     .deleteNamespacesForRelease(true)
                     .timeoutIntervalInMin(10)
-                    .build()));
+                    .build()),
+            anyMap());
   }
 
   @Test
@@ -152,7 +159,7 @@ public class K8sDeleteTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void executeWithoutManifestNotDeleteNamespace() {
     doReturn("Deployment/test").when(context).renderExpression("${workflow.variables.resources}");
-    doReturn(ExecutionResponse.builder().build()).when(k8sDelete).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sDelete).queueK8sDelegateTask(any(), any(), any());
 
     k8sDelete.setResources("${workflow.variables.resources}");
     k8sDelete.setFilePaths(null);
@@ -181,7 +188,8 @@ public class K8sDeleteTest extends WingsBaseTest {
                     .k8sTaskType(DELETE)
                     .deleteNamespacesForRelease(false)
                     .timeoutIntervalInMin(10)
-                    .build()));
+                    .build()),
+            anyMap());
   }
 
   @Test
@@ -211,7 +219,7 @@ public class K8sDeleteTest extends WingsBaseTest {
     doReturn(RELEASE_NAME).when(k8sDelete).fetchReleaseName(any(), any());
     doReturn(K8sDelegateManifestConfig.builder().build()).when(k8sDelete).createDelegateManifestConfig(any(), any());
     doReturn(emptyList()).when(k8sDelete).fetchRenderedValuesFiles(any(), any());
-    doReturn(ExecutionResponse.builder().build()).when(k8sDelete).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sDelete).queueK8sDelegateTask(any(), any(), any());
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
     Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
@@ -224,7 +232,9 @@ public class K8sDeleteTest extends WingsBaseTest {
 
     ArgumentCaptor<K8sTaskParameters> k8sDeleteTaskParamsArgumentCaptor =
         ArgumentCaptor.forClass(K8sTaskParameters.class);
-    verify(k8sDelete, times(1)).queueK8sDelegateTask(any(), k8sDeleteTaskParamsArgumentCaptor.capture());
+    verify(k8sDelete, times(1))
+        .queueK8sDelegateTask(
+            any(), k8sDeleteTaskParamsArgumentCaptor.capture(), any(applicationManifestMap.getClass()));
     K8sDeleteTaskParameters taskParams = (K8sDeleteTaskParameters) k8sDeleteTaskParamsArgumentCaptor.getValue();
 
     assertThat(taskParams.getReleaseName()).isEqualTo(RELEASE_NAME);
