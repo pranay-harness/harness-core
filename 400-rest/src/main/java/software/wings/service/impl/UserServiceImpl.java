@@ -58,6 +58,12 @@ import io.harness.data.encoding.EncodingUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.schemas.user.UserDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
@@ -78,6 +84,7 @@ import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.sanitizer.HtmlInputSanitizer;
@@ -93,6 +100,7 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.ApplicationRole;
+import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.EmailVerificationToken.EmailVerificationTokenKeys;
 import software.wings.beans.EntityType;
@@ -186,6 +194,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -295,7 +304,8 @@ public class UserServiceImpl implements UserService {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ConfigurationController configurationController;
   @Inject private HtmlInputSanitizer userNameSanitizer;
-  @Inject private NgInviteClient NGInviteClient;
+  @Inject private NgInviteClient ngInviteClient;
+  @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private AccessRequestService accessRequestService;
 
   private Cache<String, User> getUserCache() {
@@ -344,7 +354,7 @@ public class UserServiceImpl implements UserService {
 
     List<UserGroup> accountAdminGroups = getAccountAdminGroup(accountId);
 
-    User savedUser = save(user, accountId);
+    User savedUser = createUser(user, accountId);
 
     addUserToUserGroups(accountId, user, accountAdminGroups, false, false);
 
@@ -614,20 +624,24 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       throw new InvalidRequestException("No user exists with id " + userId);
     }
-    if (user.getAccountIds().contains(accountId)) {
+    if (user.getAccountIds().contains(account.getUuid())) {
       return;
     }
-    List<Account> newAccountList = new ArrayList<>(user.getAccounts());
-    newAccountList.add(account);
-    user.setAccounts(newAccountList);
-    save(user, accountId);
+    List<Account> newAccounts = user.getAccounts();
+    newAccounts.add(account);
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set(UserKeys.accounts, newAccounts);
+    updateUser(user, updateOperations);
   }
 
   @Override
   public boolean safeDeleteUser(String userId, String accountId) {
-    User user = get(userId);
+    User user = wingsPersistence.get(User.class, userId);
     if (user == null || isBlank(accountId)) {
       return false;
+    }
+    if (!user.getAccountIds().contains(accountId)) {
+      return true;
     }
     List<UserGroup> userGroups = userGroupService.listByAccountId(accountId, user, false);
     if (!userGroups.isEmpty()) {
@@ -656,7 +670,7 @@ public class UserServiceImpl implements UserService {
         user.setPasswordHash(hashed);
         user.setPasswordChangedAt(System.currentTimeMillis());
         user.setRoles(newArrayList(roleService.getAccountAdminRole(account.getUuid())));
-        return save(user, accountId);
+        return createUser(user, accountId);
       });
 
     } else {
@@ -805,7 +819,6 @@ public class UserServiceImpl implements UserService {
       String verificationUrl =
           buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(),
               user.getDefaultAccountId());
-
       Map<String, String> templateModel = getTemplateModel(user.getName(), verificationUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
@@ -1009,7 +1022,7 @@ public class UserServiceImpl implements UserService {
     user.setAppId(GLOBAL_APP_ID);
     user.setImported(userInvite.getImportedByScim());
 
-    user = save(user, accountId);
+    user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
 
     if (!isInviteAcceptanceRequired) {
@@ -1443,7 +1456,7 @@ public class UserServiceImpl implements UserService {
       user = anUser().build();
       user.setEmail(userInvite.getEmail().trim().toLowerCase());
       user.setName(userInvite.getName().trim());
-      user.setRoles(Collections.emptyList());
+      user.setRoles(new ArrayList<>());
       user.setEmailVerified(true);
       user.setAppId(GLOBAL_APP_ID);
       user.setAccounts(new ArrayList<>(Collections.singletonList(account)));
@@ -1462,10 +1475,10 @@ public class UserServiceImpl implements UserService {
         accountService.get(userInvite.getAccountId()), userInvite.getPassword());
 
     user.setPasswordHash(hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
-    user = save(user, accountId);
+    user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);
-    NGRestUtils.getResponse(NGInviteClient.completeInvite(userInvite.getUuid()));
+    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
   }
 
   private void marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
@@ -1555,7 +1568,7 @@ public class UserServiceImpl implements UserService {
     user.getAccounts().add(account);
     user.setUserGroups(accountAdminGroups);
 
-    save(user, account.getUuid());
+    createUser(user, account.getUuid());
 
     addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false, false);
   }
@@ -1719,7 +1732,7 @@ public class UserServiceImpl implements UserService {
     user.setAppId(GLOBAL_APP_ID);
     user.getAccounts().add(account);
     user.setUserGroups(accountAdminGroups);
-    user = save(user, account.getUuid());
+    user = createUser(user, account.getUuid());
 
     addUserToUserGroups(account.getUuid(), user, accountAdminGroups, false, false);
 
@@ -2025,10 +2038,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User save(User user, String accountId) {
+  public User createUser(User user, String accountId) {
     user = wingsPersistence.saveAndGet(User.class, user);
     evictUserFromCache(user.getUuid());
     eventPublishHelper.publishSetupRbacEvent(accountId, user.getUuid(), EntityType.USER);
+    publishUserEvent(null, user);
     return user;
   }
 
@@ -2265,7 +2279,6 @@ public class UserServiceImpl implements UserService {
     if (user.getAccounts() == null && user.getPendingAccounts() == null) {
       return;
     }
-
     // HAR-7189: If user removed, the corresponding user invite using the same email address should be removed.
     removeRelatedUserInvite(accountId, user.getEmail());
 
@@ -2273,38 +2286,39 @@ public class UserServiceImpl implements UserService {
         new io.harness.limits.Action(accountId, ActionType.CREATE_USER));
 
     LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      List<Account> updatedActiveAccounts = new ArrayList<>();
       if (isNotEmpty(user.getAccounts())) {
         for (Account account : user.getAccounts()) {
-          if (account.getUuid().equals(accountId)) {
-            user.getAccounts().remove(account);
-            break;
+          if (!account.getUuid().equals(accountId)) {
+            updatedActiveAccounts.add(account);
           }
         }
       }
 
+      List<Account> updatedPendingAccounts = new ArrayList<>();
       if (isNotEmpty(user.getPendingAccounts())) {
         for (Account account : user.getPendingAccounts()) {
-          if (account.getUuid().equals(accountId)) {
-            user.getPendingAccounts().remove(account);
-            break;
+          if (!account.getUuid().equals(accountId)) {
+            updatedPendingAccounts.add(account);
           }
         }
       }
 
-      if (user.getAccounts().isEmpty() && user.getPendingAccounts().isEmpty()
-          && wingsPersistence.delete(User.class, userId)) {
-        evictUserFromCache(userId);
+      if (updatedActiveAccounts.isEmpty() && updatedPendingAccounts.isEmpty()) {
+        deleteUser(user);
         return;
       }
 
-      if (user.getDefaultAccountId() != null && user.getDefaultAccountId().equals(accountId)) {
-        setNewDefaultAccountId(user);
+      String defaultAccountId = user.getDefaultAccountId();
+      if (defaultAccountId != null && defaultAccountId.equals(accountId)) {
+        defaultAccountId = user.getDefaultAccountCandidate();
       }
 
       List<Role> accountRoles = roleService.getAccountRoles(accountId);
+      List<Role> updatedRolesForUser = new ArrayList<>(user.getRoles());
       if (accountRoles != null) {
         for (Role role : accountRoles) {
-          user.getRoles().remove(role);
+          updatedRolesForUser.remove(role);
         }
       }
 
@@ -2316,24 +2330,80 @@ public class UserServiceImpl implements UserService {
       }
 
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
-                                            .set(UserKeys.roles, user.getRoles())
-                                            .set(UserKeys.accounts, user.getAccounts())
-                                            .set(UserKeys.pendingAccounts, user.getPendingAccounts());
-      if (user.getDefaultAccountId() != null) {
-        updateOp.set(UserKeys.defaultAccountId, user.getDefaultAccountId());
-      }
-      Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
-      wingsPersistence.update(updateQuery, updateOp);
-
-      evictUserFromCache(userId);
+                                            .set(UserKeys.roles, updatedRolesForUser)
+                                            .set(UserKeys.accounts, updatedActiveAccounts)
+                                            .set(UserKeys.pendingAccounts, updatedPendingAccounts)
+                                            .set(UserKeys.defaultAccountId, defaultAccountId);
+      updateUser(user, updateOp);
     });
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
     log.info("Auditing deletion of user={} in account={}", user.getName(), accountId);
   }
 
-  public void setNewDefaultAccountId(User user) {
-    String newDefaultAccountId = user.getDefaultAccountCandidate();
-    user.setDefaultAccountId(newDefaultAccountId);
+  private User updateUser(User oldUser, UpdateOperations<User> updateOperations) {
+    if (oldUser.getUuid() == null) {
+      return null;
+    }
+    User newUser = wingsPersistence.findAndModify(
+        wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, oldUser.getUuid()), updateOperations,
+        HPersistence.returnNewOptions);
+    evictUserFromCache(oldUser.getUuid());
+    publishUserEvent(oldUser, newUser);
+    return newUser;
+  }
+
+  private void deleteUser(User user) {
+    User oldUser = wingsPersistence.findAndDelete(
+        wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid()), HPersistence.returnOldOptions);
+    if (oldUser != null) {
+      evictUserFromCache(user.getUuid());
+      publishUserEvent(oldUser, null);
+    }
+  }
+
+  private void publishUserEvent(User oldUser, User updatedUser) {
+    if (oldUser == null && updatedUser == null) {
+      return;
+    }
+    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
+    boolean isUserCreated = oldUser == null;
+    boolean isUserDeleted = updatedUser == null;
+    String action;
+    if (isUserCreated) {
+      action = EventsFrameworkMetadataConstants.CREATE_ACTION;
+      userDTOBuilder.setUserId(updatedUser.getUuid());
+      userDTOBuilder.addAllNewAccountsUserAddedTo(updatedUser.getAccountIds());
+    } else if (isUserDeleted) {
+      action = EventsFrameworkMetadataConstants.DELETE_ACTION;
+      userDTOBuilder.setUserId(oldUser.getUuid());
+      userDTOBuilder.addAllAccountsUserRemovedFrom(oldUser.getAccountIds());
+    } else {
+      action = EventsFrameworkMetadataConstants.UPDATE_ACTION;
+      userDTOBuilder.setUserId(oldUser.getUuid());
+      Set<String> oldAccounts = new HashSet<>(oldUser.getAccountIds());
+      Set<String> newAccounts = new HashSet<>(updatedUser.getAccountIds());
+      userDTOBuilder.addAllNewAccountsUserAddedTo(Sets.difference(newAccounts, oldAccounts));
+      userDTOBuilder.addAllAccountsUserRemovedFrom(Sets.difference(oldAccounts, newAccounts));
+    }
+
+    /**
+     * Dont send unnecessary events. Right now we only send events when user is added/removed from account
+     */
+    if (userDTOBuilder.getAccountsUserRemovedFromList().isEmpty()
+        && userDTOBuilder.getNewAccountsUserAddedToList().isEmpty()) {
+      return;
+    }
+
+    try {
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of(EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                  EventsFrameworkMetadataConstants.USER_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(userDTOBuilder.build().toByteString())
+              .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework for user [userId: {}", userDTOBuilder.getUserId(), e);
+    }
   }
 
   /* (non-Javadoc)
@@ -2613,10 +2683,7 @@ public class UserServiceImpl implements UserService {
     if (account != null) {
       updateOperations.addToSet(UserKeys.accounts, account.getUuid());
     }
-    wingsPersistence.update(wingsPersistence.createQuery(User.class)
-                                .filter(UserKeys.email, existingUser.getEmail())
-                                .filter("appId", existingUser.getAppId()),
-        updateOperations);
+    updateUser(existingUser, updateOperations);
   }
 
   private Account setupTrialAccount(String accountName, String companyName) {
@@ -3199,7 +3266,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private InviteOperationResponse checkNgInviteStatus(UserInvite userInvite) {
-    InviteAcceptResponse inviteAcceptResponse = NGRestUtils.getResponse(NGInviteClient.accept(userInvite.getUuid()));
+    InviteAcceptResponse inviteAcceptResponse = NGRestUtils.getResponse(ngInviteClient.accept(userInvite.getUuid()));
     if (inviteAcceptResponse.getResponse().equals(FAIL)) {
       return FAIL;
     }
@@ -3215,7 +3282,7 @@ public class UserServiceImpl implements UserService {
     if (isPasswordRequired) {
       return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
     }
-    NGRestUtils.getResponse(NGInviteClient.completeInvite(userInvite.getUuid()));
+    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
     return ACCOUNT_INVITE_ACCEPTED;
   }
 
@@ -3234,12 +3301,11 @@ public class UserServiceImpl implements UserService {
         }
       }
     }
-
-    Map<String, Object> map = new HashMap<>();
-    map.put(UserKeys.accounts, newAccountsList);
-    map.put(UserKeys.pendingAccounts, newPendingAccountsList);
-    map.put(UserKeys.emailVerified, markEmailVerified);
-    wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set(UserKeys.accounts, newAccountsList);
+    updateOperations.set(UserKeys.pendingAccounts, newPendingAccountsList);
+    updateOperations.set(UserKeys.emailVerified, markEmailVerified);
+    updateUser(existingUser, updateOperations);
   }
 
   private void markUserInviteComplete(UserInvite userInvite) {
