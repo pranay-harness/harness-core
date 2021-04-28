@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -71,6 +73,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EnvironmentType;
@@ -196,6 +200,8 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
 public class AbstractK8SStateTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private AppService appService;
@@ -538,23 +544,27 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SETTING_ID);
     when(evaluator.substitute(anyString(), any(), any(), anyString())).thenReturn("default");
     when(serviceResourceService.getHelmVersionWithDefault(anyString(), anyString())).thenReturn(HelmVersion.V2);
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
 
     K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
-    abstractK8SState.queueK8sDelegateTask(context, taskParameters);
+    abstractK8SState.queueK8sDelegateTask(context, taskParameters, applicationManifestMap);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(10 * 60 * 1000);
 
     taskParameters.setTimeoutIntervalInMin(300);
-    abstractK8SState.queueK8sDelegateTask(context, taskParameters);
+    abstractK8SState.queueK8sDelegateTask(context, taskParameters, applicationManifestMap);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
     delegateTask = captor.getValue();
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(300 * 60 * 1000);
 
     taskParameters.setTimeoutIntervalInMin(0);
-    abstractK8SState.queueK8sDelegateTask(context, taskParameters);
+    abstractK8SState.queueK8sDelegateTask(context, taskParameters, applicationManifestMap);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(3)).queueTask(captor.capture());
     delegateTask = captor.getValue();
@@ -581,6 +591,10 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     doReturn(K8sClusterConfig.builder().build())
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
 
     SettingAttribute settingAttribute = aSettingAttribute()
                                             .withUuid(SETTING_ID)
@@ -589,7 +603,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
                                             .build();
     persistence.save(settingAttribute);
 
-    abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+    abstractK8SState.queueK8sDelegateTask(
+        context, K8sRollingDeployTaskParameters.builder().build(), applicationManifestMap);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -599,7 +614,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     settingAttribute.setValue(
         KubernetesClusterConfig.builder().useKubernetesDelegate(true).delegateName("delegateName").build());
     persistence.save(settingAttribute);
-    abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+    abstractK8SState.queueK8sDelegateTask(
+        context, K8sRollingDeployTaskParameters.builder().build(), applicationManifestMap);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
     delegateTask = captor.getValue();
@@ -614,7 +630,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
         .when(containerDeploymentManagerHelper)
         .getK8sClusterConfig(any(ContainerInfrastructureMapping.class), eq(context));
     persistence.save(settingAttribute);
-    abstractK8SState.queueK8sDelegateTask(context, K8sRollingDeployTaskParameters.builder().build());
+    abstractK8SState.queueK8sDelegateTask(
+        context, K8sRollingDeployTaskParameters.builder().build(), applicationManifestMap);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(3)).queueTask(captor.capture());
     delegateTask = captor.getValue();
@@ -707,6 +724,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
         .containsExactlyInAnyOrder("pod-1", "pod-2");
     assertThat(instanceElements.stream().filter(InstanceElement::isNewInstance).count()).isEqualTo(2);
   }
+
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)

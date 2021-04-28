@@ -95,7 +95,7 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     when(ngUserService.getUsersByIds(any(), any())).thenReturn(getUsers(userMembershipList));
     List<String> adminIds =
         IntStream.range(0, 4).mapToObj(i -> userMembershipList.get(i).getUserId()).collect(toList());
-    when(ngUserService.getUsersHavingRole(any(), any())).thenReturn(adminIds);
+    when(ngUserService.getUserIdsWithRole(any(), any())).thenReturn(adminIds);
   }
 
   @Test
@@ -183,7 +183,7 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
                                                         .build()))
                   .build()));
     }
-    when(ngUserService.getUsersHavingRole(any(), any())).thenReturn(userIds.subList(0, 4));
+    when(ngUserService.getUserIdsWithRole(any(), any())).thenReturn(userIds.subList(0, 4));
     when(ngUserService.getUsersByIds(any(), any())).thenReturn(getUsers(userMembershipList));
     when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
     return userMembershipList;

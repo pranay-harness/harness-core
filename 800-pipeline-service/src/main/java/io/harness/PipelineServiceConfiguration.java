@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -72,10 +73,11 @@ public class PipelineServiceConfiguration extends Configuration {
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
-  private ScmConnectionConfig scmConnectionConfig;
   private ServiceHttpClientConfig managerClientConfig;
   private LogStreamingServiceConfiguration logStreamingServiceConfig;
   private PipelineServiceIteratorsConfig iteratorsConfig;
+  private boolean shouldDeployWithGitSync;
+  private GitSdkConfiguration gitSdkConfiguration;
 
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

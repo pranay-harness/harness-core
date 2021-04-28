@@ -8,6 +8,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//960-persistence:module",
         "//970-api-services-beans:module",
         "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
@@ -27,6 +28,23 @@ java_library(
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_hibernate_hibernate_validator",
         "@maven//:org_springframework_data_spring_data_commons",
+    ],
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_reflections_reflections",
     ],
 )
 

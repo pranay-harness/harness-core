@@ -51,8 +51,6 @@ public final class BarrierExecutionInstance implements PersistentEntity, UuidAwa
   @NotNull private BarrierSetupInfo setupInfo;
   private BarrierPositionInfo positionInfo;
 
-  @Builder.Default private long expiredIn = 600_000; // 10 minutes
-
   private Long nextIteration;
 
   // audit fields

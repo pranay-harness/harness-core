@@ -86,6 +86,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
     builder.currentStateFileId(helper.getLatestFileId(entityId))
         .taskType(TFTaskType.DESTROY)
         .terraformCommand(TerraformCommand.DESTROY)
+        .terraformCommandUnit(TerraformCommandUnit.Destroy)
         .entityId(entityId)
         .workspace(ParameterFieldHelper.getParameterFieldValue(parameters.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(

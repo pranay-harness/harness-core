@@ -18,6 +18,8 @@ public interface UserMembershipRepositoryCustom {
 
   Page<UserMembership> findAll(Criteria criteria, Pageable pageable);
 
+  Page<String> findAllUserIds(Criteria criteria, Pageable pageable);
+
   Set<String> filterUsersWithMembership(List<String> userIds, String accountIdentifier, @Nullable String orgIdentifier,
       @Nullable String projectIdentifier);
 

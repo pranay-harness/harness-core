@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -29,6 +31,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
@@ -67,6 +71,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
 public class K8sScaleTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
@@ -151,11 +157,11 @@ public class K8sScaleTest extends WingsBaseTest {
         .when(k8sScale)
         .createK8sActivity(
             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
-    doReturn(ExecutionResponse.builder().build()).when(k8sScale).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sScale).queueK8sDelegateTask(any(), any(), any());
     doReturn(RELEASE_NAME).when(k8sScale).fetchReleaseName(any(), any());
 
     k8sScale.execute(executionContext);
-    verify(k8sScale, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+    verify(k8sScale, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class), any());
   }
 
   @Test
@@ -170,9 +176,9 @@ public class K8sScaleTest extends WingsBaseTest {
         .when(k8sScale)
         .createK8sActivity(
             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
-    doReturn(ExecutionResponse.builder().build()).when(k8sScale).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sScale).queueK8sDelegateTask(any(), any(), any());
     k8sScale.execute(executionContext);
-    verify(k8sScale, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+    verify(k8sScale, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class), any());
   }
 
   @Test

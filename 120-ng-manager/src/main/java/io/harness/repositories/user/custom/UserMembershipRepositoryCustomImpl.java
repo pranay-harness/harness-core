@@ -51,6 +51,16 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
   }
 
   @Override
+  public Page<String> findAllUserIds(Criteria criteria, Pageable pageable) {
+    Query query = new Query(criteria).with(pageable);
+    query.fields().include(UserMembershipKeys.userId);
+    List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
+    List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(Collectors.toList());
+    return PageableExecutionUtils.getPage(
+        userIds, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), UserMembership.class));
+  }
+
+  @Override
   public Set<String> filterUsersWithMembership(List<String> userIds, String accountIdentifier,
       @Nullable String orgIdentifier, @Nullable String projectIdentifier) {
     Query query = new Query();

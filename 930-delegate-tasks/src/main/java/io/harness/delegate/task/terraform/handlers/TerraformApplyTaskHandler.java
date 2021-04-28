@@ -97,7 +97,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
       File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, taskParameters.getWorkspace());
 
-      terraformBaseHelper.uploadTfStateFile(
+      String stateFileId = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);
 
       return TerraformTaskNGResponse.builder()
@@ -107,6 +107,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
               taskParameters.getRemoteVarfiles()))
           .encryptedTfPlan(taskParameters.getEncryptedTfPlan())
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .stateFileId(stateFileId)
           .build();
 
     } catch (TerraformCommandExecutionException terraformCommandExecutionException) {

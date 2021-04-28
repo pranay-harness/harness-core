@@ -1,10 +1,12 @@
 package io.harness.pms.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.PipelineServiceTestBase;
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
@@ -16,7 +18,8 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PMSPipelineFilterHelperTest extends PipelineServiceTestBase {
+@OwnedBy(PIPELINE)
+public class PMSPipelineFilterHelperTest extends CategoryTest {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)

@@ -147,6 +147,7 @@ public class InviteServiceImplTest extends CategoryTest {
 
     when(ngUserService.getUserFromEmail(eq(emailId))).thenReturn(Optional.of(user));
     when(ngUserService.getUserMembership(any())).thenReturn(Optional.of(userMembership));
+    when(ngUserService.isUserAtScope(any(), any())).thenReturn(true);
     InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
     assertThat(inviteOperationResponse).isEqualTo(USER_ALREADY_ADDED);
   }

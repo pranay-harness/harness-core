@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateMechanism;
@@ -28,16 +29,21 @@ public interface NgUserService {
 
   List<UserInfo> getUsersFromEmail(List<String> emailIds, String accountIdentifier);
 
-  List<String> getUsersHavingRole(Scope scope, String roleIdentifier);
+  List<String> getUserIdsWithRole(Scope scope, String roleIdentifier);
 
   Optional<UserMembership> getUserMembership(String userId);
 
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
    */
-  Page<UserInfo> list(String accountIdentifier, String searchString, Pageable page);
+  Page<UserInfo> listCurrentGenUsers(String accountIdentifier, String searchString, Pageable page);
 
-  List<String> listUsersAtScope(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  /**
+   * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
+   */
+  PageResponse<UserInfo> listUsers(Scope scope, PageRequest pageRequest);
+
+  List<String> listUserIds(Scope scope);
 
   /**
    * Use this method with caution, verify that the criteria sort is able to make use of the indexes.
@@ -54,8 +60,7 @@ public interface NgUserService {
 
   boolean isUserAtScope(String userId, Scope scope);
 
-  void removeUserFromScope(String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      UserMembershipUpdateMechanism mechanism);
+  boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateMechanism mechanism);
 
   Set<String> filterUsersWithScopeMembership(List<String> userIds, String accountIdentifier,
       @Nullable String orgIdentifier, @Nullable String projectIdentifier);

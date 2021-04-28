@@ -11,6 +11,7 @@ replace_key_value () {
 
 yq delete -i /opt/harness/cv-nextgen-config.yml server.adminConnectors
 yq delete -i /opt/harness/cv-nextgen-config.yml server.applicationConnectors[0]
+yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml logging.level "$LOGGING_LEVEL"

@@ -19,7 +19,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.dto.UserPrincipal;
-import io.harness.user.remote.UserSearchFilter;
+import io.harness.user.remote.UserFilterNG;
 
 import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
@@ -111,14 +111,13 @@ public class UserResourceNG {
 
   @POST
   @Path("/batch")
-  public RestResponse<List<UserInfo>> listUsers(
-      @QueryParam("accountId") String accountId, UserSearchFilter userSearchFilter) {
+  public RestResponse<List<UserInfo>> listUsers(@QueryParam("accountId") String accountId, UserFilterNG userFilterNG) {
     Set<User> userSet = new HashSet<>();
-    if (!isEmpty(userSearchFilter.getUserIds())) {
-      userSet.addAll(userService.getUsers(userSearchFilter.getUserIds(), accountId));
+    if (!isEmpty(userFilterNG.getUserIds())) {
+      userSet.addAll(userService.getUsers(userFilterNG.getUserIds(), accountId));
     }
-    if (!isEmpty(userSearchFilter.getEmailIds())) {
-      userSet.addAll(userService.getUsersByEmail(userSearchFilter.getEmailIds(), accountId));
+    if (!isEmpty(userFilterNG.getEmailIds())) {
+      userSet.addAll(userService.getUsersByEmail(userFilterNG.getEmailIds(), accountId));
     }
     return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet)));
   }

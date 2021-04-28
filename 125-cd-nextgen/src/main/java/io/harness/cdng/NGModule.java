@@ -31,8 +31,10 @@ import io.harness.registrars.StageTypeToStageExecutionMapperRegistrar;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import java.util.concurrent.atomic.AtomicReference;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDP)
+@Slf4j
 public class NGModule extends AbstractModule {
   private static final AtomicReference<NGModule> instanceRef = new AtomicReference<>();
   private final OrchestrationModuleConfig config;

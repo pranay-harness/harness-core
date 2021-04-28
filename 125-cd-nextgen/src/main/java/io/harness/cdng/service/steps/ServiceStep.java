@@ -11,8 +11,9 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
@@ -45,11 +46,8 @@ import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
-import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -142,18 +140,9 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
     Set<EntityDetailProtoDTO> entityDetails =
         entityReferenceExtractorUtils.extractReferredEntities(ambiance, stepParameters.getService());
     pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
-    boolean hasAccess = accessControlClient.hasAccess(principal, principalType,
-        PermissionCheckDTO.builder()
-            .permission(CDNGRbacPermissions.SERVICE_CREATE_PERMISSION)
-            .resourceIdentifier(projectIdentifier)
-            .resourceScope(
-                ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build())
-            .resourceType("PROJECT")
-            .build());
-    if (!hasAccess) {
-      throw new AccessDeniedException(
-          "Validation for Service Step failed", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
-    }
+    accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
+        ResourceScope.of(accountIdentifier, orgIdentifier, null), Resource.of("PROJECT", projectIdentifier),
+        CDNGRbacPermissions.SERVICE_CREATE_PERMISSION, "Validation for Service Step failed");
   }
 
   @Override

@@ -24,6 +24,9 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.waiter.AbstractWaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -115,6 +118,13 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return CfMigrationConfig.builder().build();
+      }
+    });
+
+    modules.add(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.MORPHIA).build();
       }
     });
 

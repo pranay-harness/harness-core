@@ -1,8 +1,10 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -18,6 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 /**
  * Created by srinivas on 3/28/17.
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 public interface NexusService {
   /**
@@ -65,9 +68,6 @@ public interface NexusService {
   List<String> getGroupIdPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat);
 
-  List<String> getGroupIdPathsUsingPrivateApis(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat);
-
   /***
    *
    * @param nexusConfig
@@ -88,17 +88,6 @@ public interface NexusService {
    */
   List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
       String path, String repositoryFormat);
-
-  /***
-   *
-   * @param nexusConfig
-   * @param repoId the repoId
-   * @param path the path
-   * @param repositoryFormat the repositoryFormat
-   * @return
-   */
-  List<String> getArtifactNamesUsingPrivateApis(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String path, String repositoryFormat);
 
   /**
    * @param nexusConfig

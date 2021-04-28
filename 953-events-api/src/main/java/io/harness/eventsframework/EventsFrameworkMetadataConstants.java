@@ -36,4 +36,5 @@ public final class EventsFrameworkMetadataConstants {
   public static final String ACCOUNT_ENTITY = "account";
 
   public static final String REFERRED_ENTITY_TYPE = "referredEntityType";
+  public static final String CONNECTOR_ENTITY_TYPE = "connectorType";
 }

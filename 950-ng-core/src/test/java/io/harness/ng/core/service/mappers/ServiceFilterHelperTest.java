@@ -6,9 +6,12 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
+import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.rule.Owner;
 
 import java.beans.PropertyDescriptor;
@@ -22,6 +25,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceFilterHelperTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
@@ -31,7 +35,7 @@ public class ServiceFilterHelperTest extends CategoryTest {
     String orgIdentifier = "ORG_ID";
     String projectIdentifier = "PROJECT_ID";
     Criteria criteriaFromServiceFilter =
-        ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
+        CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     assertThat(criteriaFromServiceFilter).isNotNull();
     Document criteriaObject = criteriaFromServiceFilter.getCriteriaObject();
     assertThat(criteriaObject.get(ServiceEntityKeys.accountId)).isEqualTo(accountId);

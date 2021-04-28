@@ -52,7 +52,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
-  public static final String PRIMARY_PROFILE_NAME = "Primary";
+  public static final String CG_PRIMARY_PROFILE_NAME = "Primary";
+  public static final String NG_PRIMARY_PROFILE_NAME = "Primary Configuration";
   public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the account";
 
   @Inject private HPersistence persistence;
@@ -73,14 +74,28 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   }
 
   @Override
-  public DelegateProfile fetchPrimaryProfile(String accountId) {
+  public DelegateProfile fetchCgPrimaryProfile(String accountId) {
+    Optional<DelegateProfile> primaryProfile = Optional.ofNullable(
+        persistence.createQuery(DelegateProfile.class)
+            .filter(DelegateProfileKeys.accountId, accountId)
+            .field(DelegateProfileKeys.ng)
+            .notEqual(Boolean.TRUE) // This is required to cover case when flag is not set at all and when it is false
+            .filter(DelegateProfileKeys.primary, Boolean.TRUE)
+            .get());
+
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, false)));
+  }
+
+  @Override
+  public DelegateProfile fetchNgPrimaryProfile(String accountId) {
     Optional<DelegateProfile> primaryProfile =
         Optional.ofNullable(persistence.createQuery(DelegateProfile.class)
-                                .filter(DelegateProfileKeys.primary, Boolean.TRUE)
                                 .filter(DelegateProfileKeys.accountId, accountId)
+                                .filter(DelegateProfileKeys.ng, Boolean.TRUE)
+                                .filter(DelegateProfileKeys.primary, Boolean.TRUE)
                                 .get());
 
-    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId)));
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, true)));
   }
 
   @Override
@@ -221,10 +236,13 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     log.info("AccountCreated event received.");
 
     if (!account.isForImport()) {
-      DelegateProfile delegateProfile = buildPrimaryDelegateProfile(account.getUuid());
-      add(delegateProfile);
+      DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), false);
+      add(cgDelegateProfile);
 
-      log.info("Primary Delegate Profile added.");
+      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), true);
+      add(ngDelegateProfile);
+
+      log.info("Primary Delegate Profiles added.");
 
       return;
     }
@@ -248,13 +266,14 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
         .collect(toList());
   }
 
-  private DelegateProfile buildPrimaryDelegateProfile(String accountId) {
+  private DelegateProfile buildPrimaryDelegateProfile(String accountId, boolean isNg) {
     return DelegateProfile.builder()
         .uuid(generateUuid())
         .accountId(accountId)
-        .name(PRIMARY_PROFILE_NAME)
+        .name(isNg ? NG_PRIMARY_PROFILE_NAME : CG_PRIMARY_PROFILE_NAME)
         .description(PRIMARY_PROFILE_DESCRIPTION)
         .primary(true)
+        .ng(isNg)
         .build();
   }
 

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.api.impl.AggregateProjectServiceImpl.removeAdmins;
 import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
-import static io.harness.ng.core.user.remote.UserSearchMapper.writeDTO;
+import static io.harness.ng.core.user.remote.mapper.UserSearchMapper.writeDTO;
 
 import static java.util.Collections.singletonList;
 
@@ -196,7 +196,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   }
 
   private List<UserSearchDTO> getAdmins(String accountIdentifier, String orgId, Map<String, UserSearchDTO> userMap) {
-    List<String> userIds = ngUserService.getUsersHavingRole(
+    List<String> userIds = ngUserService.getUserIdsWithRole(
         UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgId).build(),
         ORG_ADMIN_ROLE);
     return userIds.stream().filter(userMap::containsKey).map(userMap::get).collect(Collectors.toList());

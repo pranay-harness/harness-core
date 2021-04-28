@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -17,6 +18,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 
@@ -53,6 +55,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 @Singleton
 public class WorkflowServiceTemplateHelper {
   private static final String ENV_VAR_DESC = "Variable for Environment entity";
@@ -291,37 +294,13 @@ public class WorkflowServiceTemplateHelper {
       }
       // It means, user templatizing it from phase level
       addTemplateExpressions(phaseTemplateExpressions, templateExpressions);
-      validateTemplateExpressionsInfraRefactor(templateExpressions);
+      validateTemplateExpressions(templateExpressions);
 
       workflow.setTemplateExpressions(templateExpressions);
     }
   }
 
   public static void validateTemplateExpressions(List<TemplateExpression> templateExpressions) {
-    // Validate combinations
-    TemplateExpression envExpression =
-        WorkflowServiceTemplateHelper.getTemplateExpression(templateExpressions, "envId");
-    TemplateExpression serviceExpression = getTemplateExpression(templateExpressions, "serviceId");
-    TemplateExpression infraMappingExpression = getTemplateExpression(templateExpressions, "infraMappingId");
-
-    // It means nullifying both Service and InfraMappings .. throw an error if environment is templatized
-    // Infra not present
-    if (envExpression != null) {
-      if (infraMappingExpression == null) {
-        throw new InvalidRequestException(
-            "Service Infrastructure cannot be de-templatized because Environment is templatized", USER);
-      }
-    }
-    // Infra not present
-    if (serviceExpression != null) {
-      if (infraMappingExpression == null) {
-        throw new InvalidRequestException(
-            "Service Infrastructure cannot be de-templatized because Service is templatized", USER);
-      }
-    }
-  }
-
-  public static void validateTemplateExpressionsInfraRefactor(List<TemplateExpression> templateExpressions) {
     // Validate combinations
     TemplateExpression envExpression =
         WorkflowServiceTemplateHelper.getTemplateExpression(templateExpressions, "envId");

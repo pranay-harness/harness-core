@@ -41,10 +41,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(DX)
 public class GitBranch {
   @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String uuid;
-  String orgIdentifier;
-  String projectIdentifier;
   @NotNull String accountIdentifier;
-  @NotNull String yamlGitConfigIdentifier;
+  @NotNull String repoURL;
   @NotEmpty String branchName;
   @NotEmpty BranchSyncStatus branchSyncStatus;
   @CreatedBy private EmbeddedUser createdBy;
@@ -56,12 +54,10 @@ public class GitBranch {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_accountId_organizationId_projectId_yamlGitConfigId_branch_idx")
+                 .name("unique_accountIdentifier_repoURL_branchName_idx")
                  .unique(true)
                  .field(GitBranchKeys.accountIdentifier)
-                 .field(GitBranchKeys.orgIdentifier)
-                 .field(GitBranchKeys.projectIdentifier)
-                 .field(GitBranchKeys.yamlGitConfigIdentifier)
+                 .field(GitBranchKeys.repoURL)
                  .field(GitBranchKeys.branchName)
                  .build())
         .build();

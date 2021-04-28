@@ -11,6 +11,8 @@ import software.wings.service.intfc.FileService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -40,9 +42,10 @@ public class FileServiceResourceNG {
   @POST
   @Path("parentEntityIdAndVersion")
   public RestResponse<Boolean> updateParentEntityIdAndVersion(@QueryParam("entityId") @NotNull String entityId,
-      @QueryParam("stateFileId") @NotNull String stateFileId,
-      @QueryParam("fileBucket") @NotNull FileBucket fileBucket) {
-    boolean updated = fileService.updateParentEntityIdAndVersion(null, entityId, null, stateFileId, null, fileBucket);
+      @QueryParam("stateFileId") @NotNull String stateFileId, @QueryParam("fileBucket") @NotNull FileBucket fileBucket)
+      throws UnsupportedEncodingException {
+    boolean updated = fileService.updateParentEntityIdAndVersion(
+        null, URLDecoder.decode(entityId, "UTF-8"), null, stateFileId, null, fileBucket);
     return new RestResponse<>(updated);
   }
 }

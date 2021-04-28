@@ -1,5 +1,6 @@
 package io.harness.pms.rbac;
 
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.AccessControlDTO;
@@ -52,7 +53,7 @@ public class PipelineRbacHelper {
     List<PermissionCheckDTO> permissionCheckDTOS =
         entityDetails.stream().map(this::convertToPermissionCheckDTO).collect(Collectors.toList());
     AccessCheckResponseDTO accessCheckResponseDTO =
-        accessControlClient.checkForAccess(principal, principalType, permissionCheckDTOS);
+        accessControlClient.checkForAccess(Principal.of(principalType, principal), permissionCheckDTOS);
     if (accessCheckResponseDTO == null) {
       return;
     }

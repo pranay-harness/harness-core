@@ -317,7 +317,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         }
       }
 
-      if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, "")) {
+      if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
         if (!harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
           throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
         }

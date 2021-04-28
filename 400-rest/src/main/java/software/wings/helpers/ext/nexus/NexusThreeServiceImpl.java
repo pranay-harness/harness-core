@@ -1,20 +1,20 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.threading.Morpheus.quietSleep;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 
 import static java.lang.String.format;
-import static java.time.Duration.ofMillis;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -31,10 +31,6 @@ import io.harness.nexus.model.DockerImageTagResponse;
 import io.harness.nexus.model.Nexus3AssetResponse;
 import io.harness.nexus.model.Nexus3ComponentResponse;
 import io.harness.nexus.model.Nexus3Repository;
-import io.harness.nexus.model.Nexus3Request;
-import io.harness.nexus.model.Nexus3RequestData;
-import io.harness.nexus.model.Nexus3Response;
-import io.harness.nexus.model.Nexus3ResponseData;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stream.StreamUtils;
 
@@ -44,7 +40,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
-import software.wings.helpers.ext.artifactory.FolderPath;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.RepositoryFormat;
@@ -58,28 +53,20 @@ import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import javax.net.ssl.HttpsURLConnection;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
@@ -87,7 +74,6 @@ public class NexusThreeServiceImpl {
   private static final int MAX_PAGES = 10;
 
   @Inject EncryptionService encryptionService;
-  @Inject private ExecutorService executorService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Inject private NexusHelper nexusHelper;
 
@@ -176,153 +162,6 @@ public class NexusThreeServiceImpl {
       }
     }
     return images;
-  }
-
-  public List<String> collectGroupIds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, List<String> groupIds, String repositoryFormat) throws ExecutionException, InterruptedException {
-    if (repositoryFormat == null || repositoryFormat.equals(RepositoryFormat.maven.name())) {
-      return fetchMavenGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat);
-    } else if (repositoryFormat.equals(RepositoryFormat.nuget.name())
-        || repositoryFormat.equals(RepositoryFormat.npm.name())) {
-      return fetchPackageNames(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat);
-    }
-    return groupIds;
-  }
-
-  @SuppressWarnings({"squid:S1149"})
-  private List<String> fetchMavenGroupIds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, List<String> groupIds, String repositoryFormat) throws InterruptedException, ExecutionException {
-    NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-    Queue<Future> futures = new ConcurrentLinkedQueue<>();
-    Stack<FolderPath> paths = new Stack<>();
-    paths.addAll(getFolderPaths(nexusThreeRestClient, nexusConfig, repoId, "/", repositoryFormat));
-    while (isNotEmpty(paths) || isNotEmpty(futures)) {
-      while (isNotEmpty(paths)) {
-        FolderPath folderPath = paths.pop();
-        String node = folderPath.getNode();
-        if (folderPath.isFolder()) {
-          traverseInParallel(nexusThreeRestClient, nexusConfig, repoId, node, futures, paths, repositoryFormat);
-        } else {
-          // Strip out the artifactId and version
-          String[] pathElems = folderPath.getNode().split("/");
-          if (pathElems.length >= 2) {
-            groupIds.add(getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 2).collect(toList())));
-          }
-        }
-      }
-      while (!futures.isEmpty() && futures.peek().isDone()) {
-        futures.poll().get();
-      }
-      quietSleep(ofMillis(20)); // avoid busy wait
-    }
-    return groupIds;
-  }
-
-  private List<FolderPath> getFolderPaths(NexusThreeRestClient nexusThreeRestClient, NexusConfig nexusConfig,
-      String repoName, String node, String repositoryFormat) {
-    // Add first level paths
-    List<FolderPath> folderPaths = new ArrayList<>();
-    try {
-      Nexus3Request repositoryRequest =
-          Nexus3Request.builder()
-              .action("coreui_Browse")
-              .method("read")
-              .data(Collections.singletonList(Nexus3RequestData.builder().node(node).repositoryName(repoName).build()))
-              .type("rpc")
-              .tid(10) // just a random no. - doesn't matter what the specific value is but without this the request
-              // doesn't go through
-              .build();
-      Response<Nexus3Response> response;
-
-      final Call<Nexus3Response> request;
-      if (nexusConfig.hasCredentials()) {
-        request = nexusThreeRestClient.getGroupIds(
-            Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repositoryRequest);
-      } else {
-        request = nexusThreeRestClient.getGroupIds(repositoryRequest);
-      }
-      response = request.execute();
-      if (isSuccessful(response)) {
-        if (response.body().getResult().isSuccess()) {
-          List<Nexus3ResponseData> treeNodes = response.body().getResult().getData();
-          if (treeNodes != null) {
-            treeNodes.forEach(treeNode -> {
-              if (treeNode.getType().equals("folder")) {
-                folderPaths.add(FolderPath.builder().repo(repoName).node(treeNode.getId()).folder(true).build());
-              } else if (treeNode.getType().equals("component")) {
-                folderPaths.add(FolderPath.builder().repo(repoName).node(treeNode.getId()).folder(false).build());
-              } else if (treeNode.getType().equals("asset") && repositoryFormat.equals(RepositoryFormat.npm.name())) {
-                folderPaths.add(FolderPath.builder().repo(repoName).node(treeNode.getId()).folder(false).build());
-              }
-            });
-          }
-        }
-      }
-    } catch (final IOException e) {
-      throw new InvalidRequestException("Error occurred while retrieving Repository Group Ids from Nexus server "
-              + nexusConfig.getNexusUrl() + " for repository " + repoName + " under path " + node,
-          e);
-    }
-    return folderPaths;
-  }
-
-  private String getGroupId(List<String> pathElems) {
-    StringBuilder groupIdBuilder = new StringBuilder();
-    for (int i = 0; i < pathElems.size(); i++) {
-      groupIdBuilder.append(pathElems.get(i));
-      if (i != pathElems.size() - 1) {
-        groupIdBuilder.append('.');
-      }
-    }
-    return groupIdBuilder.toString();
-  }
-
-  @SuppressWarnings({"squid:S1149"})
-  private void traverseInParallel(NexusThreeRestClient nexusThreeRestClient, NexusConfig nexusConfig, String repoKey,
-      String path, Queue<Future> futures, Stack<FolderPath> paths, String repositoryFormat) {
-    futures.add(executorService.submit(
-        () -> paths.addAll(getFolderPaths(nexusThreeRestClient, nexusConfig, repoKey, path, repositoryFormat))));
-  }
-
-  @SuppressWarnings({"squid:S1149"})
-  public Set<String> getArtifactNamesUsingPrivateApis(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String groupId, Set<String> artifactIds,
-      String repositoryFormat) throws ExecutionException, InterruptedException {
-    NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-    Queue<Future> futures = new ConcurrentLinkedQueue<>();
-    Stack<FolderPath> paths = new Stack<>();
-    paths.addAll(
-        getFolderPaths(nexusThreeRestClient, nexusConfig, repoId, groupId.replaceAll("\\.", "/"), repositoryFormat));
-    while (isNotEmpty(paths) || isNotEmpty(futures)) {
-      while (isNotEmpty(paths)) {
-        FolderPath folderPath = paths.pop();
-        String node = folderPath.getNode();
-        if (folderPath.isFolder()) {
-          traverseInParallel(nexusThreeRestClient, nexusConfig, repoId, node, futures, paths, repositoryFormat);
-        } else {
-          // Extract artifact id from path
-          String[] pathElems = folderPath.getNode().split("/");
-          if (pathElems.length - 2 >= 0) {
-            artifactIds.add(pathElems[pathElems.length - 2]);
-          }
-        }
-      }
-      while (!futures.isEmpty() && futures.peek().isDone()) {
-        futures.poll().get();
-      }
-      quietSleep(ofMillis(20)); // avoid busy wait
-    }
-    return artifactIds;
-  }
-
-  private List<String> fetchPackageNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, List<String> packageNames, String repositoryFormat) {
-    NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
-    List<FolderPath> folderPaths = getFolderPaths(nexusThreeRestClient, nexusConfig, repoId, "/", repositoryFormat);
-    for (FolderPath folderPath : folderPaths) {
-      packageNames.add(folderPath.getNode());
-    }
-    return packageNames;
   }
 
   public List<String> getGroupIds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,

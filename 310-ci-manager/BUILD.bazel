@@ -7,12 +7,12 @@ HarnessTeam = "CI"
 shared_dependencies = [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
+    "//870-cg-orchestration:module",
     "//940-primary-version-manager:module",
     "//950-common-entities:module",
     "//955-delegate-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
-    "//400-rest:module",
     "//product/ci/engine/proto:ciengine_java_proto",
     "//product/ci/scm/proto:ciscm_java_proto",
     "@jira_client//jar",

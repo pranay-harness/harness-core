@@ -32,6 +32,8 @@ import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
+import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
+import io.harness.cdng.service.dashboard.CDOverviewDashboardServiceImpl;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -60,8 +62,8 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
-import io.harness.ng.accesscontrol.user.UserService;
-import io.harness.ng.accesscontrol.user.UserServiceImpl;
+import io.harness.ng.accesscontrol.user.AggregateUserService;
+import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
@@ -133,6 +135,9 @@ import io.harness.signup.SignupModule;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
@@ -279,6 +284,19 @@ public class NextGenModule extends AbstractModule {
       }
     });
 
+    bind(CDOverviewDashboardService.class).to(CDOverviewDashboardServiceImpl.class);
+
+    try {
+      bind(TimeScaleDBService.class)
+          .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
+    } catch (NoSuchMethodException e) {
+      log.error("TimeScaleDbServiceImpl Initialization Failed in due to missing constructor", e);
+    }
+    bind(TimeScaleDBConfig.class)
+        .annotatedWith(Names.named("TimeScaleDBConfig"))
+        .toInstance(appConfig.getTimeScaleDBConfig() != null ? appConfig.getTimeScaleDBConfig()
+                                                             : TimeScaleDBConfig.builder().build());
+
     /*
     [secondary-db]: To use another DB, uncomment this and add @Named("primaryMongoConfig") to the above one
 
@@ -402,7 +420,7 @@ public class NextGenModule extends AbstractModule {
       }
     });
     install(LicenseModule.getInstance());
-    bind(UserService.class).to(UserServiceImpl.class);
+    bind(AggregateUserService.class).to(AggregateUserServiceImpl.class);
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);

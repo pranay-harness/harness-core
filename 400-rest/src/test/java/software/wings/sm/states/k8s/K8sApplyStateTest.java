@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.k8s.K8sTaskType.APPLY;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -27,6 +29,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
@@ -65,6 +69,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
 public class K8sApplyStateTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
   private static final String FILE_PATHS = "abc/xyz";
@@ -109,14 +115,14 @@ public class K8sApplyStateTest extends WingsBaseTest {
         .when(k8sApplyState)
         .createDelegateManifestConfig(any(), any());
     doReturn(emptyList()).when(k8sApplyState).fetchRenderedValuesFiles(any(), any());
-    doReturn(ExecutionResponse.builder().build()).when(k8sApplyState).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sApplyState).queueK8sDelegateTask(any(), any(), any());
     doNothing().when(k8sApplyState).storePreviousHelmDeploymentInfo(any(), any());
 
     k8sApplyState.executeK8sTask(context, ACTIVITY_ID);
 
     ArgumentCaptor<K8sTaskParameters> k8sApplyTaskParamsArgumentCaptor =
         ArgumentCaptor.forClass(K8sTaskParameters.class);
-    verify(k8sApplyState, times(1)).queueK8sDelegateTask(any(), k8sApplyTaskParamsArgumentCaptor.capture());
+    verify(k8sApplyState, times(1)).queueK8sDelegateTask(any(), k8sApplyTaskParamsArgumentCaptor.capture(), any());
     K8sApplyTaskParameters taskParams = (K8sApplyTaskParameters) k8sApplyTaskParamsArgumentCaptor.getValue();
 
     assertThat(taskParams.getReleaseName()).isEqualTo(RELEASE_NAME);

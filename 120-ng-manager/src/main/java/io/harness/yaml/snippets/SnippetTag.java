@@ -40,5 +40,6 @@ public enum SnippetTag implements YamlSnippetTags {
   cek8s,
   codecommit,
   httphelmrepo,
-  newrelic
+  newrelic,
+  gcpcloudcost
 }

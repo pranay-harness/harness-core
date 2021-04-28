@@ -104,7 +104,7 @@ public class CfMigrationService {
         if (!cfFeatures.contains(featureName.name())) {
           try {
             cfAdminApi.createFeatureFlag(
-                cfAccount, cfOrg, createCFFeatureFlag(featureName.name(), featureName.getScope()));
+                cfAccount, cfOrg, createCFFeatureFlag(featureName.name(), featureName.getScope(), cfProject));
             Feature feature = cfAdminApi.getFeatureFlag(featureName.name(), cfAccount, cfOrg, cfProject, cfEnvironment);
             featureMap.put(featureName.name(), feature);
             log.info("CF-SYNC Created featureFlag [{}] in CF", featureName);
@@ -267,9 +267,9 @@ public class CfMigrationService {
   }
 
   @NotNull
-  private InlineObject createCFFeatureFlag(String featureName, Scope scope) {
+  private InlineObject createCFFeatureFlag(String featureName, Scope scope, String project) {
     InlineObject inlineObject = new InlineObject();
-    inlineObject.setProject("project1");
+    inlineObject.setProject(project);
     inlineObject.setIdentifier(featureName);
     inlineObject.setName(featureName);
     inlineObject.setKind(KindEnum.BOOLEAN);
