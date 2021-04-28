@@ -1,4 +1,4 @@
-Var validateQuery = "api/v1/label/__name__/values"
+Var validateQuery = concat("api/v1/label/", Env:labelName, "/values")
 Var fullQuery = concat(Env:baseUrl, Var:validateQuery)
 Var result = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
 print Var:fullQuery

@@ -5,7 +5,11 @@ import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnect
 
 import java.util.Collections;
 import java.util.Map;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
+@NoArgsConstructor
+@SuperBuilder
 public abstract class PrometheusRequest extends DataCollectionRequest<PrometheusConnectorDTO> {
   @Override
   public String getBaseUrl() {

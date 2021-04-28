@@ -16,11 +16,11 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @OwnedBy(CV)
 public class PrometheusLabelNamesFetchRequest extends PrometheusRequest {
-  public static final String DSL = StackdriverDashboardRequest.readDSL(
-      "prometheus-metric-list.datacollection", PrometheusMetricListFetchRequest.class);
+  public static final String DSL = PrometheusLabelNamesFetchRequest.readDSL(
+      "prometheus-label-names.datacollection", PrometheusLabelNamesFetchRequest.class);
 
   @Override
   public String getDSL() {
-    return null;
+    return DSL;
   }
 }

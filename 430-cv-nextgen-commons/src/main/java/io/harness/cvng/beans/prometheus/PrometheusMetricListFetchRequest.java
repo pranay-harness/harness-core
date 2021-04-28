@@ -3,7 +3,6 @@ package io.harness.cvng.beans.prometheus;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
@@ -16,11 +15,11 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @OwnedBy(CV)
 public class PrometheusMetricListFetchRequest extends PrometheusRequest {
-  public static final String DSL = StackdriverDashboardRequest.readDSL(
+  public static final String DSL = PrometheusMetricListFetchRequest.readDSL(
       "prometheus-metric-list.datacollection", PrometheusMetricListFetchRequest.class);
 
   @Override
   public String getDSL() {
-    return null;
+    return DSL;
   }
 }

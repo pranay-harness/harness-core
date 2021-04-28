@@ -1,9 +1,21 @@
 package io.harness.cvng.core.services.impl;
 
+import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.beans.DataCollectionRequestType;
+import io.harness.cvng.beans.newrelic.NewRelicApplication;
+import io.harness.cvng.beans.prometheus.PrometheusLabelNamesFetchRequest;
+import io.harness.cvng.beans.prometheus.PrometheusLabelValuesFetchRequest;
+import io.harness.cvng.beans.prometheus.PrometheusMetricListFetchRequest;
+import io.harness.cvng.core.beans.OnboardingRequestDTO;
+import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.PrometheusService;
+import io.harness.serializer.JsonUtils;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
+import java.lang.reflect.Type;
 import java.util.List;
 
 public class PrometheusServiceImpl implements PrometheusService {
@@ -11,18 +23,62 @@ public class PrometheusServiceImpl implements PrometheusService {
   @Override
   public List<String> getMetricNames(
       String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String tracingId) {
-    return null;
+    DataCollectionRequest request =
+        PrometheusMetricListFetchRequest.builder().type(DataCollectionRequestType.PROMETHEUS_METRIC_LIST_GET).build();
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<String>>() {}.getType();
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
   }
 
   @Override
   public List<String> getLabelNames(
       String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String tracingId) {
-    return null;
+    DataCollectionRequest request =
+        PrometheusLabelNamesFetchRequest.builder().type(DataCollectionRequestType.PROMETHEUS_LABEL_NAMES_GET).build();
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<String>>() {}.getType();
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
   }
 
   @Override
   public List<String> getLabelValues(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, String labelName, String tracingId) {
-    return null;
+    DataCollectionRequest request = PrometheusLabelValuesFetchRequest.builder()
+                                        .type(DataCollectionRequestType.PROMETHEUS_LABEL_VALUES_GET)
+                                        .labelName(labelName)
+                                        .build();
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<String>>() {}.getType();
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
   }
 }
