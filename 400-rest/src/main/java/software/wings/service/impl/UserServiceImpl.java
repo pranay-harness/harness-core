@@ -2455,12 +2455,12 @@ public class UserServiceImpl implements UserService {
             accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
         accessRequestList.forEach(accessRequest -> {
           if (accessRequest.getAccessType().equals(AccessRequest.AccessType.MEMBER_ACCESS)) {
-            if (accessRequest.getMemberIds().contains(user.getUuid())) {
+            if (accessRequest.getMemberIds() != null && accessRequest.getMemberIds().contains(user.getUuid())) {
               accountList.add(accountService.get(restrictedAccountId));
             }
           } else {
             HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequest.getHarnessUserGroupId());
-            if (harnessUserGroup.getMemberIds().contains(user.getUuid())) {
+            if (harnessUserGroup != null && harnessUserGroup.getMemberIds().contains(user.getUuid())) {
               accountList.add(accountService.get(restrictedAccountId));
             }
           }

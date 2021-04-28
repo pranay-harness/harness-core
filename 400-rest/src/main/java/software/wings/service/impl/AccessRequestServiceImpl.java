@@ -79,6 +79,9 @@ public class AccessRequestServiceImpl implements AccessRequestService {
                                       .accessActive(true)
                                       .build();
     if (isEmpty(accessRequestDTO.getEmailIds()) && isNotEmpty(accessRequestDTO.getHarnessUserGroupId())) {
+      HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequestDTO.getHarnessUserGroupId());
+      notNullCheck("Harness User Group id with harnessUserGroupId: " + accessRequestDTO.getHarnessUserGroupId(),
+          harnessUserGroup);
       accessRequest.setHarnessUserGroupId(accessRequestDTO.getHarnessUserGroupId());
       accessRequest.setAccessType(AccessRequest.AccessType.GROUP_ACCESS);
     } else {
