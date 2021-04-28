@@ -2,13 +2,16 @@ package io.harness.migration.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.migration.MigrationDetails;
 import io.harness.migration.MigrationProvider;
@@ -43,8 +46,10 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
   @Mock ExecutorService executorService;
   @Mock PersistentLocker persistentLocker;
   @Mock TimeLimiter timeLimiter;
+  @Mock private AcquiredLock acquiredLock;
   @Inject MongoTemplate mongoTemplate;
   NGMigrationServiceImpl ngMigrationService;
+
   @Before
   public void setup() {
     initMocks(this);
@@ -55,7 +60,13 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
   @Test
   @Owner(developers = OwnerRule.MEENAKSHI)
   @Category(UnitTests.class)
-  public void testRunMigrationMethod() {
+  public void testRunMigrationWhenSchemaIsNull() {
+    when(injector.getInstance(TestMigrationProviderClass.class)).thenReturn(new TestMigrationProviderClass());
+    when(injector.getInstance(TestMigrationDetailsClass.class)).thenReturn(new TestMigrationDetailsClass());
+    when(injector.getInstance(TestNGMigrationClass.class)).thenReturn(new TestNGMigrationClass());
+    AcquiredLock acquiredLock = mock(AcquiredLock.class);
+    when(persistentLocker.waitToAcquireLock(NGSchema.class, "ngschemaCORE", ofMinutes(25), ofMinutes(27)))
+        .thenReturn(acquiredLock);
     NGMigrationConfiguration config = NGMigrationConfiguration.builder()
                                           .microservice(Microservice.CORE)
                                           .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
@@ -63,6 +74,8 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
                                           })
                                           .build();
     ngMigrationService.runMigrations(config);
+    NGSchema ngSchema = mongoTemplate.findOne(new Query(), NGSchema.class, "schema_ngcore");
+    assertThat(ngSchema.getMigrationDetails().get(MigrationType.MongoMigration)).isEqualTo(1);
   }
 
   @Test
@@ -79,7 +92,11 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
 
     mongoTemplate.save(ngSchema, "ngschema");
     Map<Integer, Class<? extends NGMigration>> migrations = new HashMap<Integer, Class<? extends NGMigration>>() {
-      { put(2, TestNGMigrationClass.class); };
+      {
+        put(2, TestNGMigrationClass.class);
+      }
+
+      ;
     };
     ngMigrationService.doMigration(false, 1, 2, migrations, MigrationType.MongoMigration, "ngschema", "ngschema");
     NGSchema ngchema2 = mongoTemplate.findOne(new Query(), NGSchema.class, "ngschema");
@@ -101,7 +118,11 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
 
     mongoTemplate.save(ngSchema, "ngschema");
     Map<Integer, Class<? extends NGMigration>> migrations = new HashMap<Integer, Class<? extends NGMigration>>() {
-      { put(1, TestNGMigrationClass.class); };
+      {
+        put(1, TestNGMigrationClass.class);
+      }
+
+      ;
     };
     ngMigrationService.doMigration(false, 0, 1, migrations, MigrationType.TimeScaleMigration, "ngschema", "ngschema");
     NGSchema ngchema2 = mongoTemplate.findOne(new Query(), NGSchema.class, "ngschema");
@@ -112,7 +133,7 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
   public static class TestMigrationProviderClass implements MigrationProvider {
     @Override
     public String getServiceName() {
-      return "ng";
+      return "ngcore";
     }
 
     @Override
@@ -137,10 +158,11 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
     @Override
     public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
       return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
-          .add(Pair.of(2, TestNGMigrationClass.class))
+          .add(Pair.of(1, TestNGMigrationClass.class))
           .build();
     }
   }
+
   public static class TestNGMigrationClass implements NGMigration {
     @Override
     public void migrate() {

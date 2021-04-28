@@ -111,11 +111,10 @@ public class NGMigrationServiceImpl implements NGMigrationService {
       String serviceName, Microservice microservice) throws Exception {
     if (currentVersion < maxVersion) {
       if (isBackground) {
-        runForegroundMigrations(currentVersion, maxVersion, migrations, migrationDetail, collectionName, serviceName);
-
-      } else {
         runBackgroundMigrations(
             currentVersion, maxVersion, migrations, migrationDetail, collectionName, serviceName, microservice);
+      } else {
+        runForegroundMigrations(currentVersion, maxVersion, migrations, migrationDetail, collectionName, serviceName);
       }
     } else if (currentVersion > maxVersion) {
       // If the current version is bigger than the max version we are downgrading. Restore to the previous version
