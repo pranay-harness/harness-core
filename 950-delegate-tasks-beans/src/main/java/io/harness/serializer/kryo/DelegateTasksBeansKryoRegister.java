@@ -162,6 +162,7 @@ import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -639,6 +640,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(OpenshiftManifestDelegateConfig.class, 19701);
     kryo.register(S3HelmStoreDelegateConfig.class, 19702);
     kryo.register(GcsHelmStoreDelegateConfig.class, 19703);
+    kryo.register(TaskNGDataException.class, 19704);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);

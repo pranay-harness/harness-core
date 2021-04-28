@@ -201,7 +201,7 @@ public class K8sRollingBaseHandlerTest extends CategoryTest {
         KubernetesResource.builder().resourceId(sample).build());
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
 
-    k8sRollingBaseHandler.getExistingPods(3000L, managedWorkload, kubernetesConfig, "releaseName", logCallback);
+    k8sRollingBaseHandler.getExistingPods(3000L, managedWorkload, kubernetesConfig, "releaseName", logCallback, false);
 
     verify(k8sTaskHelperBase, times(1)).getPodDetails(kubernetesConfig, "default", "releaseName", 3000L);
     verify(logCallback, times(1)).saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
@@ -221,7 +221,7 @@ public class K8sRollingBaseHandlerTest extends CategoryTest {
 
     assertThatThrownBy(()
                            -> k8sRollingBaseHandler.getExistingPods(
-                               3000L, managedWorkload, kubernetesConfig, "releaseName", logCallback))
+                               3000L, managedWorkload, kubernetesConfig, "releaseName", logCallback, true))
         .isEqualTo(thrownException);
 
     verify(logCallback, times(1)).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);

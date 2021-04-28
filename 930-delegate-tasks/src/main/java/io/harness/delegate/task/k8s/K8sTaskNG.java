@@ -22,6 +22,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -129,7 +130,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
         if (k8sRequestHandler.isErrorFrameworkSupported()) {
           k8sRequestHandler.handleTaskFailure(k8sDeployRequest, ex);
-          throw ex;
+          throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), ex);
         }
 
         return K8sDeployResponse.builder()

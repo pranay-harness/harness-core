@@ -40,6 +40,7 @@ import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.exception.ExceptionUtils;
@@ -232,7 +233,10 @@ public class K8sTaskNGTest extends CategoryTest {
         .executeTask(eq(k8sDeployRequest), any(K8sDelegateTaskParams.class), eq(logStreamingTaskClient),
             eq(emptyCommandUnitsProgress));
 
-    assertThatThrownBy(() -> k8sTaskNG.run(k8sDeployRequest)).isSameAs(thrownException);
+    assertThatThrownBy(() -> k8sTaskNG.run(k8sDeployRequest))
+        .isInstanceOf(TaskNGDataException.class)
+        .getCause()
+        .isSameAs(thrownException);
 
     verify(rollingRequestHandler)
         .executeTask(eq(k8sDeployRequest), any(K8sDelegateTaskParams.class), eq(logStreamingTaskClient),

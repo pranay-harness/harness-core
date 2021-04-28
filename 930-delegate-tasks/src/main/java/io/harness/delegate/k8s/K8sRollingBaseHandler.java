@@ -149,13 +149,16 @@ public class K8sRollingBaseHandler {
   }
 
   public List<K8sPod> getExistingPods(long timeoutInMillis, List<KubernetesResource> managedWorkloads,
-      KubernetesConfig kubernetesConfig, String releaseName, LogCallback logCallback) throws Exception {
+      KubernetesConfig kubernetesConfig, String releaseName, LogCallback logCallback, boolean denoteOverallFailure)
+      throws Exception {
     List<K8sPod> existingPodList;
     try {
       logCallback.saveExecutionLog("\nFetching existing pod list.");
       existingPodList = getPods(timeoutInMillis, managedWorkloads, kubernetesConfig, releaseName);
     } catch (Exception e) {
-      logCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      if (denoteOverallFailure) {
+        logCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      }
       throw e;
     }
 

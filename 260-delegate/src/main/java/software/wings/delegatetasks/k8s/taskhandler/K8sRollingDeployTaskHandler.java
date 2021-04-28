@@ -131,7 +131,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     List<KubernetesResource> allWorkloads = ListUtils.union(managedWorkloads, customWorkloads);
     List<K8sPod> existingPodList = k8sRollingBaseHandler.getExistingPods(
-        steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName, prepareLogCallback);
+        steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName, prepareLogCallback, true);
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply), true);
