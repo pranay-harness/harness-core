@@ -43,13 +43,13 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.ExecuteStepRequest;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.steps.StepUtils;
+import io.harness.steps.executable.AsyncExecutableWithRbac;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.timeout.Timeout;
 
@@ -63,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CI)
-public abstract class AbstractStepExecutable implements AsyncExecutable<StepElementParameters> {
+public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<StepElementParameters> {
   public static final String CI_EXECUTE_STEP = "CI_EXECUTE_STEP";
   public static final long bufferTimeMillis =
       5 * 1000; // These additional 5 seconds are approx time spent on creating delegate ask and receiving response
@@ -84,7 +84,12 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<StepElem
   }
 
   @Override
-  public AsyncExecutableResponse executeAsync(
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // No validation is require, all connectors will be validated in Lite Engine Step
+  }
+
+  @Override
+  public AsyncExecutableResponse executeAsyncAfterRbac(
       Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
     String runtimeId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     String logKey = getLogKey(ambiance);
