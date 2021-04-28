@@ -18,8 +18,9 @@ import retrofit2.http.Query;
 public interface AccountClient {
   String ACCOUNT_API = "ng/accounts";
   String FEATURE_FLAG_CHECK_API = "ng/accounts/feature-flag-enabled";
-  String ACCOUNT_BASEURL = "ng/accounts/baseUrl";
+  String ACCOUNT_BASEURL_API = "ng/accounts/baseUrl";
   String ACCOUNT_EXISTS = "ng/accounts/exists";
+  String ACCOUNT_ADMIN_API = ACCOUNT_API + "/account-admins";
 
   @POST(ACCOUNT_API) Call<RestResponse<AccountDTO>> create(@Body AccountDTO dto);
 
@@ -31,7 +32,9 @@ public interface AccountClient {
   Call<RestResponse<Boolean>> isFeatureFlagEnabled(
       @Query("featureName") String featureName, @Query("accountId") String accountId);
 
-  @GET(ACCOUNT_BASEURL) Call<RestResponse<String>> getBaseUrl(@Query("accountId") String accountId);
+  @GET(ACCOUNT_BASEURL_API) Call<RestResponse<String>> getBaseUrl(@Query("accountId") String accountId);
+
+  @GET(ACCOUNT_ADMIN_API) Call<RestResponse<List<String>>> getAccountAdmins(@Query("accountId") String accountId);
 
   @GET(ACCOUNT_EXISTS + "/{accountName}")
   Call<RestResponse<Boolean>> doesAccountExist(@Path("accountName") String accountName);

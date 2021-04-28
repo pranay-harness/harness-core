@@ -2,6 +2,7 @@ package io.harness.ng.core.user.service.impl;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -18,7 +19,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.events.UserMembershipAddEvent;
@@ -30,6 +30,7 @@ import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.Scope;
 import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
@@ -68,18 +69,15 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Singleton
 @Slf4j
 @OwnedBy(PL)
-public class NgUserServiceImpl implements io.harness.ng.core.user.service.NgUserService {
+public class NgUserServiceImpl implements NgUserService {
   public static final String ACCOUNT_VIEWER = "_account_viewer";
   public static final String ORGANIZATION_VIEWER = "_organization_viewer";
-  public static final String PROJECT_VIEWER = "_project_viewer";
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
-  private static final int DEFAULT_PAGE_SIZE = 1000;
   private final UserClient userClient;
   private final UserMembershipRepository userMembershipRepository;
   private final AccessControlAdminClient accessControlAdminClient;
   private final TransactionTemplate transactionTemplate;
   private final OutboxService outboxService;
-  private final UserGroupService userGroupService;
 
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
@@ -87,14 +85,12 @@ public class NgUserServiceImpl implements io.harness.ng.core.user.service.NgUser
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
       AccessControlAdminClient accessControlAdminClient,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
-      UserGroupService userGroupService) {
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService) {
     this.userClient = userClient;
     this.userMembershipRepository = userMembershipRepository;
     this.accessControlAdminClient = accessControlAdminClient;
     this.transactionTemplate = transactionTemplate;
     this.outboxService = outboxService;
-    this.userGroupService = userGroupService;
   }
 
   @Override
@@ -214,19 +210,20 @@ public class NgUserServiceImpl implements io.harness.ng.core.user.service.NgUser
     Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
     UserMembership userMembership = userMembershipOptional.orElseGet(
         () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
-    if (!userMembership.getScopes().contains(scope)) {
+    boolean userAlreadyAdded = userMembership.getScopes().contains(scope);
+    if (!userAlreadyAdded) {
       userMembership.getScopes().add(scope);
+      UserMembership finalUserMembership = userMembership;
+      userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
+        outboxService.save(new UserMembershipAddEvent(scope.getAccountIdentifier(), scope, emailId, userId, mechanism));
+        return updatedUserMembership;
+      }));
       //    Adding user to the account for signin flow to work
       addUserToAccount(userId, scope);
-    }
-    UserMembership finalUserMembership = userMembership;
-    userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-      UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
-      outboxService.save(new UserMembershipAddEvent(scope.getAccountIdentifier(), scope, emailId, userId, mechanism));
-      return updatedUserMembership;
-    }));
-    if (addUserToParentScope) {
-      addUserToParentScope(userMembership, userId, scope, mechanism);
+      if (addUserToParentScope) {
+        addUserToParentScope(userMembership, userId, scope, mechanism);
+      }
     }
   }
 
@@ -318,10 +315,7 @@ public class NgUserServiceImpl implements io.harness.ng.core.user.service.NgUser
   @Override
   public boolean isUserAtScope(String userId, Scope scope) {
     Optional<UserMembership> userMembershipOpt = getUserMembership(userId);
-    if (!userMembershipOpt.isPresent()) {
-      return false;
-    }
-    return userMembershipOpt.get().getScopes().contains(scope);
+    return userMembershipOpt.map(userMembership -> userMembership.getScopes().contains(scope)).orElse(false);
   }
 
   @Override
@@ -331,7 +325,7 @@ public class NgUserServiceImpl implements io.harness.ng.core.user.service.NgUser
       return false;
     }
     UserMembership userMembership = userMembershipOptional.get();
-    if (isUserPartOfChildScope(userMembership, scope)) {
+    if (!UserMembershipUpdateMechanism.SYSTEM.equals(mechanism) && isUserPartOfChildScope(userMembership, scope)) {
       throw new InvalidRequestException(getDeleteUserErrorMessage(scope));
     }
     List<Scope> scopes = userMembership.getScopes();
@@ -351,6 +345,32 @@ public class NgUserServiceImpl implements io.harness.ng.core.user.service.NgUser
     if (isUserRemovedFromAccount) {
       RestClientUtils.getResponse(userClient.safeDeleteUser(userId, scope.getAccountIdentifier()));
     }
+    return true;
+  }
+
+  @Override
+  public boolean removeUserFromAccount(String userId, String accountIdentifier) {
+    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
+    if (!userMembershipOptional.isPresent()) {
+      return true;
+    }
+    UserMembership userMembership = userMembershipOptional.get();
+    List<Scope> scopesInsideAccount = userMembership.getScopes()
+                                          .stream()
+                                          .filter(scope -> accountIdentifier.equals(scope.getAccountIdentifier()))
+                                          .collect(Collectors.toList());
+    scopesInsideAccount.forEach(scope -> { removeUserFromScope(userId, scope, SYSTEM); });
+    return true;
+  }
+
+  @Override
+  public boolean removeUser(String userId) {
+    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
+    if (!userMembershipOptional.isPresent()) {
+      return true;
+    }
+    List<Scope> scopes = userMembershipOptional.get().getScopes();
+    scopes.forEach(scope -> { removeUserFromScope(userId, scope, SYSTEM); });
     return true;
   }
 

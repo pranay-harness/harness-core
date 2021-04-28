@@ -144,7 +144,7 @@ public class UserGroupResource {
     return ResponseDTO.newResponse(getNGPageResponse(page));
   }
 
-  @POST
+  @GET
   @Path("{identifier}/users")
   @ApiOperation(value = "List users in a usergroup", nickname = "getUsersInUserGroup")
   public ResponseDTO<PageResponse<UserInfo>> getUsersInUserGroup(
