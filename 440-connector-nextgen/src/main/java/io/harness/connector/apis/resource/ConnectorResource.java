@@ -3,7 +3,6 @@ package io.harness.connector.apis.resource;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.DELETE_CONNECTOR_PERMISSION;
 import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.EDIT_CONNECTOR_PERMISSION;
-import static io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions.VIEW_CONNECTOR_PERMISSION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -106,7 +105,7 @@ public class ConnectorResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get Connector", nickname = "getConnector")
-  @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = VIEW_CONNECTOR_PERMISSION)
+  //  @NGAccessControlCheck(resourceType = ResourceTypes.CONNECTOR, permission = VIEW_CONNECTOR_PERMISSION)
   public ResponseDTO<ConnectorResponseDTO> get(
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @OrgIdentifier @QueryParam(
@@ -151,8 +150,9 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(NGResourceFilterConstants.TYPE_KEY) ConnectorType type,
       @QueryParam(CATEGORY_KEY) ConnectorCategory category) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
+    //    projectIdentifier),
+    //        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
   }
@@ -170,8 +170,9 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
       @Body ConnectorFilterPropertiesDTO connectorListFilter, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
+    //    projectIdentifier),
+    //        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
             projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
@@ -280,8 +281,9 @@ public class ConnectorResource {
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
+    //    projectIdentifier),
+    //        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         connectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier));
   }
