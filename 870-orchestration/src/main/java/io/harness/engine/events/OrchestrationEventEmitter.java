@@ -60,13 +60,14 @@ public class OrchestrationEventEmitter {
 
   private void populateEventLog(OrchestrationEvent event) {
     if (event.getEventType() == OrchestrationEventType.NODE_EXECUTION_UPDATE
-        || event.getEventType() == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE) {
+        || event.getEventType() == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE
+        || event.getEventType() == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
       orchestrationEventLogRepository.save(
           OrchestrationEventLog.builder()
               .createdAt(System.currentTimeMillis())
               .event(event)
               .planExecutionId(event.getAmbiance().getPlanExecutionId())
-              .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(10)).toInstant()))
+              .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(14)).toInstant()))
               .build());
     }
   }

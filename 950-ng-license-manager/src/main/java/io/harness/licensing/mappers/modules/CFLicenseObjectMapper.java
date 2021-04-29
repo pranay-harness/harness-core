@@ -12,11 +12,21 @@ import io.harness.licensing.mappers.LicenseObjectMapper;
 public class CFLicenseObjectMapper implements LicenseObjectMapper {
   @Override
   public ModuleLicenseDTO toDTO(ModuleLicense moduleLicense) {
-    return CFModuleLicenseDTO.builder().build();
+    CFModuleLicense entity = (CFModuleLicense) moduleLicense;
+    return CFModuleLicenseDTO.builder()
+        .numberOfUsers(entity.getNumberOfUsers())
+        .numberOfClientMAUs(entity.getNumberOfClientMAUs())
+        .updateChannels(entity.getUpdateChannels())
+        .build();
   }
 
   @Override
   public ModuleLicense toEntity(ModuleLicenseDTO moduleLicenseDTO) {
-    return CFModuleLicense.builder().build();
+    CFModuleLicenseDTO dto = (CFModuleLicenseDTO) moduleLicenseDTO;
+    return CFModuleLicense.builder()
+        .numberOfClientMAUs(dto.getNumberOfClientMAUs())
+        .numberOfUsers(dto.getNumberOfUsers())
+        .updateChannels(dto.getUpdateChannels())
+        .build();
   }
 }

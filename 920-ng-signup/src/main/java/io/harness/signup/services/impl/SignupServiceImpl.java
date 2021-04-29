@@ -7,7 +7,6 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
-import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.dto.OrganizationDTO;
@@ -15,14 +14,14 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.signup.services.SignupService;
 import io.harness.signup.validator.SignupValidator;
 import io.harness.user.remote.UserClient;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
@@ -49,16 +48,27 @@ public class SignupServiceImpl implements SignupService {
     return createUser(dto, account);
   }
 
+  @Override
+  public UserInfo oAuthSignup(OAuthSignupDTO dto) {
+    signupValidator.validateEmail(dto.getEmail());
+
+    SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
+
+    AccountDTO account = accountService.createAccount(signupDTO);
+
+    createOrganization(account.getIdentifier());
+
+    return createOAuthUser(dto, account);
+  }
+
   private void createOrganization(String accountIdentifier) {
     OrganizationDTO dto =
         OrganizationDTO.builder().name("Default").identifier("default").description("Default Organization").build();
     organizationService.create(accountIdentifier, dto);
   }
 
-  private UserInfo createUser(SignupDTO signupDTO, AccountDTO account) throws UserAlreadyPresentException {
+  private UserInfo createUser(SignupDTO signupDTO, AccountDTO account) {
     String passwordHash = hashpw(signupDTO.getPassword(), BCrypt.gensalt());
-    List<AccountDTO> accountList = new ArrayList();
-    accountList.add(account);
 
     String name = account.getName();
 
@@ -68,11 +78,25 @@ public class SignupServiceImpl implements SignupService {
                                      .passwordHash(passwordHash)
                                      .accountName(account.getName())
                                      .companyName(account.getCompanyName())
-                                     .accounts(accountList)
+                                     .accounts(Arrays.asList(account))
                                      .emailVerified(false)
                                      .defaultAccountId(account.getIdentifier())
                                      .build();
 
     return RestClientUtils.getResponse(userClient.createNewUser(userRequest));
+  }
+
+  private UserInfo createOAuthUser(OAuthSignupDTO oAuthSignupDTO, AccountDTO account) {
+    UserRequestDTO userRequest = UserRequestDTO.builder()
+                                     .email(oAuthSignupDTO.getEmail())
+                                     .name(oAuthSignupDTO.getName())
+                                     .accountName(account.getName())
+                                     .companyName(account.getCompanyName())
+                                     .accounts(Arrays.asList(account))
+                                     .emailVerified(true)
+                                     .defaultAccountId(account.getIdentifier())
+                                     .build();
+
+    return RestClientUtils.getResponse(userClient.createNewOAuthUser(userRequest));
   }
 }

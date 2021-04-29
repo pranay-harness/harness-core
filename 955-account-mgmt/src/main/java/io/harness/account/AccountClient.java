@@ -3,6 +3,7 @@ package io.harness.account;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.rest.RestResponse;
 
@@ -11,6 +12,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -38,4 +40,8 @@ public interface AccountClient {
 
   @GET(ACCOUNT_EXISTS + "/{accountName}")
   Call<RestResponse<Boolean>> doesAccountExist(@Path("accountName") String accountName);
+
+  @PUT(ACCOUNT_API + "/{accountId}/default-experience")
+  Call<RestResponse<Boolean>> updateDefaultExperienceIfNull(
+      @Path("accountId") String accountId, @Query("defaultExperience") DefaultExperience defaultExperience);
 }

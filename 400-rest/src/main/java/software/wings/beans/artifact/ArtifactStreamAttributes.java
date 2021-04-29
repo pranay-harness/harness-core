@@ -2,7 +2,9 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -25,6 +27,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @Data
 @Builder(toBuilder = true)
 @ToString(exclude = {"serverSetting", "artifactServerEncryptedDataDetails", "enhancedGcrConnectivityCheckEnabled"})
@@ -79,7 +82,6 @@ public class ArtifactStreamAttributes implements ExecutionCapabilityDemander {
   private String azureResourceGroup;
   private String azureImageDefinition;
   private boolean dockerBasedDeployment;
-  private boolean supportForNexusGroupReposEnabled;
   // These fields are used only during artifact collection and cleanup.
   private boolean isCollection;
   private Set<String> savedBuildDetailsKeys;
