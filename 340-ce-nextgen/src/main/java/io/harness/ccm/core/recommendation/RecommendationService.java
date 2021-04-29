@@ -1,35 +1,31 @@
-package io.harness.ccm.query;
-
-import static io.harness.annotations.dev.HarnessTeam.CE;
+package io.harness.ccm.core.recommendation;
 
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.CPU_HISTOGRAM_FIRST_BUCKET_SIZE;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.HISTOGRAM_BUCKET_SIZE_GROWTH;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.MEMORY_HISTOGRAM_FIRST_BUCKET_SIZE;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.dto.ContainerHistogramDTO;
-import io.harness.ccm.utils.GraphQLUtils;
+import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
+import io.harness.ccm.dto.graphql.recommendation.ContainerHistogramDTO;
+import io.harness.ccm.dto.graphql.recommendation.ContainerHistogramDTO.HistogramExp;
+import io.harness.ccm.dto.graphql.recommendation.RecommendationItemDTO;
+import io.harness.ccm.dto.graphql.recommendation.ResourceType;
+import io.harness.ccm.dto.graphql.recommendation.WorkloadRecommendationDTO;
 import io.harness.histogram.Histogram;
 import io.harness.histogram.HistogramCheckpoint;
-import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
+import io.harness.timescaledb.tables.pojos.CeRecommendations;
 
+import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialHistogramAggragator;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram.PartialRecommendationHistogramKeys;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.leangen.graphql.annotations.GraphQLEnvironment;
-import io.leangen.graphql.annotations.GraphQLNonNull;
-import io.leangen.graphql.annotations.GraphQLQuery;
-import io.leangen.graphql.execution.ResolutionEnvironment;
-import java.sql.Date;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,52 +34,77 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
+import org.jooq.Condition;
 
-@Slf4j
 @Singleton
-@OwnedBy(CE)
-public class K8sWorkloadHistogramQuery {
-  @Inject private HPersistence hPersistence;
-  @Inject private GraphQLUtils graphQLUtils;
+public class RecommendationService {
+  @Inject private K8sRecommendationDAO k8sRecommendationDAO;
 
-  @GraphQLQuery(name = "workloadHistogram")
-  public List<ContainerHistogramDTO> getWorkloadHistogram(@Nullable String clusterId, @Nullable String namespace,
-      @Nullable String workloadName, @Nullable String workloadType, @GraphQLNonNull Date startDate,
-      @GraphQLNonNull Date endDate, @GraphQLEnvironment final ResolutionEnvironment env) {
-    final String accountIdentifier = graphQLUtils.getAccountIdentifier(env);
+  @NotNull
+  public RecommendationOverviewStats getStats(@NotNull String accountId, Condition condition) {
+    return k8sRecommendationDAO.fetchRecommendationsOverviewStats(accountId, condition);
+  }
 
-    Query<PartialRecommendationHistogram> query =
-        hPersistence.createQuery(PartialRecommendationHistogram.class)
-            .filter(PartialRecommendationHistogramKeys.accountId, accountIdentifier);
+  @NotNull
+  public List<RecommendationItemDTO> listAll(
+      @NotNull String accountId, Condition condition, @NotNull Long offset, @NotNull Long limit) {
+    final List<CeRecommendations> ceRecommendationsList =
+        k8sRecommendationDAO.fetchRecommendationsOverview(accountId, condition, offset, limit);
 
-    if (clusterId != null) {
-      query.filter(PartialRecommendationHistogramKeys.clusterId, clusterId);
+    return ceRecommendationsList.stream()
+        .map(ceRecommendations
+            -> RecommendationItemDTO.builder()
+                   .id(ceRecommendations.getId())
+                   .resourceName(ceRecommendations.getName())
+                   .clusterName(ceRecommendations.getClustername())
+                   .resourceType(ResourceType.valueOf(ceRecommendations.getResourcetype()))
+                   .monthlyCost(ceRecommendations.getMonthlycost())
+                   .monthlySaving(ceRecommendations.getMonthlysaving())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  @Nullable
+  public WorkloadRecommendationDTO getWorkloadRecommendationById(@NotNull String accountIdentifier, String id,
+      @NotNull OffsetDateTime startTime, @NotNull OffsetDateTime endTime) {
+    final Optional<K8sWorkloadRecommendation> workloadRecommendation =
+        k8sRecommendationDAO.fetchK8sWorkloadRecommendationById(accountIdentifier, id);
+
+    if (!workloadRecommendation.isPresent()) {
+      return WorkloadRecommendationDTO.builder().items(Collections.emptyList()).build();
     }
-    if (namespace != null) {
-      query.filter(PartialRecommendationHistogramKeys.namespace, namespace);
-    }
-    if (workloadName != null) {
-      query.filter(PartialRecommendationHistogramKeys.workloadName, workloadName);
-    }
-    if (workloadType != null) {
-      query.filter(PartialRecommendationHistogramKeys.workloadType, workloadType);
-    }
 
-    query.field(PartialRecommendationHistogramKeys.date)
-        .greaterThanOrEq(Instant.ofEpochMilli(startDate.getTime()))
-        .field(PartialRecommendationHistogramKeys.date)
-        .lessThanOrEq(Instant.ofEpochMilli(endDate.getTime()));
+    final List<PartialRecommendationHistogram> histogramList =
+        k8sRecommendationDAO.fetchPartialRecommendationHistograms(accountIdentifier,
+            constructResourceId(workloadRecommendation.get()), startTime.toInstant(), endTime.toInstant());
+    final List<ContainerHistogramDTO> containerHistogramList = mergeHistogram(histogramList);
 
+    return WorkloadRecommendationDTO.builder()
+        .containerRecommendations(workloadRecommendation.get().getContainerRecommendations())
+        .items(containerHistogramList)
+        .build();
+  }
+
+  private static ResourceId constructResourceId(K8sWorkloadRecommendation workloadRecommendation) {
+    return ResourceId.builder()
+        .accountId(workloadRecommendation.getAccountId())
+        .clusterId(workloadRecommendation.getClusterId())
+        .kind(workloadRecommendation.getWorkloadType())
+        .name(workloadRecommendation.getWorkloadName())
+        .namespace(workloadRecommendation.getNamespace())
+        .build();
+  }
+
+  @NotNull
+  private List<ContainerHistogramDTO> mergeHistogram(final List<PartialRecommendationHistogram> histogramList) {
     // find all partial histograms that match this query and merge them
-    Map<String, Histogram> cpuHistograms = new HashMap<>();
-    Map<String, Histogram> memoryHistograms = new HashMap<>();
-    try (HIterator<PartialRecommendationHistogram> partialRecommendationHistograms = new HIterator<>(query.fetch())) {
-      PartialHistogramAggragator.aggregateInto(partialRecommendationHistograms, cpuHistograms, memoryHistograms);
-    }
+    final Map<String, Histogram> cpuHistograms = new HashMap<>();
+    final Map<String, Histogram> memoryHistograms = new HashMap<>();
+    PartialHistogramAggragator.aggregateInto(histogramList, cpuHistograms, memoryHistograms);
+
     Set<String> containerNames = new HashSet<>(cpuHistograms.keySet());
     containerNames.retainAll(memoryHistograms.keySet());
 
@@ -91,7 +112,6 @@ public class K8sWorkloadHistogramQuery {
     return containerNames.stream()
         .map(containerName -> {
           Histogram memoryHistogram = memoryHistograms.get(containerName);
-          checkNotNull(memoryHistogram, "memoryHistogram is null");
           HistogramCheckpoint memoryHistogramCp = memoryHistogram.saveToCheckpoint();
           Histogram cpuHistogram = cpuHistograms.get(containerName);
           HistogramCheckpoint cpuHistogramCp = cpuHistogram.saveToCheckpoint();
@@ -103,7 +123,7 @@ public class K8sWorkloadHistogramQuery {
           StrippedHistogram cpuStripped = stripZeroes(cpuBucketWeights, CPU_HISTOGRAM_FIRST_BUCKET_SIZE);
           return ContainerHistogramDTO.builder()
               .containerName(containerName)
-              .memoryHistogram(ContainerHistogramDTO.HistogramExp.builder()
+              .memoryHistogram(HistogramExp.builder()
                                    .numBuckets(memStripped.getNumBuckets())
                                    .minBucket(memStripped.getMinBucket())
                                    .maxBucket(memStripped.getMaxBucket())
@@ -113,7 +133,7 @@ public class K8sWorkloadHistogramQuery {
                                    .precomputed(getPrecomputedPercentiles(memoryHistogram))
                                    .totalWeight(memoryHistogramCp.getTotalWeight())
                                    .build())
-              .cpuHistogram(ContainerHistogramDTO.HistogramExp.builder()
+              .cpuHistogram(HistogramExp.builder()
                                 .numBuckets(cpuStripped.getNumBuckets())
                                 .minBucket(cpuStripped.getMinBucket())
                                 .maxBucket(cpuStripped.getMaxBucket())

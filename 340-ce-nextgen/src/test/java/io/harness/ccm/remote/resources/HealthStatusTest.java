@@ -20,8 +20,8 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CE)
-public class CENextGenServiceResourceTest extends CategoryTest {
-  @InjectMocks CENextGenServiceResource ceNextGenServiceResource;
+public class HealthStatusTest extends CategoryTest {
+  @InjectMocks HealthStatus healthStatus;
 
   @Before
   public void setUp() throws Exception {
@@ -32,7 +32,7 @@ public class CENextGenServiceResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
   public void testBaseGetMethod() throws IOException {
-    ResponseDTO<Boolean> responseDTO = ceNextGenServiceResource.test();
+    ResponseDTO<Boolean> responseDTO = healthStatus.status();
     assertThat(responseDTO.getStatus()).isEqualTo(Status.SUCCESS);
     assertThat(responseDTO.getData()).isTrue();
   }

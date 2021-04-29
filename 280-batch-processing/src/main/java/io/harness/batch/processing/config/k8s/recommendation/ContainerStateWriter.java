@@ -1,7 +1,7 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
-import static io.harness.batch.processing.config.k8s.recommendation.ResourceId.NOT_FOUND;
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
+import static io.harness.ccm.commons.beans.recommendation.ResourceId.NOT_FOUND;
 import static io.harness.time.DurationUtils.truncate;
 
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.MEMORY_AGGREGATION_INTERVAL;
@@ -14,6 +14,7 @@ import static java.time.Duration.between;
 
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.ContainerStateProto;
