@@ -148,6 +148,7 @@ import software.wings.beans.DelegateTaskFactory;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.delegation.CommandParameters;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegatetasks.ActivityBasedLogSanitizer;
@@ -2027,6 +2028,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedVariable.getValue(), false)));
           }
         }
+      } else if (parameters[0] instanceof CommandParameters) {
+        // Command
+        CommandParameters commandParameters = (CommandParameters) parameters[0];
+        activityId = commandParameters.getActivityId();
+        secrets.addAll(secretsFromMaskedVariables(
+            commandParameters.getServiceVariables(), commandParameters.getSafeDisplayServiceVariables()));
       }
     } else {
       if (parameters.length >= 2 && parameters[0] instanceof Command

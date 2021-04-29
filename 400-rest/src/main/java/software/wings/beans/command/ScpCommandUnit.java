@@ -1,7 +1,9 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -14,11 +16,16 @@ import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFA
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -74,7 +81,9 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @JsonTypeName("SCP")
 @Slf4j
-public class ScpCommandUnit extends SshCommandUnit {
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+public class ScpCommandUnit extends SshCommandUnit implements NestedAnnotationResolver {
   private static final String ARTIFACT_STRING = "artifact/";
   private static final String PERIOD_DELIMITER = ".";
   @Inject @Transient private transient DelegateLogService delegateLogService;
@@ -89,7 +98,10 @@ public class ScpCommandUnit extends SshCommandUnit {
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
 
-  @Attributes(title = "Destination Path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
+  @Attributes(title = "Destination Path")
+  @DefaultValue("$WINGS_RUNTIME_PATH")
+  @Expression(ALLOW_SECRETS)
+  private String destinationDirectoryPath;
   private String artifactVariableName = ExpressionEvaluator.DEFAULT_ARTIFACT_VARIABLE_NAME;
 
   /**
