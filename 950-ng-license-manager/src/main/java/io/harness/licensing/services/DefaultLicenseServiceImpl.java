@@ -2,6 +2,7 @@ package io.harness.licensing.services;
 
 import static java.lang.String.format;
 
+import io.harness.account.services.AccountService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
@@ -13,6 +14,7 @@ import io.harness.licensing.beans.modules.StartTrialRequestDTO;
 import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
 import io.harness.licensing.mappers.LicenseObjectMapper;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.repositories.ModuleLicenseRepository;
 
 import com.google.inject.Inject;
@@ -31,6 +33,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   private final ModuleLicenseRepository moduleLicenseRepository;
   private final LicenseObjectMapper licenseObjectMapper;
   private final ModuleLicenseInterface licenseInterface;
+  private final AccountService accountService;
 
   @Override
   public ModuleLicenseDTO getModuleLicense(String accountIdentifier, ModuleType moduleType) {
@@ -123,6 +126,14 @@ public class DefaultLicenseServiceImpl implements LicenseService {
       throw new DuplicateFieldException(format("Trial license for moduleType [%s] already exists in account [%s]",
           startTrialRequestDTO.getModuleType(), accountIdentifier));
     }
+
+    updateDefaultExperienceIfNull(accountIdentifier, startTrialRequestDTO.getModuleType());
     return licenseObjectMapper.toDTO(savedEntity);
+  }
+
+  private void updateDefaultExperienceIfNull(String accountIdentifier, ModuleType moduleType) {
+    if (ModuleType.CI.equals(moduleType)) {
+      accountService.updateDefaultExperienceIfNull(accountIdentifier, DefaultExperience.NG);
+    }
   }
 }

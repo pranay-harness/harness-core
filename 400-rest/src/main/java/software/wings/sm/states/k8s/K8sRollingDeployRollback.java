@@ -51,6 +51,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -119,9 +120,12 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
                                                 .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
                                                 .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
                                                 .timeoutIntervalInMin(stateTimeoutInMinutes)
+                                                .delegateSelectors((k8sContextElement.getDelegateSelectors() == null)
+                                                        ? null
+                                                        : new HashSet<>(k8sContextElement.getDelegateSelectors()))
                                                 .build();
 
-      return queueK8sDelegateTask(context, k8sTaskParameters);
+      return queueK8sDelegateTask(context, k8sTaskParameters, null);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {

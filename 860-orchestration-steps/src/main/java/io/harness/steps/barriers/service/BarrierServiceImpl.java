@@ -265,7 +265,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
                                 .metadata(ImmutableMap.of(LEVEL, STEP_GROUP, PLAN_EXECUTION_ID, planExecutionId))
                                 .children(Collections.singletonList(step))
                                 .build();
-                        boolean isStepGroupPresent = EmptyPredicate.isNotEmpty(stepGroup.getId().getValue());
+                        boolean isStepGroupPresent =
+                            EmptyPredicate.isNotEmpty(stepGroup.getId().getValue()) && !position.isStepGroupRollback();
                         return Forcer.builder()
                             .id(new ForcerId(position.getStageRuntimeId()))
                             .metadata(ImmutableMap.of(LEVEL, STAGE, PLAN_EXECUTION_ID, planExecutionId))

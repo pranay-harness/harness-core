@@ -23,7 +23,7 @@ public final class EventsFrameworkMetadataConstants {
   public static final String ORGANIZATION_ENTITY = "organization";
   public static final String CONNECTOR_ENTITY = "connector";
   public static final String SECRET_ENTITY = "secret";
-
+  public static final String USER_ENTITY = "user";
   public static final String PIPELINE_ENTITY = "pipeline";
 
   public static final String SERVICE_ENTITY = "service";

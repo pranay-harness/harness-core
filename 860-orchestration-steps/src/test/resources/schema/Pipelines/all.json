@@ -677,6 +677,12 @@
             "$ref": "#/definitions/NotificationRules"
           }
         },
+        "orgIdentifier": {
+          "type": "string"
+        },
+        "projectIdentifier": {
+          "type": "string"
+        },
         "properties": {
           "$ref": "#/definitions/NGProperties"
         },

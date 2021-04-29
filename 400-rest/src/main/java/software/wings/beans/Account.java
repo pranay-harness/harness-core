@@ -116,6 +116,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @Getter @Setter DefaultExperience defaultExperience;
 
+  @Getter @Setter boolean createdFromNG;
+
   /**
    * If this flag is set, all encryption/decryption activities will go through LOCAL security manager.
    * No VAULT/KMS secret manager can be configured. This helps for accounts whose delegate can't access
@@ -518,6 +520,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean isHarnessSupportAccessAllowed = true;
     private AccountPreferences accountPreferences;
     private DefaultExperience defaultExperience;
+    private boolean createdFromNG;
 
     private Builder() {}
 
@@ -537,6 +540,11 @@ public class Account extends Base implements PersistentRegularIterable {
 
     public Builder withDefaultExperience(DefaultExperience defaultExperience) {
       this.defaultExperience = defaultExperience;
+      return this;
+    }
+
+    public Builder withCreatedFromNG(boolean createdFromNG) {
+      this.createdFromNG = createdFromNG;
       return this;
     }
 
@@ -685,6 +693,7 @@ public class Account extends Base implements PersistentRegularIterable {
           .withSubdomainUrl(subdomainUrl)
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
           .withDefaultExperience(defaultExperience)
+          .withCreatedFromNG(createdFromNG)
           .withAccountPreferences(accountPreferences);
     }
 
@@ -716,6 +725,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
       account.setDefaultExperience(defaultExperience);
+      account.setCreatedFromNG(createdFromNG);
       account.setAccountPreferences(accountPreferences);
       return account;
     }

@@ -21,6 +21,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
+import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -41,6 +42,7 @@ import java.util.List;
       @JsonSubTypes.Type(value = SplunkConnectorDTO.class, name = "Splunk"),
       @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
       @JsonSubTypes.Type(value = NewRelicConnectorDTO.class, name = "NewRelic"),
+      @JsonSubTypes.Type(value = PrometheusConnectorDTO.class, name = "Prometheus"),
       @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
       @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
       @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),

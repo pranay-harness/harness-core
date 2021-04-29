@@ -62,6 +62,10 @@ public interface NgUserService {
 
   boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateMechanism mechanism);
 
+  boolean removeUserFromAccount(String userId, String accountIdentifier);
+
+  boolean removeUser(String userId);
+
   Set<String> filterUsersWithScopeMembership(List<String> userIds, String accountIdentifier,
       @Nullable String orgIdentifier, @Nullable String projectIdentifier);
 

@@ -2,6 +2,7 @@ package io.harness.ng.cdOverview.resources;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -72,5 +74,17 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getExecutionDeploymentDashboard(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
+  }
+
+  @GET
+  @Path("/getDeployments")
+  @ApiOperation(value = "Get deployments", nickname = "getDeployments")
+  public ResponseDTO<DashboardDeploymentActiveFailedRunningInfo> getDeployments(
+      @NotNull @QueryParam("accountId") String accountIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("top") @DefaultValue("20") long days) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentActiveFailedRunningInfo(
+        accountIdentifier, orgIdentifier, projectIdentifier, days));
   }
 }

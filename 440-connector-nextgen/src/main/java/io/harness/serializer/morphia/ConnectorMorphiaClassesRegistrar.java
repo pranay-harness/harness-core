@@ -67,6 +67,7 @@ import io.harness.connector.entities.embedded.localconnector.LocalConnector;
 import io.harness.connector.entities.embedded.newrelicconnector.NewRelicConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
+import io.harness.connector.entities.embedded.prometheusconnector.PrometheusConnector;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.morphia.MorphiaRegistrar;
@@ -103,6 +104,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(HttpHelmConnector.class);
     set.add(NewRelicConnector.class);
     set.add(GcpCloudCostConfig.class);
+    set.add(PrometheusConnector.class);
   }
 
   @Override

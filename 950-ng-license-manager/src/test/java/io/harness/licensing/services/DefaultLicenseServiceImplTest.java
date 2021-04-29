@@ -5,8 +5,11 @@ import static io.harness.rule.OwnerRule.ZHUO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.account.services.AccountService;
 import io.harness.category.element.UnitTests;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
@@ -21,6 +24,7 @@ import io.harness.licensing.entities.modules.CIModuleLicense;
 import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
 import io.harness.licensing.mappers.LicenseObjectMapper;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.repositories.ModuleLicenseRepository;
 import io.harness.rule.Owner;
 
@@ -37,6 +41,7 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
   @Mock ModuleLicenseRepository moduleLicenseRepository;
   @Mock ModuleLicenseInterface moduleLicenseInterface;
   @Mock LicenseObjectMapper licenseObjectMapper;
+  @Mock AccountService accountService;
   @InjectMocks DefaultLicenseServiceImpl licenseService;
 
   private ModuleLicenseDTO defaultModueLicenseDTO;
@@ -144,7 +149,7 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
     when(moduleLicenseInterface.createTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(DEFAULT_MODULE_TYPE)))
         .thenReturn(defaultModueLicenseDTO);
     ModuleLicenseDTO result = licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
-
+    verify(accountService, times(1)).updateDefaultExperienceIfNull(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
     assertThat(result).isEqualTo(defaultModueLicenseDTO);
   }
 }

@@ -9,6 +9,7 @@ import io.harness.exception.ArtifactoryServerException;
 import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GeneralException;
+import io.harness.exception.HttpResponseException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.ServiceNowException;
@@ -58,5 +59,6 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(SourcePrincipalContextData.class, 980003);
     kryo.register(Principal.class, 980004);
     kryo.register(PrincipalType.class, 980005);
+    kryo.register(HttpResponseException.class, 980006);
   }
 }

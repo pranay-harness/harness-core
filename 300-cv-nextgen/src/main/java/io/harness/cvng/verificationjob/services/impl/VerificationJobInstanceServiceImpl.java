@@ -199,7 +199,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   public List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob) {
     Preconditions.checkNotNull(verificationJob);
     List<String> monitoringSourceFilter = verificationJob.getMonitoringSources();
-    if (verificationJob.isDefaultJob()) {
+    if (verificationJob.isDefaultJob() || verificationJob.isAllMonitoringSourcesEnabled()) {
       monitoringSourceFilter = null;
     }
 

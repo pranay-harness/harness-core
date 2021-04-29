@@ -22,6 +22,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -57,6 +58,7 @@ import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -99,6 +101,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private DelegateService delegateService;
   @Mock private GitConfigHelperService gitConfigHelperService;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks TerraformRollbackState terraformRollbackState = new TerraformRollbackState("Rollback Terraform Test");
 
   @Before
@@ -124,6 +127,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
         .when(infrastructureProvisionerService)
         .extractEncryptedTextVariables(anyListOf(NameValuePair.class), anyString(), anyString());
     doAnswer(doReturnSameValue).when(executionContext).renderExpression(anyString());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   /**
@@ -192,6 +196,7 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     setUp("sourceRepoBranch", true, WORKFLOW_EXECUTION_ID);
     ExecutionResponse executionResponse = terraformRollbackState.executeInternal(executionContext, ACTIVITY_ID);
     verifyResponse(executionResponse, "sourceRepoBranch", true, 1, TerraformCommand.DESTROY);
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     // no variables, no backend configs, no source repo branch
     setUp(null, false, WORKFLOW_EXECUTION_ID);

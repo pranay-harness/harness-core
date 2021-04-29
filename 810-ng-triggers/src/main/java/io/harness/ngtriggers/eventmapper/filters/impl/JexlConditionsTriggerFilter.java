@@ -75,6 +75,8 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
 
     WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
     return WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
+        filterRequestData.getWebhookPayloadData().getParseWebhookResponse(),
+        filterRequestData.getWebhookPayloadData().getOriginalEvent().getHeaders(),
         filterRequestData.getWebhookPayloadData().getOriginalEvent().getPayload(), triggerSpec.getJexlCondition());
   }
 }
