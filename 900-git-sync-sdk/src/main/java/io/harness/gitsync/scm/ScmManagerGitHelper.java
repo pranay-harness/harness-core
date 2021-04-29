@@ -9,7 +9,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
-import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
@@ -57,20 +56,6 @@ public class ScmManagerGitHelper implements ScmGitHelper {
       default:
         throw new EnumConstantNotPresentException(changeType.getClass(), "Incorrect changeType");
     }
-  }
-
-  private ScmCreateFileResponse getBuild(String yaml, InfoForGitPush infoForPush) {
-    return ScmCreateFileResponse.builder()
-        .folderPath(infoForPush.getFolderPath())
-        .filePath(infoForPush.getFilePath())
-        .pushToDefaultBranch(infoForPush.isDefault())
-        .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-        .accountIdentifier(infoForPush.getAccountId())
-        .orgIdentifier(infoForPush.getOrgIdentifier())
-        .projectIdentifier(infoForPush.getProjectIdentifier())
-        .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-        .branch(infoForPush.getBranch())
-        .build();
   }
 
   private void createNewBranchInGit(InfoForGitPush infoForPush, GitEntityInfo gitBranchInfo) {
