@@ -26,6 +26,7 @@ import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.signup.SignupTestBase;
+import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.signup.services.impl.SignupServiceImpl;
 import io.harness.signup.validator.SignupValidator;
@@ -75,6 +76,29 @@ public class SignupServiceImplTest extends SignupTestBase {
 
     verify(organizationService, times(1)).create(eq(accountDTO.getIdentifier()), any(OrganizationDTO.class));
     verify(reCaptchaVerifier, times(1)).verifyInvisibleCaptcha(anyString());
+    assertThat(returnedUser.getEmail()).isEqualTo(newUser.getEmail());
+  }
+
+  @Test
+  @Owner(developers = NATHAN)
+  @Category(UnitTests.class)
+  public void testSignupOAuth() throws IOException {
+    String email = "test@test.com";
+    String name = "testName";
+    OAuthSignupDTO oAuthSignupDTO = OAuthSignupDTO.builder().email(email).name(name).build();
+    AccountDTO accountDTO = AccountDTO.builder().identifier("12345").build();
+    UserInfo newUser = UserInfo.builder().email(email).build();
+
+    doNothing().when(signupValidator).validateEmail(eq(email));
+    when(accountService.createAccount(any(SignupDTO.class))).thenReturn(accountDTO);
+
+    Call<RestResponse<UserInfo>> createUserCall = mock(Call.class);
+    when(createUserCall.execute()).thenReturn(Response.success(new RestResponse<>(newUser)));
+    when(userClient.createNewOAuthUser(any(UserRequestDTO.class))).thenReturn(createUserCall);
+
+    UserInfo returnedUser = signupServiceImpl.oAuthSignup(oAuthSignupDTO);
+
+    verify(organizationService, times(1)).create(eq(accountDTO.getIdentifier()), any(OrganizationDTO.class));
     assertThat(returnedUser.getEmail()).isEqualTo(newUser.getEmail());
   }
 }

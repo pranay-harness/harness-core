@@ -59,7 +59,8 @@ public class SignupResource {
    */
   @POST
   @Path("/oauth")
+  @PublicApi
   public RestResponse<UserInfo> signupOAuth(OAuthSignupDTO dto) {
-    return new RestResponse<>(UserInfo.builder().build());
+    return new RestResponse<>(signupService.oAuthSignup(dto));
   }
 }
