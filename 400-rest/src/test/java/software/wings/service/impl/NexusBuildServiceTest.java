@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -21,7 +23,6 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -29,6 +30,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -65,6 +68,8 @@ import org.mockito.Mock;
 /**
  * Created by srinivas on 4/1/17.
  */
+@OwnedBy(CDC)
+@TargetModule(_930_DELEGATE_TASKS)
 public class NexusBuildServiceTest extends WingsBaseTest {
   @Mock private NexusService nexusService;
 
@@ -136,8 +141,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
-    when(nexusService.getVersions(
-             nexusConfig, null, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME, null, null, false))
+    when(nexusService.getVersions(nexusConfig, null, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME, null, null))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("3.0").build(), aBuildDetails().withNumber("2.1.2").build()));
     List<BuildDetails> buildDetails = nexusBuildService.getBuilds(
@@ -276,26 +280,24 @@ public class NexusBuildServiceTest extends WingsBaseTest {
     ArtifactStreamAttributes attributes = ArtifactStreamAttributes.builder()
                                               .jobName("someJobName")
                                               .nexusPackageName("someNexusPackageName")
-                                              .supportForNexusGroupReposEnabled(true)
                                               .repositoryFormat(npm.name())
                                               .artifactStreamType(ArtifactStreamType.NEXUS.name())
                                               .build();
     nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
     verify(nexusService)
         .getVersions(eq(npm.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
-            eq("someNexusPackageName"), anyBoolean());
+            eq("someNexusPackageName"));
 
     attributes = ArtifactStreamAttributes.builder()
                      .jobName("someJobName")
                      .nexusPackageName("someNexusPackageName")
-                     .supportForNexusGroupReposEnabled(true)
                      .repositoryFormat(nuget.name())
                      .artifactStreamType(ArtifactStreamType.NEXUS.name())
                      .build();
     nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
     verify(nexusService)
         .getVersions(eq(npm.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
-            eq("someNexusPackageName"), anyBoolean());
+            eq("someNexusPackageName"));
   }
 
   @Test

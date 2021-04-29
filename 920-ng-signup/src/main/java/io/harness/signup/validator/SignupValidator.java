@@ -44,7 +44,7 @@ public class SignupValidator {
     validatePassword(dto.getPassword());
   }
 
-  private void validateEmail(String email) {
+  public void validateEmail(String email) {
     if (isBlank(email)) {
       throw new SignupException("Email cannot be empty.");
     }
