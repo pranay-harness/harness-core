@@ -78,12 +78,13 @@ public class ExceptionManager {
           log.error("Exception handler not registered for exception : ", exception);
           handledException = prepareUnhandledExceptionResponse(exception);
         }
+        WingsException cascadedException = handledException;
+        while (cascadedException.getCause() != null) {
+          // 3rd party exception can't be allowed as cause in already handled exception
+          cascadedException = (WingsException) cascadedException.getCause();
+        }
+        setExceptionStacktrace(cascadedException, exception.getStackTrace());
         if (exception.getCause() != null) {
-          WingsException cascadedException = handledException;
-          while (cascadedException.getCause() != null) {
-            // 3rd party exception can't be allowed as cause in already handled exception
-            cascadedException = (WingsException) cascadedException.getCause();
-          }
           setExceptionCause(cascadedException, handleException((Exception) exception.getCause()));
         }
       }
@@ -101,6 +102,12 @@ public class ExceptionManager {
 
   private void setExceptionCause(WingsException exception, Exception cause) throws IllegalAccessException {
     ReflectionUtils.setObjectField(ReflectionUtils.getFieldByName(exception.getClass(), "cause"), exception, cause);
+  }
+
+  private void setExceptionStacktrace(WingsException exception, StackTraceElement[] stackTraceElements)
+      throws IllegalAccessException {
+    ReflectionUtils.setObjectField(
+        ReflectionUtils.getFieldByName(exception.getClass(), "stackTrace"), exception, stackTraceElements);
   }
 
   private boolean isExceptionKryoRegistered(WingsException wingsException) {
