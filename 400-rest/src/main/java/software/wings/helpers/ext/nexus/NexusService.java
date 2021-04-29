@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.nexus;
 
-import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -20,8 +20,8 @@ import org.apache.commons.lang3.tuple.Pair;
 /**
  * Created by srinivas on 3/28/17.
  */
-@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public interface NexusService {
   /**
    * Get Repositories
@@ -99,12 +99,10 @@ public interface NexusService {
    * @return list of versions
    */
   List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String groupId, String artifactName, String extension, String classifier,
-      boolean supportForNexusGroupReposEnabled);
+      String groupId, String artifactName, String extension, String classifier);
 
   List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName,
-      boolean supportForNexusGroupReposEnabled);
+      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName);
 
   @SuppressWarnings("squid:S00107")
   List<BuildDetails> getVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
