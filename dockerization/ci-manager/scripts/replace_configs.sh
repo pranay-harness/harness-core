@@ -198,3 +198,10 @@ if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
   yq write -i $CONFIG_FILE cimanager-mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
 fi
 
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
+fi
+

@@ -1,5 +1,8 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.CVConstants.DEFAULT_CANARY_JOB_ID;
+import static io.harness.cvng.CVConstants.DEFAULT_CANARY_JOB_NAME;
+
 import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -9,12 +12,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "CanaryVerificationJobKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class CanaryVerificationJob extends CanaryBlueGreenVerificationJob {
   @Override
   public VerificationJobType getType() {
@@ -50,5 +55,14 @@ public class CanaryVerificationJob extends CanaryBlueGreenVerificationJob {
           .set(CanaryVerificationJob.DeploymentVerificationJobKeys.trafficSplitPercentage,
               dto.getTrafficSplitPercentage());
     }
+  }
+
+  public static CanaryVerificationJob createDefaultJob(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    CanaryVerificationJob verificationJob =
+        CanaryVerificationJob.builder().jobName(DEFAULT_CANARY_JOB_NAME).identifier(DEFAULT_CANARY_JOB_ID).build();
+    CanaryBlueGreenVerificationJob.setCanaryBLueGreenDefaultJobParameters(
+        verificationJob, accountId, orgIdentifier, projectIdentifier);
+    return verificationJob;
   }
 }

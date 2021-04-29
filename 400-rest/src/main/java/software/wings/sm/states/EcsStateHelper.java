@@ -802,8 +802,8 @@ public class EcsStateHelper {
       ApplicationManifest applicationManifest =
           ecsBGRoute53SetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
       GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
-      if (gitFileConfig != null && gitFileConfig.getServiceSpecFilePath() != null
-          && gitFileConfig.getTaskSpecFilePath() != null) {
+      if (gitFileConfig != null
+          && (gitFileConfig.getServiceSpecFilePath() != null || gitFileConfig.getTaskSpecFilePath() != null)) {
         List<GitFile> gitFiles = ecsBGRoute53SetupStateExecutionData.getFetchFilesResult()
                                      .getFilesFromMultipleRepo()
                                      .get("ServiceOverride")
@@ -830,8 +830,8 @@ public class EcsStateHelper {
       ApplicationManifest applicationManifest =
           ecsSetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
       GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
-      if (gitFileConfig != null && gitFileConfig.getServiceSpecFilePath() != null
-          && gitFileConfig.getTaskSpecFilePath() != null) {
+      if (gitFileConfig != null
+          && (gitFileConfig.getServiceSpecFilePath() != null || gitFileConfig.getTaskSpecFilePath() != null)) {
         List<GitFile> gitFiles = ecsSetupStateExecutionData.getFetchFilesResult()
                                      .getFilesFromMultipleRepo()
                                      .get("ServiceOverride")

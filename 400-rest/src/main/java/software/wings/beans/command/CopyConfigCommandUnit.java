@@ -1,6 +1,8 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 
@@ -8,7 +10,12 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.expression.Expression;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.ConfigFile;
@@ -39,9 +46,12 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @JsonTypeName("COPY_CONFIGS")
 @Slf4j
-public class CopyConfigCommandUnit extends SshCommandUnit {
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+public class CopyConfigCommandUnit extends SshCommandUnit implements NestedAnnotationResolver {
   @Attributes(title = "Destination Parent Path")
   @DefaultValue("$WINGS_RUNTIME_PATH")
+  @Expression(ALLOW_SECRETS)
   private String destinationParentPath;
 
   @Inject @Transient private transient DelegateConfigService delegateConfigService;

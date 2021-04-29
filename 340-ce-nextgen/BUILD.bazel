@@ -2,6 +2,8 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 
+HarnessTeam = "CE"
+
 shared_dependencies = [
     "@ce_nextgen//:com_graphql_java_graphql_java",
     "@ce_nextgen//:org_antlr_antlr4_runtime",

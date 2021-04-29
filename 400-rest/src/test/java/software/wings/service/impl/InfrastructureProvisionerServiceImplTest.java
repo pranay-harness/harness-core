@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.RIHAZ;
+import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -66,6 +67,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.AwsInstanceFilter;
+import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitConfig;
@@ -1042,5 +1044,25 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
     verify(secretManager, times(1)).encryptedDataDetails(any(), any(), any(), any());
     assertThat(encryptedTextVariables.size()).isOne();
     assertThat(encryptedTextVariables.get("access_token").getFieldName()).isEqualTo("fieldName");
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testAddProvisionerKeys() {
+    // property value null
+    List<BlueprintProperty> properties = new ArrayList<>();
+    InfrastructureProvisioner infrastructureProvisioner = ShellScriptInfrastructureProvisioner.builder().build();
+    BlueprintProperty property = BlueprintProperty.builder().value(null).build();
+    properties.add(property);
+    infrastructureProvisionerServiceImpl.addProvisionerKeys(properties, infrastructureProvisioner);
+    assertThat(property.getValue()).isNull();
+
+    // property value not null
+    properties = new ArrayList<>();
+    property = BlueprintProperty.builder().value("test").build();
+    properties.add(property);
+    infrastructureProvisionerServiceImpl.addProvisionerKeys(properties, infrastructureProvisioner);
+    assertThat(property.getValue()).isEqualTo("${shellScriptProvisioner.test}");
   }
 }

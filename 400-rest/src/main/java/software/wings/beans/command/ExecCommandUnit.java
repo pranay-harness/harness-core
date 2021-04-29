@@ -1,10 +1,17 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.shell.ScriptType;
 
@@ -29,14 +36,16 @@ import org.mongodb.morphia.annotations.Transient;
  * Created by anubhaw on 5/25/16.
  */
 @JsonTypeName("EXEC")
-public class ExecCommandUnit extends SshCommandUnit {
-  @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+public class ExecCommandUnit extends SshCommandUnit implements NestedAnnotationResolver {
+  @Expression(ALLOW_SECRETS) @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
 
   @NotEmpty @Getter @Setter @DefaultValue("BASH") @Attributes(title = "Script Type") private ScriptType scriptType;
 
-  @Attributes(title = "Command") @NotEmpty private String commandString;
+  @Expression(ALLOW_SECRETS) @Attributes(title = "Command") @NotEmpty private String commandString;
 
-  @Attributes(title = "Files and Patterns") private List<TailFilePatternEntry> tailPatterns;
+  @Expression(ALLOW_SECRETS) @Attributes(title = "Files and Patterns") private List<TailFilePatternEntry> tailPatterns;
 
   @Transient @SchemaIgnore private String preparedCommand;
 

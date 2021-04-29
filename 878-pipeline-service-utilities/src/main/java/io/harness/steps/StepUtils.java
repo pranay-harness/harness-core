@@ -24,6 +24,9 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -259,5 +262,39 @@ public class StepUtils {
       timeoutString = timeout.getValue();
     }
     return NGTimeConversionHelper.convertTimeStringToMilliseconds(timeoutString);
+  }
+
+  public static List<TaskSelector> getTaskSelectors(ParameterField<List<String>> delegateSelectors) {
+    List<TaskSelector> taskSelectors = new ArrayList<>();
+    if (!ParameterField.isNull(delegateSelectors)) {
+      List<String> delegateSelectorsList = delegateSelectors.getValue();
+      if (delegateSelectorsList != null) {
+        taskSelectors = delegateSelectorsList.stream()
+                            .map(delegateSelector -> TaskSelector.newBuilder().setSelector(delegateSelector).build())
+                            .collect(toList());
+      }
+    }
+    return taskSelectors;
+  }
+
+  public static Status getStepStatus(CommandExecutionStatus commandExecutionStatus) {
+    if (commandExecutionStatus == null) {
+      return null;
+    }
+    switch (commandExecutionStatus) {
+      case SUCCESS:
+        return Status.SUCCEEDED;
+      case QUEUED:
+        return Status.QUEUED;
+      case SKIPPED:
+        return Status.SKIPPED;
+      case FAILURE:
+        return Status.FAILED;
+      case RUNNING:
+        return Status.RUNNING;
+      default:
+        throw new InvalidRequestException(
+            "Unhandled type CommandExecutionStatus: " + commandExecutionStatus, WingsException.USER);
+    }
   }
 }

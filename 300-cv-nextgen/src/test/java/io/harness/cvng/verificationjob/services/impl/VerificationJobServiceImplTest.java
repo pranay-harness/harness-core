@@ -30,8 +30,12 @@ import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.CVEventService;
+import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
+import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
@@ -673,5 +677,74 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
 
     VerificationJob byUrl = verificationJobService.getByUrl(accountId, null);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testCreateDefaultVerificationJobs() {
+    verificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
+    List<VerificationJob> defaultVerificationJobs =
+        hPersistence.createQuery(VerificationJob.class).filter(VerificationJobKeys.isDefaultJob, true).asList();
+    assertThat(defaultVerificationJobs).hasSize(4);
+    HealthVerificationJob healthVerificationJob =
+        HealthVerificationJob.createDefaultJob(accountId, orgIdentifier, projectIdentifier);
+    HealthVerificationJob savedHealthVerificationJob =
+        (HealthVerificationJob) hPersistence.createQuery(VerificationJob.class)
+            .filter(VerificationJobKeys.identifier, healthVerificationJob.getIdentifier())
+            .filter(VerificationJobKeys.isDefaultJob, true)
+            .asList()
+            .get(0);
+    commonDefaultJobAssertions(healthVerificationJob, savedHealthVerificationJob);
+
+    TestVerificationJob testVerificationJob =
+        TestVerificationJob.createDefaultJob(accountId, orgIdentifier, projectIdentifier);
+    TestVerificationJob savedTestVerificationJob =
+        (TestVerificationJob) hPersistence.createQuery(VerificationJob.class)
+            .filter(VerificationJobKeys.identifier, testVerificationJob.getIdentifier())
+            .filter(VerificationJobKeys.isDefaultJob, true)
+            .asList()
+            .get(0);
+    commonDefaultJobAssertions(testVerificationJob, savedTestVerificationJob);
+    assertThat(testVerificationJob.getSensitivity()).isEqualTo(savedTestVerificationJob.getSensitivity());
+
+    CanaryVerificationJob canaryVerificationJob =
+        CanaryVerificationJob.createDefaultJob(accountId, orgIdentifier, projectIdentifier);
+    CanaryVerificationJob savedCanaryVerificationJob =
+        (CanaryVerificationJob) hPersistence.createQuery(VerificationJob.class)
+            .filter(VerificationJobKeys.identifier, canaryVerificationJob.getIdentifier())
+            .asList()
+            .get(0);
+    commonDefaultJobAssertions(canaryVerificationJob, savedCanaryVerificationJob);
+    assertThat(canaryVerificationJob.getSensitivity()).isEqualTo(savedCanaryVerificationJob.getSensitivity());
+    assertThat(canaryVerificationJob.getTrafficSplitPercentage())
+        .isEqualTo(savedCanaryVerificationJob.getTrafficSplitPercentage());
+
+    BlueGreenVerificationJob blueGreenVerificationJob =
+        BlueGreenVerificationJob.createDefaultJob(accountId, orgIdentifier, projectIdentifier);
+    BlueGreenVerificationJob savedBlueGreenVerificationJob =
+        (BlueGreenVerificationJob) hPersistence.createQuery(VerificationJob.class)
+            .filter(VerificationJobKeys.identifier, blueGreenVerificationJob.getIdentifier())
+            .asList()
+            .get(0);
+    commonDefaultJobAssertions(blueGreenVerificationJob, savedBlueGreenVerificationJob);
+    assertThat(blueGreenVerificationJob.getSensitivity()).isEqualTo(savedBlueGreenVerificationJob.getSensitivity());
+    assertThat(blueGreenVerificationJob.getTrafficSplitPercentage())
+        .isEqualTo(savedBlueGreenVerificationJob.getTrafficSplitPercentage());
+  }
+
+  void commonDefaultJobAssertions(VerificationJob verificationJob, VerificationJob savedVerificationJob) {
+    assertThat(verificationJob.getIdentifier()).isEqualTo(savedVerificationJob.getIdentifier());
+    assertThat(verificationJob.getJobName()).isEqualTo(savedVerificationJob.getJobName());
+    assertThat(verificationJob.getAccountId()).isEqualTo(savedVerificationJob.getAccountId());
+    assertThat(verificationJob.getProjectIdentifier()).isEqualTo(savedVerificationJob.getProjectIdentifier());
+    assertThat(verificationJob.getOrgIdentifier()).isEqualTo(savedVerificationJob.getOrgIdentifier());
+    assertThat(verificationJob.isAllMonitoringSourcesEnabled())
+        .isEqualTo(savedVerificationJob.isAllMonitoringSourcesEnabled());
+    assertThat(verificationJob.getServiceIdentifier()).isEqualTo(savedVerificationJob.getServiceIdentifier());
+    assertThat(verificationJob.getEnvIdentifier()).isEqualTo(savedVerificationJob.getEnvIdentifier());
+    assertThat(verificationJob.getDuration()).isEqualTo(savedVerificationJob.getDuration());
+    assertThat(verificationJob.isDefaultJob()).isEqualTo(savedVerificationJob.isDefaultJob());
+    assertThat(verificationJob.getType()).isEqualTo(savedVerificationJob.getType());
   }
 }

@@ -70,6 +70,7 @@ public class DeploymentActivity extends Activity {
     Preconditions.checkNotNull(getVerificationJobRuntimeDetails(),
         "Verification job details cannot be "
             + "empty for a deployment activity");
+    Preconditions.checkNotNull(deploymentTag, "Deployment tag can not be null");
     getVerificationJobRuntimeDetails().forEach(verificationJob -> {
       Preconditions.checkNotNull(isEmpty(verificationJob.getVerificationJobIdentifier()),
           "The verification job identifier is a required parameter for deployment activities");
