@@ -7,6 +7,8 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationVisualizationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
@@ -21,10 +23,10 @@ import io.harness.testlib.RealMongo;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import java.time.Duration;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PlanExecutionStatusUpdateEventHandlerTest extends OrchestrationVisualizationTestBase {
   @Inject private SpringMongoStore mongoStore;
 
@@ -58,11 +60,8 @@ public class PlanExecutionStatusUpdateEventHandlerTest extends OrchestrationVisu
                                                 .cacheKey(planExecution.getUuid())
                                                 .cacheContextOrder(System.currentTimeMillis())
                                                 .build();
-    mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
 
-    planExecutionStatusUpdateEventHandler.handleEvent(event);
-
-    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
+    OrchestrationGraph updatedGraph = planExecutionStatusUpdateEventHandler.handleEvent(event, orchestrationGraph);
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
