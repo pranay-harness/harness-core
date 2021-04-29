@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.CVConstants.RUNTIME_PARAM_STRING;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATION_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
@@ -75,7 +76,6 @@ public abstract class VerificationJob
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("unique_query_idx")
-                 .unique(true)
                  .field(VerificationJobKeys.accountId)
                  .field(VerificationJobKeys.orgIdentifier)
                  .field(VerificationJobKeys.projectIdentifier)
@@ -119,10 +119,8 @@ public abstract class VerificationJob
     Preconditions.checkNotNull(orgIdentifier, generateErrorMessageFromParam(VerificationJobKeys.orgIdentifier));
     Preconditions.checkNotNull(envIdentifier, generateErrorMessageFromParam(VerificationJobKeys.envIdentifier));
     Preconditions.checkNotNull(duration, generateErrorMessageFromParam(VerificationJobKeys.duration));
-    Preconditions.checkNotNull(monitoringSources, generateErrorMessageFromParam(VerificationJobKeys.monitoringSources));
     // Preconditions.checkNotNull(activitySourceIdentifier,
     // generateErrorMessageFromParam(VerificationJobKeys.activitySourceIdentifier));
-    Preconditions.checkArgument(!monitoringSources.isEmpty(), "Monitoring Sources can not be empty");
     if (!duration.isRuntimeParam()) {
       Preconditions.checkArgument(getDuration().toMinutes() >= 5,
           "Minimum allowed duration is 5 mins. Current value(mins): %s", getDuration().toMinutes());
@@ -130,8 +128,12 @@ public abstract class VerificationJob
     if (isAllMonitoringSourcesEnabled()) {
       Preconditions.checkArgument(monitoringSources == null || monitoringSources.size() == 0,
           "Monitoring Sources should be null or empty if allMonitoringSources is enabled");
+    } else {
+      Preconditions.checkNotNull(
+          monitoringSources, generateErrorMessageFromParam(VerificationJobKeys.monitoringSources));
+      Preconditions.checkArgument(!monitoringSources.isEmpty(), "Monitoring Sources can not be empty");
     }
-    Preconditions.checkNotNull(type, generateErrorMessageFromParam(VerificationJobKeys.type));
+    Preconditions.checkNotNull(getType(), generateErrorMessageFromParam(VerificationJobKeys.type));
     this.validateParams();
   }
 
@@ -333,7 +335,7 @@ public abstract class VerificationJob
     public void setCommonOperations(UpdateOperations<T> updateOperations, D dto) {
       updateOperations.set(VerificationJobKeys.jobName, dto.getJobName())
           .set(VerificationJobKeys.envIdentifier,
-              this.getRunTimeParameter(dto.getEnvIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
+              getRunTimeParameter(dto.getEnvIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
           .set(VerificationJobKeys.serviceIdentifier,
               getRunTimeParameter(dto.getServiceIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
           .set(VerificationJobKeys.duration,
@@ -343,9 +345,21 @@ public abstract class VerificationJob
           .set(VerificationJobKeys.isDefaultJob, dto.isDefaultJob())
           .set(VerificationJobKeys.activitySourceIdentifier, dto.getActivitySourceIdentifier());
     }
+  }
 
-    public RuntimeParameter getRunTimeParameter(String value, boolean isRuntimeParam) {
-      return value == null ? null : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(value).build();
-    }
+  public static RuntimeParameter getRunTimeParameter(String value, boolean isRuntimeParam) {
+    return value == null ? null : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(value).build();
+  }
+
+  public static void setDefaultJobCommonParameters(
+      VerificationJob verificationJob, String accountId, String orgIdentifier, String projectIdentifier) {
+    verificationJob.setAccountId(accountId);
+    verificationJob.setOrgIdentifier(orgIdentifier);
+    verificationJob.setProjectIdentifier(projectIdentifier);
+    verificationJob.setAllMonitoringSourcesEnabled(true);
+    verificationJob.setServiceIdentifier(getRunTimeParameter(RUNTIME_PARAM_STRING, true));
+    verificationJob.setEnvIdentifier(getRunTimeParameter(RUNTIME_PARAM_STRING, true));
+    verificationJob.setDuration(RUNTIME_PARAM_STRING, true);
+    verificationJob.setDefaultJob(true);
   }
 }
