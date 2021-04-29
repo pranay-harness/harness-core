@@ -62,7 +62,6 @@ public class NGMigrationServiceImpl implements NGMigrationService {
       for (Class<? extends MigrationProvider> migrationProvider : migrationProviderList) {
         MigrationProvider migrationProviderInstance = injector.getInstance(migrationProvider);
         String serviceName = migrationProviderInstance.getServiceName();
-        //        String collectionName = migrationProviderInstance.getCollectionName();
         List<Class<? extends MigrationDetails>> migrationDetailsList =
             migrationProviderInstance.getMigrationDetailsList();
 
@@ -81,7 +80,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
                        .name(migrationProviderInstance.getServiceName())
                        .migrationDetails(migrationTypesWithVersion)
                        .build();
-          String collectionName = mongoTemplate.getCollectionName(migrationProviderInstance.getSchemaClass());
+          String collectionName = mongoTemplate.getCollectionName(schemaClass);
           mongoTemplate.save(schema, collectionName);
         }
 
