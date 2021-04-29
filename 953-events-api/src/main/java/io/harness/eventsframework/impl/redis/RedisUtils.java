@@ -44,6 +44,7 @@ public class RedisUtils {
   public RedissonClient getClient(RedisConfig redisConfig) {
     Config config = new Config();
     if (!redisConfig.isSentinel()) {
+      log.info("Using Redis Single Server");
       SingleServerConfig serverConfig = config.useSingleServer().setAddress(redisConfig.getRedisUrl());
       String redisPassword = redisConfig.getPassword();
       String redisUserName = redisConfig.getUserName();
@@ -67,8 +68,10 @@ public class RedisUtils {
         }
       }
     } else {
+      log.info("Using Redis Sentinel");
       config.useSentinelServers().setMasterName(redisConfig.getMasterName());
       for (String sentinelUrl : redisConfig.getSentinelUrls()) {
+        log.info("Sentinel URL: {}", sentinelUrl);
         config.useSentinelServers().addSentinelAddress(sentinelUrl);
       }
       config.useSentinelServers().setReadMode(ReadMode.valueOf(redisConfig.getReadMode().name()));
