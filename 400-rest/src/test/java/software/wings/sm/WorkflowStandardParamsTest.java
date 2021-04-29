@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import static io.harness.beans.FeatureName.RELOAD_APP_DEFAULTS;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MILOS;
@@ -26,11 +28,16 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -80,6 +87,8 @@ import org.mockito.Mockito;
  *
  * @author Rishi
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowStandardParamsTest extends WingsBaseTest {
   /**
    * The App service.
@@ -481,5 +490,25 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     paramMap = std.paramMap(context);
     assertThat(paramMap.get(ContextElement.HELM_CHART)).isNull();
     verify(helmChartService).listByIds(ACCOUNT_ID, helmChartIds);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReloadAppDefaultsIfFFIsEnabledAndDefaultsAreNotInPlace() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+
+    Map<String, String> defaults = singletonMap("name", "value");
+    Application app = anApplication().name("AppTestName").accountId(ACCOUNT_ID).defaults(defaults).build();
+    std.setAppId(appService.save(app).getAppId());
+
+    on(std).set("app", anApplication().accountId(ACCOUNT_ID).build());
+    on(std).set("featureFlagService", featureFlagService);
+
+    when(featureFlagService.isEnabled(RELOAD_APP_DEFAULTS, ACCOUNT_ID)).thenReturn(true);
+    when(settingsService.listAppDefaults(ACCOUNT_ID, std.getAppId())).thenReturn(defaults);
+    assertThat(std.getApp().getDefaults()).containsAllEntriesOf(defaults);
   }
 }

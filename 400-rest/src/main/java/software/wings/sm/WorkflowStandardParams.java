@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.RELOAD_APP_DEFAULTS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -9,7 +10,9 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
@@ -63,6 +66,7 @@ import org.mongodb.morphia.annotations.Transient;
  * @author Rishi.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowStandardParams implements ExecutionContextAware, ContextElement {
   private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
   public static final String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
@@ -498,6 +502,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   public Application getApp() {
     if (app == null && appId != null) {
       app = appService.getApplicationWithDefaults(appId);
+    }
+    if (app != null && featureFlagService.isEnabled(RELOAD_APP_DEFAULTS, app.getAccountId())
+        && isEmpty(app.getDefaults())) {
+      app = appService.getApplicationWithDefaults(this.getAppId());
     }
     return app;
   }
