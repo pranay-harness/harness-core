@@ -411,6 +411,10 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, table, evalTab
 		}
 		break
 	}
+	// Hack. Fix is: start using repo
+	if avg > 5000 {
+		avg = 5000
+	}
 	res.TimeSavedMs = res.Skipped * avg
 	return res, nil
 }
