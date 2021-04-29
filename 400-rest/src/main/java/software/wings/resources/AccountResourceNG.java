@@ -1,10 +1,12 @@
 package software.wings.resources;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.mappers.AccountMapper;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -13,12 +15,15 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.security.UserGroup;
 import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.UserGroupService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,10 +55,12 @@ public class AccountResourceNG {
   private final AccountService accountService;
   private SubdomainUrlHelper subdomainUrlHelper;
   private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  private UserGroupService userGroupService;
 
   @POST
   public RestResponse<AccountDTO> create(@NotNull AccountDTO dto) {
     Account account = AccountMapper.fromAccountDTO(dto);
+    account.setCreatedFromNG(true);
 
     account.setLicenseInfo(
         LicenseInfo.builder().accountType(AccountType.TRIAL).accountStatus(AccountStatus.ACTIVE).build());
@@ -88,6 +95,13 @@ public class AccountResourceNG {
   }
 
   @GET
+  @Path("/account-admins")
+  public RestResponse<List<String>> getAccountAdmins(@QueryParam("accountId") String accountId) {
+    UserGroup userGroup = userGroupService.getAdminUserGroup(accountId);
+    return new RestResponse<>(userGroup != null ? userGroup.getMemberIds() : Collections.emptyList());
+  }
+
+  @GET
   @Path("/get-whitelisted-domains")
   public RestResponse<Set<String>> getWhitelistedDomains(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(accountService.getWhitelistedDomains(accountId));
@@ -109,5 +123,18 @@ public class AccountResourceNG {
   @Path("/exists/{accountName}")
   public RestResponse<Boolean> doesAccountExist(@PathParam("accountName") String accountName) {
     return new RestResponse<>(accountService.exists(accountName));
+  }
+
+  @PUT
+  @Path("/{accountId}/default-experience")
+  public RestResponse<Boolean> updateDefaultExperienceIfNull(
+      @PathParam("accountId") @AccountIdentifier String accountId,
+      @QueryParam("defaultExperience") DefaultExperience defaultExperience) {
+    Account account = accountService.get(accountId);
+    if (account.getDefaultExperience() == null) {
+      account.setDefaultExperience(defaultExperience);
+      accountService.update(account);
+    }
+    return new RestResponse(true);
   }
 }

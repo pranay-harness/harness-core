@@ -309,7 +309,7 @@ public class SpotinstStateHelperTest extends WingsBaseTest {
             .awsConfig(AwsConfig.builder().build())
             .spotInstTaskParameters(SpotInstSetupTaskParameters.builder().build())
             .build(),
-        PROD, SERVICE_ID);
+        PROD, SERVICE_ID, false);
     assertThat(task).isNotNull();
     assertThat(task.getTags().size()).isEqualTo(1);
     assertThat(task.getTags().get(0)).isEqualTo(tag);

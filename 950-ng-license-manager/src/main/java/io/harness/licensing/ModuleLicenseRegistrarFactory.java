@@ -2,6 +2,7 @@ package io.harness.licensing;
 
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 import io.harness.licensing.interfaces.clients.local.CDLocalClient;
+import io.harness.licensing.interfaces.clients.local.CFLocalClient;
 import io.harness.licensing.interfaces.clients.local.CILocalClient;
 import io.harness.licensing.interfaces.clients.local.UnsupportedClient;
 import io.harness.licensing.mappers.LicenseObjectMapper;
@@ -29,7 +30,7 @@ public class ModuleLicenseRegistrarFactory {
     registrar.put(
         ModuleType.CV, new ModuleLicenseRegistrar(ModuleType.CV, CVLicenseObjectMapper.class, UnsupportedClient.class));
     registrar.put(
-        ModuleType.CF, new ModuleLicenseRegistrar(ModuleType.CF, CFLicenseObjectMapper.class, UnsupportedClient.class));
+        ModuleType.CF, new ModuleLicenseRegistrar(ModuleType.CF, CFLicenseObjectMapper.class, CFLocalClient.class));
   }
 
   public static Class<? extends LicenseObjectMapper> getLicenseObjectMapper(ModuleType moduleType) {

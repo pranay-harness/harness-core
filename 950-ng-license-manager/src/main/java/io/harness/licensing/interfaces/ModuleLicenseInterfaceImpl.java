@@ -20,7 +20,7 @@ import java.util.Map;
 @Singleton
 public class ModuleLicenseInterfaceImpl implements ModuleLicenseInterface {
   @Inject Map<ModuleType, ModuleLicenseClient> clientMap;
-  private static final long TRIAL_DURATION = 14;
+  static final long TRIAL_DURATION = 14;
 
   @Override
   public ModuleLicenseDTO createTrialLicense(

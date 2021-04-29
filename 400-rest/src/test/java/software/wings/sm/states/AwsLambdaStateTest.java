@@ -31,6 +31,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -73,6 +74,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
@@ -102,6 +104,7 @@ public class AwsLambdaStateTest extends CategoryTest {
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private DelegateService delegateService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @Spy @InjectMocks AwsLambdaState awsLambdaState;
   private SettingAttribute awsSetting =
@@ -113,6 +116,7 @@ public class AwsLambdaStateTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test(expected = InvalidRequestException.class)

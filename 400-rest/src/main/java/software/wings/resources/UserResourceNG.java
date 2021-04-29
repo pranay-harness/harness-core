@@ -75,6 +75,17 @@ public class UserResourceNG {
     return new RestResponse<>(convertUserToNgUser(createdUser));
   }
 
+  @POST
+  @Path("/oauth")
+  public RestResponse<UserInfo> createNewOAuthUserAndSignIn(UserRequestDTO userRequest) {
+    User user = convertUserRequesttoUser(userRequest);
+    String accountId = user.getDefaultAccountId();
+
+    User createdUser = userService.createNewOAuthUser(user, accountId);
+
+    return new RestResponse<>(convertUserToNgUser(createdUser));
+  }
+
   @GET
   @Path("/search")
   public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,

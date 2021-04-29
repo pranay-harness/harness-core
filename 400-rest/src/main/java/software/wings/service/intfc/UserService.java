@@ -82,6 +82,11 @@ public interface UserService extends OwnedByAccount {
    */
   User createNewUserAndSignIn(User user, String accountId);
 
+  /**
+   * Used for NG signup to create a new oauth user and login from an NG user object
+   */
+  User createNewOAuthUser(User user, String accountId);
+
   UserInvite createUserInviteForMarketPlace();
 
   boolean hasPermission(String accountId, PermissionType permissionType);
@@ -543,7 +548,7 @@ public interface UserService extends OwnedByAccount {
 
   boolean canEnableOrDisable(User user);
 
-  User save(User user, String accountId);
+  User createUser(User user, String accountId);
 
   String saveUserInvite(UserInvite userInvite);
 
@@ -555,8 +560,6 @@ public interface UserService extends OwnedByAccount {
   InviteOperationResponse checkInviteStatus(UserInvite userInvite, Generation gen);
 
   void loadUserGroupsForUsers(List<User> users, String accountId);
-
-  void setNewDefaultAccountId(User user);
 
   boolean isUserPresent(String userId);
 

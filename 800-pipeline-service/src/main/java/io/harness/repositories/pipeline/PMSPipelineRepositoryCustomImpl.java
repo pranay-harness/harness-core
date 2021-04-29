@@ -1,8 +1,15 @@
 package io.harness.repositories.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.git.model.ChangeType;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
+import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
@@ -29,12 +36,14 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
+@GitSyncableHarnessRepo
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCustom {
   private final MongoTemplate mongoTemplate;
+  private final GitAwarePersistence gitAwarePersistence;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);
-  private final int MAX_ATTEMPTS = 3;
 
   @Override
   public PipelineEntity update(Criteria criteria, PipelineEntity pipelineEntity) {
@@ -51,6 +60,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
                      query, update, new FindAndModifyOptions().returnNew(true), PipelineEntity.class));
   }
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    int MAX_ATTEMPTS = 3;
     return new RetryPolicy<>()
         .handle(OptimisticLockingFailureException.class)
         .handle(DuplicateKeyException.class)
@@ -91,5 +101,20 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
     List<PipelineEntity> projects = mongoTemplate.find(query, PipelineEntity.class);
     return PageableExecutionUtils.getPage(
         projects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), PipelineEntity.class));
+  }
+
+  @Override
+  public PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO) {
+    return gitAwarePersistence.save(pipelineToSave, yamlDTO, ChangeType.ADD, PipelineEntity.class);
+  }
+
+  @Override
+  public Optional<PipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean notDeleted) {
+    return gitAwarePersistence.findOne(Criteria.where(PipelineEntityKeys.deleted)
+                                           .is(!notDeleted)
+                                           .and(PipelineEntityKeys.identifier)
+                                           .is(pipelineIdentifier),
+        projectIdentifier, orgIdentifier, accountId, PipelineEntity.class);
   }
 }

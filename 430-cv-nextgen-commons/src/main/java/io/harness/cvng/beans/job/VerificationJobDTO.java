@@ -36,7 +36,7 @@ public abstract class VerificationJobDTO {
   // TODO: make it Duration and write a custom serializer
   private String duration;
   private boolean isDefaultJob;
-
+  private boolean allMonitoringSourcesEnabled;
   public abstract VerificationJobType getType();
 
   public static boolean isRuntimeParam(String value) {

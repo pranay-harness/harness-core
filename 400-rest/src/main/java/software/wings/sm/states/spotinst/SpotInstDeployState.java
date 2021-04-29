@@ -180,9 +180,11 @@ public class SpotInstDeployState extends State {
 
     DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
         TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
-        spotInstCommandRequest, env.getEnvironmentType(), awsAmiInfrastructureMapping.getServiceId());
+        spotInstCommandRequest, env.getEnvironmentType(), awsAmiInfrastructureMapping.getServiceId(),
+        isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(task);
+    appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activity.getUuid()))
@@ -448,5 +450,10 @@ public class SpotInstDeployState extends State {
       invalidFields.put("instanceCount", "Instance count needs to be populated");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -21,7 +21,6 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.facilitation.InterruptPreFacilitationChecker;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
-import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.PreFacilitationCheck;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
@@ -52,13 +51,9 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
-import io.harness.pms.sdk.core.registries.ResolverRegistry;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
@@ -100,20 +95,16 @@ public class OrchestrationEngine {
   @Inject private Injector injector;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject private ResolverRegistry resolverRegistry;
   @Inject private TimeoutRegistry timeoutRegistry;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
-  @Inject private InterruptService interruptService;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
-  @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
 
@@ -201,8 +192,6 @@ public class OrchestrationEngine {
   public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
-    PlanNodeProto node = nodeExecution.getNode();
-    StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(ambiance, node.getRebObjectsList());
     if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
       // Update Status
       Preconditions.checkNotNull(
@@ -213,11 +202,7 @@ public class OrchestrationEngine {
       String resumeId =
           delayEventHelper.delay(facilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
       waitNotifyEngine.waitForAllOn(publisherName,
-          EngineWaitResumeCallback.builder()
-              .ambiance(ambiance)
-              .facilitatorResponse(facilitatorResponse)
-              .inputPackage(inputPackage)
-              .build(),
+          EngineWaitResumeCallback.builder().ambiance(ambiance).facilitatorResponse(facilitatorResponse).build(),
           resumeId);
       return;
     }

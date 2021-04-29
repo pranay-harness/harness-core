@@ -58,18 +58,20 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
   public void parseEventTest() {
     int i = 0;
     TriggerExpressionEvaluator triggerExpressionEvaluator =
-        WebhookTriggerFilterUtils.generatorPMSExpressionEvaluator(payload);
-    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.event_type>", triggerExpressionEvaluator))
+        WebhookTriggerFilterUtils.generatorPMSExpressionEvaluator(null, emptyList(), payload);
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+trigger.payload.event_type>", triggerExpressionEvaluator))
         .isEqualTo("merge_request");
-    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.object_kind>", triggerExpressionEvaluator))
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+trigger.payload.object_kind>", triggerExpressionEvaluator))
         .isEqualTo("merge_request");
-    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.user.name>", triggerExpressionEvaluator))
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+trigger.payload.user.name>", triggerExpressionEvaluator))
         .isEqualTo("charles grant");
-    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.user.username>", triggerExpressionEvaluator))
+    assertThat(
+        WebhookTriggerFilterUtils.readFromPayload("<+trigger.payload.user.username>", triggerExpressionEvaluator))
         .isEqualTo("charles.grant");
-    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.user.avatar_url>", triggerExpressionEvaluator))
+    assertThat(
+        WebhookTriggerFilterUtils.readFromPayload("<+trigger.payload.user.avatar_url>", triggerExpressionEvaluator))
         .isEqualTo("https://secure.gravatar.com/avatar/8e");
-    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.user.email>", triggerExpressionEvaluator))
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+trigger.payload.user.email>", triggerExpressionEvaluator))
         .isEqualTo("cgrant@gmail.com");
   }
 
@@ -158,27 +160,27 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
                 WebhookCondition.builder().key("sourceBranch").operator("not equals").value("qa").build(),
                 WebhookCondition.builder().key("targetBranch").operator("regex").value("^master$").build(),
                 WebhookCondition.builder()
-                    .key("<+eventPayload.event_type>")
+                    .key("<+trigger.payload.event_type>")
                     .operator("in")
                     .value("pull_request, merge_request")
                     .build(),
                 WebhookCondition.builder()
-                    .key("<+eventPayload.object_kind>")
+                    .key("<+trigger.payload.object_kind>")
                     .operator("not in")
                     .value("push, package")
                     .build(),
                 WebhookCondition.builder()
-                    .key("<+eventPayload.user.name>")
+                    .key("<+trigger.payload.user.name>")
                     .operator("starts with")
                     .value("charles")
                     .build(),
                 WebhookCondition.builder()
-                    .key("<+eventPayload.user.username>")
+                    .key("<+trigger.payload.user.username>")
                     .operator("ends with")
                     .value("grant")
                     .build(),
                 WebhookCondition.builder()
-                    .key("<+eventPayload.user.avatar_url>")
+                    .key("<+trigger.payload.user.avatar_url>")
                     .operator("contains")
                     .value("secure.gravatar.com")
                     .build()))
