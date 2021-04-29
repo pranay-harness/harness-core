@@ -16,6 +16,7 @@ public class HintException extends WingsException {
   public static final String HINT_AWS_IAM_ROLE_CHECK = "Check IAM role on delegate ec2";
   public static final String HINT_AWS_CLIENT_UNKNOWN_ISSUE = "Check AWS client on delegate";
   public static final String HINT_ECR_IMAGE_NAME = "Check that ECR image is available in specified region";
+  public static final String HINT_AWS_ACCESS_DENIED = "Hint: please ensure AWS credentials are valid";
 
   public static final HintException MOVE_TO_THE_PARENT_OBJECT =
       new HintException("Navigate back to the parent object page and continue from there.");

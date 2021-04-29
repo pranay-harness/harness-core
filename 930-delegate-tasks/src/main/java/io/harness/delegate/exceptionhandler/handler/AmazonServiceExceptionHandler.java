@@ -9,12 +9,14 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.context.MdcGlobalContextData;
 import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.HintException;
 import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
+import io.harness.manage.GlobalContextManager;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
@@ -30,6 +32,7 @@ import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
+import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,6 +62,13 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
     } else if (amazonServiceException instanceof ServiceNotFoundException) {
       return new InvalidRequestException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof RepositoryNotFoundException) {
+      if (GlobalContextManager.get(MdcGlobalContextData.MDC_ID) != null) {
+        Map<String, String> imageDetails =
+            ((MdcGlobalContextData) GlobalContextManager.get(MdcGlobalContextData.MDC_ID)).getMap();
+        return new HintException("ECR image: '" + imageDetails.get("imageName") + "' not found in region: '"
+                + imageDetails.get("region") + "'",
+            new ImageNotFoundException(amazonServiceException.getMessage(), IMAGE_NOT_FOUND, USER));
+      }
       return new HintException(HintException.HINT_ECR_IMAGE_NAME,
           new ImageNotFoundException(amazonServiceException.getMessage(), IMAGE_NOT_FOUND, USER));
     } else if (amazonServiceException instanceof AmazonECSException
@@ -66,7 +76,8 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
       if (amazonServiceException instanceof ClientException) {
         log.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
       }
-      return new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER);
+      return new HintException(HintException.HINT_AWS_ACCESS_DENIED,
+          new InvalidRequestException(amazonServiceException.getMessage(), AWS_ACCESS_DENIED, USER));
     } else if (amazonServiceException instanceof AmazonAutoScalingException) {
       return new AwsAutoScaleException(amazonServiceException.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     } else if (amazonServiceException instanceof AmazonCloudFormationException) {
