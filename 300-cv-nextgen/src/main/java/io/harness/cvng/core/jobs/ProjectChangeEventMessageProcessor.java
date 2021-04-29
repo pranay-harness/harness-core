@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
@@ -27,6 +28,7 @@ public class ProjectChangeEventMessageProcessor extends EntityChangeEventMessage
   @Inject private Injector injector;
   @Inject private MetricPackService metricPackService;
   @Inject private ActivitySourceService activitySourceService;
+  @Inject private VerificationJobService verificationJobService;
   @Inject private NextGenService nextGenService;
 
   @Override
@@ -71,6 +73,10 @@ public class ProjectChangeEventMessageProcessor extends EntityChangeEventMessage
         projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
     if (projectDTO.getModules().contains(ModuleType.CD) && projectDTO.getModules().contains(ModuleType.CV)) {
       activitySourceService.createDefaultCDNGActivitySource(projectEntityChangeDTO.getAccountIdentifier(),
+          projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
+    }
+    if (projectDTO.getModules().contains(ModuleType.CD) || projectDTO.getModules().contains(ModuleType.CV)) {
+      verificationJobService.createDefaultVerificationJobs(projectEntityChangeDTO.getAccountIdentifier(),
           projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
     }
   }
