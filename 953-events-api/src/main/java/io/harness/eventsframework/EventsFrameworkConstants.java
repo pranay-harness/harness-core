@@ -40,6 +40,7 @@ public final class EventsFrameworkConstants {
   public static final Duration WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration FEATURE_FLAG_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
+  public static final Duration USERMEMBERSHIP_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
   public static final Duration SETUP_USAGE_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration ENTITY_ACTIVITY_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration HARNESS_TO_GIT_PUSH_MAX_PROCESSING_TIME = Duration.ofSeconds(50);
@@ -48,6 +49,7 @@ public final class EventsFrameworkConstants {
   public static final int DEFAULT_READ_BATCH_SIZE = 50;
   public static final int ENTITY_CRUD_READ_BATCH_SIZE = 50;
   public static final int FEATURE_FLAG_READ_BATCH_SIZE = 50;
+  public static final int USERMEMBERSHIP_READ_BATCH_SIZE = 50;
   public static final int SETUP_USAGE_READ_BATCH_SIZE = 50;
   public static final int ENTITY_ACTIVITY_READ_BATCH_SIZE = 50;
   public static final int HARNESS_TO_GIT_PUSH_READ_BATCH_SIZE = 50;

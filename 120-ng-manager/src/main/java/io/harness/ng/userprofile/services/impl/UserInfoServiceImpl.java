@@ -1,4 +1,3 @@
-
 package io.harness.ng.userprofile.services.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -8,7 +7,6 @@ import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.repositories.user.spring.UserMembershipRepository;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 import io.harness.security.dto.UserPrincipal;
@@ -24,7 +22,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserInfoServiceImpl implements UserInfoService {
   @Inject private UserClient userClient;
-  @Inject private UserMembershipRepository userMembershipRepository;
 
   @Override
   public UserInfo getCurrentUser() {
