@@ -71,7 +71,7 @@ public class ProjectChangeEventMessageProcessor extends EntityChangeEventMessage
   void processUpdateAction(ProjectEntityChangeDTO projectEntityChangeDTO) {
     ProjectDTO projectDTO = nextGenService.getProject(projectEntityChangeDTO.getAccountIdentifier(),
         projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-    if (projectDTO.getModules().contains(ModuleType.CD) && projectDTO.getModules().contains(ModuleType.CV)) {
+    if (projectDTO.getModules().contains(ModuleType.CD)) {
       activitySourceService.createDefaultCDNGActivitySource(projectEntityChangeDTO.getAccountIdentifier(),
           projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
     }
