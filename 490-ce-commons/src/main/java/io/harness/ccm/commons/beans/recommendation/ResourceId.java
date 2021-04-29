@@ -1,4 +1,4 @@
-package io.harness.batch.processing.config.k8s.recommendation;
+package io.harness.ccm.commons.beans.recommendation;
 
 import lombok.Builder;
 import lombok.Value;
@@ -6,7 +6,7 @@ import lombok.Value;
 @Value
 @Builder
 public class ResourceId {
-  static final ResourceId NOT_FOUND = ResourceId.builder().build();
+  public static final ResourceId NOT_FOUND = ResourceId.builder().build();
 
   String accountId;
   String clusterId;

@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.persistence.HPersistence;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
@@ -49,8 +50,8 @@ public class WorkloadRecommendationDao {
                               .build());
   }
 
-  void save(K8sWorkloadRecommendation recommendation) {
-    hPersistence.save(recommendation);
+  String save(K8sWorkloadRecommendation recommendation) {
+    return hPersistence.save(recommendation);
   }
 
   @NotNull

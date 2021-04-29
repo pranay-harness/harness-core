@@ -1,4 +1,4 @@
-package io.harness.ccm.utils;
+package io.harness.ccm.utils.graphql;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
@@ -15,6 +15,9 @@ import lombok.NonNull;
 @Singleton
 @OwnedBy(CE)
 public class GraphQLUtils {
+  public static final long DEFAULT_OFFSET = 0L;
+  public static final long DEFAULT_LIMIT = 10L;
+
   public String getAccountIdentifier(@NonNull ResolutionEnvironment env) {
     return getContextValue(env, NGCommonEntityConstants.ACCOUNT_KEY);
   }

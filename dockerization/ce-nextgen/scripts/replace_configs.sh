@@ -26,6 +26,10 @@ replace_key_with_value ngManagerServiceSecret $NEXT_GEN_MANAGER_SECRET
 replace_key_with_value jwtAuthSecret $JWT_AUTH_SECRET
 replace_key_with_value jwtIdentityServiceSecret $JWT_IDENTITY_SERVICE_SECRET
 
+replace_key_with_value timescaledb.timescaledbUrl "$TIMESCALEDB_URI"
+replace_key_with_value timescaledb.timescaledbUsername "$TIMESCALEDB_USERNAME"
+replace_key_with_value timescaledb.timescaledbPassword "$TIMESCALEDB_PASSWORD"
+
 replace_key_with_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_with_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
 replace_key_with_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL

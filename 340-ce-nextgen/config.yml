@@ -50,6 +50,16 @@ events-mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://localhost:5432/harness"
+  timescaledbUsername: "postgres"
+  timescaledbPassword: ""
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+  isHealthCheckNeeded: false
+
 ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
@@ -108,3 +118,6 @@ cfMigrationConfig:
   environment: "environment1"
   connectionTimeout: 10000
   readTimeout: 30000
+
+# CloudFormation template for AWS Connector
+awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml

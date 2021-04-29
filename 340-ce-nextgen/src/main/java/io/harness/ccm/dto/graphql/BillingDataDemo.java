@@ -1,4 +1,4 @@
-package io.harness.ccm.dto;
+package io.harness.ccm.dto.graphql;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 

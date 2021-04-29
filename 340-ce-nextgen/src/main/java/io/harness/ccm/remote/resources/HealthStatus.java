@@ -10,7 +10,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -18,20 +17,19 @@ import javax.ws.rs.Produces;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Api("health")
-@Path("health")
+@Api("/health")
+@Path("/health")
 @Produces({"application/json"})
 @Consumes({"application/json"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
 @Slf4j
 @OwnedBy(CE)
-public class CENextGenServiceResource {
+public class HealthStatus {
   @GET
   @Timed
-  @ApiOperation(value = "Get ce microservice base api", nickname = "test")
   @ExceptionMetered
-  public ResponseDTO<Boolean> test() {
+  public ResponseDTO<Boolean> status() {
     return ResponseDTO.newResponse(true);
   }
 }

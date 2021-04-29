@@ -26,7 +26,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import javax.annotation.Nullable;
-import lombok.NonNull;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.InsertFinalStep;
@@ -53,7 +53,7 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   }
 
   @Override
-  public void insertIntoNodeInfo(@NonNull InstanceInfo instanceInfo) {
+  public void insertIntoNodeInfo(@NotNull InstanceInfo instanceInfo) {
     final String nodePoolName =
         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NODE_POOL_NAME, instanceInfo.getMetaData());
 
@@ -66,17 +66,17 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
                   .onConflictOnConstraint(Keys.NODE_INFO_UNIQUE_RECORD_INDEX)
                   .doUpdate()
                   .set(NODE_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
-                  .set(NODE_INFO.UPDATEDAT, OffsetDateTime.now())
+                  .set(NODE_INFO.UPDATEDAT, OffsetDateTime.now(ZONE_OFFSET))
                   .set(NODE_INFO.NODEPOOLNAME, nodePoolName));
   }
 
   @Override
-  public void insertIntoNodeInfo(@NonNull List<InstanceInfo> instanceInfoList) {
+  public void insertIntoNodeInfo(@NotNull List<InstanceInfo> instanceInfoList) {
     instanceInfoList.forEach(this::insertIntoNodeInfo);
   }
 
   @Override
-  public void insertIntoWorkloadInfo(@NonNull String accountId, @NonNull K8sWorkloadSpec workloadSpec) {
+  public void insertIntoWorkloadInfo(@NotNull String accountId, @NotNull K8sWorkloadSpec workloadSpec) {
     int replicas = Integer.parseInt(String.valueOf(workloadSpec.getReplicas()));
 
     insertOne(dslContext.insertInto(WORKLOAD_INFO)
@@ -89,7 +89,7 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
                   .set(WORKLOAD_INFO.NAMESPACE, workloadSpec.getNamespace())
                   .onConflictOnConstraint(Keys.WORKLOAD_INFO_UNIQUE_RECORD_INDEX)
                   .doUpdate()
-                  .set(WORKLOAD_INFO.UPDATEDAT, OffsetDateTime.now())
+                  .set(WORKLOAD_INFO.UPDATEDAT, OffsetDateTime.now(ZONE_OFFSET))
                   .set(WORKLOAD_INFO.REPLICAS, replicas)
                   .set(WORKLOAD_INFO.TYPE, workloadSpec.getWorkloadKind())
                   .set(WORKLOAD_INFO.NAME, workloadSpec.getWorkloadName())
@@ -97,12 +97,12 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   }
 
   @Override
-  public void insertIntoPodInfo(@NonNull List<InstanceInfo> instanceInfoList) {
+  public void insertIntoPodInfo(@NotNull List<InstanceInfo> instanceInfoList) {
     instanceInfoList.forEach(this::insertIntoPodInfo);
   }
 
   @Override
-  public void insertIntoPodInfo(@NonNull InstanceInfo instanceInfo) {
+  public void insertIntoPodInfo(@NotNull InstanceInfo instanceInfo) {
     final String workloadId =
         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_ID, instanceInfo.getMetaData());
     final String namespace =
@@ -131,15 +131,15 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
                   .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
                   .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
                   .set(POD_INFO.PARENTNODEID, parentId)
-                  .set(POD_INFO.UPDATEDAT, OffsetDateTime.now()));
+                  .set(POD_INFO.UPDATEDAT, OffsetDateTime.now(ZONE_OFFSET)));
   }
 
   @Override
-  public void updatePodStopEvent(@NonNull List<InstanceEvent> instanceEventList) {
+  public void updatePodStopEvent(@NotNull List<InstanceEvent> instanceEventList) {
     for (InstanceEvent instanceEvent : instanceEventList) {
       updateOne(dslContext.update(POD_INFO)
                     .set(POD_INFO.STOPTIME, instantToOffsetDateTime(instanceEvent.getTimestamp()))
-                    .set(POD_INFO.UPDATEDAT, OffsetDateTime.now())
+                    .set(POD_INFO.UPDATEDAT, OffsetDateTime.now(ZONE_OFFSET))
                     .where(POD_INFO.ACCOUNTID.eq(instanceEvent.getAccountId()),
                         POD_INFO.CLUSTERID.eq(instanceEvent.getClusterId()),
                         POD_INFO.INSTANCEID.eq(instanceEvent.getInstanceId())));
@@ -147,10 +147,10 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   }
 
   @Override
-  public void updatePodLifecycleEvent(@NonNull String accountId, @NonNull List<Lifecycle> lifecycleList) {
+  public void updatePodLifecycleEvent(@NotNull String accountId, @NotNull List<Lifecycle> lifecycleList) {
     for (Lifecycle lifecycle : lifecycleList) {
       UpdateSetMoreStep<PodInfoRecord> updateSetMoreStep =
-          dslContext.update(POD_INFO).set(POD_INFO.UPDATEDAT, OffsetDateTime.now());
+          dslContext.update(POD_INFO).set(POD_INFO.UPDATEDAT, OffsetDateTime.now(ZONE_OFFSET));
 
       if (Lifecycle.EventType.EVENT_TYPE_START.equals(lifecycle.getType())) {
         updateSetMoreStep =
@@ -168,11 +168,11 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   }
 
   @Override
-  public void updateNodeStopEvent(@NonNull List<InstanceEvent> instanceEventList) {
+  public void updateNodeStopEvent(@NotNull List<InstanceEvent> instanceEventList) {
     for (InstanceEvent instanceEvent : instanceEventList) {
       updateOne(dslContext.update(NODE_INFO)
                     .set(NODE_INFO.STOPTIME, instantToOffsetDateTime(instanceEvent.getTimestamp()))
-                    .set(NODE_INFO.UPDATEDAT, OffsetDateTime.now())
+                    .set(NODE_INFO.UPDATEDAT, OffsetDateTime.now(ZONE_OFFSET))
                     .where(NODE_INFO.ACCOUNTID.eq(instanceEvent.getAccountId()),
                         NODE_INFO.CLUSTERID.eq(instanceEvent.getClusterId()),
                         NODE_INFO.INSTANCEID.eq(instanceEvent.getInstanceId())));
@@ -180,10 +180,10 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   }
 
   @Override
-  public void updateNodeLifecycleEvent(@NonNull String accountId, @NonNull List<Lifecycle> lifecycleList) {
+  public void updateNodeLifecycleEvent(@NotNull String accountId, @NotNull List<Lifecycle> lifecycleList) {
     for (Lifecycle lifecycle : lifecycleList) {
       UpdateSetMoreStep<NodeInfoRecord> updateSetMoreStep =
-          dslContext.update(NODE_INFO).set(NODE_INFO.UPDATEDAT, OffsetDateTime.now());
+          dslContext.update(NODE_INFO).set(NODE_INFO.UPDATEDAT, OffsetDateTime.now(ZONE_OFFSET));
 
       if (Lifecycle.EventType.EVENT_TYPE_START.equals(lifecycle.getType())) {
         updateSetMoreStep =
@@ -194,25 +194,25 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
         updateSetMoreStep = updateSetMoreStep.set(
             NODE_INFO.STOPTIME, HTimestamps.toInstant(lifecycle.getTimestamp()).atOffset(ZONE_OFFSET));
       }
-      updateOne(updateSetMoreStep.set(NODE_INFO.UPDATEDAT, OffsetDateTime.now())
+      updateOne(updateSetMoreStep.set(NODE_INFO.UPDATEDAT, OffsetDateTime.now(ZONE_OFFSET))
                     .where(NODE_INFO.ACCOUNTID.eq(accountId), NODE_INFO.CLUSTERID.eq(lifecycle.getClusterId()),
                         NODE_INFO.INSTANCEID.eq(lifecycle.getInstanceId())));
     }
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  private static void insertOne(@NonNull InsertFinalStep<? extends Record> finalStep) {
+  private static void insertOne(@NotNull InsertFinalStep<? extends Record> finalStep) {
     finalStep.execute();
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  private static void updateOne(@NonNull UpdateFinalStep<? extends Record> finalStep) {
+  private static void updateOne(@NotNull UpdateFinalStep<? extends Record> finalStep) {
     finalStep.execute();
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   private static <R extends Record> int bulkInsert(
-      @NonNull final Table<R> table, @NonNull final List<R> records, @NonNull final DSLContext dslContext) {
+      @NotNull final Table<R> table, @NotNull final List<R> records, @NotNull final DSLContext dslContext) {
     if (records.isEmpty()) {
       return 0;
     }
