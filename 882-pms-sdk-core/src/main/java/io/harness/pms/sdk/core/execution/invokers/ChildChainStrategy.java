@@ -14,7 +14,7 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
-import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
@@ -28,6 +28,7 @@ import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
@@ -37,6 +38,7 @@ import io.harness.tasks.ResponseData;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private StrategyHelper strategyHelper;
+  @Inject private ResponseDataMapper responseDataMapper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -133,25 +136,23 @@ public class ChildChainStrategy implements ExecuteStrategy {
   }
 
   private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
-    String ignoreNotifyId = "ignore-" + nodeExecution.getUuid();
-    AddExecutableResponseRequest addExecutableResponseRequest =
-        strategyHelper.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
-            ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
     PlanNodeProto planNode = nodeExecution.getNode();
-    ResumeNodeExecutionRequest resumeNodeExecutionRequest =
-        strategyHelper.getResumeNodeExecutionRequest(nodeExecution.getUuid(),
-            Collections.singletonMap(ignoreNotifyId,
-                StepResponseNotifyData.builder()
-                    .nodeUuid(planNode.getUuid())
-                    .identifier(planNode.getIdentifier())
-                    .group(planNode.getGroup())
-                    .status(SUSPENDED)
-                    .description("Ignoring Execution as next child found to be null")
-                    .build()),
-            false);
-
-    sdkNodeExecutionService.addExecutableResponseAndResumeNode(
-        nodeExecution.getUuid(), addExecutableResponseRequest, resumeNodeExecutionRequest);
+    Map<String, ByteString> responseBytes =
+        responseDataMapper.toResponseDataProto(Collections.singletonMap("ignore-" + nodeExecution.getUuid(),
+            StepResponseNotifyData.builder()
+                .nodeUuid(planNode.getUuid())
+                .identifier(planNode.getIdentifier())
+                .group(planNode.getGroup())
+                .status(SUSPENDED)
+                .description("Ignoring Execution as next child found to be null")
+                .build()));
+    sdkNodeExecutionService.suspendChainExecution(nodeExecution.getUuid(),
+        SuspendChainRequest.newBuilder()
+            .setNodeExecutionId(nodeExecution.getUuid())
+            .setExecutableResponse(ExecutableResponse.newBuilder().setChildChain(childChainResponse).build())
+            .setIsError(false)
+            .putAllResponse(responseBytes)
+            .build());
   }
 
   private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {

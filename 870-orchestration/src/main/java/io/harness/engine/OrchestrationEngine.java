@@ -383,7 +383,6 @@ public class OrchestrationEngine {
                                            .eventData(data)
                                            .build();
       nodeExecutionEventQueuePublisher.send(resumeEvent);
-      // Do something with the waitId
     } catch (Exception exception) {
       handleError(ambiance, exception);
     }

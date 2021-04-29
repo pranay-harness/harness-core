@@ -9,6 +9,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.utils.TransactionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -26,10 +27,8 @@ import java.util.EnumSet;
 import java.util.List;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.springframework.transaction.TransactionException;
-import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -39,16 +38,13 @@ public class EndNodeExecutionHelper {
 
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private TransactionTemplate transactionTemplate;
+  @Inject private TransactionUtils transactionUtils;
   @Inject private OrchestrationEngine orchestrationEngine;
 
   public void endNodeExecutionWithNoAdvisers(
       @NonNull NodeExecution nodeExecution, @NonNull StepResponseProto stepResponse) {
     NodeExecution updatedNodeExecution =
-        Failsafe.with(transactionRetryPolicy)
-            .get(()
-                     -> transactionTemplate.execute(
-                         ne -> processStepResponseWithNoAdvisers(nodeExecution, stepResponse)));
+        transactionUtils.performTransaction(() -> processStepResponseWithNoAdvisers(nodeExecution, stepResponse));
     if (updatedNodeExecution == null) {
       log.warn("Cannot process step response for nodeExecution {}", nodeExecution.getUuid());
       return;
@@ -97,8 +93,7 @@ public class EndNodeExecutionHelper {
   }
 
   public NodeExecution handleStepResponsePreAdviser(NodeExecution nodeExecution, StepResponseProto stepResponse) {
-    return Failsafe.with(transactionRetryPolicy)
-        .get(() -> transactionTemplate.execute(ne -> processStepResponsePreAdvisers(nodeExecution, stepResponse)));
+    return transactionUtils.performTransaction(() -> processStepResponsePreAdvisers(nodeExecution, stepResponse));
   }
 
   private NodeExecution processStepResponsePreAdvisers(NodeExecution nodeExecution, StepResponseProto stepResponse) {
