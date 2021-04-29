@@ -47,8 +47,8 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	var store store.Store
 	if config.S3.Bucket != "" {
 		// create the s3 store.
-		logrus.Infof("configuring log store to use s3 compatible backend with endpoint: %s and bucket name: %s",
-			config.S3.Endpoint, config.S3.Bucket)
+		logrus.Infof("configuring log store to use s3 compatible backend with endpoint: %s and bucket name: %s and ACL: %s",
+			config.S3.Endpoint, config.S3.Bucket, config.S3.Acl)
 		store = s3.NewEnv(
 			config.S3.Bucket,
 			config.S3.Prefix,
@@ -57,6 +57,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			config.S3.AccessKeyID,
 			config.S3.AccessKeySecret,
 			config.S3.Region,
+			config.S3.Acl,
 		)
 	} else {
 		// create the blob store.

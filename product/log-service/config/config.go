@@ -29,6 +29,7 @@ type Config struct {
 	// S3 compatible store
 	S3 struct {
 		Bucket          string `envconfig:"LOG_SERVICE_S3_BUCKET"`
+		Acl             string `envconfig:"LOG_SERVICE_S3_ACL"`
 		Prefix          string `envconfig:"LOG_SERVICE_S3_PREFIX"`
 		Endpoint        string `envconfig:"LOG_SERVICE_S3_ENDPOINT"`
 		PathStyle       bool   `envconfig:"LOG_SERVICE_S3_PATH_STYLE"`
