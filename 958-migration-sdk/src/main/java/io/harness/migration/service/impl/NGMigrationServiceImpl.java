@@ -166,7 +166,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
         continue;
       }
       Class<? extends NGMigration> migration = migrations.get(i);
-      log.info("[Migration] - {} : Migrating to version {} ...", serviceName, i);
+      log.info("[Migration] - {} : Migrating {} to version {} ...", serviceName, migrationTypeName, i);
       try {
         injector.getInstance(migration).migrate();
       } catch (Exception ex) {

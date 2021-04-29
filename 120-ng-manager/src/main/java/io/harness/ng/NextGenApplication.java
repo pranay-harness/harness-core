@@ -270,7 +270,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     return NGMigrationConfiguration.builder()
         .microservice(Microservice.CORE)
         .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
-          { add(NoOpNGCoreMigrationProvider.class); } // Add all migration provider classes here
+          { add(NGCoreMigrationProvider.class); } // Add all migration provider classes here
         })
         .build();
   }
@@ -288,11 +288,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     configureObjectMapper(ngObjectMapper);
     Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
     gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
-        .entityType(EntityType.CONNECTORS)
-        .yamlClass(ConnectorDTO.class)
-        .entityClass(Connector.class)
-        .entityHelperClass(ConnectorGitSyncHelper.class)
-        .build());
+                                          .entityType(EntityType.CONNECTORS)
+                                          .yamlClass(ConnectorDTO.class)
+                                          .entityClass(Connector.class)
+                                          .entityHelperClass(ConnectorGitSyncHelper.class)
+                                          .build());
     final GitSdkConfiguration gitSdkConfiguration = config.getGitSdkConfiguration();
     return GitSyncSdkConfiguration.builder()
         .gitSyncSortOrder(sortOrder)
@@ -343,10 +343,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerYamlSdk(Injector injector) {
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
-        .requireSchemaInit(true)
-        .requireSnippetInit(true)
-        .requireValidatorInit(true)
-        .build();
+                                                    .requireSchemaInit(true)
+                                                    .requireSnippetInit(true)
+                                                    .requireValidatorInit(true)
+                                                    .build();
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
 
@@ -496,18 +496,18 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     return getAuthFilterPredicate(PublicApi.class)
         .or(resourceInfoAndRequest
             -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
-            || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
-            || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json")
-            || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
-            "/swagger.yaml"));
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
+                    "/swagger.yaml"));
   }
 
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
       Class<? extends Annotation> annotation) {
     return resourceInfoAndRequest
         -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
-        && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
+               && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
         || (resourceInfoAndRequest.getKey().getResourceClass() != null
-        && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
   }
 }
