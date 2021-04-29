@@ -30,23 +30,23 @@ public class CfCliCommandResolverTest extends CategoryTest {
   @Owner(developers = IVAN)
   @Category(UnitTests.class)
   public void testGetApiCommand() {
-    String endpoint = "http:\\\\domain.subdomain.com\\cluster-id";
+    String endpoint = "http://domain.subdomain.com/api-endpoint";
     String apiCommand = CfCliCommandResolver.getApiCommand(cfCliPathV6, cfCliVersionV6, endpoint, true);
 
     assertThat(apiCommand).isNotEmpty();
     assertThat(apiCommand)
-        .isEqualTo("/path-to-cf-cli6/cf api http:\\\\domain.subdomain.com\\cluster-id --skip-ssl-validation");
+        .isEqualTo("/path-to-cf-cli6/cf api http://domain.subdomain.com/api-endpoint --skip-ssl-validation");
 
     apiCommand = CfCliCommandResolver.getApiCommand(cfCliPathV7, cfCliVersionV7, endpoint, true);
 
     assertThat(apiCommand).isNotEmpty();
     assertThat(apiCommand)
-        .isEqualTo("/path-to-cf-cli7/cf7 api http:\\\\domain.subdomain.com\\cluster-id --skip-ssl-validation");
+        .isEqualTo("/path-to-cf-cli7/cf7 api http://domain.subdomain.com/api-endpoint --skip-ssl-validation");
 
     apiCommand = CfCliCommandResolver.getApiCommand(cfCliDefault, cfCliVersionV7, endpoint, true);
 
     assertThat(apiCommand).isNotEmpty();
-    assertThat(apiCommand).isEqualTo("cf api http:\\\\domain.subdomain.com\\cluster-id --skip-ssl-validation");
+    assertThat(apiCommand).isEqualTo("cf api http://domain.subdomain.com/api-endpoint --skip-ssl-validation");
   }
 
   @Test
