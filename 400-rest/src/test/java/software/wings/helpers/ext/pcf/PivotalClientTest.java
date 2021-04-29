@@ -52,6 +52,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.cfcli.CfCliCommandType;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -1214,7 +1215,7 @@ public class PivotalClientTest extends CategoryTest {
     doReturn(info).when(client).extractRouteInfoFromPath(any(), anyString());
     doReturn(0).when(client).executeCommand(anyString(), any(), any());
     client.executeRoutesOperationForApplicationUsingCli(
-        "cf map-route", requestConfig, singletonList("cdp-10515.z.example.com/path"), mockCallback);
+        CfCliCommandType.MAP_ROUTE, requestConfig, singletonList("cdp-10515.z.example.com/path"), mockCallback);
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(client).executeCommand(captor.capture(), any(), any());
     String value = captor.getValue();

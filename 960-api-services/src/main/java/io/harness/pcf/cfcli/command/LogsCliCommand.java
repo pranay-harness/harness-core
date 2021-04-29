@@ -14,16 +14,16 @@ import lombok.Builder;
 import lombok.Value;
 
 @OwnedBy(HarnessTeam.CDP)
-public class VersionCliCommand extends CfCliCommand {
+public class LogsCliCommand extends CfCliCommand {
   @Builder
-  VersionCliCommand(CfCliVersion cliVersion, String cliPath, GlobalOptions globalOptions, List<String> arguments,
-      VersionOptions options) {
-    super(cliVersion, cliPath, globalOptions, CfCliCommandType.VERSION, arguments, options);
+  LogsCliCommand(CfCliVersion cliVersion, String cliPath, GlobalOptions globalOptions, List<String> arguments,
+      LogsOptions options) {
+    super(cliVersion, cliPath, globalOptions, CfCliCommandType.LOGS, arguments, options);
   }
 
   @Value
   @Builder
-  public static class VersionOptions implements Options {
-    @Flag(value = "--version") boolean version;
+  public static class LogsOptions implements Options {
+    @Flag(value = "--recent") boolean recent;
   }
 }

@@ -1,8 +1,10 @@
 package io.harness.pcf.cfcli;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -24,6 +26,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Builder;
 
 @Builder
@@ -83,7 +86,7 @@ public class CfCliCommandBuilder {
       return EMPTY;
     }
 
-    throw new UnsupportedOperationException("Operation still not supported");
+    return String.join(SPACE, arguments);
   }
 
   private static String buildOptions(Options optionsData) {
@@ -104,6 +107,9 @@ public class CfCliCommandBuilder {
           Object optionFieldValue = field.get(optionsData);
           if (fieldType == String.class) {
             addOption(optionList, optionKey, (String) optionFieldValue);
+          }
+          if (fieldType == List.class) {
+            addOption(optionList, optionKey, (List<?>) optionFieldValue);
           }
         }
 
@@ -143,8 +149,27 @@ public class CfCliCommandBuilder {
 
   private static void addOption(List<String> optionList, final String optionKey, final String fieldValue) {
     if (isNotBlank(fieldValue)) {
-      optionList.add(OPTION_TEMPLATE.replace("${KEY}", optionKey).replace("${VALUE}", fieldValue));
+      optionList.add(buildOption(optionKey, fieldValue));
     }
+  }
+
+  private static void addOption(List<String> optionList, final String optionKey, List<?> fieldValue) {
+    if (isNotEmpty(fieldValue)) {
+      Class<?> listElementType = fieldValue.get(0).getClass();
+      if (listElementType != String.class) {
+        throw new InvalidArgumentsException(format(
+            "Unsupported option list element kind, expected String.class as element type but found: %s, optionKey: %s",
+            listElementType, optionKey));
+      }
+      List<String> fieldValueList = (List<String>) fieldValue;
+      List<String> fieldOptionKeyValueList =
+          fieldValueList.stream().map(elm -> buildOption(optionKey, elm)).collect(Collectors.toList());
+      optionList.add(String.join(SPACE, fieldOptionKeyValueList));
+    }
+  }
+
+  private static String buildOption(String optionKey, String optionValue) {
+    return OPTION_TEMPLATE.replace("${KEY}", optionKey).replace("${VALUE}", optionValue);
   }
 
   private static void addFlag(List<String> optionList, final String flag, boolean fieldValue) {

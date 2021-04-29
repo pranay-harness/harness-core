@@ -4,8 +4,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pcf.cfcli.CfCliCommand;
 import io.harness.pcf.cfcli.CfCliCommandType;
-import io.harness.pcf.cfcli.option.Flag;
 import io.harness.pcf.cfcli.option.GlobalOptions;
+import io.harness.pcf.cfcli.option.Option;
 import io.harness.pcf.cfcli.option.Options;
 import io.harness.pcf.model.CfCliVersion;
 
@@ -14,16 +14,17 @@ import lombok.Builder;
 import lombok.Value;
 
 @OwnedBy(HarnessTeam.CDP)
-public class VersionCliCommand extends CfCliCommand {
+public class TargetCliCommand extends CfCliCommand {
   @Builder
-  VersionCliCommand(CfCliVersion cliVersion, String cliPath, GlobalOptions globalOptions, List<String> arguments,
-      VersionOptions options) {
-    super(cliVersion, cliPath, globalOptions, CfCliCommandType.VERSION, arguments, options);
+  TargetCliCommand(CfCliVersion cliVersion, String cliPath, GlobalOptions globalOptions, List<String> arguments,
+      TargetOptions options) {
+    super(cliVersion, cliPath, globalOptions, CfCliCommandType.TARGET, arguments, options);
   }
 
   @Value
   @Builder
-  public static class VersionOptions implements Options {
-    @Flag(value = "--version") boolean version;
+  public static class TargetOptions implements Options {
+    @Option(value = "-o") String org;
+    @Option(value = "-s") String space;
   }
 }

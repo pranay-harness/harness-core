@@ -6,6 +6,7 @@ import io.harness.pcf.cfcli.CfCliCommand;
 import io.harness.pcf.cfcli.CfCliCommandType;
 import io.harness.pcf.cfcli.option.Flag;
 import io.harness.pcf.cfcli.option.GlobalOptions;
+import io.harness.pcf.cfcli.option.Option;
 import io.harness.pcf.cfcli.option.Options;
 import io.harness.pcf.model.CfCliVersion;
 
@@ -14,16 +15,17 @@ import lombok.Builder;
 import lombok.Value;
 
 @OwnedBy(HarnessTeam.CDP)
-public class VersionCliCommand extends CfCliCommand {
+public class AuthCliCommand extends CfCliCommand {
   @Builder
-  VersionCliCommand(CfCliVersion cliVersion, String cliPath, GlobalOptions globalOptions, List<String> arguments,
-      VersionOptions options) {
-    super(cliVersion, cliPath, globalOptions, CfCliCommandType.VERSION, arguments, options);
+  AuthCliCommand(CfCliVersion cliVersion, String cliPath, GlobalOptions globalOptions, List<String> arguments,
+      AuthOptions options) {
+    super(cliVersion, cliPath, globalOptions, CfCliCommandType.AUTH, arguments, options);
   }
 
   @Value
   @Builder
-  public static class VersionOptions implements Options {
-    @Flag(value = "--version") boolean version;
+  public static class AuthOptions implements Options {
+    @Option(value = "--origin") String origin;
+    @Flag(value = "--client-credentials") boolean clientCredentials;
   }
 }

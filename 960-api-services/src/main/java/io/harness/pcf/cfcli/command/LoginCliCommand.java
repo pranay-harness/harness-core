@@ -12,7 +12,6 @@ import io.harness.pcf.model.CfCliVersion;
 
 import java.util.List;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @OwnedBy(HarnessTeam.CDP)
@@ -26,24 +25,15 @@ public class LoginCliCommand extends CfCliCommand {
 
   @Value
   @Builder
-  @EqualsAndHashCode(callSuper = true)
-  public static class LoginOptions extends Options {
+  public static class LoginOptions implements Options {
     @Option(value = "-a") String apiEndpoint;
-
     @Option(value = "-u") String user;
-
     @Option(value = "-p") String pwd;
-
     @Option(value = "-o") String org;
-
     @Option(value = "-s") String space;
-
     @Flag(value = "--sso") boolean sso;
-
     @Option(value = "--sso-passcode") String ssoPasscode;
-
     @Option(value = "--origin") String origin;
-
     @Flag(value = "--skip-ssl-validation") boolean skipSslValidation;
   }
 }

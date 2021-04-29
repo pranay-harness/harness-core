@@ -14,16 +14,17 @@ import lombok.Builder;
 import lombok.Value;
 
 @OwnedBy(HarnessTeam.CDP)
-public class VersionCliCommand extends CfCliCommand {
+public class ApiCliCommand extends CfCliCommand {
   @Builder
-  VersionCliCommand(CfCliVersion cliVersion, String cliPath, GlobalOptions globalOptions, List<String> arguments,
-      VersionOptions options) {
-    super(cliVersion, cliPath, globalOptions, CfCliCommandType.VERSION, arguments, options);
+  ApiCliCommand(CfCliVersion cliVersion, String cliPath, GlobalOptions globalOptions, List<String> arguments,
+      ApiOptions options) {
+    super(cliVersion, cliPath, globalOptions, CfCliCommandType.API, arguments, options);
   }
 
   @Value
   @Builder
-  public static class VersionOptions implements Options {
-    @Flag(value = "--version") boolean version;
+  public static class ApiOptions implements Options {
+    @Flag(value = "--unset") boolean unset;
+    @Flag(value = "--skip-ssl-validation") boolean skipSslValidation;
   }
 }

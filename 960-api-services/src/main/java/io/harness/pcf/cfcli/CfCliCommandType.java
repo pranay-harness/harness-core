@@ -8,7 +8,20 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(HarnessTeam.CDP)
 public enum CfCliCommandType {
   VERSION(StringUtils.EMPTY),
-  LOGIN("login");
+  LOGIN("login"),
+  API("api"),
+  AUTH("auth"),
+  TARGET("target"),
+  LOGS("logs"),
+  UNMAP_ROUTE("unmap-route"),
+  MAP_ROUTE("map-route"),
+  SET_ENV("set-env"),
+  UNSET_ENV("unset-env"),
+  CONFIGURE_AUTOSCALING("configure-autoscaling"),
+  DISABLE_AUTOSCALING("disable-autoscaling"),
+  ENABLE_AUTOSCALING("enable-autoscaling"),
+  AUTOSCALING_APPS("autoscaling-apps"),
+  PUSH("push");
 
   CfCliCommandType(String value) {
     this.value = value;
