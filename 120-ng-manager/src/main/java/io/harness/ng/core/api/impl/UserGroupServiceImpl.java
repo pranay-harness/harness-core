@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -208,7 +209,10 @@ public class UserGroupServiceImpl implements UserGroupService {
       String userGroupIdentifier, String userIdentifier) {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
-    existingUserGroup.getUsers().add(userIdentifier);
+
+    if (existingUserGroup.getUsers().stream().noneMatch(userIdentifier::equals)) {
+      existingUserGroup.getUsers().add(userIdentifier);
+    }
     return updateInternal(existingUserGroup, oldUserGroup);
   }
 
@@ -219,6 +223,25 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
     existingUserGroup.getUsers().remove(userIdentifier);
     return updateInternal(existingUserGroup, oldUserGroup);
+  }
+
+  @Override
+  public void removeMemberAll(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      @NotNull String userIdentifier) {
+    Criteria criteria =
+        createCriteriaByScopeAndUsersIn(accountIdentifier, orgIdentifier, projectIdentifier, userIdentifier);
+    List<UserGroup> userGroups = userGroupRepository.findAll(criteria);
+
+    List<String> userGroupIdentifiers = userGroups.stream().map(UserGroup::getIdentifier).collect(Collectors.toList());
+    userGroupIdentifiers.forEach(userGroupIdentifier
+        -> removeMember(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier, userIdentifier));
+  }
+
+  private Criteria createCriteriaByScopeAndUsersIn(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String userIdentifier) {
+    Criteria criteria = createScopeCriteria(accountIdentifier, orgIdentifier, projectIdentifier);
+    criteria.and(UserGroupKeys.users).in(userIdentifier);
+    return criteria;
   }
 
   private UserGroup getOrThrow(
@@ -283,6 +306,19 @@ public class UserGroupServiceImpl implements UserGroupService {
         throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
       }
     });
+    if (hasDuplicate(usersIds)) {
+      throw new InvalidArgumentsException("Duplicate users provided");
+    }
+  }
+
+  private static <T> boolean hasDuplicate(Iterable<T> elements) {
+    Set<T> set = new HashSet<>();
+    for (T element : elements) {
+      if (!set.add(element)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private String getInvalidUserMessage(Set<String> invalidUserIds) {

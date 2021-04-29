@@ -58,7 +58,7 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @EntityIdentifier String identifier;
 
   @NGEntityName String name;
-  @NotNull @Singular List<String> users;
+  @NotNull List<String> users;
   @NotNull List<NotificationSettingConfig> notificationConfigs;
   boolean harnessManaged;
 
