@@ -238,7 +238,8 @@ public class ConnectorResource {
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)
         .map(connector
             -> connectorRbacHelper.checkSecretRuntimeAccessWithConnectorDTO(
