@@ -590,8 +590,10 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         startDateCopy = startDateCopy.plusDays(1);
       }
 
-      repositoryInfoList.add(getRepositoryInfo(
-          repositoryName, totalBuild, success, previousSuccess, lastCommit, lastCommitTime, buildCount, lastStatus));
+      if (totalBuild > 0) {
+        repositoryInfoList.add(getRepositoryInfo(
+            repositoryName, totalBuild, success, previousSuccess, lastCommit, lastCommitTime, buildCount, lastStatus));
+      }
     }
 
     return DashboardBuildRepositoryInfo.builder().repositoryInfo(repositoryInfoList).build();

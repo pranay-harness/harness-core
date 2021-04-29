@@ -292,6 +292,9 @@ import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.scm.PushTaskType;
+import io.harness.delegate.task.scm.ScmPushTaskParams;
+import io.harness.delegate.task.scm.ScmPushTaskResponseData;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
 import io.harness.delegate.task.shell.ShellScriptTaskResponseNG;
@@ -712,6 +715,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(TFTaskType.class, 543284);
     kryo.register(TerraformTaskNGResponse.class, 543285);
 
-    kryo.register(PcfInstallationCapability.class, 543299);
+    kryo.register(ScmPushTaskParams.class, 553286);
+    kryo.register(ScmPushTaskResponseData.class, 553287);
+    kryo.register(PushTaskType.class, 553288);
+    kryo.register(PcfInstallationCapability.class, 553289);
   }
 }

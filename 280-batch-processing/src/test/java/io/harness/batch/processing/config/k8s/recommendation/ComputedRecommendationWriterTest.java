@@ -5,9 +5,11 @@ import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +20,8 @@ import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.histogram.HistogramCheckpoint;
 import io.harness.rule.Owner;
 
@@ -49,6 +53,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   public static final String NAMESPACE = "NAMESPACE";
   public static final String WORKLOAD_NAME = "WORKLOAD_NAME";
   public static final String WORKLOAD_TYPE = "WORKLOAD_TYPE";
+  private static final String UUID = "UUID";
 
   public static final Instant JOB_START_DATE = Instant.now().truncatedTo(ChronoUnit.DAYS).minus(Duration.ofDays(1));
 
@@ -58,8 +63,10 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   private WorkloadRecommendationDao workloadRecommendationDao;
 
   private ArgumentCaptor<K8sWorkloadRecommendation> captor;
+  private ArgumentCaptor<String> stringCaptor;
   private WorkloadRepository workloadRepository;
   private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
+  private K8sRecommendationDAO k8sRecommendationDAO;
 
   @Before
   public void setUp() throws Exception {
@@ -67,12 +74,18 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     workloadRecommendationDao = mock(WorkloadRecommendationDao.class);
     workloadRepository = mock(WorkloadRepository.class);
     k8sLabelServiceInfoFetcher = mock(K8sLabelServiceInfoFetcher.class);
+    k8sRecommendationDAO = mock(K8sRecommendationDAO.class);
+
+    when(workloadRecommendationDao.save(any(K8sWorkloadRecommendation.class))).thenReturn(UUID);
     when(workloadRepository.getWorkload(any())).thenReturn(Optional.empty());
     when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(anyString(), anyMap()))
         .thenReturn(Optional.empty());
-    computedRecommendationWriter = new ComputedRecommendationWriter(
-        workloadRecommendationDao, workloadCostService, workloadRepository, k8sLabelServiceInfoFetcher, JOB_START_DATE);
+    doNothing().when(k8sRecommendationDAO).insertIntoCeRecommendation(any(), any(), any(), any(), anyBoolean(), any());
+
+    computedRecommendationWriter = new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService,
+        workloadRepository, k8sLabelServiceInfoFetcher, k8sRecommendationDAO, JOB_START_DATE);
     captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
+    stringCaptor = ArgumentCaptor.forClass(String.class);
   }
 
   @Test
@@ -250,6 +263,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                              .workloadType(WORKLOAD_TYPE)
                              .namespace(NAMESPACE)
                              .workloadName(WORKLOAD_NAME)
+                             .lastReceivedUtilDataAt(Instant.EPOCH)
                              .containerRecommendation("harness-example",
                                  ContainerRecommendation.builder()
                                      .current(ResourceRequirement.builder()
@@ -286,6 +300,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                 .build()));
 
     computedRecommendationWriter.write(recommendations);
+
     verify(workloadRecommendationDao).save(captor.capture());
 
     assertThat(captor.getAllValues()).hasSize(1);
@@ -297,6 +312,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(1);
@@ -364,6 +380,11 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
 
     assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(189.52));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
+
+    verify(k8sRecommendationDAO)
+        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test
@@ -378,6 +399,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                              .workloadType(WORKLOAD_TYPE)
                              .namespace(NAMESPACE)
                              .workloadName(WORKLOAD_NAME)
+                             .lastReceivedUtilDataAt(Instant.EPOCH)
                              .containerRecommendation("harness-example",
                                  ContainerRecommendation.builder()
                                      .current(ResourceRequirement.builder()
@@ -415,6 +437,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(1);
@@ -460,6 +483,11 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
 
     assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(183.80));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
+
+    verify(k8sRecommendationDAO)
+        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test
@@ -474,6 +502,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                              .workloadType(WORKLOAD_TYPE)
                              .namespace(NAMESPACE)
                              .workloadName(WORKLOAD_NAME)
+                             .lastReceivedUtilDataAt(Instant.EPOCH)
                              .containerRecommendation("harness-example",
                                  ContainerRecommendation.builder()
                                      .current(ResourceRequirement.builder()
@@ -509,8 +538,14 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     assertThat(recommendation.isLastDayCostAvailable()).isFalse();
+
+    verify(k8sRecommendationDAO)
+        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test
@@ -525,6 +560,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
             .workloadType(WORKLOAD_TYPE)
             .namespace(NAMESPACE)
             .workloadName(WORKLOAD_NAME)
+            .lastReceivedUtilDataAt(Instant.EPOCH)
             .containerRecommendation("harness-example",
                 ContainerRecommendation.builder()
                     .current(ResourceRequirement.builder()
@@ -568,6 +604,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(1);
@@ -593,6 +630,11 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .request("memory", "20M")
                        .limit("memory", "20M")
                        .build());
+
+    verify(k8sRecommendationDAO)
+        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test
@@ -607,6 +649,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
             .workloadType(WORKLOAD_TYPE)
             .namespace(NAMESPACE)
             .workloadName(WORKLOAD_NAME)
+            .lastReceivedUtilDataAt(Instant.EPOCH)
             .containerRecommendation("harness-example",
                 ContainerRecommendation.builder()
                     .current(ResourceRequirement.builder()
@@ -650,6 +693,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(1);
@@ -676,6 +720,11 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .request("memory", "250M")
                        .limit("memory", "250M")
                        .build());
+
+    verify(k8sRecommendationDAO)
+        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test

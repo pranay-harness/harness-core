@@ -25,6 +25,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.serializer.CENextGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.threading.ExecutorModule;
+import io.harness.timescaledb.DSLContextService;
 import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
@@ -41,14 +42,15 @@ import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.jooq.DSLContext;
 import org.mongodb.morphia.converters.TypeConverter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @OwnedBy(CE)
 public class CENextGenModule extends AbstractModule {
-  private final io.harness.ccm.CENextGenConfiguration configuration;
+  private final CENextGenConfiguration configuration;
 
-  public CENextGenModule(io.harness.ccm.CENextGenConfiguration configuration) {
+  public CENextGenModule(CENextGenConfiguration configuration) {
     this.configuration = configuration;
   }
 
@@ -101,6 +103,8 @@ public class CENextGenModule extends AbstractModule {
     bind(CENextGenConfiguration.class).toInstance(configuration);
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     registerEventsFrameworkMessageListeners();
+    bind(DSLContext.class)
+        .toInstance(new DSLContextService(configuration.getTimeScaleDBConfig()).getDefaultDSLContext());
 
     install(new AbstractModule() {
       @Override

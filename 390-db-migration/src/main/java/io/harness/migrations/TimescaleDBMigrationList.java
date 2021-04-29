@@ -1,6 +1,5 @@
 package io.harness.migrations;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.timescaledb.AddAccountIdStatusIndexToDeployment;
@@ -34,6 +33,7 @@ import io.harness.migrations.timescaledb.CreateAnomaliesData;
 import io.harness.migrations.timescaledb.CreateBillingData;
 import io.harness.migrations.timescaledb.CreateBillingDataHourly;
 import io.harness.migrations.timescaledb.CreateBudgetAlerts;
+import io.harness.migrations.timescaledb.CreateCeRecommendationTable;
 import io.harness.migrations.timescaledb.CreateDeploymentParentTable;
 import io.harness.migrations.timescaledb.CreateDeploymentStageTable;
 import io.harness.migrations.timescaledb.CreateInstanceStatsDayTable;
@@ -114,6 +114,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(48, AddNewentityToAnomalies.class))
         .add(Pair.of(49, AddNewIndexToAnomalies.class))
         .add(Pair.of(50, RecommendationsRelatedTables.class))
+        .add(Pair.of(51, CreateCeRecommendationTable.class))
         .build();
   }
 }

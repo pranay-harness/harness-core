@@ -13,4 +13,5 @@ public interface GitStoreConfig extends StoreConfig {
   ParameterField<List<String>> getPaths();
   ParameterField<String> getFolderPath();
   ParameterField<String> getRepoName();
+  GitStoreConfigDTO toGitStoreConfigDTO();
 }

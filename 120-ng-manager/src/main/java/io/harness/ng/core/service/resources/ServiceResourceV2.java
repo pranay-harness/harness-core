@@ -24,9 +24,6 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.AccessDeniedException;
-import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -39,8 +36,6 @@ import io.harness.ng.core.service.mappers.ServiceElementMapper;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.rbac.NGResourceType;
-import io.harness.rbac.CDNGRbacPermissions;
-import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
@@ -49,7 +44,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -93,7 +87,7 @@ public class ServiceResourceV2 {
   @GET
   @Path("{serviceIdentifier}")
   @ApiOperation(value = "Gets a Service by identifier", nickname = "getServiceV2")
-  @NGAccessControlCheck(resourceType = NGResourceType.SERVICE, permission = "core_service_view")
+  //  @NGAccessControlCheck(resourceType = NGResourceType.SERVICE, permission = "core_service_view")
   public ResponseDTO<ServiceResponse> get(@PathParam("serviceIdentifier") @ResourceIdentifier String serviceIdentifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
@@ -193,15 +187,16 @@ public class ServiceResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
-    boolean hasAccess = accessControlClient
-                            .checkForAccess(Collections.singletonList(CDNGRbacUtility.getPermissionDTO(accountId,
-                                orgIdentifier, projectIdentifier, CDNGRbacPermissions.SERVICE_VIEW_PERMISSION)))
-                            .getAccessControlList()
-                            .get(0)
-                            .isPermitted();
-    if (!hasAccess) {
-      throw new AccessDeniedException("Unauthorized to list services", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
-    }
+    //    boolean hasAccess = accessControlClient
+    //                            .checkForAccess(Collections.singletonList(CDNGRbacUtility.getPermissionDTO(accountId,
+    //                                orgIdentifier, projectIdentifier, CDNGRbacPermissions.SERVICE_VIEW_PERMISSION)))
+    //                            .getAccessControlList()
+    //                            .get(0)
+    //                            .isPermitted();
+    //    if (!hasAccess) {
+    //      throw new AccessDeniedException("Unauthorized to list services", ErrorCode.NG_ACCESS_DENIED,
+    //      WingsException.USER);
+    //    }
     Criteria criteria =
         ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false, searchTerm);
     Pageable pageRequest;

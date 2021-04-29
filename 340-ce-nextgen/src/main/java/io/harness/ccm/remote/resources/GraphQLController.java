@@ -6,15 +6,13 @@ import static java.util.Optional.ofNullable;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.dto.GraphQLQuery;
-import io.harness.ccm.query.BillingDataQuery;
-import io.harness.ccm.query.InstanceDataQuery;
-import io.harness.ccm.query.K8sWorkloadHistogramQuery;
-import io.harness.ccm.query.K8sWorkloadRecommendationQuery;
+import io.harness.ccm.dto.graphql.GraphQLQuery;
+import io.harness.ccm.utils.graphql.GraphQLApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -26,8 +24,10 @@ import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -37,10 +37,11 @@ import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.dataloader.DataLoaderRegistry;
 import org.hibernate.validator.constraints.NotBlank;
+import org.reflections.Reflections;
 import org.springframework.stereotype.Service;
 
-@Api("graphql")
-@Path("graphql")
+@Api("/graphql")
+@Path("/graphql")
 @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
 @NextGenManagerAuth
 @Slf4j
@@ -51,25 +52,39 @@ public class GraphQLController {
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private static final SchemaPrinter schemaPrinter = new SchemaPrinter();
   private static final DataLoaderRegistry registry = new DataLoaderRegistry();
+  private static String schemaAsString;
 
   @Inject
-  public GraphQLController(InstanceDataQuery instanceDataQuery, BillingDataQuery billingDataQuery,
-      K8sWorkloadRecommendationQuery k8sWorkloadRecommendationQuery,
-      K8sWorkloadHistogramQuery k8sWorkloadHistogramQuery) {
-    // Schema generated from dataFetcher/query classes
-    GraphQLSchema schema =
-        new GraphQLSchemaGenerator()
-            .withBasePackages("io.harness.ccm")
-            .withOperationsFromSingletons(instanceDataQuery, billingDataQuery, k8sWorkloadHistogramQuery,
-                k8sWorkloadRecommendationQuery) // link all dataFetcher/query instances here
-            .generate();
+  public GraphQLController(final Injector injector) {
+    final Reflections reflections = new Reflections("io.harness.ccm.query");
+    final GraphQLSchemaGenerator schemaGenerator = new GraphQLSchemaGenerator().withBasePackages("io.harness.ccm");
+
+    final Set<Class<?>> queryClasses = reflections.getTypesAnnotatedWith(GraphQLApi.class);
+    for (Class<?> clazz : queryClasses) {
+      schemaGenerator.withOperationsFromSingleton(injector.getInstance(clazz));
+    }
+
+    final GraphQLSchema schema = schemaGenerator.generate();
     graphQL = GraphQL.newGraphQL(schema).build();
 
-    log.info("ce-nextgen graphql schemas: {}", schemaPrinter.print(schema));
-    log.info("Generated all GraphQL schemas using SPQR");
+    schemaAsString = schemaPrinter.print(schema)
+                         .replaceAll("@_mappedOperation\\(operation : \"__internal__\"\\)", "")
+                         .replaceAll("@_mappedType\\(type : \"__internal__\"\\)", "");
 
-    // register dataLoaders here
-    registry.register(instanceDataQuery.getDataLoaderName(), instanceDataQuery.getInstanceDataLoader());
+    log.info("ce-nextgen graphql schemas:\n{}", schemaAsString);
+    log.info("Finished generating all GraphQL schemas using SPQR");
+
+    registerDataLoaders();
+  }
+
+  private void registerDataLoaders() {
+    // registry.register(instanceDataQuery.getDataLoaderName(), instanceDataQuery.getInstanceDataLoader());
+  }
+
+  @GET
+  @Path("/schema")
+  public String getSchema() {
+    return schemaAsString;
   }
 
   @POST
