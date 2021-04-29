@@ -6,6 +6,7 @@ import io.harness.advisers.retry.RetryAdviserRollbackParameters;
 import io.harness.advisers.retry.RetryAdviserWithRollback;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.execution.failure.FailureType;
@@ -27,7 +28,7 @@ public class CDPMSStepPlanCreator extends GenericStepPMSPlanCreator {
   public Set<String> getSupportedStepTypes() {
     return Sets.newHashSet("K8sRollingDeploy", "K8sRollingRollback", "ShellScript", "K8sScale", "K8sCanaryDeploy",
         "K8sBlueGreenDeploy", "K8sBGSwapServices", "K8sDelete", "K8sCanaryDelete", "K8sApply", "TerraformApply",
-        "TerraformPlan", "TerraformDestroy");
+        "TerraformPlan", "TerraformDestroy", StepSpecTypeConstants.TERRAFORM_ROLLBACK);
   }
 
   @Override

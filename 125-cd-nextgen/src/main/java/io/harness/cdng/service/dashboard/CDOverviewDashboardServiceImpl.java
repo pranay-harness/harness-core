@@ -2,14 +2,17 @@ package io.harness.cdng.service.dashboard;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.cdng.Deployment.Deployment;
 import io.harness.cdng.Deployment.DeploymentCount;
 import io.harness.cdng.Deployment.DeploymentDateAndCount;
 import io.harness.cdng.Deployment.DeploymentInfo;
+import io.harness.cdng.Deployment.DeploymentStatusInfo;
 import io.harness.cdng.Deployment.ExecutionDeployment;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.Deployment.HealthDeploymentInfo;
+import io.harness.cdng.Deployment.ServiceDeploymentInfo;
 import io.harness.cdng.Deployment.TimeAndStatusDeployment;
 import io.harness.cdng.Deployment.TotalDeploymentInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -24,7 +27,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +43,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   private String tableNameCD = "pipeline_execution_summary_cd";
   private String tableNameServiceAndInfra = "service_infra_info";
+  private List<String> failedStatusList =
+      Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
+  private List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name(), ExecutionStatus.PAUSED.name());
+  private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTION_WAITING.name(),
+      ExecutionStatus.APPROVAL_WAITING.name(), ExecutionStatus.WAITING.name());
   private static final int MAX_RETRY_COUNT = 5;
 
   public String queryBuilderSelectStatusTime(
@@ -98,6 +108,75 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     }
     rate = rate * 100.0;
     return rate;
+  }
+
+  public String queryBuilderStatus(
+      String accountId, String orgId, String projectId, long days, List<String> statusList) {
+    String selectStatusQuery = "select id,name,startts,endTs,status from " + tableNameCD + " where ";
+    StringBuilder totalBuildSqlBuilder = new StringBuilder();
+    totalBuildSqlBuilder.append(selectStatusQuery);
+
+    if (accountId != null) {
+      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
+    }
+
+    if (orgId != null) {
+      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
+    }
+
+    if (projectId != null) {
+      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
+    }
+
+    totalBuildSqlBuilder.append("status in (");
+    for (String status : statusList) {
+      totalBuildSqlBuilder.append(String.format("'%s',", status));
+    }
+
+    totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
+
+    totalBuildSqlBuilder.append(String.format(") ORDER BY startts DESC LIMIT %s;", days));
+
+    return totalBuildSqlBuilder.toString();
+  }
+
+  public String queryBuilderServiceTag(
+      String accountId, String orgId, String projectId, List<String> planExecutionIdList, List<String> statusList) {
+    String selectStatusQuery = "select service_name,tag,pipeline_execution_summary_cd_id from "
+        + tableNameServiceAndInfra + ", " + tableNameCD + " where ";
+    StringBuilder totalBuildSqlBuilder = new StringBuilder(20480);
+    totalBuildSqlBuilder.append(selectStatusQuery);
+
+    if (accountId != null) {
+      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
+    }
+
+    if (orgId != null) {
+      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
+    }
+
+    if (projectId != null) {
+      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
+    }
+
+    totalBuildSqlBuilder.append("status in (");
+    for (String status : statusList) {
+      totalBuildSqlBuilder.append(String.format("'%s',", status));
+    }
+
+    totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
+
+    totalBuildSqlBuilder.append(") and pipeline_execution_summary_cd_id in (");
+    for (String cd_id : planExecutionIdList) {
+      totalBuildSqlBuilder.append(String.format("'%s',", cd_id));
+    }
+
+    totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
+
+    totalBuildSqlBuilder.append(
+        ") and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null;");
+
+    return totalBuildSqlBuilder.toString();
   }
 
   public TimeAndStatusDeployment queryCalculatorTimeAndStatus(String query) {
@@ -310,5 +389,127 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       startDateCopy = startDateCopy.plusDays(1);
     }
     return ExecutionDeploymentInfo.builder().executionDeploymentList(executionDeployments).build();
+  }
+
+  public List<DeploymentStatusInfo> getDeploymentStatusInfo(
+      String accountId, String orgId, String projectId, String queryStatus, List<String> statusList) {
+    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> namePipelineList = new ArrayList<>();
+    List<String> startTs = new ArrayList<>();
+    List<String> endTs = new ArrayList<>();
+    List<String> deploymentStatus = new ArrayList<>();
+
+    HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(queryStatus)) {
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          planExecutionIdList.add(resultSet.getString("id"));
+          namePipelineList.add(resultSet.getString("name"));
+          startTs.add(resultSet.getString("startts"));
+          deploymentStatus.add(resultSet.getString("status"));
+          if (resultSet.getString("endTs") != null) {
+            endTs.add(resultSet.getString("endTs"));
+          } else {
+            endTs.add(LocalDateTime.now().toString().replace('T', ' '));
+          }
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+
+    String queryServiceTag = queryBuilderServiceTag(accountId, orgId, projectId, planExecutionIdList, statusList);
+
+    totalTries = 0;
+    successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(queryServiceTag)) {
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          String planExecutionId = resultSet.getString("pipeline_execution_summary_cd_id");
+          String service_name = resultSet.getString("service_name");
+          String tag = resultSet.getString("tag");
+          if (serviceTagMap.containsKey(planExecutionId)) {
+            serviceTagMap.get(planExecutionId).add(getServiceDeployment(service_name, tag));
+          } else {
+            List<ServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
+            serviceDeploymentInfos.add(getServiceDeployment(service_name, tag));
+            serviceTagMap.put(planExecutionId, serviceDeploymentInfos);
+          }
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+
+    List<DeploymentStatusInfo> statusInfo = new ArrayList<>();
+    for (int i = 0; i < planExecutionIdList.size(); i++) {
+      String planExecutionId = planExecutionIdList.get(i);
+      String startTime = startTs.get(i);
+      String endTime = endTs.get(i);
+      statusInfo.add(this.getDeploymentStatusInfoObject(
+          namePipelineList.get(i), startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(planExecutionId)));
+    }
+    return statusInfo;
+  }
+  @Override
+  public DashboardDeploymentActiveFailedRunningInfo getDeploymentActiveFailedRunningInfo(
+      String accountId, String orgId, String projectId, long days) {
+    // failed
+    String queryFailed = queryBuilderStatus(accountId, orgId, projectId, days, failedStatusList);
+    List<DeploymentStatusInfo> failure =
+        getDeploymentStatusInfo(accountId, orgId, projectId, queryFailed, failedStatusList);
+
+    // active
+    String queryActive = queryBuilderStatus(accountId, orgId, projectId, days, activeStatusList);
+    List<DeploymentStatusInfo> active =
+        getDeploymentStatusInfo(accountId, orgId, projectId, queryActive, activeStatusList);
+
+    // pending
+    String queryPending = queryBuilderStatus(accountId, orgId, projectId, days, pendingStatusList);
+    List<DeploymentStatusInfo> pending =
+        getDeploymentStatusInfo(accountId, orgId, projectId, queryPending, pendingStatusList);
+
+    return DashboardDeploymentActiveFailedRunningInfo.builder()
+        .failure(failure)
+        .active(active)
+        .pending(pending)
+        .build();
+  }
+
+  private DeploymentStatusInfo getDeploymentStatusInfoObject(String name, String startTime, String endTime,
+      String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
+    return DeploymentStatusInfo.builder()
+        .name(name)
+        .startTs(startTime)
+        .endTs(endTime)
+        .status(status)
+        .serviceInfoList(serviceDeploymentInfos)
+        .build();
+  }
+
+  private ServiceDeploymentInfo getServiceDeployment(String service_name, String tag) {
+    if (service_name != null) {
+      if (tag != null) {
+        return ServiceDeploymentInfo.builder().serviceName(service_name).serviceTag(tag).build();
+      } else {
+        return ServiceDeploymentInfo.builder().serviceName(service_name).build();
+      }
+    }
+    return ServiceDeploymentInfo.builder().build();
   }
 }

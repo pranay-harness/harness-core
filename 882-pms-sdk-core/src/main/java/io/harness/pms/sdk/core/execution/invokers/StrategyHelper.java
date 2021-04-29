@@ -13,7 +13,6 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
-import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
@@ -26,7 +25,6 @@ import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -84,17 +82,6 @@ public class StrategyHelper {
         .setStatus(status)
         .setExecutableResponse(executableResponse)
         .addAllCallbackIds(callbackIds)
-        .build();
-  }
-
-  public ResumeNodeExecutionRequest getResumeNodeExecutionRequest(
-      String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
-    Map<String, ByteString> responseBytes = responseDataMapper.toResponseDataProto(response);
-
-    return ResumeNodeExecutionRequest.newBuilder()
-        .setNodeExecutionId(nodeExecutionId)
-        .putAllResponse(responseBytes)
-        .setAsyncError(asyncError)
         .build();
   }
 }
