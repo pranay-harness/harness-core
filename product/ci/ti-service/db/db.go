@@ -28,7 +28,7 @@ type Db interface {
 		stageId, stepId string, selected types.SelectTestsResp) error
 
 	// GetSelectionOverview retrieves an overview of the selected tests for the corresponding build.
-	GetSelectionOverview(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	GetSelectionOverview(ctx context.Context, table, evalTable, accountID, orgId, projectId, pipelineId,
 		buildId string) (types.SelectionOverview, error)
 
 	//  WriteDiffFiles writes modified files for the build. This information is required

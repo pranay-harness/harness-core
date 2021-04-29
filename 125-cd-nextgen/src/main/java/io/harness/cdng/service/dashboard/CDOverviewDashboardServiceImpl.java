@@ -3,6 +3,7 @@ package io.harness.cdng.service.dashboard;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
+import io.harness.cdng.Deployment.DashboardWorkloadDeployment;
 import io.harness.cdng.Deployment.Deployment;
 import io.harness.cdng.Deployment.DeploymentCount;
 import io.harness.cdng.Deployment.DeploymentDateAndCount;
@@ -15,6 +16,9 @@ import io.harness.cdng.Deployment.HealthDeploymentInfo;
 import io.harness.cdng.Deployment.ServiceDeploymentInfo;
 import io.harness.cdng.Deployment.TimeAndStatusDeployment;
 import io.harness.cdng.Deployment.TotalDeploymentInfo;
+import io.harness.cdng.Deployment.WorkloadCountInfo;
+import io.harness.cdng.Deployment.WorkloadDateCountInfo;
+import io.harness.cdng.Deployment.WorkloadDeploymentInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.timescaledb.DBUtils;
@@ -175,6 +179,34 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     totalBuildSqlBuilder.append(
         ") and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null;");
+
+    return totalBuildSqlBuilder.toString();
+  }
+
+  public String queryBuilderSelectWorkload(
+      String accountId, String orgId, String projectId, String previousStartInterval, String endInterval) {
+    String selectStatusQuery = "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from "
+        + tableNameServiceAndInfra + ", " + tableNameCD + " where ";
+    StringBuilder totalBuildSqlBuilder = new StringBuilder();
+    totalBuildSqlBuilder.append(selectStatusQuery);
+
+    if (accountId != null) {
+      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
+    }
+
+    if (orgId != null) {
+      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
+    }
+
+    if (projectId != null) {
+      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
+    }
+
+    if (previousStartInterval != null && endInterval != null) {
+      totalBuildSqlBuilder.append(
+          "pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and ");
+      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", previousStartInterval, endInterval));
+    }
 
     return totalBuildSqlBuilder.toString();
   }
@@ -511,5 +543,131 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
     return ServiceDeploymentInfo.builder().build();
+  }
+
+  private WorkloadDeploymentInfo getWorkloadDeploymentInfo(String workload, String lastExecuted, long totalDeployment,
+      String lastStatus, long success, long previousSuccess, List<WorkloadDateCountInfo> dateCount) {
+    double percentSuccess = 0.0;
+    if (totalDeployment != 0) {
+      percentSuccess = success / (double) totalDeployment;
+      percentSuccess = percentSuccess * 100.0;
+    }
+    return WorkloadDeploymentInfo.builder()
+        .serviceName(workload)
+        .lastExecuted(lastExecuted)
+        .totalDeployments(totalDeployment)
+        .lastStatus(lastStatus)
+        .percentSuccess(percentSuccess)
+        .rateSuccess(getRate(success, previousSuccess))
+        .workload(dateCount)
+        .build();
+  }
+
+  @Override
+  public DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String startInterval, String endInterval, String previousStartInterval) {
+    LocalDate startDate = LocalDate.parse(startInterval);
+    LocalDate endDate = LocalDate.parse(endInterval);
+    String query = queryBuilderSelectWorkload(
+        accountIdentifier, orgIdentifier, projectIdentifier, previousStartInterval, endDate.plusDays(1).toString());
+
+    List<String> workloads = new ArrayList<>();
+    List<String> status = new ArrayList<>();
+    List<String> startTs = new ArrayList<>();
+    List<String> endTs = new ArrayList<>();
+    List<String> planExecutionIdList = new ArrayList<>();
+
+    HashMap<String, Integer> uniqueWorkloadName = new HashMap<>();
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          String serviceName = resultSet.getString("service_name");
+          String startTime = resultSet.getString("startTs");
+          workloads.add(serviceName);
+          status.add(resultSet.getString("status"));
+          startTs.add(startTime);
+          endTs.add(resultSet.getString("endTs"));
+          planExecutionIdList.add(resultSet.getString("pipeline_execution_summary_cd_id"));
+
+          if (!uniqueWorkloadName.containsKey(serviceName)) {
+            uniqueWorkloadName.put(serviceName, 1);
+          }
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    List<WorkloadDeploymentInfo> workloadDeploymentInfoList = new ArrayList<>();
+
+    for (String workload : uniqueWorkloadName.keySet()) {
+      long totalDeployment = 0;
+      long success = 0;
+      long previousSuccess = 0;
+      String lastExecuted = null;
+      String lastStatus = null;
+
+      HashMap<String, Integer> deploymentCountMap = new HashMap<>();
+
+      LocalDate startDateCopy = startDate;
+      LocalDate endDateCopy = endDate;
+
+      while (!startDateCopy.isAfter(endDateCopy)) {
+        deploymentCountMap.put(startDateCopy.toString(), 0);
+        startDateCopy = startDateCopy.plusDays(1);
+      }
+
+      for (int i = 0; i < workloads.size(); i++) {
+        if (workloads.get(i).contentEquals(workload)) {
+          LocalDate variableDate = LocalDate.parse(startTs.get(i).substring(0, startTs.get(i).indexOf(' ')));
+          if (startDate.compareTo(variableDate) <= 0 && endDate.compareTo(variableDate) >= 0) {
+            totalDeployment++;
+            deploymentCountMap.put(variableDate.toString(), deploymentCountMap.get(variableDate.toString()) + 1);
+            if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
+              success++;
+            }
+            if (lastExecuted == null) {
+              lastExecuted = startTs.get(i);
+              lastStatus = status.get(i);
+            } else {
+              if (lastExecuted.compareTo(variableDate.toString()) <= 0) {
+                lastExecuted = startTs.get(i);
+                lastStatus = status.get(i);
+              }
+            }
+          } else {
+            if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
+              previousSuccess++;
+            }
+          }
+        }
+      }
+
+      if (totalDeployment > 0) {
+        List<WorkloadDateCountInfo> dateCount = new ArrayList<>();
+        startDateCopy = startDate;
+        endDateCopy = endDate;
+        while (!startDateCopy.isAfter(endDateCopy)) {
+          dateCount.add(
+              WorkloadDateCountInfo.builder()
+                  .date(startDateCopy.toString())
+                  .execution(
+                      WorkloadCountInfo.builder().count(deploymentCountMap.get(startDateCopy.toString())).build())
+                  .build());
+          startDateCopy = startDateCopy.plusDays(1);
+        }
+        workloadDeploymentInfoList.add(getWorkloadDeploymentInfo(
+            workload, lastExecuted, totalDeployment, lastStatus, success, previousSuccess, dateCount));
+      }
+    }
+    return DashboardWorkloadDeployment.builder().workloadDeploymentInfoList(workloadDeploymentInfoList).build();
   }
 }

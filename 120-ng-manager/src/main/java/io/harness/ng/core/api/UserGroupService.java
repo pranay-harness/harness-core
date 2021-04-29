@@ -13,6 +13,7 @@ import io.harness.ng.core.user.entities.UserMembership;
 
 import java.util.List;
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -42,4 +43,7 @@ public interface UserGroupService {
 
   UserGroup removeMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier);
+
+  void removeMemberAll(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      @NotNull String userIdentifier);
 }

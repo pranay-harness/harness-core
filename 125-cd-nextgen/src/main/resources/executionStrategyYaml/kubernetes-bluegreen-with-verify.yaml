@@ -18,7 +18,7 @@ spec:
           type: Verify
           name: Verify
           identifier: Verify
-          timeout: 120m
+          timeout: 2h
           spec: {}
       - step:
           name: "Swap primary with stage service"

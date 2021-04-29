@@ -424,6 +424,7 @@ java_binary(
     data = ["//:resource"],
     main_class = "io.harness.app.CIManagerApplication",
     resources = [
+        "//310-ci-manager/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [

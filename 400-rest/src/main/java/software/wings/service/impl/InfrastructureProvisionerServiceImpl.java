@@ -1030,9 +1030,11 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   void addProvisionerKeys(List<BlueprintProperty> properties, InfrastructureProvisioner infrastructureProvisioner) {
     if (infrastructureProvisioner instanceof ShellScriptInfrastructureProvisioner) {
       properties.forEach(property -> {
-        property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
-        if (isNotEmpty(property.getFields())) {
-          property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
+        if (property.getValue() != null) {
+          property.setValue(format("${%s.%s}", infrastructureProvisioner.variableKey(), property.getValue()));
+          if (isNotEmpty(property.getFields())) {
+            property.getFields().forEach(field -> field.setValue(format("${%s}", field.getValue())));
+          }
         }
       });
     }

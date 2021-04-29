@@ -1,15 +1,10 @@
-package io.harness.ccm.dto;
-
-import static io.harness.annotations.dev.HarnessTeam.CE;
-
-import io.harness.annotations.dev.OwnedBy;
+package io.harness.ccm.dto.graphql.recommendation;
 
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-@OwnedBy(CE)
 public class ContainerHistogramDTO {
   String containerName;
   HistogramExp cpuHistogram;

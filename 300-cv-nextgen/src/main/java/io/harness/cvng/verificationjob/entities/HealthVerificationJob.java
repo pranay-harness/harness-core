@@ -1,5 +1,8 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
+import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
+
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -118,5 +121,13 @@ public class HealthVerificationJob extends VerificationJob {
       return postActivityStartTime;
     }
     return startTime;
+  }
+
+  public static HealthVerificationJob createDefaultJob(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    HealthVerificationJob verificationJob =
+        HealthVerificationJob.builder().jobName(DEFAULT_HEALTH_JOB_NAME).identifier(DEFAULT_HEALTH_JOB_ID).build();
+    VerificationJob.setDefaultJobCommonParameters(verificationJob, accountId, orgIdentifier, projectIdentifier);
+    return verificationJob;
   }
 }
