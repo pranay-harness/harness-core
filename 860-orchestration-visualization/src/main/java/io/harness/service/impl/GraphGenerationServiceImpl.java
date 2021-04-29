@@ -19,6 +19,7 @@ import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.event.GraphStatusUpdateHelper;
+import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -29,6 +30,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEventLog;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
@@ -58,6 +60,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
+  @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
 
   public void registerIterators() {
@@ -97,8 +100,13 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       if (!unprocessedEventLogs.isEmpty()) {
         log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
         for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
-          orchestrationGraph =
-              graphStatusUpdateHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+          if (orchestrationEventLog.getEvent().getEventType() == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
+            orchestrationGraph =
+                planExecutionStatusUpdateEventHandler.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+          } else {
+            orchestrationGraph =
+                graphStatusUpdateHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+          }
           lastUpdatedAt = orchestrationEventLog.getCreatedAt();
         }
       }

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationStartEventHandler;
-import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 
@@ -25,8 +24,6 @@ public class OrchestrationVisualizationModuleEventHandlerRegistrar {
         OrchestrationEventType.ORCHESTRATION_START, Sets.newHashSet(OrchestrationStartEventHandler.class));
     engineEventHandlersMap.put(
         OrchestrationEventType.ORCHESTRATION_END, Sets.newHashSet(OrchestrationEndEventHandler.class));
-    engineEventHandlersMap.put(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE,
-        Sets.newHashSet(PlanExecutionStatusUpdateEventHandler.class));
     return engineEventHandlersMap;
   }
 }
