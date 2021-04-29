@@ -1,9 +1,16 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.WorkflowType;
 
 import software.wings.beans.Base;
@@ -14,10 +21,13 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.baseline.WorkflowExecutionBaseline.WorkflowExecutionBaselineKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.TimeSeriesDataRecord;
+import software.wings.metrics.TimeSeriesDataRecord.TimeSeriesMetricRecordKeys;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 
 import com.google.common.base.Preconditions;
@@ -33,10 +43,12 @@ import lombok.extern.slf4j.Slf4j;
  * Created by rsingh on 2/16/18.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBaselineService {
   public static final Date BASELINE_TTL = Date.from(OffsetDateTime.now().plusYears(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private DataStoreService dataStoreService;
 
   @Override
   public void markBaseline(
@@ -169,6 +181,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     updateTtl(workflowExecutionId, appId, NewRelicMetricAnalysisRecord.class);
     updateTtl(workflowExecutionId, appId, TimeSeriesMLAnalysisRecord.class);
     updateTtl(workflowExecutionId, appId, LogMLAnalysisRecord.class);
+    updateTtlForDataRecords(workflowExecutionId);
   }
 
   private <T extends Base> void updateTtl(String workflowExecutionId, String appId, Class<T> recordClass) {
@@ -176,6 +189,19 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
                                 .filter("workflowExecutionId", workflowExecutionId)
                                 .filter(WorkflowExecutionKeys.appId, appId),
         wingsPersistence.createUpdateOperations(recordClass).set("validUntil", BASELINE_TTL));
+  }
+
+  private void updateTtlForDataRecords(String workflowExecutionId) {
+    PageRequest<TimeSeriesDataRecord> pageRequest =
+        PageRequestBuilder.aPageRequest()
+            .withLimit(UNLIMITED)
+            .addFilter(TimeSeriesMetricRecordKeys.workflowExecutionId, SearchFilter.Operator.EQ, workflowExecutionId)
+            .build();
+    List<TimeSeriesDataRecord> objects = dataStoreService.list(TimeSeriesDataRecord.class, pageRequest);
+    if (isNotEmpty(objects)) {
+      objects.forEach(object -> object.setValidUntil(BASELINE_TTL));
+      dataStoreService.save(TimeSeriesDataRecord.class, objects, false);
+    }
   }
 
   @Override
