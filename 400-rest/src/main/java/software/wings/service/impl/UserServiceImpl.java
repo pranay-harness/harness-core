@@ -2449,27 +2449,42 @@ public class UserServiceImpl implements UserService {
       Set<String> excludeAccounts = user.getAccounts().stream().map(Account::getUuid).collect(Collectors.toSet());
       List<Account> accountList = harnessUserGroupService.listAllowedSupportAccounts(excludeAccounts);
 
-      Set<String> restrictedAcccountsIds = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
-      restrictedAcccountsIds.forEach(restrictedAccountId -> {
-        List<AccessRequest> accessRequestList =
-            accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
-        accessRequestList.forEach(accessRequest -> {
-          if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
-            if (accessRequest.getMemberIds() != null && accessRequest.getMemberIds().contains(user.getUuid())) {
-              accountList.add(accountService.get(restrictedAccountId));
-            }
-          } else {
-            HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequest.getHarnessUserGroupId());
-            if (harnessUserGroup != null && harnessUserGroup.getMemberIds().contains(user.getUuid())) {
-              accountList.add(accountService.get(restrictedAccountId));
-            }
-          }
-        });
-      });
+      Set<String> restrictedAccountsIds = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
+      if (isNotEmpty(restrictedAccountsIds)) {
+        List<Account> restrictedAccountsWithActiveAccessRequest =
+            getRestrictedAccountsWithActiveAccessRequest(restrictedAccountsIds, user);
+        if (isNotEmpty(restrictedAccountsWithActiveAccessRequest)) {
+          accountList.addAll(restrictedAccountsWithActiveAccessRequest);
+        }
+      }
 
       List<Account> finalAccountList = new ArrayList<>(Sets.newHashSet(accountList));
       user.setSupportAccounts(finalAccountList);
     }
+  }
+
+  private List<Account> getRestrictedAccountsWithActiveAccessRequest(Set<String> restrictedAccountIds, User user) {
+    List<Account> accountList = new ArrayList<>();
+    restrictedAccountIds.forEach(restrictedAccountId -> {
+      List<AccessRequest> accessRequestList =
+          accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
+      if (isNotEmpty(accessRequestList)) {
+        accessRequestList.forEach(accessRequest -> {
+          if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
+            if (isNotEmpty(accessRequest.getMemberIds()) && accessRequest.getMemberIds().contains(user.getUuid())) {
+              accountList.add(accountService.get(restrictedAccountId));
+            }
+          } else {
+            HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequest.getHarnessUserGroupId());
+            if (harnessUserGroup != null && isNotEmpty(harnessUserGroup.getMemberIds())
+                && harnessUserGroup.getMemberIds().contains(user.getUuid())) {
+              accountList.add(accountService.get(restrictedAccountId));
+            }
+          }
+        });
+      }
+    });
+    return accountList;
   }
 
   /* (non-Javadoc)
