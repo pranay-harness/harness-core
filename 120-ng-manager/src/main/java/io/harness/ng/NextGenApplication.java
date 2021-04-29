@@ -54,6 +54,7 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
+import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
