@@ -18,6 +18,7 @@ import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GitLabStore;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
+import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
@@ -26,6 +27,7 @@ import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigKeys;
 import io.harness.cdng.provision.terraform.TerraformInheritOutput.TerraformInheritOutputBuilder;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -67,6 +69,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Sort;
@@ -166,7 +169,7 @@ public class TerraformStepHelper {
     List<StoreConfigWrapper> remoteVarFiles = planStepParameters.getRemoteVarFiles();
     if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
       int i = 1;
-      List<StoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
+      List<GitStoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
       for (StoreConfigWrapper varFileWrapper : planStepParameters.getRemoteVarFiles()) {
         remoteVarFilesAtCommitIds.add(
             getStoreConfigAtCommitId(varFileWrapper.getStoreConfig(), commitIdMap.get(String.format(TF_VAR_FILES, i))));
@@ -214,7 +217,7 @@ public class TerraformStepHelper {
     return res;
   }
 
-  private StoreConfig getStoreConfigAtCommitId(StoreConfig storeConfig, String commitId) {
+  private GitStoreConfig getStoreConfigAtCommitId(StoreConfig storeConfig, String commitId) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig.cloneInternal();
     if (EmptyPredicate.isEmpty(commitId) || FetchType.COMMIT == gitStoreConfig.getGitFetchType()) {
       return gitStoreConfig;
@@ -256,6 +259,7 @@ public class TerraformStepHelper {
   public void saveRollbackDestroyConfigInherited(TerraformApplyStepParameters stepParameters, Ambiance ambiance) {
     TerraformInheritOutput inheritOutput = getSavedInheritOutput(
         ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance);
+
     persistence.save(
         TerraformConfig.builder()
             .accountId(AmbianceHelper.getAccountId(ambiance))
@@ -265,8 +269,11 @@ public class TerraformStepHelper {
                 ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
             .pipelineExecutionId(ambiance.getPlanExecutionId())
             .createdAt(System.currentTimeMillis())
-            .configFiles(inheritOutput.getConfigFiles())
-            .remoteVarFiles(inheritOutput.getRemoteVarFiles())
+            .configFiles(inheritOutput.getConfigFiles().toGitStoreConfigDTO())
+            .remoteVarFiles(CollectionUtils.emptyIfNull(inheritOutput.getRemoteVarFiles())
+                                .stream()
+                                .map(GitStoreConfig::toGitStoreConfigDTO)
+                                .collect(Collectors.toList()))
             .inlineVarFiles(inheritOutput.getInlineVarFiles())
             .backendConfig(inheritOutput.getBackendConfig())
             .environmentVariables(inheritOutput.getEnvironmentVariables())
@@ -289,14 +296,16 @@ public class TerraformStepHelper {
 
     Map<String, String> commitIdMap = response.getCommitIdForConfigFilesMap();
     builder.configFiles(getStoreConfigAtCommitId(
-        stepParameters.getConfigFilesWrapper().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES)));
+        stepParameters.getConfigFilesWrapper().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES))
+                            .toGitStoreConfigDTO());
     List<StoreConfigWrapper> remoteVarFiles = stepParameters.getRemoteVarFileConfigs();
     if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
       int i = 1;
-      List<StoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
+      List<GitStoreConfigDTO> remoteVarFilesAtCommitIds = new ArrayList<>();
       for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFileConfigs()) {
         remoteVarFilesAtCommitIds.add(
-            getStoreConfigAtCommitId(varFileWrapper.getStoreConfig(), commitIdMap.get(String.format(TF_VAR_FILES, i))));
+            getStoreConfigAtCommitId(varFileWrapper.getStoreConfig(), commitIdMap.get(String.format(TF_VAR_FILES, i)))
+                .toGitStoreConfigDTO());
         i++;
       }
       builder.remoteVarFiles(remoteVarFilesAtCommitIds);
@@ -326,9 +335,7 @@ public class TerraformStepHelper {
     return terraformConfig;
   }
 
-  public void clearTerraformConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
-    String entityId = generateFullIdentifier(
-        ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);
+  public void clearTerraformConfig(Ambiance ambiance, String entityId) {
     persistence.delete(persistence.createQuery(TerraformConfig.class)
                            .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
                            .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
@@ -360,6 +367,24 @@ public class TerraformStepHelper {
       String message = String.format("Unable to call fileservice to fetch latest file id for entityId: [%s]", entityId);
       throw new InvalidRequestException(message, exception);
     }
+  }
+
+  public void saveTerraformConfig(TerraformConfig rollbackConfig, Ambiance ambiance) {
+    persistence.save(TerraformConfig.builder()
+                         .accountId(AmbianceHelper.getAccountId(ambiance))
+                         .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
+                         .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
+                         .entityId(rollbackConfig.getEntityId())
+                         .pipelineExecutionId(ambiance.getPlanExecutionId())
+                         .createdAt(System.currentTimeMillis())
+                         .configFiles(rollbackConfig.getConfigFiles())
+                         .remoteVarFiles(rollbackConfig.getRemoteVarFiles())
+                         .inlineVarFiles(rollbackConfig.getInlineVarFiles())
+                         .backendConfig(rollbackConfig.getBackendConfig())
+                         .environmentVariables(rollbackConfig.getEnvironmentVariables())
+                         .workspace(rollbackConfig.getWorkspace())
+                         .targets(rollbackConfig.getTargets())
+                         .build());
   }
 
   public void updateParentEntityIdAndVersion(String entityId, String stateFileId) {

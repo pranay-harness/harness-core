@@ -348,8 +348,7 @@ public class UserServiceImpl implements UserService {
     return savedUser;
   }
 
-  @Override
-  public User createNewUserAndSignIn(User user, String accountId) {
+  private User createNewUser(User user, String accountId) {
     user.setAppId(GLOBAL_APP_ID);
 
     List<UserGroup> accountAdminGroups = getAccountAdminGroup(accountId);
@@ -358,8 +357,24 @@ public class UserServiceImpl implements UserService {
 
     addUserToUserGroups(accountId, user, accountAdminGroups, false, false);
 
+    return savedUser;
+  }
+
+  @Override
+  public User createNewUserAndSignIn(User user, String accountId) {
+    User savedUser = createNewUser(user, accountId);
+
     return authenticationManager.defaultLoginWithoutEmailVerification(
         savedUser.getEmail(), savedUser.getPasswordHash());
+  }
+
+  @Override
+  public User createNewOAuthUser(User user, String accountId) {
+    User savedUser = createNewUser(user, accountId);
+
+    createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId);
+
+    return savedUser;
   }
 
   @Override

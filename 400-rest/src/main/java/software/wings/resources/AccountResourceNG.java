@@ -1,10 +1,12 @@
 package software.wings.resources;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.mappers.AccountMapper;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -58,6 +60,7 @@ public class AccountResourceNG {
   @POST
   public RestResponse<AccountDTO> create(@NotNull AccountDTO dto) {
     Account account = AccountMapper.fromAccountDTO(dto);
+    account.setCreatedFromNG(true);
 
     account.setLicenseInfo(
         LicenseInfo.builder().accountType(AccountType.TRIAL).accountStatus(AccountStatus.ACTIVE).build());
@@ -120,5 +123,18 @@ public class AccountResourceNG {
   @Path("/exists/{accountName}")
   public RestResponse<Boolean> doesAccountExist(@PathParam("accountName") String accountName) {
     return new RestResponse<>(accountService.exists(accountName));
+  }
+
+  @PUT
+  @Path("/{accountId}/default-experience")
+  public RestResponse<Boolean> updateDefaultExperienceIfNull(
+      @PathParam("accountId") @AccountIdentifier String accountId,
+      @QueryParam("defaultExperience") DefaultExperience defaultExperience) {
+    Account account = accountService.get(accountId);
+    if (account.getDefaultExperience() == null) {
+      account.setDefaultExperience(defaultExperience);
+      accountService.update(account);
+    }
+    return new RestResponse(true);
   }
 }

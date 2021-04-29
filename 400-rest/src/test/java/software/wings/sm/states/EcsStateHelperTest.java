@@ -106,6 +106,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
@@ -134,11 +135,13 @@ import org.slf4j.Logger;
 public class EcsStateHelperTest extends CategoryTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private StateExecutionService stateExecutionService;
   @Inject @InjectMocks private EcsStateHelper helper;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -254,7 +257,7 @@ public class EcsStateHelperTest extends CategoryTest {
                                                         .build();
     Environment environment = anEnvironment().environmentType(PROD).build();
     helper.queueDelegateTaskForEcsListenerUpdate(application, awsConfig, mockService, mapping, ACTIVITY_ID, environment,
-        "CommandName", configData, emptyList(), 10);
+        "CommandName", configData, emptyList(), 10, false, null);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
@@ -503,7 +506,7 @@ public class EcsStateHelperTest extends CategoryTest {
                               .build();
     DelegateService mockDelegateService = mock(DelegateService.class);
     helper.createAndQueueDelegateTaskForEcsServiceSetUp(EcsServiceSetupRequest.builder().build(), bag,
-        Activity.builder().uuid(ACTIVITY_ID).build(), mockDelegateService);
+        Activity.builder().uuid(ACTIVITY_ID).build(), mockDelegateService, false);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
@@ -603,7 +606,7 @@ public class EcsStateHelperTest extends CategoryTest {
             .build();
     DelegateService mockDelegateService = mock(DelegateService.class);
     helper.createAndQueueDelegateTaskForEcsServiceDeploy(bag, EcsServiceDeployRequest.builder().build(),
-        Activity.builder().uuid(ACTIVITY_ID).build(), mockDelegateService);
+        Activity.builder().uuid(ACTIVITY_ID).build(), mockDelegateService, false);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();

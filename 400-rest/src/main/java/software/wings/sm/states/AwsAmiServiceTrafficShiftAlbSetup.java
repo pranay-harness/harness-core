@@ -145,8 +145,11 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, awsAmiTrafficShiftAlbData.getEnv().getUuid())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, awsAmiTrafficShiftAlbData.getEnv().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("AWS AMI service traffic shift ALB setup task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
   }
 
   private Activity createActivity(ExecutionContext context, AwsAmiTrafficShiftAlbData awsAmiTrafficShiftAlbData) {
@@ -336,5 +339,10 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     String asgNamePrefix = isEmpty(autoScalingGroupName) ? AsgConvention.getAsgNamePrefix(appName, serviceName, envName)
                                                          : context.renderExpression(autoScalingGroupName);
     return normalizeExpression(asgNamePrefix);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

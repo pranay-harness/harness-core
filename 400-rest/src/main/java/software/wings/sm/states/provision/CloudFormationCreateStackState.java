@@ -255,6 +255,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     DelegateTask delegateTask = getCreateStackDelegateTask(executionContext, awsConfig, activityId, request);
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(executionContext, delegateTask);
+
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
@@ -270,6 +272,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .waitId(activityId)
         .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("CloudFormation create stack task execution")
         .data(TaskData.builder()
                   .async(true)
                   .taskType(CLOUD_FORMATION_TASK.name())
@@ -606,5 +610,10 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         }
       });
     }
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

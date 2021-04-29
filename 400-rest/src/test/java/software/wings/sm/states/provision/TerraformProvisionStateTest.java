@@ -106,6 +106,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -161,6 +162,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ManagerExecutionLogCallback managerExecutionLogCallback;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
   @InjectMocks private TerraformProvisionState destroyProvisionState = new DestroyTerraformProvisionState("tf");
 
@@ -212,6 +214,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     doReturn(KmsConfig.builder().accountId(ACCOUNT_ID).name("name").build())
         .when(secretManagerConfigService)
         .getDefaultSecretManager(any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test

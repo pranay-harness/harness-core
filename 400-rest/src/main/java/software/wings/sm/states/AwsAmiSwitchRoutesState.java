@@ -186,9 +186,12 @@ public class AwsAmiSwitchRoutesState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, context.fetchRequiredEnvironment().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Aws Ami switch routes task execution")
             .build();
     delegateService.queueTask(delegateTask);
 
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(executionData)
@@ -235,5 +238,10 @@ public class AwsAmiSwitchRoutesState extends State {
     Activity activity = activityBuilder.build();
     activity.setAppId(app.getUuid());
     return activityService.save(activity);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

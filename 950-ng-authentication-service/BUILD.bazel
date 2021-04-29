@@ -4,6 +4,7 @@ load("//:macros.bzl", "run_analysis")
 load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 
 shared_dependencies = [
+    "//:lombok",
     "//960-ng-core-beans:module",
 ]
 

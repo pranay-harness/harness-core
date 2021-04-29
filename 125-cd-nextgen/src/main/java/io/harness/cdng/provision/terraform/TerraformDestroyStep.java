@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
+import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.data.structure.EmptyPredicate;
@@ -173,13 +174,13 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
     TerraformConfig terraformConfig = helper.getLastSuccessfulApplyConfig(parameters, ambiance);
     builder.workspace(terraformConfig.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
-            terraformConfig.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
+            terraformConfig.getConfigFiles().toGitStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
     if (EmptyPredicate.isNotEmpty(terraformConfig.getRemoteVarFiles())) {
       List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
       int i = 1;
-      for (StoreConfig storeConfig : terraformConfig.getRemoteVarFiles()) {
-        varFilesConfig.add(
-            helper.getGitFetchFilesConfig(storeConfig, ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
+      for (GitStoreConfigDTO storeConfig : terraformConfig.getRemoteVarFiles()) {
+        varFilesConfig.add(helper.getGitFetchFilesConfig(
+            storeConfig.toGitStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
         i++;
       }
       builder.remoteVarfiles(varFilesConfig);
@@ -233,7 +234,9 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
     }
 
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
-      helper.clearTerraformConfig(parameters, ambiance);
+      helper.clearTerraformConfig(ambiance,
+          helper.generateFullIdentifier(
+              ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance));
       helper.updateParentEntityIdAndVersion(
           helper.generateFullIdentifier(
               ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance),

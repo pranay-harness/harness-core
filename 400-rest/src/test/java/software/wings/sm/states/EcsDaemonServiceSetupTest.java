@@ -31,6 +31,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
@@ -69,6 +71,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -98,6 +101,7 @@ public class EcsDaemonServiceSetupTest extends WingsBaseTest {
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private SweepingOutputService mockSweepingOutputService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private EcsDaemonServiceSetup state = new EcsDaemonServiceSetup("stateName");
 
@@ -143,9 +147,9 @@ public class EcsDaemonServiceSetupTest extends WingsBaseTest {
         .getStateExecutionData(any(), anyString(), any(), any(Activity.class));
     EcsSetupContextVariableHolder holder = EcsSetupContextVariableHolder.builder().build();
     doReturn(holder).when(mockEcsStateHelper).renderEcsSetupContextVariables(any());
-    doReturn("DEL_TASK_ID")
+    doReturn(DelegateTask.builder().uuid("DEL_TASK_ID").description("desc").build())
         .when(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(Activity.class), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), anyString(), any(), eq(true));
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<EcsSetupStateConfig> captor = ArgumentCaptor.forClass(EcsSetupStateConfig.class);
     verify(mockEcsStateHelper).buildContainerSetupParams(any(), captor.capture());
@@ -163,7 +167,8 @@ public class EcsDaemonServiceSetupTest extends WingsBaseTest {
     assertThat(config.isDaemonSchedulingStrategy()).isEqualTo(true);
     ArgumentCaptor<EcsServiceSetupRequest> captor2 = ArgumentCaptor.forClass(EcsServiceSetupRequest.class);
     verify(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(String.class), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(String.class), any(), eq(true));
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     EcsServiceSetupRequest request = captor2.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getEcsSetupParams()).isNotNull();

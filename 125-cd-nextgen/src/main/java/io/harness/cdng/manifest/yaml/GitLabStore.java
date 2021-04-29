@@ -8,6 +8,7 @@ import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
+import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
@@ -112,5 +113,18 @@ public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef 
     Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
     connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
     return connectorRefMap;
+  }
+
+  @Override
+  public GitStoreConfigDTO toGitStoreConfigDTO() {
+    return GitLabStoreDTO.builder()
+        .branch(ParameterFieldHelper.getParameterFieldValue(branch))
+        .commitId(ParameterFieldHelper.getParameterFieldValue(commitId))
+        .connectorRef(ParameterFieldHelper.getParameterFieldValue(connectorRef))
+        .folderPath(ParameterFieldHelper.getParameterFieldValue(folderPath))
+        .gitFetchType(gitFetchType)
+        .paths(ParameterFieldHelper.getParameterFieldValue(paths))
+        .repoName(ParameterFieldHelper.getParameterFieldValue(repoName))
+        .build();
   }
 }

@@ -212,9 +212,12 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, context.fetchRequiredEnvironment().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("ECS Blue Green Update Route task execution")
             .build();
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -262,4 +265,9 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
 }
