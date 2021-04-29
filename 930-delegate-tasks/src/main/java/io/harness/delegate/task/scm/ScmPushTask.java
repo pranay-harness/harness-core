@@ -6,6 +6,7 @@ import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -13,6 +14,7 @@ import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.service.ScmServiceClient;
 
 import com.google.inject.Inject;
@@ -22,6 +24,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(HarnessTeam.DX)
 public class ScmPushTask extends AbstractDelegateRunnableTask {
+  @Inject private SecretDecryptionService decryptionService;
   @Inject ScmDelegateClient scmDelegateClient;
   @Inject ScmServiceClient scmServiceClient;
 
@@ -38,6 +41,9 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     ScmPushTaskParams scmPushTaskParams = (ScmPushTaskParams) parameters;
+    ConnectorConfigDTO scmConnector = (ConnectorConfigDTO) scmPushTaskParams.getScmConnector();
+    decryptionService.decrypt(
+        scmConnector.getDecryptableEntities().get(1), scmPushTaskParams.getEncryptedDataDetails());
     switch (scmPushTaskParams.changeType) {
       case ADD: {
         CreateFileResponse createFileResponse = scmDelegateClient.processScmRequest(c

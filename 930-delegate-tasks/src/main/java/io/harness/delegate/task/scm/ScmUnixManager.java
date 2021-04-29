@@ -11,7 +11,7 @@ import java.io.IOException;
 @OwnedBy(HarnessTeam.DX)
 public abstract class ScmUnixManager implements AutoCloseable {
   abstract ManagedChannel getChannel();
-  private final String PATH_TO_SCM_BUILD = "./client-tools/harness-pywinrm/versionofscm/scm.binary";
+  private final String PATH_TO_SCM_BUILD = "/Users/srihari/Desktop/scm_binary";
 
   protected String socketAddress;
   protected ProcessBuilder processBuilder;

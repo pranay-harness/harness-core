@@ -33,13 +33,13 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
             .changeType(changeType)
             .scmConnector(infoForPush.getScmConnector())
             .gitFileDetails(ScmGitUtils.getGitFileDetails(gitBranchInfo, yaml).build())
+            .encryptedDataDetails(infoForPush.getEncryptedDataDetailList())
             .build();
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(infoForPush.getAccountId())
                                                   .taskType(TaskType.SCM_PUSH_TASK.toString())
                                                   .taskParameters(scmPushTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))
-                                                  .forceExecute(true)
                                                   .build();
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;

@@ -104,6 +104,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         .orgIdentifier(entityReference.getOrgIdentifier())
         .projectIdentifier(entityReference.getProjectIdentifier())
         .defaultBranchName(yamlGitConfig.getBranch())
+        .executeOnDelegate(yamlGitConfig.isExecuteOnDelegate())
         .build();
   }
 

@@ -9,7 +9,9 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.git.model.ChangeType;
+import io.harness.security.encryption.EncryptedDataDetail;
 
+import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -21,9 +23,10 @@ public class ScmPushTaskParams implements TaskParameters, ExecutionCapabilityDem
   ScmConnector scmConnector;
   GitFileDetails gitFileDetails;
   ChangeType changeType;
+  List<EncryptedDataDetail> encryptedDataDetails;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return null;
+    return Collections.emptyList();
   }
 }
