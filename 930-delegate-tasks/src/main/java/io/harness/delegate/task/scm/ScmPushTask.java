@@ -38,14 +38,14 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     ScmPushTaskParams scmPushTaskParams = (ScmPushTaskParams) parameters;
-    switch (scmPushTaskParams.pushTaskType) {
-      case CREATE: {
+    switch (scmPushTaskParams.changeType) {
+      case ADD: {
         CreateFileResponse createFileResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.createFile(
                 scmPushTaskParams.scmConnector, scmPushTaskParams.gitFileDetails, SCMGrpc.newBlockingStub(c)));
         return ScmPushTaskResponseData.builder()
             .createFileResponse(createFileResponse)
-            .pushTaskType(PushTaskType.CREATE)
+            .changeType(scmPushTaskParams.changeType)
             .build();
       }
       case DELETE: {
@@ -58,18 +58,21 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
                 SCMGrpc.newBlockingStub(c)));
         return ScmPushTaskResponseData.builder()
             .deleteFileResponse(deleteFileResponse)
-            .pushTaskType(PushTaskType.DELETE)
+            .changeType(scmPushTaskParams.changeType)
             .build();
       }
-      case UPDATE: {
+      case MODIFY: {
         UpdateFileResponse updateFileResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.updateFile(
                 scmPushTaskParams.scmConnector, scmPushTaskParams.gitFileDetails, SCMGrpc.newBlockingStub(c)));
         return ScmPushTaskResponseData.builder()
             .updateFileResponse(updateFileResponse)
-            .pushTaskType(PushTaskType.UPDATE)
+            .changeType(scmPushTaskParams.changeType)
             .build();
       }
+      case RENAME:
+      case NONE:
+        throw new NotImplementedException("Not Implemented");
       default: {
         throw new NotImplementedException("Not Implemented");
       }

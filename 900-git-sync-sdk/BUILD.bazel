@@ -8,6 +8,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//910-delegate-service-driver:module",
+        "//950-delegate-tasks-beans:module",
         "//952-scm-java-client:module",
         "//953-events-api:module",
         "//953-git-sync-commons:module",
@@ -60,7 +62,7 @@ java_library(
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = [
-        "//949-git-sync-sdk/src/test/resources:resource",
+        "//900-git-sync-sdk/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [

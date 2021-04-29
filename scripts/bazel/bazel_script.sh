@@ -107,6 +107,7 @@ BAZEL_MODULES="\
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
+  //900-git-sync-sdk:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -132,7 +133,6 @@ BAZEL_MODULES="\
   //948-access-control-admin-client:module \
   //948-access-control-sdk:module \
   //949-access-control-commons:module \
-  //949-git-sync-sdk:module \
   //950-command-library-common:module \
   //950-cg-ng-shared-orchestration-beans:module \
   //950-common-entities:module \
@@ -403,6 +403,7 @@ build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
+build_bazel_module 900-git-sync-sdk
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 920-delegate-agent-beans
@@ -428,7 +429,6 @@ build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 953-events-api
 build_bazel_module 950-events-framework
 build_bazel_module 950-ng-audit-commons
-build_bazel_module 949-git-sync-sdk
 build_bazel_module 950-log-client
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs

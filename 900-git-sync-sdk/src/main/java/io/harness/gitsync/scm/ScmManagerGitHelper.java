@@ -10,9 +10,7 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
-import io.harness.gitsync.scm.beans.ScmDeleteFileResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
-import io.harness.gitsync.scm.beans.ScmUpdateFileResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
@@ -41,32 +39,13 @@ public class ScmManagerGitHelper implements ScmGitHelper {
         if (createFileResponse.getStatus() == 0) {
           throw new InvalidRequestException("Git push failed");
         }
-        return ScmCreateFileResponse.builder()
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-            .branch(infoForPush.getBranch())
-            .build();
+        return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush);
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
         if (deleteFileResponse.getStatus() == 0) {
           throw new InvalidRequestException("Git push failed");
         }
-        return ScmDeleteFileResponse.builder()
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .branch(infoForPush.getBranch())
-            .build();
+        return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush);
       case RENAME:
         throw new NotImplementedException("Not implemented");
       case MODIFY:
@@ -74,21 +53,24 @@ public class ScmManagerGitHelper implements ScmGitHelper {
         if (updateFileResponse.getStatus() == 0) {
           throw new InvalidRequestException("Git push failed");
         }
-        return ScmUpdateFileResponse.builder()
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-            .oldObjectId(gitBranchInfo.getLastObjectId())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .branch(infoForPush.getBranch())
-            .build();
+        return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush);
       default:
         throw new EnumConstantNotPresentException(changeType.getClass(), "Incorrect changeType");
     }
+  }
+
+  private ScmCreateFileResponse getBuild(String yaml, InfoForGitPush infoForPush) {
+    return ScmCreateFileResponse.builder()
+        .folderPath(infoForPush.getFolderPath())
+        .filePath(infoForPush.getFilePath())
+        .pushToDefaultBranch(infoForPush.isDefault())
+        .yamlGitConfigId(infoForPush.getYamlGitConfigId())
+        .accountIdentifier(infoForPush.getAccountId())
+        .orgIdentifier(infoForPush.getOrgIdentifier())
+        .projectIdentifier(infoForPush.getProjectIdentifier())
+        .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
+        .branch(infoForPush.getBranch())
+        .build();
   }
 
   private void createNewBranchInGit(InfoForGitPush infoForPush, GitEntityInfo gitBranchInfo) {

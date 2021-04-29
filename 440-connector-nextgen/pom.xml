@@ -48,6 +48,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>900-git-sync-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>950-ng-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -60,11 +65,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>948-access-control-sdk</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>949-git-sync-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

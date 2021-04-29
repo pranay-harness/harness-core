@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.git.model.ChangeType;
 
 import java.util.List;
 import lombok.Builder;
@@ -19,7 +20,7 @@ import lombok.Data;
 public class ScmPushTaskParams implements TaskParameters, ExecutionCapabilityDemander {
   ScmConnector scmConnector;
   GitFileDetails gitFileDetails;
-  PushTaskType pushTaskType;
+  ChangeType changeType;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
