@@ -1,6 +1,9 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -13,16 +16,17 @@ import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.delegation.CommandParameters;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDC)
 public class CommandTask extends AbstractDelegateRunnableTask {
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
 
@@ -33,7 +37,8 @@ public class CommandTask extends AbstractDelegateRunnableTask {
 
   @Override
   public CommandExecutionResult run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
+    CommandParameters commandParameters = (CommandParameters) parameters;
+    return run(commandParameters.getCommand(), commandParameters);
   }
 
   @Override
