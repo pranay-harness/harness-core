@@ -2458,13 +2458,12 @@ public class UserServiceImpl implements UserService {
           accountList.addAll(restrictedAccountsWithActiveAccessRequest);
         }
       }
-      List<Account> finalAccountList = new ArrayList<>(Sets.newHashSet(accountList));
-      user.setSupportAccounts(finalAccountList);
+      user.setSupportAccounts(accountList);
     }
   }
 
   private List<Account> getRestrictedAccountsWithActiveAccessRequest(Set<String> restrictedAccountIds, User user) {
-    List<Account> accountList = new ArrayList<>();
+    Set<Account> accountSet = new HashSet<>();
     restrictedAccountIds.forEach(restrictedAccountId -> {
       List<AccessRequest> accessRequestList =
           accessRequestService.getActiveAccessRequestForAccount(restrictedAccountId);
@@ -2472,20 +2471,20 @@ public class UserServiceImpl implements UserService {
         accessRequestList.forEach(accessRequest -> {
           if (AccessRequest.AccessType.MEMBER_ACCESS.equals(accessRequest.getAccessType())) {
             if (isNotEmpty(accessRequest.getMemberIds()) && accessRequest.getMemberIds().contains(user.getUuid())) {
-              accountList.add(accountService.get(restrictedAccountId));
+              accountSet.add(accountService.get(restrictedAccountId));
             }
           } else {
             HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequest.getHarnessUserGroupId());
             if (harnessUserGroup != null && isNotEmpty(harnessUserGroup.getMemberIds())
                 && harnessUserGroup.getMemberIds().contains(user.getUuid())) {
-              accountList.add(accountService.get(restrictedAccountId));
+              accountSet.add(accountService.get(restrictedAccountId));
             }
           }
         });
       }
     });
 
-    return accountList;
+    return new ArrayList<>(accountSet);
   }
 
   /* (non-Javadoc)
