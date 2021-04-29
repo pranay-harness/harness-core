@@ -2450,6 +2450,7 @@ public class UserServiceImpl implements UserService {
       List<Account> accountList = harnessUserGroupService.listAllowedSupportAccounts(excludeAccounts);
 
       Set<String> restrictedAccountsIds = accountService.getAccountsWithDisabledHarnessUserGroupAccess();
+      restrictedAccountsIds.removeAll(excludeAccounts);
       if (isNotEmpty(restrictedAccountsIds)) {
         List<Account> restrictedAccountsWithActiveAccessRequest =
             getRestrictedAccountsWithActiveAccessRequest(restrictedAccountsIds, user);
@@ -2457,7 +2458,6 @@ public class UserServiceImpl implements UserService {
           accountList.addAll(restrictedAccountsWithActiveAccessRequest);
         }
       }
-
       List<Account> finalAccountList = new ArrayList<>(Sets.newHashSet(accountList));
       user.setSupportAccounts(finalAccountList);
     }
@@ -2484,6 +2484,7 @@ public class UserServiceImpl implements UserService {
         });
       }
     });
+
     return accountList;
   }
 
