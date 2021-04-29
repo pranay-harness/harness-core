@@ -43,6 +43,7 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDP)
@@ -84,6 +85,10 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     String provisionerIdentifier =
         ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier());
     String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
+    List<String> varFileList = stepParameters.getInlineVarFilesListContent()
+                                   .stream()
+                                   .map(varFile -> ParameterFieldHelper.getParameterFieldValue(varFile))
+                                   .collect(Collectors.toList());
     builder.currentStateFileId(helper.getLatestFileId(entityId))
         .taskType(TFTaskType.APPLY)
         .terraformCommand(TerraformCommand.APPLY)
@@ -92,7 +97,8 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
             stepParameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFilesListContent()));
+        .inlineVarFiles(varFileList);
+
     if (EmptyPredicate.isNotEmpty(stepParameters.getRemoteVarFileConfigs())) {
       List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
       int i = 1;

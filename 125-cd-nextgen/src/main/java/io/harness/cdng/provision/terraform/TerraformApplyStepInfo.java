@@ -79,13 +79,13 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
       }
       builder.configFilesWrapper(executionData.getTerraformConfigFilesWrapper().getStoreConfigWrapper());
       List<StoreConfigWrapper> remoteVarFiles = new ArrayList<>();
-      List<String> inlineVarFiles = new ArrayList<>();
+      List<ParameterField<String>> inlineVarFiles = new ArrayList<>();
       List<TerraformVarFileWrapper> terraformVarFiles = executionData.getTerraformVarFiles();
       if (EmptyPredicate.isNotEmpty(terraformVarFiles)) {
         terraformVarFiles.forEach(varFile -> {
           TerraformVarFileSpec varFileSpec = varFile.getVarFile().getSpec();
           if (varFileSpec instanceof InlineTerraformVarFileSpec) {
-            inlineVarFiles.add(((InlineTerraformVarFileSpec) varFileSpec).getContent().getValue());
+            inlineVarFiles.add(((InlineTerraformVarFileSpec) varFileSpec).getContent());
           } else if (varFileSpec instanceof RemoteTerraformVarFileSpec) {
             remoteVarFiles.add(((RemoteTerraformVarFileSpec) varFileSpec).getStoreConfigWrapper());
           }
@@ -95,7 +95,7 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
         builder.remoteVarFileConfigs(remoteVarFiles);
       }
       if (EmptyPredicate.isNotEmpty(inlineVarFiles)) {
-        builder.inlineVarFilesListContent(ParameterField.createValueField(inlineVarFiles));
+        builder.inlineVarFilesListContent(inlineVarFiles);
       }
     }
 

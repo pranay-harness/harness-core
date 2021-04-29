@@ -31,7 +31,7 @@ public class TerraformApplyStepParameters extends TerraformApplyBaseStepInfo imp
   StoreConfigWrapper configFilesWrapper;
   List<StoreConfigWrapper> remoteVarFileConfigs;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
-  ParameterField<List<String>> inlineVarFilesListContent;
+  List<ParameterField<String>> inlineVarFilesListContent;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> backendConfig;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> targets;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
@@ -41,7 +41,7 @@ public class TerraformApplyStepParameters extends TerraformApplyBaseStepInfo imp
   public TerraformApplyStepParameters(ParameterField<String> provisionerIdentifier, String name, String identifier,
       TerraformStepConfigurationType stepConfigurationType, ParameterField<String> workspace,
       StoreConfigWrapper configFilesWrapper, List<StoreConfigWrapper> remoteVarFileConfigs,
-      ParameterField<List<String>> inlineVarFilesListContent, ParameterField<String> backendConfig,
+      List<ParameterField<String>> inlineVarFilesListContent, ParameterField<String> backendConfig,
       ParameterField<List<String>> targets, Map<String, Object> environmentVariables, ParameterField<String> timeout) {
     super(provisionerIdentifier);
     this.name = name;

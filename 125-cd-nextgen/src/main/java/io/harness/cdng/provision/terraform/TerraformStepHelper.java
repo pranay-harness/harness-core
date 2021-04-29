@@ -310,7 +310,11 @@ public class TerraformStepHelper {
       }
       builder.remoteVarFiles(remoteVarFilesAtCommitIds);
     }
-    builder.inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFilesListContent()))
+    List<String> varFileList = stepParameters.getInlineVarFilesListContent()
+                                   .stream()
+                                   .map(varFile -> ParameterFieldHelper.getParameterFieldValue(varFile))
+                                   .collect(Collectors.toList());
+    builder.inlineVarFiles(varFileList)
         .backendConfig(ParameterFieldHelper.getParameterFieldValue(stepParameters.getBackendConfig()))
         .environmentVariables(getEnvironmentVariablesMap(stepParameters.getEnvironmentVariables()))
         .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
