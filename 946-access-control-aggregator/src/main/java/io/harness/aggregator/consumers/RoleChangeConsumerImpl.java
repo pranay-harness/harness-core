@@ -31,7 +31,7 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
 
   @Override
   public long consumeUpdateEvent(String id, RoleDBO updatedEntity) {
-    if (Optional.ofNullable(updatedEntity.getPermissions()).filter(x -> !x.isEmpty()).isPresent()) {
+    if (Optional.ofNullable(updatedEntity.getPermissions()).isPresent()) {
       Set<String> currentPermissionsInRole = updatedEntity.getPermissions();
       List<ACL> acls = aclService.getByRole(
           updatedEntity.getScopeIdentifier(), updatedEntity.getIdentifier(), updatedEntity.isManaged());

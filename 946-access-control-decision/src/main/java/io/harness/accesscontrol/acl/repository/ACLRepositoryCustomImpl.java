@@ -15,6 +15,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -39,6 +40,8 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
           .insert(acls)
           .execute()
           .getInsertedCount();
+    } catch (DuplicateKeyException duplicateKeyException) {
+      return 0;
     } catch (BulkOperationException bulkOperationException) {
       if (!isDuplicateKeyException(bulkOperationException)) {
         throw bulkOperationException;
