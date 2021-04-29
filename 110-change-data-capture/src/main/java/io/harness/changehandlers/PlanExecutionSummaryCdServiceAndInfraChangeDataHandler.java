@@ -134,8 +134,19 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
               columnValueMapping.get("service_id").add(serviceId);
             } else {
               List<String> serviceIdList = new ArrayList<>();
-              serviceIdList.add(serviceName);
+              serviceIdList.add(serviceId);
               columnValueMapping.put("service_id", serviceIdList);
+            }
+
+            // deploymentType
+
+            String deploymentType = serviceInfoObject.get("deploymentType").toString();
+            if (columnValueMapping.containsKey("deployment_type")) {
+              columnValueMapping.get("deployment_type").add(deploymentType);
+            } else {
+              List<String> deploymentTypeList = new ArrayList<>();
+              deploymentTypeList.add(deploymentType);
+              columnValueMapping.put("deployment_type", deploymentTypeList);
             }
 
             // artifact - tag
@@ -203,6 +214,8 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
         } else {
           return null;
         }
+      } else {
+        return null;
       }
     }
 
