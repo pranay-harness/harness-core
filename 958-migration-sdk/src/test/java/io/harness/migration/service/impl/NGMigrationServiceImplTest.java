@@ -100,7 +100,7 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
       ;
     };
     ngMigrationService.doMigration(
-        false, 1, 2, migrations, MigrationType.MongoMigration, new TestMigrationProviderClass(), "ngschema");
+        false, 1, 2, migrations, MigrationType.MongoMigration, NGSchemaTestClass.class, "ngschema");
     NGSchema schema = mongoTemplate.findOne(new Query(), NGSchemaTestClass.class);
     assertThat(schema.getMigrationDetails().get(MigrationType.MongoMigration)).isEqualTo(2);
   }
@@ -126,7 +126,7 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
       ;
     };
     ngMigrationService.doMigration(
-        false, 0, 1, migrations, MigrationType.TimeScaleMigration, new TestMigrationProviderClass(), "ngschema");
+        false, 0, 1, migrations, MigrationType.TimeScaleMigration, NGSchemaTestClass.class, "ngschema");
     NGSchema ngchema2 = mongoTemplate.findOne(new Query(), NGSchemaTestClass.class);
 
     assertThat(ngchema2.getMigrationDetails().get(MigrationType.TimeScaleMigration)).isEqualTo(1);

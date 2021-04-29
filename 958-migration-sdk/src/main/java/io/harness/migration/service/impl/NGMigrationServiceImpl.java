@@ -97,8 +97,8 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
           boolean isBackground = migrationDetailInstance.isBackground();
 
-          runMigrationsInner(isBackground, currentVersion, maxVersion, migrations, migrationDetailInstance,
-              migrationProviderInstance, serviceName, microservice);
+          runMigrationsInner(isBackground, currentVersion, maxVersion, migrations, migrationDetailInstance, schemaClass,
+              serviceName, microservice);
         }
       }
     } catch (Exception e) {
@@ -108,14 +108,13 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
   private void runMigrationsInner(boolean isBackground, int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail,
-      MigrationProvider migrationProviderInstance, String serviceName, Microservice microservice) throws Exception {
+      Class<? extends NGSchema> schemaClass, String serviceName, Microservice microservice) throws Exception {
     if (currentVersion < maxVersion) {
       if (isBackground) {
-        runBackgroundMigrations(currentVersion, maxVersion, migrations, migrationDetail, migrationProviderInstance,
-            serviceName, microservice);
+        runBackgroundMigrations(
+            currentVersion, maxVersion, migrations, migrationDetail, schemaClass, serviceName, microservice);
       } else {
-        runForegroundMigrations(
-            currentVersion, maxVersion, migrations, migrationDetail, migrationProviderInstance, serviceName);
+        runForegroundMigrations(currentVersion, maxVersion, migrations, migrationDetail, schemaClass, serviceName);
       }
     } else if (currentVersion > maxVersion) {
       // If the current version is bigger than the max version we are downgrading. Restore to the previous version
@@ -123,7 +122,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
           migrationDetail.getMigrationTypeName(), currentVersion, maxVersion);
       Update update =
           new Update().set(NGSchemaKeys.migrationDetails + "." + migrationDetail.getMigrationTypeName(), maxVersion);
-      mongoTemplate.updateFirst(new Query(), update, migrationProviderInstance.getSchemaClass());
+      mongoTemplate.updateFirst(new Query(), update, schemaClass);
     } else {
       log.info("[Migration] - {} : NGSchema {} is up to date", serviceName, migrationDetail.getMigrationTypeName());
     }
@@ -131,22 +130,21 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
   private void runForegroundMigrations(int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail,
-      MigrationProvider migrationProviderInstance, String serviceName) throws Exception {
-    doMigration(false, currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(),
-        migrationProviderInstance, serviceName);
+      Class<? extends NGSchema> schemaClass, String serviceName) throws Exception {
+    doMigration(false, currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), schemaClass,
+        serviceName);
   }
 
   private void runBackgroundMigrations(int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail,
-      MigrationProvider migrationProviderInstance, String serviceName, Microservice microservice) {
+      Class<? extends NGSchema> schemaClass, String serviceName, Microservice microservice) {
     if (currentVersion < maxVersion) {
       executorService.submit(() -> {
         MigrationType migrationType = migrationDetail.getMigrationTypeName();
         try (AcquiredLock ignore = persistentLocker.acquireLock(
                  NGSchema.class, "Background-" + NG_SCHEMA_ID + microservice + migrationType, ofMinutes(120 + 1))) {
           timeLimiter.<Boolean>callWithTimeout(() -> {
-            doMigration(
-                true, currentVersion, maxVersion, migrations, migrationType, migrationProviderInstance, serviceName);
+            doMigration(true, currentVersion, maxVersion, migrations, migrationType, schemaClass, serviceName);
             return true;
           }, 2, TimeUnit.HOURS, true);
         } catch (Exception ex) {
@@ -159,7 +157,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
   @VisibleForTesting
   void doMigration(boolean isBackground, int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationType migrationTypeName,
-      MigrationProvider migrationProviderInstance, String serviceName) throws Exception {
+      Class<? extends NGSchema> schemaClass, String serviceName) throws Exception {
     log.info("[Migration] - {} : Updating {} version from {} to {}", serviceName, migrationTypeName, currentVersion,
         maxVersion);
 
@@ -181,7 +179,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
       }
 
       Update update = new Update().set(NGSchemaKeys.migrationDetails + "." + migrationTypeName, i);
-      mongoTemplate.updateFirst(new Query(), update, migrationProviderInstance.getSchemaClass());
+      mongoTemplate.updateFirst(new Query(), update, schemaClass);
     }
 
     log.info("[Migration] - {} : {} complete", serviceName, migrationTypeName);
