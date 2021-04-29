@@ -66,7 +66,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
         pushInfoBuilder.setEncryptedDataDetails(BytesValue.of(encyptedDataDetails));
       }
     } catch (WingsException e) {
-      final ByteString exceptionBytes = ByteString.copyFrom(kryoSerializer.asBytes(e));
+      final ByteString exceptionBytes = ByteString.copyFrom(kryoSerializer.asBytes(e.getMessage()));
       pushInfoBuilder.setException(BytesValue.newBuilder().setValue(exceptionBytes).build());
       pushInfoBuilder.setStatus(false);
     } catch (Exception e) {
