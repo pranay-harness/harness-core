@@ -106,8 +106,9 @@ public class MongoModule extends AbstractModule {
   private static MongoClientOptions getMongoSslContextClientOptions(MongoConfig mongoConfig) {
     MongoClientOptions primaryMongoClientOptions;
     validateSSLMongoConfig(mongoConfig);
-    String trustStorePath = mongoConfig.getMongoSSLConfig().getMongoTrustStorePath();
-    String trustStorePassword = mongoConfig.getMongoSSLConfig().getMongoTrustStorePassword();
+    MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
+    String trustStorePath = mongoSSLConfig.getMongoTrustStorePath();
+    String trustStorePassword = mongoSSLConfig.getMongoTrustStorePassword();
     primaryMongoClientOptions = MongoClientOptions.builder()
                                     .retryWrites(true)
                                     .connectTimeout(mongoConfig.getConnectTimeout())
@@ -115,7 +116,7 @@ public class MongoModule extends AbstractModule {
                                     .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
                                     .connectionsPerHost(mongoConfig.getConnectionsPerHost())
                                     .readPreference(mongoConfig.getReadPreference())
-                                    .sslEnabled(true)
+                                    .sslEnabled(mongoSSLConfig.isMongoSSLEnabled())
                                     .sslInvalidHostNameAllowed(true)
                                     .sslContext(sslContext(trustStorePath, trustStorePassword))
                                     .build();
@@ -216,11 +217,8 @@ public class MongoModule extends AbstractModule {
     SSLContext sslContext = null;
     try {
       KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-      log.info("Keystore File Path:", keystoreFile);
-      log.info("KeyStore File Password:", password);
       InputStream in = new FileInputStream(keystoreFile);
       keystore.load(in, password.toCharArray());
-
       TrustManagerFactory trustManagerFactory =
           TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
       trustManagerFactory.init(keystore);
