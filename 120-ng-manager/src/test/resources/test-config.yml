@@ -163,6 +163,11 @@ logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
 
+segmentConfiguration:
+  enabled: false
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
 accessControlClient:
   enableAccessControl: false
 

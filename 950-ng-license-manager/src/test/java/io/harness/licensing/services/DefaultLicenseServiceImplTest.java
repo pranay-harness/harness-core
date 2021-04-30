@@ -1,5 +1,6 @@
 package io.harness.licensing.services;
 
+import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_OPERATION;
 import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +28,7 @@ import io.harness.licensing.mappers.LicenseObjectMapper;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.repositories.ModuleLicenseRepository;
 import io.harness.rule.Owner;
+import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
@@ -42,6 +44,7 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
   @Mock ModuleLicenseInterface moduleLicenseInterface;
   @Mock LicenseObjectMapper licenseObjectMapper;
   @Mock AccountService accountService;
+  @Mock TelemetryReporter telemetryReporter;
   @InjectMocks DefaultLicenseServiceImpl licenseService;
 
   private ModuleLicenseDTO defaultModueLicenseDTO;
@@ -150,6 +153,9 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
         .thenReturn(defaultModueLicenseDTO);
     ModuleLicenseDTO result = licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
     verify(accountService, times(1)).updateDefaultExperienceIfNull(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
+    verify(telemetryReporter, times(1)).sendGroupEvent(eq(ACCOUNT_IDENTIFIER), any(), any());
+    verify(telemetryReporter, times(1))
+        .sendTrackEvent(eq(SUCCEED_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
     assertThat(result).isEqualTo(defaultModueLicenseDTO);
   }
 }

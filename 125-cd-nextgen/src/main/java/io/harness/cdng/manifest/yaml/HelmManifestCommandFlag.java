@@ -1,6 +1,9 @@
 package io.harness.cdng.manifest.yaml;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -17,6 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(exclude = {"flag"})
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("helmManifestCommandFlag")
+@OwnedBy(CDC)
 public class HelmManifestCommandFlag {
   @NotNull HelmCommandFlagType commandType;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> flag;

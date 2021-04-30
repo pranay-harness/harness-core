@@ -64,7 +64,6 @@ import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
@@ -106,7 +105,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Inject private ActivityService activityService;
   @Inject private VerificationJobService realVerificationJobService;
   @Inject private VerificationJobInstanceService realVerificationJobInstanceService;
-  @Mock private CVConfigService cvConfigService;
   @Mock private WebhookService mockWebhookService;
   @Mock private VerificationJobService verificationJobService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
@@ -141,14 +139,10 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(activityService, "verificationJobInstanceService", verificationJobInstanceService, true);
     FieldUtils.writeField(activityService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(activityService, "healthVerificationHeatMapService", healthVerificationHeatMapService, true);
-    FieldUtils.writeField(activityService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(activityService, "alertRuleService", alertRuleService, true);
     when(nextGenService.getService(any(), any(), any(), any()))
         .thenReturn(ServiceResponseDTO.builder().name("service name").build());
     when(mockWebhookService.validateWebhookToken(any(), any(), any())).thenReturn(true);
-    when(cvConfigService.list(
-             anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
-        .thenReturn(Lists.newArrayList(new AppDynamicsCVConfig()));
     when(verificationJobInstanceService.getCVConfigsForVerificationJob(any()))
         .thenReturn(Lists.newArrayList(new AppDynamicsCVConfig()));
   }
@@ -385,6 +379,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
                                   .newVersionHosts(new HashSet<>(Arrays.asList("node1", "node2")))
                                   .oldVersionHosts(new HashSet<>(Arrays.asList("node3", "node4")))
                                   .verificationStartTime(now.toEpochMilli())
+                                  .deploymentTag(deploymentTag)
                                   .build();
     activityDTO.setAccountIdentifier(accountId);
     activityDTO.setProjectIdentifier(projectIdentifier);

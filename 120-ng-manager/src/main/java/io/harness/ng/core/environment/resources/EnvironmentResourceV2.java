@@ -23,9 +23,6 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.AccessDeniedException;
-import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -37,8 +34,6 @@ import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.mappers.EnvironmentMapper;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ng.core.utils.CoreCriteriaUtils;
-import io.harness.rbac.CDNGRbacPermissions;
-import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
@@ -47,7 +42,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -89,7 +83,7 @@ public class EnvironmentResourceV2 {
 
   @GET
   @Path("{environmentIdentifier}")
-  @NGAccessControlCheck(resourceType = ENVIRONMENT, permission = "core_environment_view")
+  //  @NGAccessControlCheck(resourceType = ENVIRONMENT, permission = "core_environment_view")
   @ApiOperation(value = "Gets a Environment by identifier", nickname = "getEnvironmentV2")
   public ResponseDTO<EnvironmentResponse> get(
       @PathParam("environmentIdentifier") @ResourceIdentifier String environmentIdentifier,
@@ -175,16 +169,17 @@ public class EnvironmentResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
-    boolean hasAccess = accessControlClient
-                            .checkForAccess(Collections.singletonList(CDNGRbacUtility.getPermissionDTO(accountId,
-                                orgIdentifier, projectIdentifier, CDNGRbacPermissions.ENVIRONMENT_VIEW_PERMISSION)))
-                            .getAccessControlList()
-                            .get(0)
-                            .isPermitted();
-    if (!hasAccess) {
-      throw new AccessDeniedException(
-          "Unauthorized to list environments", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
-    }
+    //    boolean hasAccess = accessControlClient
+    //                            .checkForAccess(Collections.singletonList(CDNGRbacUtility.getPermissionDTO(accountId,
+    //                                orgIdentifier, projectIdentifier,
+    //                                CDNGRbacPermissions.ENVIRONMENT_VIEW_PERMISSION)))
+    //                            .getAccessControlList()
+    //                            .get(0)
+    //                            .isPermitted();
+    //    if (!hasAccess) {
+    //      throw new AccessDeniedException(
+    //          "Unauthorized to list environments", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+    //    }
     Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     Pageable pageRequest;
 

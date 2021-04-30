@@ -22,6 +22,7 @@ import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.cdng.provision.terraform.TerraformApplyStep;
 import io.harness.cdng.provision.terraform.TerraformDestroyStep;
 import io.harness.cdng.provision.terraform.TerraformPlanStep;
+import io.harness.cdng.provision.terraform.steps.rolllback.TerraformRollbackStep;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
@@ -60,6 +61,7 @@ public class NgStepRegistrar {
     engineSteps.put(TerraformApplyStep.STEP_TYPE, TerraformApplyStep.class);
     engineSteps.put(TerraformPlanStep.STEP_TYPE, TerraformPlanStep.class);
     engineSteps.put(TerraformDestroyStep.STEP_TYPE, TerraformDestroyStep.class);
+    engineSteps.put(TerraformRollbackStep.STEP_TYPE, TerraformRollbackStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;

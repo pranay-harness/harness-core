@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entities.UserGroup;
 
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -27,8 +28,15 @@ public class UserGroupRepositoryCustomImpl implements UserGroupRepositoryCustom 
     return Optional.ofNullable(mongoTemplate.findOne(query, UserGroup.class));
   }
 
+  @Override
   public Page<UserGroup> findAll(Criteria criteria, Pageable pageable) {
     return getPaginatedResult(criteria, pageable, UserGroup.class, mongoTemplate);
+  }
+
+  @Override
+  public List<UserGroup> findAll(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.find(query, UserGroup.class);
   }
 
   @Override
