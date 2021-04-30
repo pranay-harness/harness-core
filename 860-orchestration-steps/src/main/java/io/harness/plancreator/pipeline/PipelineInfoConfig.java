@@ -2,7 +2,7 @@ package io.harness.plancreator.pipeline;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.SwaggerConstants;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.notification.bean.NotificationRules;
