@@ -155,7 +155,13 @@ public class PipelineResource implements YamlSchemaResource {
     if (pipelineEntity.isPresent()) {
       version = pipelineEntity.get().getVersion().toString();
     }
-    return ResponseDTO.newResponse(version, pipelineEntity.map(PMSPipelineDtoMapper::writePipelineDto).orElse(null));
+
+    PMSPipelineResponseDTO pipeline = PMSPipelineDtoMapper.writePipelineDto(pipelineEntity.orElseThrow(
+        ()
+            -> new InvalidRequestException(
+                String.format("Pipeline with the given ID: %s does not exist or has been deleted", pipelineId))));
+
+    return ResponseDTO.newResponse(version, pipeline);
   }
 
   @PUT
@@ -240,8 +246,8 @@ public class PipelineResource implements YamlSchemaResource {
     PMSPipelineSummaryResponseDTO pipelineSummary = PMSPipelineDtoMapper.preparePipelineSummary(
         pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false)
             .orElseThrow(()
-                             -> new InvalidRequestException(
-                                 String.format("Pipeline with the given ID: %s does not exist", pipelineId))));
+                             -> new InvalidRequestException(String.format(
+                                 "Pipeline with the given ID: %s does not exist or has been deleted", pipelineId))));
 
     return ResponseDTO.newResponse(pipelineSummary);
   }
@@ -271,9 +277,9 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
       @QueryParam("status") ExecutionStatus status, @QueryParam("myDeployments") boolean myDeployments) {
     log.info("Get List of executions");
-    Criteria criteria =
-        pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier, filterIdentifier,
-            (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status, myDeployments);
+    Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
+        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status,
+        myDeployments, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
@@ -301,7 +307,7 @@ public class PipelineResource implements YamlSchemaResource {
     log.info("Get Execution Detail");
 
     PipelineExecutionSummaryEntity executionSummaryEntity =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId);
+        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()), PipelineRbacPermissions.PIPELINE_VIEW);
@@ -326,7 +332,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    return pmsExecutionService.getInputsetYaml(accountId, orgId, projectId, planExecutionId);
+    return pmsExecutionService.getInputSetYaml(accountId, orgId, projectId, planExecutionId, false);
   }
 
   @GET

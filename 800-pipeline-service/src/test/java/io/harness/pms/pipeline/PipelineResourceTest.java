@@ -2,16 +2,21 @@ package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.RepresentationStrategy;
 import io.harness.category.element.UnitTests;
+import io.harness.dto.OrchestrationAdjacencyListDTO;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
@@ -20,6 +25,9 @@ import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
+import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.rule.Owner;
 
@@ -55,10 +63,14 @@ public class PipelineResourceTest extends CategoryTest {
   private final String ORG_IDENTIFIER = "orgId";
   private final String PROJ_IDENTIFIER = "projId";
   private final String PIPELINE_IDENTIFIER = "basichttpFail";
+  private final String PLAN_EXECUTION_ID = "planId";
+  private final String STAGE_NODE_ID = "stageNodeId";
   private String yaml;
 
   PipelineEntity entity;
   PipelineEntity entityWithVersion;
+  PipelineExecutionSummaryEntity executionSummaryEntity;
+  OrchestrationGraphDTO orchestrationGraph;
 
   @Before
   public void setUp() throws IOException {
@@ -88,6 +100,25 @@ public class PipelineResourceTest extends CategoryTest {
                             .stageName("qaStage")
                             .version(1L)
                             .build();
+
+    executionSummaryEntity = PipelineExecutionSummaryEntity.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .orgIdentifier(ORG_IDENTIFIER)
+                                 .projectIdentifier(PROJ_IDENTIFIER)
+                                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
+                                 .planExecutionId(PLAN_EXECUTION_ID)
+                                 .name(PLAN_EXECUTION_ID)
+                                 .runSequence(0)
+                                 .build();
+
+    orchestrationGraph = OrchestrationGraphDTO.builder()
+                             .planExecutionId(PLAN_EXECUTION_ID)
+                             .rootNodeIds(Collections.singletonList(STAGE_NODE_ID))
+                             .adjacencyList(OrchestrationAdjacencyListDTO.builder()
+                                                .graphVertexMap(Collections.emptyMap())
+                                                .adjacencyMap(Collections.emptyMap())
+                                                .build())
+                             .build();
   }
 
   @Test
@@ -112,6 +143,24 @@ public class PipelineResourceTest extends CategoryTest {
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
     assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getData().getYamlPipeline()).isEqualTo(yaml);
+  }
+
+  @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testGetPipelineWithInvalidPipelineId() {
+    String incorrectPipelineIdentifier = "notTheIdentifierWeNeed";
+
+    doReturn(Optional.empty())
+        .when(pmsPipelineService)
+        .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, incorrectPipelineIdentifier, false);
+
+    assertThatThrownBy(()
+                           -> pipelineResource.getPipelineByIdentifier(
+                               ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, incorrectPipelineIdentifier, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(String.format(
+            "Pipeline with the given ID: %s does not exist or has been deleted", incorrectPipelineIdentifier));
   }
 
   @Test
@@ -167,6 +216,24 @@ public class PipelineResourceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testGetPipelineSummaryInvalidPipelineId() {
+    String incorrectPipelineIdentifier = "notTheIdentifierWeNeed";
+
+    doReturn(Optional.empty())
+        .when(pmsPipelineService)
+        .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, incorrectPipelineIdentifier, false);
+
+    assertThatThrownBy(()
+                           -> pipelineResource.getPipelineSummary(
+                               ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, incorrectPipelineIdentifier))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(String.format(
+            "Pipeline with the given ID: %s does not exist or has been deleted", incorrectPipelineIdentifier));
+  }
+
+  @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetListOfPipelines() {
@@ -187,5 +254,68 @@ public class PipelineResourceTest extends CategoryTest {
     assertThat(responseDTO.getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getNumOfStages()).isEqualTo(1L);
     assertThat(responseDTO.getStageNames().get(0)).isEqualTo("qaStage");
+  }
+
+  @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testGetListOfExecutions() {
+    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
+    Page<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntities =
+        new PageImpl<>(Collections.singletonList(executionSummaryEntity), pageable, 1);
+    doReturn(pipelineExecutionSummaryEntities)
+        .when(pmsExecutionService)
+        .getPipelineExecutionSummaryEntity(any(), any());
+    Page<PipelineExecutionSummaryDTO> content = pipelineResource
+                                                    .getListOfExecutions(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
+                                                        null, null, 0, 10, null, null, null, null, null, true)
+                                                    .getData();
+    assertThat(content).isNotEmpty();
+    assertThat(content.getNumberOfElements()).isEqualTo(1);
+
+    PipelineExecutionSummaryDTO responseDTO = content.toList().get(0);
+    assertThat(responseDTO.getPipelineIdentifier()).isEqualTo(PIPELINE_IDENTIFIER);
+    assertThat(responseDTO.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(responseDTO.getName()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(responseDTO.getRunSequence()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testGetExecutionDetail() {
+    doReturn(executionSummaryEntity)
+        .when(pmsExecutionService)
+        .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, false);
+    doReturn(orchestrationGraph).when(pmsExecutionService).getOrchestrationGraph(STAGE_NODE_ID, PLAN_EXECUTION_ID);
+
+    ResponseDTO<PipelineExecutionDetailDTO> executionDetails = pipelineResource.getExecutionDetail(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, STAGE_NODE_ID, PLAN_EXECUTION_ID);
+
+    assertThat(executionDetails.getData().getPipelineExecutionSummary().getPipelineIdentifier())
+        .isEqualTo(PIPELINE_IDENTIFIER);
+    assertThat(executionDetails.getData().getPipelineExecutionSummary().getPlanExecutionId())
+        .isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(executionDetails.getData().getPipelineExecutionSummary().getName()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(executionDetails.getData().getPipelineExecutionSummary().getRunSequence()).isEqualTo(0);
+    assertThat(executionDetails.getData().getExecutionGraph().getRootNodeId()).isEqualTo(STAGE_NODE_ID);
+    assertThat(executionDetails.getData().getExecutionGraph().getNodeMap().size()).isEqualTo(0);
+    assertThat(executionDetails.getData().getExecutionGraph().getRepresentationStrategy())
+        .isEqualTo(RepresentationStrategy.CAMELCASE);
+  }
+
+  @Test
+  @Owner(developers = SAMARTH)
+  @Category(UnitTests.class)
+  public void testGetExecutionDetailWithInvalidExecutionId() {
+    String invalidPlanExecutionId = "invalidId";
+    doThrow(InvalidRequestException.class)
+        .when(pmsExecutionService)
+        .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, invalidPlanExecutionId, false);
+
+    assertThatThrownBy(()
+                           -> pipelineResource.getExecutionDetail(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null,
+                               STAGE_NODE_ID, invalidPlanExecutionId))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }
