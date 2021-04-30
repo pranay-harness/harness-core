@@ -76,6 +76,7 @@ public abstract class VerificationJob
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("unique_query_idx")
+                 .unique(true)
                  .field(VerificationJobKeys.accountId)
                  .field(VerificationJobKeys.orgIdentifier)
                  .field(VerificationJobKeys.projectIdentifier)
