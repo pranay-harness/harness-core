@@ -22,6 +22,8 @@ import io.harness.product.ci.scm.proto.FindFilesInBranchRequest;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitRequest;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
+import io.harness.product.ci.scm.proto.FindFilesInPRRequest;
+import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
 import io.harness.product.ci.scm.proto.GetBatchFileRequest;
 import io.harness.product.ci.scm.proto.GetFileRequest;
 import io.harness.product.ci.scm.proto.GetLatestCommitRequest;
@@ -159,6 +161,14 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   @Override
+  public FindFilesInPRResponse findFilesInPR(
+      ScmConnector scmConnector, int prNumber, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    FindFilesInPRRequest findFilesInPRRequest = getFindFilesInPRRequest(scmConnector, prNumber);
+    // still to be resolved
+    return scmBlockingStub.findFilesInPR(findFilesInPRRequest);
+  }
+
+  @Override
   public GetLatestCommitResponse getLatestCommit(
       ScmConnector scmConnector, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     GetLatestCommitRequest getLatestCommitRequest = getLatestCommitRequestObject(scmConnector, branch);
@@ -242,6 +252,14 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     return FindFilesInBranchRequest.newBuilder()
         .setSlug(scmGitProviderHelper.getSlug(scmConnector))
         .setBranch(branch)
+        .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
+        .build();
+  }
+
+  private FindFilesInPRRequest getFindFilesInPRRequest(ScmConnector scmConnector, int prNumber) {
+    return FindFilesInPRRequest.newBuilder()
+        .setSlug(scmGitProviderHelper.getSlug(scmConnector))
+        .setNumber(prNumber)
         .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
         .build();
   }
