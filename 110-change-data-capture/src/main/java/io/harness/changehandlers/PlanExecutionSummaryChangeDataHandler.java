@@ -59,6 +59,10 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
           columnValueMapping.put("moduleInfo_repository", ciObject.get("repoName").toString());
         }
 
+        if (ciObject.get("branch") != null) {
+          columnValueMapping.put("moduleinfo_branch_name", ciObject.get("branch").toString());
+        }
+
         if (ciExecutionInfo != null) {
           DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
 
@@ -69,14 +73,22 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
               columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
               columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
             }
-            columnValueMapping.put("moduleInfo_branch_name", branch.get("name").toString());
+          } else if (ciExecutionInfo.get("pullRequest") != null) {
+            DBObject pullRequestObject = (DBObject) ciExecutionInfo.get("pullRequest");
+            if (pullRequestObject.get("commits") != null) {
+              firstCommit = (HashMap) ((List) pullRequestObject.get("commits")).get(0);
+              if (firstCommit != null) {
+                columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+                columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+              }
+            }
           }
           DBObject author = (DBObject) (ciExecutionInfo.get("author"));
-          if (ciExecutionInfo.get("event") != null) {
-            columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
-          }
           if (author != null) {
             columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
+          }
+          if (ciExecutionInfo.get("event") != null) {
+            columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
           }
         }
       } else {

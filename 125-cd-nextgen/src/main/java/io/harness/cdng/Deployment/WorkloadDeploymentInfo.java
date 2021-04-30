@@ -14,6 +14,7 @@ public class WorkloadDeploymentInfo {
   private String serviceName;
   private String lastExecuted;
   private String lastStatus;
+  private String deploymentType;
   private long totalDeployments;
   private double percentSuccess;
   private double rateSuccess;

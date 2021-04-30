@@ -139,7 +139,7 @@ public class QueryBuilderTest {
   @Category(UnitTests.class)
   public void testQueryBuilderSelectWorkload() {
     String queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
 
     assertThat(queryExpected)
         .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(
@@ -147,20 +147,20 @@ public class QueryBuilderTest {
 
     // all parameters as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where ";
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where ";
     assertThat(queryExpected)
         .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(null, null, null, null, null));
 
     // accountIdentifier as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where orgidentifier='org' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where orgidentifier='org' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
     assertThat(queryExpected)
         .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(
             null, "org", "pro", "2021-04-21", "2021-04-28"));
 
     // org as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and projectidentifier='pro' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
 
     assertThat(queryExpected)
         .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(
@@ -168,7 +168,7 @@ public class QueryBuilderTest {
 
     // proId as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and pipeline_execution_summary_cd.id=pipeline_execution_summary_cd_id and service_name is not null and startts between '2021-04-21' and '2021-04-28';";
 
     assertThat(queryExpected)
         .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload(
@@ -176,7 +176,7 @@ public class QueryBuilderTest {
 
     // startInterval as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
 
     assertThat(queryExpected)
         .isEqualTo(
@@ -184,7 +184,7 @@ public class QueryBuilderTest {
 
     // startInterval as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
 
     assertThat(queryExpected)
         .isEqualTo(
@@ -192,7 +192,7 @@ public class QueryBuilderTest {
 
     // both interval as null
     queryExpected =
-        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from service_infra_info, pipeline_execution_summary_cd where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and ";
 
     assertThat(queryExpected)
         .isEqualTo(new CDOverviewDashboardServiceImpl().queryBuilderSelectWorkload("acc", "org", "pro", null, null));
