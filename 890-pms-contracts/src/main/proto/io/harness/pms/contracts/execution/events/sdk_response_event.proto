@@ -25,6 +25,7 @@ message SdkResponseEventRequest {
     AdviserResponseRequest adviserResponseRequest = 9;
     QueueTaskRequestAndExecutableResponseRequest queueTaskRequestAndExecutableResponseRequest = 10;
     SuspendChainRequest suspendChainRequest = 11;
+    SpawnChildRequest spawnChildRequest = 12;
   }
   string nodeExecutionId = 3;
 }
@@ -87,6 +88,12 @@ message SuspendChainRequest {
   bool isError = 4;
 }
 
+message SpawnChildRequest {
+  string nodeExecutionId = 1;
+  NodeExecutionProto childNodeExecution = 2;
+  io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 3;
+}
+
 enum SdkResponseEventType {
   UNKNOWN_EVENT_TYPE = 0;
   QUEUE_NODE = 1;
@@ -98,4 +105,5 @@ enum SdkResponseEventType {
   HANDLE_ADVISER_RESPONSE = 7;
   QUEUE_TASK_AND_ADD_EXECUTABLE_RESPONSE = 8;
   SUSPEND_CHAIN = 9;
+  SPAWN_CHILD = 10;
 }

@@ -9,8 +9,7 @@ import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
-import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
@@ -25,7 +24,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +32,6 @@ import java.util.Map;
 public class ChildStrategy implements ExecuteStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-  @Inject private StrategyHelper strategyHelper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -80,12 +77,13 @@ public class ChildStrategy implements ExecuteStrategy {
                                                 .setParentId(nodeExecution.getUuid())
                                                 .build();
 
-    QueueNodeExecutionRequest queueNodeExecutionRequest =
-        strategyHelper.getQueueNodeExecutionRequest(childNodeExecution);
-    AddExecutableResponseRequest addExecutableResponseRequest =
-        strategyHelper.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
-            ExecutableResponse.newBuilder().setChild(response).build(), Collections.singletonList(childInstanceId));
-    sdkNodeExecutionService.queueNodeExecutionAndAddExecutableResponse(
-        nodeExecution.getUuid(), queueNodeExecutionRequest, addExecutableResponseRequest);
+    SpawnChildRequest spawnChildRequest =
+        SpawnChildRequest.newBuilder()
+            .setNodeExecutionId(nodeExecution.getUuid())
+            .setExecutableResponse(ExecutableResponse.newBuilder().setChild(response).build())
+            .setChildNodeExecution(childNodeExecution)
+            .build();
+
+    sdkNodeExecutionService.spawnChild(spawnChildRequest);
   }
 }
