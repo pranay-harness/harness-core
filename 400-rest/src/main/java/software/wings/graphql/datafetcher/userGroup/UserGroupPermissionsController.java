@@ -350,6 +350,10 @@ public class UserGroupPermissionsController {
       actionsList.add(QLActions.EXECUTE_WORKFLOW);
       actionsList.add(QLActions.EXECUTE_PIPELINE);
     }
+    // Do not allow adding action while in beta
+    if (actionsList.contains(QLActions.ROLLBACK_WORKFLOW)) {
+      throw new InvalidRequestException("Cannot add action ROLLBACK_WORKFLOW. Feature in development.");
+    }
   }
 
   private AppPermission convertToAppPermissionEntity(QLAppPermission permission) {
