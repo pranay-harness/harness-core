@@ -146,7 +146,6 @@ public class MongoModule extends AbstractModule {
     }
 
     MongoClientOptions primaryMongoClientOptions;
-
     MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
     if (mongoSSLConfig != null && mongoSSLConfig.isMongoSSLEnabled()) {
       primaryMongoClientOptions = getMongoSslContextClientOptions(mongoConfig);

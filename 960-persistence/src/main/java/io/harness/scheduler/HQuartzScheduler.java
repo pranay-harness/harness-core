@@ -62,19 +62,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
 
   protected Scheduler createScheduler(Properties properties) throws SchedulerException {
     MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
-    MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
-    if (mongoSSLConfig != null && mongoSSLConfig.isMongoSSLEnabled()) {
-      properties.setProperty(
-          "org.quartz.jobStore.mongoOptionEnableSSL", String.valueOf(mongoSSLConfig.isMongoSSLEnabled()));
-      Preconditions.checkArgument(StringUtils.isNotBlank(mongoSSLConfig.getMongoTrustStorePath()),
-          "mongoTrustStorePath must be set if mongoSSLEnabled is set to true");
-      properties.setProperty("org.quartz.jobStore.mongoOptionTrustStorePath", mongoSSLConfig.getMongoTrustStorePath());
-      properties.setProperty(
-          "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
-      properties.setProperty(
-          "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
-      properties.setProperty("org.quartz.jobStore.mongoOptionSslInvalidHostNameAllowed", String.valueOf(true));
-    }
+    populateMongoSSLProperties(properties, mongoConfig);
     StdSchedulerFactory factory = new StdSchedulerFactory(properties);
     Scheduler newScheduler = factory.getScheduler();
     // by default newScheduler does not create all needed mongo indexes.
@@ -135,20 +123,7 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
       }
 
       MongoConfig mongoConfig = injector.getInstance(MongoConfig.class);
-
-      MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
-
-      if (mongoSSLConfig != null && mongoSSLConfig.isMongoSSLEnabled()) {
-        props.setProperty(
-            "org.quartz.jobStore.mongoOptionEnableSSL", String.valueOf(mongoSSLConfig.isMongoSSLEnabled()));
-        Preconditions.checkArgument(StringUtils.isNotBlank(mongoSSLConfig.getMongoTrustStorePath()),
-            "mongoTrustStorePath must be set if mongoSSLEnabled is set to true");
-        props.setProperty("org.quartz.jobStore.mongoOptionTrustStorePath", mongoSSLConfig.getMongoTrustStorePath());
-        props.setProperty(
-            "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
-        props.setProperty("org.quartz.jobStore.mongoOptionSslInvalidHostNameAllowed", String.valueOf(true));
-      }
-
+      populateMongoSSLProperties(props, mongoConfig);
       props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobStoreClass());
       props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
       props.setProperty("org.quartz.jobStore.dbName", databaseName);
@@ -178,6 +153,25 @@ public class HQuartzScheduler implements PersistentScheduler, MaintenanceListene
     props.setProperty("org.quartz.scheduler.instanceName", schedulerConfig.getSchedulerName());
 
     return props;
+  }
+
+  private void populateMongoSSLProperties(Properties properties, MongoConfig mongoConfig) {
+    if (mongoConfig != null) {
+      MongoSSLConfig mongoSSLConfig = mongoConfig.getMongoSSLConfig();
+      if (mongoSSLConfig != null && mongoSSLConfig.isMongoSSLEnabled()) {
+        properties.setProperty(
+            "org.quartz.jobStore.mongoOptionEnableSSL", String.valueOf(mongoSSLConfig.isMongoSSLEnabled()));
+        Preconditions.checkArgument(StringUtils.isNotBlank(mongoSSLConfig.getMongoTrustStorePath()),
+            "mongoTrustStorePath must be set if mongoSSLEnabled is set to true");
+        properties.setProperty(
+            "org.quartz.jobStore.mongoOptionTrustStorePath", mongoSSLConfig.getMongoTrustStorePath());
+        properties.setProperty(
+            "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
+        properties.setProperty(
+            "org.quartz.jobStore.mongoOptionTrustStorePassword", mongoSSLConfig.getMongoTrustStorePassword());
+        properties.setProperty("org.quartz.jobStore.mongoOptionSslInvalidHostNameAllowed", String.valueOf(true));
+      }
+    }
   }
 
   /**
