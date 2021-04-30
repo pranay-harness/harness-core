@@ -49,5 +49,7 @@
       ],
       "uuid":"FREEZE_ID"
     }
-  ]
+  ],
+  "enableNextIterations":false,
+  "enableNextCloseIterations":false
 }
