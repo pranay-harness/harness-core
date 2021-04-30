@@ -30,6 +30,7 @@ import io.harness.audit.Action;
 import io.harness.audit.ResourceTypeConstants;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
@@ -44,7 +45,6 @@ import io.harness.ng.core.events.UserMembershipRemoveEvent;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.remote.RoleBinding;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.outbox.OutboxEvent;
 import io.harness.rule.Owner;
 
@@ -196,7 +196,7 @@ public class UserEventHandlerTest extends CategoryTest {
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
     UserMembershipAddEvent userMembershipAddEvent = new UserMembershipAddEvent(accountIdentifier,
-        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
         randomAlphabetic(10), ACCEPTED_INVITE);
     String eventData = objectMapper.writeValueAsString(userMembershipAddEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
@@ -241,7 +241,7 @@ public class UserEventHandlerTest extends CategoryTest {
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
     UserMembershipRemoveEvent userMembershipRemoveEvent = new UserMembershipRemoveEvent(accountIdentifier,
-        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
         randomAlphabetic(10), SYSTEM);
     String eventData = objectMapper.writeValueAsString(userMembershipRemoveEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
@@ -285,7 +285,7 @@ public class UserEventHandlerTest extends CategoryTest {
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
     AddCollaboratorEvent addCollaboratorEvent = new AddCollaboratorEvent(accountIdentifier,
-        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
         randomAlphabetic(10), UserMembershipUpdateSource.ACCEPTED_INVITE);
     String eventData = objectMapper.writeValueAsString(addCollaboratorEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
@@ -319,7 +319,7 @@ public class UserEventHandlerTest extends CategoryTest {
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
     RemoveCollaboratorEvent removeCollaboratorEvent = new RemoveCollaboratorEvent(accountIdentifier,
-        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
         randomAlphabetic(10), UserMembershipUpdateSource.SYSTEM);
     String eventData = objectMapper.writeValueAsString(removeCollaboratorEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
