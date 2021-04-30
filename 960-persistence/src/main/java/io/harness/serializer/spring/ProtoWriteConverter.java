@@ -1,16 +1,21 @@
 package io.harness.serializer.spring;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import lombok.SneakyThrows;
 import org.bson.Document;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(PIPELINE)
 public abstract class ProtoWriteConverter<T extends Message> implements Converter<T, Document> {
   @SneakyThrows
   @Override
   public Document convert(T entity) {
-    String entityJson = JsonFormat.printer().print(entity);
+    String entityJson = JsonFormat.printer().includingDefaultValueFields().print(entity);
     return Document.parse(entityJson);
   }
 }

@@ -1,10 +1,12 @@
 package io.harness.beans.dependencies;
 
-import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_LIST_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.ParameterField;
@@ -29,6 +31,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("ciServiceInfo")
+@OwnedBy(CI)
 public class CIServiceInfo implements DependencySpecType {
   @JsonIgnore public static final CIDependencyType type = CIDependencyType.SERVICE;
 

@@ -1,9 +1,12 @@
 package io.harness.cdng.service.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromOverridesVisitorHelper;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromStageVisitorHelper;
-import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChild;
@@ -25,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @SimpleVisitorHelper(helperClass = ServiceUseFromStageVisitorHelper.class)
 @TypeAlias("serviceUseFromStage")
+@OwnedBy(CDC)
 public class ServiceUseFromStage implements Serializable, Visitable {
   // Stage identifier of the stage to select from.
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @NotNull ParameterField<String> stage;

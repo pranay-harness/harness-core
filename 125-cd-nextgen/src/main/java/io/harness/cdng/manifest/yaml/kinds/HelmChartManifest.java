@@ -1,8 +1,8 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;

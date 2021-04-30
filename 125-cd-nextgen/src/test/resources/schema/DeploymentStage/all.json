@@ -3548,14 +3548,14 @@
         "name": {
           "type": "string"
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "timeout": {
           "type": "string"
         },
         "type": {
           "type": "string"
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -3923,14 +3923,14 @@
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "steps": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -3960,6 +3960,26 @@
     "StepSpecType": {
       "type": "object",
       "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepWhenCondition": {
+      "type": "object",
+      "required": [
+        "stageStatus"
+      ],
+      "properties": {
+        "condition": {
+          "type": "string"
+        },
+        "stageStatus": {
+          "type": "string",
+          "enum": [
+            "Success",
+            "Failure",
+            "All"
+          ]
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StoreConfig": {
