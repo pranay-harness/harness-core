@@ -565,7 +565,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
               lastCommitTime = time.get(i);
               lastStatus = status.get(i);
             } else {
-              if (lastCommitTime.compareTo(variableDate.toString()) <= 0) {
+              if (lastCommitTime.compareTo(time.get(i)) <= 0) {
                 lastCommitTime = time.get(i);
                 lastCommit = commitMessage.get(i);
                 lastStatus = status.get(i);
