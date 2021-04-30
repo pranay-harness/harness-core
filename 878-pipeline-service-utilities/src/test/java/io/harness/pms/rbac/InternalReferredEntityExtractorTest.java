@@ -1,4 +1,4 @@
-package io.harness.pms.pipeline;
+package io.harness.pms.rbac;
 
 import static io.harness.rule.OwnerRule.SAHIL;
 
