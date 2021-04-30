@@ -212,10 +212,10 @@ public class GitEntityServiceImpl implements GitEntityService {
   }
 
   @Override
-  public GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType) {
+  public GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType, String branch) {
     final Optional<GitFileLocation> gitFileLocation =
-        gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountId(
-            entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier());
+        gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountIdAndBranch(
+            entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier(), branch);
     return gitFileLocation.map(this::buildGitSyncEntityDTO).orElse(null);
   }
 
