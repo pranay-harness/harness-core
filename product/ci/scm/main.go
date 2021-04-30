@@ -22,7 +22,7 @@ var (
 	BuildCommitID = "NA"
 )
 
-var args struct {
+type args struct {
 	Verbose    bool   `arg:"--verbose" help:"enable verbose logging mode"`
 	Port       uint   `arg:"--port" help:"port for running GRPC server"`
 	UnixSocket string `arg:"--unix" help:"the unix socket to run on"`
@@ -31,18 +31,23 @@ var args struct {
 	DeploymentEnvironment string `arg:"env:DEPLOYMENT_ENVIRONMENT" help:"environment of the deployment"`
 }
 
-func parseArgs() {
-	// set defaults here
-	args.DeploymentEnvironment = "prod"
-	args.Port = port
-	args.Verbose = false
-	args.UnixSocket = ""
+func (args) Version() string {
+	return Version
+}
 
-	arg.MustParse(&args)
+func parseArgs(a *args) {
+	// set defaults here
+	a.DeploymentEnvironment = "prod"
+	a.Port = port
+	a.Verbose = false
+	a.UnixSocket = ""
+
+	arg.MustParse(a)
 }
 
 func main() {
-	parseArgs()
+	var args args
+	parseArgs(&args)
 
 	// build initial log
 	logBuilder := logs.NewBuilder().Verbose(args.Verbose).WithDeployment(args.Deployment).

@@ -60,5 +60,6 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.infra.beans.InfraUseFromStage$Overrides", InfraUseFromStage.Overrides.class);
     h.put("cdng.infra.beans.InfraUseFromStage", InfraUseFromStage.class);
     h.put("cdng.infra.steps.InfraStepParameters", InfraStepParameters.class);
+    h.put("io.harness.cdng.provision.terraform.TerraformConfig", TerraformConfig.class);
   }
 }

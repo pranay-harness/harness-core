@@ -8,7 +8,6 @@ import io.harness.exception.InvalidRequestException;
 import com.google.inject.Singleton;
 import io.grpc.Channel;
 import io.grpc.ManagedChannel;
-import java.io.IOException;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,21 +23,25 @@ public class ScmDelegateClientImpl implements ScmDelegateClient {
 
   @Override
   public <R> R processScmRequest(Function<Channel, R> functor) {
+    try (ScmUnixManager scmUnixManager = getManager()) {
+      final ManagedChannel channel = scmUnixManager.getChannel();
+      return functor.apply(channel);
+    } catch (Exception e) {
+      throw new InvalidRequestException("Cannot start Scm Unix Manager", e);
+    }
+  }
+
+  private ScmUnixManager getManager() {
+    String OS = System.getProperty("os.name").toLowerCase();
     try {
-      ScmUnixManager scmUnixManager = null;
-      try {
-        scmUnixManager = new ScmUnixManager();
-        final ManagedChannel channel = scmUnixManager.getChannel();
-        final R result = functor.apply(channel);
-        // (Todo) : Close SCM Manager in background
-        scmUnixManager.close();
-        return result;
-      } catch (IOException ioException) {
-        // handle it here
-        return null;
+      if (OS.contains("mac")) {
+        return new ScmMacOSManager();
+      } else if (OS.contains("nux") || OS.contains("nix")) {
+        return new ScmLinuxManager();
       }
     } catch (Exception e) {
-      throw new InvalidRequestException("");
+      throw new InvalidRequestException("Manager could not be created", e);
     }
+    throw new InvalidRequestException("SCM on" + OS + "is not supported yet");
   }
 }

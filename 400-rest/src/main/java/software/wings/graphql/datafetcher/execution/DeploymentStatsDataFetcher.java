@@ -114,6 +114,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 
 @Slf4j
 @OwnedBy(CDC)
@@ -598,7 +599,13 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
 
     addAccountFilter(selectQuery, accountId);
-    addParentIdFilter(selectQuery);
+    if (!CollectionUtils.isEmpty(
+            filters.stream().filter(item -> item.getEnvironmentType() != null).collect(Collectors.toList()))) {
+      addWorkflowNotNullFilter(selectQuery);
+      addPipelineNullFilter(selectQuery);
+    } else {
+      addParentIdFilter(selectQuery);
+    }
 
     List<QLDeploymentSortCriteria> finalSortCriteria = null;
     if (!isValidGroupByTime(groupByTime)) {
@@ -691,7 +698,13 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
 
     addAccountFilter(selectTags, accountId);
-    addParentIdFilter(selectTags);
+    if (!CollectionUtils.isEmpty(
+            filters.stream().filter(filter -> filter.getEnvironmentType() != null).collect(Collectors.toList()))) {
+      addWorkflowNotNullFilter(selectQuery);
+      addPipelineNullFilter(selectQuery);
+    } else {
+      addParentIdFilter(selectQuery);
+    }
 
     List<QLDeploymentSortCriteria> finalSortCriteria = null;
     if (!isValidGroupByTime(groupByTime)) {
@@ -950,6 +963,14 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     boolean t2Present;
     Long t1;
     Long t2;
+  }
+
+  private void addWorkflowNotNullFilter(SelectQuery selectQuery) {
+    selectQuery.addCondition(UnaryCondition.isNotNull(schema.getWorkflows()));
+  }
+
+  private void addPipelineNullFilter(SelectQuery selectQuery) {
+    selectQuery.addCondition(UnaryCondition.isNull(schema.getPipeline()));
   }
 
   private void addParentIdFilter(SelectQuery selectQuery) {

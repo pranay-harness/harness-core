@@ -37,4 +37,6 @@ public interface VerificationJobService {
 
   List<VerificationJobDTO> eligibleCDNGVerificationJobs(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
+
+  void createDefaultVerificationJobs(String accountId, String orgIdentifier, String projectIdentifier);
 }

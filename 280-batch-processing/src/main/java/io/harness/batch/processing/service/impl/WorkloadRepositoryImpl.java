@@ -3,10 +3,10 @@ package io.harness.batch.processing.service.impl;
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.batch.processing.config.k8s.recommendation.ResourceId;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.perpetualtask.k8s.watch.Owner;
 import io.harness.perpetualtask.k8s.watch.PodInfo;
 import io.harness.persistence.HPersistence;

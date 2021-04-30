@@ -3,6 +3,7 @@
  */
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.PodInfo;
@@ -13,6 +14,11 @@ import io.harness.timescaledb.tables.WorkloadInfo;
  */
 @SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class Tables {
+  /**
+   * The table <code>public.ce_recommendations</code>.
+   */
+  public static final CeRecommendations CE_RECOMMENDATIONS = CeRecommendations.CE_RECOMMENDATIONS;
+
   /**
    * The table <code>public.kubernetes_utilization_data</code>.
    */

@@ -33,6 +33,7 @@ java_library(
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_slf4j_slf4j_api",
     ],

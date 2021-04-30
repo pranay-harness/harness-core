@@ -7,9 +7,11 @@ public enum TimeSeriesMetricType {
   INFRA("INFRA",
       Lists.newArrayList(
           TimeSeriesThresholdCriteria.builder().criteria("> 0.2").type(TimeSeriesThresholdComparisonType.RATIO).build(),
+          TimeSeriesThresholdCriteria.builder().criteria("< 0.2").type(TimeSeriesThresholdComparisonType.RATIO).build(),
+          TimeSeriesThresholdCriteria.builder().criteria("> 20").type(TimeSeriesThresholdComparisonType.DELTA).build(),
           TimeSeriesThresholdCriteria.builder()
-              .criteria("< 0.2")
-              .type(TimeSeriesThresholdComparisonType.RATIO)
+              .criteria("< 20")
+              .type(TimeSeriesThresholdComparisonType.DELTA)
               .build())),
 
   RESP_TIME("RESP_TIME",
@@ -51,6 +53,11 @@ public enum TimeSeriesMetricType {
           TimeSeriesThresholdCriteria.builder().criteria("> 0.2").type(TimeSeriesThresholdComparisonType.RATIO).build(),
           TimeSeriesThresholdCriteria.builder()
               .criteria("> 0.01")
+              .type(TimeSeriesThresholdComparisonType.DELTA)
+              .build(),
+          TimeSeriesThresholdCriteria.builder().criteria("> 20").type(TimeSeriesThresholdComparisonType.DELTA).build(),
+          TimeSeriesThresholdCriteria.builder()
+              .criteria("< 20")
               .type(TimeSeriesThresholdComparisonType.DELTA)
               .build()));
 

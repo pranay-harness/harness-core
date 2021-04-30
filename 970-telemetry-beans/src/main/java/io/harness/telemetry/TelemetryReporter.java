@@ -19,8 +19,10 @@ public interface TelemetryReporter {
    * @param eventName  event name
    * @param properties event properties
    * @param destinations event destinations, null if sending to all destinations
+   * @param category the flow category, used to clarify what the work flow is, e.g. during SINGUP. Default is GLOBAL.
    */
-  void sendTrackEvent(String eventName, HashMap<String, Object> properties, Map<Destination, Boolean> destinations);
+  void sendTrackEvent(
+      String eventName, HashMap<String, Object> properties, Map<Destination, Boolean> destinations, String category);
 
   /**
    * Sending track message
@@ -33,9 +35,10 @@ public interface TelemetryReporter {
    * @param accountId used for value of "groupId" in properties
    * @param properties event properties
    * @param destinations event destinations, null if sending to all destinations
+   * @param category the flow category, used to clarify what the work flow is, e.g. during SINGUP. Default is GLOBAL.
    */
   void sendTrackEvent(String eventName, String identity, String accountId, HashMap<String, Object> properties,
-      Map<Destination, Boolean> destinations);
+      Map<Destination, Boolean> destinations, String category);
 
   /**
    * Sending identify message

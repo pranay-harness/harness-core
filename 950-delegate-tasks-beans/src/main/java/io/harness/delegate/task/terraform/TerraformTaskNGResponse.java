@@ -3,7 +3,8 @@ package io.harness.delegate.task.terraform;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -17,7 +18,7 @@ import lombok.experimental.NonFinal;
 @Value
 @Builder
 @OwnedBy(CDP)
-public class TerraformTaskNGResponse implements DelegateResponseData {
+public class TerraformTaskNGResponse implements DelegateTaskNotifyResponseData {
   CommandExecutionStatus commandExecutionStatus;
   String errorMessage;
   @NonFinal @Setter UnitProgressData unitProgressData;
@@ -26,4 +27,5 @@ public class TerraformTaskNGResponse implements DelegateResponseData {
   EncryptedRecordData encryptedTfPlan;
   String outputs;
   String stateFileId;
+  @NonFinal @Setter DelegateMetaInfo delegateMetaInfo;
 }

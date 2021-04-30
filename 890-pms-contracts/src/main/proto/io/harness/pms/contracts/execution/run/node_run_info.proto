@@ -7,4 +7,11 @@ option java_multiple_files = true;
 message NodeRunInfo {
   string whenCondition = 1;
   bool evaluatedCondition = 2;
+  repeated ExpressionBlock expressionList = 3;
+}
+
+message ExpressionBlock {
+  string expression = 1;
+  string expressionValue = 2;
+  int32 count = 3;
 }

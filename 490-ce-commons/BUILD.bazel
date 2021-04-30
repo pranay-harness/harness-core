@@ -9,6 +9,7 @@ java_library(
     deps = [
         "//:lombok",
         "//950-ng-authentication-service:module",
+        "//959-psql-database-models:module",
         "//960-persistence:module",
         "//970-grpc:module",
         "//980-commons:module",

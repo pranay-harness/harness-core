@@ -113,8 +113,8 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 		pipelineId := r.FormValue(pipelineIdParam)
 		buildId := r.FormValue(buildIdParam)
 
-		overview, err := db.GetSelectionOverview(ctx, config.TimeScaleDb.SelectionTable, accountId,
-			orgId, projectId, pipelineId, buildId)
+		overview, err := db.GetSelectionOverview(ctx, config.TimeScaleDb.SelectionTable, config.TimeScaleDb.HyperTableName,
+			accountId, orgId, projectId, pipelineId, buildId)
 		if err != nil {
 			log.Errorw("could not get TI overview from DB", zap.Error(err))
 			WriteInternalError(w, err)

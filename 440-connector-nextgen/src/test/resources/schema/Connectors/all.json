@@ -1058,6 +1058,7 @@
             "Git",
             "Splunk",
             "AppDynamics",
+            "Prometheus",
             "Vault",
             "DockerRegistry",
             "Local",
@@ -1431,6 +1432,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/NexusConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Prometheus"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PrometheusConnectorDTO"
               }
             }
           }
@@ -3213,6 +3230,32 @@
               ]
             }
           ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PrometheusConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"

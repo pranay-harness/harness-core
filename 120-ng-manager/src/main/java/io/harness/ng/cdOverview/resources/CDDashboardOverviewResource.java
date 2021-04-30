@@ -2,6 +2,8 @@ package io.harness.ng.cdOverview.resources;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
+import io.harness.cdng.Deployment.DashboardWorkloadDeployment;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
@@ -18,7 +20,9 @@ import io.swagger.annotations.ApiResponses;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -48,7 +52,10 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
     LocalDate startDate = LocalDate.parse(startInterval);
     LocalDate endDate = LocalDate.parse(endInterval);
     long interval = ChronoUnit.DAYS.between(startDate, endDate);
@@ -69,8 +76,48 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getExecutionDeploymentDashboard(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
+  }
+
+  @GET
+  @Path("/getDeployments")
+  @ApiOperation(value = "Get deployments", nickname = "getDeployments")
+  public ResponseDTO<DashboardDeploymentActiveFailedRunningInfo> getDeployments(
+      @NotNull @QueryParam("accountId") String accountIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("top") @DefaultValue("20") long days) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentActiveFailedRunningInfo(
+        accountIdentifier, orgIdentifier, projectIdentifier, days));
+  }
+
+  @GET
+  @Path("/getWorkloads")
+  @ApiOperation(value = "Get workloads", nickname = "getWorkloads")
+  public ResponseDTO<DashboardWorkloadDeployment> getWorkloads(
+      @NotNull @QueryParam("accountId") String accountIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
+    LocalDate startDate = LocalDate.parse(startInterval);
+    LocalDate endDate = LocalDate.parse(endInterval);
+    long interval = ChronoUnit.DAYS.between(startDate, endDate);
+
+    if (interval < 0) {
+      interval = interval * (-1);
+    }
+
+    LocalDate previousStartDate = startDate.minusDays(interval);
+
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getDashboardWorkloadDeployment(
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartDate.toString()));
   }
 }

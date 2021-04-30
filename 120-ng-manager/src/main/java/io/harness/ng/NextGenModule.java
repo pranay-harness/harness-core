@@ -90,6 +90,7 @@ import io.harness.ng.core.event.MessageProcessor;
 import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
 import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
 import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
+import io.harness.ng.core.event.UserMembershipStreamListener;
 import io.harness.ng.core.gitsync.GitChangeProcessorService;
 import io.harness.ng.core.gitsync.YamlHandler;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
@@ -485,6 +486,10 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM))
         .to(ConnectorFeatureFlagStreamListener.class);
+
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+        .to(UserMembershipStreamListener.class);
 
     bind(MessageListener.class).annotatedWith(Names.named(SETUP_USAGE)).to(SetupUsageChangeEventMessageListener.class);
     bind(MessageListener.class)

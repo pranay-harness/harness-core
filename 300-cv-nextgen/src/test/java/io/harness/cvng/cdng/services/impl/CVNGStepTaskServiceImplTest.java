@@ -104,7 +104,7 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
     cvngStepTaskService.notifyCVNGStep(get(activityId));
     assertThat(get(activityId).getStatus()).isEqualTo(Status.IN_PROGRESS);
     verify(waitNotifyEngine, times(1))
-        .doneWith(eq(activityId),
+        .progressOn(eq(activityId),
             eq(CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
   }
 

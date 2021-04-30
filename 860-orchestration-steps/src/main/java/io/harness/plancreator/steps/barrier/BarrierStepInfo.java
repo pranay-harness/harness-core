@@ -2,16 +2,14 @@ package io.harness.plancreator.steps.barrier;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.async.AsyncFacilitator;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.BarrierStep;
-import io.harness.steps.barriers.BarrierStepParameters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -53,8 +51,7 @@ public class BarrierStepInfo implements PMSStepInfo {
   }
 
   @Override
-  public StepParameters getStepParametersInfo(
-      StepElementConfig stepElementConfig, OnFailRollbackParameters failRollbackParameters) {
-    return BarrierStepParameters.builder().identifier(identifier).build();
+  public SpecParameters getSpecParameters() {
+    return BarrierSpecParameters.builder().barrierRef(identifier).build();
   }
 }
