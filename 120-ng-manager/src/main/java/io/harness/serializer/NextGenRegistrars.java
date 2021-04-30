@@ -7,6 +7,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.serializer.morphia.AccessControlMigrationMorphiaRegistrar;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
+import io.harness.serializer.morphia.MigrationMorphiaRegistrar;
 import io.harness.serializer.morphia.MigrationMorphiaRegistrars;
 import io.harness.serializer.morphia.MockRoleAssignmentMorphiaRegistrar;
 import io.harness.serializer.morphia.UserGroupMorphiaRegistrar;
@@ -48,6 +49,7 @@ public class NextGenRegistrars {
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .addAll(LicenseManagerRegistrars.morphiaRegistrars)
           .add(MigrationMorphiaRegistrars.class)
+          .add(MigrationMorphiaRegistrar.class)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
