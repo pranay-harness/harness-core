@@ -2,6 +2,7 @@ package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.DelegateTasksBeansKryoRegister;
+import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
 import io.harness.serializer.morphia.DelegateTasksBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.CapabilityParametersMorphiaConverter;
 import io.harness.serializer.morphia.converters.TestingCapabilityMorphiaConverter;
@@ -19,6 +20,7 @@ public class DelegateTasksBeansRegistrars {
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(ScmJavaClientRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
+          .add(RbacCoreKryoRegistrar.class)
           .add(DelegateTasksBeansKryoRegister.class)
           .build();
 

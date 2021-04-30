@@ -8,6 +8,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -90,6 +91,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
+@BreakDependencyOn("software.wings.service.impl.instance.InstanceHelper")
 public class DelegateAgentResource {
   private DelegateService delegateService;
   private AccountService accountService;
