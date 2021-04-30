@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -15,7 +16,6 @@ import javax.validation.Valid;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -64,14 +64,4 @@ public class UserMembership implements PersistentEntity {
   @NotEmpty String emailId;
   @Valid List<Scope> scopes;
   @Version Long version;
-
-  @Value
-  @Builder
-  @FieldDefaults(level = AccessLevel.PRIVATE)
-  @FieldNameConstants(innerTypeName = "ScopeKeys")
-  public static class Scope {
-    @NotEmpty String accountIdentifier;
-    String orgIdentifier;
-    String projectIdentifier;
-  }
 }

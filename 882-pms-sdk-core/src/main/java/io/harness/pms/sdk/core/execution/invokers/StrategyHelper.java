@@ -9,10 +9,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
-import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
@@ -69,10 +67,6 @@ public class StrategyHelper {
           .addAllFailureTypes(failureData.getFailureTypesList());
     }
     return stepResponseBuilder.failureInfo(failureInfoBuilder.build()).build();
-  }
-
-  public QueueNodeExecutionRequest getQueueNodeExecutionRequest(NodeExecutionProto nodeExecution) {
-    return QueueNodeExecutionRequest.newBuilder().setNodeExecution(nodeExecution).build();
   }
 
   public AddExecutableResponseRequest getAddExecutableResponseRequest(

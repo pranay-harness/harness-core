@@ -2,19 +2,23 @@ package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import io.harness.annotations.dev.OwnedBy;
 
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(PL)
 @Data
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@OwnedBy(PL)
+@FieldDefaults(level = PRIVATE, makeFinal = true)
+@FieldNameConstants(innerTypeName = "ScopeKeys")
 public class Scope {
-  String accountIdentifier;
+  @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
 }

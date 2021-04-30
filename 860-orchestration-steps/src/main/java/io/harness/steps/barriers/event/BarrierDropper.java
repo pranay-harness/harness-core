@@ -3,13 +3,14 @@ package io.harness.steps.barriers.event;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.BarrierStep;
-import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.service.BarrierService;
 
@@ -33,11 +34,12 @@ public class BarrierDropper implements AsyncOrchestrationEventHandler {
           || !BarrierStep.STEP_TYPE.equals(nodeExecutionProto.getNode().getStepType())) {
         return;
       }
-      BarrierStepParameters barrierStepParameters = RecastOrchestrationUtils.fromDocumentJson(
-          nodeExecutionProto.getResolvedStepParameters(), BarrierStepParameters.class);
+      StepElementParameters stepElementParameters = RecastOrchestrationUtils.fromDocumentJson(
+          nodeExecutionProto.getResolvedStepParameters(), StepElementParameters.class);
+      BarrierSpecParameters barrierSpecParameters = (BarrierSpecParameters) stepElementParameters.getSpec();
 
       BarrierExecutionInstance barrierExecutionInstance =
-          barrierService.findByIdentifierAndPlanExecutionId(barrierStepParameters.getIdentifier(), planExecutionId);
+          barrierService.findByIdentifierAndPlanExecutionId(barrierSpecParameters.getBarrierRef(), planExecutionId);
       barrierService.update(barrierExecutionInstance);
     } catch (Exception e) {
       log.error("[{}] event failed for plan [{}]", event.getEventType(), planExecutionId);

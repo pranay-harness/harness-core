@@ -24,10 +24,13 @@ import io.harness.CategoryTest;
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.dto.AccountDTO;
+import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.impl.InviteServiceImpl;
@@ -35,6 +38,8 @@ import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.invites.entities.Invite.InviteType;
 import io.harness.ng.core.invites.remote.RoleBinding;
+import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
@@ -77,6 +82,8 @@ public class InviteServiceImplTest extends CategoryTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private AccessControlAdminClient accessControlAdminClient;
   @Mock private NotificationClient notificationClient;
   @Mock private OutboxService outboxService;
+  @Mock private OrganizationService organizationService;
+  @Mock private ProjectService projectService;
 
   private InviteService inviteService;
 
@@ -86,7 +93,7 @@ public class InviteServiceImplTest extends CategoryTest {
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
     inviteService = new InviteServiceImpl(USER_VERIFICATION_SECRET, mongoConfig, jwtGeneratorUtils, ngUserService,
         transactionTemplate, inviteRepository, notificationClient, accessControlAdminClient, accountClient,
-        outboxService, "https://qa.harness.io/");
+        outboxService, organizationService, projectService, "https://qa.harness.io/");
 
     when(accountClient.getAccountDTO(any()).execute())
         .thenReturn(Response.success(new RestResponse(AccountDTO.builder()
@@ -96,6 +103,11 @@ public class InviteServiceImplTest extends CategoryTest {
                                                           .build())));
     when(accountClient.getBaseUrl(any()).execute()).thenReturn(Response.success(new RestResponse("qa.harness.io")));
     when(notificationClient.sendNotificationAsync(any())).thenReturn(new NotificationResultWithStatus());
+    when(projectService.get(any(), any(), any())).thenReturn(Optional.of(Project.builder().name("Project").build()));
+    when(organizationService.get(any(), any()))
+        .thenReturn(Optional.of(Organization.builder().name("Organization").build()));
+    when(accountClient.getAccountDTO(any()).execute())
+        .thenReturn(Response.success(new RestResponse(AccountDTO.builder().name("Account").build())));
   }
 
   private Invite getDummyInvite() {
@@ -138,7 +150,7 @@ public class InviteServiceImplTest extends CategoryTest {
     UserMembership userMembership = UserMembership.builder()
                                         .userId(userId)
                                         .emailId(emailId)
-                                        .scopes(Collections.singletonList(UserMembership.Scope.builder()
+                                        .scopes(Collections.singletonList(Scope.builder()
                                                                               .accountIdentifier(accountIdentifier)
                                                                               .orgIdentifier(orgIdentifier)
                                                                               .projectIdentifier(projectIdentifier)

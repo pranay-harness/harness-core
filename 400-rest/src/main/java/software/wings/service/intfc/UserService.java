@@ -173,6 +173,8 @@ public interface UserService extends OwnedByAccount {
 
   boolean isTwoFactorEnabled(String accountId, String usedId);
 
+  User updateUser(User oldUser, UpdateOperations<User> updateOperations);
+
   /**
    * Gets the.
    *

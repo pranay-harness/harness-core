@@ -1,13 +1,16 @@
 package io.harness.pms.ngpipeline.inputset.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
+import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.repositories.inputset.PMSInputSetRepository;
 
 import com.google.inject.Inject;
@@ -20,9 +23,12 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @Slf4j
+@OwnedBy(PIPELINE)
 public class PMSInputSetServiceImpl implements PMSInputSetService {
   @Inject private PMSInputSetRepository inputSetRepository;
 
@@ -106,5 +112,29 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
     }
 
     return criteria;
+  }
+
+  @Override
+  public void deleteInputSetsOnPipelineDeletion(PipelineEntity pipelineEntity) {
+    Criteria criteria = new Criteria();
+    criteria.and(InputSetEntityKeys.accountId)
+        .is(pipelineEntity.getAccountId())
+        .and(InputSetEntityKeys.orgIdentifier)
+        .is(pipelineEntity.getOrgIdentifier())
+        .and(InputSetEntityKeys.projectIdentifier)
+        .is(pipelineEntity.getProjectIdentifier())
+        .and(InputSetEntityKeys.pipelineIdentifier)
+        .is(pipelineEntity.getIdentifier());
+    Query query = new Query(criteria);
+
+    Update update = new Update();
+    update.set(InputSetEntityKeys.deleted, Boolean.TRUE);
+
+    UpdateResult updateResult = inputSetRepository.deleteAllInputSetsWhenPipelineDeleted(query, update);
+    if (!updateResult.wasAcknowledged()) {
+      throw new InvalidRequestException(format(
+          "InputSets for Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.",
+          pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
+    }
   }
 }

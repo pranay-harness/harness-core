@@ -1,12 +1,18 @@
 package io.harness.ng.core.user.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USER_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.beans.PageRequest;
@@ -19,13 +25,12 @@ import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.UserMembershipUpdateMechanism;
-import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.Scope;
+import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
 import io.harness.ng.core.user.remote.mapper.UserSearchMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
@@ -73,6 +78,7 @@ public class UserResource {
   AggregateUserService aggregateUserService;
   NgUserService ngUserService;
   UserInfoService userInfoService;
+  AccessControlClient accessControlClient;
 
   @GET
   @Path("currentUser")
@@ -92,6 +98,7 @@ public class UserResource {
   @GET
   @Path("usermembership")
   @ApiOperation(value = "Check if user part of scope", nickname = "checkUserMembership", hidden = true)
+  @InternalApi
   public ResponseDTO<Boolean> checkUserMembership(@QueryParam(NGCommonEntityConstants.USER_ID) String userId,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -143,11 +150,11 @@ public class UserResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid @BeanParam PageRequest pageRequest) {
-    UserMembership.Scope scope = Scope.builder()
-                                     .accountIdentifier(accountIdentifier)
-                                     .orgIdentifier(orgIdentifier)
-                                     .projectIdentifier(projectIdentifier)
-                                     .build();
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
     return ResponseDTO.newResponse(ngUserService.listUsers(scope, pageRequest));
   }
 
@@ -194,12 +201,14 @@ public class UserResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, userId), MANAGE_USER_PERMISSION);
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
     return ResponseDTO.newResponse(
-        TRUE.equals(ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateMechanism.AUTHORIZED_USER)));
+        TRUE.equals(ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER)));
   }
 }

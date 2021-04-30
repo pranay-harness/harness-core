@@ -138,7 +138,7 @@ public class YamlSnippetProvider {
         JsonNodeUtils.updatePropertiesInJsonNode(yamlWithoutWrapper, propertiesToBeModified);
       }
     } catch (Exception e) {
-      log.error("Encountered error while modifying snippet", e);
+      log.warn("Encountered error while modifying snippet", e);
     }
     // returning original snippet even in worst case.
     return genericSnippetNode;
