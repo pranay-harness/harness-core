@@ -1,6 +1,9 @@
 package io.harness.yaml.core.variables;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.encryption.SecretRefData;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.visitor.helpers.variables.SecretVariableVisitorHelper;
@@ -26,6 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(NGVariableConstants.SECRET_TYPE)
 @SimpleVisitorHelper(helperClass = SecretVariableVisitorHelper.class)
 @TypeAlias("io.harness.yaml.core.variables.SecretNGVariable")
+@OwnedBy(CDC)
 public class SecretNGVariable implements NGVariable {
   String name;
   @ApiModelProperty(allowableValues = NGVariableConstants.SECRET_TYPE) NGVariableType type = NGVariableType.SECRET;

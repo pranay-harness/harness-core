@@ -185,7 +185,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   public String queryBuilderSelectWorkload(
       String accountId, String orgId, String projectId, String previousStartInterval, String endInterval) {
-    String selectStatusQuery = "select service_name,status,startts,endts,pipeline_execution_summary_cd_id from "
+    String selectStatusQuery =
+        "select service_name,status,startts,endts,pipeline_execution_summary_cd_id,deployment_type from "
         + tableNameServiceAndInfra + ", " + tableNameCD + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
@@ -546,7 +547,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   }
 
   private WorkloadDeploymentInfo getWorkloadDeploymentInfo(String workload, String lastExecuted, long totalDeployment,
-      String lastStatus, long success, long previousSuccess, List<WorkloadDateCountInfo> dateCount) {
+      String lastStatus, String deploymentType, long success, long previousSuccess,
+      List<WorkloadDateCountInfo> dateCount) {
     double percentSuccess = 0.0;
     if (totalDeployment != 0) {
       percentSuccess = success / (double) totalDeployment;
@@ -558,6 +560,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .totalDeployments(totalDeployment)
         .lastStatus(lastStatus)
         .percentSuccess(percentSuccess)
+        .deploymentType(deploymentType)
         .rateSuccess(getRate(success, previousSuccess))
         .workload(dateCount)
         .build();
@@ -575,6 +578,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     List<String> status = new ArrayList<>();
     List<String> startTs = new ArrayList<>();
     List<String> endTs = new ArrayList<>();
+    List<String> deploymentTypeList = new ArrayList<>();
     List<String> planExecutionIdList = new ArrayList<>();
 
     HashMap<String, Integer> uniqueWorkloadName = new HashMap<>();
@@ -594,6 +598,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           startTs.add(startTime);
           endTs.add(resultSet.getString("endTs"));
           planExecutionIdList.add(resultSet.getString("pipeline_execution_summary_cd_id"));
+          deploymentTypeList.add(resultSet.getString("deployment_type"));
 
           if (!uniqueWorkloadName.containsKey(serviceName)) {
             uniqueWorkloadName.put(serviceName, 1);
@@ -614,6 +619,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       long previousSuccess = 0;
       String lastExecuted = null;
       String lastStatus = null;
+      String deploymentType = null;
 
       HashMap<String, Integer> deploymentCountMap = new HashMap<>();
 
@@ -637,10 +643,12 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
             if (lastExecuted == null) {
               lastExecuted = startTs.get(i);
               lastStatus = status.get(i);
+              deploymentType = deploymentTypeList.get(i);
             } else {
-              if (lastExecuted.compareTo(variableDate.toString()) <= 0) {
+              if (lastExecuted.compareTo(startTs.get(i)) <= 0) {
                 lastExecuted = startTs.get(i);
                 lastStatus = status.get(i);
+                deploymentType = deploymentTypeList.get(i);
               }
             }
           } else {
@@ -665,7 +673,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           startDateCopy = startDateCopy.plusDays(1);
         }
         workloadDeploymentInfoList.add(getWorkloadDeploymentInfo(
-            workload, lastExecuted, totalDeployment, lastStatus, success, previousSuccess, dateCount));
+            workload, lastExecuted, totalDeployment, lastStatus, deploymentType, success, previousSuccess, dateCount));
       }
     }
     return DashboardWorkloadDeployment.builder().workloadDeploymentInfoList(workloadDeploymentInfoList).build();
