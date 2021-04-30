@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.DX)
 public abstract class ScmUnixManager implements AutoCloseable {
   abstract ManagedChannel getChannel();
-  private final String PATH_TO_SCM_BUILD = "/opt/harness-delegate";
+  private final String PATH_TO_SCM_BUILD = "/client-tools/scm/";
 
   protected String socketAddress;
   protected ProcessBuilder processBuilder;
