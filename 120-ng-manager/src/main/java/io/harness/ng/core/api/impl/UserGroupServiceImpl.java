@@ -1,5 +1,7 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.accesscontrol.principals.PrincipalType.USER;
+import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -7,6 +9,7 @@ import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
@@ -15,6 +18,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -30,7 +34,6 @@ import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.notification.NotificationChannelType;
@@ -44,6 +47,7 @@ import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
 import io.harness.utils.PaginationUtils;
 import io.harness.utils.RetryUtils;
+import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -73,6 +77,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Singleton
 @Slf4j
 public class UserGroupServiceImpl implements UserGroupService {
+  private static final String ACCOUNT_ADMIN = "_account_admin";
   private final UserGroupRepository userGroupRepository;
   private final UserClient userClient;
   private final OutboxService outboxService;
@@ -158,8 +163,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
   }
 
-  public PageResponse<UserInfo> listUsersInUserGroup(
-      UserMembership.Scope scope, String userGroupIdentifier, PageRequest pageRequest) {
+  public PageResponse<UserInfo> listUsersInUserGroup(Scope scope, String userGroupIdentifier, PageRequest pageRequest) {
     Optional<UserGroup> userGroupOptional =
         get(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroupIdentifier);
     if (!userGroupOptional.isPresent()) {
@@ -175,21 +179,23 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    Criteria criteria = createUserGroupFetchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  public UserGroup delete(Scope scope, String identifier) {
+    Criteria criteria = createUserGroupFetchCriteria(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), identifier);
     RoleAssignmentFilterDTO roleAssignmentFilterDTO =
         RoleAssignmentFilterDTO.builder()
             .principalFilter(Collections.singleton(
                 PrincipalDTO.builder().type(PrincipalType.USER_GROUP).identifier(identifier).build()))
             .build();
     PageResponse<RoleAssignmentResponseDTO> pageResponse =
-        NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
-            accountIdentifier, orgIdentifier, projectIdentifier, 0, 10, roleAssignmentFilterDTO));
+        NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
+            scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 10, roleAssignmentFilterDTO));
     if (pageResponse.getTotalItems() > 0) {
       throw new InvalidRequestException(String.format(
           "There exists %s role assignments with this user group. Please delete them first and then try again",
           pageResponse.getTotalItems()));
     }
+    validateAtleastOneAdminExistIfUserGroupRemoved(scope, identifier);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       UserGroup userGroup = userGroupRepository.delete(criteria);
       outboxService.save(new UserGroupDeleteEvent(userGroup.getAccountIdentifier(), toDTO(userGroup)));
@@ -217,12 +223,87 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup removeMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String userGroupIdentifier, String userIdentifier) {
-    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+  public UserGroup removeMember(Scope scope, String userGroupIdentifier, String userIdentifier) {
+    UserGroup existingUserGroup = getOrThrow(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroupIdentifier);
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
+    validateAtleastOneAdminExistIfUserRemoved(scope, userGroupIdentifier, userIdentifier);
     existingUserGroup.getUsers().remove(userIdentifier);
     return updateInternal(existingUserGroup, oldUserGroup);
+  }
+
+  private void validateAtleastOneAdminExistIfUserRemoved(
+      Scope scope, String userGroupIdentifier, String userIdentifier) {
+    if (!ScopeUtils.isAccountScope(scope)) {
+      return;
+    }
+    List<PrincipalDTO> admins = getAdmins(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build());
+    boolean doesOtherAdminUsersExist = admins.stream()
+                                           .filter(admin -> admin.getType().equals(USER))
+                                           .map(PrincipalDTO::getIdentifier)
+                                           .findFirst()
+                                           .isPresent();
+    if (doesOtherAdminUsersExist) {
+      return;
+    }
+    List<String> adminUserGroupIds = admins.stream()
+                                         .filter(admin -> admin.getType().equals(USER_GROUP))
+                                         .map(PrincipalDTO::getIdentifier)
+                                         .distinct()
+                                         .collect(toList());
+    List<UserGroup> adminUserGroups =
+        list(UserGroupFilterDTO.builder().identifierFilter(new HashSet<>(adminUserGroupIds)).build());
+    doesOtherAdminUsersExist = adminUserGroups.stream().anyMatch(userGroup -> {
+      if (userGroup.getIdentifier().equals(userGroupIdentifier)) {
+        return userGroup.getUsers().size() > (userGroup.getUsers().contains(userIdentifier) ? 1 : 0);
+      } else {
+        return !userGroup.getUsers().isEmpty();
+      }
+    });
+    if (doesOtherAdminUsersExist) {
+      return;
+    }
+    throw new InvalidRequestException(String.format(
+        "%s is the last account admin for %s. Can't remove it", userIdentifier, scope.getAccountIdentifier()));
+  }
+
+  private void validateAtleastOneAdminExistIfUserGroupRemoved(Scope scope, String userGroupIdentifier) {
+    if (!ScopeUtils.isAccountScope(scope)) {
+      return;
+    }
+    List<PrincipalDTO> admins = getAdmins(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build());
+    boolean doesOtherAdminUsersExist = admins.stream()
+                                           .filter(admin -> admin.getType().equals(USER))
+                                           .map(PrincipalDTO::getIdentifier)
+                                           .findFirst()
+                                           .isPresent();
+    if (doesOtherAdminUsersExist) {
+      return;
+    }
+    boolean doesOtherAdminUserGroupsExist =
+        admins.stream()
+            .filter(admin -> admin.getType().equals(USER_GROUP) && !admin.getIdentifier().equals(userGroupIdentifier))
+            .map(PrincipalDTO::getIdentifier)
+            .findFirst()
+            .isPresent();
+    if (doesOtherAdminUserGroupsExist) {
+      return;
+    }
+    throw new InvalidRequestException(String.format("%s has the last account admins for account %s. Can't remove it",
+        userGroupIdentifier, scope.getAccountIdentifier()));
+  }
+
+  @NotNull
+  private List<PrincipalDTO> getAdmins(Scope scope) {
+    PageResponse<RoleAssignmentResponseDTO> response =
+        NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
+            scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 100,
+            RoleAssignmentFilterDTO.builder().roleFilter(Collections.singleton(ACCOUNT_ADMIN)).build()));
+    return response.getContent()
+        .stream()
+        .map(dto -> dto.getRoleAssignment().getPrincipal())
+        .distinct()
+        .collect(toList());
   }
 
   @Override
@@ -231,10 +312,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     Criteria criteria =
         createCriteriaByScopeAndUsersIn(accountIdentifier, orgIdentifier, projectIdentifier, userIdentifier);
     List<UserGroup> userGroups = userGroupRepository.findAll(criteria);
-
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
     List<String> userGroupIdentifiers = userGroups.stream().map(UserGroup::getIdentifier).collect(Collectors.toList());
-    userGroupIdentifiers.forEach(userGroupIdentifier
-        -> removeMember(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier, userIdentifier));
+    userGroupIdentifiers.forEach(userGroupIdentifier -> removeMember(scope, userGroupIdentifier, userIdentifier));
   }
 
   private Criteria createCriteriaByScopeAndUsersIn(

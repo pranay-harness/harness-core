@@ -15,7 +15,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
-import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -41,10 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CapabilityHelper {
-  public static final String TERRAFORM = "terraform";
-  public static final String TERRAGRUNT = "terragrunt";
-  public static final String HELM = "helm";
-
   public static List<ExecutionCapability> generateDelegateCapabilities(ExecutionCapabilityDemander capabilityDemander,
       List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
@@ -190,45 +185,5 @@ public class CapabilityHelper {
     }
 
     return executionCapabilities;
-  }
-
-  public static List<ExecutionCapability> generateExecutionCapabilitiesForProcessExecutor(String category,
-      List<String> processExecutorArguments, List<EncryptedDataDetail> encryptedDataDetails,
-      ExpressionEvaluator maskingEvaluator) {
-    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.add(
-        ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(category, processExecutorArguments));
-
-    if (isNotEmpty(encryptedDataDetails)) {
-      List<ExecutionCapability> capabilitiesForEncryption =
-          EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
-              encryptedDataDetails, maskingEvaluator);
-      if (isNotEmpty(capabilitiesForEncryption)) {
-        executionCapabilities.addAll(capabilitiesForEncryption);
-      }
-    }
-    return executionCapabilities;
-  }
-
-  public static List<ExecutionCapability> generateExecutionCapabilitiesForTerraform(
-      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
-    List<String> processExecutorArguments = new ArrayList<>();
-    processExecutorArguments.add("/bin/sh");
-    processExecutorArguments.add("-c");
-    processExecutorArguments.add("terraform --version");
-
-    return generateExecutionCapabilitiesForProcessExecutor(
-        TERRAFORM, processExecutorArguments, encryptedDataDetails, maskingEvaluator);
-  }
-
-  public static List<ExecutionCapability> generateExecutionCapabilitiesForTerragrunt(
-      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
-    List<String> processExecutorArguments = new ArrayList<>();
-    processExecutorArguments.add("/bin/sh");
-    processExecutorArguments.add("-c");
-    processExecutorArguments.add("terragrunt --version");
-
-    return generateExecutionCapabilitiesForProcessExecutor(
-        TERRAGRUNT, processExecutorArguments, encryptedDataDetails, maskingEvaluator);
   }
 }

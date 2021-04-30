@@ -49,7 +49,7 @@ public class RunPreFacilitationChecker extends ExpressionEvalPreFacilitationChec
               NodeRunInfo.newBuilder()
                   .setEvaluatedCondition(whenConditionValue)
                   .setWhenCondition(whenCondition)
-                  .addAllExpressionList(getAllExpressions(engineExpressionEvaluator))
+                  .addAllExpressions(getAllExpressions(engineExpressionEvaluator))
                   .build());
         });
         if (!whenConditionValue) {

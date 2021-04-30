@@ -9,6 +9,8 @@ import static io.harness.ng.core.user.remote.mapper.UserSearchMapper.writeDTO;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
+import io.harness.beans.Scope.ScopeKeys;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.dto.OrganizationAggregateDTO.OrganizationAggregateDTOBuilder;
@@ -21,8 +23,6 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.Scope;
-import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 
@@ -196,9 +196,8 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   }
 
   private List<UserSearchDTO> getAdmins(String accountIdentifier, String orgId, Map<String, UserSearchDTO> userMap) {
-    List<String> userIds = ngUserService.getUserIdsWithRole(
-        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgId).build(),
-        ORG_ADMIN_ROLE);
+    List<String> userIds = ngUserService.getUsers(
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgId).build(), ORG_ADMIN_ROLE);
     return userIds.stream().filter(userMap::containsKey).map(userMap::get).collect(Collectors.toList());
   }
 
@@ -227,7 +226,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
         -> userMembership.getScopes()
                .stream()
                .filter(scope -> scope.getOrgIdentifier() != null)
-               .map(UserMembership.Scope::getOrgIdentifier)
+               .map(Scope::getOrgIdentifier)
                .distinct()
                .forEach(orgIdentifier -> {
                  orgProjectUserMap.computeIfAbsent(orgIdentifier, arg -> new ArrayList<>());

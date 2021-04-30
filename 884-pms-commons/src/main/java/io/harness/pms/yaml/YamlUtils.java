@@ -1,8 +1,10 @@
 package io.harness.pms.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
@@ -29,8 +31,9 @@ import java.util.Map.Entry;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class YamlUtils {
-  private static final List<String> ignorableStringForQualifiedName = Arrays.asList("step", "parallel", "spec");
+  private static final List<String> ignorableStringForQualifiedName = Arrays.asList("step", "parallel");
 
   private final ObjectMapper mapper;
 
@@ -286,10 +289,7 @@ public class YamlUtils {
   }
 
   public boolean shouldNotIncludeInQualifiedName(String fieldName) {
-    if (ignorableStringForQualifiedName.contains(fieldName)) {
-      return true;
-    }
-    return fieldName.contains("Definition");
+    return ignorableStringForQualifiedName.contains(fieldName);
   }
 
   private void injectUuidInObject(JsonNode node) {

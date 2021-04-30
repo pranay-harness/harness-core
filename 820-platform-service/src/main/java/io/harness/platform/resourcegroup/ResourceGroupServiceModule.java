@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.RESOUCE_GROUP_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.AccessControlClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -126,6 +127,8 @@ public class ResourceGroupServiceModule extends AbstractModule {
     install(new AuditClientModule(this.appConfig.getResoureGroupServiceConfig().getAuditClientConfig(),
         this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), RESOUCE_GROUP_SERVICE.getServiceId(),
         this.appConfig.getResoureGroupServiceConfig().isEnableAudit()));
+    install(AccessControlClientModule.getInstance(
+        this.appConfig.getAccessControlClientConfig(), RESOUCE_GROUP_SERVICE.getServiceId()));
     install(new TransactionOutboxModule());
   }
 

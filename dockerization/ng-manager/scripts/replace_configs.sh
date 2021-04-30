@@ -239,7 +239,7 @@ replace_key_value notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
 
 replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
 
-replace_key_value accessControlAdminClient.mockAccessControlService "$MOCK_ACCESS_CONTROL_SERVICE"
+replace_key_value accessControlAdminClient.mockAccessControlService "${MOCK_ACCESS_CONTROL_SERVICE:-true}"
 
 replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
 
@@ -247,4 +247,4 @@ replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GRO
 
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
 
-replace_key_value enableDefaultResourceGroupCreation "$ENABLE_DEFAULT_RESOURCE_GROUP_CREATION"
+replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"

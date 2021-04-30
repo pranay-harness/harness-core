@@ -1,7 +1,10 @@
 package io.harness.accesscontrol.roleassignments.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USERGROUP_PERMISSION;
+import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USER_PERMISSION;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
+import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
@@ -12,6 +15,10 @@ import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PACKAGE;
 import static lombok.AccessLevel.PRIVATE;
 
+import io.harness.accesscontrol.AccessControlResourceTypes;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
@@ -98,6 +105,7 @@ public class RoleAssignmentResource {
   RoleDTOMapper roleDTOMapper;
   @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate;
   OutboxService outboxService;
+  AccessControlClient accessControlClient;
 
   RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
@@ -165,8 +173,10 @@ public class RoleAssignmentResource {
     if (roleAssignmentDTO.getPrincipal().getType().equals(USER_GROUP)) {
       harnessUserGroupService.sync(roleAssignmentDTO.getPrincipal().getIdentifier(), scope);
     }
-    RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(scope.toString(), roleAssignmentDTO));
+    RoleAssignment roleAssignment = fromDTO(scope.toString(), roleAssignmentDTO);
+    checkPermission(harnessScopeParams, roleAssignment);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignment createdRoleAssignment = roleAssignmentService.create(roleAssignment);
       RoleAssignmentResponseDTO response = roleAssignmentDTOMapper.toResponseDTO(createdRoleAssignment);
       outboxService.save(new RoleAssignmentCreateEvent(
           response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
@@ -183,9 +193,10 @@ public class RoleAssignmentResource {
     if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
       throw new InvalidRequestException("Role Assignment identifier in the request body and the url do not match.");
     }
-    RoleAssignmentUpdateResult roleAssignmentUpdateResult =
-        roleAssignmentService.update(fromDTO(scope.toString(), roleAssignmentDTO));
+    RoleAssignment roleAssignmentUpdate = fromDTO(scope.toString(), roleAssignmentDTO);
+    checkPermission(harnessScopeParams, roleAssignmentUpdate);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignmentUpdateResult roleAssignmentUpdateResult = roleAssignmentService.update(roleAssignmentUpdate);
       RoleAssignmentResponseDTO response =
           roleAssignmentDTOMapper.toResponseDTO(roleAssignmentUpdateResult.getUpdatedRoleAssignment());
       outboxService.save(
@@ -219,6 +230,7 @@ public class RoleAssignmentResource {
         if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
           harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
         }
+        checkPermission(harnessScopeParams, roleAssignment);
         RoleAssignmentResponseDTO roleAssignmentResponseDTO =
             Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
               RoleAssignmentResponseDTO response =
@@ -251,15 +263,36 @@ public class RoleAssignmentResource {
   public ResponseDTO<RoleAssignmentResponseDTO> delete(
       @BeanParam HarnessScopeParams harnessScopeParams, @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    RoleAssignment deletedRoleAssignment =
-        roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
-          throw new NotFoundException("Role Assignment not found with the given scope and identifier");
+    RoleAssignment roleAssignment =
+        roleAssignmentService.get(identifier, scopeIdentifier).<InvalidRequestException>orElseThrow(() -> {
+          throw new InvalidRequestException("Invalid Role Assignment");
         });
+    checkPermission(harnessScopeParams, roleAssignment);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleAssignment deletedRoleAssignment =
+          roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {
+            throw new NotFoundException("Role Assignment is already deleted");
+          });
       RoleAssignmentResponseDTO response = roleAssignmentDTOMapper.toResponseDTO(deletedRoleAssignment);
       outboxService.save(new RoleAssignmentDeleteEvent(
           response.getScope().getAccountIdentifier(), response.getRoleAssignment(), response.getScope()));
       return ResponseDTO.newResponse(response);
     }));
+  }
+
+  private void checkPermission(HarnessScopeParams harnessScopeParams, RoleAssignment roleAssignment) {
+    if (USER_GROUP.equals(roleAssignment.getPrincipalType())) {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+              harnessScopeParams.getProjectIdentifier()),
+          Resource.of(AccessControlResourceTypes.USER_GROUP, roleAssignment.getPrincipalIdentifier()),
+          MANAGE_USERGROUP_PERMISSION);
+    } else if (USER.equals(roleAssignment.getPrincipalType())) {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+              harnessScopeParams.getProjectIdentifier()),
+          Resource.of(AccessControlResourceTypes.USER, roleAssignment.getPrincipalIdentifier()),
+          MANAGE_USER_PERMISSION);
+    }
   }
 }

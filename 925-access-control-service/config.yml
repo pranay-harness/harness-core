@@ -91,7 +91,7 @@ redisLockConfig:
   userName: ${LOCK_CONFIG_REDIS_USERNAME:-""}
   password: ${LOCK_CONFIG_REDIS_PASSWORD:-""}
 
-distributedLockImplementation: ${DISTRIBUTED_LOCK_IMPLEMENTATION:-MONGO}
+distributedLockImplementation: ${DISTRIBUTED_LOCK_IMPLEMENTATION:-REDIS}
 
 iteratorsConfig:
   resourceGroupIteratorConfig:
@@ -150,7 +150,7 @@ aggregatorModuleConfig:
     mongodb.ssl.enabled: ${MONGODB_SSL_ENABLED:-false}
     connector.class: ${CONNECTOR_CLASS:-io.debezium.connector.mongodb.MongoDbConnector}
     database.include.list: ${DATABASE_INCLUDE_LIST:-accesscontrol}
-    collection.include.list: ${COLLECTION_INCLUDE_LIST:-accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups,accesscontrol.usergroups}
+    collection.include.list: ${COLLECTION_INCLUDE_LIST:-accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups,accesscontrol.usergroups}
   enabled: ${AGGREGATOR_ENABLED:-true}
 
 accessControlPreferenceConfig:
