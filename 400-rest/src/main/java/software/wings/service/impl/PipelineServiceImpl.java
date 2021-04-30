@@ -1171,6 +1171,7 @@ public class PipelineServiceImpl implements PipelineService {
           Variable existingVar =
               pipelineVariables.stream().filter(t -> t.getName().equals(finalVariableName)).findFirst().orElse(null);
           if (existingVar != null) {
+            existingVar.setMandatory(existingVar.isMandatory() || variable.isMandatory());
             if (existingVar.getRuntimeInput() == null) {
               existingVar.setRuntimeInput(isRuntime);
             } else if (existingVar.getRuntimeInput() != isRuntime) {
