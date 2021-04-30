@@ -15,6 +15,7 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentAggregateRespo
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -22,7 +23,6 @@ import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.invites.remote.RoleBinding;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
@@ -176,7 +176,7 @@ public class AggregateUserServiceImpl implements AggregateUserService {
 
   private PageResponse<UserSearchDTO> getUsersForUnfilteredUsersPage(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, PageRequest pageRequest, String searchTerm) {
-    List<String> userIds = ngUserService.listUserIds(UserMembership.Scope.builder()
+    List<String> userIds = ngUserService.listUserIds(Scope.builder()
                                                          .accountIdentifier(accountIdentifier)
                                                          .orgIdentifier(orgIdentifier)
                                                          .projectIdentifier(projectIdentifier)

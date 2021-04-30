@@ -14,6 +14,7 @@ import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
+import io.harness.beans.Scope;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -29,7 +30,6 @@ import io.harness.ng.core.events.OrganizationCreateEvent;
 import io.harness.ng.core.events.OrganizationDeleteEvent;
 import io.harness.ng.core.events.OrganizationRestoreEvent;
 import io.harness.ng.core.events.OrganizationUpdateEvent;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -132,8 +132,8 @@ public class OrganizationEventHandler implements OutboxEventHandler {
     if (principal instanceof UserPrincipal) {
       String userId = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal().getName();
       ngUserService.addUserToScope(userId,
-          UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(),
-          ORG_ADMIN_ROLE, SYSTEM);
+          Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), ORG_ADMIN_ROLE,
+          SYSTEM);
     }
     return true;
   }

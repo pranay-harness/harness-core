@@ -9,8 +9,8 @@ import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.ng.core.invites.entities.Role;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserProjectMap;
 import io.harness.ng.core.user.entities.UserProjectMap.UserProjectMapKeys;
 import io.harness.ng.core.user.service.NgUserService;
@@ -42,7 +42,6 @@ public class UserMembershipMigrationService implements Managed {
   private final UserProjectMapRepository userProjectMapRepository;
   private final NgUserService ngUserService;
   private final AccessControlAdminClient accessControlAdminClient;
-  private final DefaultResourceGroupCreationService defaultResourceGroupCreationService;
   private final ExecutorService executorService = Executors.newSingleThreadExecutor(
       new ThreadFactoryBuilder().setNameFormat("usermembership-migration-worker-thread").build());
   private Future userMembershipMigrationJob;
@@ -55,7 +54,6 @@ public class UserMembershipMigrationService implements Managed {
     this.userProjectMapRepository = userProjectMapRepository;
     this.ngUserService = ngUserService;
     this.accessControlAdminClient = accessControlAdminClient;
-    this.defaultResourceGroupCreationService = defaultResourceGroupCreationService;
     oldToNewRoleMap.put("Project Viewer", "_project_viewer");
     oldToNewRoleMap.put("Project Member", "_project_viewer");
     oldToNewRoleMap.put("Project Admin", "_project_admin");
@@ -110,11 +108,11 @@ public class UserMembershipMigrationService implements Managed {
   }
 
   private void handleMigration(UserProjectMap userProjectMap) {
-    UserMembership.Scope scope = UserMembership.Scope.builder()
-                                     .accountIdentifier(userProjectMap.getAccountIdentifier())
-                                     .orgIdentifier(userProjectMap.getOrgIdentifier())
-                                     .projectIdentifier(userProjectMap.getProjectIdentifier())
-                                     .build();
+    Scope scope = Scope.builder()
+                      .accountIdentifier(userProjectMap.getAccountIdentifier())
+                      .orgIdentifier(userProjectMap.getOrgIdentifier())
+                      .projectIdentifier(userProjectMap.getProjectIdentifier())
+                      .build();
     ngUserService.addUserToScope(userProjectMap.getUserId(), scope, null, SYSTEM);
 
     //    Create role assignment for the user

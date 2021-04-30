@@ -19,6 +19,7 @@ import io.harness.audit.beans.custom.user.AddCollaboratorAuditEventData;
 import io.harness.audit.beans.custom.user.InvitationSource;
 import io.harness.audit.beans.custom.user.UserInvitationAuditEventData;
 import io.harness.audit.client.api.AuditClientService;
+import io.harness.beans.Scope;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -35,7 +36,6 @@ import io.harness.ng.core.events.UserInviteUpdateEvent;
 import io.harness.ng.core.events.UserMembershipAddEvent;
 import io.harness.ng.core.events.UserMembershipRemoveEvent;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.security.dto.ServicePrincipal;
@@ -254,7 +254,7 @@ public class UserEventHandler implements OutboxEventHandler {
     return eventPublished && auditPublished;
   }
 
-  private boolean publishEvent(String userId, UserMembership.Scope scope, String action) {
+  private boolean publishEvent(String userId, Scope scope, String action) {
     try {
       io.harness.eventsframework.schemas.usermembership.Scope.Builder scopeBuilder =
           io.harness.eventsframework.schemas.usermembership.Scope.newBuilder().setAccountIdentifier(

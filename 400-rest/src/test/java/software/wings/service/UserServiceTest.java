@@ -98,6 +98,7 @@ import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
@@ -109,6 +110,7 @@ import software.wings.beans.AccountJoinRequest;
 import software.wings.beans.AccountRole;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.ApplicationRole;
+import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Event.Type;
 import software.wings.beans.LicenseInfo;
@@ -634,8 +636,8 @@ public class UserServiceTest extends WingsBaseTest {
     updateOperations.set("roles", roles);
 
     userService.update(user);
-    verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
+    Query<User> userQuery = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
+    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnNewOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -651,8 +653,8 @@ public class UserServiceTest extends WingsBaseTest {
     verify(updateOperations).set(UserKeys.name, USER_NAME);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.name, USER_NAME);
-    verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
+    Query<User> userQuery = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
+    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnNewOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -677,8 +679,8 @@ public class UserServiceTest extends WingsBaseTest {
     verify(updateOperations).unset(UserKeys.name);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.unset(UserKeys.name);
-    verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
+    Query<User> query = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
+    verify(wingsPersistence).findAndModify(query, updateOperations, HPersistence.returnNewOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -1039,8 +1041,8 @@ public class UserServiceTest extends WingsBaseTest {
     userInvite.setPassword(USER_PASSWORD);
     userService.completeInvite(userInvite);
 
-    verify(wingsPersistence, times(2)).updateFields(any(Class.class), anyString(), any(HashMap.class));
-    verify(wingsPersistence, times(1)).findAndModify(any(), any(), any());
+    verify(wingsPersistence, times(1)).updateFields(any(Class.class), anyString(), any(HashMap.class));
+    verify(wingsPersistence, times(2)).findAndModify(any(), any(), any());
   }
 
   @Test

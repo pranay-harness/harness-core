@@ -9,6 +9,8 @@ import static io.harness.ng.core.user.remote.mapper.UserSearchMapper.writeDTO;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
+import io.harness.beans.Scope.ScopeKeys;
 import io.harness.ng.core.api.AggregateProjectService;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.ProjectAggregateDTO;
@@ -24,8 +26,6 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.Scope;
-import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 
@@ -118,11 +118,11 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
 
   private List<UserSearchDTO> getAdmins(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, Map<String, UserSearchDTO> userMap) {
-    List<String> userIds = ngUserService.getUserIdsWithRole(UserMembership.Scope.builder()
-                                                                .accountIdentifier(accountIdentifier)
-                                                                .orgIdentifier(orgIdentifier)
-                                                                .projectIdentifier(projectIdentifier)
-                                                                .build(),
+    List<String> userIds = ngUserService.getUsers(Scope.builder()
+                                                      .accountIdentifier(accountIdentifier)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
+                                                      .build(),
         PROJECT_ADMIN_ROLE);
     return userIds.stream().filter(userMap::containsKey).map(userMap::get).collect(toList());
   }

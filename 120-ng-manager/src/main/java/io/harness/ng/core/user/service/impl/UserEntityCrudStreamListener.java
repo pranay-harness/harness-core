@@ -13,11 +13,11 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.user.UserDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.ng.core.user.entities.UserMembership.Scope;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.remote.client.RestClientUtils;
 

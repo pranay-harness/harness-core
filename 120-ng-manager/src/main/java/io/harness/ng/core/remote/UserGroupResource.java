@@ -15,6 +15,7 @@ import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -26,7 +27,6 @@ import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.utils.UserGroupMapper;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -134,7 +134,12 @@ public class UserGroupResource {
       @NotEmpty @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
-    UserGroup userGroup = userGroupService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    UserGroup userGroup = userGroupService.delete(scope, identifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
   }
 
@@ -165,11 +170,11 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid @BeanParam PageRequest pageRequest) {
-    UserMembership.Scope scope = UserMembership.Scope.builder()
-                                     .accountIdentifier(accountIdentifier)
-                                     .orgIdentifier(orgIdentifier)
-                                     .projectIdentifier(projectIdentifier)
-                                     .build();
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
     return ResponseDTO.newResponse(userGroupService.listUsersInUserGroup(scope, userGroupIdentifier, pageRequest));
   }
 
@@ -223,8 +228,12 @@ public class UserGroupResource {
       @PathParam("userIdentifier") String userIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
-    UserGroup userGroup =
-        userGroupService.removeMember(accountIdentifier, orgIdentifier, projectIdentifier, identifier, userIdentifier);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    UserGroup userGroup = userGroupService.removeMember(scope, identifier, userIdentifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
   }
 

@@ -3,13 +3,13 @@ package io.harness.ng.core.user.service;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.Scope;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +29,7 @@ public interface NgUserService {
 
   List<UserInfo> getUsersFromEmail(List<String> emailIds, String accountIdentifier);
 
-  List<String> getUserIdsWithRole(Scope scope, String roleIdentifier);
+  List<String> getUsers(Scope scope, String roleIdentifier);
 
   Optional<UserMembership> getUserMembership(String userId);
 
