@@ -120,7 +120,7 @@ public class PlanExecutionResource {
       @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
       @NotNull @PathParam("planExecutionId") String planExecutionId) {
     PipelineExecutionSummaryEntity executionSummaryEntity =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId);
+        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()),
