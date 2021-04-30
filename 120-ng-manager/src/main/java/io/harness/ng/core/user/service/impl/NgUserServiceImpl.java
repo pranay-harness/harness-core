@@ -2,7 +2,7 @@ package io.harness.ng.core.user.service.impl;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -21,11 +21,11 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.entities.Project;
-import io.harness.ng.core.events.UserMembershipAddEvent;
-import io.harness.ng.core.events.UserMembershipRemoveEvent;
+import io.harness.ng.core.events.AddCollaboratorEvent;
+import io.harness.ng.core.events.RemoveCollaboratorEvent;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.UserMembershipUpdateMechanism;
+import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.Scope;
 import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
@@ -167,25 +167,23 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateMechanism mechanism) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, true, mechanism);
+  public void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateSource source) {
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true, source);
   }
 
   @Override
-  public void addUserToScope(
-      UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateMechanism mechanism) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, postCreation, mechanism);
+  public void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source) {
+    addUserToScope(user.getUuid(), user.getEmail(), scope, postCreation, source);
   }
 
   @Override
-  public void addUserToScope(
-      String userId, Scope scope, String roleIdentifier, UserMembershipUpdateMechanism mechanism) {
+  public void addUserToScope(String userId, Scope scope, String roleIdentifier, UserMembershipUpdateSource source) {
     Optional<UserInfo> userOptional = getUserById(userId);
     if (!userOptional.isPresent()) {
       return;
     }
     UserInfo user = userOptional.get();
-    addUserToScope(user.getUuid(), user.getEmail(), scope, true, mechanism);
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true, source);
     if (!StringUtils.isBlank(roleIdentifier)) {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .roleIdentifier(roleIdentifier)
@@ -205,8 +203,8 @@ public class NgUserServiceImpl implements NgUserService {
     }
   }
 
-  private void addUserToScope(String userId, String emailId, Scope scope, boolean addUserToParentScope,
-      UserMembershipUpdateMechanism mechanism) {
+  private void addUserToScope(
+      String userId, String emailId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
     Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
     UserMembership userMembership = userMembershipOptional.orElseGet(
         () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
@@ -216,19 +214,19 @@ public class NgUserServiceImpl implements NgUserService {
       UserMembership finalUserMembership = userMembership;
       userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
-        outboxService.save(new UserMembershipAddEvent(scope.getAccountIdentifier(), scope, emailId, userId, mechanism));
+        outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, emailId, userId, source));
         return updatedUserMembership;
       }));
       //    Adding user to the account for signin flow to work
       addUserToAccount(userId, scope);
       if (addUserToParentScope) {
-        addUserToParentScope(userMembership, userId, scope, mechanism);
+        addUserToParentScope(userMembership, userId, scope, source);
       }
     }
   }
 
   private void addUserToParentScope(
-      UserMembership userMembership, String userId, Scope scope, UserMembershipUpdateMechanism mechanism) {
+      UserMembership userMembership, String userId, Scope scope, UserMembershipUpdateSource source) {
     //  Adding user to the parent scopes as well
     if (!isBlank(scope.getProjectIdentifier())) {
       Scope orgScope = Scope.builder()
@@ -240,8 +238,8 @@ public class NgUserServiceImpl implements NgUserService {
         UserMembership finalUserMembership = userMembership;
         userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
           UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
-          outboxService.save(new UserMembershipAddEvent(scope.getAccountIdentifier(), orgScope,
-              finalUserMembership.getEmailId(), finalUserMembership.getUserId(), mechanism));
+          outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), orgScope,
+              finalUserMembership.getEmailId(), finalUserMembership.getUserId(), source));
           return updatedUserMembership;
         }));
       }
@@ -267,8 +265,8 @@ public class NgUserServiceImpl implements NgUserService {
         UserMembership finalUserMembership = userMembership;
         Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
           UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
-          outboxService.save(new UserMembershipAddEvent(scope.getAccountIdentifier(), accountScope,
-              finalUserMembership.getEmailId(), finalUserMembership.getUserId(), mechanism));
+          outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), accountScope,
+              finalUserMembership.getEmailId(), finalUserMembership.getUserId(), source));
           return updatedUserMembership;
         }));
       }
@@ -319,13 +317,13 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateMechanism mechanism) {
+  public boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source) {
     Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
     if (!userMembershipOptional.isPresent()) {
       return false;
     }
     UserMembership userMembership = userMembershipOptional.get();
-    if (!UserMembershipUpdateMechanism.SYSTEM.equals(mechanism) && isUserPartOfChildScope(userMembership, scope)) {
+    if (!UserMembershipUpdateSource.SYSTEM.equals(source) && isUserPartOfChildScope(userMembership, scope)) {
       throw new InvalidRequestException(getDeleteUserErrorMessage(scope));
     }
     List<Scope> scopes = userMembership.getScopes();
@@ -336,8 +334,8 @@ public class NgUserServiceImpl implements NgUserService {
     scopes.remove(scope);
     Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       UserMembership updatedUserMembership = userMembershipRepository.save(userMembership);
-      outboxService.save(new UserMembershipRemoveEvent(
-          scope.getAccountIdentifier(), scope, userMembership.getEmailId(), userId, mechanism));
+      outboxService.save(new RemoveCollaboratorEvent(
+          scope.getAccountIdentifier(), scope, userMembership.getEmailId(), userId, source));
       return updatedUserMembership;
     }));
     boolean isUserRemovedFromAccount =

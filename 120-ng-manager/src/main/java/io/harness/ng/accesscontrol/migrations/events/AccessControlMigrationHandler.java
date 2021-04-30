@@ -2,7 +2,7 @@ package io.harness.ng.accesscontrol.migrations.events;
 
 import static io.harness.beans.FeatureName.NG_ACCESS_CONTROL_MIGRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;

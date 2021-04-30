@@ -27,11 +27,14 @@ import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.usermembership.UserMembershipDTO;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.ng.core.events.AddCollaboratorEvent;
+import io.harness.ng.core.events.RemoveCollaboratorEvent;
 import io.harness.ng.core.events.UserInviteCreateEvent;
 import io.harness.ng.core.events.UserInviteDeleteEvent;
 import io.harness.ng.core.events.UserInviteUpdateEvent;
 import io.harness.ng.core.events.UserMembershipAddEvent;
 import io.harness.ng.core.events.UserMembershipRemoveEvent;
+import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -70,6 +73,12 @@ public class UserEventHandler implements OutboxEventHandler {
           return handleUserInviteUpdateEvent(outboxEvent);
         case "UserInviteDeleted":
           return handleUserInviteDeleteEvent(outboxEvent);
+        case "CollaboratorAdded":
+          return handleAddCollaboratorEvent(outboxEvent);
+        case "CollaboratorRemoved":
+          return handleRemoveCollaboratorEvent(outboxEvent);
+
+          // deprecated
         case "UserMembershipAdded":
           return handleUserMembershipAddedEvent(outboxEvent);
         case "UserMembershipRemoved":
@@ -182,6 +191,61 @@ public class UserEventHandler implements OutboxEventHandler {
     boolean auditPublished;
     if (SYSTEM == userMembershipRemoveEvent.getMechanism()
         || ACCEPTED_INVITE == userMembershipRemoveEvent.getMechanism()) {
+      auditPublished = auditClientService.publishAudit(
+          auditEntry, fromSecurityPrincipal(new ServicePrincipal(NG_MANAGER.getServiceId())), globalContext);
+    } else {
+      auditPublished = auditClientService.publishAudit(auditEntry, globalContext);
+    }
+    return eventPublished && auditPublished;
+  }
+
+  private boolean handleAddCollaboratorEvent(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    AddCollaboratorEvent addCollaboratorEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), AddCollaboratorEvent.class);
+    AuditEventData auditEventData = null;
+    if (UserMembershipUpdateSource.ACCEPTED_INVITE == addCollaboratorEvent.getSource()) {
+      auditEventData = new AddCollaboratorAuditEventData(new InvitationSource());
+    }
+    AuditEntry auditEntry = AuditEntry.builder()
+                                .action(Action.ADD_COLLABORATOR)
+                                .module(ModuleType.CORE)
+                                .timestamp(outboxEvent.getCreatedAt())
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .insertId(outboxEvent.getId())
+                                .auditEventData(auditEventData)
+                                .build();
+    boolean eventPublished = publishEvent(addCollaboratorEvent.getUserId(), addCollaboratorEvent.getScope(),
+        EventsFrameworkMetadataConstants.CREATE_ACTION);
+    boolean auditPublished;
+    if (UserMembershipUpdateSource.SYSTEM == addCollaboratorEvent.getSource()
+        || UserMembershipUpdateSource.ACCEPTED_INVITE == addCollaboratorEvent.getSource()) {
+      auditPublished = auditClientService.publishAudit(
+          auditEntry, fromSecurityPrincipal(new ServicePrincipal(NG_MANAGER.getServiceId())), globalContext);
+    } else {
+      auditPublished = auditClientService.publishAudit(auditEntry, globalContext);
+    }
+    return eventPublished && auditPublished;
+  }
+
+  private boolean handleRemoveCollaboratorEvent(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    RemoveCollaboratorEvent removeCollaboratorEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), RemoveCollaboratorEvent.class);
+    AuditEntry auditEntry = AuditEntry.builder()
+                                .action(Action.REMOVE_COLLABORATOR)
+                                .module(ModuleType.CORE)
+                                .timestamp(outboxEvent.getCreatedAt())
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .insertId(outboxEvent.getId())
+                                .build();
+    boolean eventPublished = publishEvent(removeCollaboratorEvent.getUserId(), removeCollaboratorEvent.getScope(),
+        EventsFrameworkMetadataConstants.DELETE_ACTION);
+    boolean auditPublished;
+    if (UserMembershipUpdateSource.SYSTEM == removeCollaboratorEvent.getSource()
+        || UserMembershipUpdateSource.ACCEPTED_INVITE == removeCollaboratorEvent.getSource()) {
       auditPublished = auditClientService.publishAudit(
           auditEntry, fromSecurityPrincipal(new ServicePrincipal(NG_MANAGER.getServiceId())), globalContext);
     } else {

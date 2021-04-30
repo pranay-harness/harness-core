@@ -7,7 +7,7 @@ import static io.harness.ng.core.invites.InviteOperationResponse.FAIL;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
 import static io.harness.ng.core.invites.remote.InviteMapper.writeDTO;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.ACCEPTED_INVITE;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.ACCEPTED_INVITE;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;

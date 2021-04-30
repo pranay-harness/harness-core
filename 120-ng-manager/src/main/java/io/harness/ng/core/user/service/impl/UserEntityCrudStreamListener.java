@@ -6,7 +6,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
