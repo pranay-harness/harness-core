@@ -9,6 +9,7 @@ shared_dependencies = [
     "//950-ng-authentication-service:module",
     "//955-account-mgmt:module",
     "//960-ng-core-beans:module",
+    "//970-telemetry-beans:module",
     "@maven//:org_mindrot_jbcrypt",
 ]
 
@@ -27,6 +28,7 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//950-telemetry:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",
