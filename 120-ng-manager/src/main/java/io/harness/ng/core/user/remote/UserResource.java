@@ -24,7 +24,7 @@ import io.harness.ng.core.invites.dto.UserSearchDTO;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.UserMembershipUpdateMechanism;
+import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.Scope;
 import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
@@ -210,6 +210,6 @@ public class UserResource {
                       .projectIdentifier(projectIdentifier)
                       .build();
     return ResponseDTO.newResponse(
-        TRUE.equals(ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateMechanism.AUTHORIZED_USER)));
+        TRUE.equals(ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER)));
   }
 }

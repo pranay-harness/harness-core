@@ -34,6 +34,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
+import io.harness.ng.core.events.AddCollaboratorEvent;
+import io.harness.ng.core.events.RemoveCollaboratorEvent;
 import io.harness.ng.core.events.UserInviteCreateEvent;
 import io.harness.ng.core.events.UserInviteDeleteEvent;
 import io.harness.ng.core.events.UserInviteUpdateEvent;
@@ -41,6 +43,7 @@ import io.harness.ng.core.events.UserMembershipAddEvent;
 import io.harness.ng.core.events.UserMembershipRemoveEvent;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.remote.RoleBinding;
+import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.outbox.OutboxEvent;
 import io.harness.rule.Owner;
@@ -272,6 +275,94 @@ public class UserEventHandlerTest extends CategoryTest {
     assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
     assertEquals(Action.REMOVE_COLLABORATOR, auditEntry.getAction());
     assertNull(auditEntry.getNewYaml());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testCollaboratorAdd() throws JsonProcessingException, ProducerShutdownException {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String email = randomAlphabetic(10);
+    AddCollaboratorEvent addCollaboratorEvent = new AddCollaboratorEvent(accountIdentifier,
+        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        randomAlphabetic(10), UserMembershipUpdateSource.ACCEPTED_INVITE);
+    String eventData = objectMapper.writeValueAsString(addCollaboratorEvent);
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .id(randomAlphabetic(10))
+                                  .blocked(false)
+                                  .eventType("CollaboratorAdded")
+                                  .eventData(eventData)
+                                  .resourceScope(addCollaboratorEvent.getResourceScope())
+                                  .resource(addCollaboratorEvent.getResource())
+                                  .createdAt(Long.parseLong(randomNumeric(5)))
+                                  .build();
+
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
+
+    verifyInvocation(messageArgumentCaptor, auditEntryArgumentCaptor, outboxEvent);
+    assertMessage(messageArgumentCaptor, accountIdentifier, USERMEMBERSHIP, CREATE_ACTION);
+
+    AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
+    assertEquals(Action.ADD_COLLABORATOR, auditEntry.getAction());
+    assertNotNull(auditEntry.getAuditEventData());
+    assertNull(auditEntry.getOldYaml());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testCollaboratorRemove() throws JsonProcessingException, ProducerShutdownException {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String email = randomAlphabetic(10);
+    RemoveCollaboratorEvent removeCollaboratorEvent = new RemoveCollaboratorEvent(accountIdentifier,
+        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        randomAlphabetic(10), UserMembershipUpdateSource.SYSTEM);
+    String eventData = objectMapper.writeValueAsString(removeCollaboratorEvent);
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .id(randomAlphabetic(10))
+                                  .blocked(false)
+                                  .eventType("CollaboratorRemoved")
+                                  .eventData(eventData)
+                                  .resourceScope(removeCollaboratorEvent.getResourceScope())
+                                  .resource(removeCollaboratorEvent.getResource())
+                                  .createdAt(Long.parseLong(randomNumeric(5)))
+                                  .build();
+
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
+
+    verifyInvocation(messageArgumentCaptor, auditEntryArgumentCaptor, outboxEvent);
+    assertMessage(messageArgumentCaptor, accountIdentifier, USERMEMBERSHIP, DELETE_ACTION);
+
+    AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
+    assertEquals(Action.REMOVE_COLLABORATOR, auditEntry.getAction());
+    assertNull(auditEntry.getNewYaml());
+  }
+
+  private void verifyInvocation(ArgumentCaptor<Message> messageArgumentCaptor,
+      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor, OutboxEvent outboxEvent) throws ProducerShutdownException {
+    when(producer.send(any())).thenReturn("");
+    when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
+
+    userEventHandler.handle(outboxEvent);
+
+    verify(producer, times(1)).send(messageArgumentCaptor.capture());
+    verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
+  }
+
+  private void assertMessage(
+      ArgumentCaptor<Message> messageArgumentCaptor, String accountIdentifier, String entityType, String action) {
+    Message message = messageArgumentCaptor.getValue();
+    assertNotNull(message.getMetadataMap());
+    Map<String, String> metadataMap = message.getMetadataMap();
+    assertEquals(accountIdentifier, metadataMap.get("accountId"));
+    assertEquals(entityType, metadataMap.get(ENTITY_TYPE));
+    assertEquals(action, metadataMap.get(ACTION));
   }
 
   private void assertAuditEntry(

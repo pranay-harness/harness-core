@@ -2,7 +2,7 @@ package io.harness.ng.core.user.service.impl;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
