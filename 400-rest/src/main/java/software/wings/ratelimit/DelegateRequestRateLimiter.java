@@ -3,7 +3,9 @@ package software.wings.ratelimit;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateRequestRateLimiter {
   private static final int GLOBAL_DELEGATE_REQUEST_LIMIT_PER_MINUTE = 10000;
   private static final int ACCOUNT_PER_DELEGATE_REQUEST_LIMIT_PER_MINUTE = 200;

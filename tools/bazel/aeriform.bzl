@@ -23,9 +23,10 @@ def aeriform(target):
         tags = ["manual", "no-ide", "aeriform"],
         srcs = [target],
         cmd = " ".join([
-            "jdeps",
+            "$(JAVABASE)/bin/jdeps",
             "-v",
             "$(locations " + target + ")",
             "> \"$@\"",
         ]),
+        toolchains = ["@bazel_tools//tools/jdk:current_host_java_runtime"],
     )

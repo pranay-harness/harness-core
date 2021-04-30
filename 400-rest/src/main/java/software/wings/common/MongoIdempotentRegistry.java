@@ -10,6 +10,10 @@ import static software.wings.beans.Idempotent.TENTATIVE;
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
@@ -33,6 +37,8 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._960_PERSISTENCE)
 public class MongoIdempotentRegistry<T extends IdempotentResult> implements IdempotentRegistry<T> {
   public static final FindAndModifyOptions registerOptions =
       new FindAndModifyOptions().returnNew(false).upsert(true).writeConcern(new WriteConcern("majority"));

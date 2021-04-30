@@ -268,6 +268,8 @@ aeriform("//940-secret-manager-client:module")
 
 aeriform("//945-ng-audit-client:module")
 
+aeriform("//945-ng-audit-client:tests")
+
 aeriform("//946-access-control-aggregator:module")
 
 aeriform("//946-access-control-aggregator:tests")
@@ -320,6 +322,10 @@ aeriform("//950-ng-core:module")
 
 aeriform("//950-ng-core:tests")
 
+aeriform("//950-ng-license-manager:module")
+
+aeriform("//950-ng-license-manager:tests")
+
 aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
@@ -333,6 +339,8 @@ aeriform("//950-timeout-engine:module")
 aeriform("//950-timeout-engine:tests")
 
 aeriform("//950-wait-engine:module")
+
+aeriform("//950-wait-engine:supporter-test")
 
 aeriform("//950-wait-engine:tests")
 
@@ -372,6 +380,8 @@ aeriform("//955-setup-usage-sdk:tests")
 
 aeriform("//958-migration-sdk:module")
 
+aeriform("//958-migration-sdk:tests")
+
 aeriform("//959-psql-database-models:module")
 
 aeriform("//960-api-services:module")
@@ -385,6 +395,8 @@ aeriform("//960-expression-service:module")
 aeriform("//960-expression-service:tests")
 
 aeriform("//960-ng-core-beans:module")
+
+aeriform("//960-ng-license-beans:module")
 
 aeriform("//960-ng-signup-beans:module")
 

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -59,6 +60,7 @@ import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@BreakDependencyOn("software.wings.WingsBaseTest")
 public class DelegateProfileServiceTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = generateUuid();
   public static final String DELEGATE_PROFILE_NAME = "DELEGATE_PROFILE_NAME";
