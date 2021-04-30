@@ -50,7 +50,8 @@ public class TrackEventInterceptor implements MethodInterceptor {
 
     HashMap<String, Object> properties = TelemetryEventUtils.generateProperties(sendTrackEvent.properties(), arguments);
     Map<Destination, Boolean> destinations = TelemetryEventUtils.generateDestinations(sendTrackEvent.destinations());
-    telemetryReporter.sendTrackEvent(sendTrackEvent.eventName(), identity, accountId, properties, destinations);
+    telemetryReporter.sendTrackEvent(
+        sendTrackEvent.eventName(), identity, accountId, properties, destinations, sendTrackEvent.category());
   }
 
   private String checkAndGetValue(Input input, Object[] arguments) {
