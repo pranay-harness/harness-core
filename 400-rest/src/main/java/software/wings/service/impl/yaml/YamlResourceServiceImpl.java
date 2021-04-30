@@ -626,6 +626,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case NEW_RELIC:
       case DYNA_TRACE:
       case PROMETHEUS:
+      case DATA_DOG:
+      case APM_VERIFICATION:
+      case BUG_SNAG:
         return yamlHandlerFactory.getYamlHandler(YamlType.VERIFICATION_PROVIDER, settingVariableType.name());
 
       case HOST_CONNECTION_ATTRIBUTES:
