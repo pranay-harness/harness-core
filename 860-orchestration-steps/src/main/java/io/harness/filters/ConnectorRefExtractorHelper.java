@@ -40,7 +40,7 @@ public class ConnectorRefExtractorHelper implements EntityReferenceExtractor {
         return result;
       }
       String fullQualifiedDomainName = VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR
-          + YAMLFieldNameConstants.CONNECTOR_REF;
+          + YAMLFieldNameConstants.SPEC + PATH_CONNECTOR + key;
       result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier, projectIdentifier,
           fullQualifiedDomainName, connectorRef, EntityTypeProtoEnum.CONNECTORS));
     }

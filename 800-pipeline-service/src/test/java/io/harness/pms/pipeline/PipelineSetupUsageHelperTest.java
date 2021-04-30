@@ -109,25 +109,28 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
         .thenReturn(request);
     try {
       List<EntitySetupUsageDTO> list = new ArrayList<>();
-      list.add(EntitySetupUsageDTO.builder()
-                   .accountIdentifier(accountIdentifier)
-                   .referredByEntity(referredByEntity)
-                   .referredEntity(
-                       EntityDetail.builder()
-                           .type(EntityType.CONNECTORS)
-                           .entityRef(IdentifierRef.builder()
-                                          .accountIdentifier(accountIdentifier)
-                                          .orgIdentifier(orgIdentifier)
-                                          .projectIdentifier(projectIdentifier)
-                                          .identifier("DOCKER_NEW_TEST")
-                                          .scope(Scope.PROJECT)
-                                          .metadata(Collections.singletonMap(PreFlightCheckMetadata.FQN,
-                                              "pipeline.stages.deploy.serviceConfig.artifacts.primary.connectorRef"))
-                                          .build())
-                           .build())
-                   .build());
+      list.add(
+          EntitySetupUsageDTO.builder()
+              .accountIdentifier(accountIdentifier)
+              .referredByEntity(referredByEntity)
+              .referredEntity(
+                  EntityDetail.builder()
+                      .type(EntityType.CONNECTORS)
+                      .entityRef(
+                          IdentifierRef.builder()
+                              .accountIdentifier(accountIdentifier)
+                              .orgIdentifier(orgIdentifier)
+                              .projectIdentifier(projectIdentifier)
+                              .identifier("DOCKER_NEW_TEST")
+                              .scope(Scope.PROJECT)
+                              .metadata(Collections.singletonMap(PreFlightCheckMetadata.FQN,
+                                  "pipeline.stages.deploy.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef"))
+                              .build())
+                      .build())
+              .build());
       Map<String, String> metadata = new HashMap<>();
-      metadata.put(PreFlightCheckMetadata.FQN, "pipeline.stages.deploy.infrastructure.connectorRef");
+      metadata.put(PreFlightCheckMetadata.FQN,
+          "pipeline.stages.deploy.spec.infrastructure.infrastructureDefinition.spec.connectorRef");
       metadata.put(PreFlightCheckMetadata.EXPRESSION, "<+input>");
       list.add(EntitySetupUsageDTO.builder()
                    .accountIdentifier(accountIdentifier)
