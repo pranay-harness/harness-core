@@ -1,26 +1,25 @@
 package io.harness.waiter;
 
-import static io.harness.persistence.HQuery.excludeAuthority;
-
-import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ProgressData;
-import io.harness.waiter.WaitInstance.WaitInstanceKeys;
+import io.harness.waiter.persistence.PersistenceWrapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ProgressUpdateService implements Runnable {
   @Inject private Injector injector;
-  @Inject private HPersistence persistence;
+  @Inject private PersistenceWrapper persistenceWrapper;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private WaitInstanceService waitInstanceService;
 
@@ -39,20 +38,15 @@ public class ProgressUpdateService implements Runnable {
           continue;
         }
 
-        Query<WaitInstance> query = persistence.createQuery(WaitInstance.class, excludeAuthority)
-                                        .filter(WaitInstanceKeys.correlationIds, progressUpdate.getCorrelationId())
-                                        .project(WaitInstanceKeys.progressCallback, true);
-
         ProgressData progressData = (ProgressData) kryoSerializer.asInflatedObject(progressUpdate.getProgressData());
 
-        try (HIterator<WaitInstance> iterator = new HIterator<>(query.fetch())) {
-          for (WaitInstance waitInstance : iterator) {
-            ProgressCallback progressCallback = waitInstance.getProgressCallback();
-            injector.injectMembers(progressCallback);
-            progressCallback.notify(progressUpdate.getCorrelationId(), progressData);
-          }
+        List<WaitInstance> waitInstances = persistenceWrapper.fetchWaitInstances(progressUpdate.getCorrelationId());
+        for (WaitInstance waitInstance : waitInstances) {
+          ProgressCallback progressCallback = waitInstance.getProgressCallback();
+          injector.injectMembers(progressCallback);
+          progressCallback.notify(progressUpdate.getCorrelationId(), progressData);
         }
-        persistence.delete(progressUpdate);
+        persistenceWrapper.delete(progressUpdate);
       } catch (Exception e) {
         log.error("Exception occurred while running progress service", e);
       }

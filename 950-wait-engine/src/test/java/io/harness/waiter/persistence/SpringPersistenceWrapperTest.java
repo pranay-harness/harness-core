@@ -22,7 +22,11 @@ import io.harness.waiter.WaitInstance;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 
 import com.google.inject.Inject;
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -145,5 +149,67 @@ public class SpringPersistenceWrapperTest extends WaitEngineTestBase {
     assertThat(modifiedWaitInstance).isNotNull();
     assertThat(modifiedWaitInstance.getWaitingOnCorrelationIds()).isEmpty();
     assertThat(modifiedWaitInstance.getCorrelationIds()).containsExactly(correlationId);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void testFetchWaitInstances() {
+    String waitInstanceId1 = generateUuid();
+    String waitInstanceId2 = generateUuid();
+    String correlationId1 = generateUuid();
+    String correlationId2 = generateUuid();
+    final WaitInstance waitInstance1 = WaitInstance.builder()
+                                           .uuid(waitInstanceId1)
+                                           .callback(new TestNotifyCallback())
+                                           .progressCallback(new TestProgressCallback())
+                                           .publisher(TEST_PUBLISHER)
+                                           .correlationIds(Arrays.asList(correlationId1, correlationId2))
+                                           .waitingOnCorrelationIds(Arrays.asList(correlationId1, correlationId2))
+                                           .build();
+
+    final WaitInstance waitInstance2 = WaitInstance.builder()
+                                           .uuid(waitInstanceId2)
+                                           .callback(new TestNotifyCallback())
+                                           .progressCallback(new TestProgressCallback())
+                                           .publisher(TEST_PUBLISHER)
+                                           .correlationIds(Arrays.asList(correlationId1))
+                                           .waitingOnCorrelationIds(Arrays.asList(correlationId1))
+                                           .build();
+    mongoTemplate.save(waitInstance1);
+    mongoTemplate.save(waitInstance2);
+
+    List<WaitInstance> waitInstances = persistenceWrapper.fetchWaitInstances(correlationId1);
+    assertThat(waitInstances).isNotEmpty();
+    assertThat(waitInstances).hasSize(2);
+    assertThat(waitInstances.stream().map(WaitInstance::getUuid).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(waitInstanceId1, waitInstanceId2);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void shouldTestFetchNotifyResponseKeys() {
+    long now = System.currentTimeMillis();
+    long queryTime = now - Duration.ofSeconds(10).toMillis();
+
+    NotifyResponse response1 = NotifyResponse.builder()
+                                   .uuid(generateUuid())
+                                   .createdAt(now - Duration.ofSeconds(20).toMillis())
+                                   .responseData(new byte[] {})
+                                   .error(false)
+                                   .build();
+
+    NotifyResponse response2 =
+        NotifyResponse.builder().uuid(generateUuid()).createdAt(now).responseData(new byte[] {}).error(false).build();
+
+    mongoTemplate.save(response1);
+    mongoTemplate.save(response2);
+
+    List<String> keyList = persistenceWrapper.fetchNotifyResponseKeys(queryTime);
+    assertThat(keyList).hasSize(1);
+    assertThat(keyList).containsExactly(response1.getUuid());
   }
 }
