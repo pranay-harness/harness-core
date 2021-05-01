@@ -20,6 +20,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -67,6 +68,7 @@ import lombok.Setter;
 
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsBGUpdateRoute53DNSWeightState extends State {
   public static final String UPDATE_ROUTE_53_DNS_WEIGHTS = "Update Route 53 DNS Weights";
   private static final int MIN_WEIGHT = 0;

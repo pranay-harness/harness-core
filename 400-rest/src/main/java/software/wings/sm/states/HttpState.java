@@ -14,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -106,6 +107,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Attributes
 @Slf4j
 @TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HttpState extends State implements SweepingOutputStateMixin {
   private static final String ASSERTION_ERROR_MSG =
       "Assertion should return true/false (Expression syntax is based on java language).";

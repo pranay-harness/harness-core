@@ -20,6 +20,7 @@ import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -98,6 +99,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsBlueGreenServiceSetupRoute53DNS extends State {
   public static final String ECS_SERVICE_SETUP_COMMAND_ROUTE53 = "ECS Service Setup Route 53";
 

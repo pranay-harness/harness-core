@@ -12,6 +12,7 @@ import static software.wings.metrics.MetricType.ERROR;
 import static software.wings.metrics.MetricType.RESP_TIME;
 import static software.wings.metrics.MetricType.THROUGHPUT;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -81,6 +82,7 @@ import org.slf4j.Logger;
 @FieldNameConstants(innerTypeName = "DatadogStateKeys")
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class DatadogState extends AbstractMetricAnalysisState {
   @Inject @SchemaIgnore private transient DatadogService datadogService;
   private static final int DATA_COLLECTION_RATE_MINS = 5;
