@@ -28,8 +28,8 @@ public class NGCoreMigrationProvider implements MigrationProvider {
   public List<Class<? extends MigrationDetails>> getMigrationDetailsList() {
     return new ArrayList<Class<? extends MigrationDetails>>() {
       {
-        add(NGCoreMigrationDetails.class);
         add(NGCoreMongoMigrationBGDetails.class);
+        add(NGCoreMigrationDetails.class);
       }
     };
   }
