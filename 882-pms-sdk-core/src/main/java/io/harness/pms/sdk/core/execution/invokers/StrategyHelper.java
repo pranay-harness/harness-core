@@ -12,7 +12,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
-import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.supplier.ThrowingSupplier;
@@ -35,7 +34,7 @@ public class StrategyHelper {
       }
       ResponseData data = responseDataMap.values().iterator().next();
       if (data instanceof ErrorResponseData) {
-        throw new ErrorDataException((ErrorResponseData) data);
+        throw((ErrorResponseData) data).getException();
       }
       return data;
     };
