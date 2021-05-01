@@ -7,13 +7,12 @@ import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
-import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
 import lombok.Builder;
@@ -23,16 +22,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("integrationStageStepParameters")
-public class IntegrationStageStepParametersPMS implements StepParameters {
-  String identifier;
-  String name;
-  ParameterField<String> description;
-  List<NGVariable> originalVariables;
-  String type;
+public class IntegrationStageStepParametersPMS implements SpecParameters {
   Infrastructure infrastructure;
   List<DependencyElement> dependencies;
   ParameterField<List<String>> sharedPaths;
-  ParameterField<String> skipCondition;
   ParameterField<Boolean> enableCloneRepo;
   BuildStatusUpdateParameter buildStatusUpdateParameter;
   String childNodeID;
@@ -47,15 +40,9 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
     Infrastructure infrastructure = getInfrastructure(stageElementConfig, ctx);
 
     return IntegrationStageStepParametersPMS.builder()
-        .identifier(stageElementConfig.getIdentifier())
-        .name(stageElementConfig.getName())
         .buildStatusUpdateParameter(buildStatusUpdateParameter)
-        .description(stageElementConfig.getDescription())
         .infrastructure(infrastructure)
         .dependencies(integrationStageConfig.getServiceDependencies())
-        .type(stageElementConfig.getType())
-        .skipCondition(stageElementConfig.getSkipCondition())
-        .originalVariables(stageElementConfig.getVariables())
         .childNodeID(childNodeID)
         .sharedPaths(integrationStageConfig.getSharedPaths())
         .enableCloneRepo(integrationStageConfig.getCloneCodebase())

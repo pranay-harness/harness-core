@@ -5,11 +5,11 @@ import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
@@ -50,8 +50,8 @@ public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEv
     try {
       if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name())
           && isFinalStatus(nodeExecution.getStatus())) {
-        IntegrationStageStepParametersPMS integrationStageStepParameters = RecastOrchestrationUtils.fromDocument(
-            nodeExecution.getResolvedStepParameters(), IntegrationStageStepParametersPMS.class);
+        StageElementParameters integrationStageStepParameters = RecastOrchestrationUtils.fromDocument(
+            nodeExecution.getResolvedStepParameters(), StageElementParameters.class);
 
         log.info("Received event with status {} to clean stage {}", nodeExecution.getStatus(),
             integrationStageStepParameters.getIdentifier());

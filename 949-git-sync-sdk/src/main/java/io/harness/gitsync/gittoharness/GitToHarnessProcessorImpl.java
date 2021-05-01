@@ -3,7 +3,6 @@ package io.harness.gitsync.gittoharness;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
-import static io.harness.gitsync.interceptor.GitSyncBranchThreadLocal.gitBranchGuard;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,9 +16,11 @@ import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
 import io.harness.gitsync.interceptor.GitEntityInfo;
-import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
+import io.harness.manage.GlobalContextManager;
+import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -57,7 +58,6 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
    * <li><b>Sort step.</b> Changesets are sorted as per sort order.</li>
    * <li><b>Process step.</b> Change sets are processed by calling various service layers.</li>
    * <li><b>Post process step.</b> Collection of all the return data happens.</li>
-   * @param changeSets
    */
   @Override
   public ProcessingResponse gitToHarnessProcessingRequest(GitToHarnessProcessRequest gitToHarnessRequest) {
@@ -102,8 +102,9 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
     try {
       // todo(abhinav): Do parallel processing.
       for (ChangeSet changeSet : changeSets.getChangeSetList()) {
-        try (GitSyncBranchThreadLocal.Guard guard =
-                 gitBranchGuard(createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet))) {
+        try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+          GlobalContextManager.upsertGlobalContextRecord(
+              createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet));
           changeSetHelperService.process(changeSet);
           updateFileProcessingResponse(FileProcessingStatus.SUCCESS, null, processingResponseMap, changeSet.getId());
           processingResponseMap.put(changeSet.getId(),
@@ -123,7 +124,7 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
     return false;
   }
 
-  private GitEntityInfo createGitEntityInfo(GitToHarnessInfo gitToHarnessBranchInfo, ChangeSet changeSet) {
+  private GitSyncBranchContext createGitEntityInfo(GitToHarnessInfo gitToHarnessBranchInfo, ChangeSet changeSet) {
     String[] pathSplited = emptyIfNull(changeSet.getFilePath()).split(GitSyncConstants.FOLDER_PATH);
     if (pathSplited.length != 2) {
       throw new InvalidRequestException(
@@ -132,13 +133,15 @@ public class GitToHarnessProcessorImpl implements GitToHarnessProcessor {
     }
     String folderPath = pathSplited[0] + GitSyncConstants.FOLDER_PATH;
     String filePath = pathSplited[1];
-    return GitEntityInfo.builder()
-        .branch(gitToHarnessBranchInfo.getBranch())
-        .folderPath(folderPath)
-        .filePath(filePath)
-        .yamlGitConfigId(gitToHarnessBranchInfo.getYamlGitConfigId())
-        .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().getValue())
-        .isSyncFromGit(true)
+    return GitSyncBranchContext.builder()
+        .gitBranchInfo(GitEntityInfo.builder()
+                           .branch(gitToHarnessBranchInfo.getBranch())
+                           .folderPath(folderPath)
+                           .filePath(filePath)
+                           .yamlGitConfigId(gitToHarnessBranchInfo.getYamlGitConfigId())
+                           .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().getValue())
+                           .isSyncFromGit(true)
+                           .build())
         .build();
   }
 
