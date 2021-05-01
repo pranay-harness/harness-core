@@ -9,6 +9,7 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
+import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
@@ -23,8 +24,6 @@ import lombok.NonNull;
 
 @OwnedBy(CDC)
 public interface SdkNodeExecutionService {
-  void queueNodeExecution(NodeExecutionProto nodeExecution);
-
   void suspendChainExecution(String currentNodeExecutionId, SuspendChainRequest suspendChainRequest);
 
   void addExecutableResponse(
@@ -49,4 +48,6 @@ public interface SdkNodeExecutionService {
   void spawnChild(SpawnChildRequest spawnChildRequest);
 
   void queueTaskRequest(QueueTaskRequest queueTaskRequest);
+
+  void spawnChildren(SpawnChildrenRequest spawnChildrenRequest);
 }

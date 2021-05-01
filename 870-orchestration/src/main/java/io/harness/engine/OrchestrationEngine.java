@@ -362,7 +362,6 @@ public class OrchestrationEngine {
         return;
       }
 
-      PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
       if (nodeExecution.getStatus() != RUNNING) {
         nodeExecution = Preconditions.checkNotNull(
             nodeExecutionService.updateStatusWithOps(nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class)));
@@ -372,11 +371,8 @@ public class OrchestrationEngine {
       if (isNotEmpty(response)) {
         response.forEach((k, v) -> byteResponseMap.put(k, v.toByteArray()));
       }
-      ResumeNodeExecutionEventData data = ResumeNodeExecutionEventData.builder()
-                                              .asyncError(asyncError)
-                                              .nodes(planExecution.getPlan().getNodes())
-                                              .response(byteResponseMap)
-                                              .build();
+      ResumeNodeExecutionEventData data =
+          ResumeNodeExecutionEventData.builder().asyncError(asyncError).response(byteResponseMap).build();
       NodeExecutionEvent resumeEvent = NodeExecutionEvent.builder()
                                            .eventType(NodeExecutionEventType.RESUME)
                                            .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))

@@ -16,7 +16,6 @@ option java_multiple_files = true;
 message SdkResponseEventRequest {
   oneof request {
     QueueTaskRequest queueTaskRequest = 1;
-    QueueNodeExecutionRequest queueNodeExecutionRequest = 2;
     AddExecutableResponseRequest addExecutableResponseRequest = 4;
     HandleStepResponseRequest handleStepResponseRequest = 5;
     ResumeNodeExecutionRequest resumeNodeExecutionRequest = 6;
@@ -25,12 +24,9 @@ message SdkResponseEventRequest {
     AdviserResponseRequest adviserResponseRequest = 9;
     SuspendChainRequest suspendChainRequest = 11;
     SpawnChildRequest spawnChildRequest = 12;
+    SpawnChildrenRequest spawnChildrenRequest = 13;
   }
   string nodeExecutionId = 3;
-}
-
-message QueueNodeExecutionRequest {
-  NodeExecutionProto nodeExecution = 1;
 }
 
 message FacilitatorResponseRequest {
@@ -77,9 +73,18 @@ message SuspendChainRequest {
 }
 
 message SpawnChildRequest {
-  string nodeExecutionId = 1;
-  NodeExecutionProto childNodeExecution = 2;
-  io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 3;
+  string planExecutionId = 1;
+  string nodeExecutionId = 2;
+  oneof spawnableExecutableResponse {
+    io.harness.pms.contracts.execution.ChildExecutableResponse child = 3;
+    io.harness.pms.contracts.execution.ChildChainExecutableResponse childChain = 4;
+  }
+}
+
+message SpawnChildrenRequest {
+  string planExecutionId = 1;
+  string nodeExecutionId = 2;
+  io.harness.pms.contracts.execution.ChildrenExecutableResponse children = 3;
 }
 
 message QueueTaskRequest {
@@ -92,7 +97,6 @@ message QueueTaskRequest {
 
 enum SdkResponseEventType {
   UNKNOWN_EVENT_TYPE = 0;
-  QUEUE_NODE = 1;
   ADD_EXECUTABLE_RESPONSE = 2;
   HANDLE_STEP_RESPONSE = 3;
   RESUME_NODE_EXECUTION = 4;
@@ -102,4 +106,5 @@ enum SdkResponseEventType {
   SUSPEND_CHAIN = 9;
   SPAWN_CHILD = 10;
   QUEUE_TASK = 11;
+  SPAWN_CHILDREN = 12;
 }
