@@ -133,7 +133,6 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       processor.handleStart(
           InvokerPackage.builder()
               .inputPackage(inputPackage)
-              .nodes(eventData.getNodes())
               .passThroughData(facilitatorResponse == null ? null : facilitatorResponse.getPassThroughData())
               .nodeExecution(nodeExecution)
               .build());
@@ -169,11 +168,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
         return true;
       }
 
-      processor.handleResume(ResumePackage.builder()
-                                 .nodeExecution(nodeExecution)
-                                 .nodes(eventData.getNodes())
-                                 .responseDataMap(response)
-                                 .build());
+      processor.handleResume(ResumePackage.builder().nodeExecution(nodeExecution).responseDataMap(response).build());
       return true;
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);

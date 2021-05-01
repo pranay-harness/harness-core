@@ -59,7 +59,7 @@ public class AddExecutableResponseEventHandlerTest {
         SdkResponseEventInternal.builder()
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(request).build())
-            .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)
+            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .build());
     verify(nodeExecutionService).update(eq("id"), any());
   }
@@ -74,7 +74,7 @@ public class AddExecutableResponseEventHandlerTest {
         SdkResponseEventInternal.builder()
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(request).build())
-            .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)
+            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .build());
     verify(nodeExecutionService)
         .updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any(), eq(EnumSet.noneOf(Status.class)));
@@ -94,7 +94,7 @@ public class AddExecutableResponseEventHandlerTest {
         SdkResponseEventInternal.builder()
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(request).build())
-            .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)
+            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .build());
     OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(request.getNodeExecutionId()).build();
 

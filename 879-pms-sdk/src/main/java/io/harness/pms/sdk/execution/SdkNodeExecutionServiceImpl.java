@@ -13,12 +13,12 @@ import io.harness.pms.contracts.execution.events.AdviserResponseRequest;
 import io.harness.pms.contracts.execution.events.EventErrorRequest;
 import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
-import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
+import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
@@ -56,23 +56,6 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   @Inject private StepRegistry stepRegistry;
   @Inject private ResponseDataMapper responseDataMapper;
   @Inject private SdkResponseEventPublisher sdkResponseEventPublisher;
-
-  @Override
-  public void queueNodeExecution(NodeExecutionProto nodeExecution) {
-    SdkResponseEventInternal sdkResponseEventInternal =
-        SdkResponseEventInternal.builder()
-            .sdkResponseEventType(SdkResponseEventType.QUEUE_NODE)
-            .sdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder()
-                    .setNodeExecutionId(nodeExecution.getUuid())
-                    .setQueueNodeExecutionRequest(
-                        QueueNodeExecutionRequest.newBuilder().setNodeExecution(nodeExecution).build())
-                    .build())
-            .build();
-    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
-                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
-                                       .build());
-  }
 
   @Override
   public void suspendChainExecution(String currentNodeExecutionId, SuspendChainRequest suspendChainRequest) {
@@ -229,6 +212,21 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                     .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
                                                  .setSpawnChildRequest(spawnChildRequest)
                                                  .setNodeExecutionId(spawnChildRequest.getNodeExecutionId())
+                                                 .build())
+                    .build())
+            .build());
+  }
+
+  @Override
+  public void spawnChildren(SpawnChildrenRequest spawnChildrenRequest) {
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventInternal(
+                SdkResponseEventInternal.builder()
+                    .sdkResponseEventType(SdkResponseEventType.SPAWN_CHILDREN)
+                    .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                                 .setSpawnChildrenRequest(spawnChildrenRequest)
+                                                 .setNodeExecutionId(spawnChildrenRequest.getNodeExecutionId())
                                                  .build())
                     .build())
             .build());
