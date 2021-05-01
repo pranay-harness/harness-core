@@ -17,6 +17,7 @@ import static software.wings.sm.StateType.ECS_STEADY_STATE_CHECK;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -74,6 +75,7 @@ import lombok.Setter;
 
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsSteadyStateCheck extends State {
   public static final String ECS_STEADY_STATE_CHECK_COMMAND_NAME = "ECS Steady State Check";
 

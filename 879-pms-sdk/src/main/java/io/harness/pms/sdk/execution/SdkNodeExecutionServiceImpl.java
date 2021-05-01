@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.execution;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -15,7 +15,6 @@ import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
-import io.harness.pms.contracts.execution.events.QueueTaskRequestAndExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
@@ -49,7 +48,7 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 @Singleton
 public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
@@ -87,26 +86,6 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                                                                        .build())
                                           .build())
             .build());
-  }
-
-  @Override
-  public void queueTaskAndAddExecutableResponse(
-      QueueTaskRequest queueTaskRequest, AddExecutableResponseRequest addExecutableResponseRequest) {
-    SdkResponseEventInternal sdkResponseEventInternal =
-        SdkResponseEventInternal.builder()
-            .sdkResponseEventType(SdkResponseEventType.QUEUE_TASK_AND_ADD_EXECUTABLE_RESPONSE)
-            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
-                                         .setQueueTaskRequestAndExecutableResponseRequest(
-                                             QueueTaskRequestAndExecutableResponseRequest.newBuilder()
-                                                 .setAddExecutableResponseRequest(addExecutableResponseRequest)
-                                                 .setQueueTaskRequest(queueTaskRequest)
-                                                 .build())
-                                         .build())
-            .build();
-
-    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
-                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
-                                       .build());
   }
 
   @Override
@@ -250,6 +229,21 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                     .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
                                                  .setSpawnChildRequest(spawnChildRequest)
                                                  .setNodeExecutionId(spawnChildRequest.getNodeExecutionId())
+                                                 .build())
+                    .build())
+            .build());
+  }
+
+  @Override
+  public void queueTaskRequest(QueueTaskRequest queueTaskRequest) {
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventInternal(
+                SdkResponseEventInternal.builder()
+                    .sdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
+                    .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                                 .setQueueTaskRequest(queueTaskRequest)
+                                                 .setNodeExecutionId(queueTaskRequest.getNodeExecutionId())
                                                  .build())
                     .build())
             .build());

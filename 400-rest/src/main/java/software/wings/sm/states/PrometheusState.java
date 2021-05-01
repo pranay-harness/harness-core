@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -51,6 +52,7 @@ import org.slf4j.Logger;
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 @FieldNameConstants(innerTypeName = "PrometheusStateKeys")
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class PrometheusState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";
   @Transient @SchemaIgnore public static final String CONTROL_HOST_NAME = "controlNode";

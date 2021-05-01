@@ -7,6 +7,7 @@ import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -70,6 +71,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(HarnessTeam.DEL)
+@BreakDependencyOn("software.wings.beans.User")
+@BreakDependencyOn("software.wings.security.UserThreadLocal")
 public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBase {
   private DelegateProfileService delegateProfileService;
   private UserService userService;

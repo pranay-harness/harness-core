@@ -14,6 +14,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -80,6 +81,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDP)
 @Slf4j
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {
   private static final int TIMEOUT_IN_MINUTES = 20;
   private static final String COMMAND_UNIT = "Shell Script Provision";

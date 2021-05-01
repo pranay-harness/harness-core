@@ -8,6 +8,7 @@ import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -60,6 +61,7 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class K8sCanaryDeploy extends AbstractK8sState {
   @Inject private transient ActivityService activityService;
   @Inject private transient SecretManager secretManager;

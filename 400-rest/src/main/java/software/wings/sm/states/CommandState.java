@@ -20,6 +20,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.joor.Reflect.on;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -143,12 +144,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 
-/**
- * Created by peeyushaggarwal on 5/31/16.
- */
 @OwnedBy(CDC)
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CommandState extends State {
   public static final String RUNTIME_PATH = "RUNTIME_PATH";
   public static final String BACKUP_PATH = "BACKUP_PATH";

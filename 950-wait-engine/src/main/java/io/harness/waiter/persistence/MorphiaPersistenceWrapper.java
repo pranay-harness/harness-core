@@ -10,6 +10,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HKeyIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
@@ -24,12 +25,14 @@ import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 
 import com.google.inject.Inject;
 import com.mongodb.WriteConcern;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -83,6 +86,34 @@ public class MorphiaPersistenceWrapper implements PersistenceWrapper {
     }
 
     return ProcessedMessageResponse.builder().isError(isError).responseDataMap(responseMap).build();
+  }
+
+  @Override
+  public List<WaitInstance> fetchWaitInstances(String correlationId) {
+    List<WaitInstance> waitInstances = new ArrayList<>();
+    Query<WaitInstance> query = hPersistence.createQuery(WaitInstance.class, excludeAuthority)
+                                    .filter(WaitInstanceKeys.correlationIds, correlationId);
+    try (HIterator<WaitInstance> iterator = new HIterator<>(query.fetch())) {
+      for (WaitInstance waitInstance : iterator) {
+        waitInstances.add(waitInstance);
+      }
+    }
+    return waitInstances;
+  }
+
+  @Override
+  public List<String> fetchNotifyResponseKeys(long limit) {
+    List<String> keys = new ArrayList<>();
+    try (HKeyIterator<NotifyResponse> iterator =
+             new HKeyIterator<>(hPersistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                    .field(NotifyResponseKeys.createdAt)
+                                    .lessThan(limit)
+                                    .fetchKeys())) {
+      for (Key<NotifyResponse> key : iterator) {
+        keys.add(key.getId().toString());
+      }
+    }
+    return keys;
   }
 
   @Override
@@ -151,5 +182,19 @@ public class MorphiaPersistenceWrapper implements PersistenceWrapper {
         hPersistence.createUpdateOperations(WaitInstance.class)
             .removeAll(WaitInstanceKeys.waitingOnCorrelationIds, waitingOnCorrelationId);
     return hPersistence.findAndModify(query, operations, HPersistence.returnNewOptions);
+  }
+
+  @Override
+  public void deleteNotifyResponses(List<String> responseIds) {
+    if (isEmpty(responseIds)) {
+      return;
+    }
+    log.info("Deleting {} not needed responses", responseIds.size());
+    boolean deleted = hPersistence.deleteOnServer(hPersistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                                      .field(NotifyResponseKeys.uuid)
+                                                      .in(responseIds));
+    if (!deleted) {
+      log.warn("Not Able to delete Notify Responses");
+    }
   }
 }

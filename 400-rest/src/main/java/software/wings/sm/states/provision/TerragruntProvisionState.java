@@ -59,6 +59,7 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -145,6 +146,7 @@ import org.apache.commons.io.FilenameUtils;
 @OwnedBy(CDP)
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class TerragruntProvisionState extends State {
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;

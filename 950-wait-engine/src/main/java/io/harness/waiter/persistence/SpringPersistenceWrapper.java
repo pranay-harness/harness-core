@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -50,6 +51,19 @@ public class SpringPersistenceWrapper implements PersistenceWrapper {
     if (!remove.wasAcknowledged() || remove.getDeletedCount() != 1) {
       throw new GeneralException("Not able to Delete wait instance");
     }
+  }
+
+  @Override
+  public List<String> fetchNotifyResponseKeys(long limit) {
+    Query query = query(where(NotifyResponseKeys.createdAt).lt(limit));
+    List<NotifyResponse> notifyResponses = mongoTemplate.find(query, NotifyResponse.class);
+    return notifyResponses.stream().map(NotifyResponse::getUuid).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<WaitInstance> fetchWaitInstances(String correlationId) {
+    Query query = query(where(WaitInstanceKeys.waitingOnCorrelationIds).is(correlationId));
+    return mongoTemplate.find(query, WaitInstance.class);
   }
 
   @Override
@@ -127,5 +141,18 @@ public class SpringPersistenceWrapper implements PersistenceWrapper {
     final Query wiQuery = query(where(WaitInstanceKeys.uuid).is(waitInstanceId));
     final Update wiUpdate = new Update().pullAll(WaitInstanceKeys.waitingOnCorrelationIds, keys.toArray(new String[0]));
     return mongoTemplate.findAndModify(wiQuery, wiUpdate, SpringDataMongoUtils.returnNewOptions, WaitInstance.class);
+  }
+
+  @Override
+  public void deleteNotifyResponses(List<String> responseIds) {
+    if (isEmpty(responseIds)) {
+      return;
+    }
+    log.info("Deleting {} not needed responses", responseIds.size());
+    DeleteResult deleteResult =
+        mongoTemplate.remove(query(where(NotifyResponseKeys.uuid).in(responseIds)), NotifyResponse.class);
+    if (!deleteResult.wasAcknowledged()) {
+      log.warn("Not Able to delete Notify Responses");
+    }
   }
 }

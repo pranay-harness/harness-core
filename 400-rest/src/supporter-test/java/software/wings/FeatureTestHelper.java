@@ -5,6 +5,10 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.beans.FeatureName;
@@ -18,6 +22,8 @@ import com.google.inject.Singleton;
 import java.util.Collections;
 
 @Singleton
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_FEATURE_FLAG)
 public class FeatureTestHelper {
   @Inject protected HPersistence persistence;
   @Inject protected FeatureFlagService featureFlagService;
