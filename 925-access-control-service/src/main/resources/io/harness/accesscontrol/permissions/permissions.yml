@@ -209,3 +209,83 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_usergroup_view
+    name: View User Groups
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_usergroup_manage
+    name: Manage User Groups
+    status: ACTIVE
+    includeInAllRoless: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_user_view
+    name: View Users
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_user_manage
+    name: Manage Users
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_role_view
+    name: View Roles
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_role_edit
+    name: Create or Edit Role
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_role_delete
+    name: Delete Role
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_resourcegroup_view
+    name: View Resource Groups
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_resourcegroup_edit
+    name: Create or Edit Resource Group
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_resourcegroup_delete
+    name: Delete Resource Group
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project

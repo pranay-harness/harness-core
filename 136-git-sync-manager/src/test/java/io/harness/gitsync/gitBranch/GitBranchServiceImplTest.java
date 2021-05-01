@@ -12,6 +12,7 @@ import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.dtos.GitBranchDTO;
+import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -53,15 +54,16 @@ public class GitBranchServiceImplTest extends GitSyncTestBase {
                                      .projectIdentifier(projectIdentifier)
                                      .identifier(yamlGitConfigIdentifier)
                                      .repo("repoURL")
+                                     .branch("A")
                                      .build());
     final GitBranch gitBranch1 = buildGitBranch(accountIdentifier, "repoURL", "Z", BranchSyncStatus.SYNCED);
     final GitBranch gitBranch2 = buildGitBranch(accountIdentifier, "repoURL", "C", BranchSyncStatus.SYNCING);
     final GitBranch gitBranch3 = buildGitBranch(accountIdentifier, "repoURL", "A", BranchSyncStatus.UNSYNCED);
     final GitBranch gitBranch4 = buildGitBranch(accountIdentifier, "repoURL", "B", BranchSyncStatus.UNSYNCED);
     gitBranchesRepository.saveAll(Arrays.asList(gitBranch1, gitBranch2, gitBranch3, gitBranch4));
-    PageResponse<GitBranchDTO> gitBranchPageResponse =
-        gitBranchServiceImpl.listBranchesWithStatus(accountIdentifier, orgIdentifier, projectIdentifier,
-            yamlGitConfigIdentifier, PageRequest.builder().pageIndex(0).pageSize(2).build(), "");
+    GitBranchListDTO gitBranchListDTO = gitBranchServiceImpl.listBranchesWithStatus(accountIdentifier, orgIdentifier,
+        projectIdentifier, yamlGitConfigIdentifier, PageRequest.builder().pageIndex(0).pageSize(2).build(), "");
+    PageResponse<GitBranchDTO> gitBranchPageResponse = gitBranchListDTO.getBranches();
     assertThat(!gitBranchPageResponse.isEmpty());
     assertThat(gitBranchPageResponse.getTotalItems() == 4 && gitBranchPageResponse.getTotalPages() == 2
         && gitBranchPageResponse.getPageItemCount() == 2

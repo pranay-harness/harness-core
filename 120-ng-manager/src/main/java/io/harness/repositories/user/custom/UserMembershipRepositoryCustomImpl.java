@@ -10,8 +10,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwi
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 
 import com.google.inject.Inject;

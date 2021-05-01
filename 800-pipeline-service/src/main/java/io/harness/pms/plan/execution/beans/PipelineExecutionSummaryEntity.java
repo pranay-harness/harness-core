@@ -73,6 +73,8 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @NotEmpty @FdUniqueIndex String planExecutionId;
   @NotEmpty String name;
 
+  @Builder.Default Boolean pipelineDeleted = Boolean.FALSE;
+
   Status internalStatus;
   ExecutionStatus status;
 
@@ -112,6 +114,13 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .field(PlanExecutionSummaryKeys.orgIdentifier)
                  .field(PlanExecutionSummaryKeys.projectIdentifier)
                  .field(PlanExecutionSummaryKeys.planExecutionId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_pipelineId")
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .field(PlanExecutionSummaryKeys.pipelineIdentifier)
                  .build())
         .build();
   }

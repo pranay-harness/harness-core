@@ -11,6 +11,7 @@ import io.harness.event.handlers.QueueNodeExecutionEventHandler;
 import io.harness.event.handlers.QueueTaskAndAddExecutableResponseHandler;
 import io.harness.event.handlers.ResumeNodeExecutionResponseEventHandler;
 import io.harness.event.handlers.SdkResponseEventHandler;
+import io.harness.event.handlers.SpawnChildResponseEventHandler;
 import io.harness.event.handlers.SuspendChainResponseEventHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
@@ -44,6 +45,8 @@ public class SdkNodeExecutionEventHandlerFactory {
         return injector.getInstance(QueueTaskAndAddExecutableResponseHandler.class);
       case SUSPEND_CHAIN:
         return injector.getInstance(SuspendChainResponseEventHandler.class);
+      case SPAWN_CHILD:
+        return injector.getInstance(SpawnChildResponseEventHandler.class);
       default:
         throw new InvalidRequestException("Unknown sdkResponseEventType.");
     }

@@ -252,7 +252,4 @@ public class InstanceDataDaoImpl implements InstanceDataDao {
 
     return query.asList(new FindOptions().limit(batchSize));
   }
-
-  // TODO(utsav): refactor; add "query.and(..." from above three to one here
-  private void enforceActiveInstances() {}
 }

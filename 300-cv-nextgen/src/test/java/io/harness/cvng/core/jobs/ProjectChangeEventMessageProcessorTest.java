@@ -2,6 +2,7 @@ package io.harness.cvng.core.jobs;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,9 +34,12 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
@@ -59,6 +63,7 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTestBase {
   @Inject private VerificationJobService verificationJobService;
   @Inject private MetricPackService metricPackService;
   @Mock private NextGenService nextGenService;
+  @Inject private HPersistence hPersistence;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -230,6 +235,25 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTestBase {
     // CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER)).isNotNull();
     verify(activitySourceService, times(1))
         .createDefaultCDNGActivitySource(eq(accountId), eq(orgIdentifier), eq(projectIdentifier));
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testProcessUpdateAction_CheckCVDefualtProjectCreation() {
+    String accountId = generateUuid();
+    String orgIdentifier = generateUuid();
+    String projectIdentifier = generateUuid();
+
+    ProjectDTO projectDTO = ProjectDTO.builder().modules(Arrays.asList(ModuleType.CV)).build();
+    when(nextGenService.getProject(any(), any(), any())).thenReturn(projectDTO);
+    projectChangeEventMessageProcessor.processUpdateAction(ProjectEntityChangeDTO.newBuilder()
+                                                               .setAccountIdentifier(accountId)
+                                                               .setOrgIdentifier(orgIdentifier)
+                                                               .setIdentifier(projectIdentifier)
+                                                               .build());
+    assertThat(hPersistence.createQuery(VerificationJob.class).filter(VerificationJobKeys.isDefaultJob, true).asList())
+        .hasSize(4);
   }
 
   private boolean doesClassContainField(Class<?> clazz, String fieldName) {

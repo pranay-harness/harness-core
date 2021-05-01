@@ -14,6 +14,7 @@ import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -55,6 +56,7 @@ import org.mongodb.morphia.query.Sort;
 @Slf4j
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CloudFormationRollbackStackState extends CloudFormationState {
   private static final String COMMAND_UNIT = "Rollback Stack";
 

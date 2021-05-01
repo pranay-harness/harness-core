@@ -50,7 +50,8 @@
                             node_info |
                             pod_info |
                             workload_info |
-                            node_pool</includes>
+                            node_pool |
+                            ce_recommendations</includes>
                             <excludes />
                             <inputSchema>public</inputSchema>
                         </database>

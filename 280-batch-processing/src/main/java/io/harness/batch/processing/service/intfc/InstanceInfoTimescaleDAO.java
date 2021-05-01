@@ -6,24 +6,24 @@ import io.harness.event.payloads.Lifecycle;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 
 import java.util.List;
-import lombok.NonNull;
+import javax.validation.constraints.NotNull;
 
 public interface InstanceInfoTimescaleDAO {
-  void insertIntoNodeInfo(@NonNull InstanceInfo instanceInfo);
+  void insertIntoNodeInfo(@NotNull InstanceInfo instanceInfo);
 
-  void insertIntoNodeInfo(@NonNull List<InstanceInfo> instanceInfoList);
+  void insertIntoNodeInfo(@NotNull List<InstanceInfo> instanceInfoList);
 
-  void insertIntoWorkloadInfo(@NonNull String accountId, @NonNull K8sWorkloadSpec workloadSpec);
+  void insertIntoWorkloadInfo(@NotNull String accountId, @NotNull K8sWorkloadSpec workloadSpec);
 
-  void insertIntoPodInfo(@NonNull List<InstanceInfo> instanceInfoList);
+  void insertIntoPodInfo(@NotNull List<InstanceInfo> instanceInfoList);
 
-  void insertIntoPodInfo(@NonNull InstanceInfo instanceInfo);
+  void insertIntoPodInfo(@NotNull InstanceInfo instanceInfo);
 
-  void updatePodStopEvent(@NonNull List<InstanceEvent> instanceEventList);
+  void updatePodStopEvent(@NotNull List<InstanceEvent> instanceEventList);
 
-  void updatePodLifecycleEvent(@NonNull String accountId, @NonNull List<Lifecycle> lifecycleList);
+  void updatePodLifecycleEvent(@NotNull String accountId, @NotNull List<Lifecycle> lifecycleList);
 
-  void updateNodeStopEvent(@NonNull List<InstanceEvent> instanceEventList);
+  void updateNodeStopEvent(@NotNull List<InstanceEvent> instanceEventList);
 
-  void updateNodeLifecycleEvent(@NonNull String accountId, @NonNull List<Lifecycle> lifecycleList);
+  void updateNodeLifecycleEvent(@NotNull String accountId, @NotNull List<Lifecycle> lifecycleList);
 }

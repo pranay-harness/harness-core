@@ -22,6 +22,9 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.RbacCoreRegistrars;
+import io.harness.telemetry.AbstractTelemetryModule;
+import io.harness.telemetry.TelemetryConfiguration;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -124,6 +127,12 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(AccountService.class).toInstance(mock(AccountService.class));
         bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+      }
+    });
+    modules.add(new AbstractTelemetryModule() {
+      @Override
+      public TelemetryConfiguration telemetryConfiguration() {
+        return SegmentConfiguration.builder().build();
       }
     });
 

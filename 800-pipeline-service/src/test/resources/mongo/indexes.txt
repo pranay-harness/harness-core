@@ -71,6 +71,7 @@ pipelinesPMS {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pipelinesPMS {"name": "unique_accountId_organizationId_projectId_pipelineId", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 planExecutions {"name": "id_status_idx", "background": true} {"_id": 1, "status": 1}
 planExecutions {"name": "status_idx", "background": true} {"status": 1}
+planExecutionsSummary {"name": "accountId_organizationId_projectId_pipelineId", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "pipelineIdentifier": 1}
 planExecutionsSummary {"name": "createdAt_1", "background": true} {"createdAt": 1}
 planExecutionsSummary {"name": "planExecutionId_1", "unique": true} {"planExecutionId": 1}
 planExecutionsSummary {"name": "unique_accountId_organizationId_projectId_planExecutionId", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "planExecutionId": 1}

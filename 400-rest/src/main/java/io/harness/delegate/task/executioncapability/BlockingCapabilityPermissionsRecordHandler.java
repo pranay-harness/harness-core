@@ -7,6 +7,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
@@ -41,7 +43,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class BlockingCapabilityPermissionsRecordHandler
     implements MongoPersistenceIterator.Handler<CapabilityTaskSelectionDetails>,
                CapabilitySubjectPermissionCrudObserver, DelegateObserver {

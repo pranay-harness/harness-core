@@ -1,8 +1,10 @@
 package io.harness.beans.yaml.extended.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.number;
 
-import io.harness.common.SwaggerConstants;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
@@ -18,6 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @TypeAlias("resource")
+@OwnedBy(CI)
 public class ContainerResource {
   @NotNull Limits limits;
 

@@ -16,7 +16,8 @@ import java.lang.annotation.Target;
  * If the identiy or accountId is defined with invalid value, message will not be sent
  *
  * for instance,
- * &#064;SendTrackEvent(eventName = "delete_start", triggerAt = TriggerAt.PRE_METHOD, identity =
+ * &#064;SendTrackEvent(eventName = "delete_start", category = Category.SIGNUP, triggerAt = TriggerAt.PRE_METHOD,
+ * identity =
  * &#064;Input(argumentIndex = 0), properties =
  *       {
  *         &#064;EventProperty(key = "method", value = &#064;Input(value = "delete"))
@@ -28,7 +29,7 @@ import java.lang.annotation.Target;
  * HashMap&lt;String, Object&gt; properties = new HashMap<>();
  * properties.put("method,"delete");
  * TelemetryReporter.sendTrackEvent("delete_start", identity, null,properties, ImmutableMap.builder()
- * .put(SegmentDestination.NATERO, true).put(SegmentDestination.ALL, false);
+ * .put(SegmentDestination.NATERO, true).put(SegmentDestination.ALL, false), Category.SIGNUP);
  */
 @OwnedBy(HarnessTeam.GTM)
 @Repeatable(SendTrackEvents.class)
@@ -36,6 +37,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface SendTrackEvent {
   String eventName();
+  String category();
   Input identity() default @Input;
   Input accountId() default @Input;
   TriggerAt triggerAt() default TriggerAt.POST_METHOD;
