@@ -86,17 +86,23 @@ public class DatadogState extends AbstractMetricAnalysisState {
   private static final int DATA_COLLECTION_RATE_MINS = 5;
   private static final URL DATADOG_URL = DatadogState.class.getResource("/apm/datadog.yml");
   private static final URL DATADOG_METRICS_URL = DatadogState.class.getResource("/apm/datadog_metrics.yml");
-  private static final String DATADOG_METRICS_YAML, DATADOG_YAML;
+  private static final Map<String, List<Metric>> metricsMap;
+  private static final Map<String, MetricInfo> metricInfos;
   static {
     String tmpDatadogMetricsYaml = "", tmpDatadogYaml = "";
+    Map<String, List<Metric>> tmpMetricsMap = new HashMap<>();
+    Map<String, MetricInfo> tmpMetricInfos = new HashMap<>();
     try {
       tmpDatadogMetricsYaml = Resources.toString(DATADOG_METRICS_URL, Charsets.UTF_8);
       tmpDatadogYaml = Resources.toString(DATADOG_URL, Charsets.UTF_8);
+      YamlUtils yamlUtils = new YamlUtils();
+      tmpMetricsMap = yamlUtils.read(tmpDatadogMetricsYaml, new TypeReference<Map<String, List<Metric>>>() {});
+      tmpMetricInfos = yamlUtils.read(tmpDatadogYaml, new TypeReference<Map<String, MetricInfo>>() {});
     } catch (IOException ex) {
       log.error("Unable to initialize datadog metrics yaml");
     }
-    DATADOG_METRICS_YAML = tmpDatadogMetricsYaml;
-    DATADOG_YAML = tmpDatadogYaml;
+    metricsMap = tmpMetricsMap;
+    metricInfos = tmpMetricInfos;
   }
 
   public DatadogState(String name) {
@@ -274,11 +280,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
 
   public static String getMetricTypeForMetric(String metricName, DatadogCVServiceConfiguration cvConfig) {
     try {
-      YamlUtils yamlUtils = new YamlUtils();
-
-      Map<String, List<Metric>> metricsMap =
-          yamlUtils.read(DATADOG_METRICS_YAML, new TypeReference<Map<String, List<Metric>>>() {});
-      List<Metric> metrics = metricsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
+      List<Metric> metrics = clonedMetricsMap().values().stream().flatMap(List::stream).collect(Collectors.toList());
       Optional<Metric> matchedMetric =
           metrics.stream().filter(metric -> metric.getMetricName().equals(metricName)).findAny();
       if (matchedMetric.isPresent()) {
@@ -304,123 +306,115 @@ public class DatadogState extends AbstractMetricAnalysisState {
   public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(Optional<String> datadogServiceName,
       Optional<List<String>> metricNames, Optional<String> applicationFilter,
       Optional<Map<String, Set<Metric>>> customMetrics, Optional<DeploymentType> deploymentType) {
-    YamlUtils yamlUtils = new YamlUtils();
-
-    try {
-      Map<String, MetricInfo> metricInfos =
-          yamlUtils.read(DATADOG_YAML, new TypeReference<Map<String, MetricInfo>>() {});
-
-      if (!metricNames.isPresent()) {
-        metricNames = Optional.of(new ArrayList<>());
-      }
-
-      String hostFilter;
-      if (deploymentType.isPresent() && deploymentType.get() == DeploymentType.ECS) {
-        parseMetricInfo(metricInfos.get("Docker"), DD_ECS_HOST_NAME);
-        hostFilter = DD_ECS_HOST_NAME;
-      } else {
-        parseMetricInfo(metricInfos.get("Docker"), DD_K8s_HOST_NAME);
-        hostFilter = DD_K8s_HOST_NAME;
-      }
-      Map<String, Metric> metricMap =
-          metrics(metricNames, datadogServiceName, customMetrics, applicationFilter, Optional.of(hostFilter));
-
-      // metrics list will have list of metric objects for given MetricNames
-      List<Metric> metrics = new ArrayList<>();
-      for (String metricName : metricNames.get()) {
-        if (!metricMap.containsKey(metricName)) {
-          throw new WingsException("metric name not found" + metricName);
-        }
-        metrics.add(metricMap.get(metricName));
-      }
-
-      Map<String, List<APMMetricInfo>> result = new HashMap<>();
-      for (Metric metric : metrics) {
-        APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
-        MetricInfo metricInfo = metricInfos.get(metric.getDatadogMetricType());
-
-        String metricUrl = getMetricURL(metricInfo, metric.getDatadogMetricType(), deploymentType);
-        newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
-        newMetricInfoBuilder.metricType(MetricType.valueOf(metric.getMlMetricType()));
-        newMetricInfoBuilder.tag(metric.getDatadogMetricType());
-        newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
-        newMetricInfoBuilder.metricName(metric.getDisplayName());
-
-        if (Arrays.asList("System", "Kubernetes", "Docker", "ECS").contains(metric.getDatadogMetricType())) {
-          metricUrl = metricUrl.replace("${query}", metric.getMetricName());
-          if (applicationFilter.isPresent()) {
-            metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter.get());
-          }
-
-          metricUrl = parseTransformationUnit(metricUrl, deploymentType, metric);
-
-          if (!result.containsKey(metricUrl)) {
-            result.put(metricUrl, new ArrayList<>());
-          }
-          result.get(metricUrl).add(newMetricInfoBuilder.build());
-        } else if (metric.getDatadogMetricType().equals("Servlet")) {
-          if (datadogServiceName.isPresent()) {
-            metricUrl = metricUrl.replace("${datadogServiceName}", datadogServiceName.get());
-          }
-          metricUrl = metricUrl.replace("${query}", metric.getMetricName());
-
-          if (!applicationFilter.isPresent()) {
-            applicationFilter = Optional.of("");
-          }
-          metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter.get());
-
-          if (!result.containsKey(metricUrl)) {
-            result.put(metricUrl, new ArrayList<>());
-          }
-          result.get(metricUrl).add(newMetricInfoBuilder.build());
-        } else {
-          throw new WingsException("Unsupported template type for" + metric);
-        }
-      }
-
-      if (customMetrics.isPresent()) {
-        for (String identifier : customMetrics.get().keySet()) {
-          // identifier can be host_identifier or application filter
-          if (deploymentType.isPresent()) {
-            parseMetricInfo(metricInfos.get("Custom"), identifier);
-          } else {
-            parseMetricInfo(metricInfos.get("Custom"), DD_K8s_HOST_NAME);
-          }
-          Set<Metric> metricSet = customMetrics.get().get(identifier);
-          metricSet.forEach(metric -> {
-            MetricInfo metricInfo = metricInfos.get(metric.getDatadogMetricType());
-
-            APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
-            // update the response mapper with the transaction/group name.
-            Map<String, ResponseMapper> responseMapperMap = metricInfo.responseMapperMap();
-            String txnName = "Transaction Group 1";
-            if (isNotEmpty(metric.getTxnName())) {
-              txnName = metric.getTxnName();
-            }
-            responseMapperMap.put("txnName", ResponseMapper.builder().fieldName("txnName").fieldValue(txnName).build());
-            newMetricInfoBuilder.responseMappers(responseMapperMap);
-            newMetricInfoBuilder.metricType(MetricType.valueOf(metric.getMlMetricType()));
-            newMetricInfoBuilder.tag(metric.getDatadogMetricType());
-            newMetricInfoBuilder.metricName(metric.getDisplayName());
-
-            String metricUrl = getMetricURL(metricInfo, metric.getDatadogMetricType(), deploymentType);
-            metricUrl = metricUrl.replace("${query}", metric.getMetricName());
-            if (deploymentType.isPresent()) {
-              metricUrl = metricUrl.replace("${host_identifier}", identifier);
-            } else {
-              metricUrl = metricUrl.replace("${applicationFilter}", identifier);
-            }
-            if (!result.containsKey(metricUrl)) {
-              result.put(metricUrl, new ArrayList<>());
-            }
-            result.get(metricUrl).add(newMetricInfoBuilder.build());
-          });
-        }
-      }
-      return result;
-    } catch (RuntimeException | IOException ex) {
-      throw new WingsException("Unable to get metric info", ex);
+    Map<String, MetricInfo> cloneMetricInfoMap = clonedMetricInfos();
+    if (!metricNames.isPresent()) {
+      metricNames = Optional.of(new ArrayList<>());
     }
+
+    String hostFilter;
+    if (deploymentType.isPresent() && deploymentType.get() == DeploymentType.ECS) {
+      parseMetricInfo(cloneMetricInfoMap.get("Docker"), DD_ECS_HOST_NAME);
+      hostFilter = DD_ECS_HOST_NAME;
+    } else {
+      parseMetricInfo(cloneMetricInfoMap.get("Docker"), DD_K8s_HOST_NAME);
+      hostFilter = DD_K8s_HOST_NAME;
+    }
+    Map<String, Metric> metricMap =
+        metrics(metricNames, datadogServiceName, customMetrics, applicationFilter, Optional.of(hostFilter));
+
+    // metrics list will have list of metric objects for given MetricNames
+    List<Metric> metrics = new ArrayList<>();
+    for (String metricName : metricNames.get()) {
+      if (!metricMap.containsKey(metricName)) {
+        throw new WingsException("metric name not found" + metricName);
+      }
+      metrics.add(metricMap.get(metricName));
+    }
+
+    Map<String, List<APMMetricInfo>> result = new HashMap<>();
+    for (Metric metric : metrics) {
+      APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
+      MetricInfo metricInfo = cloneMetricInfoMap.get(metric.getDatadogMetricType());
+
+      String metricUrl = getMetricURL(metricInfo, metric.getDatadogMetricType(), deploymentType);
+      newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
+      newMetricInfoBuilder.metricType(MetricType.valueOf(metric.getMlMetricType()));
+      newMetricInfoBuilder.tag(metric.getDatadogMetricType());
+      newMetricInfoBuilder.responseMappers(metricInfo.responseMapperMap());
+      newMetricInfoBuilder.metricName(metric.getDisplayName());
+
+      if (Arrays.asList("System", "Kubernetes", "Docker", "ECS").contains(metric.getDatadogMetricType())) {
+        metricUrl = metricUrl.replace("${query}", metric.getMetricName());
+        if (applicationFilter.isPresent()) {
+          metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter.get());
+        }
+
+        metricUrl = parseTransformationUnit(metricUrl, deploymentType, metric);
+
+        if (!result.containsKey(metricUrl)) {
+          result.put(metricUrl, new ArrayList<>());
+        }
+        result.get(metricUrl).add(newMetricInfoBuilder.build());
+      } else if (metric.getDatadogMetricType().equals("Servlet")) {
+        if (datadogServiceName.isPresent()) {
+          metricUrl = metricUrl.replace("${datadogServiceName}", datadogServiceName.get());
+        }
+        metricUrl = metricUrl.replace("${query}", metric.getMetricName());
+
+        if (!applicationFilter.isPresent()) {
+          applicationFilter = Optional.of("");
+        }
+        metricUrl = metricUrl.replace("${applicationFilter}", applicationFilter.get());
+
+        if (!result.containsKey(metricUrl)) {
+          result.put(metricUrl, new ArrayList<>());
+        }
+        result.get(metricUrl).add(newMetricInfoBuilder.build());
+      } else {
+        throw new WingsException("Unsupported template type for" + metric);
+      }
+    }
+
+    if (customMetrics.isPresent()) {
+      for (String identifier : customMetrics.get().keySet()) {
+        // identifier can be host_identifier or application filter
+        if (deploymentType.isPresent()) {
+          parseMetricInfo(cloneMetricInfoMap.get("Custom"), identifier);
+        } else {
+          parseMetricInfo(cloneMetricInfoMap.get("Custom"), DD_K8s_HOST_NAME);
+        }
+        Set<Metric> metricSet = customMetrics.get().get(identifier);
+        metricSet.forEach(metric -> {
+          MetricInfo metricInfo = cloneMetricInfoMap.get(metric.getDatadogMetricType());
+
+          APMMetricInfoBuilder newMetricInfoBuilder = APMMetricInfo.builder();
+          // update the response mapper with the transaction/group name.
+          Map<String, ResponseMapper> responseMapperMap = metricInfo.responseMapperMap();
+          String txnName = "Transaction Group 1";
+          if (isNotEmpty(metric.getTxnName())) {
+            txnName = metric.getTxnName();
+          }
+          responseMapperMap.put("txnName", ResponseMapper.builder().fieldName("txnName").fieldValue(txnName).build());
+          newMetricInfoBuilder.responseMappers(responseMapperMap);
+          newMetricInfoBuilder.metricType(MetricType.valueOf(metric.getMlMetricType()));
+          newMetricInfoBuilder.tag(metric.getDatadogMetricType());
+          newMetricInfoBuilder.metricName(metric.getDisplayName());
+
+          String metricUrl = getMetricURL(metricInfo, metric.getDatadogMetricType(), deploymentType);
+          metricUrl = metricUrl.replace("${query}", metric.getMetricName());
+          if (deploymentType.isPresent()) {
+            metricUrl = metricUrl.replace("${host_identifier}", identifier);
+          } else {
+            metricUrl = metricUrl.replace("${applicationFilter}", identifier);
+          }
+          if (!result.containsKey(metricUrl)) {
+            result.put(metricUrl, new ArrayList<>());
+          }
+          result.get(metricUrl).add(newMetricInfoBuilder.build());
+        });
+      }
+    }
+    return result;
   }
 
   private static String parseTransformationUnit(
@@ -479,11 +473,8 @@ public class DatadogState extends AbstractMetricAnalysisState {
   public static Map<String, Metric> metrics(Optional<List<String>> metricNames, Optional<String> datadogServiceName,
       Optional<Map<String, Set<Metric>>> customMetricsByTag, Optional<String> applicationFilter,
       Optional<String> hostFilter) {
-    YamlUtils yamlUtils = new YamlUtils();
+    Map<String, List<Metric>> clonedMetricsMap = clonedMetricsMap();
     try {
-      Map<String, List<Metric>> metrics =
-          yamlUtils.read(DATADOG_METRICS_YAML, new TypeReference<Map<String, List<Metric>>>() {});
-
       if (!metricNames.isPresent()) {
         metricNames = Optional.of(new ArrayList<>());
       }
@@ -491,7 +482,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
       if (datadogServiceName.isPresent()) {
         // add the servlet metrics to this list.
         List<String> servletMetrics = new ArrayList<>();
-        metrics.get("Servlet").forEach(servletMetric -> { servletMetrics.add(servletMetric.getMetricName()); });
+        clonedMetricsMap.get("Servlet").forEach(servletMetric -> servletMetrics.add(servletMetric.getMetricName()));
         metricNames.get().addAll(servletMetrics);
       }
 
@@ -499,7 +490,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
       Set<String> metricNamesSet = Sets.newHashSet(metricNames.get());
 
       // add servlet, docker, ecs metrics to the map
-      for (Map.Entry<String, List<Metric>> entry : metrics.entrySet()) {
+      for (Map.Entry<String, List<Metric>> entry : clonedMetricsMap.entrySet()) {
         entry.getValue().forEach(metric -> {
           if (metricNamesSet.contains(metric.getMetricName())) {
             if (metric.getTags() == null) {
@@ -539,14 +530,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
   }
 
   public static List<Metric> metricNames() {
-    YamlUtils yamlUtils = new YamlUtils();
-    try {
-      Map<String, List<Metric>> metricsMap =
-          yamlUtils.read(DATADOG_METRICS_YAML, new TypeReference<Map<String, List<Metric>>>() {});
-      return metricsMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
-    } catch (Exception ex) {
-      throw new WingsException("Unable to load datadog metrics", ex);
-    }
+    return clonedMetricsMap().values().stream().flatMap(Collection::stream).collect(Collectors.toList());
   }
 
   public String getMetrics() {
@@ -621,9 +605,25 @@ public class DatadogState extends AbstractMetricAnalysisState {
     return new HashMap<>();
   }
 
+  private static Map<String, List<Metric>> clonedMetricsMap() {
+    Map<String, List<Metric>> clonedMetricsMap = new HashMap<>();
+    metricsMap.forEach((name, metrics) -> {
+      List<Metric> clonedMetrics = new ArrayList<>();
+      metrics.forEach(metric -> clonedMetrics.add(metric.clone()));
+      clonedMetricsMap.put(name, clonedMetrics);
+    });
+    return clonedMetricsMap;
+  }
+
+  private static Map<String, MetricInfo> clonedMetricInfos() {
+    Map<String, MetricInfo> clonedMetricInfos = new HashMap<>();
+    metricInfos.forEach((name, metricInfo) -> clonedMetricInfos.put(name, metricInfo.clone()));
+    return clonedMetricInfos;
+  }
+
   @Data
   @Builder
-  public static class Metric {
+  public static class Metric implements Cloneable {
     private String metricName;
     private String mlMetricType;
     private String datadogMetricType;
@@ -632,21 +632,50 @@ public class DatadogState extends AbstractMetricAnalysisState {
     private String transformation24x7;
     private Set<String> tags;
     private String txnName; // this field is optional. It can be extracted from the response
+
+    @Override
+    public Metric clone() {
+      return Metric.builder()
+          .metricName(metricName)
+          .mlMetricType(mlMetricType)
+          .datadogMetricType(datadogMetricType)
+          .displayName(displayName)
+          .transformation(transformation)
+          .transformation24x7(transformation24x7)
+          .tags(isEmpty(tags) ? tags : Sets.newHashSet(tags))
+          .txnName(txnName)
+          .build();
+    }
   }
 
   @Data
   @Builder
-  public static class MetricInfo {
+  public static class MetricInfo implements Cloneable {
     private String url;
     private String urlEcs;
     private String url24x7;
-    private List<APMMetricInfo.ResponseMapper> responseMappers;
-    public Map<String, APMMetricInfo.ResponseMapper> responseMapperMap() {
-      Map<String, APMMetricInfo.ResponseMapper> result = new HashMap<>();
-      for (APMMetricInfo.ResponseMapper responseMapper : responseMappers) {
+    private List<ResponseMapper> responseMappers;
+    public Map<String, ResponseMapper> responseMapperMap() {
+      Map<String, ResponseMapper> result = new HashMap<>();
+      for (ResponseMapper responseMapper : responseMappers) {
         result.put(responseMapper.getFieldName(), responseMapper);
       }
       return result;
+    }
+
+    @Override
+    public MetricInfo clone() {
+      List<ResponseMapper> clonedResponseMappers = new ArrayList<>();
+      if (isNotEmpty(responseMappers)) {
+        responseMappers.forEach(responseMapper -> clonedResponseMappers.add(responseMapper.clone()));
+      }
+
+      return MetricInfo.builder()
+          .url(url)
+          .urlEcs(urlEcs)
+          .url24x7(url24x7)
+          .responseMappers(clonedResponseMappers)
+          .build();
     }
   }
 }
