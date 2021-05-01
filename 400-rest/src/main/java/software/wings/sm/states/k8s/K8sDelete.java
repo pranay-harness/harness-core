@@ -9,6 +9,7 @@ import static software.wings.sm.StateType.K8S_DELETE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -65,6 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class K8sDelete extends AbstractK8sState {
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;

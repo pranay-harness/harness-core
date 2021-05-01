@@ -12,6 +12,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -73,6 +74,7 @@ import org.slf4j.Logger;
 @FieldNameConstants(innerTypeName = "APMVerificationStateKeys")
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class APMVerificationState extends AbstractMetricAnalysisState {
   public APMVerificationState(String name) {
     super(name, StateType.APM_VERIFICATION);

@@ -360,6 +360,8 @@ aeriform("//953-git-sync-commons:module")
 
 aeriform("//954-connector-beans:module")
 
+aeriform("//954-connector-beans:tests")
+
 aeriform("//955-account-mgmt:module")
 
 aeriform("//955-alert-beans:module")
