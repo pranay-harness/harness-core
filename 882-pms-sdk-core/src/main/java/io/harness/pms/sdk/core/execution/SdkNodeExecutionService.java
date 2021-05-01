@@ -7,7 +7,6 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
@@ -27,9 +26,6 @@ public interface SdkNodeExecutionService {
   void queueNodeExecution(NodeExecutionProto nodeExecution);
 
   void suspendChainExecution(String currentNodeExecutionId, SuspendChainRequest suspendChainRequest);
-
-  void queueTaskAndAddExecutableResponse(
-      QueueTaskRequest queueTaskRequest, AddExecutableResponseRequest addExecutableResponseRequest);
 
   void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds);
@@ -51,4 +47,6 @@ public interface SdkNodeExecutionService {
   void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo);
 
   void spawnChild(SpawnChildRequest spawnChildRequest);
+
+  void queueTaskRequest(QueueTaskRequest queueTaskRequest);
 }

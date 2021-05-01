@@ -8,14 +8,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.exceptionmanager.ExceptionManager;
-import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.execution.ErrorDataException;
-import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.supplier.ThrowingSupplier;
@@ -30,7 +27,6 @@ import java.util.stream.Collectors;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class StrategyHelper {
   @Inject private ExceptionManager exceptionManager;
-  @Inject private ResponseDataMapper responseDataMapper;
 
   public static ThrowingSupplier buildResponseDataSupplier(Map<String, ResponseData> responseDataMap) {
     return () -> {
@@ -67,15 +63,5 @@ public class StrategyHelper {
           .addAllFailureTypes(failureData.getFailureTypesList());
     }
     return stepResponseBuilder.failureInfo(failureInfoBuilder.build()).build();
-  }
-
-  public AddExecutableResponseRequest getAddExecutableResponseRequest(
-      String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds) {
-    return AddExecutableResponseRequest.newBuilder()
-        .setNodeExecutionId(nodeExecutionId)
-        .setStatus(status)
-        .setExecutableResponse(executableResponse)
-        .addAllCallbackIds(callbackIds)
-        .build();
   }
 }

@@ -12,7 +12,6 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.SkipTaskExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
-import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest.RequestCase;
@@ -95,8 +94,7 @@ public class TaskStrategy implements ExecuteStrategy {
       return;
     }
 
-    AddExecutableResponseRequest addExecutableResponseRequest = strategyHelper.getAddExecutableResponseRequest(
-        nodeExecution.getUuid(), TASK_WAITING,
+    ExecutableResponse executableResponse =
         ExecutableResponse.newBuilder()
             .setTask(
                 TaskExecutableResponse.newBuilder()
@@ -105,13 +103,15 @@ public class TaskStrategy implements ExecuteStrategy {
                     .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
                     .setTaskName(taskRequest.getDelegateTaskRequest().getTaskName())
                     .build())
-            .build(),
-        Collections.emptyList());
+            .build();
+
     QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
                                             .setNodeExecutionId(nodeExecution.getUuid())
                                             .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
                                             .setTaskRequest(taskRequest)
+                                            .setExecutableResponse(executableResponse)
+                                            .setStatus(TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskAndAddExecutableResponse(queueTaskRequest, addExecutableResponseRequest);
+    sdkNodeExecutionService.queueTaskRequest(queueTaskRequest);
   }
 }
