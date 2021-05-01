@@ -5,11 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
-import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
+import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
@@ -35,23 +35,17 @@ public class ScmManagerGitHelper implements ScmGitHelper {
     switch (changeType) {
       case ADD:
         final CreateFileResponse createFileResponse = doScmCreateFile(yaml, gitBranchInfo, infoForPush);
-        if (createFileResponse.getStatus() == 0) {
-          throw new InvalidRequestException("Git push failed");
-        }
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createFileResponse.getStatus());
         return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush);
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
-        if (deleteFileResponse.getStatus() == 0) {
-          throw new InvalidRequestException("Git push failed");
-        }
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(deleteFileResponse.getStatus());
         return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush);
       case RENAME:
         throw new NotImplementedException("Not implemented");
       case MODIFY:
         final UpdateFileResponse updateFileResponse = doScmUpdateFile(yaml, gitBranchInfo, infoForPush);
-        if (updateFileResponse.getStatus() == 0) {
-          throw new InvalidRequestException("Git push failed");
-        }
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(updateFileResponse.getStatus());
         return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush);
       default:
         throw new EnumConstantNotPresentException(changeType.getClass(), "Incorrect changeType");

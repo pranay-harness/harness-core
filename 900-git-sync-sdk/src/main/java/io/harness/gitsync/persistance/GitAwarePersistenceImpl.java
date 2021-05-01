@@ -17,10 +17,11 @@ import io.harness.gitsync.branching.EntityGitBranchMetadata.EntityGitBranchMetad
 import io.harness.gitsync.branching.GitBranchingHelper;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.interceptor.GitEntityInfo;
-import io.harness.gitsync.interceptor.GitSyncBranchThreadLocal;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.scm.EntityToYamlStringUtils;
 import io.harness.gitsync.scm.SCMGitSyncHelper;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.utils.NGYamlUtils;
 
@@ -30,6 +31,7 @@ import com.google.protobuf.StringValue;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -107,7 +109,9 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
       return null;
     }
 
-    final GitEntityInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
+    final GitEntityInfo gitBranchInfo = ((GitSyncBranchContext) Objects.requireNonNull(
+                                             GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT)))
+                                            .getGitBranchInfo();
     final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
     final EntityDetail entityDetail = gitSdkEntityHandlerInterface.getEntityDetail(objectToUpdate);
@@ -150,7 +154,9 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     if (isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
       final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
           gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
-      final GitEntityInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
+      final GitEntityInfo gitBranchInfo = ((GitSyncBranchContext) Objects.requireNonNull(
+                                               GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT)))
+                                              .getGitBranchInfo();
       final List<String> objectId;
       if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
           || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT_BRANCH)
@@ -178,7 +184,6 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
       B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass) {
-    final GitEntityInfo gitBranchInfo = GitSyncBranchThreadLocal.get();
     final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
     final EntityDetail entityDetail = gitSdkEntityHandlerInterface.getEntityDetail(objectToSave);
@@ -187,7 +192,9 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
         && isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
             entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
       final String yamlString = NGYamlUtils.getYamlString(yaml);
-
+      final GitEntityInfo gitBranchInfo = ((GitSyncBranchContext) Objects.requireNonNull(
+                                               GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT)))
+                                              .getGitBranchInfo();
       final ScmPushResponse scmPushResponse =
           scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
 
@@ -341,11 +348,10 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
   private <B extends GitSyncableEntity> B setBranchInObject(B object) {
     // todo(abhinav): in list api when pipeline asks for connector from different branches something extra needs to be
     // done.
-
-    final GitEntityInfo gitEntityInfo = GitSyncBranchThreadLocal.get();
-    if (object != null && gitEntityInfo != null && gitEntityInfo.getBranch() != null
-        && !gitEntityInfo.getBranch().equals(DEFAULT_BRANCH)) {
-      object.setBranch(gitEntityInfo.getBranch());
+    final GitSyncBranchContext gitEntityInfo = GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
+    if (object != null && gitEntityInfo != null && gitEntityInfo.getGitBranchInfo().getBranch() != null
+        && !gitEntityInfo.getGitBranchInfo().getBranch().equals(DEFAULT_BRANCH)) {
+      object.setBranch(gitEntityInfo.getGitBranchInfo().getBranch());
     }
     return object;
   }

@@ -25,4 +25,10 @@ public interface PersistenceWrapper {
   ProgressUpdate fetchForProcessingProgressUpdate(Set<String> busyCorrelationIds, long now);
 
   ProcessedMessageResponse processMessage(WaitInstance waitInstance);
+
+  List<WaitInstance> fetchWaitInstances(String correlationId);
+
+  List<String> fetchNotifyResponseKeys(long limit);
+
+  void deleteNotifyResponses(List<String> responseIds);
 }

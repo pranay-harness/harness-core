@@ -12,7 +12,6 @@ import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.execution.EngineResumeCallback;
-import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -43,7 +42,6 @@ public class PmsSdkCoreKryoRegistrar implements KryoRegistrar {
     // New classes here
     kryo.register(PlanNode.class, 88201);
     kryo.register(ExecutionSweepingOutput.class, 88202);
-    kryo.register(ErrorDataException.class, 88203);
     kryo.register(EngineResumeCallback.class, 88204);
   }
 }
