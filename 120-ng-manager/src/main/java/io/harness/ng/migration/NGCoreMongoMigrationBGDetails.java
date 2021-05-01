@@ -26,7 +26,7 @@ public class NGCoreMongoMigrationBGDetails implements MigrationDetails {
   @Override
   public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
-        .add(Pair.of(1, NoopNGCoreMigration.class))
+        .add(Pair.of(2, NoopNGCoreMigration.class))
         .build();
   }
 }
