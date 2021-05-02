@@ -128,9 +128,13 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     return mongoTemplate.find(query, PlanExecution.class);
   }
 
-  public Status calculateEndStatus(String planExecutionId) {
+  public Status calculateStatus(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
     return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
+  }
+
+  public PlanExecution updateCalculatedStatus(String planExecutionId) {
+    return updateStatus(planExecutionId, calculateStatus(planExecutionId));
   }
 
   private void emitEvent(PlanExecution planExecution) {
