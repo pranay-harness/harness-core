@@ -33,8 +33,6 @@ public interface SdkNodeExecutionService {
 
   void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError);
 
-  Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId);
-
   StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution);
 
   void handleFacilitationResponse(

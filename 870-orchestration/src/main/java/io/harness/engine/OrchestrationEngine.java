@@ -15,6 +15,7 @@ import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -76,7 +77,6 @@ import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +107,7 @@ public class OrchestrationEngine {
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
+  @Inject private InvocationHelper invocationHelper;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -367,12 +368,10 @@ public class OrchestrationEngine {
             nodeExecutionService.updateStatusWithOps(nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class)));
       }
 
-      Map<String, byte[]> byteResponseMap = new HashMap<>();
-      if (isNotEmpty(response)) {
-        response.forEach((k, v) -> byteResponseMap.put(k, v.toByteArray()));
-      }
-      ResumeNodeExecutionEventData data =
-          ResumeNodeExecutionEventData.builder().asyncError(asyncError).response(byteResponseMap).build();
+      ResumeNodeExecutionEventData data = ResumeNodeExecutionEventData.builder()
+                                              .asyncError(asyncError)
+                                              .response(invocationHelper.buildResponseMap(nodeExecution, response))
+                                              .build();
       NodeExecutionEvent resumeEvent = NodeExecutionEvent.builder()
                                            .eventType(NodeExecutionEventType.RESUME)
                                            .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
