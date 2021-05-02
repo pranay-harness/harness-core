@@ -52,7 +52,8 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
   }
 
   @Override
-  public SpecParameters getSpecParameters(String childNodeId) {
+  public SpecParameters getSpecParameters(
+      String childNodeId, PlanCreationContext ctx, StageElementConfig stageElementConfig) {
     return DeploymentStageStepParameters.getStepParameters(childNodeId);
   }
 

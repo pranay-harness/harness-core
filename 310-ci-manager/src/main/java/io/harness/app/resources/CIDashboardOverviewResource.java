@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -54,8 +55,10 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") String startInterval,
-      @NotNull @QueryParam("endInterval") String endInterval) {
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
     LocalDate startDate = LocalDate.parse(startInterval);
     LocalDate endDate = LocalDate.parse(endInterval);
     long interval = ChronoUnit.DAYS.between(startDate, endDate);
@@ -77,7 +80,10 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
     return ResponseDTO.newResponse(ciOverviewDashboardService.getBuildExecutionBetweenIntervals(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
   }
@@ -89,7 +95,10 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
     LocalDate startDate = LocalDate.parse(startInterval);
     LocalDate endDate = LocalDate.parse(endInterval);
     long interval = ChronoUnit.DAYS.between(startDate, endDate);

@@ -98,13 +98,11 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
         || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
       return nexusService.getVersions(artifactStreamAttributes.getRepositoryFormat(), config, encryptionDetails,
-          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName(),
-          artifactStreamAttributes.isSupportForNexusGroupReposEnabled());
+          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
     } else {
       return nexusService.getVersions(config, encryptionDetails, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
-          artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier(),
-          artifactStreamAttributes.isSupportForNexusGroupReposEnabled());
+          artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier());
     }
   }
 

@@ -189,6 +189,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .name("parentId_status_idx")
                  .field(NodeExecutionKeys.parentId)
                  .field(NodeExecutionKeys.status)
+                 .field(NodeExecutionKeys.oldRetry)
                  .build())
         .build();
   }

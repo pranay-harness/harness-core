@@ -26,6 +26,7 @@ import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -58,10 +59,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
-    Preconditions.checkNotNull(
-        stepParameters.getServiceIdentifier().getValue(), "serviceIdentifier is null. Please check your expression.");
-    Preconditions.checkNotNull(
-        stepParameters.getEnvIdentifier().getValue(), "envIdentifier is null. Please check your expression.");
+    validate(stepParameters);
     Instant startTime = clock.instant();
     String activityUuid = activityService.register(accountId,
         DeploymentActivityDTO.builder()
@@ -90,6 +88,16 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     return AsyncExecutableResponse.newBuilder().addCallbackIds(activityUuid).build();
   }
 
+  private void validate(CVNGStepParameter stepParameters) {
+    Preconditions.checkNotNull(stepParameters.getVerificationJobIdentifier(), "verificationJobRef can not be null");
+    Preconditions.checkNotNull(
+        stepParameters.getServiceIdentifier().getValue(), "serviceIdentifier is null. Please check your expression.");
+    Preconditions.checkNotNull(
+        stepParameters.getEnvIdentifier().getValue(), "envIdentifier is null. Please check your expression.");
+    Preconditions.checkNotNull(
+        stepParameters.getDeploymentTag().getValue(), "deployment tag is null. Please check your expression.");
+  }
+
   private String getActivityName(CVNGStepParameter stepParameters) {
     return "CD Nextgen - " + stepParameters.getServiceIdentifier().getValue() + " - "
         + stepParameters.getDeploymentTag().getValue();
@@ -105,7 +113,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
 
   @Value
   @Builder
-  public static class CVNGResponseData implements ResponseData {
+  public static class CVNGResponseData implements ResponseData, ProgressData {
     String activityId;
     ActivityStatusDTO activityStatusDTO;
   }

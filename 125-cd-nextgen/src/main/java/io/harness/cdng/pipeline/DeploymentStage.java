@@ -1,9 +1,12 @@
 package io.harness.cdng.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.deploymentstage.DeploymentStageVisitorHelper;
-import io.harness.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pipeline.executions.NGStageType;
 import io.harness.pms.yaml.ParameterField;
@@ -28,6 +31,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("Deployment")
 @SimpleVisitorHelper(helperClass = DeploymentStageVisitorHelper.class)
 @TypeAlias("deploymentStage")
+@OwnedBy(CDC)
 public class DeploymentStage implements CDStage, Visitable {
   @JsonIgnore public static String DEPLOYMENT_NAME = "Deployment";
   @JsonIgnore public static NGStageType DEPLOYMENT_STAGE_TYPE = NGStageType.builder().type(DEPLOYMENT_NAME).build();

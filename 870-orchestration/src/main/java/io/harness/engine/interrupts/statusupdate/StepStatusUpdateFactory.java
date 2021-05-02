@@ -16,6 +16,7 @@ public class StepStatusUpdateFactory {
   @Inject PausedStepStatusUpdate pausedStepStatusUpdate;
   @Inject ResumeStepStatusUpdate resumeStepStatusUpdate;
   @Inject TerminalStepStatusUpdate terminalStepStatusUpdate;
+  @Inject AbortAndRunningStepStatusUpdate abortAndRunningStepStatusUpdate;
 
   public StepStatusUpdate obtainStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
     switch (stepStatusUpdateInfo.getStatus()) {
@@ -27,6 +28,9 @@ public class StepStatusUpdateFactory {
         return pausedStepStatusUpdate;
       case QUEUED:
         return resumeStepStatusUpdate;
+      case RUNNING:
+      case ABORTED:
+        return abortAndRunningStepStatusUpdate;
       default:
         if (StatusUtils.isFinalStatus(stepStatusUpdateInfo.getStatus())) {
           return terminalStepStatusUpdate;

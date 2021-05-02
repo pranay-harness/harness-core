@@ -231,4 +231,4 @@ replace_key_value resourceGroupServiceConfig.mongo.indexManagerMode "$MONGO_INDE
 
 replace_key_value auditServiceConfig.mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
 
-replace_key_value resourceGroupServiceConfig.enableResourceGroup "$ENABLE_RESOURCE_GROUP" 
+replace_key_value resourceGroupServiceConfig.enableResourceGroup "${ENABLE_RESOURCE_GROUP:-false}" 

@@ -167,7 +167,10 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Sm
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SpotInstConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.sourcerepoprovider.GitConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.sourcerepoprovider.SourceRepoProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.APMConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.BugsnagConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.DatadogConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.InstanaConfigYamlHandler;
@@ -399,6 +402,12 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(InstanaConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SCALYR.name())
         .to(ScalyrConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.DATA_DOG.name())
+        .to(DatadogConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.APM_VERIFICATION.name())
+        .to(APMConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.BUG_SNAG.name())
+        .to(BugsnagConfigYamlHandler.class);
 
     MapBinder<String, CVConfigurationYamlHandler> cvConfigYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CVConfigurationYamlHandler.class);

@@ -17,4 +17,8 @@ public class PlatformPermissions {
   public static final String VIEW_PROJECT_PERMISSION = "core_project_view";
   public static final String EDIT_PROJECT_PERMISSION = "core_project_edit";
   public static final String CREATE_PROJECT_PERMISSION = "core_project_create";
+  public static final String VIEW_USERGROUP_PERMISSION = "core_usergroup_view";
+  public static final String MANAGE_USERGROUP_PERMISSION = "core_usergroup_manage";
+  public static final String VIEW_USER_PERMISSION = "core_user_view";
+  public static final String MANAGE_USER_PERMISSION = "core_user_manage";
 }

@@ -1,9 +1,11 @@
 package io.harness.engine.facilitation;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.PreFacilitationCheck;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -16,13 +18,14 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class SkipPreFacilitationChecker extends ExpressionEvalPreFacilitationChecker {
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private OrchestrationEngine orchestrationEngine;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
-  protected PreFacilitationCheck performCheck(NodeExecution nodeExecution) {
+  protected ExecutionCheck performCheck(NodeExecution nodeExecution) {
     log.info("Checking If Node should be Skipped");
     Ambiance ambiance = nodeExecution.getAmbiance();
     String skipCondition = nodeExecution.getNode().getSkipCondition();
@@ -42,13 +45,13 @@ public class SkipPreFacilitationChecker extends ExpressionEvalPreFacilitationChe
                       SkipInfo.newBuilder().setSkipCondition(skipCondition).setEvaluatedCondition(true).build())
                   .build();
           orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), response);
-          return PreFacilitationCheck.builder().proceed(false).reason("Skip Condition Evaluated to true").build();
+          return ExecutionCheck.builder().proceed(false).reason("Skip Condition Evaluated to true").build();
         }
-        return PreFacilitationCheck.builder().proceed(true).reason("Skip Condition Evaluated to false").build();
+        return ExecutionCheck.builder().proceed(true).reason("Skip Condition Evaluated to false").build();
       } catch (Exception ex) {
         return handleExpressionEvaluationError(nodeExecution.getUuid(), ex);
       }
     }
-    return PreFacilitationCheck.builder().proceed(true).reason("No Skip Condition Configured").build();
+    return ExecutionCheck.builder().proceed(true).reason("No Skip Condition Configured").build();
   }
 }

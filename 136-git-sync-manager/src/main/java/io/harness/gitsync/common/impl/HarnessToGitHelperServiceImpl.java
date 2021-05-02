@@ -3,6 +3,7 @@ package io.harness.gitsync.common.impl;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCED;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -29,6 +30,7 @@ import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
+import io.harness.gitsync.scm.ScmGitUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
@@ -80,7 +82,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     final InfoForGitPushBuilder infoForGitPushBuilder = InfoForGitPush.builder();
     final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(
         entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
-    final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType);
+    final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType, branch);
     if (gitSyncEntityDTO != null) {
       if (filePath != null) {
         if (!gitSyncEntityDTO.getEntityGitPath().equals(filePath)) {
@@ -163,9 +165,14 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
           ()
               -> syncNewlyCreatedBranch(entityRef.getAccountIdentifier(), yamlGitConfigDTO.getIdentifier(),
                   yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
-                  pushInfo.getBranchName(), pushInfo.getFilePath(), yamlGitConfigDTO.getRepo()));
+                  pushInfo.getBranchName(), createTheFilePath(pushInfo.getFilePath(), pushInfo.getFolderPath()),
+                  yamlGitConfigDTO.getRepo()));
     }
     // todo(abhinav): record git commit and git file activity.
+  }
+
+  private String createTheFilePath(String filePath, String folderPath) {
+    return ScmGitUtils.createFilePath(folderPath, filePath);
   }
 
   private void shortListTheBranch(
@@ -174,10 +181,11 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     BranchSyncStatus branchSyncStatus = isNewBranch ? SYNCING : SYNCED;
     if (gitBranch == null) {
       createGitBranch(yamlGitConfigDTO, accountIdentifier, branchName, branchSyncStatus);
+      return;
     }
-    if (gitBranch.getBranchSyncStatus() != SYNCED) {
+    if (gitBranch.getBranchSyncStatus() == UNSYNCED) {
       gitBranchService.updateBranchSyncStatus(
-          accountIdentifier, yamlGitConfigDTO.getOrganizationIdentifier(), branchName, branchSyncStatus);
+          accountIdentifier, yamlGitConfigDTO.getRepo(), branchName, branchSyncStatus);
     }
   }
 
@@ -189,7 +197,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
 
   private void syncNewlyCreatedBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
       String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
-    gitBranchService.checkBranchIsNotAlreadyShortlisted(repoURL, accountId, branch);
     processFilesInBranch(
         accountId, gitSyncConfigId, projectIdentifier, orgIdentifier, branch, filePathToBeExcluded, repoURL);
   }

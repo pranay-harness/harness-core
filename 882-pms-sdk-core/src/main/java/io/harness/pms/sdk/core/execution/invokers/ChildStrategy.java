@@ -1,19 +1,13 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
-import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
-import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
-import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ResumePackage;
@@ -22,19 +16,14 @@ import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 public class ChildStrategy implements ExecuteStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-  @Inject private StrategyHelper strategyHelper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -43,7 +32,7 @@ public class ChildStrategy implements ExecuteStrategy {
     ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
     ChildExecutableResponse response = childExecutable.obtainChild(ambiance,
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(nodeExecution, invokerPackage.getNodes(), response);
+    handleResponse(nodeExecution, response);
   }
 
   @Override
@@ -51,10 +40,8 @@ public class ChildStrategy implements ExecuteStrategy {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
-    Map<String, ResponseData> accumulateResponses = sdkNodeExecutionService.accumulateResponses(
-        ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
-    StepResponse stepResponse = childExecutable.handleChildResponse(
-        ambiance, sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), accumulateResponses);
+    StepResponse stepResponse = childExecutable.handleChildResponse(ambiance,
+        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
     sdkNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
@@ -64,28 +51,15 @@ public class ChildStrategy implements ExecuteStrategy {
     return (ChildExecutable) stepRegistry.obtain(node.getStepType());
   }
 
-  private void handleResponse(
-      NodeExecutionProto nodeExecution, List<PlanNodeProto> nodes, ChildExecutableResponse response) {
+  private void handleResponse(NodeExecutionProto nodeExecution, ChildExecutableResponse response) {
     Ambiance ambiance = nodeExecution.getAmbiance();
-    String childInstanceId = generateUuid();
-    PlanNodeProto node = findNode(nodes, response.getChildNodeId());
-    Ambiance clonedAmbiance =
-        AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(childInstanceId, node));
-    NodeExecutionProto childNodeExecution = NodeExecutionProto.newBuilder()
-                                                .setUuid(childInstanceId)
-                                                .setNode(node)
-                                                .setAmbiance(clonedAmbiance)
-                                                .setStatus(Status.QUEUED)
-                                                .setNotifyId(childInstanceId)
-                                                .setParentId(nodeExecution.getUuid())
-                                                .build();
 
-    QueueNodeExecutionRequest queueNodeExecutionRequest =
-        strategyHelper.getQueueNodeExecutionRequest(childNodeExecution);
-    AddExecutableResponseRequest addExecutableResponseRequest =
-        strategyHelper.getAddExecutableResponseRequest(nodeExecution.getUuid(), Status.NO_OP,
-            ExecutableResponse.newBuilder().setChild(response).build(), Collections.singletonList(childInstanceId));
-    sdkNodeExecutionService.queueNodeExecutionAndAddExecutableResponse(
-        nodeExecution.getUuid(), queueNodeExecutionRequest, addExecutableResponseRequest);
+    SpawnChildRequest spawnChildRequest = SpawnChildRequest.newBuilder()
+                                              .setPlanExecutionId(ambiance.getPlanExecutionId())
+                                              .setNodeExecutionId(nodeExecution.getUuid())
+                                              .setChild(response)
+                                              .build();
+
+    sdkNodeExecutionService.spawnChild(spawnChildRequest);
   }
 }

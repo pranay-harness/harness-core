@@ -15,7 +15,6 @@ import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetrySdkTestBase;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import com.segment.analytics.messages.GroupMessage;
 import com.segment.analytics.messages.IdentifyMessage;
 import com.segment.analytics.messages.TrackMessage;
@@ -38,15 +37,17 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PrepareForTest(SecurityContextBuilder.class)
 public class SegmentReporterImplTest extends TelemetrySdkTestBase {
   @Mock SegmentSender segmentSender;
-  @Inject @InjectMocks SegmentReporterImpl segmentReporterImpl;
+  @InjectMocks SegmentReporterImpl segmentReporterImpl;
 
   private static final String EMAIL = "dummy@dummy";
   private static final String DESTINATION = "Natero";
   private static final String USER_ID_KEY = "userId";
   private static final String GROUP_ID_KEY = "groupId";
+  private static final String CATEGORY_KEY = "category";
   private static final String ACCOUNT_ID = "123";
   private static final String PROPERTY_KEY = "a";
   private static final String PROPERTY_VALUE = "b";
+  private static final String TEST_CATEGORY = io.harness.telemetry.Category.SIGN_UP;
   private HashMap<String, Object> properties;
   private Map<Destination, Boolean> destinations;
   private ArgumentCaptor<TrackMessage.Builder> trackCaptor;
@@ -72,15 +73,24 @@ public class SegmentReporterImplTest extends TelemetrySdkTestBase {
   @Category(UnitTests.class)
   public void testSendTrackEvent() {
     Mockito.when(segmentSender.isEnabled()).thenReturn(true);
-    segmentReporterImpl.sendTrackEvent("test", properties, destinations);
+    segmentReporterImpl.sendTrackEvent("test", properties, destinations, TEST_CATEGORY);
     Mockito.verify(segmentSender).enqueue(trackCaptor.capture());
     TrackMessage message = trackCaptor.getValue().build();
     assertThat(message.event()).isEqualTo("test");
     assertThat(message.properties().get(PROPERTY_KEY)).isEqualTo(PROPERTY_VALUE);
     assertThat(message.properties().get(GROUP_ID_KEY)).isEqualTo(ACCOUNT_ID);
     assertThat(message.properties().get(USER_ID_KEY)).isEqualTo(EMAIL);
+    assertThat(message.properties().get(CATEGORY_KEY)).isEqualTo(TEST_CATEGORY);
     assertThat(message.userId()).isEqualTo(EMAIL);
     assertThat(message.integrations().get(DESTINATION)).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testSendTrackEventWithNull() {
+    Mockito.when(segmentSender.isEnabled()).thenReturn(true);
+    segmentReporterImpl.sendTrackEvent(null, null, null, properties, destinations, null);
   }
 
   @Test
@@ -100,6 +110,14 @@ public class SegmentReporterImplTest extends TelemetrySdkTestBase {
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
+  public void testSendGroupEventWithNull() {
+    Mockito.when(segmentSender.isEnabled()).thenReturn(true);
+    segmentReporterImpl.sendGroupEvent(null, null, properties, destinations, null);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
   public void testSendIdentifyEent() {
     Mockito.when(segmentSender.isEnabled()).thenReturn(true);
     segmentReporterImpl.sendIdentifyEvent("user", properties, destinations);
@@ -108,5 +126,13 @@ public class SegmentReporterImplTest extends TelemetrySdkTestBase {
     assertThat(message.userId()).isEqualTo("user");
     assertThat(message.traits().get(PROPERTY_KEY)).isEqualTo(PROPERTY_VALUE);
     assertThat(message.integrations().get(DESTINATION)).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testSendIdentifyEventWithNull() {
+    Mockito.when(segmentSender.isEnabled()).thenReturn(true);
+    segmentReporterImpl.sendIdentifyEvent(null, properties, destinations);
   }
 }

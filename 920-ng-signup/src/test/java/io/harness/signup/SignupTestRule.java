@@ -8,9 +8,6 @@ import static org.mockito.Mockito.mock;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cf.AbstractCfModule;
-import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.lock.DistributedLockImplementation;
@@ -25,6 +22,9 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.RbacCoreRegistrars;
+import io.harness.telemetry.AbstractTelemetryModule;
+import io.harness.telemetry.TelemetryConfiguration;
+import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
@@ -129,15 +129,10 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
         bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
       }
     });
-    modules.add(new AbstractCfModule() {
+    modules.add(new AbstractTelemetryModule() {
       @Override
-      public CfClientConfig cfClientConfig() {
-        return CfClientConfig.builder().build();
-      }
-
-      @Override
-      public CfMigrationConfig cfMigrationConfig() {
-        return CfMigrationConfig.builder().build();
+      public TelemetryConfiguration telemetryConfiguration() {
+        return SegmentConfiguration.builder().build();
       }
     });
 

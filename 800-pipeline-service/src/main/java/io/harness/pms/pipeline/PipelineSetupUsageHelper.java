@@ -24,6 +24,7 @@ import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
+import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -99,8 +100,8 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
         if (NGExpressionUtils.isRuntimeOrExpressionField(finalValue)) {
           continue;
         }
-        IdentifierRef identifierRef =
-            IdentifierRefHelper.getIdentifierRef(finalValue, accountIdentifier, orgIdentifier, projectIdentifier);
+        IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
+            finalValue, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
         entityDetails.add(EntityDetail.builder()
                               .name(referredUsage.getReferredEntity().getName())
                               .type(referredUsage.getReferredEntity().getType())

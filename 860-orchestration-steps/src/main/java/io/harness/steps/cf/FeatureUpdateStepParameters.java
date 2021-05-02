@@ -2,7 +2,7 @@ package io.harness.steps.cf;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.SwaggerConstants;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
 

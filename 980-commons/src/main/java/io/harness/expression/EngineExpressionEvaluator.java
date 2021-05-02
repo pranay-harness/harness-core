@@ -336,6 +336,7 @@ public class EngineExpressionEvaluator {
       }
     }
 
+    observed(expressionBlock, object);
     return object;
   }
 

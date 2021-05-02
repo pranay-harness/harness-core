@@ -37,6 +37,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -166,6 +167,7 @@ import org.slf4j.Logger;
 @Singleton
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsStateHelper {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SweepingOutputService sweepingOutputService;
@@ -802,8 +804,8 @@ public class EcsStateHelper {
       ApplicationManifest applicationManifest =
           ecsBGRoute53SetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
       GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
-      if (gitFileConfig != null && gitFileConfig.getServiceSpecFilePath() != null
-          && gitFileConfig.getTaskSpecFilePath() != null) {
+      if (gitFileConfig != null
+          && (gitFileConfig.getServiceSpecFilePath() != null || gitFileConfig.getTaskSpecFilePath() != null)) {
         List<GitFile> gitFiles = ecsBGRoute53SetupStateExecutionData.getFetchFilesResult()
                                      .getFilesFromMultipleRepo()
                                      .get("ServiceOverride")
@@ -830,8 +832,8 @@ public class EcsStateHelper {
       ApplicationManifest applicationManifest =
           ecsSetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
       GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
-      if (gitFileConfig != null && gitFileConfig.getServiceSpecFilePath() != null
-          && gitFileConfig.getTaskSpecFilePath() != null) {
+      if (gitFileConfig != null
+          && (gitFileConfig.getServiceSpecFilePath() != null || gitFileConfig.getTaskSpecFilePath() != null)) {
         List<GitFile> gitFiles = ecsSetupStateExecutionData.getFetchFilesResult()
                                      .getFilesFromMultipleRepo()
                                      .get("ServiceOverride")

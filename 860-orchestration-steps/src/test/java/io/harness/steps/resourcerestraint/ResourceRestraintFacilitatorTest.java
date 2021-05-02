@@ -19,6 +19,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.Consumer;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.expression.PmsEngineExpressionService;
@@ -86,12 +87,13 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ACCUMULATE)
                                                          .holdingScope(holdingScope)
                                                          .permits(1)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     doReturn(Collections.singletonList(ResourceRestraintInstance.builder()
                                            .state(Consumer.State.ACTIVE)
@@ -102,7 +104,8 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
         .when(resourceRestraintService)
         .getAllByRestraintIdAndResourceUnitAndStates(any(), any(), any());
 
-    FacilitatorResponse response = resourceRestraintFacilitator.facilitate(ambiance, stepParameters, parameters, null);
+    FacilitatorResponse response =
+        resourceRestraintFacilitator.facilitate(ambiance, stepElementParameters, parameters, null);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionMode()).isEqualTo(ASYNC);
   }
@@ -120,18 +123,20 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
                             .build();
     byte[] parameters = kryoSerializer.asBytes(DefaultFacilitatorParams.builder().build());
-    ResourceRestraintStepParameters stepParameters = ResourceRestraintStepParameters.builder()
+    ResourceRestraintSpecParameters specParameters = ResourceRestraintSpecParameters.builder()
                                                          .resourceUnit(RESOURCE_UNIT)
                                                          .acquireMode(AcquireMode.ENSURE)
                                                          .holdingScope(holdingScope)
                                                          .permits(1)
                                                          .build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     doReturn(Collections.emptyList())
         .when(resourceRestraintService)
         .getAllByRestraintIdAndResourceUnitAndStates(any(), any(), any());
     doReturn(0).when(resourceRestraintService).getAllCurrentlyAcquiredPermits(any(), any());
-    FacilitatorResponse response = resourceRestraintFacilitator.facilitate(ambiance, stepParameters, parameters, null);
+    FacilitatorResponse response =
+        resourceRestraintFacilitator.facilitate(ambiance, stepElementParameters, parameters, null);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionMode()).isEqualTo(SYNC);
   }

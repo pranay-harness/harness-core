@@ -10,6 +10,8 @@ import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.newrelicconnector.NewRelicCapabilityHelper;
+import io.harness.delegate.beans.connector.prometheusconnector.PrometheusCapabilityHelper;
+import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkCapabilityHelper;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -36,8 +38,9 @@ public class CVConnectorCapabilitiesHelper extends ConnectorTaskParams {
     } else if (connectorDTO instanceof GcpConnectorDTO) {
       return GcpCapabilityHelper.fetchRequiredExecutionCapabilities(connectorDTO, maskingEvaluator);
     } else if (connectorDTO instanceof NewRelicConnectorDTO) {
-      return NewRelicCapabilityHelper.fetchRequiredExecutionCapabilities(
-          maskingEvaluator, (NewRelicConnectorDTO) connectorDTO);
+      return NewRelicCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, connectorDTO);
+    } else if (connectorDTO instanceof PrometheusConnectorDTO) {
+      return PrometheusCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, connectorDTO);
     } else {
       throw new InvalidRequestException("Connector capability not found for " + connectorDTO);
     }

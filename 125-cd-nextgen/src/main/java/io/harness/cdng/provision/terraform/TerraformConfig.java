@@ -4,7 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
@@ -52,8 +52,8 @@ public class TerraformConfig implements PersistentEntity {
   String pipelineExecutionId;
   long createdAt;
 
-  StoreConfig configFiles;
-  List<StoreConfig> remoteVarFiles;
+  GitStoreConfigDTO configFiles;
+  List<GitStoreConfigDTO> remoteVarFiles;
   List<String> inlineVarFiles;
   String backendConfig;
   Map<String, String> environmentVariables;

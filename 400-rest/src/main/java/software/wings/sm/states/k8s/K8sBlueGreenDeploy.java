@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -53,6 +54,7 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class K8sBlueGreenDeploy extends AbstractK8sState {
   @Inject private transient ActivityService activityService;
   @Inject private transient SecretManager secretManager;

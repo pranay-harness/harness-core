@@ -18,6 +18,7 @@ import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GitLabStore;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
+import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
@@ -26,6 +27,7 @@ import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigKeys;
 import io.harness.cdng.provision.terraform.TerraformInheritOutput.TerraformInheritOutputBuilder;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -54,6 +56,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.validation.Validator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,10 +66,12 @@ import com.google.inject.name.Named;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Sort;
@@ -158,30 +163,31 @@ public class TerraformStepHelper {
 
   public void saveTerraformInheritOutput(TerraformPlanStepParameters planStepParameters,
       TerraformTaskNGResponse terraformTaskNGResponse, Ambiance ambiance) {
-    TerraformInheritOutputBuilder builder = TerraformInheritOutput.builder();
-    builder.workspace(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getWorkspace()));
+    validatePlanStepConfigFiles(planStepParameters);
+    TerraformPlanExecutionDataParameters configuration = planStepParameters.getConfiguration();
+    TerraformInheritOutputBuilder builder = TerraformInheritOutput.builder().workspace(
+        ParameterFieldHelper.getParameterFieldValue(configuration.getWorkspace()));
     Map<String, String> commitIdMap = terraformTaskNGResponse.getCommitIdForConfigFilesMap();
     builder.configFiles(getStoreConfigAtCommitId(
-        planStepParameters.getConfigFilesWrapper().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES)));
-    List<StoreConfigWrapper> remoteVarFiles = planStepParameters.getRemoteVarFiles();
-    if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
+        configuration.getConfigFiles().getStore().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES)));
+    List<StoreConfig> remoteTfVarFiles = getRemoteTfVarFiles(configuration.getVarFiles());
+    if (EmptyPredicate.isNotEmpty(remoteTfVarFiles)) {
       int i = 1;
-      List<StoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
-      for (StoreConfigWrapper varFileWrapper : planStepParameters.getRemoteVarFiles()) {
+      List<GitStoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
+      for (StoreConfig storeConfig : remoteTfVarFiles) {
         remoteVarFilesAtCommitIds.add(
-            getStoreConfigAtCommitId(varFileWrapper.getStoreConfig(), commitIdMap.get(String.format(TF_VAR_FILES, i))));
+            getStoreConfigAtCommitId(storeConfig, commitIdMap.get(String.format(TF_VAR_FILES, i))));
         i++;
       }
       builder.remoteVarFiles(remoteVarFilesAtCommitIds);
     }
-    builder.inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getInlineVarFiles()))
-        .backendConfig(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getBackendConfig()))
-        .environmentVariables(getEnvironmentVariablesMap(planStepParameters.getEnvironmentVariables()))
-        .workspace(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getWorkspace()))
-        .targets(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getTargets()))
+    builder.inlineVarFiles(getInlineVarFiles(configuration.getVarFiles()))
+        .backendConfig(getBackendConfig(configuration.getBackendConfig()))
+        .environmentVariables(getEnvironmentVariablesMap(configuration.getEnvironmentVariables()))
+        .targets(ParameterFieldHelper.getParameterFieldValue(configuration.getTargets()))
         .encryptedTfPlan(terraformTaskNGResponse.getEncryptedTfPlan())
         .encryptionConfig(getEncryptionConfig(ambiance, planStepParameters))
-        .planName(getTerraformPlanName(planStepParameters.getTerraformPlanCommand(), ambiance));
+        .planName(getTerraformPlanName(planStepParameters.getConfiguration().getCommand(), ambiance));
     String fullEntityId = generateFullIdentifier(
         ParameterFieldHelper.getParameterFieldValue(planStepParameters.getProvisionerIdentifier()), ambiance);
     String inheritOutputName = String.format(INHERIT_OUTPUT_FORMAT, fullEntityId);
@@ -195,7 +201,7 @@ public class TerraformStepHelper {
 
   public EncryptionConfig getEncryptionConfig(Ambiance ambiance, TerraformPlanStepParameters planStepParameters) {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-        ParameterFieldHelper.getParameterFieldValue(planStepParameters.getSecretManagerId()),
+        ParameterFieldHelper.getParameterFieldValue(planStepParameters.getConfiguration().getSecretManagerRef()),
         AmbianceHelper.getAccountId(ambiance), AmbianceHelper.getOrgIdentifier(ambiance),
         AmbianceHelper.getProjectIdentifier(ambiance));
 
@@ -214,7 +220,7 @@ public class TerraformStepHelper {
     return res;
   }
 
-  private StoreConfig getStoreConfigAtCommitId(StoreConfig storeConfig, String commitId) {
+  private GitStoreConfig getStoreConfigAtCommitId(StoreConfig storeConfig, String commitId) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig.cloneInternal();
     if (EmptyPredicate.isEmpty(commitId) || FetchType.COMMIT == gitStoreConfig.getGitFetchType()) {
       return gitStoreConfig;
@@ -256,6 +262,7 @@ public class TerraformStepHelper {
   public void saveRollbackDestroyConfigInherited(TerraformApplyStepParameters stepParameters, Ambiance ambiance) {
     TerraformInheritOutput inheritOutput = getSavedInheritOutput(
         ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance);
+
     persistence.save(
         TerraformConfig.builder()
             .accountId(AmbianceHelper.getAccountId(ambiance))
@@ -265,8 +272,11 @@ public class TerraformStepHelper {
                 ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
             .pipelineExecutionId(ambiance.getPlanExecutionId())
             .createdAt(System.currentTimeMillis())
-            .configFiles(inheritOutput.getConfigFiles())
-            .remoteVarFiles(inheritOutput.getRemoteVarFiles())
+            .configFiles(inheritOutput.getConfigFiles().toGitStoreConfigDTO())
+            .remoteVarFiles(CollectionUtils.emptyIfNull(inheritOutput.getRemoteVarFiles())
+                                .stream()
+                                .map(GitStoreConfig::toGitStoreConfigDTO)
+                                .collect(Collectors.toList()))
             .inlineVarFiles(inheritOutput.getInlineVarFiles())
             .backendConfig(inheritOutput.getBackendConfig())
             .environmentVariables(inheritOutput.getEnvironmentVariables())
@@ -275,8 +285,50 @@ public class TerraformStepHelper {
             .build());
   }
 
+  public void validateApplyStepParamsInline(TerraformApplyStepParameters stepParameters) {
+    Validator.notNullCheck("Apply Step Parameters are null", stepParameters);
+    Validator.notNullCheck("Apply Step configuration is NULL", stepParameters.getConfiguration());
+  }
+
+  public void validateApplyStepConfigFilesInline(TerraformApplyStepParameters stepParameters) {
+    Validator.notNullCheck("Apply Step Parameters are null", stepParameters);
+    Validator.notNullCheck("Apply Step configuration is NULL", stepParameters.getConfiguration());
+    TerraformExecutionDataParameters spec = stepParameters.getConfiguration().getSpec();
+    Validator.notNullCheck("Apply Step Spec is NULL", spec);
+    Validator.notNullCheck("Apply Step Spec does not have Config files", spec.getConfigFiles());
+    Validator.notNullCheck("Apply Step Spec does not have Config files store", spec.getConfigFiles().getStore());
+  }
+
+  public void validateDestroyStepParamsInline(TerraformDestroyStepParameters stepParameters) {
+    Validator.notNullCheck("Destroy Step Parameters are null", stepParameters);
+    Validator.notNullCheck("Destroy Step configuration is NULL", stepParameters.getConfiguration());
+  }
+
+  public void validateDestroyStepConfigFilesInline(TerraformDestroyStepParameters stepParameters) {
+    Validator.notNullCheck("Destroy Step Parameters are null", stepParameters);
+    Validator.notNullCheck("Destroy Step configuration is NULL", stepParameters.getConfiguration());
+    TerraformExecutionDataParameters spec = stepParameters.getConfiguration().getSpec();
+    Validator.notNullCheck("Destroy Step Spec is NULL", spec);
+    Validator.notNullCheck("Destroy Step Spec does not have Config files", spec.getConfigFiles());
+    Validator.notNullCheck("Destroy Step Spec does not have Config files store", spec.getConfigFiles().getStore());
+  }
+
+  public void validatePlanStepConfigFiles(TerraformPlanStepParameters stepParameters) {
+    Validator.notNullCheck("Plan Step Parameters are null", stepParameters);
+    Validator.notNullCheck("Plan Step configuration is NULL", stepParameters.getConfiguration());
+    Validator.notNullCheck("Plan Step does not have Config files", stepParameters.getConfiguration().getConfigFiles());
+    Validator.notNullCheck(
+        "Plan Step does not have Config files store", stepParameters.getConfiguration().getConfigFiles().getStore());
+    Validator.notNullCheck("Plan Step does not have Plan Command", stepParameters.getConfiguration().getCommand());
+    Validator.notNullCheck(
+        "Plan Step does not have Secret Manager Ref", stepParameters.getConfiguration().getSecretManagerRef());
+  }
+
   public void saveRollbackDestroyConfigInline(
       TerraformApplyStepParameters stepParameters, TerraformTaskNGResponse response, Ambiance ambiance) {
+    validateApplyStepConfigFilesInline(stepParameters);
+    TerrformStepConfigurationParameters configuration = stepParameters.getConfiguration();
+    TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformConfigBuilder builder =
         TerraformConfig.builder()
             .accountId(AmbianceHelper.getAccountId(ambiance))
@@ -288,25 +340,96 @@ public class TerraformStepHelper {
             .createdAt(System.currentTimeMillis());
 
     Map<String, String> commitIdMap = response.getCommitIdForConfigFilesMap();
-    builder.configFiles(getStoreConfigAtCommitId(
-        stepParameters.getConfigFilesWrapper().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES)));
-    List<StoreConfigWrapper> remoteVarFiles = stepParameters.getRemoteVarFileConfigs();
-    if (EmptyPredicate.isNotEmpty(remoteVarFiles)) {
+    builder.configFiles(
+        getStoreConfigAtCommitId(spec.getConfigFiles().getStore().getStoreConfig(), commitIdMap.get(TF_CONFIG_FILES))
+            .toGitStoreConfigDTO());
+    List<StoreConfig> remoteTfVarFiles = getRemoteTfVarFiles(spec.getVarFiles());
+    if (EmptyPredicate.isNotEmpty(remoteTfVarFiles)) {
       int i = 1;
-      List<StoreConfig> remoteVarFilesAtCommitIds = new ArrayList<>();
-      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFileConfigs()) {
+      List<GitStoreConfigDTO> remoteVarFilesAtCommitIds = new ArrayList<>();
+      for (StoreConfig storeConfig : remoteTfVarFiles) {
         remoteVarFilesAtCommitIds.add(
-            getStoreConfigAtCommitId(varFileWrapper.getStoreConfig(), commitIdMap.get(String.format(TF_VAR_FILES, i))));
+            getStoreConfigAtCommitId(storeConfig, commitIdMap.get(String.format(TF_VAR_FILES, i)))
+                .toGitStoreConfigDTO());
         i++;
       }
       builder.remoteVarFiles(remoteVarFilesAtCommitIds);
     }
-    builder.inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFilesListContent()))
-        .backendConfig(ParameterFieldHelper.getParameterFieldValue(stepParameters.getBackendConfig()))
-        .environmentVariables(getEnvironmentVariablesMap(stepParameters.getEnvironmentVariables()))
-        .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
-        .targets(ParameterFieldHelper.getParameterFieldValue(stepParameters.getTargets()));
+    builder.inlineVarFiles(getInlineVarFiles(spec.getVarFiles()))
+        .backendConfig(getBackendConfig(spec.getBackendConfig()))
+        .environmentVariables(getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
+        .workspace(ParameterFieldHelper.getParameterFieldValue(spec.getWorkspace()))
+        .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()));
     persistence.save(builder.build());
+  }
+
+  public String getBackendConfig(TerraformBackendConfig backendConfig) {
+    if (backendConfig != null) {
+      TerraformBackendConfigSpec terraformBackendConfigSpec = backendConfig.getTerraformBackendConfigSpec();
+      if (terraformBackendConfigSpec instanceof InlineTerraformBackendConfigSpec) {
+        return ParameterFieldHelper.getParameterFieldValue(
+            ((InlineTerraformBackendConfigSpec) terraformBackendConfigSpec).getContent());
+      }
+    }
+    return null;
+  }
+
+  public List<String> getInlineVarFiles(Map<String, TerraformVarFile> varFiles) {
+    if (EmptyPredicate.isEmpty(varFiles)) {
+      return Collections.emptyList();
+    }
+    List<String> inlineVarFiles = new ArrayList<>();
+    for (Map.Entry<String, TerraformVarFile> entry : varFiles.entrySet()) {
+      TerraformVarFile varFile = entry.getValue();
+      if (varFile != null) {
+        TerraformVarFileSpec spec = varFile.getSpec();
+        if (spec instanceof InlineTerraformVarFileSpec) {
+          InlineTerraformVarFileSpec inlineTerraformVarFileSpec = (InlineTerraformVarFileSpec) spec;
+          String content = ParameterFieldHelper.getParameterFieldValue(inlineTerraformVarFileSpec.getContent());
+          if (EmptyPredicate.isNotEmpty(content)) {
+            inlineVarFiles.add(content);
+          }
+        }
+      }
+    }
+    return inlineVarFiles;
+  }
+
+  public List<StoreConfig> getRemoteTfVarFiles(Map<String, TerraformVarFile> varFiles) {
+    if (EmptyPredicate.isEmpty(varFiles)) {
+      return Collections.emptyList();
+    }
+    List<StoreConfig> remoteVarFiles = new ArrayList<>();
+    for (Map.Entry<String, TerraformVarFile> entry : varFiles.entrySet()) {
+      TerraformVarFile varFile = entry.getValue();
+      if (varFile != null) {
+        TerraformVarFileSpec spec = varFile.getSpec();
+        if (spec instanceof RemoteTerraformVarFileSpec) {
+          RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = (RemoteTerraformVarFileSpec) spec;
+          StoreConfigWrapper storeConfigWrapper = remoteTerraformVarFileSpec.getStoreConfigWrapper();
+          if (storeConfigWrapper != null) {
+            remoteVarFiles.add(storeConfigWrapper.getStoreConfig());
+          }
+        }
+      }
+    }
+    return remoteVarFiles;
+  }
+
+  public List<GitFetchFilesConfig> getOrderedFetchFilesConfigForRemoteFiles(
+      Map<String, TerraformVarFile> varFiles, Ambiance ambiance) {
+    List<StoreConfig> remoteVarFiles = getRemoteTfVarFiles(varFiles);
+    if (EmptyPredicate.isEmpty(remoteVarFiles)) {
+      return Collections.emptyList();
+    }
+    List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
+    int i = 1;
+    for (StoreConfig storeConfig : remoteVarFiles) {
+      varFilesConfig.add(
+          getGitFetchFilesConfig(storeConfig, ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
+      i++;
+    }
+    return varFilesConfig;
   }
 
   public TerraformConfig getLastSuccessfulApplyConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
@@ -326,9 +449,7 @@ public class TerraformStepHelper {
     return terraformConfig;
   }
 
-  public void clearTerraformConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
-    String entityId = generateFullIdentifier(
-        ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);
+  public void clearTerraformConfig(Ambiance ambiance, String entityId) {
     persistence.delete(persistence.createQuery(TerraformConfig.class)
                            .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
                            .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
@@ -360,6 +481,24 @@ public class TerraformStepHelper {
       String message = String.format("Unable to call fileservice to fetch latest file id for entityId: [%s]", entityId);
       throw new InvalidRequestException(message, exception);
     }
+  }
+
+  public void saveTerraformConfig(TerraformConfig rollbackConfig, Ambiance ambiance) {
+    persistence.save(TerraformConfig.builder()
+                         .accountId(AmbianceHelper.getAccountId(ambiance))
+                         .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
+                         .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
+                         .entityId(rollbackConfig.getEntityId())
+                         .pipelineExecutionId(ambiance.getPlanExecutionId())
+                         .createdAt(System.currentTimeMillis())
+                         .configFiles(rollbackConfig.getConfigFiles())
+                         .remoteVarFiles(rollbackConfig.getRemoteVarFiles())
+                         .inlineVarFiles(rollbackConfig.getInlineVarFiles())
+                         .backendConfig(rollbackConfig.getBackendConfig())
+                         .environmentVariables(rollbackConfig.getEnvironmentVariables())
+                         .workspace(rollbackConfig.getWorkspace())
+                         .targets(rollbackConfig.getTargets())
+                         .build());
   }
 
   public void updateParentEntityIdAndVersion(String entityId, String stateFileId) {

@@ -75,6 +75,17 @@ public class UserResourceNG {
     return new RestResponse<>(convertUserToNgUser(createdUser));
   }
 
+  @POST
+  @Path("/oauth")
+  public RestResponse<UserInfo> createNewOAuthUserAndSignIn(UserRequestDTO userRequest) {
+    User user = convertUserRequesttoUser(userRequest);
+    String accountId = user.getDefaultAccountId();
+
+    User createdUser = userService.createNewOAuthUser(user, accountId);
+
+    return new RestResponse<>(convertUserToNgUser(createdUser));
+  }
+
   @GET
   @Path("/search")
   public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,
@@ -84,13 +95,12 @@ public class UserResourceNG {
 
     List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
 
-    PageResponse<UserInfo> pageResponse =
-        aPageResponse()
-            .withOffset(offset.toString())
-            .withLimit(pageSize.toString())
-            .withResponse(userList.stream().map(this::convertUserToNgUser).collect(Collectors.toList()))
-            .withTotal(userService.getTotalUserCount(accountId, true))
-            .build();
+    PageResponse<UserInfo> pageResponse = aPageResponse()
+                                              .withOffset(offset.toString())
+                                              .withLimit(pageSize.toString())
+                                              .withResponse(convertUserToNgUser(userList))
+                                              .withTotal(userService.getTotalUserCount(accountId, true))
+                                              .build();
 
     return new RestResponse<>(pageResponse);
   }
@@ -221,7 +231,11 @@ public class UserResourceNG {
         .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .token(user.getToken())
-
+        .admin(
+            Optional.ofNullable(user.getUserGroups())
+                .map(x
+                    -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
+                .orElse(false))
         .build();
   }
 

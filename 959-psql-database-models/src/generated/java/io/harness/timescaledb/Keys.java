@@ -3,9 +3,11 @@
  */
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.PodInfo;
 import io.harness.timescaledb.tables.WorkloadInfo;
+import io.harness.timescaledb.tables.records.CeRecommendationsRecord;
 import io.harness.timescaledb.tables.records.NodeInfoRecord;
 import io.harness.timescaledb.tables.records.PodInfoRecord;
 import io.harness.timescaledb.tables.records.WorkloadInfoRecord;
@@ -25,6 +27,9 @@ public class Keys {
   // UNIQUE and PRIMARY KEY definitions
   // -------------------------------------------------------------------------
 
+  public static final UniqueKey<CeRecommendationsRecord> CE_RECOMMENDATIONS_PKEY =
+      Internal.createUniqueKey(CeRecommendations.CE_RECOMMENDATIONS, DSL.name("ce_recommendations_pkey"),
+          new TableField[] {CeRecommendations.CE_RECOMMENDATIONS.ID}, true);
   public static final UniqueKey<NodeInfoRecord> NODE_INFO_UNIQUE_RECORD_INDEX =
       Internal.createUniqueKey(NodeInfo.NODE_INFO, DSL.name("node_info_unique_record_index"),
           new TableField[] {NodeInfo.NODE_INFO.ACCOUNTID, NodeInfo.NODE_INFO.CLUSTERID, NodeInfo.NODE_INFO.INSTANCEID},

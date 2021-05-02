@@ -432,4 +432,23 @@ public class VerificationJobServiceImpl implements VerificationJobService {
 
     return query.asList().stream().map(VerificationJob::getVerificationJobDTO).collect(Collectors.toList());
   }
+
+  @Override
+  public void createDefaultVerificationJobs(String accountId, String orgIdentifier, String projectIdentifier) {
+    saveDefaultJob(HealthVerificationJob.createDefaultJob(accountId, orgIdentifier, projectIdentifier));
+    saveDefaultJob(TestVerificationJob.createDefaultJob(accountId, orgIdentifier, projectIdentifier));
+    saveDefaultJob(CanaryVerificationJob.createDefaultJob(accountId, orgIdentifier, projectIdentifier));
+    saveDefaultJob(BlueGreenVerificationJob.createDefaultJob(accountId, orgIdentifier, projectIdentifier));
+  }
+
+  private void saveDefaultJob(VerificationJob verificationJob) {
+    try {
+      verificationJob.validate();
+      hPersistence.save(verificationJob);
+    } catch (DuplicateKeyException ex) {
+      log.info(String.format(
+          "A Default Verification Job  with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
+          verificationJob.getIdentifier(), verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier()));
+    }
+  }
 }

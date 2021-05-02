@@ -47,6 +47,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -149,6 +150,7 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class TerraformProvisionState extends State {
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;

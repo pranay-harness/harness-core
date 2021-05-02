@@ -67,7 +67,7 @@ public class GenericStepPMSFilterJsonCreatorTest extends CategoryTest {
     assertThat(filterCreationResponse.getReferredEntities()).isNotEmpty();
     assertThat(filterCreationResponse.getReferredEntities().get(0))
         .isEqualTo(FilterCreatorHelper.convertToEntityDetailProtoDTO(ACCOUNT_ID, ORG_ID, PROJECT_ID,
-            "pipeline.stages.managerDeployment.execution.steps.managerCanary.connectorRef",
+            "pipeline.stages.managerDeployment.spec.execution.steps.managerCanary.spec.connectorRef",
             ParameterField.createValueField("connectorRef"), EntityTypeProtoEnum.CONNECTORS));
   }
 }

@@ -82,6 +82,11 @@ public interface UserService extends OwnedByAccount {
    */
   User createNewUserAndSignIn(User user, String accountId);
 
+  /**
+   * Used for NG signup to create a new oauth user and login from an NG user object
+   */
+  User createNewOAuthUser(User user, String accountId);
+
   UserInvite createUserInviteForMarketPlace();
 
   boolean hasPermission(String accountId, PermissionType permissionType);
@@ -167,6 +172,8 @@ public interface UserService extends OwnedByAccount {
   boolean overrideTwoFactorforAccount(String accountId, boolean adminOverrideTwoFactorEnabled);
 
   boolean isTwoFactorEnabled(String accountId, String usedId);
+
+  User updateUser(User oldUser, UpdateOperations<User> updateOperations);
 
   /**
    * Gets the.
