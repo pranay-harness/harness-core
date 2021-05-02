@@ -11,7 +11,7 @@ import io.harness.PipelineUtils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.beans.stages.IntegrationStageStepParameters;
+import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
@@ -71,8 +71,8 @@ public class GitBuildStatusUtility {
     StageElementParameters stageElementParameters =
         RecastOrchestrationUtils.fromDocument(nodeExecution.getResolvedStepParameters(), StageElementParameters.class);
 
-    IntegrationStageStepParameters integrationStageStepParameters =
-        (IntegrationStageStepParameters) stageElementParameters.getSpec();
+    IntegrationStageStepParametersPMS integrationStageStepParameters =
+        (IntegrationStageStepParametersPMS) stageElementParameters.getSpec();
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();
 
