@@ -17,6 +17,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/delegate-task-grpc-service/grpc"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/engine/output"
+	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -38,9 +39,9 @@ var (
 
 // SendStepStatus sends the step status to delegate task service.
 func SendStepStatus(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *enginepb.Artifact, log *zap.SugaredLogger) error {
 	start := time.Now()
-	arg := getRequestArg(stepID, accountID, callbackToken, taskID, numRetries, timeTaken, status, errMsg, stepOutput, log)
+	arg := getRequestArg(stepID, accountID, callbackToken, taskID, numRetries, timeTaken, status, errMsg, stepOutput, artifact, log)
 	err := sendStatusWithRetries(ctx, endpoint, arg, log)
 	if err != nil {
 		log.Errorw(
@@ -61,11 +62,12 @@ func SendStepStatus(ctx context.Context, stepID, endpoint, accountID, callbackTo
 
 // getRequestArg returns arguments for send status rpc
 func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
+	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *enginepb.Artifact, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
 	var stepOutputMap map[string]string
 	if stepOutput != nil {
 		stepOutputMap = stepOutput.Output.Variables
 	}
+
 	req := &pb.SendTaskStatusRequest{
 		AccountId: &delegatepb.AccountId{
 			Id: accountID,
@@ -88,6 +90,7 @@ func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries i
 							Output: stepOutputMap,
 						},
 					},
+					Artifact: artifact,
 				},
 			},
 		},

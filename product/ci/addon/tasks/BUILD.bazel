@@ -16,6 +16,7 @@ go_library(
         "//commons/go/lib/images:go_default_library",
         "//commons/go/lib/metrics:go_default_library",
         "//commons/go/lib/utils:go_default_library",
+        "//product/ci/addon/artifact:go_default_library",
         "//product/ci/addon/remote:go_default_library",
         "//product/ci/addon/resolver:go_default_library",
         "//product/ci/addon/testreports:go_default_library",

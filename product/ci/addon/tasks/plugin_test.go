@@ -54,7 +54,7 @@ func TestPluginSuccess(t *testing.T) {
 	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
 	cmd.EXPECT().Wait().Return(nil)
 
-	retries, err := e.Run(ctx)
+	_, retries, err := e.Run(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, retries, numRetries)
 }
@@ -96,7 +96,7 @@ func TestPluginNonZeroStatus(t *testing.T) {
 	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
 	cmd.EXPECT().Wait().Return(&exec.ExitError{})
 
-	retries, err := e.Run(ctx)
+	_, retries, err := e.Run(ctx)
 	assert.NotNil(t, err)
 	if _, ok := err.(*exec.ExitError); !ok {
 		t.Fatalf("Expected err of type exec.ExitError")
@@ -142,7 +142,7 @@ func TestPluginEntrypointErr(t *testing.T) {
 
 	var buf bytes.Buffer
 	executor := NewPluginTask(step, nil, log.Sugar(), &buf, false, log.Sugar())
-	_, err := executor.Run(ctx)
+	_, _, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
 
@@ -168,7 +168,7 @@ func TestPluginEmptyEntrypointErr(t *testing.T) {
 
 	var buf bytes.Buffer
 	executor := NewPluginTask(step, nil, log.Sugar(), &buf, false, log.Sugar())
-	_, err := executor.Run(ctx)
+	_, _, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
 
@@ -210,7 +210,7 @@ func TestPluginWithJEXlErr(t *testing.T) {
 	}
 	defer func() { evaluateJEXL = oldEvaluateJEXL }()
 
-	retries, err := e.Run(ctx)
+	_, retries, err := e.Run(ctx)
 	assert.NotNil(t, err)
 	assert.Equal(t, retries, numRetries)
 }
@@ -274,7 +274,7 @@ func TestPluginWithJEXlSuccess(t *testing.T) {
 	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
 	cmd.EXPECT().Wait().Return(nil)
 
-	retries, err := e.Run(ctx)
+	_, retries, err := e.Run(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, retries, numRetries)
 }

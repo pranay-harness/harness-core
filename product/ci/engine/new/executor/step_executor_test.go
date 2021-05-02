@@ -75,7 +75,7 @@ func TestStepValidations(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, log *zap.SugaredLogger) error {
 		return nil
 	}
 	for _, tc := range tests {
@@ -114,14 +114,14 @@ func TestStepError(t *testing.T) {
 	oldAddonExecutor := executeStepOnAddon
 	defer func() { executeStepOnAddon = oldAddonExecutor }()
 	executeStepOnAddon = func(ctx context.Context, step *pb.UnitStep, tmpFilePath string,
-		log *zap.SugaredLogger) (*output.StepOutput, error) {
-		return nil, errors.New("failed")
+		log *zap.SugaredLogger) (*output.StepOutput, *pb.Artifact, error) {
+		return nil, nil, errors.New("failed")
 	}
 
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, log *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -163,8 +163,8 @@ func TestStepRunSuccess(t *testing.T) {
 	oldAddonExecutor := executeStepOnAddon
 	defer func() { executeStepOnAddon = oldAddonExecutor }()
 	executeStepOnAddon = func(ctx context.Context, step *pb.UnitStep, tmpFilePath string,
-		log *zap.SugaredLogger) (*output.StepOutput, error) {
-		return o, nil
+		log *zap.SugaredLogger) (*output.StepOutput, *pb.Artifact, error) {
+		return o, nil, nil
 	}
 
 	oldStopAdddon := stopAddon
@@ -177,7 +177,7 @@ func TestStepRunSuccess(t *testing.T) {
 	oldSendStepStatus := sendStepStatus
 	defer func() { sendStepStatus = oldSendStepStatus }()
 	sendStepStatus = func(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+		status statuspb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *pb.Artifact, log *zap.SugaredLogger) error {
 		return nil
 	}
 

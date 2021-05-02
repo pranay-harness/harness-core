@@ -6,8 +6,10 @@ package tasks
 
 import (
 	context "context"
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
+	proto "github.com/wings-software/portal/product/ci/engine/proto"
 )
 
 // MockPluginTask is a mock of PluginTask interface.
@@ -34,12 +36,13 @@ func (m *MockPluginTask) EXPECT() *MockPluginTaskMockRecorder {
 }
 
 // Run mocks base method.
-func (m *MockPluginTask) Run(ctx context.Context) (int32, error) {
+func (m *MockPluginTask) Run(ctx context.Context) (*proto.Artifact, int32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Run", ctx)
-	ret0, _ := ret[0].(int32)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(*proto.Artifact)
+	ret1, _ := ret[1].(int32)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // Run indicates an expected call of Run.
