@@ -1,12 +1,18 @@
 package io.harness.beans.stages;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
+import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.ParallelStepElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -14,6 +20,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -22,12 +29,14 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("integrationStageStepParameters")
+@OwnedBy(HarnessTeam.CI)
 public class IntegrationStageStepParametersPMS implements SpecParameters {
   Infrastructure infrastructure;
   List<DependencyElement> dependencies;
   ParameterField<List<String>> sharedPaths;
   ParameterField<Boolean> enableCloneRepo;
   BuildStatusUpdateParameter buildStatusUpdateParameter;
+  List<String> stepIdentifiers;
   String childNodeID;
 
   public static IntegrationStageStepParametersPMS getStepParameters(StageElementConfig stageElementConfig,
@@ -39,6 +48,8 @@ public class IntegrationStageStepParametersPMS implements SpecParameters {
 
     Infrastructure infrastructure = getInfrastructure(stageElementConfig, ctx);
 
+    List<String> stepIdentifiers = getStepIdentifiers(integrationStageConfig);
+
     return IntegrationStageStepParametersPMS.builder()
         .buildStatusUpdateParameter(buildStatusUpdateParameter)
         .infrastructure(infrastructure)
@@ -46,6 +57,7 @@ public class IntegrationStageStepParametersPMS implements SpecParameters {
         .childNodeID(childNodeID)
         .sharedPaths(integrationStageConfig.getSharedPaths())
         .enableCloneRepo(integrationStageConfig.getCloneCodebase())
+        .stepIdentifiers(stepIdentifiers)
         .build();
   }
 
@@ -76,6 +88,43 @@ public class IntegrationStageStepParametersPMS implements SpecParameters {
     } catch (Exception ex) {
       throw new CIStageExecutionException(
           "Failed to deserialize IntegrationStage for use from stage identifier: " + identifier, ex);
+    }
+  }
+
+  private static List<String> getStepIdentifiers(IntegrationStageConfig integrationStageConfig) {
+    List<String> stepIdentifiers = new ArrayList<>();
+    integrationStageConfig.getExecution().getSteps().forEach(
+        executionWrapper -> addStepIdentifier(executionWrapper, stepIdentifiers));
+    return stepIdentifiers;
+  }
+
+  private static void addStepIdentifier(ExecutionWrapperConfig executionWrapper, List<String> stepIdentifiers) {
+    if (executionWrapper != null) {
+      if (executionWrapper.getStep() != null && !executionWrapper.getStep().isNull()) {
+        StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
+        stepIdentifiers.add(stepElementConfig.getIdentifier());
+      } else if (executionWrapper.getParallel() != null && !executionWrapper.getParallel().isNull()) {
+        ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapper);
+        parallelStepElementConfig.getSections().forEach(section -> addStepIdentifier(section, stepIdentifiers));
+      } else {
+        throw new InvalidRequestException("Only Parallel or StepElement is supported");
+      }
+    }
+  }
+
+  private static StepElementConfig getStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
+    try {
+      return YamlUtils.read(executionWrapperConfig.getStep().toString(), StepElementConfig.class);
+    } catch (Exception ex) {
+      throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig step node", ex);
+    }
+  }
+
+  private static ParallelStepElementConfig getParallelStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
+    try {
+      return YamlUtils.read(executionWrapperConfig.getParallel().toString(), ParallelStepElementConfig.class);
+    } catch (Exception ex) {
+      throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig parallel node", ex);
     }
   }
 }

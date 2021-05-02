@@ -1,5 +1,8 @@
 package io.harness.task.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.delegate.task.stepstatus.artifact.ArtifactMetadataType.DOCKER_ARTIFACT_METADATA;
+import static io.harness.delegate.task.stepstatus.artifact.ArtifactMetadataType.FILE_ARTIFACT_METADATA;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SANJA;
 
@@ -8,11 +11,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
+import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
+import io.harness.delegate.task.stepstatus.artifact.DockerArtifactDescriptor;
+import io.harness.delegate.task.stepstatus.artifact.DockerArtifactMetadata;
+import io.harness.delegate.task.stepstatus.artifact.FileArtifactDescriptor;
+import io.harness.delegate.task.stepstatus.artifact.FileArtifactMetadata;
 import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -27,6 +36,7 @@ import io.harness.task.service.SendTaskProgressRequest;
 import io.harness.task.service.SendTaskProgressResponse;
 import io.harness.task.service.SendTaskStatusRequest;
 import io.harness.task.service.SendTaskStatusResponse;
+import io.harness.task.service.StepStatus;
 import io.harness.task.service.TaskProgressRequest;
 import io.harness.task.service.TaskProgressResponse;
 import io.harness.task.service.TaskServiceGrpc;
@@ -47,6 +57,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(CI)
 public class TaskServiceImplTest extends TaskServiceTestBase {
   @Rule public GrpcCleanupRule grpcCleanupRule = new GrpcCleanupRule();
   @Mock private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
@@ -60,11 +71,12 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
   private AccountId accountId;
   private TaskId taskId;
   private DelegateCallbackToken delegateCallbackToken;
+  private TaskServiceImpl taskService;
 
   @Before
   public void doSetup() throws IOException {
     TaskServiceTestHelper.registerConverters(registry);
-    TaskServiceImpl taskService = new TaskServiceImpl(delegateServiceGrpcAgentClient, kryoSerializer, registry);
+    taskService = new TaskServiceImpl(delegateServiceGrpcAgentClient, kryoSerializer, registry);
 
     String serverName = InProcessServerBuilder.generateName();
     testInProcessServer = grpcCleanupRule.register(
@@ -289,5 +301,88 @@ public class TaskServiceImplTest extends TaskServiceTestBase {
                                    .setTaskResponseData(taskServiceTestHelper.getTaskProgressResponseData())
                                    .build()))
         .isInstanceOf(io.grpc.StatusRuntimeException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldBuildDockerArtifactMetadata() {
+    StepStatus stepStatus =
+        StepStatus.newBuilder()
+            .setArtifact(
+                io.harness.product.ci.engine.proto.Artifact.newBuilder()
+                    .setDockerArtifact(
+                        io.harness.product.ci.engine.proto.DockerArtifactMetadata.newBuilder()
+                            .setRegistryType("Docker")
+                            .setRegistryUrl("https://registry.docker.io/v2")
+                            .addDockerImages(
+                                io.harness.product.ci.engine.proto.DockerImageMetadata.newBuilder()
+                                    .setDigest(
+                                        "sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70")
+                                    .setImage("harness/ci-automation:1.2")
+                                    .build())
+                            .addDockerImages(
+                                io.harness.product.ci.engine.proto.DockerImageMetadata.newBuilder()
+                                    .setDigest(
+                                        "sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70")
+                                    .setImage("harness/ci-automation:latest")
+                                    .build())
+                            .build())
+                    .build())
+            .build();
+    ArtifactMetadata artifactMetadata = taskService.buildArtifactMetadata(stepStatus);
+    assertThat(artifactMetadata).isNotNull();
+    assertThat(artifactMetadata.getType()).isEqualTo(DOCKER_ARTIFACT_METADATA);
+    assertThat(artifactMetadata.getSpec())
+        .isEqualTo(
+            DockerArtifactMetadata.builder()
+                .registryUrl("https://registry.docker.io/v2")
+                .registryType("Docker")
+                .dockerArtifact(DockerArtifactDescriptor.builder()
+                                    .imageName("harness/ci-automation:1.2")
+                                    .digest("sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70")
+                                    .build())
+                .dockerArtifact(DockerArtifactDescriptor.builder()
+                                    .imageName("harness/ci-automation:latest")
+                                    .digest("sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70")
+                                    .build())
+                .build());
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldBuildFileArtifactMetadata() {
+    StepStatus stepStatus =
+        StepStatus.newBuilder()
+            .setArtifact(
+                io.harness.product.ci.engine.proto.Artifact.newBuilder()
+                    .setFileArtifact(
+                        io.harness.product.ci.engine.proto.FileArtifactMetadata.newBuilder()
+                            .addFileArtifacts(io.harness.product.ci.engine.proto.FileArtifact.newBuilder()
+                                                  .setName("/dir/file1")
+                                                  .setUrl("https://mybucket.s3.us-east-1.amazonaws.com/dir/file1")
+                                                  .build())
+                            .addFileArtifacts(io.harness.product.ci.engine.proto.FileArtifact.newBuilder()
+                                                  .setName("/dir/file2")
+                                                  .setUrl("https://mybucket.s3.us-east-1.amazonaws.com/dir/file2")
+                                                  .build())
+                            .build())
+                    .build())
+            .build();
+    ArtifactMetadata artifactMetadata = taskService.buildArtifactMetadata(stepStatus);
+    assertThat(artifactMetadata).isNotNull();
+    assertThat(artifactMetadata.getType()).isEqualTo(FILE_ARTIFACT_METADATA);
+    assertThat(artifactMetadata.getSpec())
+        .isEqualTo(FileArtifactMetadata.builder()
+                       .fileArtifactDescriptor(FileArtifactDescriptor.builder()
+                                                   .name("/dir/file1")
+                                                   .url("https://mybucket.s3.us-east-1.amazonaws.com/dir/file1")
+                                                   .build())
+                       .fileArtifactDescriptor(FileArtifactDescriptor.builder()
+                                                   .name("/dir/file2")
+                                                   .url("https://mybucket.s3.us-east-1.amazonaws.com/dir/file2")
+                                                   .build())
+                       .build());
   }
 }
