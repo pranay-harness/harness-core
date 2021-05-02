@@ -1,3 +1,9 @@
 package io.harness.instancesync.repository.instancesyncperpetualtask;
 
-public interface InstanceRepository {}
+import io.harness.instancesync.dto.Instance;
+
+import java.util.List;
+
+public interface InstanceRepository {
+  List<Instance> getActiveInstancesByAccount(String accountId, long timestamp);
+}

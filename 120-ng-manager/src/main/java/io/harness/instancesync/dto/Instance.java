@@ -13,6 +13,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 public class Instance {
+  public static final String ACCOUNT_ID_FIELD = "accountId";
+  public static final String CREATED_AT_FIELD = "createdAt";
+  public static final String IS_DELETED_FIELD = "isDeleted";
+  public static final String DELETED_AT_FIELD = "deletedAt";
+
   @NotEmpty private InstanceType instanceType;
   private HostInstanceKey hostInstanceKey;
   private ContainerInstanceKey containerInstanceKey;
