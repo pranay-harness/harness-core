@@ -29,7 +29,7 @@ import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.execution.SdkResponseEventInternal;
+import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -101,7 +101,7 @@ public class QueueTaskResponseHandlerTest extends OrchestrationTestBase {
             .setExecutableResponse(ExecutableResponse.newBuilder().setTask(taskBuilder.build()).build())
             .build();
 
-    queueTaskResponseHandler.handleEvent(SdkResponseEventInternal.builder()
+    queueTaskResponseHandler.handleEvent(SdkResponseEvent.builder()
                                              .sdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
                                              .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
                                                                           .setQueueTaskRequest(queueTaskRequest)
