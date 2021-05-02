@@ -55,3 +55,69 @@ java_library(
 run_tests()
 
 run_analysis()
+
+#Docker Build Config
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_image",
+    "container_push",
+)
+
+load("@io_bazel_rules_docker//docker/package_managers:download_pkgs.bzl", "download_pkgs")
+load("@io_bazel_rules_docker//docker/package_managers:install_pkgs.bzl", "install_pkgs")
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
+
+container_image(
+    name = "docker_image",
+    base = "@base_image//image",
+    files = ["config.yml", "keystore.jks", "accesscontrol-service-capsule.jar", "docker/scripts"],
+)
+
+container_run_and_commit(
+    name = "access_control_docker_image",
+    commands = [
+        "wget https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 -O /usr/bin/yq -O /usr/bin/yq",
+        "chmod +x /usr/bin/yq",
+        "mv accesscontrol-service-capsule.jar /opt/harness",
+        "mv keystore.jks /opt/harness",
+        "mv config.yml /opt/harness",
+        "cp scripts/* /opt/harness",
+        "chmod +x /opt/harness/*.sh",
+        "mkdir /opt/harness/plugins",
+        "addgroup -S 65534 && adduser -S 65534 -G 65534",
+        "chown -R 65534:65534 /opt/harness/ /tmp",
+        "chmod 700 -R /opt/harness/",
+        "chmod 700 -R /tmp",
+    ],
+    image = ":docker_image.tar",
+)
+
+container_run_and_commit(
+    name = "access_control_docker_image_gcr",
+    commands = [
+        "wget https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 -O /usr/bin/yq -O /usr/bin/yq",
+        "chmod +x /usr/bin/yq",
+        "mv accesscontrol-service-capsule.jar /opt/harness",
+        "mv keystore.jks /opt/harness",
+        "mv config.yml /opt/harness",
+        "cp scripts/* /opt/harness",
+        "chmod +x /opt/harness/*.sh",
+        "mkdir /opt/harness/plugins",
+    ],
+    image = ":docker_image.tar",
+)
+
+container_image(
+    name = "access_control_docker_image_final",
+    base = "access_control_docker_image_commit.tar",
+    user= "65534",
+    workdir = "/opt/harness",
+    cmd = "./run.sh",
+)
+
+container_image(
+    name = "access_control_docker_image_gcr_final",
+    base = "access_control_docker_image_gcr_commit.tar",
+    workdir = "/opt/harness",
+    cmd = "./run.sh",
+)
