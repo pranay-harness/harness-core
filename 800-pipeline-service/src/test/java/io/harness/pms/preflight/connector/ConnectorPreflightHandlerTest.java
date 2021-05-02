@@ -1,18 +1,17 @@
-package io.harness.pms.preflight.handler;
+package io.harness.pms.preflight.connector;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.preflight.PreFlightStatus;
-import io.harness.pms.preflight.connector.ConnectorCheckResponse;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
@@ -27,12 +26,18 @@ import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 
-@OwnedBy(PIPELINE)
-public class AsyncPreFlightHandlerTest extends CategoryTest {
+@OwnedBy(HarnessTeam.PIPELINE)
+public class ConnectorPreflightHandlerTest extends CategoryTest {
   Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
+
+  @InjectMocks ConnectorPreflightHandler connectorPreflightHandler;
+
   @Before
-  public void setUp() throws IOException {
+  public void setup() throws IOException {
+    MockitoAnnotations.initMocks(this);
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -45,16 +50,13 @@ public class AsyncPreFlightHandlerTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testNonExistentConnectorsInPipeline() {
-    AsyncPreFlightHandler asyncPreFlightHandler =
-        AsyncPreFlightHandler.builder().fqnToObjectMapMergedYaml(fqnToObjectMapMergedYaml).build();
-
     Map<String, String> connectorIdentifierToFqn = new HashMap<>();
     connectorIdentifierToFqn.put(
         "my_git_connector", "pipeline.stages.qaStage.serviceConfig.manifests.baseValues.my_git_connector");
 
     List<ConnectorResponseDTO> connectorResponses = new ArrayList<>();
-    List<ConnectorCheckResponse> connectorCheckResponse =
-        asyncPreFlightHandler.getConnectorCheckResponse(connectorResponses, connectorIdentifierToFqn);
+    List<ConnectorCheckResponse> connectorCheckResponse = connectorPreflightHandler.getConnectorCheckResponse(
+        fqnToObjectMapMergedYaml, connectorResponses, connectorIdentifierToFqn);
     assertThat(connectorCheckResponse).isNotEmpty();
     ConnectorCheckResponse response = connectorCheckResponse.get(0);
     assertThat(response.getStatus()).isEqualTo(PreFlightStatus.FAILURE);
