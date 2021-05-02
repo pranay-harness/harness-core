@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
-import io.harness.pms.execution.SdkResponseEventInternal;
+import io.harness.pms.execution.SdkResponseEvent;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,7 +15,7 @@ public class ResumeNodeExecutionResponseEventHandler implements SdkResponseEvent
   @Inject OrchestrationEngine engine;
 
   @Override
-  public void handleEvent(SdkResponseEventInternal event) {
+  public void handleEvent(SdkResponseEvent event) {
     ResumeNodeExecutionRequest request = event.getSdkResponseEventRequest().getResumeNodeExecutionRequest();
     engine.resume(request.getNodeExecutionId(), request.getResponseMap(), request.getAsyncError());
   }
