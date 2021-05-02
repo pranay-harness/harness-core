@@ -4,7 +4,7 @@ import static io.harness.exception.WingsException.EVERYBODY;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.exception.UnexpectedException;
-import io.harness.instancesync.entity.infrastructureMapping.InfrastructureMapping;
+import io.harness.instancesync.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.instancesync.service.ContainerInstanceHandler;
 import io.harness.instancesync.service.InstanceHandler;
 

@@ -1,4 +1,4 @@
-package io.harness.instancesync.entity.infrastructureMapping;
+package io.harness.instancesync.dto.infrastructureMapping;
 
 import lombok.Data;
 

@@ -9,12 +9,13 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.WingsException;
+import io.harness.instancesync.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.instancesync.entity.DeploymentEvent;
 import io.harness.instancesync.entity.DeploymentSummary;
 import io.harness.instancesync.entity.InstanceSyncFlowType;
 import io.harness.instancesync.entity.deploymentinfo.OnDemandRollbackInfo;
-import io.harness.instancesync.entity.infrastructureMapping.InfrastructureMapping;
 import io.harness.instancesync.service.InstanceHandler;
+import io.harness.instancesync.service.infrastructuremapping.InfrastructureMappingService;
 import io.harness.instancesync.service.instance.InstanceService;
 import io.harness.instancesync.service.instancehandlerfactory.InstanceHandlerFactoryService;
 import io.harness.instancesync.service.instancesyncperpetualtask.InstanceSyncPerpetualTaskService;
@@ -41,6 +42,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   @Inject private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
   @Inject private InstanceService instanceService;
   @Inject private PerpetualTaskService perpetualTaskService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   public void processDeploymentEvent(DeploymentEvent deploymentEvent) {
     try {
@@ -92,7 +94,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   // TODO check how to perform this, what should be the inputs
   public String manualSync(String appId, String infraMappingId) {
     String syncJobId = UUIDGenerator.generateUuid();
-    InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(infraMappingId);
     String accountId = infrastructureMapping.getAccountId();
     instanceService.saveManualSyncJob(
         ManualSyncJob.builder().uuid(syncJobId).accountId(accountId).appId(appId).build());
@@ -146,29 +148,29 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
   private void processDeploymentSummary(
       DeploymentSummary deploymentSummary, boolean isRollback, OnDemandRollbackInfo onDemandRollbackInfo) {
-    String infraMappingId = deploymentSummary.getInfrastructureMapping().getId();
+    String infrastructureMappingId = deploymentSummary.getInfrastructureMappingId();
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
-             InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
+             InfrastructureMapping.class, infrastructureMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
       //            log.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
 
-      InfrastructureMapping infraMapping = deploymentSummary.getInfrastructureMapping();
-      notNullCheck("Infra mapping is null for the given id: " + infraMappingId, infraMapping);
+      InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(infrastructureMappingId);
+      notNullCheck("Infra mapping is null for the given id: " + infrastructureMappingId, infrastructureMapping);
 
       InfrastructureMappingType infrastructureMappingType =
-          Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+          Utils.getEnumFromString(InfrastructureMappingType.class, infrastructureMapping.getInfraMappingType());
       Preconditions.checkNotNull(infrastructureMappingType, "InfrastructureMappingType should not be null");
       if (isSupported(infrastructureMappingType)) {
-        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
+        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMapping);
         instanceHandler.handleNewDeployment(deploymentSummary, isRollback, onDemandRollbackInfo);
-        createPerpetualTaskForNewDeploymentIfEnabled(infraMapping, deploymentSummary);
-        log.info("Handled deployment event for infraMappingId [{}] successfully", infraMappingId);
+        createPerpetualTaskForNewDeploymentIfEnabled(infrastructureMapping, deploymentSummary);
+        log.info("Handled deployment event for infraMappingId [{}] successfully", infrastructureMappingId);
       } else {
-        log.info("Skipping deployment event for infraMappingId [{}]", infraMappingId);
+        log.info("Skipping deployment event for infraMappingId [{}]", infrastructureMappingId);
       }
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception
-      log.warn("Exception while handling deployment event for infraMappingId [{}]", infraMappingId, ex);
+      log.warn("Exception while handling deployment event for infraMappingId [{}]", infrastructureMappingId, ex);
     }
   }
 
@@ -217,7 +219,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
       throw ex;
     } finally {
-      Status status = handler.getStatus(infrastructureMapping, response);
+      Status status = instanceHandler.getStatus(infrastructureMapping, response);
       if (status.isSuccess()) {
         instanceService.updateSyncSuccess(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(),
             infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(),

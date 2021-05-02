@@ -1,20 +1,20 @@
 package io.harness.instancesync.service;
 
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.instancesync.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.instancesync.entity.DeploymentSummary;
 import io.harness.instancesync.entity.deploymentinfo.OnDemandRollbackInfo;
-import io.harness.instancesync.entity.infrastructureMapping.InfrastructureMapping;
+import io.harness.instancesync.service.infrastructuremapping.InfrastructureMappingService;
 
-import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
-import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.instance.InstanceSyncFlow;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import java.util.List;
+import com.google.inject.Inject;
 
 public abstract class InstanceHandler implements IInstanceHandler, IInstanceSyncByPerpetualTaskhandler {
+  @Inject protected InfrastructureMappingService infrastructureMappingService;
+
   protected abstract void validateDeploymentInfo(DeploymentSummary deploymentSummary);
 
   protected abstract <T> Multimap<T, Instance> createDeploymentInstanceMap(DeploymentSummary deploymentSummary);
@@ -49,54 +49,3 @@ public abstract class InstanceHandler implements IInstanceHandler, IInstanceSync
     //        loadContainerSvcNameInstanceMap(containerInfraMapping, containerMetadataInstanceMap);
   }
 }
-
-/**
- if (isEmpty(deploymentSummaries)) {
- return;
- }
-
- String infraMappingId = deploymentSummaries.iterator().next().getInfraMappingId();
- String appId = deploymentSummaries.iterator().next().getAppId();
- log.info("Handling new container deployment for inframappingId [{}]", infraMappingId);
- validateDeploymentInfos(deploymentSummaries);
-
- if (deploymentSummaries.iterator().next().getDeploymentInfo() instanceof ContainerDeploymentInfoWithNames) {
- deploymentSummaries.forEach(deploymentSummary -> {
- ContainerDeploymentInfoWithNames deploymentInfo =
- (ContainerDeploymentInfoWithNames) deploymentSummary.getDeploymentInfo();
- containerSvcNameInstanceMap.put(ContainerMetadata.builder()
- .containerServiceName(deploymentInfo.getContainerSvcName())
- .namespace(deploymentInfo.getNamespace())
- .build(),
- null);
- });
- } else if (deploymentSummaries.iterator().next().getDeploymentInfo() instanceof K8sDeploymentInfo) {
- deploymentSummaries.forEach(deploymentSummary -> {
- K8sDeploymentInfo deploymentInfo = (K8sDeploymentInfo) deploymentSummary.getDeploymentInfo();
-
- String releaseName = deploymentInfo.getReleaseName();
- Set<String> namespaces = new HashSet<>();
- if (isNotBlank(deploymentInfo.getNamespace())) {
- namespaces.add(deploymentInfo.getNamespace());
- }
-
- if (isNotEmpty(deploymentInfo.getNamespaces())) {
- namespaces.addAll(deploymentInfo.getNamespaces());
- }
-
- for (String namespace : namespaces) {
- containerSvcNameInstanceMap.put(ContainerMetadata.builder()
- .type(ContainerMetadataType.K8S)
- .releaseName(releaseName)
- .namespace(namespace)
- .build(),
- null);
- }
- });
- }
-
- ContainerInfrastructureMapping containerInfraMapping = getContainerInfraMapping(appId, infraMappingId);
- syncInstancesInternal(
- containerInfraMapping, containerSvcNameInstanceMap, deploymentSummaries, rollback, null, NEW_DEPLOYMENT);
- *
- */

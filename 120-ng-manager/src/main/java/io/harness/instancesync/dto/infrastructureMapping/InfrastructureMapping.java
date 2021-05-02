@@ -1,11 +1,11 @@
-package io.harness.instancesync.entity.infrastructureMapping;
+package io.harness.instancesync.dto.infrastructureMapping;
+
+import io.harness.persistence.PersistentEntity;
 
 import lombok.Data;
 
 @Data
-public abstract class InfrastructureMapping {
-  // This id is created using hash of service-env- and other fields and should remain consistent
-  // for this combination of fields
+public abstract class InfrastructureMapping implements PersistentEntity {
   private String id;
   private String accountId;
   private String infraMappingType;

@@ -1,7 +1,7 @@
 package io.harness.instancesync.service;
 
+import io.harness.instancesync.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.instancesync.entity.DeploymentSummary;
-import io.harness.instancesync.entity.infrastructureMapping.InfrastructureMapping;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
 import java.util.List;

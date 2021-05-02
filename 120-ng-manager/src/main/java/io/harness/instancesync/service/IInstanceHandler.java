@@ -1,9 +1,9 @@
 package io.harness.instancesync.service;
 
+import io.harness.instancesync.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.instancesync.entity.DeploymentSummary;
 import io.harness.instancesync.entity.InstanceSyncFlowType;
 import io.harness.instancesync.entity.deploymentinfo.OnDemandRollbackInfo;
-import io.harness.instancesync.entity.infrastructureMapping.InfrastructureMapping;
 
 public interface IInstanceHandler {
   <T, O extends InfrastructureMapping> void handleNewDeployment(

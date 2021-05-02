@@ -5,8 +5,8 @@ import static java.util.Collections.emptyList;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ff.FeatureFlagService;
 import io.harness.instancesync.dto.InstanceSyncPerpetualTaskInfo;
+import io.harness.instancesync.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.instancesync.entity.DeploymentSummary;
-import io.harness.instancesync.entity.infrastructureMapping.InfrastructureMapping;
 import io.harness.instancesync.repository.instancesyncperpetualtask.InstanceSyncPerpetualTaskRepository;
 import io.harness.instancesync.service.IInstanceSyncByPerpetualTaskhandler;
 import io.harness.instancesync.service.InstanceHandler;
@@ -52,6 +52,10 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
   public void createPerpetualTasksForNewDeployment(
       InfrastructureMapping infrastructureMapping, DeploymentSummary deploymentSummary) {
     InstanceHandler handler = getInstanceHandler(infrastructureMapping);
+    if (handler == null) {
+      // TODO handle it gracefully with logs
+      return;
+    }
 
     List<PerpetualTaskRecord> existingTasks = getExistingPerpetualTasks(infrastructureMapping);
 
