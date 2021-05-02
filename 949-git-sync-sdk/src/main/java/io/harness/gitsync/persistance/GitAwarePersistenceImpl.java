@@ -2,7 +2,7 @@ package io.harness.gitsync.persistance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT_BRANCH;
+import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 
@@ -159,8 +159,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
                                               .getGitBranchInfo();
       final List<String> objectId;
       if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
-          || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT_BRANCH)
-          || gitBranchInfo.getBranch().equals(DEFAULT_BRANCH)) {
+          || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT) || gitBranchInfo.getBranch().equals(DEFAULT)) {
         return new Criteria().andOperator(
             new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
                 Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
@@ -350,7 +349,7 @@ public class GitAwarePersistenceImpl implements GitAwarePersistence {
     // done.
     final GitSyncBranchContext gitEntityInfo = GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
     if (object != null && gitEntityInfo != null && gitEntityInfo.getGitBranchInfo().getBranch() != null
-        && !gitEntityInfo.getGitBranchInfo().getBranch().equals(DEFAULT_BRANCH)) {
+        && !gitEntityInfo.getGitBranchInfo().getBranch().equals(DEFAULT)) {
       object.setBranch(gitEntityInfo.getGitBranchInfo().getBranch());
     }
     return object;

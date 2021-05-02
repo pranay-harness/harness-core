@@ -102,4 +102,9 @@ public class PipelineEntityGitSyncHelper implements GitSdkEntityHandlerInterface
   public String getUuidKey() {
     return PipelineEntityKeys.uuid;
   }
+
+  @Override
+  public String getBranchKey() {
+    return PipelineEntityKeys.branch;
+  }
 }

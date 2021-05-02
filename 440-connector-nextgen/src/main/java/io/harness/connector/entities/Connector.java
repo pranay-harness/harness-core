@@ -78,7 +78,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   String heartbeatPerpetualTaskId;
   String objectIdOfYaml;
   Boolean isFromDefaultBranch;
-  transient String branch;
+  String branch;
   String yamlGitConfigRef;
 
   @Override
