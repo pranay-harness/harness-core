@@ -22,10 +22,7 @@ import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
-import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
-import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.SdkResponseEvent;
@@ -52,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
-  @Inject private NodeExecutionProtoServiceBlockingStub nodeExecutionProtoServiceBlockingStub;
   @Inject private StepRegistry stepRegistry;
   @Inject private ResponseDataMapper responseDataMapper;
   @Inject private SdkResponseEventPublisher sdkResponseEventPublisher;
@@ -128,13 +124,6 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
     sdkResponseEventPublisher.send(SdkResponseEvent.builder()
                                        .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
                                        .build());
-  }
-
-  @Override
-  public Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId) {
-    AccumulateResponsesResponse response = nodeExecutionProtoServiceBlockingStub.accumulateResponses(
-        AccumulateResponsesRequest.newBuilder().setPlanExecutionId(planExecutionId).setNotifyId(notifyId).build());
-    return responseDataMapper.fromResponseDataProto(response.getResponseMap());
   }
 
   @Override

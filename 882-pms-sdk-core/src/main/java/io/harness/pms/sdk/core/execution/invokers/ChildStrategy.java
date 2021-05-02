@@ -16,10 +16,8 @@ import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
-import java.util.Map;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
@@ -42,10 +40,8 @@ public class ChildStrategy implements ExecuteStrategy {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildExecutable childExecutable = extractChildExecutable(nodeExecution);
-    Map<String, ResponseData> accumulateResponses = sdkNodeExecutionService.accumulateResponses(
-        ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
-    StepResponse stepResponse = childExecutable.handleChildResponse(
-        ambiance, sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), accumulateResponses);
+    StepResponse stepResponse = childExecutable.handleChildResponse(ambiance,
+        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
     sdkNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }

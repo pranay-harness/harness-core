@@ -3,8 +3,6 @@ package io.harness.pms.sdk;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
 import io.harness.grpc.server.GrpcServer;
-import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc;
-import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc;
@@ -153,12 +151,6 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Singleton
   public SweepingOutputServiceBlockingStub sweepingOutputGrpcClient() throws SSLException {
     return SweepingOutputServiceGrpc.newBlockingStub(getChannel());
-  }
-
-  @Provides
-  @Singleton
-  public NodeExecutionProtoServiceBlockingStub nodeExecutionProtoGrpcClient() throws SSLException {
-    return NodeExecutionProtoServiceGrpc.newBlockingStub(getChannel());
   }
 
   @Provides
