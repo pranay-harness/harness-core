@@ -3,7 +3,7 @@ package io.harness.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
-import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -68,14 +68,14 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("GraphUpdateIterator")
             .poolSize(5)
-            .interval(ofMillis(1500))
+            .interval(ofSeconds(2))
             .build(),
         GraphGenerationServiceImpl.class,
         MongoPersistenceIterator.<PlanExecution, SpringFilterExpander>builder()
             .clazz(PlanExecution.class)
             .fieldName(PlanExecutionKeys.nextIteration)
-            .targetInterval(ofMillis(1500))
-            .acceptableNoAlertDelay(ofMillis(1500))
+            .targetInterval(ofSeconds(2))
+            .acceptableNoAlertDelay(ofSeconds(5))
             .handler(this::updateGraph)
             .filterExpander(query
                 -> query.addCriteria(Criteria.where(PlanExecutionKeys.status).in(StatusUtils.graphUpdateStatuses())))

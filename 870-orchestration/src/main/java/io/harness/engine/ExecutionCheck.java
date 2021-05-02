@@ -1,4 +1,4 @@
-package io.harness.engine.interrupts;
+package io.harness.engine;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -10,7 +10,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
-public class PreFacilitationCheck {
+public class ExecutionCheck {
   boolean proceed;
   String reason;
 }

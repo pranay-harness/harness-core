@@ -19,10 +19,9 @@ import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.facilitation.InterruptPreFacilitationChecker;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
-import io.harness.engine.interrupts.PreFacilitationCheck;
+import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
@@ -107,6 +106,7 @@ public class OrchestrationEngine {
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
+  @Inject private InterruptService interruptService;
   @Inject private InvocationHelper invocationHelper;
 
   public void startNodeExecution(String nodeExecutionId) {
@@ -148,7 +148,7 @@ public class OrchestrationEngine {
   // Start to Facilitators
   private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
-      PreFacilitationCheck check = performPreFacilitationChecks(nodeExecution);
+      ExecutionCheck check = performPreFacilitationChecks(nodeExecution);
       if (!check.isProceed()) {
         log.info("Not Proceeding with  Execution. Reason : {}", check.getReason());
         return;
@@ -181,17 +181,16 @@ public class OrchestrationEngine {
     }
   }
 
-  private PreFacilitationCheck performPreFacilitationChecks(NodeExecution nodeExecution) {
-    InterruptPreFacilitationChecker iChecker = injector.getInstance(InterruptPreFacilitationChecker.class);
+  private ExecutionCheck performPreFacilitationChecks(NodeExecution nodeExecution) {
     RunPreFacilitationChecker rChecker = injector.getInstance(RunPreFacilitationChecker.class);
     SkipPreFacilitationChecker sChecker = injector.getInstance(SkipPreFacilitationChecker.class);
-    iChecker.setNextChecker(rChecker);
     rChecker.setNextChecker(sChecker);
-    return iChecker.check(nodeExecution);
+    return rChecker.check(nodeExecution);
   }
 
   public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution = nodeExecutionService.update(
+        nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
     Ambiance ambiance = nodeExecution.getAmbiance();
     if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
       // Update Status
@@ -211,8 +210,15 @@ public class OrchestrationEngine {
   }
 
   public void invokeExecutable(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
+    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    if (!check.isProceed()) {
+      log.info("Not Proceeding with Execution : {}", check.getReason());
+      return;
+    }
+
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
-    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse);
+    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
 
     StartNodeExecutionEventData startNodeExecutionEventData = StartNodeExecutionEventData.builder()
                                                                   .facilitatorResponse(facilitatorResponse)
@@ -255,12 +261,10 @@ public class OrchestrationEngine {
     return timeoutInstanceIds;
   }
 
-  private NodeExecution prepareNodeExecutionForInvocation(
-      Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
+  private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
-          ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
           ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
           if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
             setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
@@ -338,7 +342,7 @@ public class OrchestrationEngine {
 
   private void concludePlanExecution(NodeExecution nodeExecution) {
     Ambiance ambiance = nodeExecution.getAmbiance();
-    Status status = planExecutionService.calculateEndStatus(ambiance.getPlanExecutionId());
+    Status status = planExecutionService.calculateStatus(ambiance.getPlanExecutionId());
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
     eventEmitter.emitEvent(OrchestrationEvent.builder()

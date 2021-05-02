@@ -1,6 +1,6 @@
 package io.harness.engine.executions.node;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
@@ -10,7 +10,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
@@ -45,7 +44,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
@@ -85,7 +84,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses) {
     Query query = query(where(NodeExecutionKeys.parentId).is(parentId))
-                      .addCriteria(where(NodeExecutionKeys.status).in(flowingStatuses));
+                      .addCriteria(where(NodeExecutionKeys.status).in(flowingStatuses))
+                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
     return mongoTemplate.find(query, NodeExecution.class);
   }
 
@@ -212,19 +212,13 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
+      emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
       stepStatusUpdateSubject.fireInform(StepStatusUpdate::onStepStatusUpdate,
           StepStatusUpdateInfo.builder()
               .nodeExecutionId(updated.getUuid())
               .planExecutionId(updated.getAmbiance().getPlanExecutionId())
               .status(updated.getStatus())
-              .interruptId(EmptyPredicate.isEmpty(updated.getInterruptHistories())
-                      ? null
-                      : updated.getInterruptHistories()
-                            .get(updated.getInterruptHistories().size() - 1)
-                            .getInterruptId())
               .build());
-
-      emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
     }
     return updated;
   }

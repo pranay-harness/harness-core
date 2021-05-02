@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.expressions.OrchestrationConstants;
-import io.harness.engine.interrupts.PreFacilitationCheck;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.expression.EngineExpressionEvaluator;
@@ -34,7 +34,7 @@ public class RunPreFacilitationChecker extends ExpressionEvalPreFacilitationChec
   @Inject PmsEngineExpressionService pmsEngineExpressionService;
 
   @Override
-  protected PreFacilitationCheck performCheck(NodeExecution nodeExecution) {
+  protected ExecutionCheck performCheck(NodeExecution nodeExecution) {
     log.info("Checking If Node should be Run with When Condition.");
     Ambiance ambiance = nodeExecution.getAmbiance();
     String whenCondition = nodeExecution.getNode().getWhenCondition();
@@ -61,14 +61,14 @@ public class RunPreFacilitationChecker extends ExpressionEvalPreFacilitationChec
                       NodeRunInfo.newBuilder().setWhenCondition(whenCondition).setEvaluatedCondition(false).build())
                   .build();
           orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), response);
-          return PreFacilitationCheck.builder().proceed(false).reason("When Condition Evaluated to false").build();
+          return ExecutionCheck.builder().proceed(false).reason("When Condition Evaluated to false").build();
         }
-        return PreFacilitationCheck.builder().proceed(true).reason("When Condition Evaluated to true").build();
+        return ExecutionCheck.builder().proceed(true).reason("When Condition Evaluated to true").build();
       } catch (Exception ex) {
         return handleExpressionEvaluationError(nodeExecution.getUuid(), ex);
       }
     }
-    return PreFacilitationCheck.builder().proceed(true).reason("No when Condition Configured").build();
+    return ExecutionCheck.builder().proceed(true).reason("No when Condition Configured").build();
   }
 
   @VisibleForTesting
