@@ -79,4 +79,9 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   public String getUuidKey() {
     return "uuid";
   }
+
+  @Override
+  public String getBranchKey() {
+    return "branch";
+  }
 }

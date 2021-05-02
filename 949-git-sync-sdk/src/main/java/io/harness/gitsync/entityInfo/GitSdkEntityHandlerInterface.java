@@ -34,4 +34,6 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
   String getYamlGitConfigRefKey();
 
   String getUuidKey();
+
+  String getBranchKey();
 }
