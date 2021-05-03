@@ -19,6 +19,7 @@ public class Instance {
   public static final String DELETED_AT_FIELD = "deletedAt";
 
   @NotEmpty private InstanceType instanceType;
+  private String infrastructureMappingId;
   private HostInstanceKey hostInstanceKey;
   private ContainerInstanceKey containerInstanceKey;
   private PcfInstanceKey pcfInstanceKey;

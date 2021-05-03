@@ -1,4 +1,4 @@
-package io.harness.instancesync.service.stats;
+package io.harness.instancesync.service.stats.statscollector;
 
 public interface StatsCollector {
   boolean createStats(String accountId);

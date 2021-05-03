@@ -9,6 +9,7 @@ proto_library(
         "create_entity_setup_usage_v2.proto",
         "delete_setup_usage.proto",
         "entity_detail_with_setup_usage_detail.proto",
+        "create_timeseries_batch_event_info.proto"
     ],
     visibility = ["//visibility:public"],
     deps = ["//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:970_ng_commons_proto"],

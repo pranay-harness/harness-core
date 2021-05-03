@@ -1,9 +1,10 @@
-package io.harness.instancesync.service.stats;
+package io.harness.instancesync.service.stats.statscollector;
 
 import io.harness.instancesync.dto.Instance;
 import io.harness.instancesync.helper.SnapshotTimeProvider;
 import io.harness.instancesync.repository.instancesyncperpetualtask.InstanceRepository;
 import io.harness.instancesync.service.instancestats.InstanceStatsService;
+import io.harness.instancesync.service.stats.usagemetrics.UsageMetricsEventPublisher;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -23,6 +24,7 @@ public class InstanceStatsCollectorImpl implements StatsCollector {
 
   private InstanceStatsService instanceStatsService;
   private InstanceRepository instanceRepository;
+  private UsageMetricsEventPublisher usageMetricsEventPublisher;
 
   @Override
   public boolean createStats(String accountId) {
@@ -65,16 +67,14 @@ public class InstanceStatsCollectorImpl implements StatsCollector {
     try {
       instances = instanceRepository.getActiveInstancesByAccount(accountId, instant.toEpochMilli());
       log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, instant);
-
-    } catch (Exception e) {
-      // TODO handle exception gracefully
-      return false;
-    } finally {
       try {
-        usageMetricsEventPublisher.publishInstanceTimeSeries(accountId, instant.toEpochMilli(), instances);
+        usageMetricsEventPublisher.publishInstanceStatsTimeSeries(accountId, instant.toEpochMilli(), instances);
       } catch (Exception e) {
         log.error("Error while publishing metrics for account {}, timestamp {}", accountId, instant.toEpochMilli(), e);
       }
+    } catch (Exception e) {
+      // TODO handle exception gracefully
+      return false;
     }
   }
 }
