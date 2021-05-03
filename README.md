@@ -131,6 +131,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 
     `bazel build :all`
 
+
 4. If Global Search is not required:
 
     Install and start MongoDB Docker Image (v3.6):
