@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.accesscontrol.PlatformPermissions.CREATE_ORGANIZATION_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.DELETE_ORGANIZATION_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.EDIT_ORGANIZATION_PERMISSION;
-import static io.harness.ng.accesscontrol.PlatformResourceTypes.ACCOUNT;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
 import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -81,9 +80,9 @@ public class OrganizationResource {
 
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
-  @NGAccessControlCheck(resourceType = ACCOUNT, permission = CREATE_ORGANIZATION_PERMISSION)
+  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = CREATE_ORGANIZATION_PERMISSION)
   public ResponseDTO<OrganizationResponse> create(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @ResourceIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid OrganizationRequest organizationDTO) {
     if (DEFAULT_ORG_IDENTIFIER.equals(organizationDTO.getOrganization().getIdentifier())) {
       throw new InvalidRequestException(
@@ -110,9 +109,9 @@ public class OrganizationResource {
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  //  @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ORGANIZATION_PERMISSION)
+  //  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   public ResponseDTO<PageResponse<OrganizationResponse>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @ResourceIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO =

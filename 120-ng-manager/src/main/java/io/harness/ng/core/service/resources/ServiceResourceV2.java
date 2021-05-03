@@ -108,7 +108,7 @@ public class ServiceResourceV2 {
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
-        Resource.NONE, SERVICE_CREATE_PERMISSION);
+        Resource.of(NGResourceType.SERVICE, null), SERVICE_CREATE_PERMISSION);
     ServiceEntity serviceEntity = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     ServiceEntity createdService = serviceEntityService.create(serviceEntity);
     return ResponseDTO.newResponse(
@@ -124,7 +124,7 @@ public class ServiceResourceV2 {
     for (ServiceRequestDTO serviceRequestDTO : serviceRequestDTOs) {
       accessControlClient.checkForAccessOrThrow(
           ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
-          Resource.NONE, SERVICE_CREATE_PERMISSION);
+          Resource.of(NGResourceType.SERVICE, null), SERVICE_CREATE_PERMISSION);
     }
     List<ServiceEntity> serviceEntities =
         serviceRequestDTOs.stream()
@@ -154,7 +154,7 @@ public class ServiceResourceV2 {
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
-        Resource.NONE, SERVICE_UPDATE_PERMISSION);
+        Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity updatedService = serviceEntityService.update(requestService);
@@ -170,7 +170,7 @@ public class ServiceResourceV2 {
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
-        Resource.NONE, SERVICE_UPDATE_PERMISSION);
+        Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity upsertedService = serviceEntityService.upsert(requestService);
@@ -187,16 +187,9 @@ public class ServiceResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
-    //    boolean hasAccess = accessControlClient
-    //                            .checkForAccess(Collections.singletonList(CDNGRbacUtility.getPermissionDTO(accountId,
-    //                                orgIdentifier, projectIdentifier, CDNGRbacPermissions.SERVICE_VIEW_PERMISSION)))
-    //                            .getAccessControlList()
-    //                            .get(0)
-    //                            .isPermitted();
-    //    if (!hasAccess) {
-    //      throw new AccessDeniedException("Unauthorized to list services", ErrorCode.NG_ACCESS_DENIED,
-    //      WingsException.USER);
-    //    }
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
+    //        Resource.of(NGResourceType.SERVICE, null), SERVICE_VIEW_PERMISSION, "Unauthorized to list services");
+
     Criteria criteria =
         ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false, searchTerm);
     Pageable pageRequest;
