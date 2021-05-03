@@ -19,6 +19,13 @@ public class BigQueryConstants {
       + " FROM  `%s`  "
       + "WHERE accountid = '%s' and starttime = %s ; ";
 
+  public static final String AZURE_VM_BILLING_QUERY =
+      "SELECT SUM(cost) as cost, azureInstanceId, azureVMProviderId, azureMeterCategory "
+      + "FROM `%s` "
+      + "WHERE  azureVMProviderId IN ( '%s' )  AND "
+      + "startTime  >= '%s' AND startTime < '%s' AND cloudProvider = 'AZURE' "
+      + "GROUP BY  azureInstanceId, azureVMProviderId, azureMeterCategory; ";
+
   public static final String EKS_FARGATE_BILLING_QUERY = "SELECT SUM(blendedcost) as cost, resourceid, usagetype  "
       + "FROM `%s` "
       + "WHERE  "
@@ -49,4 +56,7 @@ public class BigQueryConstants {
   public static final String eksNetworkInstanceType = "DataTransfer";
   public static final String eksCpuInstanceType = "vCPU-Hours";
   public static final String eksMemoryInstanceType = "Fargate-GB-Hours";
+  public static final String azureMeterCategory = "azureMeterCategory";
+  public static final String azureVMProviderId = "azureVMProviderId";
+  public static final String azureVMMeterCategory = "Virtual Machines";
 }

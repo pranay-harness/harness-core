@@ -2,6 +2,8 @@ package io.harness.batch.processing.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Service
 @Slf4j
 public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataService {
@@ -35,6 +38,9 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
 
   private LoadingCache<String, String> awsBillingMetaDataCache =
       Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAwsBillingMetaData);
+
+  private LoadingCache<String, String> azureBillingMetaDataCache =
+      Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAzureBillingMetaData);
 
   private LoadingCache<CacheKey, Boolean> pipelineJobStatusCache =
       Caffeine.newBuilder()
@@ -65,6 +71,11 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
 
   @Override
+  public String getAzureDataSetId(String accountId) {
+    return azureBillingMetaDataCache.get(accountId);
+  }
+
+  @Override
   public Boolean checkPipelineJobFinished(String accountId, Instant startTime, Instant endTime) {
     CacheKey cacheKey = new CacheKey(accountId, startTime, endTime);
     return pipelineJobStatusCache.get(cacheKey);
@@ -87,6 +98,15 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
     CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
     if (null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
         && ceMetadataRecord.getAwsDataPresent()) {
+      return cloudBillingHelper.getDataSetId(accountId);
+    }
+    return null;
+  }
+
+  private String getAzureBillingMetaData(String accountId) {
+    CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAzureDataPresent()
+        && ceMetadataRecord.getAzureDataPresent()) {
       return cloudBillingHelper.getDataSetId(accountId);
     }
     return null;
