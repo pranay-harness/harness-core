@@ -35,6 +35,7 @@ import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
@@ -65,8 +66,8 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
       if (GlobalContextManager.get(MdcGlobalContextData.MDC_ID) != null) {
         Map<String, String> imageDetails =
             ((MdcGlobalContextData) GlobalContextManager.get(MdcGlobalContextData.MDC_ID)).getMap();
-        return new HintException("ECR image: '" + imageDetails.get("imageName") + "' not found in region: '"
-                + imageDetails.get("region") + "'",
+        return new HintException("ECR image: '" + StringUtils.defaultString(imageDetails.get("imageName"), "")
+                + "' not found in region: '" + StringUtils.defaultString(imageDetails.get("region"), "") + "'",
             new ImageNotFoundException(amazonServiceException.getMessage(), IMAGE_NOT_FOUND, USER));
       }
       return new HintException(HintException.HINT_ECR_IMAGE_NAME,
