@@ -171,7 +171,7 @@ public class PodWatcherTest extends CategoryTest {
     WireMock.verify(1, getRequestedFor(POD_URL_MATCHING).withQueryParam("watch", equalTo("false")));
     WireMock.verify(getRequestedFor(POD_URL_MATCHING).withQueryParam("watch", equalTo("true")));
 
-    verify(eventPublisher, times(2)).publishMessage(captor.capture(), any(), any());
+    verify(eventPublisher, times(5)).publishMessage(captor.capture(), any(), any());
 
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this::infoMessageAssertions);
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this::scheduledMessageAssertions);
