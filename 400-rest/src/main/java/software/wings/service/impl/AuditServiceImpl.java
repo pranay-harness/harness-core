@@ -165,7 +165,6 @@ public class AuditServiceImpl implements AuditService {
   public AuditRecord fetchMostRecentAuditRecord(String auditHeaderId) {
     return wingsPersistence.createQuery(AuditRecord.class, excludeAuthority)
         .filter(AuditRecordKeys.auditHeaderId, auditHeaderId)
-        .order(Sort.descending(AuditHeaderKeys.createdAt))
         .get();
   }
 

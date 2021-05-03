@@ -36,7 +36,6 @@ public class ChangeSetConnectionDataFetcher
   public QLChangeSetConnection fetchConnection(List<QLChangeSetFilter> serviceFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<AuditHeader> query = populateFilters(wingsPersistence, serviceFilters, AuditHeader.class, true);
-    query.order(Sort.descending(AuditHeaderKeys.createdAt));
 
     QLChangeSetConnectionBuilder connectionBuilder = QLChangeSetConnection.builder();
     connectionBuilder.pageInfo(utils.populate(pageQueryParameters, query, audit -> {
