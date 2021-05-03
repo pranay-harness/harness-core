@@ -256,7 +256,6 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = VISTAAR)
   @Category(UnitTests.class)
-  @Ignore("Ignored to be fixed later")
   public void shouldGetAwsCodeCommitGitEnvVariables() {
     ConnectorDetails gitConnector =
         ConnectorDetails.builder()
