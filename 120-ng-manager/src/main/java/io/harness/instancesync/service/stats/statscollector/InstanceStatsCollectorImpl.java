@@ -67,11 +67,9 @@ public class InstanceStatsCollectorImpl implements StatsCollector {
     try {
       instances = instanceRepository.getActiveInstancesByAccount(accountId, instant.toEpochMilli());
       log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, instant);
-      try {
-        usageMetricsEventPublisher.publishInstanceStatsTimeSeries(accountId, instant.toEpochMilli(), instances);
-      } catch (Exception e) {
-        log.error("Error while publishing metrics for account {}, timestamp {}", accountId, instant.toEpochMilli(), e);
-      }
+
+      usageMetricsEventPublisher.publishInstanceStatsTimeSeries(accountId, instant.toEpochMilli(), instances);
+      return true;
     } catch (Exception e) {
       // TODO handle exception gracefully
       return false;
