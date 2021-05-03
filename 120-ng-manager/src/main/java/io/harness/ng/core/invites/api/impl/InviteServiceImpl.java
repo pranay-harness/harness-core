@@ -7,7 +7,7 @@ import static io.harness.ng.core.invites.InviteOperationResponse.FAIL;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
 import static io.harness.ng.core.invites.remote.InviteMapper.writeDTO;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.ACCEPTED_INVITE;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.ACCEPTED_INVITE;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -24,14 +24,17 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
-import io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter;
+import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.AccountDTO;
+import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.events.UserInviteCreateEvent;
 import io.harness.ng.core.events.UserInviteDeleteEvent;
 import io.harness.ng.core.events.UserInviteUpdateEvent;
@@ -39,14 +42,14 @@ import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.InviteDTO;
-import io.harness.ng.core.invites.dto.UserSearchDTO;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.invites.remote.RoleBinding;
 import io.harness.ng.core.invites.remote.RoleBinding.RoleBindingKeys;
+import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
-import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.Scope;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.channeldetails.EmailChannel.EmailChannelBuilder;
@@ -114,6 +117,8 @@ public class InviteServiceImpl implements InviteService {
   private final AccessControlAdminClient accessControlAdminClient;
   private final AccountClient accountClient;
   private final OutboxService outboxService;
+  private final OrganizationService organizationService;
+  private final ProjectService projectService;
   private final String currentGenUiUrl;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
@@ -126,6 +131,7 @@ public class InviteServiceImpl implements InviteService {
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
       InviteRepository inviteRepository, NotificationClient notificationClient,
       AccessControlAdminClient accessControlAdminClient, AccountClient accountClient, OutboxService outboxService,
+      OrganizationService organizationService, ProjectService projectService,
       @Named("currentGenUiUrl") String currentGenUiUrl) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
@@ -136,6 +142,8 @@ public class InviteServiceImpl implements InviteService {
     this.accessControlAdminClient = accessControlAdminClient;
     this.accountClient = accountClient;
     this.outboxService = outboxService;
+    this.organizationService = organizationService;
+    this.projectService = projectService;
     this.currentGenUiUrl = currentGenUiUrl;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
@@ -173,16 +181,15 @@ public class InviteServiceImpl implements InviteService {
 
   private boolean checkIfUserAlreadyAdded(Invite invite) {
     Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail());
-    if (!userOptional.isPresent()) {
-      return false;
-    }
-    Optional<UserMembership> userMembershipOptional = ngUserService.getUserMembership(userOptional.get().getUuid());
-    Scope scope = Scope.builder()
-                      .accountIdentifier(invite.getAccountIdentifier())
-                      .orgIdentifier(invite.getOrgIdentifier())
-                      .projectIdentifier(invite.getProjectIdentifier())
-                      .build();
-    return userMembershipOptional.isPresent() && userMembershipOptional.get().getScopes().contains(scope);
+    return userOptional
+        .filter(user
+            -> ngUserService.isUserAtScope(user.getUuid(),
+                Scope.builder()
+                    .accountIdentifier(invite.getAccountIdentifier())
+                    .orgIdentifier(invite.getOrgIdentifier())
+                    .projectIdentifier(invite.getProjectIdentifier())
+                    .build()))
+        .isPresent();
   }
 
   private InviteOperationResponse createInvite(Invite newInvite, Invite existingInvite) {
@@ -211,7 +218,7 @@ public class InviteServiceImpl implements InviteService {
     PageResponse<Invite> invitesPage =
         getInvitePage(accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, pageRequest, aclAggregateFilter);
     List<String> userEmails = invitesPage.getContent().stream().map(Invite::getEmail).collect(toList());
-    Map<String, UserSearchDTO> userSearchDTOs = getPendingUserMap(userEmails, accountIdentifier);
+    Map<String, UserMetadataDTO> userSearchDTOs = getPendingUserMap(userEmails, accountIdentifier);
     List<InviteDTO> inviteDTOS = aggregatePendingUsers(invitesPage.getContent(), userSearchDTOs);
     return PageUtils.getNGPageResponse(invitesPage, inviteDTOS);
   }
@@ -397,14 +404,39 @@ public class InviteServiceImpl implements InviteService {
     Map<String, String> templateData = new HashMap<>();
     templateData.put("url", url);
     if (!isBlank(invite.getProjectIdentifier())) {
-      templateData.put("projectname", invite.getProjectIdentifier());
+      templateData.put("projectname",
+          getProjectName(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier()));
     } else if (!isBlank(invite.getOrgIdentifier())) {
-      templateData.put("organizationname", invite.getOrgIdentifier());
+      templateData.put("organizationname", getOrgName(invite.getAccountIdentifier(), invite.getOrgIdentifier()));
     } else {
-      templateData.put("accountname", invite.getAccountIdentifier());
+      templateData.put("accountname", getAccountName(invite.getAccountIdentifier()));
     }
     emailChannelBuilder.templateData(templateData);
     notificationClient.sendNotificationAsync(emailChannelBuilder.build());
+  }
+
+  private String getProjectName(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Optional<Project> projectOpt = projectService.get(accountIdentifier, orgIdentifier, projectIdentifier);
+    if (!projectOpt.isPresent()) {
+      throw new IllegalStateException(String.format("Project with identifier [%s] doesn't exists", projectIdentifier));
+    }
+    return projectOpt.get().getName();
+  }
+
+  private String getOrgName(String accountIdentifier, String orgIdentifier) {
+    Optional<Organization> organizationOpt = organizationService.get(accountIdentifier, orgIdentifier);
+    if (!organizationOpt.isPresent()) {
+      throw new IllegalStateException(String.format("Organization with identifier [%s] doesn't exists", orgIdentifier));
+    }
+    return organizationOpt.get().getName();
+  }
+
+  private String getAccountName(String accountIdentifier) {
+    AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(accountIdentifier));
+    if (account == null) {
+      throw new IllegalStateException(String.format("Account with identifier [%s] doesn't exists", accountIdentifier));
+    }
+    return account.getName();
   }
 
   private String getInvitationMailEmbedUrl(Invite invite) throws URISyntaxException {
@@ -493,35 +525,35 @@ public class InviteServiceImpl implements InviteService {
       }
     }
     if (!isBlank(searchTerm)) {
-      Page<UserInfo> userInfos = ngUserService.list(
+      Page<UserInfo> userInfos = ngUserService.listCurrentGenUsers(
           accountIdentifier, searchTerm, org.springframework.data.domain.PageRequest.of(0, DEFAULT_PAGE_SIZE));
-      List<String> userIds = userInfos.stream().map(UserInfo::getEmail).collect(toList());
+      List<String> emailIds = userInfos.stream().map(UserInfo::getEmail).collect(toList());
       Criteria searchTermCriteria = new Criteria();
       searchTermCriteria.orOperator(
-          Criteria.where(InviteKeys.email).regex(quote(searchTerm)), Criteria.where(InviteKeys.email).in(userIds));
+          Criteria.where(InviteKeys.email).regex(quote(searchTerm)), Criteria.where(InviteKeys.email).in(emailIds));
       criteria = new Criteria().andOperator(criteria, searchTermCriteria);
     }
     return getInvites(criteria, pageRequest);
   }
 
-  private Map<String, UserSearchDTO> getPendingUserMap(List<String> userEmails, String accountIdentifier) {
+  private Map<String, UserMetadataDTO> getPendingUserMap(List<String> userEmails, String accountIdentifier) {
     List<UserInfo> users = ngUserService.getUsersFromEmail(userEmails, accountIdentifier);
-    Map<String, UserSearchDTO> userSearchMap = new HashMap<>();
+    Map<String, UserMetadataDTO> userSearchMap = new HashMap<>();
     users.forEach(user
         -> userSearchMap.put(user.getEmail(),
-            UserSearchDTO.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build()));
+            UserMetadataDTO.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build()));
     for (String email : userEmails) {
-      userSearchMap.computeIfAbsent(email, email1 -> UserSearchDTO.builder().email(email1).build());
+      userSearchMap.computeIfAbsent(email, email1 -> UserMetadataDTO.builder().email(email1).build());
     }
     return userSearchMap;
   }
 
-  private List<InviteDTO> aggregatePendingUsers(List<Invite> invites, Map<String, UserSearchDTO> userMap) {
+  private List<InviteDTO> aggregatePendingUsers(List<Invite> invites, Map<String, UserMetadataDTO> userMap) {
     Preconditions.checkState(invites.stream().map(Invite::getEmail).distinct().count() == userMap.size(),
         "Number of invites should be same as number of invites. Invariant violated");
     List<InviteDTO> inviteDTOs = new ArrayList<>();
     for (Invite invite : invites) {
-      UserSearchDTO user = userMap.get(invite.getEmail());
+      UserMetadataDTO user = userMap.get(invite.getEmail());
       inviteDTOs.add(InviteDTO.builder()
                          .id(invite.getId())
                          .name(user.getName())

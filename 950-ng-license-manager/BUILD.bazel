@@ -1,8 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 HarnessTeam = "GTM"
 
@@ -12,10 +11,12 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//955-account-mgmt:module",
         "//960-ng-core-beans:module",
         "//960-ng-license-beans:module",
         "//960-persistence:module",
         "//970-rbac-core:module",
+        "//970-telemetry-beans:module",
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_inject_guice",
@@ -35,6 +36,7 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//950-telemetry:module",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
@@ -44,6 +46,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

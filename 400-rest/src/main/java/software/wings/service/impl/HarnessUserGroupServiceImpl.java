@@ -196,7 +196,7 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
 
   @Override
   public boolean delete(String accountId, String uuid) {
-    if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, "")) {
+    if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
       List<AccessRequest> accessRequestList = accessRequestService.getActiveAccessRequest(uuid);
       if (isNotEmpty(accessRequestList)) {
         throw new AccessRequestPresentException(

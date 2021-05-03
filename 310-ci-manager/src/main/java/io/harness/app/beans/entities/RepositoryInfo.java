@@ -12,6 +12,7 @@ public class RepositoryInfo {
   private double percentSuccess;
   private double successRate;
   private String lastCommit;
+  private String lastStatus;
   private List<RepositoryBuildInfo> countList;
   private String time;
 }

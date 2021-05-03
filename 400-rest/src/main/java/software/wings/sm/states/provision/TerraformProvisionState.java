@@ -47,6 +47,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -59,12 +60,14 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
@@ -131,14 +134,19 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -149,6 +157,7 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class TerraformProvisionState extends State {
   @Inject private transient AppService appService;
   @Inject private transient ActivityService activityService;
@@ -188,6 +197,8 @@ public abstract class TerraformProvisionState extends State {
   @Getter @Setter private boolean exportPlanToApplyStep;
   @Getter @Setter private String workspace;
   @Getter @Setter private String delegateTag;
+
+  static final String DUPLICATE_VAR_MSG_PREFIX = "variable names should be unique, duplicate variable(s) found: ";
 
   /**
    * Instantiates a new state.
@@ -500,6 +511,48 @@ public abstract class TerraformProvisionState extends State {
     activityService.updateStatus(activityId, appId, status);
   }
 
+  private void validateTerraformVariables() {
+    ensureNoDuplicateVars(getBackendConfigs());
+    ensureNoDuplicateVars(getEnvironmentVariables());
+    ensureNoDuplicateVars(getVariables());
+
+    boolean areVariablesValid = areKeysMongoCompliant(getVariables(), getBackendConfigs(), getEnvironmentVariables());
+    if (!areVariablesValid) {
+      throw new InvalidRequestException("The following characters are not allowed in terraform "
+          + "variable names: . and $");
+    }
+  }
+
+  private void ensureNoDuplicateVars(List<NameValuePair> variables) {
+    if (isEmpty(variables)) {
+      return;
+    }
+
+    HashSet<String> distinctVariableNames = new HashSet<>();
+    Set<String> duplicateVariableNames = new HashSet<>();
+    for (NameValuePair variable : variables) {
+      if (!distinctVariableNames.contains(variable.getName().trim())) {
+        distinctVariableNames.add(variable.getName());
+      } else {
+        duplicateVariableNames.add(variable.getName());
+      }
+    }
+
+    if (!duplicateVariableNames.isEmpty()) {
+      throw new InvalidRequestException(
+          DUPLICATE_VAR_MSG_PREFIX + duplicateVariableNames.toString(), WingsException.USER);
+    }
+  }
+
+  private boolean areKeysMongoCompliant(List<NameValuePair>... variables) {
+    Predicate<String> terraformVariableNameCheckFail = value -> value.contains(".") || value.contains("$");
+    return Stream.of(variables)
+        .filter(EmptyPredicate::isNotEmpty)
+        .flatMap(Collection::stream)
+        .map(NameValuePair::getName)
+        .noneMatch(terraformVariableNameCheckFail);
+  }
+
   protected static List<NameValuePair> validateAndFilterVariables(
       List<NameValuePair> workflowVariables, List<NameValuePair> provisionerVariables) {
     Map<String, String> variableTypesMap = isNotEmpty(provisionerVariables)
@@ -659,6 +712,8 @@ public abstract class TerraformProvisionState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD,
                 executionContext.getEnv() != null ? executionContext.getEnv().getEnvironmentType().name() : null)
             .tags(getRenderedTaskTags(delegateTag, executionContext))
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Terraform provision task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TERRAFORM_PROVISION_TASK.name())
@@ -677,6 +732,8 @@ public abstract class TerraformProvisionState extends State {
     renderDelegateTask(executionContext, delegateTask, stateExecutionContext);
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(executionContext, delegateTask);
+
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activityId))
@@ -724,9 +781,10 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedEnvironmentVars = null;
     List<NameValuePair> rawVariablesList = new ArrayList<>();
 
+    validateTerraformVariables();
+
     if (isNotEmpty(this.variables) || isNotEmpty(this.backendConfigs) || isNotEmpty(this.environmentVariables)) {
-      List<NameValuePair> validVariables =
-          validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
+      List<NameValuePair> validVariables = isNotEmpty(getVariables()) ? getVariables() : new ArrayList<>();
       rawVariablesList.addAll(validVariables);
 
       variables = infrastructureProvisionerService.extractUnresolvedTextVariables(validVariables);
@@ -741,7 +799,7 @@ public abstract class TerraformProvisionState extends State {
 
       if (this.environmentVariables != null) {
         List<NameValuePair> validEnvironmentVariables =
-            validateAndFilterVariables(this.environmentVariables, terraformProvisioner.getEnvironmentVariables());
+            isNotEmpty(getEnvironmentVariables()) ? getEnvironmentVariables() : new ArrayList<>();
         environmentVars = infrastructureProvisionerService.extractUnresolvedTextVariables(validEnvironmentVariables);
         encryptedEnvironmentVars = infrastructureProvisionerService.extractEncryptedTextVariables(
             validEnvironmentVariables, context.getAppId(), context.getWorkflowExecutionId());
@@ -957,15 +1015,6 @@ public abstract class TerraformProvisionState extends State {
     return targets.stream().map(context::renderExpression).collect(toList());
   }
 
-  /**
-   * getVariables() returns all variables including backend configs.
-   * for just the variables, this method should be called.
-   * @return
-   */
-  private List<NameValuePair> getAllVariables() {
-    return variables;
-  }
-
   protected void saveTerraformConfig(
       ExecutionContext context, TerraformInfrastructureProvisioner provisioner, TerraformExecutionData executionData) {
     TfVarSource tfVarSource = executionData.getTfVarSource();
@@ -1080,5 +1129,10 @@ public abstract class TerraformProvisionState extends State {
   SecretManagerConfig getSecretManagerContainingTfPlan(String secretManagerId, String accountId) {
     return isEmpty(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
                                     : secretManagerConfigService.getSecretManager(accountId, secretManagerId, false);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

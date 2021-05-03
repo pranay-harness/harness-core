@@ -10,8 +10,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwi
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 
 import com.google.inject.Inject;
@@ -48,6 +48,16 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
     List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
     return PageableExecutionUtils.getPage(
         userMemberships, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), UserMembership.class));
+  }
+
+  @Override
+  public Page<String> findAllUserIds(Criteria criteria, Pageable pageable) {
+    Query query = new Query(criteria).with(pageable);
+    query.fields().include(UserMembershipKeys.userId);
+    List<UserMembership> userMemberships = mongoTemplate.find(query, UserMembership.class);
+    List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(Collectors.toList());
+    return PageableExecutionUtils.getPage(
+        userIds, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), UserMembership.class));
   }
 
   @Override

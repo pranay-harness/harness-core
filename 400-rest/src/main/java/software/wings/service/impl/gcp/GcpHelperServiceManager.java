@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class GcpHelperServiceManager {
   @Inject private GcpHelperService gcpHelperService;
   @Inject private DelegateService delegateService;

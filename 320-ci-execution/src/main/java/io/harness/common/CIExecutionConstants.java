@@ -111,4 +111,6 @@ public class CIExecutionConstants {
 
   public static final String AWS_CODE_COMMIT_URL_REGEX =
       "^https://git-codecommit\\.([^/.]*)\\.amazonaws\\.com/v1/repos(?:/?|/[^/.]*)$";
+
+  public static final String PLUGIN_ARTIFACT_FILE_VALUE = "/addon/tmp/.plugin/artifact";
 }

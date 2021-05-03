@@ -1,7 +1,6 @@
 package io.harness.grpc.server;
 
 import io.harness.PipelineServiceConfiguration;
-import io.harness.engine.executions.node.PmsNodeExecutionGrpcSevice;
 import io.harness.engine.interrupts.InterruptGrpcService;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
@@ -128,14 +127,12 @@ public class PipelineServiceGrpcModule extends AbstractModule {
 
   @Provides
   private Set<BindableService> bindableServices(HealthStatusManager healthStatusManager,
-      PmsSdkInstanceService pmsSdkInstanceService, PmsNodeExecutionGrpcSevice pmsNodeExecutionGrpcSevice,
-      PmsExecutionGrpcService pmsExecutionGrpcService, SweepingOutputServiceImpl sweepingOutputService,
-      OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer,
+      PmsSdkInstanceService pmsSdkInstanceService, PmsExecutionGrpcService pmsExecutionGrpcService,
+      SweepingOutputServiceImpl sweepingOutputService, OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer,
       EngineExpressionGrpcServiceImpl engineExpressionGrpcService, InterruptGrpcService interruptGrpcService) {
     Set<BindableService> services = new HashSet<>();
     services.add(healthStatusManager.getHealthService());
     services.add(pmsSdkInstanceService);
-    services.add(pmsNodeExecutionGrpcSevice);
     services.add(pmsExecutionGrpcService);
     services.add(sweepingOutputService);
     services.add(outcomeServiceGrpcServer);

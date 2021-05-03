@@ -1,6 +1,7 @@
 package io.harness.pms.execution.utils;
 
 import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.pms.contracts.execution.Status.APPROVAL_REJECTED;
 import static io.harness.pms.contracts.execution.Status.APPROVAL_WAITING;
 import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
@@ -40,7 +41,7 @@ public class StatusUtils {
 
   private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED, IGNORE_FAILED);
 
-  private final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED);
+  private final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED, APPROVAL_REJECTED);
 
   private final EnumSet<Status> RESUMABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, APPROVAL_WAITING,
       RESOURCE_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING);
@@ -55,12 +56,13 @@ public class StatusUtils {
       RUNNING, INTERVENTION_WAITING, APPROVAL_WAITING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
 
   private final EnumSet<Status> FINAL_STATUSES =
-      EnumSet.of(SKIPPED, IGNORE_FAILED, ABORTED, ERRORED, FAILED, EXPIRED, SUSPENDED, SUCCEEDED);
+      EnumSet.of(SKIPPED, IGNORE_FAILED, ABORTED, ERRORED, FAILED, EXPIRED, SUSPENDED, SUCCEEDED, APPROVAL_REJECTED);
 
   private final EnumSet<Status> GRAPH_UPDATE_STATUSES = EnumSet.of(RUNNING, INTERVENTION_WAITING, TIMED_WAITING,
       ASYNC_WAITING, TASK_WAITING, DISCONTINUING, PAUSING, QUEUED, PAUSED, APPROVAL_WAITING, RESOURCE_WAITING);
 
-  private final EnumSet<Status> RETRYABLE_STATUSES = EnumSet.of(INTERVENTION_WAITING, FAILED, ERRORED, EXPIRED);
+  private final EnumSet<Status> RETRYABLE_STATUSES =
+      EnumSet.of(INTERVENTION_WAITING, FAILED, ERRORED, EXPIRED, APPROVAL_REJECTED);
 
   public EnumSet<Status> finalizableStatuses() {
     return FINALIZABLE_STATUSES;
@@ -129,6 +131,7 @@ public class StatusUtils {
       case SUSPENDED:
       case FAILED:
       case EXPIRED:
+      case APPROVAL_REJECTED:
         return FINALIZABLE_STATUSES;
       case SUCCEEDED:
         return EnumSet.of(INTERVENTION_WAITING, RUNNING);
@@ -140,10 +143,14 @@ public class StatusUtils {
   }
 
   public EnumSet<Status> planAllowedStartSet(Status status) {
-    if (status == INTERVENTION_WAITING) {
-      return EnumSet.of(RUNNING);
+    switch (status) {
+      case INTERVENTION_WAITING:
+        return EnumSet.of(RUNNING, PAUSING, PAUSED);
+      case PAUSED:
+        return EnumSet.of(QUEUED, RUNNING, PAUSING, INTERVENTION_WAITING);
+      default:
+        return nodeAllowedStartSet(status);
     }
-    return nodeAllowedStartSet(status);
   }
 
   public boolean isFinalStatus(Status status) {
@@ -160,6 +167,8 @@ public class StatusUtils {
       return ERRORED;
     } else if (statuses.stream().anyMatch(status -> status == FAILED)) {
       return FAILED;
+    } else if (statuses.stream().anyMatch(status -> status == APPROVAL_REJECTED)) {
+      return APPROVAL_REJECTED;
     } else if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
       return EXPIRED;
     } else if (statuses.stream().anyMatch(status -> status == INTERVENTION_WAITING)) {
@@ -168,12 +177,12 @@ public class StatusUtils {
       return APPROVAL_WAITING;
     } else if (statuses.stream().anyMatch(status -> status == RESOURCE_WAITING)) {
       return RESOURCE_WAITING;
-    } else if (statuses.stream().anyMatch(status -> status == PAUSED)) {
-      return PAUSED;
     } else if (statuses.stream().anyMatch(status -> status == QUEUED)) {
       return QUEUED;
     } else if (!Collections.disjoint(statuses, FLOWING_STATUSES)) {
       return RUNNING;
+    } else if (statuses.stream().anyMatch(status -> status == PAUSED)) {
+      return PAUSED;
     } else {
       log.error("Cannot calculate the end status for PlanExecutionId : {}", planExecutionId);
       return ERRORED;

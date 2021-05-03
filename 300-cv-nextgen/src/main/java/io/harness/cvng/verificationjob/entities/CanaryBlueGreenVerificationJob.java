@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.CVConstants.RUNTIME_PARAM_STRING;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SENSITIVITY_KEY;
 
@@ -18,11 +19,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @FieldNameConstants(innerTypeName = "DeploymentVerificationJobKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public abstract class CanaryBlueGreenVerificationJob extends VerificationJob {
   // TODO: move sensitivity to common base class.
   private RuntimeParameter sensitivity;
@@ -98,5 +101,14 @@ public abstract class CanaryBlueGreenVerificationJob extends VerificationJob {
   @Override
   public boolean collectHostData() {
     return true;
+  }
+
+  public static void setCanaryBLueGreenDefaultJobParameters(
+      CanaryBlueGreenVerificationJob canaryBlueGreenVerificationJob, String accountId, String orgIdentifier,
+      String projectIdentifier) {
+    canaryBlueGreenVerificationJob.setSensitivity(RUNTIME_PARAM_STRING, true);
+    canaryBlueGreenVerificationJob.setTrafficSplitPercentage(Integer.valueOf(5));
+    VerificationJob.setDefaultJobCommonParameters(
+        canaryBlueGreenVerificationJob, accountId, orgIdentifier, projectIdentifier);
   }
 }

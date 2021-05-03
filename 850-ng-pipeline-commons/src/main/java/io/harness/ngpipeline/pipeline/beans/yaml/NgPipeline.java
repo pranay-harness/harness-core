@@ -1,6 +1,9 @@
 package io.harness.ngpipeline.pipeline.beans.yaml;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -42,6 +45,7 @@ import org.springframework.data.annotation.TypeAlias;
     })
 @SimpleVisitorHelper(helperClass = NgPipelineVisitorHelper.class)
 @TypeAlias("ngPipeline")
+@OwnedBy(PIPELINE)
 public class NgPipeline implements Pipeline, Visitable {
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityName String name;
   @NotNull(groups = PreInputSet.class) @Required(groups = PostInputSet.class) @EntityIdentifier String identifier;

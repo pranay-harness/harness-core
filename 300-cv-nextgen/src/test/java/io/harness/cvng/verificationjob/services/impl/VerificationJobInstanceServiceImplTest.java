@@ -1025,7 +1025,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   public void testGetCVConfigsForVerification_defaultJob() {
     String monSource = "monitoringSource1";
     VerificationJob job = verificationJobService.fromDto(newHealthVerificationJobDTO());
-    job.setMonitoringSources(Arrays.asList("ALL"));
+    job.setAllMonitoringSourcesEnabled(true);
     job.setAccountId(accountId);
     job.setIdentifier(verificationJobIdentifier);
     job.setDefaultJob(true);

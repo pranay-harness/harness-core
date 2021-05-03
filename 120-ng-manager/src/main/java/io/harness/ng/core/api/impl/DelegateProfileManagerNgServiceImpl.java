@@ -9,6 +9,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -28,6 +30,8 @@ import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
+import io.harness.owner.OrgIdentifier;
+import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.persistence.HPersistence;
 
@@ -53,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManagerNgService {
   public static final String ENVIRONMENT_TYPE = "Environment Type";
   public static final String ENVIRONMENT = "Environment";
@@ -64,9 +69,13 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
 
   @Override
   public PageResponse<DelegateProfileDetailsNg> list(
-      String accountId, PageRequest<DelegateProfileDetailsNg> pageRequest) {
+      String accountId, PageRequest<DelegateProfileDetailsNg> pageRequest, String orgId, String projectId) {
+    OrgIdentifier orgIdentifier = isNotBlank(orgId) ? OrgIdentifier.newBuilder().setId(orgId).build() : null;
+    ProjectIdentifier projectIdentifier =
+        isNotBlank(projectId) ? ProjectIdentifier.newBuilder().setId(projectId).build() : null;
+
     DelegateProfilePageResponseGrpc pageResponse = delegateProfileServiceGrpcClient.listProfiles(
-        AccountId.newBuilder().setId(accountId).build(), convert(pageRequest));
+        AccountId.newBuilder().setId(accountId).build(), convert(pageRequest), true, orgIdentifier, projectIdentifier);
 
     if (pageResponse == null) {
       return null;
@@ -228,7 +237,8 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
             .setAccountId(AccountId.newBuilder().setId(delegateProfile.getAccountId()).build())
             .setName(delegateProfile.getName())
             .setPrimary(delegateProfile.isPrimary())
-            .setApprovalRequired(delegateProfile.isApprovalRequired());
+            .setApprovalRequired(delegateProfile.isApprovalRequired())
+            .setNg(true);
 
     if (delegateProfile.getCreatedBy() != null) {
       delegateProfileGrpcBuilder.setCreatedBy(EmbeddedUserDetails.newBuilder()
@@ -268,6 +278,16 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
 
     if (isNotBlank(delegateProfile.getIdentifier())) {
       delegateProfileGrpcBuilder.setIdentifier(delegateProfile.getIdentifier());
+    }
+
+    if (isNotBlank(delegateProfile.getOrgIdentifier())) {
+      delegateProfileGrpcBuilder.setOrgIdentifier(
+          OrgIdentifier.newBuilder().setId(delegateProfile.getOrgIdentifier()).build());
+    }
+
+    if (isNotBlank(delegateProfile.getProjectIdentifier())) {
+      delegateProfileGrpcBuilder.setProjectIdentifier(
+          ProjectIdentifier.newBuilder().setId(delegateProfile.getProjectIdentifier()).build());
     }
 
     return delegateProfileGrpcBuilder.build();
@@ -312,7 +332,9 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
             .primary(delegateProfileGrpc.getPrimary())
             .approvalRequired(delegateProfileGrpc.getApprovalRequired())
             .startupScript(delegateProfileGrpc.getStartupScript())
-            .numberOfDelegates(delegateProfileGrpc.getNumberOfDelegates());
+            .numberOfDelegates(delegateProfileGrpc.getNumberOfDelegates())
+            .createdAt(delegateProfileGrpc.getCreatedAt())
+            .lastUpdatedAt(delegateProfileGrpc.getLastUpdatedAt());
 
     if (delegateProfileGrpc.hasCreatedBy()) {
       delegateProfileDetailsNgBuilder.createdBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()
@@ -344,6 +366,14 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
 
     if (isNotBlank(delegateProfileGrpc.getIdentifier())) {
       delegateProfileDetailsNgBuilder.identifier(delegateProfileGrpc.getIdentifier());
+    }
+
+    if (delegateProfileGrpc.hasOrgIdentifier()) {
+      delegateProfileDetailsNgBuilder.orgIdentifier(delegateProfileGrpc.getOrgIdentifier().getId());
+    }
+
+    if (delegateProfileGrpc.hasProjectIdentifier()) {
+      delegateProfileDetailsNgBuilder.projectIdentifier(delegateProfileGrpc.getProjectIdentifier().getId());
     }
 
     return delegateProfileDetailsNgBuilder.build();

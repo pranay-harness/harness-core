@@ -76,12 +76,15 @@ public class AuditServiceImpl implements AuditService {
     validate(auditEventDTO);
     AuditEvent auditEvent = fromDTO(auditEventDTO);
     try {
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      long startTime = System.currentTimeMillis();
+      Boolean result = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         AuditEvent savedAuditEvent = auditRepository.save(auditEvent);
         saveYamlDiff(auditEventDTO, savedAuditEvent.getId());
         return true;
       }));
-
+      log.info(String.format("Took %d milliseconds for create audit db operation for insertId %s.",
+          System.currentTimeMillis() - startTime, auditEventDTO.getInsertId()));
+      return result;
     } catch (DuplicateKeyException ex) {
       log.info("Audit for this entry already exists with id {} and account identifier {}", auditEvent.getInsertId(),
           auditEvent.getResourceScope().getAccountIdentifier());
@@ -130,9 +133,13 @@ public class AuditServiceImpl implements AuditService {
   @Override
   public Page<AuditEvent> list(
       String accountIdentifier, PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+    long startTime = System.currentTimeMillis();
     auditFilterPropertiesValidator.validate(accountIdentifier, auditFilterPropertiesDTO);
     Criteria criteria = getFilterCriteria(accountIdentifier, auditFilterPropertiesDTO);
-    return auditRepository.findAll(criteria, getPageRequest(pageRequest));
+    Page<AuditEvent> result = auditRepository.findAll(criteria, getPageRequest(pageRequest));
+    log.info(
+        String.format("Took %d milliseconds for list audit db operation.", System.currentTimeMillis() - startTime));
+    return result;
   }
 
   private Criteria getFilterCriteria(String accountIdentifier, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {

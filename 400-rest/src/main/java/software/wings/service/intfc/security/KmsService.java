@@ -22,4 +22,6 @@ public interface KmsService {
   boolean deleteKmsConfig(String accountId, String kmsConfigId);
 
   void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret);
+
+  void validateSecretsManagerConfig(String accountId, KmsConfig kmsConfig);
 }

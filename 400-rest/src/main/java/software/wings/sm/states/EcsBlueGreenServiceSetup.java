@@ -21,6 +21,7 @@ import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -102,6 +103,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsBlueGreenServiceSetup extends State {
   public static final String ECS_SERVICE_SETUP_COMMAND_ELB = "ECS Service Setup ELB";
 
@@ -265,7 +267,7 @@ public class EcsBlueGreenServiceSetup extends State {
                                            .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
-        request, ecsSetUpDataBag, activityId, delegateService);
+        request, ecsSetUpDataBag, activityId, delegateService, isSelectionLogsTrackingForTasksEnabled());
     appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
@@ -452,6 +454,8 @@ public class EcsBlueGreenServiceSetup extends State {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -500,5 +504,10 @@ public class EcsBlueGreenServiceSetup extends State {
       invalidFields.put(WorkflowServiceHelper.ELB, "Elastic Load Balancer must be specified");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

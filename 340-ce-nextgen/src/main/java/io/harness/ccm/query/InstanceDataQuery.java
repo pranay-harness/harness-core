@@ -3,9 +3,10 @@ package io.harness.ccm.query;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.dto.BillingDataDemo;
-import io.harness.ccm.dto.InstanceDataDemo;
-import io.harness.ccm.utils.GraphQLUtils;
+import io.harness.ccm.dto.graphql.BillingDataDemo;
+import io.harness.ccm.dto.graphql.InstanceDataDemo;
+import io.harness.ccm.utils.graphql.GraphQLApi;
+import io.harness.ccm.utils.graphql.GraphQLUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,6 +28,7 @@ import org.dataloader.DataLoader;
  */
 @Slf4j
 @Singleton
+@GraphQLApi
 @OwnedBy(CE)
 public class InstanceDataQuery {
   @Inject private GraphQLUtils graphQLUtils;
@@ -61,7 +63,6 @@ public class InstanceDataQuery {
   }
 
   // DataLoader and DAO
-  @Getter
   private final DataLoader<CacheKey, InstanceDataDemo> instanceDataLoader =
       DataLoader.newDataLoader(instanceIds -> CompletableFuture.supplyAsync(() -> getInstanceDataByIds(instanceIds)));
 

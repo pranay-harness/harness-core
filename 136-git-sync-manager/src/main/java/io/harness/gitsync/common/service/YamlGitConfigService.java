@@ -15,8 +15,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(DX)
 public interface YamlGitConfigService {
-  Optional<ConnectorInfoDTO> getGitConnector(
-      YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName);
+  Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO ygs, String gitConnectorId);
 
   List<YamlGitConfigDTO> getByConnectorRepoAndBranch(
       String gitConnectorId, String repo, String branchName, String accountId);

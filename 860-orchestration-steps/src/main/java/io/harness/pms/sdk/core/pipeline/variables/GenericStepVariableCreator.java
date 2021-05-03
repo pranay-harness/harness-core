@@ -2,6 +2,8 @@ package io.harness.pms.sdk.core.pipeline.variables;
 
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public abstract class GenericStepVariableCreator extends ChildrenVariableCreator {
   public abstract Set<String> getSupportedStepTypes();
 
@@ -94,20 +97,10 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
 
   protected void addFieldToPropertiesMapUnderStep(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
     String fqn = YamlUtils.getFullyQualifiedName(fieldNode.getNode());
-    String localName = removeExecutionPrefix(
-        YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.EXECUTION));
+    String localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.EXECUTION);
 
     yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
         YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
-  }
-
-  private String removeExecutionPrefix(String name) {
-    String[] split = name.split("\\.");
-    String[] res = new String[split.length - 1];
-    if (split.length - 1 >= 0) {
-      System.arraycopy(split, 1, res, 0, split.length - 1);
-    }
-    return String.join(".", res);
   }
 
   protected void addVariablesForVariables(YamlField variablesField, Map<String, YamlProperties> yamlPropertiesMap) {
@@ -116,8 +109,8 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
       YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
       if (uuidNode != null) {
         String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
-        String localName = removeExecutionPrefix(
-            YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.EXECUTION));
+        String localName =
+            YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.EXECUTION);
         YamlField valueNode = variableNode.getField(YAMLFieldNameConstants.VALUE);
         String variableName =
             Objects.requireNonNull(variableNode.getField(YAMLFieldNameConstants.NAME)).getNode().asText();

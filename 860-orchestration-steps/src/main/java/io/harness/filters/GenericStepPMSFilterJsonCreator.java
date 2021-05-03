@@ -13,6 +13,7 @@ import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlUtils;
 
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ public abstract class GenericStepPMSFilterJsonCreator implements FilterJsonCreat
       for (Map.Entry<String, ParameterField<String>> entry : connectorRefs.entrySet()) {
         String fullQualifiedDomainName =
             YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode()) + PATH_CONNECTOR
-            + entry.getKey();
+            + YAMLFieldNameConstants.SPEC + PATH_CONNECTOR + entry.getKey();
         result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier,
             projectIdentifier, fullQualifiedDomainName, entry.getValue(), EntityTypeProtoEnum.CONNECTORS));
       }

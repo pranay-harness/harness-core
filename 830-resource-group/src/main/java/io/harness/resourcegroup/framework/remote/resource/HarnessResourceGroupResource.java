@@ -1,9 +1,15 @@
 package io.harness.resourcegroup.framework.remote.resource;
 
+import static io.harness.resourcegroup.ResourceGroupPermissions.DELETE_RESOURCEGROUP_PERMISSION;
+import static io.harness.resourcegroup.ResourceGroupPermissions.EDIT_RESOURCEGROUP_PERMISSION;
+import static io.harness.resourcegroup.ResourceGroupResourceTypes.RESOURCE_GROUP;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
@@ -53,6 +59,7 @@ import lombok.AllArgsConstructor;
 @OwnedBy(HarnessTeam.PL)
 public class HarnessResourceGroupResource {
   ResourceGroupService resourceGroupService;
+  AccessControlClient accessControlClient;
 
   @GET
   @Path("{identifier}")
@@ -62,6 +69,9 @@ public class HarnessResourceGroupResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
+    //    projectIdentifier),
+    //        Resource.of(RESOURCE_GROUP, identifier), VIEW_RESOURCEGROUP_PERMISSION);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
         resourceGroupService.get(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
@@ -74,6 +84,9 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
+    //    projectIdentifier),
+    //        Resource.of(RESOURCE_GROUP, null), VIEW_RESOURCEGROUP_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(
         resourceGroupService.list(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, searchTerm)));
   }
@@ -85,6 +98,8 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid ResourceGroupRequest resourceGroupRequest) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(RESOURCE_GROUP, null), EDIT_RESOURCEGROUP_PERMISSION);
     ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponse);
   }
@@ -113,6 +128,8 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid ResourceGroupRequest resourceGroupRequest) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(RESOURCE_GROUP, identifier), EDIT_RESOURCEGROUP_PERMISSION);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
         resourceGroupService.update(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
@@ -127,6 +144,8 @@ public class HarnessResourceGroupResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(RESOURCE_GROUP, identifier), DELETE_RESOURCEGROUP_PERMISSION);
     boolean deleted =
         resourceGroupService.delete(identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
     return ResponseDTO.newResponse(deleted);

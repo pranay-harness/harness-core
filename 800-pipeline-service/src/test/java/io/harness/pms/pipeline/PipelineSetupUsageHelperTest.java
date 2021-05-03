@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -32,6 +33,7 @@ import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreat
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.rule.Owner;
 
@@ -63,6 +65,7 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
   @Mock private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
   @Mock private EntitySetupUsageClient entitySetupUsageClient;
   @Mock private Producer eventProducer;
+  @Mock private InternalReferredEntityExtractor internalReferredEntityExtractor;
   @InjectMocks private PipelineSetupUsageHelper pipelineSetupUsageHelper;
 
   @Before
@@ -70,6 +73,7 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
     MockitoAnnotations.initMocks(this);
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO("accountId", null, null, null))
         .thenReturn(IdentifierRefProtoDTO.newBuilder().build());
+    when(internalReferredEntityExtractor.extractInternalEntities(any(), anyList())).thenReturn(new ArrayList());
   }
 
   @After
@@ -105,25 +109,28 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
         .thenReturn(request);
     try {
       List<EntitySetupUsageDTO> list = new ArrayList<>();
-      list.add(EntitySetupUsageDTO.builder()
-                   .accountIdentifier(accountIdentifier)
-                   .referredByEntity(referredByEntity)
-                   .referredEntity(
-                       EntityDetail.builder()
-                           .type(EntityType.CONNECTORS)
-                           .entityRef(IdentifierRef.builder()
-                                          .accountIdentifier(accountIdentifier)
-                                          .orgIdentifier(orgIdentifier)
-                                          .projectIdentifier(projectIdentifier)
-                                          .identifier("DOCKER_NEW_TEST")
-                                          .scope(Scope.PROJECT)
-                                          .metadata(Collections.singletonMap(PreFlightCheckMetadata.FQN,
-                                              "pipeline.stages.deploy.serviceConfig.artifacts.primary.connectorRef"))
-                                          .build())
-                           .build())
-                   .build());
+      list.add(
+          EntitySetupUsageDTO.builder()
+              .accountIdentifier(accountIdentifier)
+              .referredByEntity(referredByEntity)
+              .referredEntity(
+                  EntityDetail.builder()
+                      .type(EntityType.CONNECTORS)
+                      .entityRef(
+                          IdentifierRef.builder()
+                              .accountIdentifier(accountIdentifier)
+                              .orgIdentifier(orgIdentifier)
+                              .projectIdentifier(projectIdentifier)
+                              .identifier("DOCKER_NEW_TEST")
+                              .scope(Scope.PROJECT)
+                              .metadata(Collections.singletonMap(PreFlightCheckMetadata.FQN,
+                                  "pipeline.stages.deploy.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef"))
+                              .build())
+                      .build())
+              .build());
       Map<String, String> metadata = new HashMap<>();
-      metadata.put(PreFlightCheckMetadata.FQN, "pipeline.stages.deploy.infrastructure.connectorRef");
+      metadata.put(PreFlightCheckMetadata.FQN,
+          "pipeline.stages.deploy.spec.infrastructure.infrastructureDefinition.spec.connectorRef");
       metadata.put(PreFlightCheckMetadata.EXPRESSION, "<+input>");
       list.add(EntitySetupUsageDTO.builder()
                    .accountIdentifier(accountIdentifier)

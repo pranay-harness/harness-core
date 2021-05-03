@@ -17,6 +17,7 @@ input ExecutionFilter {
   service: IdFilter
   cloudProvider: IdFilter
   environment: IdFilter
+  environmentType: EnvironmentTypeFilter
   status: IdFilter
   endTime: TimeFilter
   startTime: TimeFilter

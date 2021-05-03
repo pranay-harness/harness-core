@@ -16,3 +16,11 @@
   permissionKey: environment
 - identifier: AUDIT
   permissionKey: audit
+- identifier: USER
+  permissionKey: user
+- identifier: USERGROUP
+  permissionKey: usergroup
+- identifier: ROLE
+  permissionKey: role
+- identifier: RESOURCEGROUP
+  permissionKey: resourcegroup

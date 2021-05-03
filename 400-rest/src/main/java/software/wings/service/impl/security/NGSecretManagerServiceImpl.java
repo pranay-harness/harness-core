@@ -1,11 +1,15 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
@@ -33,10 +37,12 @@ import io.harness.security.encryption.AccessType;
 import io.harness.security.encryption.EncryptionType;
 
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.VaultService;
@@ -50,12 +56,15 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(PL)
+@TargetModule(_890_SM_CORE)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   private final VaultService vaultService;
   private final LocalSecretManagerService localSecretManagerService;
   private final GcpSecretsManagerService gcpSecretsManagerService;
+  private final KmsService kmsService;
   private final SecretManagerConfigService secretManagerConfigService;
   private final WingsPersistence wingsPersistence;
 
@@ -94,6 +103,9 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           gcpSecretsManagerService.saveGcpKmsConfig(
               secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
           return secretManagerConfig;
+        case KMS:
+          kmsService.saveKmsConfig(secretManagerConfig.getAccountId(), (KmsConfig) secretManagerConfig);
+          return secretManagerConfig;
         case LOCAL:
           localSecretManagerService.saveLocalEncryptionConfig(
               secretManagerConfig.getAccountId(), (LocalEncryptionConfig) secretManagerConfig);
@@ -122,6 +134,10 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
             gcpSecretsManagerService.validateSecretsManagerConfig(
                 accountIdentifier, (GcpKmsConfig) secretManagerConfigOptional.get());
             return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+          case KMS:
+            kmsService.validateSecretsManagerConfig(accountIdentifier, (KmsConfig) secretManagerConfigOptional.get());
+            return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+
           case LOCAL:
             localSecretManagerService.validateLocalEncryptionConfig(
                 accountIdentifier, (LocalEncryptionConfig) secretManagerConfigOptional.get());
@@ -263,6 +279,9 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           gcpSecretsManagerService.updateGcpKmsConfig(
               secretManagerConfig.getAccountId(), (GcpKmsConfig) secretManagerConfig, false);
           return secretManagerConfig;
+        case KMS:
+          kmsService.saveKmsConfig(secretManagerConfig.getAccountId(), (KmsConfig) secretManagerConfig);
+          return secretManagerConfig;
         default:
           throw new UnsupportedOperationException("Secret Manager not supported.");
       }
@@ -303,6 +322,9 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         case GCP_KMS:
           GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) secretManagerConfig;
           return gcpSecretsManagerService.deleteGcpKmsConfig(gcpKmsConfig.getAccountId(), gcpKmsConfig.getUuid());
+        case KMS:
+          KmsConfig kmsConfig = (KmsConfig) secretManagerConfig;
+          return kmsService.deleteKmsConfig(kmsConfig.getAccountId(), kmsConfig.getUuid());
         case LOCAL:
           LocalEncryptionConfig localEncryptionConfig = (LocalEncryptionConfig) secretManagerConfig;
           return localSecretManagerService.deleteLocalEncryptionConfig(

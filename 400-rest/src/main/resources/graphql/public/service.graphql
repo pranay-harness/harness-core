@@ -38,6 +38,28 @@ input ServiceFilter {
   application: IdFilter
   service: IdFilter
   tag: ServiceTagFilter
+  deploymentType: DeploymentTypeFilter
+}
+
+input DeploymentTypeFilter {
+  operator: EnumOperator
+  values: [DeploymentType]
+}
+
+enum DeploymentType {
+  SSH
+  AWS_CODEDEPLOY
+  ECS
+  SPOTINST
+  KUBERNETES
+  HELM
+  AWS_LAMBDA
+  AMI
+  WINRM
+  PCF
+  AZURE_VMSS
+  AZURE_WEBAPP
+  CUSTOM
 }
 
 input ServiceTagFilter {

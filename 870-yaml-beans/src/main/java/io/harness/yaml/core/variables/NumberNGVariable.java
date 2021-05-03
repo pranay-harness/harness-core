@@ -1,6 +1,9 @@
 package io.harness.yaml.core.variables;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.visitor.helpers.variables.NumberVariableVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
@@ -25,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(NGVariableConstants.NUMBER_TYPE)
 @SimpleVisitorHelper(helperClass = NumberVariableVisitorHelper.class)
 @TypeAlias("io.harness.yaml.core.variables.NumberNGVariable")
+@OwnedBy(CDC)
 public class NumberNGVariable implements NGVariable {
   String name;
   @ApiModelProperty(allowableValues = NGVariableConstants.NUMBER_TYPE) NGVariableType type = NGVariableType.NUMBER;

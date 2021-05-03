@@ -182,6 +182,8 @@ public class ARMProvisionState extends State {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Fetch remote files from git")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(GIT_FETCH_FILES_TASK.name())
@@ -190,6 +192,7 @@ public class ARMProvisionState extends State {
                       .build())
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
@@ -314,6 +317,8 @@ public class ARMProvisionState extends State {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("ARM task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(AZURE_ARM_TASK.name())
@@ -331,6 +336,7 @@ public class ARMProvisionState extends State {
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
@@ -477,5 +483,10 @@ public class ARMProvisionState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     // No implementation done yet for this method
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

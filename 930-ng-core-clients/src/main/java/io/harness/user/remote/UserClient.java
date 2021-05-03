@@ -26,6 +26,7 @@ public interface UserClient {
   String SEARCH_TERM_KEY = "searchTerm";
   String USERS_SEARCH_API = "ng/user/search";
   String USERS_API = "ng/user";
+  String USERS_API_OAUTH = "ng/user/oauth";
   String USER_BATCH_LIST_API = "ng/user/batch";
   String USER_IN_ACCOUNT_VERIFICATION = "ng/user/user-account";
   String USER_SAFE_DELETE = "ng/user/safeDelete/{userId}";
@@ -35,6 +36,8 @@ public interface UserClient {
   String USER_DISABLE_TWO_FACTOR_AUTH = "ng/user/disable-two-factor-auth";
 
   @POST(USERS_API) Call<RestResponse<UserInfo>> createNewUser(@Body UserRequestDTO userRequest);
+
+  @POST(USERS_API_OAUTH) Call<RestResponse<UserInfo>> createNewOAuthUser(@Body UserRequestDTO userRequest);
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,
@@ -46,8 +49,7 @@ public interface UserClient {
   Call<RestResponse<Optional<UserInfo>>> getUserByEmailId(@Path("emailId") String emailId);
 
   @POST(USER_BATCH_LIST_API)
-  Call<RestResponse<List<UserInfo>>> listUsers(
-      @Body UserSearchFilter userSearchFilter, @Query("accountId") String accountId);
+  Call<RestResponse<List<UserInfo>>> listUsers(@Body UserFilterNG userFilterNG, @Query("accountId") String accountId);
 
   @PUT(UPDATE_USER_API) Call<RestResponse<Optional<UserInfo>>> updateUser(@Body UserInfo userInfo);
 

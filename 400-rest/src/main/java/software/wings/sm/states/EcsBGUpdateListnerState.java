@@ -6,6 +6,7 @@ import static io.harness.exception.FailureType.TIMEOUT;
 
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -52,6 +53,7 @@ import java.util.Map;
 
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsBGUpdateListnerState extends State {
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -122,7 +124,8 @@ public class EcsBGUpdateListnerState extends State {
 
     return ecsStateHelper.queueDelegateTaskForEcsListenerUpdate(application, awsConfig, delegateService,
         infrastructureMapping, activity.getUuid(), environment, ECS_UPDATE_LISTENER_COMMAND, requestConfigData,
-        encryptedDetails, containerElement.getServiceSteadyStateTimeout());
+        encryptedDetails, containerElement.getServiceSteadyStateTimeout(), isSelectionLogsTrackingForTasksEnabled(),
+        context.getStateExecutionInstanceId());
   }
 
   protected EcsListenerUpdateRequestConfigData getEcsListenerUpdateRequestConfigData(
@@ -192,5 +195,10 @@ public class EcsBGUpdateListnerState extends State {
 
   public void setDownsizeOldService(boolean downsizeOldService) {
     this.downsizeOldService = downsizeOldService;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

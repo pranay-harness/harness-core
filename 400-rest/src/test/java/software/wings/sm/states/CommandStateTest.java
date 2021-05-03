@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
@@ -71,6 +72,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -181,9 +186,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-/**
- * Created by peeyushaggarwal on 6/10/16.
- */
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CommandStateTest extends WingsBaseTest {
   /**
    * The constant RUNTIME_PATH.
@@ -1360,13 +1365,19 @@ public class CommandStateTest extends WingsBaseTest {
   private void testRenderCommandString(
       CommandState commandState, CommandStateExecutionData commandStateExecutionData, Command command) {
     Artifact artifact = null;
-    commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
+    commandState.renderCommandString(command, context, commandStateExecutionData, artifact, 0);
     verify(context, times(2))
-        .renderExpression(
-            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+        .renderExpression("${var1}",
+            StateExecutionContext.builder()
+                .stateExecutionData(commandStateExecutionData)
+                .adoptDelegateDecryption(true)
+                .build());
     verify(context, times(1))
-        .renderExpression(
-            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+        .renderExpression("${var2}",
+            StateExecutionContext.builder()
+                .stateExecutionData(commandStateExecutionData)
+                .adoptDelegateDecryption(true)
+                .build());
   }
 
   @Test
@@ -1498,13 +1509,19 @@ public class CommandStateTest extends WingsBaseTest {
 
   private void testRenderCommandStringWithoutArtifact(
       CommandState commandState, CommandStateExecutionData commandStateExecutionData, Command command) {
-    commandState.renderCommandString(command, context, commandStateExecutionData);
+    commandState.renderCommandString(command, context, commandStateExecutionData, 0);
     verify(context, times(2))
-        .renderExpression(
-            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+        .renderExpression("${var1}",
+            StateExecutionContext.builder()
+                .adoptDelegateDecryption(true)
+                .stateExecutionData(commandStateExecutionData)
+                .build());
     verify(context, times(1))
-        .renderExpression(
-            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+        .renderExpression("${var2}",
+            StateExecutionContext.builder()
+                .adoptDelegateDecryption(true)
+                .stateExecutionData(commandStateExecutionData)
+                .build());
   }
 
   @Test

@@ -88,6 +88,8 @@ public class ARMRollbackState extends ARMProvisionState {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("ARM rollback task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(AZURE_ARM_TASK.name())
@@ -96,6 +98,7 @@ public class ARMRollbackState extends ARMProvisionState {
                       .build())
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
@@ -233,5 +236,10 @@ public class ARMRollbackState extends ARMProvisionState {
   @SchemaIgnore
   public GitFileConfig getParametersGitFileConfig() {
     return super.getParametersGitFileConfig();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

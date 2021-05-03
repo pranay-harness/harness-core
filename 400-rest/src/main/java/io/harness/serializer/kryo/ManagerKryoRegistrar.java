@@ -316,6 +316,7 @@ import software.wings.beans.container.Label;
 import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
+import software.wings.beans.delegation.CommandParameters;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerragruntProvisionParameters;
@@ -1758,5 +1759,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerragruntExecutionData.class, 8507);
     kryo.register(TerragruntOutputVariables.class, 8508);
     kryo.register(ApiException.class, 8125);
+
+    kryo.register(CommandParameters.class, 8509);
   }
 }

@@ -5,8 +5,11 @@ import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.GeneralException;
+import io.harness.exception.HintException;
 import io.harness.exception.KryoHandlerNotFoundException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.logging.ExceptionLogger;
@@ -29,8 +32,14 @@ public class ExceptionManager {
   public final String DEFAULT_ERROR_MESSAGE = "NULL EXCEPTION";
 
   public WingsException processException(Exception exception) {
-    WingsException processedException = handleException(exception);
-    return ensureExceptionIsKryoSerializable(processedException);
+    try {
+      WingsException processedException = handleException(exception);
+      return ensureExceptionIsKryoSerializable(processedException);
+    } catch (Exception ex) {
+      log.error("Exception occured while handling error in exception manager", ex);
+      return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_UNEXPECTED_ERROR,
+          ExplanationException.EXPLANATION_UNEXPECTED_ERROR, new GeneralException(ex.getMessage()));
+    }
   }
 
   public List<ResponseMessage> buildResponseFromException(Exception exception) {
@@ -69,12 +78,13 @@ public class ExceptionManager {
           log.error("Exception handler not registered for exception : ", exception);
           handledException = prepareUnhandledExceptionResponse(exception);
         }
+        WingsException cascadedException = handledException;
+        while (cascadedException.getCause() != null) {
+          // 3rd party exception can't be allowed as cause in already handled exception
+          cascadedException = (WingsException) cascadedException.getCause();
+        }
+        setExceptionStacktrace(cascadedException, exception.getStackTrace());
         if (exception.getCause() != null) {
-          WingsException cascadedException = handledException;
-          while (cascadedException.getCause() != null) {
-            // 3rd party exception can't be allowed as cause in already handled exception
-            cascadedException = (WingsException) cascadedException.getCause();
-          }
           setExceptionCause(cascadedException, handleException((Exception) exception.getCause()));
         }
       }
@@ -94,27 +104,36 @@ public class ExceptionManager {
     ReflectionUtils.setObjectField(ReflectionUtils.getFieldByName(exception.getClass(), "cause"), exception, cause);
   }
 
+  private void setExceptionStacktrace(WingsException exception, StackTraceElement[] stackTraceElements)
+      throws IllegalAccessException {
+    ReflectionUtils.setObjectField(
+        ReflectionUtils.getFieldByName(exception.getClass(), "stackTrace"), exception, stackTraceElements);
+  }
+
   private boolean isExceptionKryoRegistered(WingsException wingsException) {
     return kryoSerializer.isRegistered(wingsException.getClass());
   }
 
-  private WingsException handleExceptionIfNotKryoRegistered(WingsException wingsException) {
-    if (!isExceptionKryoRegistered(wingsException)) {
-      log.error("Kryo handler not found for exception {}", wingsException.getClass());
-      return new KryoHandlerNotFoundException(wingsException.getMessage());
+  private WingsException handleExceptionIfNotKryoRegistered(Exception exception) {
+    if (!(exception instanceof WingsException) || !isExceptionKryoRegistered((WingsException) exception)) {
+      log.error("Kryo handler not found for exception {}", exception.getClass());
+      return new KryoHandlerNotFoundException(exception.getMessage());
     }
-    return wingsException;
+    return (WingsException) exception;
   }
 
-  private WingsException ensureExceptionIsKryoSerializable(WingsException wingsException) {
-    if (wingsException == null) {
+  private WingsException ensureExceptionIsKryoSerializable(Exception exception) {
+    if (exception == null) {
       return null;
     }
 
-    WingsException kryoSerializedException = handleExceptionIfNotKryoRegistered(wingsException);
+    if (!(exception instanceof WingsException)) {
+      log.error("Unknown runtime exception found in processed exception : {}", exception.getClass());
+    }
+
+    WingsException kryoSerializedException = handleExceptionIfNotKryoRegistered(exception);
     try {
-      setExceptionCause(
-          kryoSerializedException, ensureExceptionIsKryoSerializable((WingsException) wingsException.getCause()));
+      setExceptionCause(kryoSerializedException, ensureExceptionIsKryoSerializable((Exception) exception.getCause()));
     } catch (IllegalAccessException ignored) {
     }
 

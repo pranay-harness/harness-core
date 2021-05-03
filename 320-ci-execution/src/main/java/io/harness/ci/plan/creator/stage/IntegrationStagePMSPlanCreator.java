@@ -28,27 +28,22 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.execution.ExecutionElementConfig;
+import io.harness.plancreator.stages.GenericStagePlanCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
-import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
-import io.harness.pms.execution.utils.SkipInfoUtils;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
-import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.states.IntegrationStageStepPMS;
-import io.harness.steps.StepOutcomeGroup;
-import io.harness.when.utils.RunInfoUtils;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
@@ -69,7 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
-public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageElementConfig> {
+public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
   @Inject private KryoSerializer kryoSerializer;
 
   public static final String STAGE_NAME = "CI";
@@ -113,27 +108,6 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
     return planCreationResponseMap;
   }
 
-  @Override
-  public PlanNode createPlanForParentNode(
-      PlanCreationContext ctx, StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
-    BuildStatusUpdateParameter buildStatusUpdateParameter = obtainBuildStatusUpdateParameter(ctx, stageElementConfig);
-    StepParameters stepParameters = IntegrationStageStepParametersPMS.getStepParameters(
-        stageElementConfig, childrenNodeIds.get(0), buildStatusUpdateParameter, ctx);
-
-    return PlanNode.builder()
-        .uuid(stageElementConfig.getUuid())
-        .name(stageElementConfig.getName())
-        .identifier(stageElementConfig.getIdentifier())
-        .group(StepOutcomeGroup.STAGE.name())
-        .stepParameters(stepParameters)
-        .stepType(IntegrationStageStepPMS.STEP_TYPE)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        .skipCondition(SkipInfoUtils.getSkipCondition(stageElementConfig.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen()))
-        .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
-        .build();
-  }
-
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
@@ -152,6 +126,24 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       }
     }
     return adviserObtainments;
+  }
+
+  @Override
+  public Set<String> getSupportedStageTypes() {
+    return Collections.singleton("CI");
+  }
+
+  @Override
+  public StepType getStepType(StageElementConfig stageElementConfig) {
+    return IntegrationStageStepPMS.STEP_TYPE;
+  }
+
+  @Override
+  public SpecParameters getSpecParameters(
+      String childNodeId, PlanCreationContext ctx, StageElementConfig stageElementConfig) {
+    BuildStatusUpdateParameter buildStatusUpdateParameter = obtainBuildStatusUpdateParameter(ctx, stageElementConfig);
+    return IntegrationStageStepParametersPMS.getStepParameters(
+        stageElementConfig, childNodeId, buildStatusUpdateParameter, ctx);
   }
 
   @Override

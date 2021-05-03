@@ -38,6 +38,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
@@ -212,6 +213,8 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(_955_ACCOUNT_MGMT)
+@BreakDependencyOn("io.harness.delegate.beans.Delegate")
+@BreakDependencyOn("software.wings.service.impl.DelegateConnectionDao")
 public class AccountServiceImpl implements AccountService {
   private static final SecureRandom random = new SecureRandom();
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
@@ -839,6 +842,10 @@ public class AccountServiceImpl implements AccountService {
 
     if (account.getServiceGuardLimit() != null) {
       updateOperations.set(AccountKeys.serviceGuardLimit, account.getServiceGuardLimit());
+    }
+
+    if (account.getDefaultExperience() != null) {
+      updateOperations.set(AccountKeys.defaultExperience, account.getDefaultExperience());
     }
 
     wingsPersistence.update(account, updateOperations);

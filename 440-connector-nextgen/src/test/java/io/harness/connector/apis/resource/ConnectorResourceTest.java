@@ -172,7 +172,7 @@ public class ConnectorResourceTest extends CategoryTest {
   public void testConnectionResourceTest() {
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(connectorResponse));
     ResponseDTO<ConnectorValidationResult> validationResult = connectorResource.testConnection(
-        "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
+        "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier", null);
     Mockito.verify(connectorService, times(1)).testConnection(any(), any(), any(), any());
   }
 

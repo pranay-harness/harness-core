@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.pms.yaml.YamlNode;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 
 @OwnedBy(CDC)
@@ -65,7 +66,7 @@ public interface YamlTypes {
   String SKIP_DRY_RUN = "skipDryRun";
   String OUTPUT = "output";
   String TIMEOUT = "timeout";
-  String UUID = "uuid";
+  String UUID = YamlNode.UUID_FIELD_NAME;
   String SHELL = "shell";
   String SOURCE = "source";
   String EXECUTION_TARGET = "executionTarget";

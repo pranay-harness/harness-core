@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.acl.daos;
 
+import static io.harness.accesscontrol.acl.models.ACL.getAclQueryString;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.Principal;
@@ -18,19 +19,16 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.dao.DuplicateKeyException;
 
 @OwnedBy(PL)
 @Singleton
 @Slf4j
 public class ACLDAOImpl implements ACLDAO {
   private static final String PATH_DELIMITER = "/";
-  private static final String ALL_RESOURCES_IDENTIFIER = "*";
   private final ACLRepository aclRepository;
   private final ScopeService scopeService;
   private final Set<String> resourceTypes;
@@ -46,53 +44,57 @@ public class ACLDAOImpl implements ACLDAO {
     return PATH_DELIMITER.concat(resourceType).concat(PATH_DELIMITER).concat(resourceIdentifier);
   }
 
-  private Optional<Scope> getScope(ResourceScope resourceScope) {
-    if (Optional.ofNullable(resourceScope)
-            .map(ResourceScope::getAccountIdentifier)
-            .filter(x -> !StringUtils.isEmpty(x))
-            .isPresent()) {
-      return Optional.of(scopeService.buildScopeFromParams(HarnessScopeParams.builder()
-                                                               .accountIdentifier(resourceScope.getAccountIdentifier())
-                                                               .orgIdentifier(resourceScope.getOrgIdentifier())
-                                                               .projectIdentifier(resourceScope.getProjectIdentifier())
-                                                               .build()));
-    }
-    return Optional.empty();
+  private Scope getScope(ResourceScope resourceScope) {
+    return scopeService.buildScopeFromParams(HarnessScopeParams.builder()
+                                                 .accountIdentifier(resourceScope.getAccountIdentifier())
+                                                 .orgIdentifier(resourceScope.getOrgIdentifier())
+                                                 .projectIdentifier(resourceScope.getProjectIdentifier())
+                                                 .build());
   }
 
   private List<ACL> processACLQueries(List<PermissionCheckDTO> permissionsRequired, Principal principal) {
     List<ACL> aclList = new ArrayList<>();
     permissionsRequired.forEach(permissionCheckDTO -> {
+      String scope = getScope(permissionCheckDTO.getResourceScope()).toString();
       List<String> queryStrings = new ArrayList<>();
-      Optional<Scope> scopeOptional = getScope(permissionCheckDTO.getResourceScope());
 
-      if (scopeOptional.isPresent()) {
-        Scope scope = scopeOptional.get();
-        queryStrings.add(ACL.getAclQueryString(scope.toString(),
+      // query for resource=/RESOURCE_TYPE/{resourceIdentifier} in given scope
+      if (!StringUtils.isEmpty(permissionCheckDTO.getResourceIdentifier())) {
+        queryStrings.add(getAclQueryString(scope,
             getResourceSelector(permissionCheckDTO.getResourceType(), permissionCheckDTO.getResourceIdentifier()),
             principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
             permissionCheckDTO.getPermission()));
+      }
 
-        queryStrings.add(ACL.getAclQueryString(scope.toString(),
-            getResourceSelector(permissionCheckDTO.getResourceType(), ALL_RESOURCES_IDENTIFIER),
-            principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
-            permissionCheckDTO.getPermission()));
+      // query for resource=/RESOURCE_TYPE/* in given scope
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(permissionCheckDTO.getResourceType(), "*"),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
 
-        String currentResourceType = permissionCheckDTO.getResourceType();
-        Scope currentScope = scope;
-        while (!resourceTypes.contains(currentResourceType) && currentScope.getParentScope() != null) {
-          queryStrings.add(ACL.getAclQueryString(currentScope.getParentScope().toString(),
-              getResourceSelector(currentScope.getLevel().getResourceType(), currentScope.getInstanceId()),
+      // query for resource=/*/* in given scope
+      queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
+          principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
+
+      // if RESOURCE_TYPE is a scope, query for scope = {given_scope}/RESOURCE_TYPE/{resourceIdentifier}
+      if (resourceTypes.contains(permissionCheckDTO.getResourceType())) {
+        scope = scope.concat(PATH_DELIMITER + permissionCheckDTO.getResourceType() + PATH_DELIMITER
+            + permissionCheckDTO.getResourceIdentifier());
+
+        // and resource = /RESOURCE_TYPE/{resourceIdentifier}
+        if (!StringUtils.isEmpty(permissionCheckDTO.getResourceIdentifier())) {
+          queryStrings.add(getAclQueryString(scope,
+              getResourceSelector(permissionCheckDTO.getResourceType(), permissionCheckDTO.getResourceIdentifier()),
               principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
               permissionCheckDTO.getPermission()));
-          currentScope = currentScope.getParentScope();
-          currentResourceType = currentScope.getLevel().getResourceType();
         }
-      } else {
-        queryStrings.add(ACL.getAclQueryString("",
-            getResourceSelector(permissionCheckDTO.getResourceType(), permissionCheckDTO.getResourceIdentifier()),
+
+        // and resource = /RESOURCE_TYPE/*
+        queryStrings.add(getAclQueryString(scope, getResourceSelector(permissionCheckDTO.getResourceType(), "*"),
             principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
             permissionCheckDTO.getPermission()));
+
+        // and resource = /*/*
+        queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
+            principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
       }
 
       List<ACL> aclsInDB = aclRepository.getByAclQueryStringInAndEnabled(queryStrings, true);
@@ -112,22 +114,8 @@ public class ACLDAOImpl implements ACLDAO {
   }
 
   @Override
-  public ACL save(ACL acl) {
-    return aclRepository.save(acl);
-  }
-
-  @Override
-  public long insertAllIgnoringDuplicates(List<ACL> acls) {
-    try {
-      return aclRepository.insertAllIgnoringDuplicates(acls);
-    } catch (DuplicateKeyException duplicateKeyException) {
-      return 0;
-    }
-  }
-
-  @Override
   public long saveAll(List<ACL> acls) {
-    return aclRepository.saveAll(acls).spliterator().estimateSize();
+    return aclRepository.insertAllIgnoringDuplicates(acls);
   }
 
   @Override
@@ -136,27 +124,27 @@ public class ACLDAOImpl implements ACLDAO {
   }
 
   @Override
-  public long deleteByRoleAssignmentId(String roleAssignmentId) {
+  public long deleteByRoleAssignment(String roleAssignmentId) {
     return aclRepository.deleteByRoleAssignmentId(roleAssignmentId);
   }
 
   @Override
-  public List<ACL> getByUserGroup(String scopeIdentifier, String userGroupIdentifier) {
-    return aclRepository.findByUserGroup(scopeIdentifier, userGroupIdentifier);
+  public List<ACL> getByUserGroup(String scope, String userGroupIdentifier) {
+    return aclRepository.findByUserGroup(scope, userGroupIdentifier);
   }
 
   @Override
-  public List<ACL> getByRole(String scopeIdentifier, String identifier, boolean managed) {
-    return aclRepository.findByRole(scopeIdentifier, identifier, managed);
+  public List<ACL> getByRole(String scope, String roleIdentifier, boolean managed) {
+    return aclRepository.findByRole(scope, roleIdentifier, managed);
   }
 
   @Override
-  public List<ACL> getByResourceGroup(String scopeIdentifier, String identifier, boolean managed) {
-    return aclRepository.findByResourceGroup(scopeIdentifier, identifier, managed);
+  public List<ACL> getByResourceGroup(String scope, String resourceGroupIdentifier, boolean managed) {
+    return aclRepository.findByResourceGroup(scope, resourceGroupIdentifier, managed);
   }
 
   @Override
-  public List<ACL> getByRoleAssignmentId(String id) {
-    return aclRepository.getByRoleAssignmentId(id);
+  public List<ACL> getByRoleAssignment(String roleAssignmentId) {
+    return aclRepository.getByRoleAssignmentId(roleAssignmentId);
   }
 }

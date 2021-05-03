@@ -3,11 +3,12 @@ package io.harness.delegate.task.artifacts.ecr;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
-import io.harness.delegate.beans.connector.awsconnector.AwsDelegateDetailsDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
@@ -26,6 +27,7 @@ import lombok.Value;
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class EcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest {
   /** Images in repos need to be referenced via a path. */
   String imagePath;
@@ -48,10 +50,8 @@ public class EcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (awsConnectorDTO.getCredential() != null) {
       if (awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.INHERIT_FROM_DELEGATE) {
-        AwsDelegateDetailsDTO delegateDetailsDTO = (AwsDelegateDetailsDTO) awsConnectorDTO.getCredential().getConfig();
-        if (EmptyPredicate.isNotEmpty(delegateDetailsDTO.getDelegateSelectors())) {
-          return singletonList(
-              SelectorCapability.builder().selectors(delegateDetailsDTO.getDelegateSelectors()).build());
+        if (EmptyPredicate.isNotEmpty(awsConnectorDTO.getDelegateSelectors())) {
+          return singletonList(SelectorCapability.builder().selectors(awsConnectorDTO.getDelegateSelectors()).build());
         }
         return emptyList();
       } else if (awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.MANUAL_CREDENTIALS) {

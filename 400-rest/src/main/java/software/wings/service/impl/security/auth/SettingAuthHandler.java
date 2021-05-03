@@ -1,8 +1,15 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static software.wings.beans.SettingAttribute.SettingCategory;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -16,6 +23,8 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule.UNDEFINED)
 public class SettingAuthHandler {
   @Inject private AuthHandler authHandler;
   @Inject private SettingsService settingsService;
@@ -43,6 +52,10 @@ public class SettingAuthHandler {
         authorizeConnector();
         break;
       }
+      case SETTING: {
+        authorizeSshAndWinRM();
+        break;
+      }
       case CLOUD_PROVIDER: {
         authorizeCloudProvider();
         break;
@@ -51,6 +64,12 @@ public class SettingAuthHandler {
         break;
       }
     }
+  }
+
+  private void authorizeSshAndWinRM() {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(MANAGE_SSH_AND_WINRM));
+    authorize(permissionAttributeList);
   }
 
   private void authorizeConnector() {

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,5 +12,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @OwnedBy(CDP)
 public class TerraformConfigFilesWrapper {
-  @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+  StoreConfigWrapper store;
 }

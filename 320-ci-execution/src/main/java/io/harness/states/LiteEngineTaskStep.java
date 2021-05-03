@@ -4,17 +4,26 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.beans.dependencies.ServiceDependency;
+import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
+import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
@@ -25,6 +34,7 @@ import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logstreaming.LogStreamingHelper;
+import io.harness.ng.core.EntityDetail;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -33,9 +43,11 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -43,7 +55,9 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
+import io.harness.steps.executable.TaskExecutableWithRbac;
 import io.harness.supplier.ThrowingSupplier;
+import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -52,6 +66,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -60,13 +77,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CI)
-public class LiteEngineTaskStep implements TaskExecutable<StepElementParameters, K8sTaskExecutionResponse> {
+public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementParameters, K8sTaskExecutionResponse> {
   public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
 
   private static final String DEPENDENCY_OUTCOME = "dependencies";
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.STEP_TYPE;
@@ -77,7 +95,27 @@ public class LiteEngineTaskStep implements TaskExecutable<StepElementParameters,
   }
 
   @Override
-  public TaskRequest obtainTask(
+  public void validateResources(Ambiance ambiance, StepElementParameters stepElementParameters) {
+    String accountIdentifier = AmbianceUtils.getAccountId(ambiance);
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+    ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
+    String principal = executionPrincipalInfo.getPrincipal();
+    if (EmptyPredicate.isEmpty(principal)) {
+      return;
+    }
+
+    LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+    List<EntityDetail> connectorsEntityDetails =
+        getConnectorIdentifiers(liteEngineTaskStepInfo, accountIdentifier, projectIdentifier, orgIdentifier);
+
+    if (isNotEmpty(connectorsEntityDetails)) {
+      pipelineRbacHelper.checkRuntimePermissions(ambiance, connectorsEntityDetails, true);
+    }
+  }
+
+  @Override
+  public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     LiteEngineTaskStepInfo stepParameters = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
 
@@ -241,7 +279,62 @@ public class LiteEngineTaskStep implements TaskExecutable<StepElementParameters,
   }
 
   private String getLogPrefix(Ambiance ambiance) {
-    LinkedHashMap<String, String> logAbstractions = StepUtils.generateStageLogAbstractions(ambiance);
+    LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance, "STAGE");
     return LogStreamingHelper.generateLogBaseKey(logAbstractions);
+  }
+
+  private List<EntityDetail> getConnectorIdentifiers(LiteEngineTaskStepInfo liteEngineTaskStepInfo,
+      String accountIdentifier, String projectIdentifier, String orgIdentifier) {
+    K8BuildJobEnvInfo.PodsSetupInfo podSetupInfo =
+        ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();
+    if (isEmpty(podSetupInfo.getPodSetupInfoList())) {
+      return new ArrayList<>();
+    }
+    Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
+    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+
+    List<EntityDetail> entityDetails = new ArrayList<>();
+
+    String infraConnectorRef = ((K8sDirectInfraYaml) infrastructure).getSpec().getConnectorRef();
+
+    // Add Infra connector
+    entityDetails.add(createEntityDetails(infraConnectorRef, accountIdentifier, projectIdentifier, orgIdentifier));
+
+    // Add git clone connector
+    if (!liteEngineTaskStepInfo.isSkipGitClone()) {
+      entityDetails.add(createEntityDetails(liteEngineTaskStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier,
+          projectIdentifier, orgIdentifier));
+    }
+
+    Optional<PodSetupInfo> podSetupInfoOptional = podSetupInfo.getPodSetupInfoList().stream().findFirst();
+    try {
+      if (podSetupInfoOptional.isPresent()) {
+        entityDetails.addAll(podSetupInfoOptional.get()
+                                 .getPodSetupParams()
+                                 .getContainerDefinitionInfos()
+                                 .stream()
+                                 .map(ContainerDefinitionInfo::getContainerImageDetails)
+                                 .map(ContainerImageDetails::getConnectorIdentifier)
+                                 .filter(Objects::nonNull)
+                                 .map(connectorIdentifier -> {
+                                   return createEntityDetails(
+                                       connectorIdentifier, accountIdentifier, projectIdentifier, orgIdentifier);
+                                 })
+                                 .collect(Collectors.toList()));
+      }
+    } catch (Exception ex) {
+      throw new CIStageExecutionException("Failed to retrieve connector information", ex);
+    }
+
+    return entityDetails;
+  }
+
+  private EntityDetail createEntityDetails(
+      String connectorIdentifier, String accountIdentifier, String projectIdentifier, String orgIdentifier) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
+    return EntityDetail.builder().entityRef(connectorRef).type(EntityType.CONNECTORS).build();
   }
 }

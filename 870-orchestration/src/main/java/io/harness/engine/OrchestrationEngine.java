@@ -15,14 +15,13 @@ import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.facilitation.InterruptPreFacilitationChecker;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.interrupts.PreFacilitationCheck;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
@@ -52,13 +51,9 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
-import io.harness.pms.sdk.core.registries.ResolverRegistry;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
@@ -81,8 +76,6 @@ import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -100,22 +93,20 @@ public class OrchestrationEngine {
   @Inject private Injector injector;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject private ResolverRegistry resolverRegistry;
   @Inject private TimeoutRegistry timeoutRegistry;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
-  @Inject private InterruptService interruptService;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
-  @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
+  @Inject private InterruptService interruptService;
+  @Inject private InvocationHelper invocationHelper;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -139,7 +130,6 @@ public class OrchestrationEngine {
             .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
-            .progressDataMap(new LinkedHashMap<>())
             .unitProgresses(new ArrayList<>())
             .build();
     nodeExecutionService.save(nodeExecution);
@@ -156,7 +146,7 @@ public class OrchestrationEngine {
   // Start to Facilitators
   private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
-      PreFacilitationCheck check = performPreFacilitationChecks(nodeExecution);
+      ExecutionCheck check = performPreFacilitationChecks(nodeExecution);
       if (!check.isProceed()) {
         log.info("Not Proceeding with  Execution. Reason : {}", check.getReason());
         return;
@@ -189,20 +179,17 @@ public class OrchestrationEngine {
     }
   }
 
-  private PreFacilitationCheck performPreFacilitationChecks(NodeExecution nodeExecution) {
-    InterruptPreFacilitationChecker iChecker = injector.getInstance(InterruptPreFacilitationChecker.class);
+  private ExecutionCheck performPreFacilitationChecks(NodeExecution nodeExecution) {
     RunPreFacilitationChecker rChecker = injector.getInstance(RunPreFacilitationChecker.class);
     SkipPreFacilitationChecker sChecker = injector.getInstance(SkipPreFacilitationChecker.class);
-    iChecker.setNextChecker(rChecker);
     rChecker.setNextChecker(sChecker);
-    return iChecker.check(nodeExecution);
+    return rChecker.check(nodeExecution);
   }
 
   public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution = nodeExecutionService.update(
+        nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
     Ambiance ambiance = nodeExecution.getAmbiance();
-    PlanNodeProto node = nodeExecution.getNode();
-    StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(ambiance, node.getRebObjectsList());
     if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
       // Update Status
       Preconditions.checkNotNull(
@@ -213,11 +200,7 @@ public class OrchestrationEngine {
       String resumeId =
           delayEventHelper.delay(facilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
       waitNotifyEngine.waitForAllOn(publisherName,
-          EngineWaitResumeCallback.builder()
-              .ambiance(ambiance)
-              .facilitatorResponse(facilitatorResponse)
-              .inputPackage(inputPackage)
-              .build(),
+          EngineWaitResumeCallback.builder().ambiance(ambiance).facilitatorResponse(facilitatorResponse).build(),
           resumeId);
       return;
     }
@@ -225,8 +208,15 @@ public class OrchestrationEngine {
   }
 
   public void invokeExecutable(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
+    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    if (!check.isProceed()) {
+      log.info("Not Proceeding with Execution : {}", check.getReason());
+      return;
+    }
+
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
-    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse);
+    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
 
     StartNodeExecutionEventData startNodeExecutionEventData = StartNodeExecutionEventData.builder()
                                                                   .facilitatorResponse(facilitatorResponse)
@@ -269,12 +259,10 @@ public class OrchestrationEngine {
     return timeoutInstanceIds;
   }
 
-  private NodeExecution prepareNodeExecutionForInvocation(
-      Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
+  private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
-          ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
           ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
           if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
             setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
@@ -352,7 +340,7 @@ public class OrchestrationEngine {
 
   private void concludePlanExecution(NodeExecution nodeExecution) {
     Ambiance ambiance = nodeExecution.getAmbiance();
-    Status status = planExecutionService.calculateEndStatus(ambiance.getPlanExecutionId());
+    Status status = planExecutionService.calculateStatus(ambiance.getPlanExecutionId());
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
     eventEmitter.emitEvent(OrchestrationEvent.builder()
@@ -377,20 +365,14 @@ public class OrchestrationEngine {
         return;
       }
 
-      PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
       if (nodeExecution.getStatus() != RUNNING) {
         nodeExecution = Preconditions.checkNotNull(
             nodeExecutionService.updateStatusWithOps(nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class)));
       }
 
-      Map<String, byte[]> byteResponseMap = new HashMap<>();
-      if (isNotEmpty(response)) {
-        response.forEach((k, v) -> byteResponseMap.put(k, v.toByteArray()));
-      }
       ResumeNodeExecutionEventData data = ResumeNodeExecutionEventData.builder()
                                               .asyncError(asyncError)
-                                              .nodes(planExecution.getPlan().getNodes())
-                                              .response(byteResponseMap)
+                                              .response(invocationHelper.buildResponseMap(nodeExecution, response))
                                               .build();
       NodeExecutionEvent resumeEvent = NodeExecutionEvent.builder()
                                            .eventType(NodeExecutionEventType.RESUME)
@@ -398,7 +380,6 @@ public class OrchestrationEngine {
                                            .eventData(data)
                                            .build();
       nodeExecutionEventQueuePublisher.send(resumeEvent);
-      // Do something with the waitId
     } catch (Exception exception) {
       handleError(ambiance, exception);
     }

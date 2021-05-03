@@ -7,9 +7,12 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HeaderConfig;
 import io.harness.exception.TriggerException;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
@@ -19,13 +22,16 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 @Slf4j
 public class WebhookTriggerFilterUtils {
@@ -119,8 +125,7 @@ public class WebhookTriggerFilterUtils {
         input = webhookPayloadData.getWebhookEvent().getBaseAttributes().getTarget();
       } else {
         if (triggerExpressionEvaluator == null) {
-          triggerExpressionEvaluator =
-              generatorPMSExpressionEvaluator(webhookPayloadData.getOriginalEvent().getPayload());
+          triggerExpressionEvaluator = generatorPMSExpressionEvaluator(webhookPayloadData);
         }
         input = readFromPayload(webhookCondition.getKey(), triggerExpressionEvaluator);
       }
@@ -151,12 +156,14 @@ public class WebhookTriggerFilterUtils {
     return false;
   }
 
-  public boolean checkIfJexlConditionsMatch(String payload, String jexlExpression) {
+  public boolean checkIfJexlConditionsMatch(
+      ParseWebhookResponse parseWebhookResponse, List<HeaderConfig> headers, String payload, String jexlExpression) {
     if (isBlank(jexlExpression)) {
       return true;
     }
 
-    TriggerExpressionEvaluator triggerExpressionEvaluator = generatorPMSExpressionEvaluator(payload);
+    TriggerExpressionEvaluator triggerExpressionEvaluator =
+        generatorPMSExpressionEvaluator(parseWebhookResponse, headers, payload);
     Object result = triggerExpressionEvaluator.evaluateExpression(jexlExpression);
     if (result != null && Boolean.class.isAssignableFrom(result.getClass())) {
       return (Boolean) result;
@@ -189,7 +196,7 @@ public class WebhookTriggerFilterUtils {
     String standard;
     String operator;
     boolean allConditionsMatched = true;
-    TriggerExpressionEvaluator triggerExpressionEvaluator = generatorPMSExpressionEvaluator(payload);
+    TriggerExpressionEvaluator triggerExpressionEvaluator = generatorPMSExpressionEvaluator(null, emptyList(), payload);
 
     for (WebhookCondition webhookCondition : triggerSpec.getPayloadConditions()) {
       standard = webhookCondition.getValue();
@@ -236,7 +243,13 @@ public class WebhookTriggerFilterUtils {
     return triggerExpressionEvaluator.renderExpression(key);
   }
 
-  TriggerExpressionEvaluator generatorPMSExpressionEvaluator(String payload) {
-    return new TriggerExpressionEvaluator(payload);
+  TriggerExpressionEvaluator generatorPMSExpressionEvaluator(WebhookPayloadData webhookPayloadData) {
+    return generatorPMSExpressionEvaluator(webhookPayloadData.getParseWebhookResponse(),
+        webhookPayloadData.getOriginalEvent().getHeaders(), webhookPayloadData.getOriginalEvent().getPayload());
+  }
+
+  TriggerExpressionEvaluator generatorPMSExpressionEvaluator(
+      ParseWebhookResponse parseWebhookResponse, List<HeaderConfig> headerConfigs, String payload) {
+    return new TriggerExpressionEvaluator(parseWebhookResponse, headerConfigs, payload);
   }
 }

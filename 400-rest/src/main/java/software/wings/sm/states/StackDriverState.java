@@ -8,6 +8,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -59,6 +60,7 @@ import org.slf4j.Logger;
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 @FieldNameConstants(innerTypeName = "StackDriverStateKeys")
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class StackDriverState extends AbstractMetricAnalysisState {
   @Inject private transient StackDriverService stackDriverService;
 

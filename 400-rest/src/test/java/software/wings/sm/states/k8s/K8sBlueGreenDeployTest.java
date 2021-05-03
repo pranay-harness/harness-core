@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.k8s.K8sTaskType.BLUE_GREEN_DEPLOY;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -30,6 +32,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.K8sCommandUnitConstants;
@@ -69,6 +73,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
 public class K8sBlueGreenDeployTest extends WingsBaseTest {
   private static final String RELEASE_NAME = "releaseName";
 
@@ -106,7 +112,7 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
         .when(k8sBlueGreenDeploy)
         .createDelegateManifestConfig(any(), any());
     doReturn(emptyList()).when(k8sBlueGreenDeploy).fetchRenderedValuesFiles(any(), any());
-    doReturn(ExecutionResponse.builder().build()).when(k8sBlueGreenDeploy).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sBlueGreenDeploy).queueK8sDelegateTask(any(), any(), any());
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
     Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
@@ -117,7 +123,9 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
 
     ArgumentCaptor<K8sTaskParameters> k8sApplyTaskParamsArgumentCaptor =
         ArgumentCaptor.forClass(K8sTaskParameters.class);
-    verify(k8sBlueGreenDeploy, times(1)).queueK8sDelegateTask(any(), k8sApplyTaskParamsArgumentCaptor.capture());
+    verify(k8sBlueGreenDeploy, times(1))
+        .queueK8sDelegateTask(
+            any(), k8sApplyTaskParamsArgumentCaptor.capture(), any(applicationManifestMap.getClass()));
     K8sBlueGreenDeployTaskParameters taskParams =
         (K8sBlueGreenDeployTaskParameters) k8sApplyTaskParamsArgumentCaptor.getValue();
 

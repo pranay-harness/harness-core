@@ -23,6 +23,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
@@ -51,6 +54,7 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.SpotInstConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -96,6 +100,8 @@ public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
     on(state).set("delegateService", mockDelegateService);
     SpotInstStateHelper mockSpotinstStateHelper = mock(SpotInstStateHelper.class);
     on(state).set("spotinstStateHelper", mockSpotinstStateHelper);
+    StateExecutionService stateExecutionService = mock(StateExecutionService.class);
+    on(state).set("stateExecutionService", stateExecutionService);
     DeploymentExecutionContext mockContext = mock(DeploymentExecutionContext.class);
     when(mockContext.renderExpression(anyString())).thenAnswer(new Answer<String>() {
       @Override
@@ -130,6 +136,11 @@ public class SpotinstTrafficShiftAlbSetupStateTest extends WingsBaseTest {
                  .build())
         .when(mockSpotinstStateHelper)
         .generateConfigFromJson(anyString());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(DelegateTask.builder().description("desc").build())
+        .when(mockSpotinstStateHelper)
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(),
+            anyString(), eq(true));
     ExecutionResponse response = state.execute(mockContext);
     assertThat(response).isNotNull();
     assertThat(response.getCorrelationIds().size()).isEqualTo(1);

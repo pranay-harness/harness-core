@@ -52,7 +52,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     String tag = null;
     String repoName = null;
 
-    if (!isLiteEngineNodeAndCompleted(nodeExecutionProto.getNode())) {
+    if (!isLiteEngineNode(nodeExecutionProto.getNode())) {
       return null;
     }
 
@@ -127,7 +127,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     return null;
   }
 
-  private boolean isLiteEngineNodeAndCompleted(PlanNodeProto node) {
+  private boolean isLiteEngineNode(PlanNodeProto node) {
     return Objects.equals(node.getStepType().getType(), LiteEngineTaskStep.STEP_TYPE.getType());
   }
 

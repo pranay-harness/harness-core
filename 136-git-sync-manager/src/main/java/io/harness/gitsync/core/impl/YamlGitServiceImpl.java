@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.delegate.beans.TaskData;
@@ -49,6 +50,7 @@ import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.utils.IdentifierRefHelper;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.TaskType;
@@ -96,10 +98,10 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   private Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO yamlGitConfig) {
     if (yamlGitConfig != null) {
-      String branchName = yamlGitConfig.getBranch();
-      String gitConnectorIdentifier = yamlGitConfig.getGitConnectorRef();
-      String repoName = yamlGitConfig.getRepo();
-      return yamlGitConfigService.getGitConnector(yamlGitConfig, gitConnectorIdentifier, repoName, branchName);
+      IdentifierRef identifierRef =
+          IdentifierRefHelper.getIdentifierRef(yamlGitConfig.getGitConnectorRef(), yamlGitConfig.getAccountIdentifier(),
+              yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier());
+      return yamlGitConfigService.getGitConnector(yamlGitConfig, identifierRef.getIdentifier());
     }
     return Optional.empty();
   }

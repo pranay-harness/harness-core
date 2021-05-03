@@ -11,10 +11,9 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
-
-import software.wings.app.IndexMigratorModule;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,19 +80,21 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
         return new NoopUserProvider();
       }
     });
-    modules.add(new IndexMigratorModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(CiExecutionRegistrars.kryoRegistrars)
+            .build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .addAll(CiExecutionRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -101,7 +102,7 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(ManagerRegistrars.morphiaConverters)
+            .addAll(CiExecutionRegistrars.morphiaConverters)
             .build();
       }
     });

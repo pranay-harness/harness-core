@@ -149,9 +149,11 @@ public class ArtifactCollectionUtils {
 
   public long getDelegateQueueTimeout(String accountId) {
     long timeout = DELEGATE_QUEUE_TIMEOUT;
-    if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)
-        || DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+    if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)) {
       timeout = Duration.ofSeconds(15).toMillis();
+    }
+    if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+      timeout = Duration.ofSeconds(45).toMillis();
     }
     return System.currentTimeMillis() + timeout;
   }
@@ -672,10 +674,6 @@ public class ArtifactCollectionUtils {
     String appId = artifactStream.fetchAppId();
     boolean multiArtifact = multiArtifactEnabled(settingAttribute.getAccountId());
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, multiArtifact);
-
-    if (featureFlagService.isEnabled(FeatureName.SUPPORT_NEXUS_GROUP_REPOS, settingAttribute.getAccountId())) {
-      artifactStreamAttributes.setSupportForNexusGroupReposEnabled(true);
-    }
 
     BuildSourceRequestType requestType =
         getBuildSourceRequestType(artifactStream, multiArtifact, artifactStreamAttributes);

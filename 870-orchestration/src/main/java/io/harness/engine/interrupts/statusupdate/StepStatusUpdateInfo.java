@@ -15,6 +15,5 @@ import lombok.Value;
 public class StepStatusUpdateInfo {
   @NonNull String planExecutionId;
   String nodeExecutionId;
-  String interruptId;
   Status status;
 }

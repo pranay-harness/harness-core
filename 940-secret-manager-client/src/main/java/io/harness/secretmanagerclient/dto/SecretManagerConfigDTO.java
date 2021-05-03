@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -26,7 +27,8 @@ import lombok.experimental.SuperBuilder;
     visible = true)
 @JsonSubTypes({
   @Type(name = "LOCAL", value = LocalConfigDTO.class)
-  , @Type(name = "VAULT", value = VaultConfigDTO.class), @Type(name = "GCP_KMS", value = GcpKmsConfigDTO.class)
+  , @Type(name = "VAULT", value = VaultConfigDTO.class), @Type(name = "GCP_KMS", value = GcpKmsConfigDTO.class),
+      @Type(name = "KMS", value = AwsKmsConfigDTO.class)
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class SecretManagerConfigDTO {

@@ -24,6 +24,9 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -31,7 +34,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -98,28 +100,27 @@ public class StepUtils {
   }
 
   @Nonnull
-  public static LinkedHashMap<String, String> generateStageLogAbstractions(Ambiance ambiance) {
+  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance, String lastGroup) {
     LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
     logAbstractions.put("accountId", ambiance.getSetupAbstractionsMap().getOrDefault("accountId", ""));
     logAbstractions.put("orgId", ambiance.getSetupAbstractionsMap().getOrDefault("orgIdentifier", ""));
     logAbstractions.put("projectId", ambiance.getSetupAbstractionsMap().getOrDefault("projectIdentifier", ""));
-    logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
-    ambiance.getLevelsList()
-        .stream()
-        .filter(level -> level.getGroup().equals("STAGE"))
-        .findFirst()
-        .ifPresent(stageLevel -> logAbstractions.put("stageId", stageLevel.getIdentifier()));
+    logAbstractions.put("pipelineId", ambiance.getMetadata().getPipelineIdentifier());
+    logAbstractions.put("runSequence", String.valueOf(ambiance.getMetadata().getRunSequence()));
+    for (int i = 0; i < ambiance.getLevelsList().size(); i++) {
+      Level currentLevel = ambiance.getLevelsList().get(i);
+      String retrySuffix = currentLevel.getRetryIndex() > 0 ? String.format("_%s", currentLevel.getRetryIndex()) : "";
+      logAbstractions.put("level" + i, currentLevel.getIdentifier() + retrySuffix);
+      if (lastGroup != null && lastGroup.equals(currentLevel.getGroup())) {
+        break;
+      }
+    }
     return logAbstractions;
   }
 
   @Nonnull
   public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
-    LinkedHashMap<String, String> logAbstractions = generateStageLogAbstractions(ambiance);
-    Level currentLevel = AmbianceUtils.obtainCurrentLevel(ambiance);
-    if (currentLevel != null) {
-      logAbstractions.put("stepRuntimeId", currentLevel.getRuntimeId());
-    }
-    return logAbstractions;
+    return generateLogAbstractions(ambiance, null);
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
@@ -261,5 +262,39 @@ public class StepUtils {
       timeoutString = timeout.getValue();
     }
     return NGTimeConversionHelper.convertTimeStringToMilliseconds(timeoutString);
+  }
+
+  public static List<TaskSelector> getTaskSelectors(ParameterField<List<String>> delegateSelectors) {
+    List<TaskSelector> taskSelectors = new ArrayList<>();
+    if (!ParameterField.isNull(delegateSelectors)) {
+      List<String> delegateSelectorsList = delegateSelectors.getValue();
+      if (delegateSelectorsList != null) {
+        taskSelectors = delegateSelectorsList.stream()
+                            .map(delegateSelector -> TaskSelector.newBuilder().setSelector(delegateSelector).build())
+                            .collect(toList());
+      }
+    }
+    return taskSelectors;
+  }
+
+  public static Status getStepStatus(CommandExecutionStatus commandExecutionStatus) {
+    if (commandExecutionStatus == null) {
+      return null;
+    }
+    switch (commandExecutionStatus) {
+      case SUCCESS:
+        return Status.SUCCEEDED;
+      case QUEUED:
+        return Status.QUEUED;
+      case SKIPPED:
+        return Status.SKIPPED;
+      case FAILURE:
+        return Status.FAILED;
+      case RUNNING:
+        return Status.RUNNING;
+      default:
+        throw new InvalidRequestException(
+            "Unhandled type CommandExecutionStatus: " + commandExecutionStatus, WingsException.USER);
+    }
   }
 }

@@ -40,6 +40,7 @@ import io.harness.migrations.all.AddAccountidToTimeSeriesMLScores;
 import io.harness.migrations.all.AddAnalysisStatusMigration;
 import io.harness.migrations.all.AddArtifactIdentityMigration;
 import io.harness.migrations.all.AddCeFullTrialLicenseToCurrentAccounts;
+import io.harness.migrations.all.AddEnableIteratorsToGovernanceConfig;
 import io.harness.migrations.all.AddHarnessOwnedToResourceConstraint;
 import io.harness.migrations.all.AddInfraMappingNameToInstanceData;
 import io.harness.migrations.all.AddIsDefaultFlagToUserGroup;
@@ -55,6 +56,7 @@ import io.harness.migrations.all.CleanupOrphanInfraMappings;
 import io.harness.migrations.all.CleanupOrphanInstances;
 import io.harness.migrations.all.CleanupSyncStatusForDeletedEntities;
 import io.harness.migrations.all.ConvertHttpHeadersStringTypeToList;
+import io.harness.migrations.all.CreateNgPrimaryProfileForExistingAccounts;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
@@ -320,6 +322,8 @@ public class MigrationBackgroundList {
         .add(Pair.of(190, InstanceSyncPerpetualTaskInfoMigration.class))
         .add(Pair.of(191, GcpConfigMultipleDelegateMigration.class))
         .add(Pair.of(192, DelegatesWithoutGroupMigration.class))
+        .add(Pair.of(193, CreateNgPrimaryProfileForExistingAccounts.class))
+        .add(Pair.of(194, AddEnableIteratorsToGovernanceConfig.class))
         .build();
   }
 }

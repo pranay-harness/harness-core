@@ -340,8 +340,11 @@ public class AwsAmiServiceSetup extends State {
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
               .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("Aws Ami service setup task execution")
               .build();
       delegateService.queueTask(delegateTask);
+      appendDelegateTaskDetails(context, delegateTask);
     } catch (Exception exception) {
       log.error("Ami setup step failed with error ", exception);
       executionStatus = ExecutionStatus.FAILED;
@@ -437,5 +440,10 @@ public class AwsAmiServiceSetup extends State {
 
   public void setDesiredInstances(String desiredInstances) {
     this.desiredInstances = desiredInstances;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

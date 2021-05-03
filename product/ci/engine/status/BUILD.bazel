@@ -13,6 +13,7 @@ go_library(
         "//commons/go/lib/delegate-task-grpc-service/grpc:go_default_library",
         "//commons/go/lib/utils:go_default_library",
         "//product/ci/engine/output:go_default_library",
+        "//product/ci/engine/proto:go_default_library",
         "@com_github_cenkalti_backoff_v4//:go_default_library",
         "@com_github_gogo_protobuf//jsonpb:go_default_library",
         "@com_github_golang_protobuf//ptypes:go_default_library_gen",

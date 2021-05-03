@@ -19,7 +19,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.dto.UserPrincipal;
-import io.harness.user.remote.UserSearchFilter;
+import io.harness.user.remote.UserFilterNG;
 
 import software.wings.beans.User;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
@@ -75,6 +75,17 @@ public class UserResourceNG {
     return new RestResponse<>(convertUserToNgUser(createdUser));
   }
 
+  @POST
+  @Path("/oauth")
+  public RestResponse<UserInfo> createNewOAuthUserAndSignIn(UserRequestDTO userRequest) {
+    User user = convertUserRequesttoUser(userRequest);
+    String accountId = user.getDefaultAccountId();
+
+    User createdUser = userService.createNewOAuthUser(user, accountId);
+
+    return new RestResponse<>(convertUserToNgUser(createdUser));
+  }
+
   @GET
   @Path("/search")
   public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,
@@ -82,15 +93,14 @@ public class UserResourceNG {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true, false);
 
-    PageResponse<UserInfo> pageResponse =
-        aPageResponse()
-            .withOffset(offset.toString())
-            .withLimit(pageSize.toString())
-            .withResponse(userList.stream().map(this::convertUserToNgUser).collect(Collectors.toList()))
-            .withTotal(userService.getTotalUserCount(accountId, true))
-            .build();
+    PageResponse<UserInfo> pageResponse = aPageResponse()
+                                              .withOffset(offset.toString())
+                                              .withLimit(pageSize.toString())
+                                              .withResponse(convertUserToNgUser(userList))
+                                              .withTotal(userService.getTotalUserCount(accountId, true))
+                                              .build();
 
     return new RestResponse<>(pageResponse);
   }
@@ -111,14 +121,13 @@ public class UserResourceNG {
 
   @POST
   @Path("/batch")
-  public RestResponse<List<UserInfo>> listUsers(
-      @QueryParam("accountId") String accountId, UserSearchFilter userSearchFilter) {
+  public RestResponse<List<UserInfo>> listUsers(@QueryParam("accountId") String accountId, UserFilterNG userFilterNG) {
     Set<User> userSet = new HashSet<>();
-    if (!isEmpty(userSearchFilter.getUserIds())) {
-      userSet.addAll(userService.getUsers(userSearchFilter.getUserIds(), accountId));
+    if (!isEmpty(userFilterNG.getUserIds())) {
+      userSet.addAll(userService.getUsers(userFilterNG.getUserIds(), accountId));
     }
-    if (!isEmpty(userSearchFilter.getEmailIds())) {
-      userSet.addAll(userService.getUsersByEmail(userSearchFilter.getEmailIds(), accountId));
+    if (!isEmpty(userFilterNG.getEmailIds())) {
+      userSet.addAll(userService.getUsersByEmail(userFilterNG.getEmailIds(), accountId));
     }
     return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet)));
   }
@@ -222,7 +231,11 @@ public class UserResourceNG {
         .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .token(user.getToken())
-
+        .admin(
+            Optional.ofNullable(user.getUserGroups())
+                .map(x
+                    -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
+                .orElse(false))
         .build();
   }
 

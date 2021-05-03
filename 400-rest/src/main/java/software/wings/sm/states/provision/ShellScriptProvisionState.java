@@ -14,6 +14,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -80,6 +81,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDP)
 @Slf4j
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {
   private static final int TIMEOUT_IN_MINUTES = 20;
   private static final String COMMAND_UNIT = "Shell Script Provision";
@@ -131,6 +133,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .accountId(context.getAccountId())
                                     .waitId(activityId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                    .description("Shell script provision task")
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.toString())
@@ -141,6 +145,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
@@ -262,6 +267,11 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                     .adoptDelegateDecryption(true)
                     .expressionFunctorToken(expressionFunctorToken)
                     .build()));
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 
   private List<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {

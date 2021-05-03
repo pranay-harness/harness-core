@@ -52,16 +52,21 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
       final ByteString connector = ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getScmConnector()));
       pushInfoBuilder.setConnector(BytesValue.newBuilder().setValue(connector).build())
           .setFilePath(StringValue.newBuilder().setValue(infoForPush.getFilePath()).build())
+          .setFolderPath(StringValue.newBuilder().setValue(request.getFolderPath()).build())
           .setOrgIdentifier(StringValue.of(infoForPush.getOrgIdentifier()))
           .setProjectIdentifier(StringValue.of(infoForPush.getProjectIdentifier()))
           .setAccountId(infoForPush.getAccountId())
           .setYamlGitConfigId(infoForPush.getYamlGitConfigId())
           .setIsDefault(infoForPush.isDefault())
-          .setDefaultBranchName(infoForPush.getDefaultBranchName());
-
+          .setDefaultBranchName(infoForPush.getDefaultBranchName())
+          .setExecuteOnDelegate(infoForPush.isExecuteOnDelegate());
+      if (infoForPush.isExecuteOnDelegate()) {
+        final ByteString encyptedDataDetails =
+            ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getEncryptedDataDetailList()));
+        pushInfoBuilder.setEncryptedDataDetails(BytesValue.of(encyptedDataDetails));
+      }
     } catch (WingsException e) {
-      final ByteString exceptionBytes =
-          ByteString.copyFrom(kryoSerializer.asBytes(new InvalidRequestException("Failed to get git sync config", e)));
+      final ByteString exceptionBytes = ByteString.copyFrom(kryoSerializer.asBytes(e.getMessage()));
       pushInfoBuilder.setException(BytesValue.newBuilder().setValue(exceptionBytes).build());
       pushInfoBuilder.setStatus(false);
     } catch (Exception e) {
@@ -71,7 +76,6 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
           ByteString.copyFrom(kryoSerializer.asBytes(new InvalidRequestException("Unknown exception", e)));
       pushInfoBuilder.setException(BytesValue.newBuilder().setValue(exceptionBytes).build());
     }
-
     responseObserver.onNext(pushInfoBuilder.build());
     responseObserver.onCompleted();
   }

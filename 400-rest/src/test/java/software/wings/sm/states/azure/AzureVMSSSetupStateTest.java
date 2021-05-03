@@ -18,6 +18,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.ExecutionStatus;
@@ -48,6 +49,7 @@ import software.wings.beans.VMSSDeploymentType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -68,6 +70,7 @@ public class AzureVMSSSetupStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @Spy @InjectMocks AzureVMSSSetupState state = new AzureVMSSSetupState("Azure VMSS Setup State");
 
@@ -141,6 +144,7 @@ public class AzureVMSSSetupStateTest extends WingsBaseTest {
     doReturn(10)
         .when(azureVMSSStateHelper)
         .renderExpressionOrGetDefault(eq("10"), eq(context), eq(AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN));
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     initializeFields(state);
 
     ExecutionResponse result = state.execute(context);
@@ -173,6 +177,7 @@ public class AzureVMSSSetupStateTest extends WingsBaseTest {
 
     assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
     assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   private void initializeFields(AzureVMSSSetupState state) {

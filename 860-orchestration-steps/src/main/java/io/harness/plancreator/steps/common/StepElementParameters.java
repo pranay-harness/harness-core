@@ -11,14 +11,17 @@ import io.harness.when.beans.StepWhenCondition;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDC)
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stepElementParameters")
-@OwnedBy(CDC)
 public class StepElementParameters implements StepParameters {
   String uuid;
   String identifier;

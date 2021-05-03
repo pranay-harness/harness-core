@@ -88,7 +88,7 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Version Long version;
 
-  @FdIndex private long nextIteration;
+  @FdIndex private Long nextIteration;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
