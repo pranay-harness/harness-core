@@ -15,7 +15,7 @@ import io.harness.gitsync.gittoharness.NoOpChangeSetInterceptorServiceImpl;
 import io.harness.gitsync.persistance.EntityKeySource;
 import io.harness.gitsync.persistance.EntityLookupHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
-import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
+import io.harness.gitsync.persistance.GitAwarePersistenceNewImpl;
 import io.harness.gitsync.scm.ScmDelegateGitHelper;
 import io.harness.gitsync.scm.ScmGitHelper;
 import io.harness.gitsync.scm.ScmManagerGitHelper;
@@ -54,7 +54,7 @@ public class GitSyncSdkModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(GIT_CONFIG_STREAM))
         .to(GitSyncConfigEventMessageListener.class);
-    bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
+    bind(GitAwarePersistence.class).to(GitAwarePersistenceNewImpl.class);
     bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_MANAGER)).to(ScmManagerGitHelper.class);
     bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_DELEGATE)).to(ScmDelegateGitHelper.class);
     //    AnnotationConfigApplicationContext context =
