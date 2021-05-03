@@ -106,7 +106,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(new GitSyncablePersistenceTestModule());
-    modules.add(new ConnectorModule(CEAwsSetupConfig.builder().build()));
+    modules.add(ConnectorModule.getInstance());
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
@@ -157,6 +157,12 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       @Singleton
       public ObjectMapper getYamlSchemaObjectMapper() {
         return Jackson.newObjectMapper();
+      }
+
+      @Provides
+      @Singleton
+      CEAwsSetupConfig ceAwsSetupConfig() {
+        return CEAwsSetupConfig.builder().build();
       }
     });
     return modules;
