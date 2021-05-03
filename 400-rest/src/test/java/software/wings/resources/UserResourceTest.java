@@ -134,7 +134,7 @@ public class UserResourceTest extends WingsBaseTest {
     PageRequest pageRequest = mock(PageRequest.class);
     when(pageRequest.getOffset()).thenReturn("0");
     when(pageRequest.getPageSize()).thenReturn(30);
-    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean()))
+    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(anUser().build())).build());
     userResource.list(pageRequest, UUIDGenerator.generateUuid(), null, false);
     verify(USER_SERVICE).getTotalUserCount(any(), anyBoolean());

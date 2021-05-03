@@ -555,9 +555,9 @@ public interface UserService extends OwnedByAccount {
   String saveUserInvite(UserInvite userInvite);
 
   List<User> listUsers(PageRequest pageRequest, String accountId, String searchTerm, Integer offset, Integer pageSize,
-      boolean loadUserGroups);
+      boolean loadUserGroups, boolean includeUsersPendingInviteAcceptance);
 
-  long getTotalUserCount(String accountId, boolean listPendingUsers);
+  long getTotalUserCount(String accountId, boolean includeUsersPendingInviteAcceptance);
 
   InviteOperationResponse checkInviteStatus(UserInvite userInvite, Generation gen);
 

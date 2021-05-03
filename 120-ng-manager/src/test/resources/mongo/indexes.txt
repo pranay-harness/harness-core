@@ -788,9 +788,9 @@ userGroups {"name": "name_1", "background": true} {"name": 1}
 userInvites {"name": "accountId_email_1", "background": true} {"accountId": 1, "email": 1}
 userInvites {"name": "appId_1", "background": true} {"appId": 1}
 userInvites {"name": "createdAt_1", "background": true} {"createdAt": 1}
+userMemberships {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 userMemberships {"name": "uniqueUserMembershipUserId", "unique": true} {"userId": 1}
 userMemberships {"name": "userMembershipAccountOrgProject", "background": true} {"scopes.accountIdentifier": 1, "scopes.orgIdentifier": 1, "scopes.projectIdentifier": 1}
-userMemberships {"name": "userMembershipUserIdScopes", "background": true} {"userId": 1, "scopes": 1}
 userProjectMaps {"name": "accountOrgProjectMapIdx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 userProjectMaps {"name": "uniqueUserProjectMap", "unique": true} {"userId": 1, "accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 userProjectMaps {"name": "userProjectMapMigrationIdx", "background": true} {"moved": 1, "tries": 1}

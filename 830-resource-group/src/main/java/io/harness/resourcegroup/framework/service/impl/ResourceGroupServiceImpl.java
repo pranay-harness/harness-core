@@ -122,16 +122,13 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
 
   private ResourceGroup create(ResourceGroup resourceGroup) {
     preprocessResourceGroup(resourceGroup);
-    if (resourceGroupValidatorService.isValid(resourceGroup)) {
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
-        outboxService.save(new ResourceGroupCreateEvent(
-            savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(savedResourceGroup)));
-        return savedResourceGroup;
-      }));
-    }
-    log.error("PreValidations failed for resource group {}", resourceGroup);
-    throw new InvalidRequestException("Prevalidation Checks failed for the resource group");
+    resourceGroupValidatorService.validate(resourceGroup);
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
+      outboxService.save(new ResourceGroupCreateEvent(
+          savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(savedResourceGroup)));
+      return savedResourceGroup;
+    }));
   }
 
   @Override
@@ -234,16 +231,16 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {
       throw new InvalidRequestException("Can't update managed resource group");
     }
+    preprocessResourceGroup(resourceGroup);
+    resourceGroupValidatorService.validate(resourceGroup);
     ResourceGroupDTO oldResourceGroup =
         (ResourceGroupDTO) NGObjectMapperHelper.clone(ResourceGroupMapper.toDTO(savedResourceGroup));
     savedResourceGroup.setName(resourceGroup.getName());
     savedResourceGroup.setColor(resourceGroup.getColor());
     savedResourceGroup.setTags(resourceGroup.getTags());
     savedResourceGroup.setDescription(resourceGroup.getDescription());
-    if (resourceGroupValidatorService.isValid(resourceGroup)) {
-      savedResourceGroup.setFullScopeSelected(resourceGroup.getFullScopeSelected());
-      savedResourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
-    }
+    savedResourceGroup.setFullScopeSelected(resourceGroup.getFullScopeSelected());
+    savedResourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
     resourceGroup = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       ResourceGroup updatedResourceGroup = resourceGroupRepository.save(savedResourceGroup);
       outboxService.save(new ResourceGroupUpdateEvent(savedResourceGroup.getAccountIdentifier(),
@@ -265,7 +262,12 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
         resourceSelectors.stream()
             .filter(StaticResourceSelector.class ::isInstance)
             .map(StaticResourceSelector.class ::cast)
-            .collect(toMap(StaticResourceSelector::getResourceType, StaticResourceSelector::getIdentifiers));
+            .collect(toMap(StaticResourceSelector::getResourceType, StaticResourceSelector::getIdentifiers,
+                (oldResourceIds, newResourceIds) -> {
+                  oldResourceIds.addAll(newResourceIds);
+                  return oldResourceIds;
+                }));
+
     List<ResourceSelector> condensedResourceSelectors = new ArrayList<>();
     resources.forEach(
         (k, v)

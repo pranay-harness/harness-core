@@ -26,7 +26,8 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
-import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
+import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.ng.core.utils.UserGroupMapper;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -161,21 +162,22 @@ public class UserGroupResource {
     return ResponseDTO.newResponse(getNGPageResponse(page));
   }
 
-  @GET
+  @POST
   @Path("{identifier}/users")
-  @ApiOperation(value = "List users in a usergroup", nickname = "getUsersInUserGroup")
-  public ResponseDTO<PageResponse<UserInfo>> getUsersInUserGroup(
+  @ApiOperation(value = "List users in a user group", nickname = "getUsersInUserGroup")
+  public ResponseDTO<PageResponse<UserMetadataDTO>> getUsersInUserGroup(
       @NotNull @PathParam("identifier") String userGroupIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Valid @BeanParam PageRequest pageRequest) {
+      @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
-    return ResponseDTO.newResponse(userGroupService.listUsersInUserGroup(scope, userGroupIdentifier, pageRequest));
+    return ResponseDTO.newResponse(
+        userGroupService.listUsersInUserGroup(scope, userGroupIdentifier, userFilter, pageRequest));
   }
 
   @POST

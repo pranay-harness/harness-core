@@ -3,6 +3,7 @@ package io.harness.ng.core.api.impl;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
@@ -33,7 +34,9 @@ import io.harness.ng.core.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.notification.NotificationChannelType;
@@ -44,8 +47,6 @@ import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.ng.core.spring.UserGroupRepository;
 import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserFilterNG;
-import io.harness.utils.PageUtils;
-import io.harness.utils.PaginationUtils;
 import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
 
@@ -163,19 +164,20 @@ public class UserGroupServiceImpl implements UserGroupService {
     return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
   }
 
-  public PageResponse<UserInfo> listUsersInUserGroup(Scope scope, String userGroupIdentifier, PageRequest pageRequest) {
+  public PageResponse<UserMetadataDTO> listUsersInUserGroup(
+      Scope scope, String userGroupIdentifier, UserFilter userFilter, PageRequest pageRequest) {
     Optional<UserGroup> userGroupOptional =
         get(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroupIdentifier);
     if (!userGroupOptional.isPresent()) {
       return PageResponse.getEmptyPageResponse(pageRequest);
     }
-    PageResponse<String> userIdsPage = PaginationUtils.getPage(userGroupOptional.get().getUsers(), pageRequest);
-    if (userIdsPage.isEmpty()) {
-      return PageResponse.getEmptyPageResponse(pageRequest);
+    Set<String> userGroupMemberIds = new HashSet<>(userGroupOptional.get().getUsers());
+    if (isEmpty(userFilter.getIdentifiers())) {
+      userFilter.setIdentifiers(userGroupMemberIds);
+    } else {
+      userFilter.setIdentifiers(Sets.intersection(userFilter.getIdentifiers(), userGroupMemberIds));
     }
-    List<UserInfo> userInfos = RestClientUtils.getResponse(userClient.listUsers(
-        UserFilterNG.builder().userIds(userIdsPage.getContent()).build(), scope.getAccountIdentifier()));
-    return PageUtils.getNGPageResponse(userIdsPage, userInfos);
+    return ngUserService.listUsers(scope, pageRequest, userFilter);
   }
 
   @Override
