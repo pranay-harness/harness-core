@@ -61,7 +61,7 @@ public class MongoConfig {
 
   @JsonProperty(defaultValue = "300") @Default @NotEmpty private int connectionsPerHost = 300;
 
-  private MongoSSLConfig mongoSSLConfig;
+  private MongoSSLConfig mongoSSLConfig = MongoSSLConfig.builder().build();
 
   private boolean transactionsEnabled;
 
