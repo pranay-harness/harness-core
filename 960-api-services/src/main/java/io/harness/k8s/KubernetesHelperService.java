@@ -324,13 +324,8 @@ public class KubernetesHelperService {
         httpClientBuilder.addNetworkInterceptor(loggingInterceptor);
       }
 
-      if (config.getConnectionTimeout() > 0) {
-        httpClientBuilder.connectTimeout(config.getConnectionTimeout(), TimeUnit.MILLISECONDS);
-      }
-
-      if (config.getRequestTimeout() > 0) {
-        httpClientBuilder.readTimeout(config.getRequestTimeout(), TimeUnit.MILLISECONDS);
-      }
+      httpClientBuilder.connectTimeout(0, TimeUnit.MILLISECONDS);
+      httpClientBuilder.readTimeout(0, TimeUnit.MILLISECONDS);
 
       if (config.getWebsocketPingInterval() > 0) {
         httpClientBuilder.pingInterval(config.getWebsocketPingInterval(), TimeUnit.MILLISECONDS);
