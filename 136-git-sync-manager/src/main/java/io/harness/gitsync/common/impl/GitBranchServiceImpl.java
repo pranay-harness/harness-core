@@ -7,10 +7,6 @@ import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.IdentifierRef;
-import io.harness.connector.impl.ConnectorErrorMessagesHelper;
-import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.BranchSyncStatus;
@@ -21,18 +17,14 @@ import io.harness.gitsync.common.dtos.GitBranchDTO.SyncedBranchDTOKeys;
 import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
+import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageResponse;
-import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.repositories.gitBranches.GitBranchesRepository;
-import io.harness.service.ScmClient;
-import io.harness.tasks.DecryptGitApiAccessHelper;
-import io.harness.utils.IdentifierRefHelper;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -49,66 +41,21 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 @OwnedBy(DX)
 public class GitBranchServiceImpl implements GitBranchService {
-  private final DecryptGitApiAccessHelper decryptGitApiAccessHelper;
-  private final ScmClient scmClient;
-  private final ConnectorService connectorService;
-  private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
   private final GitBranchesRepository gitBranchesRepository;
   private final YamlGitConfigService yamlGitConfigService;
   private final ExecutorService executorService;
   private final HarnessToGitHelperService harnessToGitHelperService;
+  private final ScmClientFacilitatorService scmClientFacilitatorService;
 
   @Inject
-  public GitBranchServiceImpl(DecryptGitApiAccessHelper decryptGitApiAccessHelper, ScmClient scmClient,
-      @Named("connectorDecoratorService") ConnectorService connectorService,
-      ConnectorErrorMessagesHelper connectorErrorMessagesHelper, GitBranchesRepository gitBranchesRepository,
-      YamlGitConfigService yamlGitConfigService, ExecutorService executorService,
-      HarnessToGitHelperService harnessToGitHelperService) {
-    this.decryptGitApiAccessHelper = decryptGitApiAccessHelper;
-    this.scmClient = scmClient;
-    this.connectorService = connectorService;
-    this.connectorErrorMessagesHelper = connectorErrorMessagesHelper;
+  public GitBranchServiceImpl(GitBranchesRepository gitBranchesRepository, YamlGitConfigService yamlGitConfigService,
+      ExecutorService executorService, HarnessToGitHelperService harnessToGitHelperService,
+      ScmClientFacilitatorService scmClientFacilitatorService) {
     this.gitBranchesRepository = gitBranchesRepository;
     this.yamlGitConfigService = yamlGitConfigService;
     this.executorService = executorService;
     this.harnessToGitHelperService = harnessToGitHelperService;
-  }
-
-  @Override
-  public List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String connectorIdentifierRef, String repoURL,
-      io.harness.ng.beans.PageRequest pageRequest, String searchTerm) {
-    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-        connectorIdentifierRef, accountIdentifier, orgIdentifier, projectIdentifier);
-    ScmConnector scmConnector =
-        connectorService
-            .get(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-                identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())
-            .map(connectorResponseDTO
-                -> decryptGitApiAccessHelper.decryptScmApiAccess(
-                    (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig(),
-                    identifierRef.getAccountIdentifier(), identifierRef.getProjectIdentifier(),
-                    identifierRef.getOrgIdentifier()))
-            .orElseThrow(()
-                             -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-                                 identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-                                 identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())));
-    scmConnector.setUrl(repoURL);
-    ListBranchesResponse listBranchesResponse = scmClient.listBranches(scmConnector);
-    return listBranchesResponse.getBranchesList();
-  }
-
-  @Override
-  public List<String> listBranchesForRepoByGitSyncConfig(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String yamlGitConfigIdentifier, io.harness.ng.beans.PageRequest pageRequest,
-      String searchTerm) {
-    YamlGitConfigDTO yamlGitConfig =
-        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
-    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(yamlGitConfig.getGitConnectorRef(),
-        accountIdentifier, yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier());
-    return listBranchesForRepoByConnector(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-        identifierRef.getProjectIdentifier(), identifierRef.getIdentifier(), yamlGitConfig.getRepo(), pageRequest,
-        searchTerm);
+    this.scmClientFacilitatorService = scmClientFacilitatorService;
   }
 
   @Override
@@ -169,9 +116,9 @@ public class GitBranchServiceImpl implements GitBranchService {
   public void createBranches(String accountId, String orgIdentifier, String projectIdentifier, String gitConnectorRef,
       String repoUrl, String yamlGitConfigIdentifier) {
     final int MAX_BRANCH_SIZE = 5000;
-    final List<String> branches =
-        listBranchesForRepoByConnector(accountId, orgIdentifier, projectIdentifier, gitConnectorRef, repoUrl,
-            io.harness.ng.beans.PageRequest.builder().pageSize(MAX_BRANCH_SIZE).pageIndex(0).build(), null);
+    final List<String> branches = scmClientFacilitatorService.listBranchesForRepoByConnector(accountId, orgIdentifier,
+        projectIdentifier, gitConnectorRef, repoUrl,
+        io.harness.ng.beans.PageRequest.builder().pageSize(MAX_BRANCH_SIZE).pageIndex(0).build(), null);
     for (String branchName : branches) {
       GitBranch gitBranch = GitBranch.builder()
                                 .accountIdentifier(accountId)
