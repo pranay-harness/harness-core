@@ -1,5 +1,7 @@
 package io.harness.batch.processing.billing.service.impl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.service.PricingData;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.InstanceCategory;
@@ -9,6 +11,7 @@ import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
+import io.harness.batch.processing.pricing.service.intfc.AzureCustomBillingService;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.batch.processing.pricing.service.support.GCPCustomInstanceDetailProvider;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
@@ -29,11 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @Service
 public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   private final VMPricingService vmPricingService;
   private final AwsCustomBillingService awsCustomBillingService;
+  private final AzureCustomBillingService azureCustomBillingService;
   private final InstanceResourceService instanceResourceService;
   private final EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
   private final CustomBillingMetaDataService customBillingMetaDataService;
@@ -41,7 +46,8 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
 
   @Autowired
   public ComputeInstancePricingStrategy(VMPricingService vmPricingService,
-      AwsCustomBillingService awsCustomBillingService, InstanceResourceService instanceResourceService,
+      AwsCustomBillingService awsCustomBillingService, AzureCustomBillingService azureCustomBillingService,
+      InstanceResourceService instanceResourceService,
       EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy,
       CustomBillingMetaDataService customBillingMetaDataService, PricingProfileService pricingProfileService) {
     this.vmPricingService = vmPricingService;
@@ -50,6 +56,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     this.ecsFargateInstancePricingStrategy = ecsFargateInstancePricingStrategy;
     this.customBillingMetaDataService = customBillingMetaDataService;
     this.pricingProfileService = pricingProfileService;
+    this.azureCustomBillingService = azureCustomBillingService;
   }
 
   @Override
@@ -127,30 +134,34 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
   private PricingData getCustomVMPricing(InstanceData instanceData, Instant startTime, Instant endTime,
       double instanceActiveSeconds, String instanceFamily, String region, CloudProvider cloudProvider) {
     PricingData pricingData = null;
+    VMInstanceBillingData vmInstanceBillingData = null;
     if (instanceFamily == null || region == null || cloudProvider == null) {
       return pricingData;
     }
+    double cpuUnit = instanceData.getTotalResource().getCpuUnits();
+    double memoryMb = instanceData.getTotalResource().getMemoryMb();
+    Resource computeVMResource = instanceResourceService.getComputeVMResource(instanceFamily, region, cloudProvider);
+    if (null != computeVMResource) {
+      cpuUnit = computeVMResource.getCpuUnits();
+      memoryMb = computeVMResource.getMemoryMb();
+    }
+
     String awsDataSetId = customBillingMetaDataService.getAwsDataSetId(instanceData.getAccountId());
+    String azureDataSetId = customBillingMetaDataService.getAzureDataSetId(instanceData.getAccountId());
     if (cloudProvider == CloudProvider.AWS && null != awsDataSetId) {
-      double cpuUnit = instanceData.getTotalResource().getCpuUnits();
-      double memoryMb = instanceData.getTotalResource().getMemoryMb();
-      Resource computeVMResource = instanceResourceService.getComputeVMResource(instanceFamily, region, cloudProvider);
-      if (null != computeVMResource) {
-        cpuUnit = computeVMResource.getCpuUnits();
-        memoryMb = computeVMResource.getMemoryMb();
-      }
-      VMInstanceBillingData vmInstanceBillingData =
-          awsCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
-      if (null != vmInstanceBillingData && !Double.isNaN(vmInstanceBillingData.getComputeCost())) {
-        double pricePerHr = (vmInstanceBillingData.getComputeCost() * 3600) / instanceActiveSeconds;
-        pricingData = PricingData.builder()
-                          .pricePerHour(pricePerHr)
-                          .networkCost(vmInstanceBillingData.getNetworkCost())
-                          .pricingSource(PricingSource.CUR_REPORT)
-                          .cpuUnit(cpuUnit)
-                          .memoryMb(memoryMb)
-                          .build();
-      }
+      vmInstanceBillingData = awsCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
+    } else if (cloudProvider == CloudProvider.AZURE && null != azureDataSetId) {
+      vmInstanceBillingData = azureCustomBillingService.getComputeVMPricingInfo(instanceData, startTime, endTime);
+    }
+    if (null != vmInstanceBillingData && !Double.isNaN(vmInstanceBillingData.getComputeCost())) {
+      double pricePerHr = (vmInstanceBillingData.getComputeCost() * 3600) / instanceActiveSeconds;
+      pricingData = PricingData.builder()
+                        .pricePerHour(pricePerHr)
+                        .networkCost(vmInstanceBillingData.getNetworkCost())
+                        .pricingSource(PricingSource.CUR_REPORT)
+                        .cpuUnit(cpuUnit)
+                        .memoryMb(memoryMb)
+                        .build();
     }
     return pricingData;
   }
