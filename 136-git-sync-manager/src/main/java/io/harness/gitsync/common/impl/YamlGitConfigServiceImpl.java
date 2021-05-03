@@ -158,7 +158,9 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   @Override
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs) {
-    return save(ygs, ygs.getAccountIdentifier(), true);
+    // Do full sync if this is git sync was disabled before this.
+    return save(ygs, ygs.getAccountIdentifier(),
+        !isGitSyncEnabled(ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier()));
   }
 
   void validatePresenceOfRequiredFields(Object... fields) {
@@ -216,10 +218,10 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs, String accountId, boolean performFullSync) {
     // TODO(abhinav): add full sync logic.
-    return saveInternal(ygs, accountId);
+    return saveInternal(ygs, accountId, performFullSync);
   }
 
-  private YamlGitConfigDTO saveInternal(YamlGitConfigDTO gitSyncConfigDTO, String accountId) {
+  private YamlGitConfigDTO saveInternal(YamlGitConfigDTO gitSyncConfigDTO, String accountId, boolean performFullSync) {
     validateTheGitConfigInput(gitSyncConfigDTO);
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, accountId);
     yamlGitConfigToBeSaved.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
@@ -232,11 +234,12 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     }
     sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
         yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
-    executorService.submit(
-        ()
-            -> gitBranchService.createBranches(accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
-                gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getGitConnectorRef(),
-                gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getIdentifier()));
+    if ()
+      executorService.submit(
+          ()
+              -> gitBranchService.createBranches(accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
+                  gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getGitConnectorRef(),
+                  gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getIdentifier()));
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
   }
 
