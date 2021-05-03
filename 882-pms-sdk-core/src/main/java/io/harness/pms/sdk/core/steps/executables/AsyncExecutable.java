@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.steps.executables;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -27,9 +27,9 @@ import java.util.Map;
  * supplied as parameter in responseDataMap. The key is the callbackId supplied in method above
  *
  */
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public interface AsyncExecutable<T extends StepParameters>
-    extends Step<T>, Abortable<T, AsyncExecutableResponse>, Failable<T> {
+    extends Step<T>, Abortable<T, AsyncExecutableResponse>, Failable<T>, Progressable<T> {
   AsyncExecutableResponse executeAsync(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   StepResponse handleAsyncResponse(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);

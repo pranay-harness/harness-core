@@ -76,7 +76,6 @@ import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -131,7 +130,6 @@ public class OrchestrationEngine {
             .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
-            .progressDataMap(new LinkedHashMap<>())
             .unitProgresses(new ArrayList<>())
             .build();
     nodeExecutionService.save(nodeExecution);
