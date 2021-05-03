@@ -1,29 +1,58 @@
 provisioner:
   steps:
     - step:
-        type: TerraformApply
-        name: Terraform Apply
-        identifier: terraformApply
+        type: TerraformPlan
+        name: Terraform Plan
+        identifier:
         timeout: 10m
         spec:
           provisionerIdentifier:
           configuration:
-            type: Inline
-            spec:
-              workspace: default
-              configFiles:
-                store:
-                  type: Git
-                  spec:
-                    gitFetchType: Branch
-                    repoName:
-                    branch:
-                    folderPath:
-                    connectorRef:
-              varFiles:
-              backendConfig:
+            command: Apply
+            secretManagerRef:
+            configFiles:
+              store:
+                type: Github
+                spec:
+                  connectorRef:
+                  gitFetchType: Branch
+                  branch:
+                  folderPath:
+            varFiles:
+              - varFile:
+                identifier:
                 type: Inline
                 spec:
-                  content:
-              targets:
-              environmentVariables:
+                  content
+    - step:
+        type: HarnessApproval
+        name: Harness Approval
+        identifier:
+        timeout: 1d
+        spec:
+          approvalMessage:
+          includePipelineExecutionHistory: true
+          approvers:
+            userGroups: []
+            minimumCount: 1
+            disallowPipelineExecutor: true
+          approverInputs:
+            - name: ""
+              defaultValue: ""
+    - step:
+        type: TerraformApply
+        name: Terraform Apply
+        identifier:
+        timeout: 10m
+        spec:
+          provisionerIdentifier:
+          configuration:
+            type: InheritFromPlan
+  rollbackSteps:
+    - step:
+        type: TerraformRollback
+        name: Terraform Rollback
+        identifier:
+        timeout: 10m
+        spec:
+          provisionerIdentifier:
