@@ -30,6 +30,11 @@ if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
   export CACHE_TEST_RESULTS=yes
 fi
 
+if [ "${RUN_BAZEL_TESTS_HAARNESS_CIE}" == "true" ]; then
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
+  bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
+fi
+
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
   bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/... || true
