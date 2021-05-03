@@ -50,7 +50,6 @@ public class NodeExecutionToExecutioNodeMapper {
         .startTs(nodeExecution.getStartTs())
         .endTs(nodeExecution.getEndTs())
         .stepType(nodeExecution.getNode().getStepType().getType())
-        .taskIdToProgressDataMap(nodeExecution.getProgressDataMap())
         .status(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()))
         .failureInfo(FailureInfoDTOConverter.toFailureInfoDTO(nodeExecution.getFailureInfo()))
         .interruptHistories(nodeExecution.getInterruptHistories())

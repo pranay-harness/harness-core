@@ -35,7 +35,6 @@ public class GraphVertexConverter {
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
-        .progressDataMap(nodeExecution.getProgressDataMap())
         .unitProgresses(nodeExecution.getUnitProgresses())
         .build();
   }
@@ -63,7 +62,6 @@ public class GraphVertexConverter {
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .outcomeDocuments(outcomes)
-        .progressDataMap(nodeExecution.getProgressDataMap())
         .unitProgresses(nodeExecution.getUnitProgresses())
         .build();
   }

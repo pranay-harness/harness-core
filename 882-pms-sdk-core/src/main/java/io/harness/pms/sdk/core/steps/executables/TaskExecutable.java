@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.steps.executables;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -27,9 +27,9 @@ import java.util.Map;
  * handleTaskResult : The result of the task will be supplied in the responseDataMap. The key will be the waitId, See
  * {@link Task} for details on this
  */
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public interface TaskExecutable<T extends StepParameters, R extends ResponseData>
-    extends Step<T>, Abortable<T, TaskExecutableResponse>, Failable<T> {
+    extends Step<T>, Abortable<T, TaskExecutableResponse>, Failable<T>, Progressable<T> {
   TaskRequest obtainTask(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   StepResponse handleTaskResult(Ambiance ambiance, T stepParameters, ThrowingSupplier<R> responseDataSupplier)
