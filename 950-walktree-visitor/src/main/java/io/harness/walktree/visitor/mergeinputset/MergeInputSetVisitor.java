@@ -3,8 +3,6 @@ package io.harness.walktree.visitor.mergeinputset;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.reflection.ReflectionUtils;
-import io.harness.walktree.beans.LevelNode;
-import io.harness.walktree.beans.ParentQualifier;
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.registries.visitorfield.VisitorFieldRegistry;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
@@ -15,7 +13,6 @@ import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.walktree.visitor.response.VisitorResponse;
 import io.harness.walktree.visitor.utilities.MergeInputSetHelperUtils;
 import io.harness.walktree.visitor.utilities.VisitorDummyElementUtils;
-import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 import io.harness.walktree.visitor.utilities.VisitorResponseUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -63,11 +60,6 @@ public class MergeInputSetVisitor extends SimpleVisitor<DummyVisitableElement> {
 
   @Override
   public VisitElementResult preVisitElement(Object element) {
-    // add to the list of parent.
-    if (element instanceof ParentQualifier) {
-      LevelNode levelNode = ((ParentQualifier) element).getLevelNode();
-      VisitorParentPathUtils.addToParentList(this.getContextMap(), levelNode);
-    }
     // This is called to initialise elementToInputSetElementListMap.
     if (!elementToInputSetElementListMap.containsKey(element)) {
       if (!givenInputSetPipelineList.isEmpty()
@@ -115,11 +107,6 @@ public class MergeInputSetVisitor extends SimpleVisitor<DummyVisitableElement> {
   public VisitElementResult postVisitElement(Object element) {
     addChildrenResponseToCurrentElement(element);
     addErrorChildrenResponseToCurrentElement(element);
-
-    // Remove from parent list once traversed
-    if (element instanceof ParentQualifier) {
-      VisitorParentPathUtils.removeFromParentList(this.getContextMap());
-    }
     currentObjectResult = VisitorDummyElementUtils.getDummyElementFromMap(elementToResponseDummyElementMap, element);
     currentObjectErrorResult = VisitorDummyElementUtils.getDummyElementFromMap(getElementToDummyElementMap(), element);
     return super.postVisitElement(element);

@@ -2,11 +2,16 @@ package io.harness.walktree.visitor;
 
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.beans.VisitableChild;
+import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import lombok.Getter;
 
 public abstract class Visitor {
+  @Getter Map<String, Object> contextMap = new ConcurrentHashMap<>();
+
   /**
    * Invoked for a directory before entries in the Element are visited.
    * @param element
@@ -49,17 +54,21 @@ public abstract class Visitor {
       if (!skipChildren) {
         Visitable visitable = (Visitable) currentElement;
         if (visitable.getChildrenToWalk() != null) {
-          List<Object> childrenToWalk = visitable.getChildrenToWalk()
-                                            .getVisitableChildList()
-                                            .stream()
-                                            .map(VisitableChild::getValue)
-                                            .collect(Collectors.toList());
-          for (Object child : childrenToWalk) {
+          Map<String, Object> childrenToWalk =
+              visitable.getChildrenToWalk()
+                  .getVisitableChildList()
+                  .stream()
+                  .filter(visitableChild -> visitableChild.getValue() != null)
+                  .collect(Collectors.toMap(VisitableChild::getFieldName, VisitableChild::getValue));
+          for (Map.Entry<String, Object> fieldNameToChild : childrenToWalk.entrySet()) {
+            Object child = fieldNameToChild.getValue();
             // if child is null then we should not visit it
             if (child == null) {
               continue;
             }
+            VisitorParentPathUtils.addToParentList(this.getContextMap(), fieldNameToChild.getKey());
             VisitElementResult childVisitResult = walkElementTree(child);
+            VisitorParentPathUtils.removeFromParentList(this.getContextMap());
             if (childVisitResult == VisitElementResult.TERMINATE) {
               return childVisitResult;
             }

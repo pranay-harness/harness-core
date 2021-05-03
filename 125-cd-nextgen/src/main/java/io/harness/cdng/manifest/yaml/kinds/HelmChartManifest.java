@@ -15,6 +15,7 @@ import io.harness.cdng.visitor.helpers.manifest.HelmChartManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -85,7 +86,7 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("storeConfigWrapper", storeConfigWrapper);
+    children.add(YAMLFieldNameConstants.STORE, storeConfigWrapper);
     return children;
   }
 
