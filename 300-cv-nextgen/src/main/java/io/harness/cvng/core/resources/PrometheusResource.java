@@ -1,6 +1,7 @@
 package io.harness.cvng.core.resources;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.core.beans.PrometheusSampleData;
 import io.harness.cvng.core.services.api.PrometheusService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -78,5 +79,20 @@ public class PrometheusResource {
       @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(prometheusService.getLabelValues(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, labelName, tracingId));
+  }
+
+  @GET
+  @Path("/sample-data")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get sample data", nickname = "getSampleData")
+  public ResponseDTO<List<PrometheusSampleData>> getSampleData(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("pageSize") @NotNull int pageSize,
+      @QueryParam("offset") @NotNull int offset, @QueryParam("query") @DefaultValue("") String query,
+      @QueryParam("tracingId") String tracingId) {
+    return ResponseDTO.newResponse(prometheusService.getSampleData(
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, query, tracingId));
   }
 }

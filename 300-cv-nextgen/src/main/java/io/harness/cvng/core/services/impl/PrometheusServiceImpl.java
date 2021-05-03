@@ -3,19 +3,25 @@ package io.harness.cvng.core.services.impl;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
+import io.harness.cvng.beans.prometheus.PrometheusFetchSampleDataRequest;
 import io.harness.cvng.beans.prometheus.PrometheusLabelNamesFetchRequest;
 import io.harness.cvng.beans.prometheus.PrometheusLabelValuesFetchRequest;
 import io.harness.cvng.beans.prometheus.PrometheusMetricListFetchRequest;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
+import io.harness.cvng.core.beans.PrometheusSampleData;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.PrometheusService;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.serializer.JsonUtils;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import java.lang.reflect.Type;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class PrometheusServiceImpl implements PrometheusService {
@@ -79,6 +85,31 @@ public class PrometheusServiceImpl implements PrometheusService {
     OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
     final Gson gson = new Gson();
     Type type = new TypeToken<List<String>>() {}.getType();
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+  }
+
+  @Override
+  public List<PrometheusSampleData> getSampleData(String accountId, String connectorIdentifier, String orgIdentifier,
+      String projectIdentifier, String query, String tracingId) {
+    Instant time = DateTimeUtils.roundDownTo1MinBoundary(Instant.now());
+    DataCollectionRequest request = PrometheusFetchSampleDataRequest.builder()
+                                        .type(DataCollectionRequestType.PROMETHEUS_SAMPLE_DATA)
+                                        .query(query)
+                                        .startTime(time.minus(Duration.of(30, ChronoUnit.MINUTES)))
+                                        .endTime(time)
+                                        .build();
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<PrometheusSampleData>>() {}.getType();
     return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
   }
 }
