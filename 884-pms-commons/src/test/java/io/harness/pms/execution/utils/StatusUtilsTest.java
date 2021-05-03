@@ -1,10 +1,13 @@
 package io.harness.pms.execution.utils;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.rule.Owner;
@@ -14,6 +17,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class StatusUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
@@ -78,9 +82,20 @@ public class StatusUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
-  public void testCalculateStatusPaused() {
+  public void testCalculateStatusRunningNotPaused() {
     List<Status> statuses = Arrays.asList(Status.SUCCEEDED, Status.SKIPPED, Status.IGNORE_FAILED, Status.PAUSED,
         Status.SUSPENDED, Status.RUNNING, Status.RUNNING);
+
+    Status status = StatusUtils.calculateStatus(statuses, "PLAN_EXECUTION_ID");
+    assertThat(status).isEqualTo(Status.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testCalculateStatusPaused() {
+    List<Status> statuses =
+        Arrays.asList(Status.SUCCEEDED, Status.SUCCEEDED, Status.IGNORE_FAILED, Status.PAUSED, Status.SUSPENDED);
 
     Status status = StatusUtils.calculateStatus(statuses, "PLAN_EXECUTION_ID");
     assertThat(status).isEqualTo(Status.PAUSED);

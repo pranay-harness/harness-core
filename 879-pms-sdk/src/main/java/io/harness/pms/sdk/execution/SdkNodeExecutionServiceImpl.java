@@ -22,14 +22,10 @@ import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
-import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
-import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.SdkResponseEvent;
-import io.harness.pms.execution.SdkResponseEventInternal;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
@@ -42,7 +38,6 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
@@ -52,23 +47,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
-  @Inject private NodeExecutionProtoServiceBlockingStub nodeExecutionProtoServiceBlockingStub;
   @Inject private StepRegistry stepRegistry;
   @Inject private ResponseDataMapper responseDataMapper;
   @Inject private SdkResponseEventPublisher sdkResponseEventPublisher;
 
   @Override
   public void suspendChainExecution(String currentNodeExecutionId, SuspendChainRequest suspendChainRequest) {
-    sdkResponseEventPublisher.send(
-        SdkResponseEvent.builder()
-            .sdkResponseEventInternal(SdkResponseEventInternal.builder()
-                                          .sdkResponseEventType(SdkResponseEventType.SUSPEND_CHAIN)
-                                          .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
-                                                                       .setNodeExecutionId(currentNodeExecutionId)
-                                                                       .setSuspendChainRequest(suspendChainRequest)
-                                                                       .build())
-                                          .build())
-            .build());
+    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
+                                       .sdkResponseEventType(SdkResponseEventType.SUSPEND_CHAIN)
+                                       .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                                                    .setNodeExecutionId(currentNodeExecutionId)
+                                                                    .setSuspendChainRequest(suspendChainRequest)
+                                                                    .build())
+                                       .build());
   }
 
   @Override
@@ -81,15 +72,13 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
     if (status != null && status != Status.NO_OP) {
       builder.setStatus(status);
     }
-    SdkResponseEventInternal sdkResponseEventInternal =
-        SdkResponseEventInternal.builder()
+    SdkResponseEvent sdkResponseEvent =
+        SdkResponseEvent.builder()
             .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(builder.build()).build())
             .build();
-    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
-                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
-                                       .build());
+    sdkResponseEventPublisher.send(sdkResponseEvent);
   }
 
   @Override
@@ -98,16 +87,14 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                                                     .setNodeExecutionId(nodeExecutionId)
                                                     .setStepResponse(stepResponse)
                                                     .build();
-    SdkResponseEventInternal sdkResponseEventInternal =
-        SdkResponseEventInternal.builder()
+    SdkResponseEvent sdkResponseEvent =
+        SdkResponseEvent.builder()
             .sdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(responseRequest).build())
             .build();
 
-    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
-                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
-                                       .build());
+    sdkResponseEventPublisher.send(sdkResponseEvent);
   }
 
   @Override
@@ -118,23 +105,14 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                                                                 .putAllResponse(responseBytes)
                                                                 .setAsyncError(asyncError)
                                                                 .build();
-    SdkResponseEventInternal sdkResponseEventInternal =
-        SdkResponseEventInternal.builder()
+    SdkResponseEvent sdkResponseEvent =
+        SdkResponseEvent.builder()
             .sdkResponseEventType(SdkResponseEventType.RESUME_NODE_EXECUTION)
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setResumeNodeExecutionRequest(resumeNodeExecutionRequest).build())
             .build();
 
-    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
-                                       .sdkResponseEventInternals(Collections.singletonList(sdkResponseEventInternal))
-                                       .build());
-  }
-
-  @Override
-  public Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId) {
-    AccumulateResponsesResponse response = nodeExecutionProtoServiceBlockingStub.accumulateResponses(
-        AccumulateResponsesRequest.newBuilder().setPlanExecutionId(planExecutionId).setNotifyId(notifyId).build());
-    return responseDataMapper.fromResponseDataProto(response.getResponseMap());
+    sdkResponseEventPublisher.send(sdkResponseEvent);
   }
 
   @Override
@@ -154,21 +132,17 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
 
     sdkResponseEventPublisher.send(
         SdkResponseEvent.builder()
-            .sdkResponseEventInternals(Collections.singletonList(
-                SdkResponseEventInternal.builder()
-                    .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
-                                                 .setFacilitatorResponseRequest(facilitatorResponseRequest)
-                                                 .build())
-                    .sdkResponseEventType(SdkResponseEventType.HANDLE_FACILITATE_RESPONSE)
-                    .build()))
+            .sdkResponseEventRequest(
+                SdkResponseEventRequest.newBuilder().setFacilitatorResponseRequest(facilitatorResponseRequest).build())
+            .sdkResponseEventType(SdkResponseEventType.HANDLE_FACILITATE_RESPONSE)
             .build());
   }
 
   @Override
   public void handleAdviserResponse(
       @NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse) {
-    SdkResponseEventInternal handleAdviserResponseRequest =
-        SdkResponseEventInternal.builder()
+    SdkResponseEvent handleAdviserResponseRequest =
+        SdkResponseEvent.builder()
             .sdkResponseEventType(SdkResponseEventType.HANDLE_ADVISER_RESPONSE)
             .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
                                          .setAdviserResponseRequest(AdviserResponseRequest.newBuilder()
@@ -178,16 +152,13 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                                                                         .build())
                                          .build())
             .build();
-    sdkResponseEventPublisher.send(
-        SdkResponseEvent.builder()
-            .sdkResponseEventInternals(Collections.singletonList(handleAdviserResponseRequest))
-            .build());
+    sdkResponseEventPublisher.send(handleAdviserResponseRequest);
   }
 
   @Override
   public void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo) {
-    SdkResponseEventInternal handleEventErrorRequest =
-        SdkResponseEventInternal.builder()
+    SdkResponseEvent handleEventErrorRequest =
+        SdkResponseEvent.builder()
             .sdkResponseEventType(SdkResponseEventType.HANDLE_EVENT_ERROR)
             .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
                                          .setEventErrorRequest(EventErrorRequest.newBuilder()
@@ -197,23 +168,18 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                                                                    .build())
                                          .build())
             .build();
-    sdkResponseEventPublisher.send(SdkResponseEvent.builder()
-                                       .sdkResponseEventInternals(Collections.singletonList(handleEventErrorRequest))
-                                       .build());
+    sdkResponseEventPublisher.send(handleEventErrorRequest);
   }
 
   @Override
   public void spawnChild(SpawnChildRequest spawnChildRequest) {
     sdkResponseEventPublisher.send(
         SdkResponseEvent.builder()
-            .sdkResponseEventInternal(
-                SdkResponseEventInternal.builder()
-                    .sdkResponseEventType(SdkResponseEventType.SPAWN_CHILD)
-                    .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
-                                                 .setSpawnChildRequest(spawnChildRequest)
-                                                 .setNodeExecutionId(spawnChildRequest.getNodeExecutionId())
-                                                 .build())
-                    .build())
+            .sdkResponseEventType(SdkResponseEventType.SPAWN_CHILD)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setSpawnChildRequest(spawnChildRequest)
+                                         .setNodeExecutionId(spawnChildRequest.getNodeExecutionId())
+                                         .build())
             .build());
   }
 
@@ -221,14 +187,11 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   public void spawnChildren(SpawnChildrenRequest spawnChildrenRequest) {
     sdkResponseEventPublisher.send(
         SdkResponseEvent.builder()
-            .sdkResponseEventInternal(
-                SdkResponseEventInternal.builder()
-                    .sdkResponseEventType(SdkResponseEventType.SPAWN_CHILDREN)
-                    .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
-                                                 .setSpawnChildrenRequest(spawnChildrenRequest)
-                                                 .setNodeExecutionId(spawnChildrenRequest.getNodeExecutionId())
-                                                 .build())
-                    .build())
+            .sdkResponseEventType(SdkResponseEventType.SPAWN_CHILDREN)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setSpawnChildrenRequest(spawnChildrenRequest)
+                                         .setNodeExecutionId(spawnChildrenRequest.getNodeExecutionId())
+                                         .build())
             .build());
   }
 
@@ -236,14 +199,11 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   public void queueTaskRequest(QueueTaskRequest queueTaskRequest) {
     sdkResponseEventPublisher.send(
         SdkResponseEvent.builder()
-            .sdkResponseEventInternal(
-                SdkResponseEventInternal.builder()
-                    .sdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
-                    .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
-                                                 .setQueueTaskRequest(queueTaskRequest)
-                                                 .setNodeExecutionId(queueTaskRequest.getNodeExecutionId())
-                                                 .build())
-                    .build())
+            .sdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
+            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                         .setQueueTaskRequest(queueTaskRequest)
+                                         .setNodeExecutionId(queueTaskRequest.getNodeExecutionId())
+                                         .build())
             .build());
   }
 

@@ -4,8 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc;
-import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.InterruptProtoServiceGrpc;
 import io.harness.pms.contracts.service.InterruptProtoServiceGrpc.InterruptProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc;
@@ -30,10 +28,6 @@ public class PmsSdkDummyGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<NodeExecutionProtoServiceBlockingStub>() {})
-        .toInstance(
-            NodeExecutionProtoServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
-
     bind(new TypeLiteral<InterruptProtoServiceBlockingStub>() {
     }).toInstance(InterruptProtoServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
 

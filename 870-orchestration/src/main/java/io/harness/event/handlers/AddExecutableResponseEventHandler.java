@@ -9,7 +9,7 @@ import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
-import io.harness.pms.execution.SdkResponseEventInternal;
+import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -27,7 +27,7 @@ public class AddExecutableResponseEventHandler implements SdkResponseEventHandle
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) private String publisherName;
 
   @Override
-  public void handleEvent(SdkResponseEventInternal event) {
+  public void handleEvent(SdkResponseEvent event) {
     AddExecutableResponseRequest request = event.getSdkResponseEventRequest().getAddExecutableResponseRequest();
     List<String> callbackIds = request.getCallbackIdsList();
     if (EmptyPredicate.isNotEmpty(callbackIds)) {

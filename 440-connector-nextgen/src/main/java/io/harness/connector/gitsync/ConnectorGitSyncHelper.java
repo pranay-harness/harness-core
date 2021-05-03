@@ -105,4 +105,9 @@ public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Conn
   public String getUuidKey() {
     return ConnectorKeys.id;
   }
+
+  @Override
+  public String getBranchKey() {
+    return ConnectorKeys.branch;
+  }
 }

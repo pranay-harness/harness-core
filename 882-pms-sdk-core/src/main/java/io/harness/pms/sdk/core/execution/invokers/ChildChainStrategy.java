@@ -65,10 +65,6 @@ public class ChildChainStrategy implements ExecuteStrategy {
     ChildChainExecutableResponse lastChildChainExecutableResponse = Preconditions.checkNotNull(
         Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getChildChain());
     Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
-    if (!lastChildChainExecutableResponse.getSuspend()) {
-      accumulatedResponse = sdkNodeExecutionService.accumulateResponses(
-          ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
-    }
     byte[] passThrowDataBytes = lastChildChainExecutableResponse.getPassThroughData().toByteArray();
     PassThroughData passThroughData = passThrowDataBytes.length == 0 ? new PassThroughData() {
     } : (PassThroughData) kryoSerializer.asObject(passThrowDataBytes);

@@ -15,6 +15,8 @@ import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.service.impl.ComputeInstancePricingStrategy;
 import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricingStrategy;
 import io.harness.batch.processing.billing.service.impl.StoragePricingStrategy;
@@ -28,6 +30,7 @@ import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
+import io.harness.batch.processing.pricing.service.intfc.AzureCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.service.intfc.PricingProfileService;
@@ -58,12 +61,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+@OwnedBy(HarnessTeam.CE)
 @RunWith(MockitoJUnitRunner.class)
 public class BillingCalculationServiceTest extends CategoryTest {
   @InjectMocks private BillingCalculationService billingCalculationService;
   @Mock private InstancePricingStrategyContext instancePricingStrategyRegistry;
   @Mock private VMPricingServiceImpl vmPricingService;
   @Mock private AwsCustomBillingService awsCustomBillingService;
+  @Mock private AzureCustomBillingService azureCustomBillingService;
   @Mock private InstanceResourceService instanceResourceService;
   @Mock private EcsFargateInstancePricingStrategy ecsFargateInstancePricingStrategy;
   @Mock private CustomBillingMetaDataService customBillingMetaDataService;
@@ -516,8 +521,9 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   private ComputeInstancePricingStrategy getComputeInstancePricingStrategy() {
-    return new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, instanceResourceService,
-        ecsFargateInstancePricingStrategy, customBillingMetaDataService, pricingProfileService);
+    return new ComputeInstancePricingStrategy(vmPricingService, awsCustomBillingService, azureCustomBillingService,
+        instanceResourceService, ecsFargateInstancePricingStrategy, customBillingMetaDataService,
+        pricingProfileService);
   }
 
   @Test

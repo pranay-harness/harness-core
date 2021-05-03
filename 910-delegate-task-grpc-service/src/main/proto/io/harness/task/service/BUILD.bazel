@@ -10,6 +10,7 @@ proto_library(
         "//920-delegate-service-beans/src/main/proto/io/harness/callback:920_delegate_service_beans_proto",
         "//920-delegate-service-beans/src/main/proto/io/harness/delegate:920_delegate_service_beans_proto",
         "//955-delegate-beans/src/main/proto/io/harness/delegate:955_delegate_beans_proto",
+        "//product/ci/engine/proto:cienginepb_proto",
         "@com_google_protobuf//:duration_proto",
     ],
 )
@@ -24,6 +25,7 @@ go_proto_library(
         "//920-delegate-service-beans/src/main/proto/io/harness/callback:go_default_library",
         "//920-delegate-service-beans/src/main/proto/io/harness/delegate:go_default_library",
         "//955-delegate-beans/src/main/proto/io/harness/delegate:go_default_library",
+        "//product/ci/engine/proto:cienginepb_go_proto",
     ],
 )
 

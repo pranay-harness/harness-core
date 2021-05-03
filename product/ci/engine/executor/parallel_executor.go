@@ -121,7 +121,7 @@ func (e *parallelExecutor) sendAbortToPendingSteps(ctx context.Context, stepStat
 			stepID := step.GetId()
 
 			err := sendStepStatus(ctx, stepID, "", accountID, callbackToken, taskID, int32(1), time.Since(startTime),
-				statuspb.StepExecutionStatus_ABORTED, "", nil, e.log)
+				statuspb.StepExecutionStatus_ABORTED, "", nil, nil, e.log)
 			if err != nil {
 				e.log.Errorw("Failed to send abort step stepStatus to pending step in parallel section", "step_id", stepID, zap.Error(err))
 				return err

@@ -23,6 +23,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.preflight.PreFlightDTO;
+import io.harness.pms.preflight.service.PreflightService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
@@ -61,6 +62,7 @@ public class PlanExecutionResource {
   @Inject private final TriggeredByHelper triggeredByHelper;
   @Inject private final OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private final AccessControlClient accessControlClient;
+  @Inject private final PreflightService preflightService;
 
   @POST
   @Path("/{identifier}")
@@ -170,7 +172,7 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @ApiParam(hidden = true) String inputSetPipelineYaml) throws IOException {
-    return ResponseDTO.newResponse(pipelineExecuteHelper.startPreflightCheck(
+    return ResponseDTO.newResponse(preflightService.startPreflightCheck(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml));
   }
 
@@ -183,7 +185,7 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam("preflightCheckId") String preflightCheckId,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    return ResponseDTO.newResponse(pipelineExecuteHelper.getPreflightCheckResponse(preflightCheckId));
+    return ResponseDTO.newResponse(preflightService.getPreflightCheckResponse(preflightCheckId));
   }
 
   @GET

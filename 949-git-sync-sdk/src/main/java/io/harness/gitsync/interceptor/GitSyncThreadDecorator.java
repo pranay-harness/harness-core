@@ -1,7 +1,7 @@
 package io.harness.gitsync.interceptor;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT_BRANCH;
+import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT;
 
 import static javax.ws.rs.Priorities.HEADER_DECORATOR;
 
@@ -73,12 +73,12 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter, Container
   String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
     try {
-      return URLDecoder.decode(queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : DEFAULT_BRANCH,
-          Charsets.UTF_8.name());
+      return URLDecoder.decode(
+          queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : DEFAULT, Charsets.UTF_8.name());
     } catch (UnsupportedEncodingException e) {
       log.error("Error in setting request param for {}", key);
     }
-    return DEFAULT_BRANCH;
+    return DEFAULT;
   }
 
   @Override

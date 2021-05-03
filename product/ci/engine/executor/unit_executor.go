@@ -119,7 +119,7 @@ func (e *unitExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep, 
 	stepID := step.GetId()
 
 	err := sendStepStatus(ctx, stepID, "", accountID, callbackToken, taskID, numRetries, timeTaken,
-		stepStatus, errMsg, so, e.log)
+		stepStatus, errMsg, so, nil, e.log)
 	if err != nil {
 		e.log.Errorw("Failed to send step status. Bailing out stage execution", "step_id", stepID, zap.Error(err))
 		return err

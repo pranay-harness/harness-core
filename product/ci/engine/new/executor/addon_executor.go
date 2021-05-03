@@ -25,11 +25,11 @@ var (
 
 // ExecuteStepOnAddon executes customer provided step on addon
 func ExecuteStepOnAddon(ctx context.Context, step *pb.UnitStep, tmpFilePath string,
-	log *zap.SugaredLogger) (*output.StepOutput, error) {
+	log *zap.SugaredLogger) (*output.StepOutput, *pb.Artifact, error) {
 	// execute runtest step
 	if _, ok := step.GetStep().(*pb.UnitStep_RunTests); ok {
 		stepOutput, _, err := runtests.NewRunTestsStep(step, tmpFilePath, nil, log).Run(ctx)
-		return stepOutput, err
+		return stepOutput, nil, err
 	}
 
 	st := time.Now()
@@ -40,7 +40,7 @@ func ExecuteStepOnAddon(ctx context.Context, step *pb.UnitStep, tmpFilePath stri
 	if err != nil {
 		log.Errorw("Unable to create CI addon client", "step_id", stepID,
 			"elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
-		return nil, errors.Wrap(err, "Could not create CI Addon client")
+		return nil, nil, errors.Wrap(err, "Could not create CI Addon client")
 	}
 	defer addonClient.CloseConn()
 
@@ -53,14 +53,15 @@ func ExecuteStepOnAddon(ctx context.Context, step *pb.UnitStep, tmpFilePath stri
 	if err != nil {
 		log.Errorw("Execute step RPC failed", "step_id", stepID,
 			"elapsed_time_ms", utils.TimeSince(st), zap.Error(err))
-		return nil, err
+		return nil, nil, err
 	}
 
 	log.Infow("Successfully executed step", "step_id", stepID,
 		"elapsed_time_ms", utils.TimeSince(st))
 	stepOutput := &output.StepOutput{}
 	stepOutput.Output.Variables = ret.GetOutput()
-	return stepOutput, nil
+	artifact := ret.GetArtifact()
+	return stepOutput, artifact, nil
 }
 
 // StopAddon stops addon grpc service running on specified port
