@@ -264,6 +264,6 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
     assertThat(gitEnvVariables).containsKeys(DRONE_REMOTE_URL, DRONE_AWS_REGION);
     assertThat(gitEnvVariables.get(DRONE_REMOTE_URL))
         .isEqualTo("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test.git");
-    assertThat(gitEnvVariables.get(DRONE_AWS_REGION)).isEqualTo("eu-central-1");
+    assertThat(gitEnvVariables.get(DRONE_AWS_REGION)).isEqualTo("eu-centrbhjnkhbal-1");
   }
 }
