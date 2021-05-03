@@ -33,19 +33,16 @@ public class TerraformInfrastructureProvisionerYamlHandler
   @Override
   public Yaml toYaml(TerraformInfrastructureProvisioner bean, String appId) {
     Yaml yaml = Yaml.builder().build();
+    bean.setVariables(null);
     super.toYaml(yaml, bean);
+
     yaml.setType(InfrastructureProvisionerType.TERRAFORM.name());
     yaml.setPath(bean.getPath());
     yaml.setSourceRepoSettingName(getSourceRepoSettingName(appId, bean.getSourceRepoSettingId()));
     yaml.setSourceRepoBranch(bean.getSourceRepoBranch());
     yaml.setCommitId(bean.getCommitId());
     yaml.setRepoName(bean.getRepoName());
-    if (isNotEmpty(bean.getBackendConfigs())) {
-      yaml.setBackendConfigs(getSortedNameValuePairYamlList(bean.getBackendConfigs(), bean.getAppId()));
-    }
-    if (isNotEmpty(bean.getEnvironmentVariables())) {
-      yaml.setEnvironmentVariables(getSortedNameValuePairYamlList(bean.getEnvironmentVariables(), bean.getAppId()));
-    }
+
     if (isNotEmpty(bean.getKmsId())) {
       SecretManagerConfig secretManagerConfig = secretManager.getSecretManager(bean.getAccountId(), bean.getKmsId());
       yaml.setSecretMangerName(secretManagerConfig.getName());
@@ -95,6 +92,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
       ChangeContext<TerraformInfrastructureProvisioner.Yaml> changeContext, String appId) {
     TerraformInfrastructureProvisioner.Yaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
+    yaml.setVariables(null);
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setPath(yaml.getPath());
     bean.setSourceRepoSettingId(getSourceRepoSettingId(appId, yaml.getSourceRepoSettingName()));
@@ -104,12 +102,6 @@ public class TerraformInfrastructureProvisionerYamlHandler
     bean.setRepoName(yaml.getRepoName());
     bean.setSkipRefreshBeforeApplyingPlan(yaml.isSkipRefreshBeforeApplyingPlan());
 
-    if (isNotEmpty(yaml.getBackendConfigs())) {
-      bean.setBackendConfigs(getNameValuePairList(yaml.getBackendConfigs()));
-    }
-    if (isNotEmpty(yaml.getEnvironmentVariables())) {
-      bean.setEnvironmentVariables(getNameValuePairList(yaml.getEnvironmentVariables()));
-    }
     if (isNotEmpty(yaml.getSecretMangerName())) {
       SecretManagerConfig secretManagerConfig =
           secretManager.getSecretManagerByName(bean.getAccountId(), yaml.getSecretMangerName());
