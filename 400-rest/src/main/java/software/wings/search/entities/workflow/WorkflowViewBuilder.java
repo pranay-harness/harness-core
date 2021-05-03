@@ -181,7 +181,6 @@ class WorkflowViewBuilder {
                                                                .equal(workflow.getUuid())
                                                                .field(WorkflowKeys.createdAt)
                                                                .greaterThanOrEq(startTimestamp)
-                                                               .order(Sort.descending(AuditHeaderKeys.createdAt))
                                                                .fetch())) {
       while (iterator.hasNext()) {
         final AuditHeader auditHeader = iterator.next();

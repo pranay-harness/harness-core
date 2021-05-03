@@ -78,7 +78,6 @@ class PipelineViewBuilder {
                                                                .equal(pipeline.getUuid())
                                                                .field(PipelineKeys.createdAt)
                                                                .greaterThanOrEq(startTimestamp)
-                                                               .order(Sort.descending(AuditHeaderKeys.createdAt))
                                                                .fetch())) {
       while (iterator.hasNext()) {
         final AuditHeader auditHeader = iterator.next();
