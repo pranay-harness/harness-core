@@ -107,13 +107,17 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     String slug = scmGitProviderHelper.getSlug(scmConnector);
-    final GetFileRequest fileRequest = GetFileRequest.newBuilder()
-                                           .setBranch(gitFilePathDetails.getBranch())
-                                           .setPath(gitFilePathDetails.getFilePath())
-                                           .setProvider(gitProvider)
-                                           .setSlug(slug)
-                                           .build();
-    return scmBlockingStub.getFile(fileRequest);
+    final GetFileRequest.Builder gitFileRequestBuilder = GetFileRequest.newBuilder()
+                                                             .setBranch(gitFilePathDetails.getBranch())
+                                                             .setPath(gitFilePathDetails.getFilePath())
+                                                             .setProvider(gitProvider)
+                                                             .setSlug(slug);
+    if (gitFilePathDetails.getBranch() != null) {
+      gitFileRequestBuilder.setBranch(gitFilePathDetails.getBranch());
+    } else if (gitFilePathDetails.getRef() != null) {
+      gitFileRequestBuilder.setRef(gitFilePathDetails.getRef());
+    }
+    return scmBlockingStub.getFile(gitFileRequestBuilder.build());
   }
 
   private FileBatchContentResponse getContentOfFiles(List<String> filePaths, String slug, Provider gitProvider,

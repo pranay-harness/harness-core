@@ -14,7 +14,6 @@ import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.utils.URLDecoderUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
@@ -22,7 +21,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -48,39 +46,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(DX)
 public class GitBranchResource {
   private final GitBranchService gitBranchService;
-
-  @GET
-  @Path("listRepoBranches")
-  @ApiOperation(value = "Gets list of branches by Connector Identifier", nickname = "getListOfBranchesByConnector")
-  public ResponseDTO<List<String>> listBranchesForRepo(
-      @QueryParam(NGCommonEntityConstants.CONNECTOR_IDENTIFIER_REF) String connectorIdentifierRef,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL,
-      @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
-      @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue("50") int pageSize,
-      @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
-    return ResponseDTO.newResponse(gitBranchService.listBranchesForRepoByConnector(accountIdentifier, orgIdentifier,
-        projectIdentifier, connectorIdentifierRef, URLDecoderUtility.getDecodedString(repoURL),
-        PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
-  }
-
-  @GET
-  @Path("listBranchesByGitConfig")
-  @ApiOperation(value = "Gets list of branches by Git Config Identifier", nickname = "getListOfBranchesByGitConfig")
-  public ResponseDTO<List<String>> listBranchesForRepo(
-      @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
-      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue("0") int pageNum,
-      @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue("50") int pageSize,
-      @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
-    return ResponseDTO.newResponse(
-        gitBranchService.listBranchesForRepoByGitSyncConfig(accountIdentifier, orgIdentifier, projectIdentifier,
-            yamlGitConfigIdentifier, PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
-  }
 
   @GET
   @Path("listBranchesWithStatus")
