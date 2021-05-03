@@ -56,8 +56,16 @@ public class RoleAssignmentDBO implements PersistentEntity, AccessControlEntity 
   @NotEmpty final String roleIdentifier;
   @NotEmpty final String principalIdentifier;
   @NotNull final PrincipalType principalType;
-  final boolean managed;
+  @Getter(value = AccessLevel.NONE) final Boolean managed;
   @Getter(value = AccessLevel.NONE) final Boolean disabled;
+
+  public boolean isManaged() {
+    return managed != null && managed;
+  }
+
+  public Boolean getManaged() {
+    return managed;
+  }
 
   public boolean isDisabled() {
     return disabled != null && disabled;

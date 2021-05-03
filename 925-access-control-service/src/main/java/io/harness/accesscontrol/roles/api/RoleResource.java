@@ -101,6 +101,10 @@ public class RoleResource {
   public ResponseDTO<PageResponse<RoleResponseDTO>> get(@BeanParam PageRequest pageRequest,
       @BeanParam HarnessScopeParams harnessScopeParams,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    //    accessControlClient.checkForAccessOrThrow(
+    //        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+    //            harnessScopeParams.getProjectIdentifier()),
+    //        Resource.of(ROLE, null), VIEW_ROLE_PERMISSION);
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     RoleFilter roleFilter =
         RoleFilter.builder().searchTerm(searchTerm).scopeIdentifier(scopeIdentifier).managedFilter(NO_FILTER).build();
@@ -113,6 +117,10 @@ public class RoleResource {
   @ApiOperation(value = "Get Role", nickname = "getRole")
   public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
+    //    accessControlClient.checkForAccessOrThrow(
+    //        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+    //            harnessScopeParams.getProjectIdentifier()),
+    //        Resource.of(ROLE, identifier), VIEW_ROLE_PERMISSION);
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(
         roleService.get(identifier, scopeIdentifier, NO_FILTER).<InvalidRequestException>orElseThrow(() -> {
@@ -148,7 +156,7 @@ public class RoleResource {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
-        Resource.NONE, EDIT_ROLE_PERMISSION);
+        Resource.of(ROLE, null), EDIT_ROLE_PERMISSION);
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     if (isEmpty(roleDTO.getAllowedScopeLevels())) {
       roleDTO.setAllowedScopeLevels(Sets.newHashSet(scope.getLevel().toString()));

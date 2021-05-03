@@ -3,6 +3,7 @@ package io.harness.accesscontrol.acl.services;
 import static io.harness.accesscontrol.permissions.PermissionStatus.EXPERIMENTAL;
 import static io.harness.accesscontrol.permissions.PermissionStatus.INACTIVE;
 import static io.harness.accesscontrol.permissions.PermissionStatus.STAGING;
+import static io.harness.accesscontrol.principals.PrincipalType.fromSecurityPrincipalType;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
@@ -122,6 +123,21 @@ public class ACLServiceImpl implements ACLService {
     return !Optional.ofNullable(principal).map(Principal::getPrincipalIdentifier).filter(x -> !x.isEmpty()).isPresent();
   }
 
+  private AccessCheckResponseDTO checkForAccessInternal(Principal principal, List<PermissionCheckDTO> permissions) {
+    List<ACL> accessControlList = aclDAO.get(principal, permissions);
+    List<AccessControlDTO> accessControlDTOList = new ArrayList<>();
+    for (int i = 0; i < permissions.size(); i++) {
+      PermissionCheckDTO permissionCheckDTO = permissions.get(i);
+      if (disabledPermissions.contains(permissionCheckDTO.getPermission())) {
+        accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, true));
+      } else {
+        accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, accessControlList.get(i) != null));
+      }
+    }
+
+    return AccessCheckResponseDTO.builder().principal(principal).accessControlList(accessControlDTOList).build();
+  }
+
   @Override
   public AccessCheckResponseDTO checkAccess(
       io.harness.security.dto.Principal contextPrincipal, AccessCheckRequestDTO accessCheckRequestDTO) {
@@ -159,28 +175,9 @@ public class ACLServiceImpl implements ACLService {
 
     if (notPresent(principalToCheckPermissions)) {
       principalToCheckPermissions =
-          Principal.builder()
-              .principalIdentifier(contextPrincipal.getName())
-              .principalType(io.harness.accesscontrol.principals.PrincipalType.fromSecurityPrincipalType(
-                  contextPrincipal.getType()))
-              .build();
+          Principal.of(fromSecurityPrincipalType(contextPrincipal.getType()), contextPrincipal.getName());
     }
-
-    List<ACL> accessControlList = aclDAO.get(principalToCheckPermissions, permissions);
-    List<AccessControlDTO> accessControlDTOList = new ArrayList<>();
-    for (int i = 0; i < permissions.size(); i++) {
-      PermissionCheckDTO permissionCheckDTO = permissions.get(i);
-      if (disabledPermissions.contains(permissionCheckDTO.getPermission())) {
-        accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, true));
-      } else {
-        accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, accessControlList.get(i) != null));
-      }
-    }
-
-    return AccessCheckResponseDTO.builder()
-        .principal(principalToCheckPermissions)
-        .accessControlList(accessControlDTOList)
-        .build();
+    return checkForAccessInternal(principalToCheckPermissions, permissions);
   }
 
   @Override

@@ -141,10 +141,13 @@ public class PipelineRbacHelper {
         && identifierRef.getMetadata().getOrDefault("new", "false").equals("true")) {
       return PermissionCheckDTO.builder()
           .permission(PipelineReferredEntityPermissionHelper.getPermissionForGivenType(entityDetail.getType(), true))
-          .resourceIdentifier(
-              PipelineReferredEntityPermissionHelper.getParentResourceIdentifierForCreate(identifierRef))
-          .resourceScope(PipelineReferredEntityPermissionHelper.getResourceScopeForCreate(identifierRef))
-          .resourceType(PipelineReferredEntityPermissionHelper.getEntityTypeForCreate(identifierRef))
+          .resourceIdentifier(null)
+          .resourceScope(ResourceScope.builder()
+                             .accountIdentifier(identifierRef.getAccountIdentifier())
+                             .orgIdentifier(identifierRef.getOrgIdentifier())
+                             .projectIdentifier(identifierRef.getProjectIdentifier())
+                             .build())
+          .resourceType(PipelineReferredEntityPermissionHelper.getEntityName(entityDetail.getType()))
           .build();
     }
     return PermissionCheckDTO.builder()

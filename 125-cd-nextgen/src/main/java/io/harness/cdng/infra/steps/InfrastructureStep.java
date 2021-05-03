@@ -170,7 +170,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
         entityReferenceExtractorUtils.extractReferredEntities(ambiance, stepParameters.getPipelineInfrastructure());
     pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
     accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
-        ResourceScope.of(accountIdentifier, orgIdentifier, null), Resource.of("PROJECT", projectIdentifier),
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of("ENVIRONMENT", null),
         CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION, "Validation for Infrastructure Step failed");
   }
 }
