@@ -1,12 +1,14 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -16,9 +18,12 @@ import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.connector.ConnectorConnectionDataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameterImpl;
+import software.wings.graphql.schema.type.QLEnvironmentType;
 import software.wings.graphql.schema.type.QLExecutionConnection;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLWorkflowExecution;
+import software.wings.graphql.schema.type.aggregation.Filter;
+import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
@@ -27,6 +32,7 @@ import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 import software.wings.graphql.utils.nameservice.NameService;
 import software.wings.security.UserThreadLocal;
@@ -42,6 +48,7 @@ import graphql.schema.SelectedField;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -120,8 +127,8 @@ public class ExecutionConnectionDataFetcherTest extends AbstractDataFetcherTestB
     // Account1
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
-    workflowExecutionId = createWorkflowExecution(ACCOUNT1_ID, APP1_ID_ACCOUNT1, WORKFLOW1);
-    pipelineExecutionId = createPipelineExecution(ACCOUNT1_ID, APP1_ID_ACCOUNT1, PIPELINE1);
+    workflowExecutionId = createWorkflowExecution(ACCOUNT1_ID, APP1_ID_ACCOUNT1, WORKFLOW1, EnvironmentType.NON_PROD);
+    pipelineExecutionId = createPipelineExecution(ACCOUNT1_ID, APP1_ID_ACCOUNT1, PIPELINE1, EnvironmentType.PROD);
   }
 
   @Test
@@ -141,6 +148,10 @@ public class ExecutionConnectionDataFetcherTest extends AbstractDataFetcherTestB
             .workflow(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {WORKFLOW1}).build())
             .triggeredBy(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"USER"}).build())
             .trigger(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"TRIGGER"}).build())
+            .environmentType(QLEnvironmentTypeFilter.builder()
+                                 .operator(QLEnumOperator.IN)
+                                 .values(new QLEnvironmentType[] {QLEnvironmentType.NON_PROD})
+                                 .build())
             .build();
     when(dataFetchingEnvironment.getArguments())
         .thenReturn(Collections.singletonMap(ExecutionConnectionDataFetcher.INDIRECT_EXECUTION_FIELD, false));
@@ -193,6 +204,10 @@ public class ExecutionConnectionDataFetcherTest extends AbstractDataFetcherTestB
             .service(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"SERVICE"}).build())
             .cloudProvider(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"CP"}).build())
             .environment(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"ENV"}).build())
+            .environmentType(QLEnvironmentTypeFilter.builder()
+                                 .operator(QLEnumOperator.IN)
+                                 .values(new QLEnvironmentType[] {QLEnvironmentType.PROD})
+                                 .build())
             .pipelineExecutionId(
                 QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"PIPE_EXEC"}).build())
             .pipeline(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {PIPELINE1}).build())
@@ -273,5 +288,35 @@ public class ExecutionConnectionDataFetcherTest extends AbstractDataFetcherTestB
       assertThat(value.apply(executionFilter).getOperator()).isEqualTo(QLIdOperator.EQUALS);
       assertThat(value.apply(executionFilter).getValues()).containsExactly("fieldValue");
     });
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void testExecutionConnectionWithEnvironmentType() {
+    array[0] = pipelineExecutionId;
+    QLExecutionFilter executionFilter =
+        QLExecutionFilter.builder()
+            .application(
+                QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {APP1_ID_ACCOUNT1}).build())
+            .environmentType(QLEnvironmentTypeFilter.builder()
+                                 .operator(QLEnumOperator.IN)
+                                 .values(new QLEnvironmentType[] {QLEnvironmentType.NON_PROD})
+                                 .build())
+            .build();
+    when(dataFetchingEnvironment.getArguments())
+        .thenReturn(Collections.singletonMap(ExecutionConnectionDataFetcher.INDIRECT_EXECUTION_FIELD, true));
+
+    List<QLExecutionFilter> filters = Arrays.asList(executionFilter);
+    QLPageQueryParameterImpl pageQueryParams = QLPageQueryParameterImpl.builder()
+                                                   .limit(100)
+                                                   .selectionSet(mockSelectionSet)
+                                                   .dataFetchingEnvironment(dataFetchingEnvironment)
+                                                   .build();
+    QLExecutionConnection connection = executionConnectionDataFetcher.fetchConnection(filters, pageQueryParams, null);
+    assertThat(connection).isNotNull();
+    assertThat(connection.getNodes()).hasSize(1);
+    assertThat(connection.getNodes().get(0)).isInstanceOf(QLWorkflowExecution.class);
+    assertThat((((QLWorkflowExecution) connection.getNodes().get(0))).getWorkflowId()).isEqualTo(WORKFLOW1);
   }
 }

@@ -10,4 +10,5 @@ message UserDTO {
   string userId = 2;
   repeated string newAccountsUserAddedTo = 3;
   repeated string accountsUserRemovedFrom = 4;
+  string name = 5;
 }

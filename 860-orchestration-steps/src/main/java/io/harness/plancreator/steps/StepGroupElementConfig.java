@@ -3,7 +3,6 @@ package io.harness.plancreator.steps;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
@@ -43,8 +42,10 @@ public class StepGroupElementConfig {
   @NotNull @EntityIdentifier String identifier;
   @EntityName String name;
 
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
-  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) StepWhenCondition when;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  ParameterField<String> skipCondition;
+  StepWhenCondition when;
 
   List<FailureStrategyConfig> failureStrategies;
   @NotNull List<ExecutionWrapperConfig> steps;

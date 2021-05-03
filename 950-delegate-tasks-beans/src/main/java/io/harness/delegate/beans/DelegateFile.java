@@ -1,11 +1,18 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class DelegateFile extends FileMetadata {
   private String fileId;
   private FileBucket bucket;

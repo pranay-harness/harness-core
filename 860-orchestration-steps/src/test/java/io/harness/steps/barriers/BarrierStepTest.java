@@ -12,6 +12,7 @@ import io.harness.OrchestrationStepsTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -53,12 +54,13 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                                            .barrierState(STANDING)
                                            .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
+    BarrierSpecParameters stepParameters = BarrierSpecParameters.builder().barrierRef(barrierIdentifier).build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 
     when(barrierService.findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId()))
         .thenReturn(barrier);
 
-    AsyncExecutableResponse stepResponse = barrierStep.executeAsync(ambiance, stepParameters, stepInputPackage);
+    AsyncExecutableResponse stepResponse = barrierStep.executeAsync(ambiance, stepElementParameters, stepInputPackage);
 
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getCallbackIdsList()).contains(uuid);
@@ -80,14 +82,15 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).build()))
                             .setPlanExecutionId(generateUuid())
                             .build();
-    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
+    BarrierSpecParameters specParameters = BarrierSpecParameters.builder().barrierRef(barrierIdentifier).build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     when(barrierService.findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId()))
         .thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
 
     StepResponse stepResponse = barrierStep.handleAsyncResponse(
-        ambiance, stepParameters, ImmutableMap.of(uuid, BarrierResponseData.builder().failed(false).build()));
+        ambiance, stepElementParameters, ImmutableMap.of(uuid, BarrierResponseData.builder().failed(false).build()));
 
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
@@ -108,13 +111,14 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).build()))
                             .setPlanExecutionId(generateUuid())
                             .build();
-    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
+    BarrierSpecParameters specParameters = BarrierSpecParameters.builder().barrierRef(barrierIdentifier).build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     when(barrierService.findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId()))
         .thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
 
-    StepResponse stepResponse = barrierStep.handleAsyncResponse(ambiance, stepParameters,
+    StepResponse stepResponse = barrierStep.handleAsyncResponse(ambiance, stepElementParameters,
         ImmutableMap.of(uuid,
             BarrierResponseData.builder()
                 .failed(true)
@@ -140,13 +144,14 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).build()))
                             .setPlanExecutionId(generateUuid())
                             .build();
-    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
+    BarrierSpecParameters specParameters = BarrierSpecParameters.builder().barrierRef(barrierIdentifier).build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     when(barrierService.findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId()))
         .thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
 
-    StepResponse stepResponse = barrierStep.handleAsyncResponse(ambiance, stepParameters,
+    StepResponse stepResponse = barrierStep.handleAsyncResponse(ambiance, stepElementParameters,
         ImmutableMap.of(uuid,
             BarrierResponseData.builder()
                 .failed(true)
@@ -172,13 +177,14 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
                             .addAllLevels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).build()))
                             .setPlanExecutionId(generateUuid())
                             .build();
-    BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
+    BarrierSpecParameters specParameters = BarrierSpecParameters.builder().barrierRef(barrierIdentifier).build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
     when(barrierService.findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId()))
         .thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
 
-    barrierStep.handleAbort(ambiance, stepParameters, null);
+    barrierStep.handleAbort(ambiance, stepElementParameters, null);
 
     verify(barrierService).findByIdentifierAndPlanExecutionId(barrierIdentifier, ambiance.getPlanExecutionId());
     verify(barrierService).update(barrier);

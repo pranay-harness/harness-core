@@ -11,10 +11,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.PreFacilitationCheck;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
@@ -38,6 +40,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class SkipPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Mock EngineExpressionService engineExpressionService;
   @Mock OrchestrationEngine engine;
@@ -64,7 +67,7 @@ public class SkipPreFacilitationCheckerTest extends OrchestrationTestBase {
     nodeExecutionService.save(nodeExecution);
 
     when(engineExpressionService.evaluateExpression(nodeExecution.getAmbiance(), skipCondition)).thenReturn(false);
-    PreFacilitationCheck check = checker.performCheck(nodeExecution);
+    ExecutionCheck check = checker.performCheck(nodeExecution);
     assertThat(check).isNotNull();
     assertThat(check.isProceed()).isTrue();
     verify(engine, times(0)).handleStepResponse(any(), any());
@@ -90,7 +93,7 @@ public class SkipPreFacilitationCheckerTest extends OrchestrationTestBase {
     nodeExecutionService.save(nodeExecution);
 
     when(engineExpressionService.evaluateExpression(nodeExecution.getAmbiance(), skipCondition)).thenReturn(true);
-    PreFacilitationCheck check = checker.performCheck(nodeExecution);
+    ExecutionCheck check = checker.performCheck(nodeExecution);
     assertThat(check).isNotNull();
     assertThat(check.isProceed()).isFalse();
     verify(engine, times(1))
@@ -122,7 +125,7 @@ public class SkipPreFacilitationCheckerTest extends OrchestrationTestBase {
 
     when(engineExpressionService.evaluateExpression(nodeExecution.getAmbiance(), skipCondition))
         .thenThrow(new InvalidRequestException("TestException"));
-    PreFacilitationCheck check = checker.performCheck(nodeExecution);
+    ExecutionCheck check = checker.performCheck(nodeExecution);
     assertThat(check).isNotNull();
     assertThat(check.isProceed()).isFalse();
     verify(engine, times(1))

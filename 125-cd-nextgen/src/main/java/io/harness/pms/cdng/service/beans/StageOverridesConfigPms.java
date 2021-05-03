@@ -2,7 +2,7 @@ package io.harness.pms.cdng.service.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.SwaggerConstants;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.cdng.artifact.bean.yaml.ArtifactListConfigPms;
 import io.harness.pms.cdng.manifest.yaml.ManifestConfigWrapperPms;
 import io.harness.pms.yaml.ParameterField;

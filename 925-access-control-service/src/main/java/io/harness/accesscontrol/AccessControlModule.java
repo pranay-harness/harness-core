@@ -165,9 +165,8 @@ public class AccessControlModule extends AbstractModule {
       install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
     }
 
-    // TODO{phoenikx}  remove this later on
     install(AccessControlClientModule.getInstance(
-        config.getAccessControlClientConfiguration(), ACCESS_CONTROL_SERVICE.getServiceId(), false));
+        config.getAccessControlClientConfiguration(), ACCESS_CONTROL_SERVICE.getServiceId()));
 
     install(new ResourceGroupClientModule(config.getResourceGroupClientConfiguration().getResourceGroupServiceConfig(),
         config.getResourceGroupClientConfiguration().getResourceGroupServiceSecret(),

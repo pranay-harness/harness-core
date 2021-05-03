@@ -7,12 +7,15 @@ import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.states.LiteEngineTaskStep.LE_STATUS_TASK_TYPE;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfo;
-import io.harness.beans.steps.CiStepOutcome;
+import io.harness.beans.steps.outcome.CIStepArtifactOutcome;
+import io.harness.beans.steps.outcome.CIStepOutcome;
+import io.harness.beans.steps.outcome.StepArtifacts;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
@@ -31,6 +34,7 @@ import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
+import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -45,16 +49,17 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.ExecuteStepRequest;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.steps.executable.AsyncExecutableWithRbac;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.inject.Inject;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -119,7 +124,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     return AsyncExecutableResponse.newBuilder()
         .addCallbackIds(parkedTaskId)
         .addCallbackIds(liteEngineTaskId)
-        .addAllLogKeys(CollectionUtils.emptyIfNull(Arrays.asList(logKey)))
+        .addAllLogKeys(CollectionUtils.emptyIfNull(singletonList(logKey)))
         .build();
   }
 
@@ -138,38 +143,54 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
           .failureInfo(FailureInfo.newBuilder().addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE)).build())
           .build();
     }
-    return buildAndReturnStepResponse(stepStatusTaskResponseData, stepIdentifier);
+    return buildAndReturnStepResponse(stepStatusTaskResponseData, ambiance, stepParameters, stepIdentifier);
   }
 
-  private StepResponse buildAndReturnStepResponse(
-      StepStatusTaskResponseData stepStatusTaskResponseData, String stepIdentifier) {
+  private StepResponse buildAndReturnStepResponse(StepStatusTaskResponseData stepStatusTaskResponseData,
+      Ambiance ambiance, StepElementParameters stepParameters, String stepIdentifier) {
     StepStatus stepStatus = stepStatusTaskResponseData.getStepStatus();
+    StepResponseBuilder stepResponseBuilder = StepResponse.builder();
 
     log.info("Received response {} for step {}", stepStatus.getStepExecutionStatus(), stepIdentifier);
     if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SUCCESS) {
-      StepResponse.StepOutcome stepOutcome = null;
       if (stepStatus.getOutput() != null) {
-        stepOutcome =
+        StepResponse.StepOutcome stepOutcome =
             StepResponse.StepOutcome.builder()
                 .outcome(
-                    CiStepOutcome.builder().outputVariables(((StepMapOutput) stepStatus.getOutput()).getMap()).build())
+                    CIStepOutcome.builder().outputVariables(((StepMapOutput) stepStatus.getOutput()).getMap()).build())
                 .name("output")
                 .build();
+        stepResponseBuilder.stepOutcome(stepOutcome);
       }
-      return StepResponse.builder().status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
+
+      StepArtifacts stepArtifacts = handleArtifact(stepStatus.getArtifactMetadata(), stepParameters);
+      if (stepArtifacts != null) {
+        StepResponse.StepOutcome stepArtifactOutcome =
+            StepResponse.StepOutcome.builder()
+                .outcome(CIStepArtifactOutcome.builder().stepArtifacts(stepArtifacts).build())
+                .group(StepOutcomeGroup.STAGE.name())
+                .name("artifact-" + stepIdentifier)
+                .build();
+        stepResponseBuilder.stepOutcome(stepArtifactOutcome);
+      }
+
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } else if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SKIPPED) {
-      return StepResponse.builder().status(Status.SKIPPED).build();
+      return stepResponseBuilder.status(Status.SKIPPED).build();
     } else if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.ABORTED) {
-      return StepResponse.builder().status(Status.ABORTED).build();
+      return stepResponseBuilder.status(Status.ABORTED).build();
     } else {
-      return StepResponse.builder()
-          .status(Status.FAILED)
+      return stepResponseBuilder.status(Status.FAILED)
           .failureInfo(FailureInfo.newBuilder()
                            .setErrorMessage(stepStatus.getError())
                            .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
                            .build())
           .build();
     }
+  }
+
+  protected StepArtifacts handleArtifact(ArtifactMetadata artifactMetadata, StepElementParameters stepParameters) {
+    return null;
   }
 
   @Override

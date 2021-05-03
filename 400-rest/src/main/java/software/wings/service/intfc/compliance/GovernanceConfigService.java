@@ -19,6 +19,8 @@ import java.util.Set;
 public interface GovernanceConfigService extends OwnedByAccount {
   GovernanceConfig get(String accountId);
 
+  void resetEnableIterators(GovernanceConfig governanceConfig);
+
   GovernanceConfig upsert(String accountId, GovernanceConfig governanceConfig);
 
   /**

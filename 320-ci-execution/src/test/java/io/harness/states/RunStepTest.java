@@ -16,7 +16,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
-import io.harness.beans.steps.CiStepOutcome;
+import io.harness.beans.steps.outcome.CIStepOutcome;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
@@ -173,7 +173,7 @@ public class RunStepTest extends CIExecutionTestBase {
                 .status(Status.SUCCEEDED)
                 .stepOutcome(
                     StepResponse.StepOutcome.builder()
-                        .outcome(CiStepOutcome.builder()
+                        .outcome(CIStepOutcome.builder()
                                      .outputVariables(
                                          StepMapOutput.builder().output(OUTPUT_KEY, OUTPUT_VALUE).build().getMap())
                                      .build())

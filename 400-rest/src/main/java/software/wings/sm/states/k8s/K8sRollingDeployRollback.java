@@ -9,6 +9,7 @@ import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -60,6 +61,7 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class K8sRollingDeployRollback extends AbstractK8sState {
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;

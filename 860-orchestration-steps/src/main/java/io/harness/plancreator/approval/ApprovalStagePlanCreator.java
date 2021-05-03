@@ -34,7 +34,8 @@ public class ApprovalStagePlanCreator extends GenericStagePlanCreator {
   }
 
   @Override
-  public SpecParameters getSpecParameters(String childNodeId) {
+  public SpecParameters getSpecParameters(
+      String childNodeId, PlanCreationContext ctx, StageElementConfig stageElementConfig) {
     return ApprovalStageSpecParameters.getStepParameters(childNodeId);
   }
 

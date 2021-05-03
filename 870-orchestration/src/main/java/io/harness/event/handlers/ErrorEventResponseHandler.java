@@ -3,7 +3,7 @@ package io.harness.event.handlers;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.events.EventErrorRequest;
-import io.harness.pms.execution.SdkResponseEventInternal;
+import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.tasks.FailureResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -17,7 +17,7 @@ public class ErrorEventResponseHandler implements SdkResponseEventHandler {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
-  public void handleEvent(SdkResponseEventInternal event) {
+  public void handleEvent(SdkResponseEvent event) {
     EventErrorRequest request = event.getSdkResponseEventRequest().getEventErrorRequest();
     waitNotifyEngine.doneWith(request.getEventNotifyId(),
         FailureResponseData.builder()

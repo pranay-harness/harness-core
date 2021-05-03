@@ -7,9 +7,9 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
-import io.harness.pms.contracts.execution.events.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
+import io.harness.pms.contracts.execution.events.SpawnChildRequest;
+import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
@@ -24,15 +24,7 @@ import lombok.NonNull;
 
 @OwnedBy(CDC)
 public interface SdkNodeExecutionService {
-  void queueNodeExecution(NodeExecutionProto nodeExecution);
-
-  void queueNodeExecutionAndAddExecutableResponse(String currentNodeExecutionId,
-      QueueNodeExecutionRequest queueNodeExecutionRequest, AddExecutableResponseRequest addExecutableResponseRequest);
-
   void suspendChainExecution(String currentNodeExecutionId, SuspendChainRequest suspendChainRequest);
-
-  void queueTaskAndAddExecutableResponse(
-      QueueTaskRequest queueTaskRequest, AddExecutableResponseRequest addExecutableResponseRequest);
 
   void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds);
@@ -40,8 +32,6 @@ public interface SdkNodeExecutionService {
   void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse);
 
   void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError);
-
-  Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId);
 
   StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution);
 
@@ -52,4 +42,10 @@ public interface SdkNodeExecutionService {
       @NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse);
 
   void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo);
+
+  void spawnChild(SpawnChildRequest spawnChildRequest);
+
+  void queueTaskRequest(QueueTaskRequest queueTaskRequest);
+
+  void spawnChildren(SpawnChildrenRequest spawnChildrenRequest);
 }

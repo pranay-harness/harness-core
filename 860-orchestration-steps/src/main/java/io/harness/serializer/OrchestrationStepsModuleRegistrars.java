@@ -39,6 +39,8 @@ public class OrchestrationStepsModuleRegistrars {
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
+          .addAll(RbacCoreRegistrars.kryoRegistrars)
+          .addAll(NGCoreClientRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -48,6 +50,8 @@ public class OrchestrationStepsModuleRegistrars {
           .add(CgNgSharedOrchestrationBeansMorphiaRegistrar.class)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
+          .addAll(RbacCoreRegistrars.morphiaRegistrars)
+          .addAll(NGCoreClientRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

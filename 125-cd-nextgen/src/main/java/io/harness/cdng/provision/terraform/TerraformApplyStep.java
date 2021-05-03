@@ -5,7 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
@@ -64,7 +63,8 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
   public TaskRequest obtainTask(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     TerraformApplyStepParameters stepParameters = (TerraformApplyStepParameters) stepElementParameters.getSpec();
-    TerraformStepConfigurationType configurationType = stepParameters.getStepConfigurationType();
+    helper.validateApplyStepParamsInline(stepParameters);
+    TerraformStepConfigurationType configurationType = stepParameters.getConfiguration().getType();
     switch (configurationType) {
       case INLINE:
         return obtainInlineTask(ambiance, stepParameters, stepElementParameters);
@@ -78,6 +78,9 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
 
   private TaskRequest obtainInlineTask(
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
+    helper.validateApplyStepConfigFilesInline(stepParameters);
+    TerrformStepConfigurationParameters configuration = stepParameters.getConfiguration();
+    TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
@@ -89,24 +92,15 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
         .terraformCommand(TerraformCommand.APPLY)
         .terraformCommandUnit(TerraformCommandUnit.Apply)
         .entityId(entityId)
-        .workspace(ParameterFieldHelper.getParameterFieldValue(stepParameters.getWorkspace()))
+        .workspace(ParameterFieldHelper.getParameterFieldValue(spec.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
-            stepParameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(stepParameters.getInlineVarFilesListContent()));
-    if (EmptyPredicate.isNotEmpty(stepParameters.getRemoteVarFileConfigs())) {
-      List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-      int i = 1;
-      for (StoreConfigWrapper varFileWrapper : stepParameters.getRemoteVarFileConfigs()) {
-        varFilesConfig.add(helper.getGitFetchFilesConfig(
-            varFileWrapper.getStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-        i++;
-      }
-      builder.remoteVarfiles(varFilesConfig);
-    }
-    builder.backendConfig(ParameterFieldHelper.getParameterFieldValue(stepParameters.getBackendConfig()))
-        .targets(ParameterFieldHelper.getParameterFieldValue(stepParameters.getTargets()))
+            spec.getConfigFiles().getStore().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+        .inlineVarFiles(helper.getInlineVarFiles(spec.getVarFiles()))
+        .remoteVarfiles(helper.getOrderedFetchFilesConfigForRemoteFiles(spec.getVarFiles(), ambiance))
+        .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
+        .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
-        .environmentVariables(helper.getEnvironmentVariablesMap(stepParameters.getEnvironmentVariables()));
+        .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()));
 
     TaskData taskData =
         TaskData.builder()
@@ -170,7 +164,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
   public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
     TerraformApplyStepParameters stepParameters = (TerraformApplyStepParameters) stepElementParameters.getSpec();
-    TerraformStepConfigurationType configurationType = stepParameters.getStepConfigurationType();
+    TerraformStepConfigurationType configurationType = stepParameters.getConfiguration().getType();
     switch (configurationType) {
       case INLINE:
         return handleTaskResultInline(ambiance, stepParameters, responseSupplier);

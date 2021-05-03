@@ -24,6 +24,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
@@ -154,6 +155,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class AbstractK8sState extends State implements K8sStateExecutor {
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient SettingsService settingsService;

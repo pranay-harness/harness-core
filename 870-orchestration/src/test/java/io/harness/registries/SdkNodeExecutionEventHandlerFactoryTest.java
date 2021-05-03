@@ -14,7 +14,6 @@ import io.harness.event.handlers.AdviserEventResponseHandler;
 import io.harness.event.handlers.ErrorEventResponseHandler;
 import io.harness.event.handlers.FacilitateResponseRequestHandler;
 import io.harness.event.handlers.HandleStepResponseEventHandler;
-import io.harness.event.handlers.QueueNodeExecutionEventHandler;
 import io.harness.event.handlers.ResumeNodeExecutionResponseEventHandler;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.rule.Owner;
@@ -49,11 +48,7 @@ public class SdkNodeExecutionEventHandlerFactoryTest extends OrchestrationTestBa
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetHandler() {
-    Mockito.when(injector.getInstance(QueueNodeExecutionEventHandler.class)).thenReturn(null);
     Mockito.when(injector.getInstance(AddExecutableResponseEventHandler.class)).thenReturn(null);
-
-    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.QUEUE_NODE);
-    verify(injector).getInstance(QueueNodeExecutionEventHandler.class);
 
     sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE);
     verify(injector).getInstance(AddExecutableResponseEventHandler.class);

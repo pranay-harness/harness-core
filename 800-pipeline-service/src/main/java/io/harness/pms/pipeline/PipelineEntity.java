@@ -94,7 +94,7 @@ public class PipelineEntity
 
   @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
-  @Setter @NonFinal transient String branch;
+  @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
 
   @Override
