@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -173,7 +174,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     BiFunction<String, Collector, Answer> extractVariablesOfType = (type, collector) -> {
       return invocation -> {
         List<NameValuePair> input = invocation.getArgumentAt(0, List.class);
-        return input.stream().filter(value -> type.equals(value.getValueType())).collect(collector);
+        return input.stream()
+            .filter(value -> value.getValue() != null)
+            .filter(value -> type.equals(value.getValueType()))
+            .collect(collector);
       };
     };
     Answer doExtractTextVariables =
@@ -1236,5 +1240,169 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     verify(secretManagerConfigService, times(1)).getSecretManager(anyString(), anyString(), anyBoolean());
     assertThat(((ScriptStateExecutionData) executionResponse1.getStateExecutionData()).getActivityId())
         .isEqualTo("uuid");
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecuteRegularWithNoProvisionerVariables() {
+    state.setProvisionerId(PROVISIONER_ID);
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
+            NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").value("hjjh").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType("TEXT").build());
+    state.setVariables(nameValuePairList);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .variables(asList())
+                                                         .skipRefreshBeforeApplyingPlan(true)
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    ExecutionResponse response = state.execute(executionContext);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+
+    assertThat(response.isAsync()).isTrue();
+    assertThat(createdTask.getData().getParameters()).isNotEmpty();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    assertThat(parameters.getEnvironmentVariables()).isNull();
+    assertThat(parameters.getVariables()).isNotEmpty();
+    assertThat(parameters.getEncryptedVariables()).isNotEmpty();
+    assertThat(parameters.getVariables().size()).isEqualTo(3);
+    assertThat(parameters.getEncryptedVariables().size()).isEqualTo(1);
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecuteRegularWithSomeProvisionerVariables() {
+    state.setProvisionerId(PROVISIONER_ID);
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
+            NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").value("hjjh").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType("TEXT").build());
+    state.setVariables(nameValuePairList);
+    TerraformInfrastructureProvisioner provisioner =
+        TerraformInfrastructureProvisioner.builder()
+            .appId(APP_ID)
+            .path("current/working/directory")
+            .variables(asList(NameValuePair.builder().name("TF_LOG").valueType("TEXT").build(),
+                NameValuePair.builder().name("access_token").valueType("ENCRYPTED_TEXT").build(),
+                NameValuePair.builder().name("nil").valueType("TEXT").build(),
+                NameValuePair.builder().name("PROVISIONER_VAR").valueType("TEXT").build()))
+            .skipRefreshBeforeApplyingPlan(true)
+            .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    ExecutionResponse response = state.execute(executionContext);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+
+    assertThat(response.isAsync()).isTrue();
+    assertThat(createdTask.getData().getParameters()).isNotEmpty();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    assertThat(parameters.getEnvironmentVariables()).isNull();
+    assertThat(parameters.getVariables()).isNotEmpty();
+    assertThat(parameters.getEncryptedVariables()).isNotEmpty();
+    assertThat(parameters.getVariables().size()).isEqualTo(3);
+    assertThat(parameters.getEncryptedVariables().size()).isEqualTo(1);
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecuteRegularWithNoProvisionerBackendConfigs() {
+    state.setProvisionerId(PROVISIONER_ID);
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
+            NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").value("hjjh").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType("TEXT").build());
+    state.setBackendConfigs(nameValuePairList);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .backendConfigs(null)
+                                                         .skipRefreshBeforeApplyingPlan(true)
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    ExecutionResponse response = state.execute(executionContext);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+
+    assertThat(response.isAsync()).isTrue();
+    assertThat(createdTask.getData().getParameters()).isNotEmpty();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    assertThat(parameters.getEnvironmentVariables()).isNull();
+    assertThat(parameters.getVariables()).isEmpty();
+    assertThat(parameters.getBackendConfigs().size()).isEqualTo(3);
+    assertThat(parameters.getEncryptedBackendConfigs().size()).isEqualTo(1);
+    assertThat(parameters.getEncryptedVariables()).isEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testExecuteRegularWithNoProvisionerEnvironmentVariables() {
+    state.setProvisionerId(PROVISIONER_ID);
+    List<NameValuePair> nameValuePairList =
+        asList(NameValuePair.builder().name("TF_LOG").value("TRACE").valueType("TEXT").build(),
+            NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build(),
+            NameValuePair.builder().name("nil").valueType("TEXT").value("hjjh").build(),
+            NameValuePair.builder().name("noValueType").value("value").valueType("TEXT").build());
+    state.setEnvironmentVariables(nameValuePairList);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .environmentVariables(null)
+                                                         .skipRefreshBeforeApplyingPlan(true)
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    ExecutionResponse response = state.execute(executionContext);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+
+    assertThat(response.isAsync()).isTrue();
+    assertThat(createdTask.getData().getParameters()).isNotEmpty();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    assertThat(parameters.getBackendConfigs()).isNull();
+    assertThat(parameters.getVariables()).isEmpty();
+    assertThat(parameters.getEnvironmentVariables().size()).isEqualTo(3);
+    assertThat(parameters.getEncryptedEnvironmentVariables().size()).isEqualTo(1);
+    assertThat(parameters.getEncryptedVariables()).isEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
   }
 }

@@ -7,6 +7,7 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.pipeline.ExecutionSummaryInfoDTO;
 import io.harness.pms.pipeline.PMSPipelineResponseDTO;
@@ -29,6 +30,7 @@ public class PMSPipelineDtoMapper {
     return PMSPipelineResponseDTO.builder()
         .yamlPipeline(pipelineEntity.getYaml())
         .version(pipelineEntity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
         .build();
   }
 
@@ -67,6 +69,7 @@ public class PMSPipelineDtoMapper {
         .modules(pipelineEntity.getFilters().keySet())
         .filters(pipelineEntity.getFilters())
         .stageNames(pipelineEntity.getStageNames())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
         .build();
   }
 
