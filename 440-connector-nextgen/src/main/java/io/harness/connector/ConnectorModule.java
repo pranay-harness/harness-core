@@ -20,19 +20,23 @@ import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
 import io.harness.persistence.HPersistence;
-import io.harness.remote.CEAwsSetupConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 public class ConnectorModule extends AbstractModule {
+  private static volatile ConnectorModule instance;
   public static final String DEFAULT_CONNECTOR_SERVICE = "defaultConnectorService";
 
-  private final CEAwsSetupConfig ceAwsSetupConfig;
+  private ConnectorModule() {}
 
-  public ConnectorModule(CEAwsSetupConfig ceAwsSetupConfig) {
-    this.ceAwsSetupConfig = ceAwsSetupConfig;
+  public static ConnectorModule getInstance() {
+    if (instance == null) {
+      instance = new ConnectorModule();
+    }
+
+    return instance;
   }
 
   @Override
@@ -67,7 +71,6 @@ public class ConnectorModule extends AbstractModule {
     bind(ConnectorFilterService.class).to(ConnectorFilterServiceImpl.class);
     bind(ConnectorHeartbeatService.class).to(ConnectorHeartbeatServiceImpl.class);
     bind(AwsClient.class).to(AwsClientImpl.class);
-    bind(CEAwsSetupConfig.class).toInstance(this.ceAwsSetupConfig);
 
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);

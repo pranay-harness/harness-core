@@ -127,6 +127,7 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
 import io.harness.redis.RedisConfig;
+import io.harness.remote.CEAwsSetupConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
@@ -273,6 +274,12 @@ public class NextGenModule extends AbstractModule {
     return appConfig.getGitGrpcClientConfigs();
   }
 
+  @Provides
+  @Singleton
+  CEAwsSetupConfig ceAwsSetupConfig() {
+    return this.appConfig.getCeAwsSetupConfig();
+  }
+
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
@@ -336,7 +343,7 @@ public class NextGenModule extends AbstractModule {
     install(new InviteModule(appConfig.getBaseUrls().getCurrentGenUiUrl()));
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
+    install(ConnectorModule.getInstance());
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
