@@ -1,12 +1,12 @@
 package io.harness.serializer;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.serializer.morphia.FiltersMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
+import io.harness.serializer.kryo.PipelineServiceKryoRegistrar;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.PMSPipelineMorphiaRegistrar;
 
@@ -16,11 +16,12 @@ import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class PipelineServiceModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .add(PipelineServiceKryoRegistrar.class)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .add(OrchestrationVisualizationKryoRegistrar.class)
           .addAll(NGTriggerRegistrars.kryoRegistrars)
