@@ -28,9 +28,18 @@ fi
 if [ "${STEP}" == "dockerization" ]; then
   GCP=""
 fi
+
 if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
-  java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar /home/jenkins/workspace/pr-portal-funtional-tests/260-delegate/target/delegate-capsule.jar /home/jenkins/workspace/pr-portal-funtional-tests/260-delegate/config-delegate.yml &
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test/... || true
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //200-functional-test/...
+
+  bazel ${bazelrc} run 230-model-test:app &
+  MANAGER_PID=$!
+  java -Xbootclasspath/p:/root/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar /home/jenkins/.bazel-dirs/bin/260-delegate/module_deploy.jar /home/jenkins/workspace/pr-portal-funtional-tests/260-delegate/config-delegate.yml &
+  DELEGATE_PID=$!
+  sleep 300
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test/... //190-deployment-functional-tests:software.wings.functional.terraform.TerraformFunctionalTest //190-deployment-functional-tests:software.wings.functional.customDeployment.CustomDeploymentFunctionalTest || true
+  kill -9 $MANAGER_PID
+  kill -9 $DELEGATE_PID
 fi
 
 ps auxwwwe

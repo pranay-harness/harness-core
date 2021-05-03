@@ -7,8 +7,9 @@ directories:
   125-cd-nextgen
   136-git-sync-manager
   160-model-gen-tool
-  190-deployment-functional-tests
   160-stress-tester
+  190-deployment-functional-tests
+  200-functional-test
   210-command-library-server
   220-graphql-test
   230-model-test
@@ -48,11 +49,11 @@ directories:
   850-ng-pipeline-commons
   860-orchestration-steps
   860-orchestration-visualization
-  870-cg-yaml-beans
   870-cg-orchestration
+  870-cg-yaml-beans
   870-orchestration
-  871-cg-beans
   870-yaml-beans
+  871-cg-beans
   874-orchestration-delay
   876-orchestration-beans
   878-pipeline-service-utilities
@@ -88,13 +89,13 @@ directories:
   948-access-control-admin-client
   948-access-control-sdk
   949-access-control-commons
+  949-git-sync-sdk
   950-cg-ng-shared-orchestration-beans
   950-command-library-common
-  950-log-client
   950-common-entities
   950-delegate-tasks-beans
-  953-events-api
   950-events-framework
+  950-log-client
   950-ng-audit-commons
   950-ng-authentication-service
   950-ng-core
@@ -104,10 +105,13 @@ directories:
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
-  953-git-sync-commons
   952-scm-java-client
+  953-events-api
+  953-git-sync-commons
   954-connector-beans
   955-account-mgmt
+  955-alert-beans
+  955-delegate-beans
   955-filters-sdk
   955-outbox-sdk
   955-setup-usage-sdk
@@ -126,16 +130,16 @@ directories:
   970-api-services-beans
   970-grpc
   970-ng-commons
-  970-telemetry-beans
   970-rbac-core
+  970-telemetry-beans
   980-commons
   990-commons-test
+  cargo
+  dockerization
   run-configurations
-  200-functional-test
+  scripts
   tools
   toolset
-  scripts
-  cargo
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
