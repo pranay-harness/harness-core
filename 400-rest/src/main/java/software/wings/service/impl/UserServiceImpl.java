@@ -3207,12 +3207,12 @@ public class UserServiceImpl implements UserService {
   }
 
   public List<User> listUsers(PageRequest pageRequest, String accountId, String searchTerm, Integer offset,
-      Integer pageSize, boolean loadUserGroups) {
+      Integer pageSize, boolean loadUserGroups, boolean includeUsersPendingInviteAcceptance) {
     Query<User> query;
     if (isNotEmpty(searchTerm)) {
-      query = getSearchUserQuery(accountId, searchTerm);
+      query = getSearchUserQuery(accountId, searchTerm, includeUsersPendingInviteAcceptance);
     } else {
-      query = getListUserQuery(accountId, true);
+      query = getListUserQuery(accountId, includeUsersPendingInviteAcceptance);
     }
     query.criteria(UserKeys.disabled).notEqual(true);
     applySortFilter(pageRequest, query);
@@ -3236,16 +3236,16 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  public long getTotalUserCount(String accountId, boolean listPendingUsers) {
-    Query<User> query = getListUserQuery(accountId, listPendingUsers);
+  public long getTotalUserCount(String accountId, boolean includeUsersPendingInviteAcceptance) {
+    Query<User> query = getListUserQuery(accountId, includeUsersPendingInviteAcceptance);
     query.criteria(UserKeys.disabled).notEqual(true);
     return query.count();
   }
 
-  private Query<User> getListUserQuery(String accountId, boolean listPendingUsers) {
+  private Query<User> getListUserQuery(String accountId, boolean includeUsersPendingInviteAcceptance) {
     Query<User> listUserQuery = wingsPersistence.createQuery(User.class, excludeAuthority);
 
-    if (listPendingUsers) {
+    if (includeUsersPendingInviteAcceptance) {
       listUserQuery.or(listUserQuery.criteria(UserKeys.accounts).hasThisOne(accountId),
           listUserQuery.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
     } else {
@@ -3256,7 +3256,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @VisibleForTesting
-  Query<User> getSearchUserQuery(String accountId, String searchTerm) {
+  Query<User> getSearchUserQuery(String accountId, String searchTerm, boolean includeUsersPendingInviteAcceptance) {
     Query<User> query = wingsPersistence.createQuery(User.class, excludeAuthority);
 
     CriteriaContainer nameCriterion = query.and(
@@ -3264,6 +3264,11 @@ public class UserServiceImpl implements UserService {
 
     CriteriaContainer emailCriterion = query.and(
         getSearchCriterion(query, UserKeys.email, searchTerm), query.criteria(UserKeys.accounts).hasThisOne(accountId));
+
+    if (!includeUsersPendingInviteAcceptance) {
+      query.or(nameCriterion, emailCriterion);
+      return query;
+    }
 
     CriteriaContainer emailCriterionForPendingUsers = query.and(getSearchCriterion(query, UserKeys.email, searchTerm),
         query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));

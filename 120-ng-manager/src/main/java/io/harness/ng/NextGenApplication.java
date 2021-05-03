@@ -50,6 +50,7 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
+import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
 import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
@@ -305,6 +306,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerIterators(Injector injector) {
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+    injector.getInstance(UserMembershipMigrationService.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
@@ -367,7 +369,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
-    environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
+    environment.lifecycle().manage(injector.getInstance(UserProjectMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 
