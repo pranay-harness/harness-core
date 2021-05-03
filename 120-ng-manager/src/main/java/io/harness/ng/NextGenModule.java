@@ -304,11 +304,17 @@ public class NextGenModule extends AbstractModule {
     } catch (NoSuchMethodException e) {
       log.error("TimeScaleDbServiceImpl Initialization Failed in due to missing constructor", e);
     }
-    bind(TimeScaleDBConfig.class)
-        .annotatedWith(Names.named("TimeScaleDBConfig"))
-        .toInstance(appConfig.getTimeScaleDBConfig() != null ? appConfig.getTimeScaleDBConfig()
-                                                             : TimeScaleDBConfig.builder().build());
 
+    if (appConfig.getEnableDashboardTimescale() != null && appConfig.getEnableDashboardTimescale()) {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(appConfig.getTimeScaleDBConfig() != null ? appConfig.getTimeScaleDBConfig()
+                                                               : TimeScaleDBConfig.builder().build());
+    } else {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(TimeScaleDBConfig.builder().build());
+    }
     /*
     [secondary-db]: To use another DB, uncomment this and add @Named("primaryMongoConfig") to the above one
 

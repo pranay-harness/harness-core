@@ -94,6 +94,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
+  @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

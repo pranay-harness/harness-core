@@ -282,3 +282,14 @@ cfMigrationConfig:
   environment: "environment1"
   connectionTimeout: 10000
   readTimeout: 30000
+
+enableDashboardTimescale: false
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
