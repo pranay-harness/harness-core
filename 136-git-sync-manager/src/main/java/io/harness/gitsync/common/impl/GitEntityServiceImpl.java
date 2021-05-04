@@ -144,6 +144,7 @@ public class GitEntityServiceImpl implements GitEntityService {
         .folderPath(entity.getFolderPath())
         .entityGitPath(entity.getEntityGitPath())
         .accountId(entity.getAccountId())
+        .repoIdentifier(entity.getGitSyncConfigId())
         .build();
   }
 

@@ -29,4 +29,5 @@ public class GitSyncEntityDTO {
   private String entityGitPath;
   private RepoProviders repoProviderType;
   @JsonIgnore String accountId;
+  private String repoIdentifier;
 }

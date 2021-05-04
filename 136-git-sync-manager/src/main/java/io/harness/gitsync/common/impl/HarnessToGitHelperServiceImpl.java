@@ -25,6 +25,7 @@ import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
+import io.harness.gitsync.common.helper.GitEntityUtils;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
@@ -80,15 +81,18 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   public InfoForGitPush getInfoForPush(String yamlGitConfigId, String branch, String filePath, String accountId,
       EntityReference entityReference, EntityType entityType) {
     final InfoForGitPushBuilder infoForGitPushBuilder = InfoForGitPush.builder();
-    final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(
-        entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
+    YamlGitConfigDTO yamlGitConfig;
     final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType, branch);
+    // Case 1: when we already have entity on git we just want to get configs from that.
+    // Case 2: In case new entity we want to get path which came in from context.
     if (gitSyncEntityDTO != null) {
-      if (filePath != null) {
-        if (!gitSyncEntityDTO.getEntityGitPath().equals(filePath)) {
-          throw new InvalidRequestException("Incorrect file path");
-        }
-      }
+      final String repoIdentifier = gitSyncEntityDTO.getRepoIdentifier();
+      yamlGitConfig = yamlGitConfigService.get(
+          entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, repoIdentifier);
+      filePath = GitEntityUtils.getFilePathInGit(gitSyncEntityDTO);
+    } else {
+      yamlGitConfig = yamlGitConfigService.get(
+          entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
     }
     if (yamlGitConfig.isExecuteOnDelegate()) {
       final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =
