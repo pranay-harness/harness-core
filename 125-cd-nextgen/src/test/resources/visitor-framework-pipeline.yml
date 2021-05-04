@@ -1,0 +1,100 @@
+pipeline:
+  name: k8sDeleteByRelease
+  identifier: NGPipeAutok8sDeleteByReleaseVPvK
+  description: ""
+  tags: {}
+  stages:
+    - stage:
+        name: stage 1
+        identifier: stage_1
+        description: ""
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceDefinition:
+              spec:
+                artifacts:
+                  sidecars: []
+                  primary:
+                    type: Dockerhub
+                    spec:
+                      connectorRef: org.DockerConnectorForAutomationTest
+                      imagePath: nginx
+                      tag: "100"
+                manifestOverrideSets: []
+                manifests:
+                  - manifest:
+                      identifier: manifest1
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: org.GitConnectorForAutomationTest
+                            gitFetchType: Branch
+                            branch: master
+                            commitId: ""
+                            paths:
+                              - ng-automation/k8s/templates/
+                  - manifest:
+                      identifier: values
+                      type: Values
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: org.GitConnectorForAutomationTest
+                            gitFetchType: Branch
+                            branch: master
+                            commitId: ""
+                            paths:
+                              - ng-automation/k8s/values.yaml
+              type: Kubernetes
+            stageOverrides:
+              manifests: []
+            service:
+              name: service 1
+              identifier: service_1
+          infrastructure:
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: org.KubernetesConnectorForAutomationTest
+                namespace: namespace-690983
+                releaseName: release-delrelease
+            environment:
+              name: env 1
+              identifier: env_1
+              type: PreProduction
+          execution:
+            steps:
+              - step:
+                  type: K8sRollingDeploy
+                  name: rolling
+                  identifier: rolling
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+              - step:
+                  type: K8sDelete
+                  name: delete release
+                  identifier: delete_release
+                  timeout: 10m
+                  spec:
+                    deleteResources:
+                      type: ReleaseName
+                      spec:
+                        deleteNamespace: false
+            rollbackSteps: []
+        tags: {}
+        variables:
+          - name: resourceNamePrefix
+            type: String
+            value: deleterelease
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AnyOther
+              action:
+                type: StageRollback
+        skipCondition: ""
