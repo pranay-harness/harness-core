@@ -22,6 +22,7 @@ import software.wings.graphql.schema.type.aggregation.pipeline.QLPipelineTagType
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,8 @@ public class PipelineStatsDataFetcher
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLPipelineFilter> filters,
-      List<QLPipelineAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLPipelineAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = Pipeline.class;
     final List<String> groupByEntityList = new ArrayList<>();
     if (isNotEmpty(groupByList)) {
