@@ -3,6 +3,7 @@ package io.harness.accesscontrol.roles.api;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.AccessControlPermissions.DELETE_ROLE_PERMISSION;
 import static io.harness.accesscontrol.AccessControlPermissions.EDIT_ROLE_PERMISSION;
+import static io.harness.accesscontrol.AccessControlPermissions.VIEW_ROLE_PERMISSION;
 import static io.harness.accesscontrol.AccessControlResourceTypes.ROLE;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
@@ -101,10 +102,10 @@ public class RoleResource {
   public ResponseDTO<PageResponse<RoleResponseDTO>> get(@BeanParam PageRequest pageRequest,
       @BeanParam HarnessScopeParams harnessScopeParams,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    //    accessControlClient.checkForAccessOrThrow(
-    //        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
-    //            harnessScopeParams.getProjectIdentifier()),
-    //        Resource.of(ROLE, null), VIEW_ROLE_PERMISSION);
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+            harnessScopeParams.getProjectIdentifier()),
+        Resource.of(ROLE, null), VIEW_ROLE_PERMISSION);
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     RoleFilter roleFilter =
         RoleFilter.builder().searchTerm(searchTerm).scopeIdentifier(scopeIdentifier).managedFilter(NO_FILTER).build();
@@ -117,10 +118,10 @@ public class RoleResource {
   @ApiOperation(value = "Get Role", nickname = "getRole")
   public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
-    //    accessControlClient.checkForAccessOrThrow(
-    //        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
-    //            harnessScopeParams.getProjectIdentifier()),
-    //        Resource.of(ROLE, identifier), VIEW_ROLE_PERMISSION);
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+            harnessScopeParams.getProjectIdentifier()),
+        Resource.of(ROLE, identifier), VIEW_ROLE_PERMISSION);
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(
         roleService.get(identifier, scopeIdentifier, NO_FILTER).<InvalidRequestException>orElseThrow(() -> {
