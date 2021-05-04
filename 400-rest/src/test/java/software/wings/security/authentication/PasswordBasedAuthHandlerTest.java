@@ -1,5 +1,7 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.rule.OwnerRule.NATHAN;
 import static io.harness.rule.OwnerRule.RUSHABH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +17,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -41,6 +46,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class PasswordBasedAuthHandlerTest extends CategoryTest {
   @Mock private MainConfiguration configuration;
   @Mock private UserService userService;
@@ -112,6 +119,28 @@ public class PasswordBasedAuthHandlerTest extends CategoryTest {
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.EMAIL_NOT_VERIFIED.name());
     }
+  }
+
+  @Test
+  @Owner(developers = NATHAN)
+  @Category(UnitTests.class)
+  public void testBasicTokenValidationEmailNotRequired() {
+    User mockUser = new User();
+    mockUser.setEmailVerified(true);
+    mockUser.setUuid("TestUID");
+    mockUser.setDefaultAccountId("accountId");
+    mockUser.setPasswordHash("$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2");
+    when(configuration.getPortal()).thenReturn(mock(PortalConfig.class));
+    when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(new Account());
+    when(loginSettingsService.isUserLocked(any(User.class), any(Account.class))).thenReturn(false);
+    doNothing().when(loginSettingsService).updateUserLockoutInfo(any(User.class), any(Account.class), anyInt());
+    doReturn(mockUser).when(authHandler).getUser(anyString());
+    when(domainWhitelistCheckerService.isDomainWhitelisted(mockUser)).thenReturn(true);
+    when(accountService.getFromCacheWithFallback(anyString()))
+        .thenReturn(Account.Builder.anAccount().withCreatedFromNG(true).build());
+
+    User authenticatedUser = authHandler.authenticate("admin@harness.io", "admin").getUser();
+    assertThat(authenticatedUser).isNotNull();
   }
 
   @Test

@@ -308,7 +308,7 @@ public class AuthenticationManager {
       if (isNotEmpty(accountId)) {
         User user = authenticationUtils.getUser(userName, USER);
         AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
-        return defaultLoginInternal(userName, password, false, authenticationMechanism, true);
+        return defaultLoginInternal(userName, password, false, authenticationMechanism);
       } else {
         return defaultLogin(userName, password);
       }
@@ -329,19 +329,15 @@ public class AuthenticationManager {
   }
 
   public User defaultLogin(String userName, String password) {
-    return defaultLoginInternal(userName, password, false, getAuthenticationMechanism(userName), true);
+    return defaultLoginInternal(userName, password, false, getAuthenticationMechanism(userName));
   }
 
   public User defaultLoginUsingPasswordHash(String userName, String passwordHash) {
-    return defaultLoginInternal(userName, passwordHash, true, getAuthenticationMechanism(userName), true);
+    return defaultLoginInternal(userName, passwordHash, true, getAuthenticationMechanism(userName));
   }
 
-  public User defaultLoginWithoutEmailVerification(String userName, String passwordHash) {
-    return defaultLoginInternal(userName, passwordHash, true, getAuthenticationMechanism(userName), false);
-  }
-
-  private User defaultLoginInternal(String userName, String password, boolean isPasswordHash,
-      AuthenticationMechanism authenticationMechanism, boolean shouldVerifyEmail) {
+  private User defaultLoginInternal(
+      String userName, String password, boolean isPasswordHash, AuthenticationMechanism authenticationMechanism) {
     try {
       AuthHandler authHandler = getAuthHandler(authenticationMechanism);
       if (authHandler == null) {
@@ -353,7 +349,7 @@ public class AuthenticationManager {
       if (isPasswordHash) {
         if (authHandler instanceof PasswordBasedAuthHandler) {
           PasswordBasedAuthHandler passwordBasedAuthHandler = (PasswordBasedAuthHandler) authHandler;
-          user = passwordBasedAuthHandler.authenticateWithPasswordHash(shouldVerifyEmail, userName, password).getUser();
+          user = passwordBasedAuthHandler.authenticateWithPasswordHash(userName, password).getUser();
         } else {
           log.error("isPasswordHash should not be true if the auth mechanism {} is not username / password",
               authenticationMechanism);
@@ -397,8 +393,7 @@ public class AuthenticationManager {
 
   public User loginUsingHarnessPassword(final String basicToken) {
     String[] decryptedData = decryptBasicToken(basicToken);
-    User user =
-        defaultLoginInternal(decryptedData[0], decryptedData[1], false, AuthenticationMechanism.USER_PASSWORD, true);
+    User user = defaultLoginInternal(decryptedData[0], decryptedData[1], false, AuthenticationMechanism.USER_PASSWORD);
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST);
     }
