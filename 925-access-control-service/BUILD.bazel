@@ -57,12 +57,7 @@ run_tests()
 run_analysis()
 
 #Docker Build Config
-load(
-    "@io_bazel_rules_docker//container:container.bzl",
-    "container_image",
-    "container_push",
-)
-
+load("@io_bazel_rules_docker//container:container.bzl","container_image","container_push",)
 load("@io_bazel_rules_docker//docker/package_managers:download_pkgs.bzl", "download_pkgs")
 load("@io_bazel_rules_docker//docker/package_managers:install_pkgs.bzl", "install_pkgs")
 load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
@@ -114,4 +109,14 @@ container_image(
     base = "access_control_docker_image_gcr_commit.tar",
     workdir = "/opt/harness",
     cmd = "./run.sh",
+    repository = "us.gcr.io/harness-playground/access-control-service",
+)
+
+container_push(
+   name = "push_access_control_docker_image_gcr_final",
+   image = ":access_control_docker_image_gcr_final",
+   format = "Docker",
+   registry = "gcr.io",
+   repository = "harness-playground/access-control-service",
+   tag = "diptiman",
 )
