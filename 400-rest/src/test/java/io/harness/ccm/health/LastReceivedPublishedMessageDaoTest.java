@@ -28,7 +28,7 @@ public class LastReceivedPublishedMessageDaoTest extends WingsBaseTest {
   public void shouldGetPublishedMessage() {
     lastReceivedPublishedMessageDao.upsert(accountId, identifier);
     LastReceivedPublishedMessage message = lastReceivedPublishedMessageDao.get(accountId, identifier);
-    assertThat(message.getAccountId()).isEqualTo(accountId);
+    assertThat(message.getAccountId()).isEqualTo("smkfsdkmsfd");
     assertThat(message.getIdentifier()).isEqualTo(identifier);
   }
 }
