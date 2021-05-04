@@ -33,18 +33,27 @@ type TimeScaleDb struct {
 }
 
 // New connects to timescaledb and returns a wrapped connection object.
-func New(username, password, host, port, dbName string, log *zap.SugaredLogger) (*TimeScaleDb, error) {
+func New(username, password, host, port, dbName string, enableSSL bool, sslCertPath string, log *zap.SugaredLogger) (*TimeScaleDb, error) {
 	iport, err := strconv.ParseUint(port, 10, 64)
 	if err != nil {
 		return nil, err
 	}
 
-	ci := &db.ConnectionInfo{Application: "ti-svc", DBName: dbName, User: username, Host: host, Password: password, Port: uint(iport), Engine: "postgres"}
+	ci := &db.ConnectionInfo{Application: "ti-svc", DBName: dbName,
+		User: username, Host: host, Password: password,
+		Port: uint(iport), Engine: "postgres",
+		EnableSSL: enableSSL, SSLCertPath: sslCertPath}
 	db, err := db.NewDB(ci, log)
 	if err != nil {
 		return nil, err
 	}
 
+	// Send a ping to timescale. Set timeout to 10 seconds
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = db.PingContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	return &TimeScaleDb{Conn: db, Log: log}, nil
 }
 

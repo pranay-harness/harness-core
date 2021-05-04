@@ -129,6 +129,14 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{
 	return rows, err
 }
 
+// PingContext pings the DB using the given context
+func (db *DB) PingContext(ctx context.Context) error {
+	start := time.Now()
+	err := db.conn.PingContext(ctx)
+	logQuery(db.log, start, "sql ping", []interface{}{}, err)
+	return err
+}
+
 // QueryRowContext runs the given sql statement using the given context db.QueryRowContext, logs details about the call and returns the result
 func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	start := time.Now()

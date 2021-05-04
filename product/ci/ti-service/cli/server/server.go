@@ -57,13 +57,17 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			"db_name", config.TimeScaleDb.DbName,
 			"test_table_name", config.TimeScaleDb.HyperTableName,
 			"selection_stats_table", config.TimeScaleDb.SelectionTable,
-			"coverage_table", config.TimeScaleDb.CoverageTable)
+			"coverage_table", config.TimeScaleDb.CoverageTable,
+			"ssl_enabled", config.TimeScaleDb.EnableSSL,
+			"ssl_cert_path", config.TimeScaleDb.SSLCertPath,)
 		db, err = timescaledb.New(
 			config.TimeScaleDb.Username,
 			config.TimeScaleDb.Password,
 			config.TimeScaleDb.Host,
 			config.TimeScaleDb.Port,
 			config.TimeScaleDb.DbName,
+			config.TimeScaleDb.EnableSSL,
+			config.TimeScaleDb.SSLCertPath,
 			log,
 		)
 		if err != nil {
