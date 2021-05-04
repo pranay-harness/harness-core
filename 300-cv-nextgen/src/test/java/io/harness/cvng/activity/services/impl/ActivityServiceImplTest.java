@@ -145,6 +145,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     when(mockWebhookService.validateWebhookToken(any(), any(), any())).thenReturn(true);
     when(verificationJobInstanceService.getCVConfigsForVerificationJob(any()))
         .thenReturn(Lists.newArrayList(new AppDynamicsCVConfig()));
+    realVerificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
   }
 
   @Test
@@ -1009,7 +1010,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
                                         .identifier(generateUuid())
                                         .build());
     kubernetesActivity.setVerificationJobRuntimeDetails(null);
-
     assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity).size()).isEqualTo(1);
   }
 

@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.CREATE_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.DELETE_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.EDIT_PROJECT_PERMISSION;
-import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -92,11 +91,11 @@ public class ProjectResource {
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
-  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = CREATE_PROJECT_PERMISSION)
+  @NGAccessControlCheck(resourceType = PROJECT, permission = CREATE_PROJECT_PERMISSION)
   public ResponseDTO<ProjectResponse> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(DEFAULT_ORG_IDENTIFIER)
-      @ResourceIdentifier String orgIdentifier, @NotNull @Valid ProjectRequest projectDTO) {
+      @OrgIdentifier String orgIdentifier, @NotNull @Valid ProjectRequest projectDTO) {
     Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO.getProject());
     return ResponseDTO.newResponse(createdProject.getVersion().toString(), toResponseWrapper(createdProject));
   }
@@ -187,19 +186,18 @@ public class ProjectResource {
     } else {
       orgIdentifiers = Collections.singleton(orgIdentifier);
     }
-
     return orgIdentifiers;
 
-    //    ResourceScope resourceScope = ResourceScope.builder().accountIdentifier(accountIdentifier).build();
-    //    List<PermissionCheckDTO> permissionChecks = orgIdentifiers.stream()
-    //                                                    .map(oi
-    //                                                        -> PermissionCheckDTO.builder()
-    //                                                               .permission(VIEW_PROJECT_PERMISSION)
-    //                                                               .resourceIdentifier(oi)
-    //                                                               .resourceScope(resourceScope)
-    //                                                               .resourceType(ORGANIZATION)
-    //                                                               .build())
-    //                                                    .collect(Collectors.toList());
+    //    List<PermissionCheckDTO> permissionChecks =
+    //        orgIdentifiers.stream()
+    //            .map(oi
+    //                -> PermissionCheckDTO.builder()
+    //                       .permission(VIEW_PROJECT_PERMISSION)
+    //                       .resourceScope(
+    //                           ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(oi).build())
+    //                       .resourceType(PROJECT)
+    //                       .build())
+    //            .collect(Collectors.toList());
     //    AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
     //    return accessCheckResponse.getAccessControlList()
     //        .stream()

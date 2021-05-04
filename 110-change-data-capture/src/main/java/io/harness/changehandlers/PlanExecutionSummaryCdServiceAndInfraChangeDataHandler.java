@@ -12,6 +12,7 @@ import com.mongodb.DBObject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -111,6 +112,46 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
         idList.add(id);
         columnValueMapping.put("id", idList);
       }
+
+      // stage - status
+      String service_status = ((BasicDBObject) iteratorObject.getValue()).get("status").toString();
+      if (service_status != null) {
+        if (columnValueMapping.containsKey("service_status")) {
+          columnValueMapping.get("service_status").add(service_status);
+        } else {
+          List<String> service_status_list = new ArrayList<>();
+          service_status_list.add(service_status);
+          columnValueMapping.put("service_status", service_status_list);
+        }
+      }
+      // service_startts
+      if (((BasicDBObject) iteratorObject.getValue()).get("startTs") != null) {
+        String service_startts = String.valueOf(
+            new Timestamp(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("startTs").toString())));
+        if (service_startts != null) {
+          if (columnValueMapping.containsKey("service_startts")) {
+            columnValueMapping.get("service_startts").add(service_startts);
+          } else {
+            List<String> service_startts_list = new ArrayList<>();
+            service_startts_list.add(service_startts);
+            columnValueMapping.put("service_startts", service_startts_list);
+          }
+        }
+      }
+      // service_endts
+      if (((BasicDBObject) iteratorObject.getValue()).get("endTs") != null) {
+        String service_endts = String.valueOf(
+            new Timestamp(Long.parseLong(((BasicDBObject) iteratorObject.getValue()).get("endTs").toString())));
+        if (service_endts != null) {
+          if (columnValueMapping.containsKey("service_endts")) {
+            columnValueMapping.get("service_endts").add(service_endts);
+          } else {
+            List<String> service_endts_list = new ArrayList<>();
+            service_endts_list.add(service_endts);
+            columnValueMapping.put("service_endts", service_endts_list);
+          }
+        }
+      }
       DBObject moduleInfoObject = (DBObject) ((DBObject) iteratorObject.getValue()).get("moduleInfo");
       if (moduleInfoObject != null) {
         DBObject cdObject = (DBObject) moduleInfoObject.get("cd");
@@ -186,28 +227,34 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
               envType = infraExecutionSummaryObject.get("type").toString();
             }
 
-            if (columnValueMapping.containsKey("env_name")) {
-              columnValueMapping.get("env_name").add(envName);
-            } else {
-              List<String> envNameList = new ArrayList<>();
-              envNameList.add(envName);
-              columnValueMapping.put("env_name", envNameList);
+            if (envName != null && envName.length() != 0) {
+              if (columnValueMapping.containsKey("env_name")) {
+                columnValueMapping.get("env_name").add(envName);
+              } else {
+                List<String> envNameList = new ArrayList<>();
+                envNameList.add(envName);
+                columnValueMapping.put("env_name", envNameList);
+              }
             }
 
-            if (columnValueMapping.containsKey("env_id")) {
-              columnValueMapping.get("env_id").add(envIdentifier);
-            } else {
-              List<String> envIdList = new ArrayList<>();
-              envIdList.add(envIdentifier);
-              columnValueMapping.put("env_id", envIdList);
+            if (envIdentifier != null && envIdentifier.length() != 0) {
+              if (columnValueMapping.containsKey("env_id")) {
+                columnValueMapping.get("env_id").add(envIdentifier);
+              } else {
+                List<String> envIdList = new ArrayList<>();
+                envIdList.add(envIdentifier);
+                columnValueMapping.put("env_id", envIdList);
+              }
             }
 
-            if (columnValueMapping.containsKey("env_type")) {
-              columnValueMapping.get("env_type").add(envType);
-            } else {
-              List<String> envIdList = new ArrayList<>();
-              envIdList.add(envType);
-              columnValueMapping.put("env_type", envIdList);
+            if (envType != null && envType.length() != 0) {
+              if (columnValueMapping.containsKey("env_type")) {
+                columnValueMapping.get("env_type").add(envType);
+              } else {
+                List<String> envIdList = new ArrayList<>();
+                envIdList.add(envType);
+                columnValueMapping.put("env_type", envIdList);
+              }
             }
           }
 

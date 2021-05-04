@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
@@ -11,6 +12,7 @@ import lombok.experimental.FieldNameConstants;
 @Getter
 @Builder
 @FieldNameConstants(innerTypeName = "GitEntityInfoKeys")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(DX)
 public class GitEntityInfo {
   String branch;

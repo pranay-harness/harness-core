@@ -69,6 +69,9 @@ public class HarnessResourceGroupResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
+    //    projectIdentifier),
+    //        Resource.of(RESOURCE_GROUP, identifier), VIEW_RESOURCEGROUP_PERMISSION);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
         resourceGroupService.get(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
@@ -81,6 +84,9 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
+    //    projectIdentifier),
+    //        Resource.of(RESOURCE_GROUP, null), VIEW_RESOURCEGROUP_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(
         resourceGroupService.list(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, searchTerm)));
   }
@@ -93,7 +99,7 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid ResourceGroupRequest resourceGroupRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.NONE, EDIT_RESOURCEGROUP_PERMISSION);
+        Resource.of(RESOURCE_GROUP, null), EDIT_RESOURCEGROUP_PERMISSION);
     ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponse);
   }

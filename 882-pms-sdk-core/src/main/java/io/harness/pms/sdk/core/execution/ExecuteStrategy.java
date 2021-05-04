@@ -1,12 +1,11 @@
 package io.harness.pms.sdk.core.execution;
 
-import io.harness.exception.InvalidRequestException;
-import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.sdk.core.steps.Step;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
+@OwnedBy(HarnessTeam.PIPELINE)
 public interface ExecuteStrategy {
   void start(InvokerPackage invokerPackage);
 
@@ -14,12 +13,5 @@ public interface ExecuteStrategy {
     throw new UnsupportedOperationException();
   }
 
-  default PlanNodeProto findNode(List<PlanNodeProto> nodes, String nodeId) {
-    int nodeIndex = Collections.binarySearch(
-        nodes, PlanNodeProto.newBuilder().setUuid(nodeId).build(), Comparator.comparing(PlanNodeProto::getUuid));
-    if (nodeIndex < 0) {
-      throw new InvalidRequestException("No node found with Id :" + nodeId);
-    }
-    return nodes.get(nodeIndex);
-  }
+  <T extends Step> T extractStep(NodeExecutionProto proto);
 }

@@ -1,75 +1,95 @@
 package io.harness.aggregator.consumers;
 
+import static io.harness.accesscontrol.principals.PrincipalType.USER;
+import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
+import static io.harness.aggregator.ACLUtils.getACL;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.utils.PageUtils.getPageRequest;
 
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.services.ACLService;
+import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
+import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.beans.PageRequest;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
-  private final ACLService aclService;
-
-  @Inject
-  public RoleChangeConsumerImpl(ACLService aclService) {
-    this.aclService = aclService;
-  }
+  private final ACLRepository aclRepository;
+  private final RoleAssignmentRepository roleAssignmentRepository;
+  private final ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer;
 
   @Override
   public long consumeUpdateEvent(String id, RoleDBO updatedEntity) {
-    if (Optional.ofNullable(updatedEntity.getPermissions()).filter(x -> !x.isEmpty()).isPresent()) {
-      Set<String> currentPermissionsInRole = updatedEntity.getPermissions();
-      List<ACL> acls = aclService.getByRole(
-          updatedEntity.getScopeIdentifier(), updatedEntity.getIdentifier(), updatedEntity.isManaged());
+    long createdCount = 0;
+    int pageIdx = 0;
+    int pageSize = 1000;
+    int iterations = 100;
+    Page<RoleAssignmentDBO> roleAssignments;
 
-      Set<String> oldPermissionsInACLs = acls.stream().map(ACL::getPermissionIdentifier).collect(Collectors.toSet());
-
-      Set<String> permissionsToDelete = Sets.difference(oldPermissionsInACLs, currentPermissionsInRole);
-      Set<String> permissionsToAdd = Sets.difference(currentPermissionsInRole, oldPermissionsInACLs);
-
-      // delete ACLs which contain permission contained in permissionsToDelete
-      List<ACL> aclsToDelete = acls.stream()
-                                   .filter(x -> permissionsToDelete.contains(x.getPermissionIdentifier()))
-                                   .collect(Collectors.toList());
-      if (!aclsToDelete.isEmpty()) {
-        log.info("Deleting {} ACLs", aclsToDelete.size());
-        aclService.deleteAll(aclsToDelete);
+    do {
+      Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.roleIdentifier).is(updatedEntity.getIdentifier());
+      if (!StringUtils.isEmpty(updatedEntity.getScopeIdentifier())) {
+        criteria.and(RoleAssignmentDBOKeys.managed).is(true);
       }
+      roleAssignments = roleAssignmentRepository.findAll(
+          criteria, getPageRequest(PageRequest.builder().pageIndex(pageIdx).pageSize(pageSize).build()));
 
-      Map<ACL.RoleAssignmentResourceSelectorPrincipal, List<ACL>> roleAssignmentToACLMapping =
-          acls.stream().collect(Collectors.groupingBy(ACL::roleAssignmentResourceSelectorPrincipal));
+      for (RoleAssignmentDBO roleAssignmentDBO : roleAssignments.getContent()) {
+        Set<String> existingPermissions =
+            Sets.newHashSet(aclRepository.getDistinctPermissionsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
+        if (existingPermissions.isEmpty()) {
+          roleAssignmentChangeConsumer.consumeCreateEvent(roleAssignmentDBO.getId(), roleAssignmentDBO);
+        } else {
+          Set<String> permissionsToAdd = Sets.difference(updatedEntity.getPermissions(), existingPermissions);
+          Set<String> permissionsToDelete = Sets.difference(existingPermissions, updatedEntity.getPermissions());
+          Set<String> existingResourceSelectors =
+              Sets.newHashSet(aclRepository.getDistinctResourceSelectorsInACLs(roleAssignmentDBO.getId()));
+          Set<String> existingPrincipals =
+              Sets.newHashSet(aclRepository.getDistinctPrincipalsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
+          PrincipalType principalType =
+              USER_GROUP.equals(roleAssignmentDBO.getPrincipalType()) ? USER : roleAssignmentDBO.getPrincipalType();
 
-      // add new ACLs for new permissions
-      List<ACL> aclsToCreate = new ArrayList<>();
-      roleAssignmentToACLMapping.forEach((roleAssignmentId, aclList) -> permissionsToAdd.forEach(permissionToAdd -> {
-        ACL aclToCreate = ACL.copyOf(aclList.get(0));
-        aclToCreate.setPermissionIdentifier(permissionToAdd);
-        aclToCreate.setAclQueryString(ACL.getAclQueryString(aclToCreate));
-        aclsToCreate.add(aclToCreate);
-      }));
+          long deletedCount =
+              aclRepository.deleteByRoleAssignmentIdAndPermissions(roleAssignmentDBO.getId(), permissionsToDelete);
+          log.info("ACLs deleted: {}", deletedCount);
 
-      long count = 0;
-      if (!aclsToCreate.isEmpty()) {
-        count = aclService.saveAll(aclsToCreate);
+          List<ACL> aclsToCreate = new ArrayList<>();
+          existingResourceSelectors.forEach(resourceSelector
+              -> permissionsToAdd.forEach(permissionIdentifier
+                  -> existingPrincipals.forEach(principalIdentifier
+                      -> aclsToCreate.add(getACL(permissionIdentifier, Principal.of(principalType, principalIdentifier),
+                          roleAssignmentDBO, resourceSelector)))));
+          if (!aclsToCreate.isEmpty()) {
+            createdCount += aclRepository.insertAllIgnoringDuplicates(aclsToCreate);
+            log.info("ACLs created: {}", createdCount);
+          }
+        }
       }
-      log.info("{} ACLs created", count);
-      return count;
-    }
-    return 0;
+      pageIdx++;
+      iterations--;
+    } while (iterations > 0 && !roleAssignments.getContent().isEmpty());
+
+    return createdCount;
   }
 
   @Override

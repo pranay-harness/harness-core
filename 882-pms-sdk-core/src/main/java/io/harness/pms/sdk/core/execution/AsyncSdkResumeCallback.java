@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.execution;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.tasks.ResponseData;
@@ -11,10 +11,10 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Value
 @Builder
-public class EngineResumeCallback implements OldNotifyCallback {
+public class AsyncSdkResumeCallback implements OldNotifyCallback {
   @Inject SdkNodeExecutionService sdkNodeExecutionService;
 
   String nodeExecutionId;

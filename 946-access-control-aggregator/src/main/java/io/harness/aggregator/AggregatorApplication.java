@@ -9,10 +9,6 @@ import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
 import io.harness.aggregator.consumers.ChangeConsumer;
-import io.harness.aggregator.consumers.ResourceGroupChangeConsumerImpl;
-import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
-import io.harness.aggregator.consumers.RoleChangeConsumerImpl;
-import io.harness.aggregator.consumers.UserGroupChangeConsumerImpl;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.collect.ImmutableMap;
@@ -35,10 +31,10 @@ import org.apache.kafka.common.serialization.Serde;
 @OwnedBy(PL)
 @Singleton
 public class AggregatorApplication {
-  private final RoleChangeConsumerImpl roleChangeConsumer;
-  private final RoleAssignmentChangeConsumerImpl roleAssignmentChangeConsumer;
-  private final ResourceGroupChangeConsumerImpl resourceGroupChangeConsumer;
-  private final UserGroupChangeConsumerImpl userGroupChangeConsumer;
+  private final ChangeConsumer<RoleDBO> roleChangeConsumer;
+  private final ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer;
+  private final ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer;
+  private final ChangeConsumer<UserGroupDBO> userGroupChangeConsumer;
   private final AggregatorConfiguration aggregatorConfiguration;
   private final ExecutorService executorService;
   private static final String MONGO_DB_CONNECTOR = "io.debezium.connector.mongodb.MongoDbConnector";
@@ -69,10 +65,10 @@ public class AggregatorApplication {
   private static final String UNKNOWN_PROPERTIES_IGNORED = "unknown.properties.ignored";
 
   @Inject
-  public AggregatorApplication(RoleChangeConsumerImpl roleChangeConsumer,
-      RoleAssignmentChangeConsumerImpl roleAssignmentChangeConsumer,
-      ResourceGroupChangeConsumerImpl resourceGroupChangeConsumer, UserGroupChangeConsumerImpl userGroupChangeConsumer,
-      AggregatorConfiguration aggregatorConfiguration) {
+  public AggregatorApplication(ChangeConsumer<RoleDBO> roleChangeConsumer,
+      ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer,
+      ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer,
+      ChangeConsumer<UserGroupDBO> userGroupChangeConsumer, AggregatorConfiguration aggregatorConfiguration) {
     this.roleChangeConsumer = roleChangeConsumer;
     this.roleAssignmentChangeConsumer = roleAssignmentChangeConsumer;
     this.resourceGroupChangeConsumer = resourceGroupChangeConsumer;

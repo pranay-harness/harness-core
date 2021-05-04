@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -414,5 +415,21 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     instance = stateExecutionService.getStateExecutionInstance(instance.getAppId(), instance.getExecutionUuid(), id);
 
     assertThat(instance.getDelegateTasksDetails()).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void fetchCurrentPhaseStepStateExecutionInstance() {
+    String uuid1 = generateUuid();
+    String uuid2 = generateUuid();
+    String uuid3 = generateUuid();
+    String uuid4 = generateUuid();
+    setupStateExecutionInstanceData(uuid1, uuid2, uuid3, uuid4);
+    StateExecutionInstance phaseStepState =
+        stateExecutionService.fetchCurrentPhaseStepStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid1);
+    assertThat(phaseStepState).isNotNull();
+    assertThat(phaseStepState.getUuid()).isEqualTo(uuid2);
+    assertThat(phaseStepState.getStateName()).isEqualTo("Deploy");
   }
 }

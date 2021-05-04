@@ -7,9 +7,11 @@ import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.remote.dto.UserFilter;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +35,8 @@ public interface NgUserService {
 
   Optional<UserMembership> getUserMembership(String userId);
 
+  Optional<UserMetadataDTO> getUserMetadata(String userId);
+
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
    */
@@ -41,7 +45,7 @@ public interface NgUserService {
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
    */
-  PageResponse<UserInfo> listUsers(Scope scope, PageRequest pageRequest);
+  PageResponse<UserMetadataDTO> listUsers(Scope scope, PageRequest pageRequest, UserFilter userFilter);
 
   List<String> listUserIds(Scope scope);
 
@@ -59,6 +63,8 @@ public interface NgUserService {
   boolean isUserInAccount(String accountId, String userId);
 
   boolean isUserAtScope(String userId, Scope scope);
+
+  boolean update(UserMembership userMembership);
 
   boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source);
 

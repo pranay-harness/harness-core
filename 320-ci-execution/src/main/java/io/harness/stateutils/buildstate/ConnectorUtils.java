@@ -118,6 +118,14 @@ public class ConnectorUtils {
   }
 
   public ConnectorDetails getConnectorDetails(NGAccess ngAccess, String connectorIdentifier) {
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed call to fetch connector: [%s], attempt: {}", connectorIdentifier),
+            format("Failed to fetch connector: [%s] after retrying {} times", connectorIdentifier));
+
+    return Failsafe.with(retryPolicy).get(() -> { return getConnectorDetailsInternal(ngAccess, connectorIdentifier); });
+  }
+
+  private ConnectorDetails getConnectorDetailsInternal(NGAccess ngAccess, String connectorIdentifier) {
     log.info("Getting connector details for connector ref [{}]", connectorIdentifier);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifier,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());

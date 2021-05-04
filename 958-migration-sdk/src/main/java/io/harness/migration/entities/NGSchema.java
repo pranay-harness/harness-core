@@ -9,6 +9,7 @@ import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -21,9 +22,10 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Builder
 @FieldNameConstants(innerTypeName = "NGSchemaKeys")
 @OwnedBy(DX)
+@AllArgsConstructor
 public class NGSchema implements PersistentEntity {
   public static final String NG_SCHEMA_ID = "ngschema";
-  @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String id;
+  @JsonIgnore @Id String id;
   @NotEmpty @CreatedDate Long createdAt;
   @LastModifiedDate Long lastUpdatedAt;
   @NotEmpty @EntityName String name;

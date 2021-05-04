@@ -18,13 +18,13 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(PL)
-public class UserSearchDTO {
-  @ApiModelProperty(required = true) @NotEmpty String name;
+public class UserMetadataDTO {
+  String name;
   @ApiModelProperty(required = true) @NotEmpty String email;
   @ApiModelProperty(required = true) @NotEmpty String uuid;
 
   @Builder
-  public UserSearchDTO(String name, String email, String uuid) {
+  public UserMetadataDTO(String name, String email, String uuid) {
     this.name = name;
     this.email = email;
     this.uuid = uuid;

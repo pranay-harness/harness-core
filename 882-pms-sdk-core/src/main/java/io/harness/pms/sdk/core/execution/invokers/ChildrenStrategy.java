@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -20,7 +20,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import com.google.inject.Inject;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class ChildrenStrategy implements ExecuteStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
@@ -28,7 +28,7 @@ public class ChildrenStrategy implements ExecuteStrategy {
   @Override
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    ChildrenExecutable childrenExecutable = extractChildrenExecutable(nodeExecution);
+    ChildrenExecutable childrenExecutable = extractStep(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
     ChildrenExecutableResponse response = childrenExecutable.obtainChildren(ambiance,
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
@@ -39,14 +39,15 @@ public class ChildrenStrategy implements ExecuteStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
-    ChildrenExecutable childrenExecutable = extractChildrenExecutable(nodeExecution);
+    ChildrenExecutable childrenExecutable = extractStep(nodeExecution);
     StepResponse stepResponse = childrenExecutable.handleChildrenResponse(ambiance,
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
     sdkNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
-  private ChildrenExecutable extractChildrenExecutable(NodeExecutionProto nodeExecution) {
+  @Override
+  public ChildrenExecutable extractStep(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (ChildrenExecutable) stepRegistry.obtain(node.getStepType());
   }

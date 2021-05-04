@@ -93,7 +93,7 @@ public class UserResourceNG {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true, false);
 
     PageResponse<UserInfo> pageResponse = aPageResponse()
                                               .withOffset(offset.toString())

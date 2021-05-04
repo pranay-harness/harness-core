@@ -138,12 +138,12 @@ public class UserServiceImplTest extends WingsBaseTest {
     map.put("sort[0][direction]", Arrays.asList("ASC"));
     map.put("sort[0][field]", Arrays.asList("name"));
     when(uriInfo.getQueryParameters(true)).thenReturn(map);
-    List<User> userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "", 0, 30, false);
+    List<User> userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "", 0, 30, false, true);
     assertThat(userList.get(2).getName()).isEqualTo("pqr");
 
     map.put("sort[0][field]", Arrays.asList("email"));
     when(uriInfo.getQueryParameters(true)).thenReturn(map);
-    userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "", 0, 30, false);
+    userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "", 0, 30, false, true);
     assertThat(userList.get(2).getName()).isEqualTo("eFg");
   }
 
@@ -159,11 +159,11 @@ public class UserServiceImplTest extends WingsBaseTest {
     when(pageRequest.getUriInfo()).thenReturn(uriInfo);
     when(uriInfo.getQueryParameters(true)).thenReturn(map);
 
-    List<User> userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "ab", 0, 30, false);
+    List<User> userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "ab", 0, 30, false, true);
     assertThat(userList.size()).isEqualTo(1);
     assertThat(userList.get(0).getName()).isEqualTo("pqr");
 
-    userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "PqR", 0, 30, false);
+    userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "PqR", 0, 30, false, true);
     assertThat(userList.size()).isEqualTo(2);
   }
 
@@ -181,10 +181,10 @@ public class UserServiceImplTest extends WingsBaseTest {
 
     map.put("sort[0][direction]", Arrays.asList("DESC"));
     map.put("sort[0][field]", Arrays.asList("email"));
-    List<User> userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "PqR", 0, 30, false);
+    List<User> userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "PqR", 0, 30, false, true);
     assertThat(userList.get(1).getName()).isEqualTo("pqr");
 
-    userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "fgh", 0, 30, false);
+    userList = userServiceImpl.listUsers(pageRequest, "ACCOUNT_ID", "fgh", 0, 30, false, true);
     assertThat(userList.size()).isEqualTo(0);
   }
 

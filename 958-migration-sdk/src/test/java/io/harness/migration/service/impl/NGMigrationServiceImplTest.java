@@ -74,7 +74,7 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
                                           })
                                           .build();
     ngMigrationService.runMigrations(config);
-    NGSchema ngSchema = mongoTemplate.findOne(new Query(), NGSchema.class, "schema_ngcore");
+    NGSchema ngSchema = mongoTemplate.findOne(new Query(), NGSchemaTestClass.class);
     assertThat(ngSchema.getMigrationDetails().get(MigrationType.MongoMigration)).isEqualTo(1);
   }
 
@@ -83,7 +83,8 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
   @Category(UnitTests.class)
   public void testDoMigration() throws Exception {
     when(injector.getInstance(TestNGMigrationClass.class)).thenReturn(new TestNGMigrationClass());
-    NGSchema ngSchema = NGSchema.builder()
+    when(injector.getInstance(TestMigrationProviderClass.class)).thenReturn(new TestMigrationProviderClass());
+    NGSchema ngSchema = NGSchemaTestClass.builder()
                             .name("ngschema")
                             .migrationDetails(new HashMap<MigrationType, Integer>() {
                               { put(MigrationType.MongoMigration, 1); }
@@ -98,10 +99,10 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
 
       ;
     };
-    ngMigrationService.doMigration(false, 1, 2, migrations, MigrationType.MongoMigration, "ngschema", "ngschema");
-    NGSchema ngchema2 = mongoTemplate.findOne(new Query(), NGSchema.class, "ngschema");
-
-    assertThat(ngchema2.getMigrationDetails().get(MigrationType.MongoMigration)).isEqualTo(2);
+    ngMigrationService.doMigration(
+        false, 1, 2, migrations, MigrationType.MongoMigration, NGSchemaTestClass.class, "ngschema");
+    NGSchema schema = mongoTemplate.findOne(new Query(), NGSchemaTestClass.class);
+    assertThat(schema.getMigrationDetails().get(MigrationType.MongoMigration)).isEqualTo(2);
   }
 
   @Test
@@ -109,7 +110,7 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
   @Category(UnitTests.class)
   public void testDoMigrationWhenFieldIsNotPresent() throws Exception {
     when(injector.getInstance(TestNGMigrationClass.class)).thenReturn(new TestNGMigrationClass());
-    NGSchema ngSchema = NGSchema.builder()
+    NGSchema ngSchema = NGSchemaTestClass.builder()
                             .name("ngschema")
                             .migrationDetails(new HashMap<MigrationType, Integer>() {
                               { put(MigrationType.MongoMigration, 1); }
@@ -124,8 +125,9 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
 
       ;
     };
-    ngMigrationService.doMigration(false, 0, 1, migrations, MigrationType.TimeScaleMigration, "ngschema", "ngschema");
-    NGSchema ngchema2 = mongoTemplate.findOne(new Query(), NGSchema.class, "ngschema");
+    ngMigrationService.doMigration(
+        false, 0, 1, migrations, MigrationType.TimeScaleMigration, NGSchemaTestClass.class, "ngschema");
+    NGSchema ngchema2 = mongoTemplate.findOne(new Query(), NGSchemaTestClass.class);
 
     assertThat(ngchema2.getMigrationDetails().get(MigrationType.TimeScaleMigration)).isEqualTo(1);
   }
@@ -134,6 +136,11 @@ public class NGMigrationServiceImplTest extends NGMigrationTestBase {
     @Override
     public String getServiceName() {
       return "ngcore";
+    }
+
+    @Override
+    public Class<? extends NGSchema> getSchemaClass() {
+      return NGSchemaTestClass.class;
     }
 
     @Override
