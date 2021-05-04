@@ -11,4 +11,6 @@ public interface KubernetesExceptionMessage {
   String APPLY_MANIFEST_FAILED = "Apply manifest failed to complete";
   String WAIT_FOR_STEADY_STATE_FAILED = "Wait for steady state failed";
   String RELEASE_HISTORY_YAML_EXCEPTION = "Corrupted or invalid release history";
+
+  String MISSING_APPLY_FILES_PATH = "No files specified to apply";
 }

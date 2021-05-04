@@ -47,8 +47,8 @@ public class K8sApplyBaseHandler {
   }
 
   @VisibleForTesting
-  public boolean prepare(
-      LogCallback executionLogCallback, boolean skipSteadyStateCheck, K8sApplyHandlerConfig k8sApplyHandlerConfig) {
+  public boolean prepare(LogCallback executionLogCallback, boolean skipSteadyStateCheck,
+      K8sApplyHandlerConfig k8sApplyHandlerConfig, boolean rethrowException) {
     try {
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(k8sApplyHandlerConfig.getResources()));
@@ -68,16 +68,21 @@ public class K8sApplyBaseHandler {
       }
     } catch (Exception e) {
       log.error("Exception:", e);
-      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      return false;
+      if (rethrowException) {
+        throw e;
+      } else {
+        executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+        return false;
+      }
     }
+
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
     return true;
   }
 
   public boolean steadyStateCheck(boolean skipSteadyStateCheck, String namespace,
       K8sDelegateTaskParams k8sDelegateTaskParams, long timeoutInMillis, LogCallback executionLogCallback,
-      K8sApplyHandlerConfig k8sApplyHandlerConfig) throws Exception {
+      K8sApplyHandlerConfig k8sApplyHandlerConfig, boolean denoteOverallFailure) throws Exception {
     if (isEmpty(k8sApplyHandlerConfig.getWorkloads()) && isEmpty(k8sApplyHandlerConfig.getCustomWorkloads())) {
       executionLogCallback.saveExecutionLog("Skipping Status Check since there is no Workload.", INFO, SUCCESS);
       return true;

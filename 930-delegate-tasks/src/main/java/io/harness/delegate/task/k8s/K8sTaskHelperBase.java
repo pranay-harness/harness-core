@@ -1686,6 +1686,13 @@ public class K8sTaskHelperBase {
   public boolean doStatusCheckForAllCustomResources(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
       long timeoutInMillis) throws Exception {
+    return doStatusCheckForAllCustomResources(
+        client, resources, k8sDelegateTaskParams, executionLogCallback, denoteOverallSuccess, timeoutInMillis, true);
+  }
+
+  public boolean doStatusCheckForAllCustomResources(Kubectl client, List<KubernetesResource> resources,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
+      long timeoutInMillis, boolean denoteOverallFailure) throws Exception {
     List<KubernetesResourceId> resourceIds =
         resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
     if (isEmpty(resourceIds)) {
@@ -1749,7 +1756,9 @@ public class K8sTaskHelperBase {
               currentSteadyCondition),
           Yellow, Bold));
 
-      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      if (denoteOverallFailure) {
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+      }
       return false;
     } finally {
       for (StartedProcess eventWatchProcess : eventWatchProcesses) {
@@ -1760,9 +1769,11 @@ public class K8sTaskHelperBase {
           executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
         }
       } else {
-        executionLogCallback.saveExecutionLog(
-            format("%nStatus check for resources in namespace [%s] failed.", namespaces), INFO,
-            CommandExecutionStatus.FAILURE);
+        if (denoteOverallFailure) {
+          executionLogCallback.saveExecutionLog(
+              format("%nStatus check for resources in namespace [%s] failed.", namespaces), INFO,
+              CommandExecutionStatus.FAILURE);
+        }
       }
     }
   }

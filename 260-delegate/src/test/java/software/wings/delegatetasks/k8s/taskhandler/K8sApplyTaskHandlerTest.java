@@ -261,12 +261,14 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     k8sApplyHandlerConfig.setResources(EMPTY_LIST);
     Reflect.on(k8sApplyTaskHandler).set("k8sApplyHandlerConfig", k8sApplyHandlerConfig);
 
-    assertThat(k8sApplyBaseHandler.prepare(mock(ExecutionLogCallback.class), false, k8sApplyHandlerConfig)).isTrue();
+    assertThat(k8sApplyBaseHandler.prepare(mock(ExecutionLogCallback.class), false, k8sApplyHandlerConfig, false))
+        .isTrue();
     assertThat(k8sApplyHandlerConfig.getWorkloads()).isEmpty();
 
     k8sApplyHandlerConfig.setResources(resources);
     Reflect.on(k8sApplyTaskHandler).set("k8sApplyHandlerConfig", k8sApplyHandlerConfig);
-    assertThat(k8sApplyBaseHandler.prepare(mock(ExecutionLogCallback.class), false, k8sApplyHandlerConfig)).isTrue();
+    assertThat(k8sApplyBaseHandler.prepare(mock(ExecutionLogCallback.class), false, k8sApplyHandlerConfig, false))
+        .isTrue();
     assertThat(k8sApplyHandlerConfig.getWorkloads()).hasSize(1);
   }
 
@@ -290,7 +292,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     K8sApplyHandlerConfig k8sApplyHandlerConfig = new K8sApplyHandlerConfig();
     k8sApplyHandlerConfig.setResources(resources);
 
-    boolean success = k8sApplyBaseHandler.prepare(executionLogCallback, false, k8sApplyHandlerConfig);
+    boolean success = k8sApplyBaseHandler.prepare(executionLogCallback, false, k8sApplyHandlerConfig, false);
     assertThat(success).isTrue();
     assertThat(k8sApplyHandlerConfig.getWorkloads()).hasSize(1);
     assertThat(k8sApplyHandlerConfig.getCustomWorkloads()).hasSize(1);
@@ -313,7 +315,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void prepareFailure() {
     //    PowerMockito.when(ManifestHelper.getWorkloadsForApplyState(anyList())).thenThrow(new RuntimeException());
-    assertThat(k8sApplyBaseHandler.prepare(mock(ExecutionLogCallback.class), false, new K8sApplyHandlerConfig()))
+    assertThat(k8sApplyBaseHandler.prepare(mock(ExecutionLogCallback.class), false, new K8sApplyHandlerConfig(), false))
         .isFalse();
   }
 
@@ -331,7 +333,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
         any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     doReturn(true)
         .when(baseHandler)
-        .prepare(any(ExecutionLogCallback.class), anyBoolean(), any(K8sApplyHandlerConfig.class));
+        .prepare(any(ExecutionLogCallback.class), anyBoolean(), any(K8sApplyHandlerConfig.class), eq(false));
     doReturn(false)
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
@@ -373,7 +375,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     boolean status = baseHandler.steadyStateCheck(
-        false, "default", K8sDelegateTaskParams.builder().build(), 100000, null, k8sApplyHandlerConfig);
+        false, "default", K8sDelegateTaskParams.builder().build(), 100000, null, k8sApplyHandlerConfig, true);
 
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllResources(any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class),
@@ -418,7 +420,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     boolean status = baseHandler.steadyStateCheck(
-        false, "default", K8sDelegateTaskParams.builder().build(), 100000, null, k8sApplyHandlerConfig);
+        false, "default", K8sDelegateTaskParams.builder().build(), 100000, null, k8sApplyHandlerConfig, true);
 
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheckForAllCustomResources(any(Kubectl.class), captor.capture(), any(K8sDelegateTaskParams.class),
@@ -462,7 +464,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     k8sApplyHandlerConfig.setCustomWorkloads(managedResources);
 
     boolean status = baseHandler.steadyStateCheck(
-        false, "default", K8sDelegateTaskParams.builder().build(), 100000, null, k8sApplyHandlerConfig);
+        false, "default", K8sDelegateTaskParams.builder().build(), 100000, null, k8sApplyHandlerConfig, true);
     assertThat(status).isFalse();
 
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
@@ -488,7 +490,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
         any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
     doReturn(true)
         .when(mockedK8sApplyBaseHandler)
-        .prepare(any(ExecutionLogCallback.class), anyBoolean(), any(K8sApplyHandlerConfig.class));
+        .prepare(any(ExecutionLogCallback.class), anyBoolean(), any(K8sApplyHandlerConfig.class), eq(false));
     doReturn(true)
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
@@ -496,7 +498,7 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
     doReturn(true)
         .when(mockedK8sApplyBaseHandler)
         .steadyStateCheck(anyBoolean(), anyString(), any(K8sDelegateTaskParams.class), anyLong(),
-            any(ExecutionLogCallback.class), any(K8sApplyHandlerConfig.class));
+            any(ExecutionLogCallback.class), any(K8sApplyHandlerConfig.class), eq(true));
 
     final K8sTaskExecutionResponse response =
         handler.executeTask(K8sApplyTaskParameters.builder()

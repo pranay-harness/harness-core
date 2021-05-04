@@ -2,11 +2,11 @@ package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -22,12 +22,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.k8s.beans.K8sApplyHandlerConfig;
+import io.harness.delegate.k8s.exception.KubernetesExceptionHints;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
@@ -119,14 +121,15 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .getResourcesFromManifests(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, filePaths,
             valuesList, releaseName, namespace, logCallback, timeoutIntervalInMin);
-    doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig);
+    doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig, true);
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
     doReturn(true)
         .when(k8sApplyBaseHandler)
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
 
     K8sDeployResponse response = requestHandler.executeTaskInternal(
         applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
@@ -136,12 +139,13 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
-    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(1))
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
     verify(k8sApplyBaseHandler, times(1))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(1)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 
@@ -180,14 +184,15 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
     doReturn(true)
         .when(k8sTaskHelperBase)
         .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback));
-    doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig);
+    doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig, true);
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
     doReturn(true)
         .when(k8sApplyBaseHandler)
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
 
     K8sDeployResponse response = requestHandler.executeTaskInternal(
         applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
@@ -199,12 +204,13 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(1))
         .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback));
-    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(1))
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
     verify(k8sApplyBaseHandler, times(1))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(1)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 
@@ -244,22 +250,22 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback));
 
-    K8sDeployResponse response = requestHandler.executeTaskInternal(
-        applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> requestHandler.executeTaskInternal(
+                               applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessage(KubernetesExceptionHints.DRY_RUN_MANIFEST_FAILED);
 
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(1))
         .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback));
-    verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(0))
         .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
     verify(k8sApplyBaseHandler, times(0))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(0)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 
@@ -284,6 +290,7 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
 
     K8sDelegateTaskParams delegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
+    RuntimeException dryRunException = new RuntimeException("Dry run manifest failed");
 
     List<KubernetesResource> resources = Arrays.asList(
         KubernetesResource.builder()
@@ -295,26 +302,27 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .getResourcesFromManifests(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, filePaths,
             valuesList, releaseName, namespace, logCallback, timeoutIntervalInMin);
-    doThrow(new RuntimeException("Dry run manifest failed"))
+    doThrow(dryRunException)
         .when(k8sTaskHelperBase)
         .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback));
 
-    K8sDeployResponse response = requestHandler.executeTaskInternal(
-        applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> requestHandler.executeTaskInternal(
+                               applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(dryRunException);
 
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(1))
         .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback));
-    verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(0))
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
     verify(k8sApplyBaseHandler, times(0))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(0)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 
@@ -339,6 +347,7 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
 
     K8sDelegateTaskParams delegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
+    RuntimeException getResourceException = new RuntimeException("Get resources from manifests failed");
 
     List<KubernetesResource> resources = Arrays.asList(
         KubernetesResource.builder()
@@ -346,27 +355,27 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
             .resourceId(
                 KubernetesResourceId.builder().namespace(namespace).kind("deployment").name("test-deployment").build())
             .build());
-    doThrow(new RuntimeException("Get resources from manifests failed"))
+    doThrow(getResourceException)
         .when(k8sTaskHelperBase)
         .getResourcesFromManifests(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, filePaths,
             valuesList, releaseName, namespace, logCallback, timeoutIntervalInMin);
 
-    K8sDeployResponse response = requestHandler.executeTaskInternal(
-        applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> requestHandler.executeTaskInternal(
+                               applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(getResourceException);
 
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
     verify(k8sTaskHelperBase, times(0))
         .dryRunManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback));
-    verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(0))
         .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
     verify(k8sApplyBaseHandler, times(0))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(0)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 
@@ -392,18 +401,18 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
     K8sDelegateTaskParams delegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
 
-    K8sDeployResponse response = requestHandler.executeTaskInternal(
-        applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> requestHandler.executeTaskInternal(
+                               applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessage(KubernetesExceptionHints.MISSING_APPLY_FILES_PATH);
 
     verify(k8sTaskHelperBase, times(0))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
-    verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(0)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sApplyBaseHandler, times(0))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(0)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 
@@ -425,6 +434,7 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
                                        .skipDryRun(true)
                                        .skipSteadyStateCheck(false)
                                        .build();
+    InvalidRequestException prepareException = new InvalidRequestException("Failed to prepare");
 
     K8sDelegateTaskParams delegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
@@ -439,22 +449,22 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .getResourcesFromManifests(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, filePaths,
             valuesList, releaseName, namespace, logCallback, timeoutIntervalInMin);
-    doReturn(false).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig);
+    doThrow(prepareException).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig, true);
 
-    K8sDeployResponse response = requestHandler.executeTaskInternal(
-        applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> requestHandler.executeTaskInternal(
+                               applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(prepareException);
 
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
-    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(0))
         .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
     verify(k8sApplyBaseHandler, times(0))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(0)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 
@@ -490,25 +500,27 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .getResourcesFromManifests(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, filePaths,
             valuesList, releaseName, namespace, logCallback, timeoutIntervalInMin);
-    doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig);
+    doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig, true);
     doReturn(false)
         .when(k8sTaskHelperBase)
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
 
-    K8sDeployResponse response = requestHandler.executeTaskInternal(
-        applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> requestHandler.executeTaskInternal(
+                               applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessage(KubernetesExceptionHints.APPLY_MANIFEST_FAILED);
 
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
-    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(1))
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
     verify(k8sApplyBaseHandler, times(0))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(0)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 
@@ -544,29 +556,31 @@ public class K8sApplyRequestHandlerTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .getResourcesFromManifests(delegateTaskParams, manifestDelegateConfig, manifestFileDirectory, filePaths,
             valuesList, releaseName, namespace, logCallback, timeoutIntervalInMin);
-    doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig);
+    doReturn(true).when(k8sApplyBaseHandler).prepare(logCallback, false, k8sApplyHandlerConfig, true);
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
     doReturn(false)
         .when(k8sApplyBaseHandler)
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
 
-    K8sDeployResponse response = requestHandler.executeTaskInternal(
-        applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThatThrownBy(()
+                           -> requestHandler.executeTaskInternal(
+                               applyRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessage(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_FAILED);
 
     verify(k8sTaskHelperBase, times(1))
         .getResourcesFromManifests(eq(delegateTaskParams), eq(manifestDelegateConfig), eq(manifestFileDirectory),
             eq(filePaths), eq(valuesList), eq(releaseName), eq(namespace), eq(logCallback), eq(timeoutIntervalInMin));
-    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig));
+    verify(k8sApplyBaseHandler, times(1)).prepare(eq(logCallback), eq(false), eq(k8sApplyHandlerConfig), eq(true));
     verify(k8sTaskHelperBase, times(1))
-        .applyManifests(any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true));
+        .applyManifests(
+            any(Kubectl.class), eq(resources), eq(delegateTaskParams), eq(logCallback), eq(true), eq(false));
     verify(k8sApplyBaseHandler, times(1))
         .steadyStateCheck(
-            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig);
+            false, namespace, delegateTaskParams, timeoutIntervalInMillis, logCallback, k8sApplyHandlerConfig, false);
     verify(k8sApplyBaseHandler, times(0)).wrapUp(eq(delegateTaskParams), eq(logCallback), any(Kubectl.class));
   }
 }

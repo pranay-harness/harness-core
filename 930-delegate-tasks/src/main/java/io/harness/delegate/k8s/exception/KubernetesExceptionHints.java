@@ -16,4 +16,6 @@ public interface KubernetesExceptionHints {
   String DRY_RUN_MANIFEST_FAILED = "Verify manifest output for invalid fields names and types or manifest is not empty";
   String APPLY_MANIFEST_FAILED = "Verify Kubernetes manifest for invalid values or conflicting resources";
   String WAIT_FOR_STEADY_STATE_FAILED = "Check deployment pods probe checks, nodes availability or image pull secrets";
+
+  String MISSING_APPLY_FILES_PATH = "Add files to apply in step";
 }

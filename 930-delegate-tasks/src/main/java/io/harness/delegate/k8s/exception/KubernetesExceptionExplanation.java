@@ -18,4 +18,6 @@ public interface KubernetesExceptionExplanation {
   String DRY_RUN_MANIFEST_FAILED = "Performed local manifest validation failed";
   String APPLY_MANIFEST_FAILED = "Unable to apply Kubernetes manifest";
   String WAIT_FOR_STEADY_STATE_FAILED = "One of managed workloads failed to rollout";
+
+  String MISSING_APPLY_FILES_PATH = "No any manifest files provided to apply";
 }

@@ -95,7 +95,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
     }
 
     success = k8sApplyBaseHandler.prepare(k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, Prepare),
-        k8sApplyTaskParameters.isSkipSteadyStateCheck(), k8sApplyHandlerConfig);
+        k8sApplyTaskParameters.isSkipSteadyStateCheck(), k8sApplyHandlerConfig, false);
     if (!success) {
       return getFailureResponse();
     }
@@ -108,7 +108,7 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
 
     success = k8sApplyBaseHandler.steadyStateCheck(k8sApplyTaskParameters.isSkipSteadyStateCheck(),
         k8sTaskParameters.getK8sClusterConfig().getNamespace(), k8sDelegateTaskParams, timeoutInMillis,
-        k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, WaitForSteadyState), k8sApplyHandlerConfig);
+        k8sTaskHelper.getExecutionLogCallback(k8sApplyTaskParameters, WaitForSteadyState), k8sApplyHandlerConfig, true);
     if (!success) {
       return getFailureResponse();
     }
