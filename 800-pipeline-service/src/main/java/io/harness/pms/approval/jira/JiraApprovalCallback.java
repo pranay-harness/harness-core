@@ -18,7 +18,6 @@ import io.harness.logging.LogLevel;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.logstreaming.NGLogCallback;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.execution.ErrorDataException;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.approval.step.ApprovalInstanceService;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
@@ -78,7 +77,10 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
       ResponseData responseData = response.values().iterator().next();
       responseData = (ResponseData) kryoSerializer.asInflatedObject(((BinaryResponseData) responseData).getData());
       if (responseData instanceof ErrorNotifyResponseData) {
-        throw new ErrorDataException((ErrorNotifyResponseData) responseData);
+        ErrorNotifyResponseData errorResponse = (ErrorNotifyResponseData) responseData;
+        log.error(String.format("Failed to fetch jira issue: %s", errorResponse.getErrorMessage()),
+            errorResponse.getException());
+        return;
       }
 
       jiraTaskNGResponse = (JiraTaskNGResponse) responseData;
@@ -91,10 +93,6 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
       }
 
       logCallback.saveExecutionLog(String.format("Issue url: %s", jiraTaskNGResponse.getIssue().getUrl()));
-    } catch (ErrorDataException ex) {
-      ErrorNotifyResponseData errorResponse = (ErrorNotifyResponseData) ex.getErrorResponseData();
-      log.error(String.format("Failed to fetch jira issue: %s", errorResponse.getErrorMessage()), ex);
-      return;
     } catch (Exception ex) {
       logCallback.saveExecutionLog(
           LogHelper.color(String.format("Error fetching jira issue response: %s. Retrying in sometime...",

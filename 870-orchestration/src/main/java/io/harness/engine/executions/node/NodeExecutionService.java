@@ -66,4 +66,6 @@ public interface NodeExecutionService {
       String planExecutionId, String parentId, EnumSet<Status> flowingStatuses, boolean includeParent);
 
   List<NodeExecution> fetchNodeExecutionsByStatusAndIdIn(String planExecutionId, Status status, List<String> targetIds);
+
+  List<NodeExecution> fetchNodeExecutionsByParentId(String nodeExecutionId, boolean oldRetry);
 }

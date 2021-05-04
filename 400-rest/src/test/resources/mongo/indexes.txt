@@ -542,6 +542,7 @@ resourceConstraintInstances {"name": "iterationIndex", "background": true} {"sta
 resourceConstraintInstances {"name": "uniqueUnitOrder", "unique": true} {"resourceConstraintId": 1, "resourceUnit": 1, "order": 1}
 resourceConstraintInstances {"name": "usageIndex", "background": true} {"resourceConstraintId": 1, "order": 1}
 resourceConstraintInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+resourceLookup {"name": "accountId_createdAt_ResourceLookup_Index", "background": true} {"accountId": 1, "createdAt": -1}
 resourceLookup {"name": "createdAt_1", "background": true} {"createdAt": 1}
 resourceLookup {"name": "resourceIdResourceLookupIndex", "background": true} {"accountId": 1, "resourceId": 1}
 resourceLookup {"name": "resourceId_1", "background": true} {"resourceId": 1}

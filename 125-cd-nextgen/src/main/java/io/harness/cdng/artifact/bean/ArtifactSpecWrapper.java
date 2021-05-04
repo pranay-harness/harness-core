@@ -6,6 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.artifact.ArtifactSpecWrapperVisitorHelper;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -47,7 +48,7 @@ public class ArtifactSpecWrapper implements Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren visitableChildren = VisitableChildren.builder().build();
-    visitableChildren.add("artifactConfig", artifactConfig);
+    visitableChildren.add(YAMLFieldNameConstants.SPEC, artifactConfig);
     return visitableChildren;
   }
 

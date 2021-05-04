@@ -39,7 +39,7 @@ logging:
       stackdriverLogEnabled: false
 
 accessControlClient:
-  enableAccessControl: true
+  enableAccessControl: false
   accessControlServiceConfig:
     baseUrl: http://localhost:9006/api/
     connectTimeOutSeconds: 15

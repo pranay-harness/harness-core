@@ -2,8 +2,10 @@ package io.harness.engine.facilitation;
 
 import static io.harness.pms.contracts.execution.Status.FAILED;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.engine.interrupts.PreFacilitationCheck;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.pms.contracts.execution.failure.FailureData;
@@ -13,10 +15,11 @@ import io.harness.pms.contracts.steps.io.StepResponseProto;
 
 import com.google.inject.Inject;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public abstract class ExpressionEvalPreFacilitationChecker extends AbstractPreFacilitationChecker {
   @Inject private OrchestrationEngine orchestrationEngine;
 
-  PreFacilitationCheck handleExpressionEvaluationError(String nodeExecutionID, Exception ex) {
+  ExecutionCheck handleExpressionEvaluationError(String nodeExecutionID, Exception ex) {
     StepResponseProto stepResponseProto =
         StepResponseProto.newBuilder()
             .setStatus(FAILED)
@@ -34,7 +37,7 @@ public abstract class ExpressionEvalPreFacilitationChecker extends AbstractPreFa
                     .build())
             .build();
     orchestrationEngine.handleStepResponse(nodeExecutionID, stepResponseProto);
-    return PreFacilitationCheck.builder()
+    return ExecutionCheck.builder()
         .proceed(false)
         .reason("Error in evaluating configured when condition on step")
         .build();

@@ -579,32 +579,33 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testGetOrCreateDefaultHealthVerificationJob_firstTime() {
+  public void testGetOrCreateDefaultHealthVerificationJob_ifExists() {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
+    verificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
     VerificationJob verificationJob =
-        verificationJobService.getOrCreateDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
+        verificationJobService.getDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
     assertThat(verificationJob).isNotNull();
     assertThat(verificationJob.isDefaultJob()).isTrue();
-    assertThat(verificationJob.getIdentifier()).isEqualTo(projectIdentifier + "_" + DEFAULT_HEALTH_JOB_ID);
+    assertThat(verificationJob.getIdentifier()).isEqualTo(DEFAULT_HEALTH_JOB_ID);
     assertThat(verificationJob.getServiceIdentifier()).isEqualTo("<+input>");
     assertThat(verificationJob.getEnvIdentifier()).isEqualTo("<+input>");
-    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(Duration.ofMinutes(15).toMinutes());
+    assertThat(verificationJob.getEnvIdentifier()).isEqualTo("<+input>");
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testGetOrCreateDefaultHealthVerificationJob_secondTime() {
+  public void testGetOrCreateDefaultHealthVerificationJob_ifDoesNotExists() {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
-    VerificationJob verificationJob =
-        verificationJobService.getOrCreateDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
-    VerificationJob verificationJobSecond =
-        verificationJobService.getOrCreateDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
 
-    assertThat(verificationJob.getCreatedAt()).isEqualTo(verificationJobSecond.getCreatedAt());
-    assertThat(verificationJob.getLastUpdatedAt()).isEqualTo(verificationJobSecond.getLastUpdatedAt());
+    assertThatThrownBy(
+        () -> verificationJobService.getDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage(String.format(
+            "Default Health job cannot be null for accountIdentifier [%s], orgIdentifier [%s], projectIdentifier [%s]",
+            accountId, orgIdentifier, projectIdentifier));
   }
 
   @Test

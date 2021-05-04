@@ -202,7 +202,7 @@ public class UserResource {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true, true);
 
     PageResponse<PublicUser> pageResponse = aPageResponse()
                                                 .withOffset(offset.toString())

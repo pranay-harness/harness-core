@@ -32,7 +32,7 @@ public class SidecarArtifactWrapper implements Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("sidecar", sidecar);
+    children.add(sidecar.getIdentifier(), sidecar);
     return children;
   }
 }

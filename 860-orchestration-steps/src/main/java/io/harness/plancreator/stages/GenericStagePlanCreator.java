@@ -43,7 +43,8 @@ public abstract class GenericStagePlanCreator extends ChildrenPlanCreator<StageE
 
   public abstract StepType getStepType(StageElementConfig stageElementConfig);
 
-  public abstract SpecParameters getSpecParameters(String childNodeId);
+  public abstract SpecParameters getSpecParameters(
+      String childNodeId, PlanCreationContext ctx, StageElementConfig stageElementConfig);
 
   @Override
   public Class<StageElementConfig> getFieldClass() {
@@ -63,7 +64,7 @@ public abstract class GenericStagePlanCreator extends ChildrenPlanCreator<StageE
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
     StageElementParametersBuilder stageParameters = StepParametersUtils.getStageParameters(stageElementConfig);
-    stageParameters.spec(getSpecParameters(childrenNodeIds.get(0)));
+    stageParameters.spec(getSpecParameters(childrenNodeIds.get(0), ctx, stageElementConfig));
     return PlanNode.builder()
         .uuid(stageElementConfig.getUuid())
         .name(stageElementConfig.getName())

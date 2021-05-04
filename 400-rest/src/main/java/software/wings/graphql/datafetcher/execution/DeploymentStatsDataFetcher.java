@@ -92,6 +92,7 @@ import com.healthmarketscience.sqlbuilder.SqlObject;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.ValidationContext;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
+import graphql.schema.DataFetchingEnvironment;
 import io.fabric8.utils.Lists;
 import java.io.IOException;
 import java.sql.Connection;
@@ -132,14 +133,21 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   private static final long weekOffset = 7 * 24 * 60 * 60 * 1000;
   private static final String startTimeDBFieldName = "starttime";
   private static final String endTimeDBFieldName = "endtime";
+  private static final String INDIRECT_EXECUTION_FIELD = "includeIndirectExecutions";
 
   @Override
   protected QLData fetch(String accountId, QLDeploymentAggregationFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupBy,
-      List<QLDeploymentSortCriteria> sortCriteria) {
+      List<QLDeploymentSortCriteria> sortCriteria, DataFetchingEnvironment dataFetchingEnvironment) {
     try {
       if (timeScaleDBService.isValid()) {
-        return getData(accountId, aggregateFunction, filters, groupBy, sortCriteria);
+        boolean includeIndirectExecutions = false;
+        if (dataFetchingEnvironment != null && dataFetchingEnvironment.getArguments() != null
+            && dataFetchingEnvironment.getArguments().get(INDIRECT_EXECUTION_FIELD) != null) {
+          includeIndirectExecutions =
+              Boolean.TRUE.equals(dataFetchingEnvironment.getArguments().get(INDIRECT_EXECUTION_FIELD));
+        }
+        return getData(accountId, aggregateFunction, filters, groupBy, sortCriteria, includeIndirectExecutions);
       } else {
         throw new InvalidRequestException("Cannot process request");
       }
@@ -150,7 +158,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
 
   protected QLData getData(@NotNull String accountId, QLDeploymentAggregationFunction aggregateFunction,
       List<QLDeploymentFilter> filters, List<QLDeploymentAggregation> groupByList,
-      List<QLDeploymentSortCriteria> sortCriteria) {
+      List<QLDeploymentSortCriteria> sortCriteria, boolean includeIndirectExecutions) {
     DeploymentStatsQueryMetaData queryData;
     boolean successful = false;
     int retryCount = 0;
@@ -162,11 +170,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
 
     preValidateInput(groupByEntityList, groupByTime);
     if (isGroupByHStore(groupByTagList)) {
-      queryData = formQueryWithHStoreGroupBy(
-          accountId, aggregateFunction, filters, groupByEntityList, groupByTagList, groupByTime, sortCriteria);
+      queryData = formQueryWithHStoreGroupBy(accountId, aggregateFunction, filters, groupByEntityList, groupByTagList,
+          groupByTime, sortCriteria, includeIndirectExecutions);
     } else {
-      queryData = formQueryWithNonHStoreGroupBy(
-          accountId, aggregateFunction, filters, groupByEntityList, groupByTime, sortCriteria);
+      queryData = formQueryWithNonHStoreGroupBy(accountId, aggregateFunction, filters, groupByEntityList, groupByTime,
+          sortCriteria, includeIndirectExecutions);
     }
 
     while (!successful && retryCount < MAX_RETRY) {
@@ -530,7 +538,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   protected DeploymentStatsQueryMetaData formQueryWithNonHStoreGroupBy(String accountId,
       QLDeploymentAggregationFunction aggregateFunction, List<QLDeploymentFilter> filters,
       List<QLDeploymentEntityAggregation> groupBy, QLTimeSeriesAggregation groupByTime,
-      List<QLDeploymentSortCriteria> sortCriteria) {
+      List<QLDeploymentSortCriteria> sortCriteria, boolean includeIndirectExecutions) {
     DeploymentStatsQueryMetaDataBuilder queryMetaDataBuilder = DeploymentStatsQueryMetaData.builder();
     SelectQuery selectQuery = new SelectQuery();
 
@@ -603,7 +611,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
             filters.stream().filter(item -> item.getEnvironmentType() != null).collect(Collectors.toList()))) {
       addWorkflowNotNullFilter(selectQuery);
       addPipelineNullFilter(selectQuery);
-    } else {
+    } else if (!includeIndirectExecutions) {
       addParentIdFilter(selectQuery);
     }
 
@@ -627,7 +635,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   protected DeploymentStatsQueryMetaData formQueryWithHStoreGroupBy(String accountId,
       QLDeploymentAggregationFunction aggregateFunction, List<QLDeploymentFilter> filters,
       List<QLDeploymentEntityAggregation> groupBy, List<QLDeploymentTagAggregation> groupByTagList,
-      QLTimeSeriesAggregation groupByTime, List<QLDeploymentSortCriteria> sortCriteria) {
+      QLTimeSeriesAggregation groupByTime, List<QLDeploymentSortCriteria> sortCriteria,
+      boolean includeIndirectExecutions) {
     ResultType resultType = getResultType(groupBy, groupByTime);
 
     DeploymentStatsQueryMetaDataBuilder queryMetaDataBuilder = DeploymentStatsQueryMetaData.builder();
@@ -702,8 +711,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
             filters.stream().filter(filter -> filter.getEnvironmentType() != null).collect(Collectors.toList()))) {
       addWorkflowNotNullFilter(selectQuery);
       addPipelineNullFilter(selectQuery);
-    } else {
-      addParentIdFilter(selectQuery);
+    } else if (!includeIndirectExecutions) {
+      addParentIdFilter(selectTags);
     }
 
     List<QLDeploymentSortCriteria> finalSortCriteria = null;

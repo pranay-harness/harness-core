@@ -507,7 +507,10 @@ public enum ErrorCode {
   CONNECTOR_NOT_FOUND_EXCEPTION,
   GCP_SERVER_ERROR,
   HTTP_RESPONSE_EXCEPTION,
-  DATA;
+  DATA,
+  SCM_NOT_FOUND_ERROR,
+  SCM_CONFLICT_ERROR,
+  SCM_UNPROCESSABLE_ENTITY;
 
   private Status status = BAD_REQUEST;
   private String description;

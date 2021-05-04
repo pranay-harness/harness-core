@@ -69,6 +69,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("orchestrationStepConfig") private OrchestrationStepConfig orchestrationStepConfig;
+  @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
 
   private String managerServiceSecret;
   private String managerTarget;

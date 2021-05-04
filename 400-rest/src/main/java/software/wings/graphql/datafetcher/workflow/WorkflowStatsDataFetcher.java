@@ -22,6 +22,7 @@ import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagType
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,8 @@ public class WorkflowStatsDataFetcher
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLWorkflowFilter> filters,
-      List<QLWorkflowAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLWorkflowAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = Workflow.class;
     final List<String> groupByEntityList = new ArrayList<>();
     if (isNotEmpty(groupByList)) {

@@ -19,10 +19,18 @@ public class TriggerReference implements EntityReference {
   String projectIdentifier;
   String pipelineIdentifier;
   String identifier;
+  String repoIdentifier;
+  String branch;
+  Boolean isDefault;
 
   @Override
   public String getFullyQualifiedName() {
     return EntityReferenceHelper.createFQN(
         Arrays.asList(accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier));
+  }
+
+  @Override
+  public Boolean isDefault() {
+    return isDefault;
   }
 }

@@ -6,6 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import io.harness.cdng.service.ServiceSpec;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceDefinitionVisitorHelper;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -46,7 +47,7 @@ public class ServiceDefinition implements Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("serviceSpec", serviceSpec);
+    children.add(YAMLFieldNameConstants.SPEC, serviceSpec);
     return children;
   }
 

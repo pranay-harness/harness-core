@@ -8,16 +8,8 @@ import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.ng.beans.PageRequest;
 
-import java.util.List;
-
 @OwnedBy(DX)
 public interface GitBranchService {
-  List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String connectorIdentifierRef, String repoURL, PageRequest pageRequest, String searchTerm);
-
-  List<String> listBranchesForRepoByGitSyncConfig(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String yamlGitConfigIdentifier, PageRequest pageRequest, String searchTerm);
-
   GitBranchListDTO listBranchesWithStatus(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, PageRequest pageRequest, String searchTerm);
 

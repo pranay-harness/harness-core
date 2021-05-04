@@ -1,7 +1,5 @@
 package io.harness.cvng.verificationjob.services.impl;
 
-import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
-import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
 import static io.harness.cvng.beans.job.VerificationJobType.HEALTH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -10,8 +8,6 @@ import static io.harness.exception.WingsException.USER_SRE;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.CDNGActivitySource;
-import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.services.api.CVEventService;
@@ -21,7 +17,6 @@ import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
-import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobUpdatableEntity;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
@@ -42,7 +37,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DuplicateKeyException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -165,31 +159,19 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   @Override
-  public List<VerificationJob> getHealthVerificationJobs(String accountIdentifier, String orgIdentifier,
+  public VerificationJob getResolvedHealthVerificationJob(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String envIdentifier, String serviceIdentifier) {
     Preconditions.checkNotNull(accountIdentifier);
     Preconditions.checkNotNull(orgIdentifier);
     Preconditions.checkNotNull(projectIdentifier);
     Preconditions.checkNotNull(envIdentifier);
     Preconditions.checkNotNull(serviceIdentifier);
-    List<VerificationJob> specificHealthJobs =
-        hPersistence.createQuery(VerificationJob.class)
-            .filter(VerificationJobKeys.accountId, accountIdentifier)
-            .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
-            .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
-            .filter(VerificationJobKeys.envIdentifier + "." + RuntimeParameterKeys.value, envIdentifier)
-            .filter(VerificationJobKeys.serviceIdentifier + "." + RuntimeParameterKeys.value, serviceIdentifier)
-            .filter(VerificationJobKeys.type, HEALTH)
-            .asList();
-    if (isEmpty(specificHealthJobs)) {
-      VerificationJob defaultJob =
-          getOrCreateDefaultHealthVerificationJob(accountIdentifier, orgIdentifier, projectIdentifier);
-      defaultJob.setServiceIdentifier(serviceIdentifier, false);
-      defaultJob.setEnvIdentifier(envIdentifier, false);
-      return Arrays.asList(defaultJob);
-    } else {
-      return specificHealthJobs;
-    }
+    VerificationJob defaultHealthVerificationJob =
+        getDefaultHealthVerificationJob(accountIdentifier, orgIdentifier, projectIdentifier);
+    defaultHealthVerificationJob.setServiceIdentifier(serviceIdentifier, false);
+    defaultHealthVerificationJob.setEnvIdentifier(envIdentifier, false);
+    defaultHealthVerificationJob.setDuration("15m", false);
+    return defaultHealthVerificationJob;
   }
 
   @Override
@@ -336,47 +318,27 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   @Override
-  public void createDefaultHealthVerificationJob(String accountId, String orgIdentifier, String projectIdentifier) {
-    VerificationJobDTO verificationJobDTO = HealthVerificationJobDTO.builder()
-                                                .orgIdentifier(orgIdentifier)
-                                                .projectIdentifier(projectIdentifier)
-                                                .jobName(DEFAULT_HEALTH_JOB_NAME)
-                                                .identifier(projectIdentifier + "_" + DEFAULT_HEALTH_JOB_ID)
-                                                .dataSources(Arrays.asList(DataSourceType.values()))
-                                                .monitoringSources(Arrays.asList("ALL"))
-                                                .serviceIdentifier(VerificationJobDTO.RUNTIME_PARAMS_STRING)
-                                                .envIdentifier(VerificationJobDTO.RUNTIME_PARAMS_STRING)
-                                                .duration("15m")
-                                                .isDefaultJob(true)
-                                                .build();
-    this.upsert(accountId, verificationJobDTO);
-  }
-
-  @Override
-  public VerificationJob getOrCreateDefaultHealthVerificationJob(
+  public VerificationJob getDefaultHealthVerificationJob(
       String accountId, String orgIdentifier, String projectIdentifier) {
-    VerificationJob defaultJob = getDefaultVerificationJob(accountId, orgIdentifier, projectIdentifier);
-    if (defaultJob == null) {
-      createDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
-      defaultJob = getDefaultVerificationJob(accountId, orgIdentifier, projectIdentifier);
-    }
+    VerificationJob defaultJob = hPersistence.createQuery(VerificationJob.class)
+                                     .filter(VerificationJobKeys.accountId, accountId)
+                                     .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
+                                     .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
+                                     .filter(VerificationJobKeys.type, HEALTH)
+                                     .filter(VerificationJobKeys.isDefaultJob, true)
+                                     .get();
+    Preconditions.checkNotNull(defaultJob,
+        String.format(
+            "Default Health job cannot be null for accountIdentifier [%s], orgIdentifier [%s], projectIdentifier [%s]",
+            accountId, orgIdentifier, projectIdentifier));
     return defaultJob;
   }
 
   @Override
   public VerificationJobDTO getDefaultHealthVerificationJobDTO(
       String accountId, String orgIdentifier, String projectIdentifier) {
-    VerificationJob defaultJob = getOrCreateDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
+    VerificationJob defaultJob = getDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
     return defaultJob.getVerificationJobDTO();
-  }
-
-  private VerificationJob getDefaultVerificationJob(String accountId, String orgIdentifier, String projectIdentifier) {
-    return hPersistence.createQuery(VerificationJob.class)
-        .filter(VerificationJobKeys.accountId, accountId)
-        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
-        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
-        .filter(VerificationJobKeys.isDefaultJob, true)
-        .get();
   }
 
   @Override

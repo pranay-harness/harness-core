@@ -158,3 +158,8 @@ func (h *handler) CreateWebhook(ctx context.Context, in *pb.CreateWebhookRequest
 func (h *handler) DeleteWebhook(ctx context.Context, in *pb.DeleteWebhookRequest) (*pb.DeleteWebhookResponse, error) {
 	return repo.DeleteWebhook(ctx, in, h.log)
 }
+
+// ListWebhooks is used to list all webhooks associated with a repo.
+func (h *handler) ListWebhooks(ctx context.Context, in *pb.ListWebhooksRequest) (*pb.ListWebhooksResponse, error) {
+	return repo.ListWebhooks(ctx, in, h.log)
+}

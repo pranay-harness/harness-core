@@ -8,6 +8,7 @@ import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
@@ -30,7 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(HarnessTeam.CDP)
-public class TerraformConfig implements PersistentEntity {
+public class TerraformConfig implements PersistentEntity, CreatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()

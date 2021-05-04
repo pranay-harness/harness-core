@@ -1,6 +1,6 @@
 package io.harness.serializer;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
@@ -10,14 +10,14 @@ import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventLog;
-import io.harness.pms.sdk.core.execution.EngineResumeCallback;
+import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
 import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.PipelineViewObject;
 
 import java.util.Set;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class PmsSdkCoreMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -33,6 +33,6 @@ public class PmsSdkCoreMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
-    h.put("pms.sdk.core.execution.EngineResumeCallback", EngineResumeCallback.class);
+    h.put("pms.sdk.core.execution.AsyncSdkResumeCallback", AsyncSdkResumeCallback.class);
   }
 }

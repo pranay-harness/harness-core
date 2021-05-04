@@ -322,6 +322,12 @@ import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
+import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
+import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadataType;
+import io.harness.delegate.task.stepstatus.artifact.DockerArtifactDescriptor;
+import io.harness.delegate.task.stepstatus.artifact.DockerArtifactMetadata;
+import io.harness.delegate.task.stepstatus.artifact.FileArtifactDescriptor;
+import io.harness.delegate.task.stepstatus.artifact.FileArtifactMetadata;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
@@ -713,8 +719,16 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(TerraformTaskNGParameters.class, 543283);
     kryo.register(TFTaskType.class, 543284);
     kryo.register(TerraformTaskNGResponse.class, 543285);
+
     kryo.register(ScmPushTaskParams.class, 553286);
     kryo.register(ScmPushTaskResponseData.class, 553287);
     kryo.register(PushTaskType.class, 553288);
+
+    kryo.register(ArtifactMetadata.class, 543301);
+    kryo.register(ArtifactMetadataType.class, 543302);
+    kryo.register(DockerArtifactMetadata.class, 543303);
+    kryo.register(DockerArtifactDescriptor.class, 543304);
+    kryo.register(FileArtifactMetadata.class, 543305);
+    kryo.register(FileArtifactDescriptor.class, 543306);
   }
 }

@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -83,12 +83,9 @@ import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created by anubhaw on 8/18/16.
- */
 @ValidateOnExecution
 @Singleton
-@TargetModule(_930_DELEGATE_TASKS)
+@TargetModule(_420_DELEGATE_SERVICE)
 @OwnedBy(CDC)
 @Slf4j
 public class BuildSourceServiceImpl implements BuildSourceService {
