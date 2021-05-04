@@ -9,6 +9,7 @@ public enum Constants {
   INSTANCE_TYPE("INSTANCETYPE"),
   ARTIFACT_ID("ARTIFACTID"),
   INSTANCECOUNT("INSTANCECOUNT"),
+  SANITYSTATUS("SANITYSTATUS"),
   ;
 
   private String key;
