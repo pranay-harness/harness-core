@@ -40,6 +40,10 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.encryptors.Encryptors;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -79,6 +83,7 @@ import io.harness.ng.core.api.impl.DelegateProfileManagerNgServiceImpl;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
+import io.harness.ng.core.encryptors.NGManagerVaultEncryptor;
 import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageListener;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageListener;
@@ -480,6 +485,19 @@ public class NextGenModule extends AbstractModule {
     sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
+    registerEncryptors();
+  }
+
+  void registerEncryptors() {
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.HASHICORP_VAULT_ENCRYPTOR.getName()))
+        .to(NGManagerVaultEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.LOCAL_ENCRYPTOR.getName()))
+        .to(LocalEncryptor.class);
   }
 
   private void registerEventsFrameworkMessageListeners() {

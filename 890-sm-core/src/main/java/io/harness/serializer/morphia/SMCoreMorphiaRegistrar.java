@@ -6,6 +6,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretUsageLog;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.ng.entities.NGEncryptedData;
 
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
@@ -38,6 +39,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SSHVaultConfig.class);
     set.add(BaseVaultConfig.class);
     set.add(MigrateSecretTask.class);
+    set.add(NGEncryptedData.class);
   }
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
