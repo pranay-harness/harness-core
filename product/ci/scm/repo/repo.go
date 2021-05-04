@@ -82,3 +82,41 @@ func DeleteWebhook(ctx context.Context, request *pb.DeleteWebhookRequest, log *z
 	}
 	return out, nil
 }
+
+func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap.SugaredLogger) (out *pb.ListWebhooksResponse, err error) {
+	start := time.Now()
+	log.Infow("ListWebhooks starting", "slug", request.GetSlug())
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("ListWebhooks failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	scmHooks, response, err := client.Repositories.ListHooks(ctx, request.GetSlug(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
+	if err != nil {
+		log.Errorw("ListWebhooks failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+	log.Infow("ListWebhooks success", "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start))
+	var hooks []*pb.WebhookResponse
+	for _, h := range scmHooks {
+		webhookResponse := pb.WebhookResponse{
+			Id:         h.ID,
+			Name:       h.Name,
+			Target:     h.Target,
+			Events:     h.Events,
+			Active:     h.Active,
+			SkipVerify: h.SkipVerify,
+		}
+		hooks = append(hooks, &webhookResponse)
+	}
+
+	out = &pb.ListWebhooksResponse{
+		Webhooks: hooks,
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
+	}
+	return out, nil
+}
