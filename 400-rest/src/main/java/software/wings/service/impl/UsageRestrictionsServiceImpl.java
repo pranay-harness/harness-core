@@ -148,8 +148,8 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       UserPermissionInfo userPermissionInfo = user.getUserRequestContext().getUserPermissionInfo();
       UserRestrictionInfo userRestrictionInfo = user.getUserRequestContext().getUserRestrictionInfo();
 
-      log.info("UserPermissionInfo:", userPermissionInfo);
-      log.info("UserRestrictionInfo:", userRestrictionInfo);
+      log.info("UserPermissionInfo:" + userPermissionInfo);
+      log.info("UserRestrictionInfo:" + userRestrictionInfo);
 
       if (user == null) {
         return true;
