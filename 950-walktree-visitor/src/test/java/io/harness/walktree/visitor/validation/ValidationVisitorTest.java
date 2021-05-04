@@ -15,7 +15,6 @@ import io.harness.walktree.beans.DummyVisitorFieldProcessor;
 import io.harness.walktree.registries.visitorfield.VisitableFieldProcessor;
 import io.harness.walktree.registries.visitorfield.VisitorFieldRegistry;
 import io.harness.walktree.visitor.utilities.VisitorDummyElementUtils;
-import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 import io.harness.walktree.visitor.validation.modes.ModeType;
 
 import com.google.inject.Injector;
@@ -96,17 +95,5 @@ public class ValidationVisitorTest extends CategoryTest {
     DummyVisitorField dummyTestField =
         ((VisitorTestParent) validationVisitor.getElementToDummyElementMap().get(visitorTestParent)).getVisitorField();
     Assertions.assertThat(dummyTestField.getValue()).isEqualTo(".dummyTestField");
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
-  public void testPreVisitElement() {
-    VisitorTestChild visitorTestChild = VisitorTestChild.builder().name("dummyTestPojo").build();
-    VisitorTestParent visitorTestParent = VisitorTestParent.builder().visitorTestChild(visitorTestChild).build();
-    validationVisitor.preVisitElement(visitorTestParent);
-
-    assertThat(VisitorParentPathUtils.getFullQualifiedDomainName(validationVisitor.getContextMap()))
-        .isEqualTo("dummyTestPOJO");
   }
 }

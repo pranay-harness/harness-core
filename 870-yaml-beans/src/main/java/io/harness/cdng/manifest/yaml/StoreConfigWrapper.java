@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -51,7 +52,7 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("storeConfig", storeConfig);
+    children.add(YAMLFieldNameConstants.SPEC, storeConfig);
     return children;
   }
 
