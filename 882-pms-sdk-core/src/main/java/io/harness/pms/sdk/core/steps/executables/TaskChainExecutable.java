@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.steps.executables;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -37,9 +37,9 @@ import java.util.Map;
  *
  */
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public interface TaskChainExecutable<T extends StepParameters>
-    extends Step<T>, Abortable<T, TaskChainExecutableResponse>, Failable<T> {
+    extends Step<T>, Abortable<T, TaskChainExecutableResponse>, Failable<T>, Progressable<T> {
   TaskChainResponse startChainLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   TaskChainResponse executeNextLink(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,

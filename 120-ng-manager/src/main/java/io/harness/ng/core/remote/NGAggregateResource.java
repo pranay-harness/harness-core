@@ -136,10 +136,10 @@ public class NGAggregateResource {
 
   @GET
   @Path("organizations")
-  //  @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ORGANIZATION_PERMISSION)
+  //  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Get OrganizationAggregateDTO list", nickname = "getOrganizationAggregateDTOList")
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @ResourceIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
     if (isEmpty(pageRequest.getSortOrders())) {

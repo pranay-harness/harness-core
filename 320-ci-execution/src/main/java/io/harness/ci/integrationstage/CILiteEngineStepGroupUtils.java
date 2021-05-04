@@ -209,6 +209,7 @@ public class CILiteEngineStepGroupUtils {
                                   ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getImage()))
                               .name(GIT_CLONE_STEP_NAME)
                               .settings(ParameterField.createValueField(settings))
+                              .entrypoint(ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getEntrypoint())
                               .build();
 
     String uuid = generateUuid();

@@ -40,6 +40,10 @@ import io.harness.health.HealthService;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.migration.MigrationProvider;
+import io.harness.migration.NGMigrationSdkInitHelper;
+import io.harness.migration.NGMigrationSdkModule;
+import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -50,6 +54,8 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
+import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
+import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
@@ -198,6 +204,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       }
     });
     modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(NGMigrationSdkModule.getInstance());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
     modules.add(new AbstractCfModule() {
@@ -246,6 +253,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerIterators(injector);
     registerJobs(injector);
+    registerMigrations(injector);
 
     intializeGitSync(injector, appConfig);
     //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
@@ -253,6 +261,20 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerManagedBeans(environment, injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerMigrations(Injector injector) {
+    NGMigrationConfiguration config = getMigrationSdkConfiguration();
+    NGMigrationSdkInitHelper.initialize(injector, config);
+  }
+
+  private NGMigrationConfiguration getMigrationSdkConfiguration() {
+    return NGMigrationConfiguration.builder()
+        .microservice(Microservice.CORE)
+        .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
+          { add(NGCoreMigrationProvider.class); } // Add all migration provider classes here
+        })
+        .build();
   }
 
   private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
@@ -305,6 +327,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerIterators(Injector injector) {
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+    injector.getInstance(UserMembershipMigrationService.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
@@ -367,7 +390,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
-    environment.lifecycle().manage(injector.getInstance(UserMembershipMigrationService.class));
+    environment.lifecycle().manage(injector.getInstance(UserProjectMigrationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 

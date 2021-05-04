@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.graphql.schema.type.instance.QLInstanceType.PHYSICAL_HOST_INSTANCE;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -61,6 +63,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(DX)
 @FieldNameConstants(innerTypeName = "InstanceStatsDataFetcherTestKeys")
 public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
@@ -146,10 +149,10 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Category(UnitTests.class)
   public void testSinglePointDataWithNoFilter() {
     // No Filter
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, null, null, null);
     assertSinglePointData(qlData, 6L);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, null, null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, null, null, null);
     assertSinglePointData(qlData, 2L);
   }
 
@@ -163,7 +166,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
             .application(
                 QLIdFilter.builder().values(new String[] {APP1_ID_ACCOUNT1}).operator(QLIdOperator.EQUALS).build())
             .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), null, null, null);
     assertSinglePointData(qlData, 4L);
   }
 
@@ -176,7 +179,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
             .environment(
                 QLIdFilter.builder().values(new String[] {ENV1_ID_APP1_ACCOUNT1}).operator(QLIdOperator.EQUALS).build())
             .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(envFilter), null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(envFilter), null, null, null);
     assertSinglePointData(qlData, 2L);
   }
 
@@ -195,7 +198,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                                                       .operator(QLIdOperator.EQUALS)
                                                       .build())
                                          .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(serviceFilter, env2Filter), null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(serviceFilter, env2Filter), null, null, null);
     assertSinglePointData(qlData, 1L);
   }
 
@@ -209,7 +212,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                                                       .operator(QLIdOperator.EQUALS)
                                                       .build())
                                          .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(serviceFilter), null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(serviceFilter), null, null, null);
     assertSinglePointData(qlData, 3L);
   }
 
@@ -224,10 +227,10 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                      .tags(newArrayList(QLTagInput.builder().name(TAG_ENVTYPE).value(TAG_VALUE_PROD).build()))
                      .build())
             .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(prodTagFilter), null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(prodTagFilter), null, null, null);
     assertSinglePointData(qlData, 3L);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, newArrayList(prodTagFilter), null, null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, newArrayList(prodTagFilter), null, null, null);
     assertSinglePointData(qlData, 1L);
 
     QLInstanceFilter nonProdTagFilter =
@@ -237,10 +240,10 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                      .tags(newArrayList(QLTagInput.builder().name(TAG_ENVTYPE).value(TAG_VALUE_NON_PROD).build()))
                      .build())
             .build();
-    qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(nonProdTagFilter), null, null);
+    qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(nonProdTagFilter), null, null, null);
     assertSinglePointData(qlData, 3L);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, newArrayList(nonProdTagFilter), null, null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, newArrayList(nonProdTagFilter), null, null, null);
     assertSinglePointData(qlData, 1L);
 
     QLInstanceFilter appTagFilter =
@@ -250,7 +253,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                      .tags(newArrayList(QLTagInput.builder().name(TAG_TEAM).value(TAG_VALUE_TEAM1).build()))
                      .build())
             .build();
-    qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appTagFilter), null, null);
+    qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appTagFilter), null, null, null);
     assertSinglePointData(qlData, 4L);
   }
 
@@ -265,10 +268,10 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                      .tags(newArrayList(QLTagInput.builder().name(TAG_ENVTYPE).build()))
                      .build())
             .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(allEnvTypeTagFilter), null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(allEnvTypeTagFilter), null, null, null);
     assertSinglePointData(qlData, 6L);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, newArrayList(allEnvTypeTagFilter), null, null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, newArrayList(allEnvTypeTagFilter), null, null, null);
     assertSinglePointData(qlData, 2L);
 
     allEnvTypeTagFilter =
@@ -279,10 +282,10 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                          QLTagInput.builder().name(TAG_ENVTYPE).value(TAG_VALUE_PROD).build()))
                      .build())
             .build();
-    qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(allEnvTypeTagFilter), null, null);
+    qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(allEnvTypeTagFilter), null, null, null);
     assertSinglePointData(qlData, 6L);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, newArrayList(allEnvTypeTagFilter), null, null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, newArrayList(allEnvTypeTagFilter), null, null, null);
     assertSinglePointData(qlData, 2L);
   }
 
@@ -302,7 +305,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                                                       .operator(QLIdOperator.EQUALS)
                                                       .build())
                                          .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter, serviceFilter), null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter, serviceFilter), null, null, null);
     assertSinglePointData(qlData, 3L);
   }
 
@@ -317,7 +320,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                                                       .operator(QLIdOperator.IN)
                                                       .build())
                                      .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), null, null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), null, null, null);
     assertSinglePointData(qlData, 6L);
   }
 
@@ -328,14 +331,14 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     // One level Aggregation
     QLInstanceAggregation firstLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Application).build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     QLAggregatedData aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(APP1_ID_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(4);
     assertThat(aggregatedData.getDataPoints().get(1).getKey().getId()).isEqualTo(APP2_ID_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(1).getValue()).isEqualTo(2);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     aggregatedData = assertOneLevelAggregatedData(qlData, 1);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(APP3_ID_ACCOUNT2);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(2);
@@ -354,14 +357,14 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     QLInstanceAggregation firstLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Service).build();
     QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), newArrayList(firstLevelAggregation), null);
+        dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), newArrayList(firstLevelAggregation), null, null);
     QLAggregatedData aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(3);
     assertThat(aggregatedData.getDataPoints().get(1).getKey().getId()).isEqualTo(SERVICE2_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(1).getValue()).isEqualTo(1);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     aggregatedData = assertOneLevelAggregatedData(qlData, 1);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(SERVICE4_ID_APP3_ACCOUNT2);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(2);
@@ -380,14 +383,14 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     QLInstanceAggregation firstLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Environment).build();
     QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), newArrayList(firstLevelAggregation), null);
+        dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), newArrayList(firstLevelAggregation), null, null);
     QLAggregatedData aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(2);
     assertThat(aggregatedData.getDataPoints().get(1).getKey().getId()).isEqualTo(ENV2_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(1).getValue()).isEqualTo(2);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(ENV5_ID_APP3_ACCOUNT2);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(1);
@@ -402,14 +405,14 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     // One level Aggregation
     QLInstanceAggregation firstLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.CloudProvider).build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     QLAggregatedData aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(CLOUD_PROVIDER1_ID_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(3);
     assertThat(aggregatedData.getDataPoints().get(1).getKey().getId()).isEqualTo(CLOUD_PROVIDER2_ID_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(1).getValue()).isEqualTo(3);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     aggregatedData = assertOneLevelAggregatedData(qlData, 1);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(CLOUD_PROVIDER3_ID_ACCOUNT2);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(2);
@@ -425,7 +428,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
             .tagAggregation(
                 QLInstanceTagAggregation.builder().entityType(QLInstanceTagType.APPLICATION).tagName(TAG_TEAM).build())
             .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     QLAggregatedData aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(APP1_ID_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(4);
@@ -439,7 +442,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     assertThat(aggregatedDataPostFetch.getDataPoints().get(1).getKey().getId()).isEqualTo(TAG_TEAM2);
     assertThat(aggregatedDataPostFetch.getDataPoints().get(1).getValue()).isEqualTo(2);
 
-    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null);
+    qlData = dataFetcher.fetch(ACCOUNT2_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     aggregatedData = assertOneLevelAggregatedData(qlData, 1);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(APP3_ID_ACCOUNT2);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(2);
@@ -460,7 +463,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
             .tagAggregation(
                 QLInstanceTagAggregation.builder().entityType(QLInstanceTagType.SERVICE).tagName(TAG_MODULE).build())
             .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     QLAggregatedData aggregatedData = assertOneLevelAggregatedData(qlData, 3);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(3);
@@ -474,7 +477,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
             .application(
                 QLIdFilter.builder().values(new String[] {APP1_ID_ACCOUNT1}).operator(QLIdOperator.EQUALS).build())
             .build();
-    qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), newArrayList(firstLevelAggregation), null);
+    qlData =
+        dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(appFilter), newArrayList(firstLevelAggregation), null, null);
     aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(3);
@@ -488,8 +492,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                      .tags(newArrayList(QLTagInput.builder().name(TAG_MODULE).value(TAG_VALUE_MODULE1).build()))
                      .build())
             .build();
-    qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(serviceTagFilter), newArrayList(firstLevelAggregation), null);
+    qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, newArrayList(serviceTagFilter), newArrayList(firstLevelAggregation), null, null);
     aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(SERVICE1_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(3);
@@ -513,7 +517,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                                                                           .tagName(TAG_ENVTYPE)
                                                                           .build())
                                                       .build();
-    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation), null, null);
     QLAggregatedData aggregatedData = assertOneLevelAggregatedData(qlData, 4);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(2);
@@ -532,8 +536,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                      .build())
             .build();
 
-    qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(prodTagFilter), newArrayList(firstLevelAggregation), null);
+    qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, newArrayList(prodTagFilter), newArrayList(firstLevelAggregation), null, null);
     aggregatedData = assertOneLevelAggregatedData(qlData, 2);
     assertThat(aggregatedData.getDataPoints().get(0).getKey().getId()).isEqualTo(ENV1_ID_APP1_ACCOUNT1);
     assertThat(aggregatedData.getDataPoints().get(0).getValue()).isEqualTo(2);
@@ -608,7 +612,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                                  .build())
             .build();
     QLData qlData = dataFetcher.fetch(
-        ACCOUNT1_ID, null, newArrayList(fromFilter, toFilter), newArrayList(firstLevelAggregation), null);
+        ACCOUNT1_ID, null, newArrayList(fromFilter, toFilter), newArrayList(firstLevelAggregation), null, null);
     assertThat(qlData).isInstanceOf(QLTimeSeriesData.class);
     QLTimeSeriesData timeSeriesData = (QLTimeSeriesData) qlData;
     List<QLTimeSeriesDataPoint> timeSeriesDataPoints = timeSeriesData.getDataPoints();
@@ -767,7 +771,7 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     instanceFilters.add(fromFilter);
     instanceFilters.add(toFilter);
     QLData qlData = dataFetcher.fetch(
-        ACCOUNT1_ID, null, instanceFilters, newArrayList(firstLevelAggregation, secondLevelAggregation), null);
+        ACCOUNT1_ID, null, instanceFilters, newArrayList(firstLevelAggregation, secondLevelAggregation), null, null);
     assertThat(qlData).isInstanceOf(QLStackedTimeSeriesData.class);
     QLStackedTimeSeriesData stackedTimeSeriesData = (QLStackedTimeSeriesData) qlData;
     List<QLStackedTimeSeriesDataPoint> stackedTimeSeriesDataData = stackedTimeSeriesData.getData();
@@ -790,8 +794,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Application).build();
     QLInstanceAggregation secondLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Service).build();
-    QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null, null);
     QLStackedData stackedData = assertTwoLevelAggregatedData(qlData, 2);
 
     QLStackedDataPoint stackedDataPoint1 = stackedData.getDataPoints().get(0);
@@ -826,8 +830,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Application).build();
     QLInstanceAggregation secondLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Environment).build();
-    QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null, null);
     QLStackedData stackedData = assertTwoLevelAggregatedData(qlData, 2);
 
     QLStackedDataPoint stackedDataPoint1 = stackedData.getDataPoints().get(0);
@@ -866,8 +870,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Application).build();
     QLInstanceAggregation secondLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.CloudProvider).build();
-    QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null, null);
     QLStackedData stackedData = assertTwoLevelAggregatedData(qlData, 2);
 
     QLStackedDataPoint stackedDataPoint1 = stackedData.getDataPoints().get(0);
@@ -906,8 +910,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Application).build();
     QLInstanceAggregation secondLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.InstanceType).build();
-    QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null, null);
     QLStackedData stackedData = assertTwoLevelAggregatedData(qlData, 2);
 
     QLStackedDataPoint stackedDataPoint1 = stackedData.getDataPoints().get(0);
@@ -942,8 +946,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
     QLInstanceAggregation secondLevelAggregation =
         QLInstanceAggregation.builder().entityAggregation(QLInstanceEntityAggregation.Service).build();
 
-    QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null, null);
     QLStackedData stackedData = assertTwoLevelAggregatedData(qlData, 2);
 
     QLStackedDataPoint stackedDataPoint1 = stackedData.getDataPoints().get(0);
@@ -1013,8 +1017,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                 QLInstanceTagAggregation.builder().tagName(TAG_MODULE).entityType(QLInstanceTagType.SERVICE).build())
             .build();
 
-    QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null, null);
     QLStackedData stackedData = assertTwoLevelAggregatedData(qlData, 2);
 
     QLStackedDataPoint stackedDataPoint1 = stackedData.getDataPoints().get(0);
@@ -1081,8 +1085,8 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                                                                            .build())
                                                        .build();
 
-    QLData qlData =
-        dataFetcher.fetch(ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null);
+    QLData qlData = dataFetcher.fetch(
+        ACCOUNT1_ID, null, null, newArrayList(firstLevelAggregation, secondLevelAggregation), null, null);
     QLStackedData stackedData = assertTwoLevelAggregatedData(qlData, 2);
 
     QLStackedDataPoint stackedDataPoint1 = stackedData.getDataPoints().get(0);

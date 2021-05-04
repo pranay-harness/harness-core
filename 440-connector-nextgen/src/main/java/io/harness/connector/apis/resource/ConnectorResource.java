@@ -152,7 +152,7 @@ public class ConnectorResource {
       @QueryParam(CATEGORY_KEY) ConnectorCategory category) {
     //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
     //    projectIdentifier),
-    //        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+    //        Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
   }
@@ -172,7 +172,7 @@ public class ConnectorResource {
       @Body ConnectorFilterPropertiesDTO connectorListFilter, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
     //    projectIdentifier),
-    //        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+    //        Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
             projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
@@ -186,7 +186,7 @@ public class ConnectorResource {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier()),
-        Resource.NONE, EDIT_CONNECTOR_PERMISSION);
+        Resource.of(ResourceTypes.CONNECTOR, null), EDIT_CONNECTOR_PERMISSION);
 
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException(
@@ -283,7 +283,7 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
     //    projectIdentifier),
-    //        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+    //        Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         connectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier));
   }

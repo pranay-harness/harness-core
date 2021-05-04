@@ -6,6 +6,7 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.ValuesManifestVisitorHelper;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -56,7 +57,7 @@ public class ValuesManifest implements ManifestAttributes, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("storeConfigWrapper", storeConfigWrapper);
+    children.add(YAMLFieldNameConstants.STORE, storeConfigWrapper);
     return children;
   }
 

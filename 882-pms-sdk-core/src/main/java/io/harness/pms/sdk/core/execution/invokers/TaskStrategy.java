@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.execution.Status.NO_OP;
 import static io.harness.pms.contracts.execution.Status.SKIPPED;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
@@ -33,7 +33,7 @@ import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class TaskStrategy implements ExecuteStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
@@ -42,7 +42,7 @@ public class TaskStrategy implements ExecuteStrategy {
   @Override
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
+    TaskExecutable taskExecutable = extractStep(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskRequest task = taskExecutable.obtainTask(ambiance,
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
@@ -53,7 +53,7 @@ public class TaskStrategy implements ExecuteStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
-    TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
+    TaskExecutable taskExecutable = extractStep(nodeExecution);
     StepResponse stepResponse = null;
     try {
       stepResponse = taskExecutable.handleTaskResult(ambiance,
@@ -64,11 +64,6 @@ public class TaskStrategy implements ExecuteStrategy {
     }
     sdkNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
-  }
-
-  private TaskExecutable extractTaskExecutable(NodeExecutionProto nodeExecution) {
-    PlanNodeProto node = nodeExecution.getNode();
-    return (TaskExecutable) stepRegistry.obtain(node.getStepType());
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, TaskRequest taskRequest) {
@@ -113,5 +108,11 @@ public class TaskStrategy implements ExecuteStrategy {
                                             .setStatus(TASK_WAITING)
                                             .build();
     sdkNodeExecutionService.queueTaskRequest(queueTaskRequest);
+  }
+
+  @Override
+  public TaskExecutable extractStep(NodeExecutionProto nodeExecution) {
+    PlanNodeProto node = nodeExecution.getNode();
+    return (TaskExecutable) stepRegistry.obtain(node.getStepType());
   }
 }

@@ -21,12 +21,13 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.invites.dto.UserSearchDTO;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
+import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.ng.core.user.remote.mapper.UserSearchMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
@@ -126,7 +127,7 @@ public class UserResource {
   @GET
   @Path("currentgen")
   @ApiOperation(value = "Get users from current gen for an account", nickname = "getCurrentGenUsers")
-  public ResponseDTO<PageResponse<UserSearchDTO>> getCurrentGenUsers(
+  public ResponseDTO<PageResponse<UserMetadataDTO>> getCurrentGenUsers(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("searchString") @DefaultValue("") String searchString, @BeanParam PageRequest pageRequest) {
     Pageable pageable = getPageRequest(pageRequest);
@@ -145,17 +146,17 @@ public class UserResource {
   @POST
   @Path("batch")
   @ApiOperation(value = "Get a list of users", nickname = "getUsers")
-  public ResponseDTO<PageResponse<UserInfo>> getUsers(
+  public ResponseDTO<PageResponse<UserMetadataDTO>> getUsers(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Valid @BeanParam PageRequest pageRequest) {
+      @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)
                       .projectIdentifier(projectIdentifier)
                       .build();
-    return ResponseDTO.newResponse(ngUserService.listUsers(scope, pageRequest));
+    return ResponseDTO.newResponse(ngUserService.listUsers(scope, pageRequest, userFilter));
   }
 
   @POST

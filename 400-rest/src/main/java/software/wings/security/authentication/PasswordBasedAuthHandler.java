@@ -59,11 +59,10 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
-    return authenticateInternal(false, true, credentials);
+    return authenticateInternal(false, credentials);
   }
 
-  private AuthenticationResponse authenticateInternal(
-      boolean isPasswordHash, boolean shouldVerifyEmail, String... credentials) {
+  private AuthenticationResponse authenticateInternal(boolean isPasswordHash, String... credentials) {
     if (credentials == null || credentials.length != 2) {
       throw new WingsException(INVALID_ARGUMENT);
     }
@@ -81,7 +80,13 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       log.info("Authenticating via Username Password");
 
-      if (shouldVerifyEmail && !user.isEmailVerified()) {
+      Account defaultAccount = accountId != null ? getAccount(accountId) : null;
+
+      // Check for a verified email if a default account doesn't exist OR if the default account is a CG account
+      // Accounts made from NG signup are allowed to access the application without email verification
+      boolean checkForVerifiedEmail = defaultAccount == null || !defaultAccount.isCreatedFromNG();
+
+      if (checkForVerifiedEmail && !user.isEmailVerified()) {
         throw new WingsException(EMAIL_NOT_VERIFIED, USER);
       }
 
@@ -151,8 +156,8 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     }
   }
 
-  public AuthenticationResponse authenticateWithPasswordHash(boolean shouldVerifyEmail, String... credentials) {
-    return authenticateInternal(true, shouldVerifyEmail, credentials);
+  public AuthenticationResponse authenticateWithPasswordHash(String... credentials) {
+    return authenticateInternal(true, credentials);
   }
 
   @Override
@@ -162,5 +167,9 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
   protected User getUser(String email) {
     return userService.getUserByEmail(email);
+  }
+
+  protected Account getAccount(String accountId) {
+    return accountService.getFromCacheWithFallback(accountId);
   }
 }

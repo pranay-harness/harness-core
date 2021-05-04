@@ -9,6 +9,8 @@ import static io.restassured.config.HttpClientConfig.httpClientConfig;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.testframework.framework.utils.FileUtils;
@@ -32,6 +34,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class ManagerExecutor {
   private static boolean failedAlready;
   private static Duration waiting = ofMinutes(5);
@@ -76,8 +79,12 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get("/home/jenkins"
-        + "/.bazel-dirs/bin/360-cg-manager/module_deploy.jar");
+    String home = System.getProperty("user.home");
+    if (home.contains("root")) {
+      home = "/home/jenkins";
+    }
+
+    final Path jar = Paths.get(home + "/.bazel-dirs/bin/360-cg-manager/module_deploy.jar");
 
     final Path config = Paths.get(directory.getPath(), "360-cg-manager", "modified_config.yml");
 

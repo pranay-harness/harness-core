@@ -40,8 +40,6 @@ public class KubernetesActivitySource extends ActivitySource {
         .uuid(getUuid())
         .connectorIdentifier(connectorIdentifier)
         .activitySourceConfigs(activitySourceConfigs)
-        .createdAt(getCreatedAt())
-        .lastUpdatedAt(getLastUpdatedAt())
         .build();
   }
 

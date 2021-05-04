@@ -90,7 +90,7 @@ public class InputSetResourcePMS {
   @GET
   @Path("{inputSetIdentifier}")
   @ApiOperation(value = "Gets an InputSet by identifier", nickname = "getInputSetForPipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<InputSetResponseDTOPMS> getInputSet(
       @PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
@@ -116,7 +116,7 @@ public class InputSetResourcePMS {
   @GET
   @Path("overlay/{inputSetIdentifier}")
   @ApiOperation(value = "Gets an Overlay InputSet by identifier", nickname = "getOverlayInputSetForPipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<OverlayInputSetResponseDTOPMS> getOverlayInputSet(
       @PathParam(NGCommonEntityConstants.INPUT_SET_IDENTIFIER_KEY) String inputSetIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
@@ -269,7 +269,7 @@ public class InputSetResourcePMS {
 
   @GET
   @ApiOperation(value = "Gets InputSets list for a pipeline", nickname = "getInputSetsListForPipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<PageResponse<InputSetSummaryResponseDTOPMS>> listInputSetsForPipeline(
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
@@ -296,7 +296,7 @@ public class InputSetResourcePMS {
   @GET
   @Path("template")
   @ApiOperation(value = "Get template from a pipeline yaml", nickname = "getTemplateFromPipeline")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<InputSetTemplateResponseDTOPMS> getTemplateFromPipeline(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
@@ -313,7 +313,7 @@ public class InputSetResourcePMS {
   @ApiOperation(
       value = "Merges given input sets list on pipeline and return input set template format of applied pipeline",
       nickname = "getMergeInputSetFromPipelineTemplateWithListInput")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  //  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<MergeInputSetResponseDTOPMS>
   getMergeInputSetFromPipelineTemplate(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,

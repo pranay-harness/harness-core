@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.PHASE_STEP;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -392,6 +393,23 @@ public class StateExecutionServiceImpl implements StateExecutionService {
       return stateExecutionInstance;
     } else {
       return fetchCurrentPhaseStateExecutionInstance(
+          appId, executionUuid, stateExecutionInstance.getParentInstanceId());
+    }
+  }
+
+  @Override
+  public StateExecutionInstance fetchCurrentPhaseStepStateExecutionInstance(
+      String appId, String executionUuid, String currentStateExecutionId) {
+    StateExecutionInstance stateExecutionInstance =
+        getStateExecutionInstance(appId, executionUuid, currentStateExecutionId);
+
+    if (stateExecutionInstance == null) {
+      return null;
+    }
+    if (stateExecutionInstance.getStateType().equals(PHASE_STEP.name())) {
+      return stateExecutionInstance;
+    } else {
+      return fetchCurrentPhaseStepStateExecutionInstance(
           appId, executionUuid, stateExecutionInstance.getParentInstanceId());
     }
   }

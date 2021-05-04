@@ -42,7 +42,7 @@ import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.InviteDTO;
-import io.harness.ng.core.invites.dto.UserSearchDTO;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.invites.remote.RoleBinding;
@@ -218,7 +218,7 @@ public class InviteServiceImpl implements InviteService {
     PageResponse<Invite> invitesPage =
         getInvitePage(accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, pageRequest, aclAggregateFilter);
     List<String> userEmails = invitesPage.getContent().stream().map(Invite::getEmail).collect(toList());
-    Map<String, UserSearchDTO> userSearchDTOs = getPendingUserMap(userEmails, accountIdentifier);
+    Map<String, UserMetadataDTO> userSearchDTOs = getPendingUserMap(userEmails, accountIdentifier);
     List<InviteDTO> inviteDTOS = aggregatePendingUsers(invitesPage.getContent(), userSearchDTOs);
     return PageUtils.getNGPageResponse(invitesPage, inviteDTOS);
   }
@@ -536,24 +536,24 @@ public class InviteServiceImpl implements InviteService {
     return getInvites(criteria, pageRequest);
   }
 
-  private Map<String, UserSearchDTO> getPendingUserMap(List<String> userEmails, String accountIdentifier) {
+  private Map<String, UserMetadataDTO> getPendingUserMap(List<String> userEmails, String accountIdentifier) {
     List<UserInfo> users = ngUserService.getUsersFromEmail(userEmails, accountIdentifier);
-    Map<String, UserSearchDTO> userSearchMap = new HashMap<>();
+    Map<String, UserMetadataDTO> userSearchMap = new HashMap<>();
     users.forEach(user
         -> userSearchMap.put(user.getEmail(),
-            UserSearchDTO.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build()));
+            UserMetadataDTO.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build()));
     for (String email : userEmails) {
-      userSearchMap.computeIfAbsent(email, email1 -> UserSearchDTO.builder().email(email1).build());
+      userSearchMap.computeIfAbsent(email, email1 -> UserMetadataDTO.builder().email(email1).build());
     }
     return userSearchMap;
   }
 
-  private List<InviteDTO> aggregatePendingUsers(List<Invite> invites, Map<String, UserSearchDTO> userMap) {
+  private List<InviteDTO> aggregatePendingUsers(List<Invite> invites, Map<String, UserMetadataDTO> userMap) {
     Preconditions.checkState(invites.stream().map(Invite::getEmail).distinct().count() == userMap.size(),
         "Number of invites should be same as number of invites. Invariant violated");
     List<InviteDTO> inviteDTOs = new ArrayList<>();
     for (Invite invite : invites) {
-      UserSearchDTO user = userMap.get(invite.getEmail());
+      UserMetadataDTO user = userMap.get(invite.getEmail());
       inviteDTOs.add(InviteDTO.builder()
                          .id(invite.getId())
                          .name(user.getName())

@@ -42,6 +42,32 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 	return out, nil
 }
 
+func FindFilesInPR(ctx context.Context, request *pb.FindFilesInPRRequest, log *zap.SugaredLogger) (out *pb.FindFilesInPRResponse, err error) {
+	start := time.Now()
+	log.Infow("FindFilesInPR starting", "slug", request.GetSlug())
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("FindFilesInPR failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	changes, response, err := client.PullRequests.ListChanges(ctx, request.GetSlug(), int(request.GetNumber()), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
+	if err != nil {
+		log.Errorw("FindFilesInPR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+	log.Infow("FindFilesInPR success", "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start))
+
+	out = &pb.FindFilesInPRResponse{
+		Files: convertChangesList(changes),
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
+	}
+	return out, nil
+}
+
 func CreateBranch(ctx context.Context, request *pb.CreateBranchRequest, log *zap.SugaredLogger) (out *pb.CreateBranchResponse, err error) {
 	start := time.Now()
 	log.Infow("CreateBranch starting", "slug", request.GetSlug())
@@ -163,4 +189,20 @@ func ListCommits(ctx context.Context, request *pb.ListCommitsRequest, log *zap.S
 		},
 	}
 	return out, nil
+}
+
+func convertChangesList(from []*scm.Change) (to []*pb.PRFile) {
+	for _, v := range from {
+		to = append(to, convertChange(v))
+	}
+	return to
+}
+
+func convertChange(from *scm.Change) *pb.PRFile {
+	return &pb.PRFile{
+		Path:    from.Path,
+		Added:   from.Added,
+		Deleted: from.Deleted,
+		Renamed: from.Renamed,
+	}
 }

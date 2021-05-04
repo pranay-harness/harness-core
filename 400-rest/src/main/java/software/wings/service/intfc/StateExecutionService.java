@@ -57,6 +57,9 @@ public interface StateExecutionService {
   StateExecutionInstance fetchCurrentPhaseStateExecutionInstance(
       String appId, String executionUuid, String currentStateExecutionId);
 
+  StateExecutionInstance fetchCurrentPhaseStepStateExecutionInstance(
+      String appId, String executionUuid, String currentStateExecutionId);
+
   StateExecutionInstance getStateExecutionInstance(String appId, String executionUuid, String currentStateExecutionId);
 
   void appendDelegateTaskDetails(String instanceId, DelegateTaskDetails delegateTaskDetails);
