@@ -14,6 +14,8 @@ public interface BatchJobScheduledDataService {
 
   Instant fetchLastDependentBatchJobScheduledTime(String accountId, BatchJobType batchJobType);
 
+  Instant fetchLastDependentBatchJobCreatedTime(String accountId, BatchJobType batchJobType);
+
   void invalidateJobs(CEDataCleanupRequest ceDataCleanupRequest);
 
   void invalidateJobs(String accountId, List<String> batchJobTypes, Instant instant);
