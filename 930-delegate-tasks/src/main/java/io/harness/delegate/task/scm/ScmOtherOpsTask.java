@@ -1,5 +1,7 @@
 package io.harness.delegate.task.scm;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -17,6 +19,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(HarnessTeam.DX)
 public class ScmOtherOpsTask extends AbstractDelegateRunnableTask {
   private final SecretDecryptionService secretDecryptionService;
   private final ScmServiceClient scmServiceClient;
