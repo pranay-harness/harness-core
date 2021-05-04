@@ -364,8 +364,7 @@ public class UserServiceImpl implements UserService {
   public User createNewUserAndSignIn(User user, String accountId) {
     User savedUser = createNewUser(user, accountId);
 
-    return authenticationManager.defaultLoginWithoutEmailVerification(
-        savedUser.getEmail(), savedUser.getPasswordHash());
+    return authenticationManager.defaultLoginUsingPasswordHash(savedUser.getEmail(), savedUser.getPasswordHash());
   }
 
   @Override
