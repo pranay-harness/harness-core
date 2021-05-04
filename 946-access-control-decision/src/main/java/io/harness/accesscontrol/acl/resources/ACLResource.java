@@ -49,7 +49,7 @@ public class ACLResource {
   public ResponseDTO<AccessCheckResponseDTO> get(@Valid @NotNull AccessCheckRequestDTO dto) {
     Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
     // TODO: make the level to DEBUG after things get stable
-    log.info("Access check request with contextPrincipal: type/{}/name/{}, requestPrincipal: {} and permissions: {}",
+    log.info("Access check request with contextPrincipal: TYPE/{}/NAME/{}, requestPrincipal: {} and permissions: {}",
         contextPrincipal == null ? "" : contextPrincipal.getType(),
         contextPrincipal == null ? "" : contextPrincipal.getName(), dto.getPrincipal(), dto.getPermissions());
 
