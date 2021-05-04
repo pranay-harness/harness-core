@@ -2,7 +2,9 @@ package io.harness.delegate.task.scm;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.gitsync.GitFilePathDetails;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -38,11 +40,14 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     ScmPushTaskParams scmPushTaskParams = (ScmPushTaskParams) parameters;
-    switch (scmPushTaskParams.pushTaskType) {
+    final DecryptableEntity apiAccessDecryptableEntity =
+        GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmPushTaskParams.getScmConnector());
+
+    switch (scmPushTaskParams.getPushTaskType()) {
       case CREATE: {
         CreateFileResponse createFileResponse = scmDelegateClient.processScmRequest(c
-            -> scmServiceClient.createFile(
-                scmPushTaskParams.scmConnector, scmPushTaskParams.gitFileDetails, SCMGrpc.newBlockingStub(c)));
+            -> scmServiceClient.createFile(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(),
+                SCMGrpc.newBlockingStub(c)));
         return ScmPushTaskResponseData.builder()
             .createFileResponse(createFileResponse)
             .pushTaskType(PushTaskType.CREATE)
@@ -50,10 +55,10 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
       }
       case DELETE: {
         DeleteFileResponse deleteFileResponse = scmDelegateClient.processScmRequest(c
-            -> scmServiceClient.deleteFile(scmPushTaskParams.scmConnector,
+            -> scmServiceClient.deleteFile(scmPushTaskParams.getScmConnector(),
                 GitFilePathDetails.builder()
-                    .branch(scmPushTaskParams.gitFileDetails.getBranch())
-                    .filePath(scmPushTaskParams.gitFileDetails.getFilePath())
+                    .branch(scmPushTaskParams.getGitFileDetails().getBranch())
+                    .filePath(scmPushTaskParams.getGitFileDetails().getFilePath())
                     .build(),
                 SCMGrpc.newBlockingStub(c)));
         return ScmPushTaskResponseData.builder()
@@ -63,8 +68,8 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
       }
       case UPDATE: {
         UpdateFileResponse updateFileResponse = scmDelegateClient.processScmRequest(c
-            -> scmServiceClient.updateFile(
-                scmPushTaskParams.scmConnector, scmPushTaskParams.gitFileDetails, SCMGrpc.newBlockingStub(c)));
+            -> scmServiceClient.updateFile(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(),
+                SCMGrpc.newBlockingStub(c)));
         return ScmPushTaskResponseData.builder()
             .updateFileResponse(updateFileResponse)
             .pushTaskType(PushTaskType.UPDATE)
