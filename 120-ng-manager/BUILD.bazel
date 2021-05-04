@@ -55,6 +55,7 @@ shared_dependencies = [
     "//440-connector-nextgen:module",
     "//955-filters-sdk:module",
     "//955-outbox-sdk:module",
+    "//958-migration-sdk:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
