@@ -111,6 +111,7 @@ type GcpCloudProvider implements CloudProvider {
   createdBy: User
   type: String
   isContinuousEfficiencyEnabled: Boolean
+  delegateSelectors: [String]
 }
 
 type KubernetesCloudProvider implements CloudProvider {
