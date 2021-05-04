@@ -118,5 +118,5 @@ container_push(
    format = "Docker",
    registry = "gcr.io",
    repository = "harness-playground/access-control-service",
-   tag = "diptiman",
+   tag = "test-docker-bazel",
 )
