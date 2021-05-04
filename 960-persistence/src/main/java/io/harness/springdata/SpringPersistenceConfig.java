@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
 
@@ -57,6 +58,11 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
   @Primary
   public MongoTemplate mongoTemplate() throws Exception {
     return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+  }
+
+  @Bean
+  public GridFsTemplate gridFsTemplate() throws Exception {
+    return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
   }
 
   @Bean

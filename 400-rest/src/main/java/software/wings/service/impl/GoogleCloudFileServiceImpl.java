@@ -18,6 +18,7 @@ import io.harness.delegate.beans.FileMetadata;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GCPStorageFileReadException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.app.MainConfiguration;
@@ -73,7 +74,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   private static final String METADATA_FILE_NAME = "fileName";
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
 
-  private WingsPersistence wingsPersistence;
+  private HPersistence wingsPersistence;
   private MainConfiguration configuration;
   private volatile Storage storage;
 
