@@ -27,6 +27,7 @@ go_test(
         "testdata/commit.json",
         "testdata/commits.json",
         "testdata/pr.json",
+        "testdata/pr_files.json",
     ],
     embed = [":go_default_library"],
     deps = [
