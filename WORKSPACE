@@ -5479,10 +5479,6 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.17.0/rules_docker-v0.17.0.tar.gz"],
 )
 
-load("@io_bazel_rules_docker//toolchains/docker:toolchain.bzl",
-    docker_toolchain_configure="toolchain_configure"
-)
-
 load(
     "@io_bazel_rules_docker//repositories:repositories.bzl",
     container_repositories = "repositories",
@@ -5500,11 +5496,11 @@ load(
 )
 
 container_pull(
-    name = "base_image",
+    name = "platform_alpine",
+    digest = "sha256:a568e8f557c055ce59215ccdb864e8a73ac7ff9deed260ae9ced82f0a86e42bb",
     registry = "us.gcr.io",
     repository = "platform-205701/alpine",
     tag = "safe-alpine3.12-sec1096-apm",
-    digest = "sha256:a568e8f557c055ce59215ccdb864e8a73ac7ff9deed260ae9ced82f0a86e42bb"
 )
 
 load(
