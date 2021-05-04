@@ -1,4 +1,4 @@
-package io.harness.instancesync.service.stats.usagemetrics;
+package io.harness.instancesync.service.stats.usagemetrics.eventpublisher;
 
 import io.harness.instancesync.dto.Instance;
 

@@ -4,7 +4,7 @@ import io.harness.instancesync.dto.Instance;
 import io.harness.instancesync.helper.SnapshotTimeProvider;
 import io.harness.instancesync.repository.instancesyncperpetualtask.InstanceRepository;
 import io.harness.instancesync.service.instancestats.InstanceStatsService;
-import io.harness.instancesync.service.stats.usagemetrics.UsageMetricsEventPublisher;
+import io.harness.instancesync.service.stats.usagemetrics.eventpublisher.UsageMetricsEventPublisher;
 
 import com.google.inject.Inject;
 import java.time.Instant;

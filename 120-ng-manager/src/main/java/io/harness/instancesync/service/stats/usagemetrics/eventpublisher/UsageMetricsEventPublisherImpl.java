@@ -1,4 +1,4 @@
-package io.harness.instancesync.service.stats.usagemetrics;
+package io.harness.instancesync.service.stats.usagemetrics.eventpublisher;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
