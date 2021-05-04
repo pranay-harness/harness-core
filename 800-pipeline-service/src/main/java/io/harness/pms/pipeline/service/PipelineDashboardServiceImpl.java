@@ -155,7 +155,7 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
     return totalBuildSqlBuilder.toString();
   }
 
-  private StatusAndTime queryCalculatorForStatusAndTime(String query) {
+  public StatusAndTime queryCalculatorForStatusAndTime(String query) {
     long totalTries = 0;
 
     List<String> status = new ArrayList<>();
@@ -180,7 +180,7 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
     return StatusAndTime.builder().status(status).time(time).build();
   }
 
-  private long queryCalculatorMean(String query) {
+  public long queryCalculatorMean(String query) {
     long totalTries = 0;
 
     long mean = 0;
@@ -205,7 +205,7 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
     return mean;
   }
 
-  private long queryCalculatorMedian(String query) {
+  public long queryCalculatorMedian(String query) {
     long totalTries = 0;
 
     long mdedian = 0;
