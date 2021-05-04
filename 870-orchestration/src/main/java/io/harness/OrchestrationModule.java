@@ -32,6 +32,8 @@ import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.serializer.KryoSerializer;
+import io.harness.testing.TestExecution;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.AsyncWaitEngineImpl;
@@ -42,6 +44,8 @@ import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
@@ -102,6 +106,12 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     if (!config.isWithPMS()) {
       bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     }
+
+    MapBinder<String, TestExecution> testExecutionMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
+    Provider<KryoSerializer> kryoSerializerProvider = getProvider(Key.get(KryoSerializer.class));
+    testExecutionMapBinder.addBinding("Callback Kryo Registration")
+        .toInstance(() -> OrchestrationComponentTester.testKryoRegistration(kryoSerializerProvider));
   }
 
   @Provides
