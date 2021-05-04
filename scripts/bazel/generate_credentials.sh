@@ -34,4 +34,13 @@ JFROG_USERNAME="${JFROG_USERNAME}"
 JFROG_PASSWORD="${JFROG_PASSWORD}"
 EOF
 
+#configure docker credentials
+if ! dirname $(which gcloud) ;then
+  echo "ERROR: Please install gcloud"
+  exit 1
+fi
+
+gcloud components install docker-credential-gcr
+docker-credential-gcr configure-docker
+
 scripts/bazel/testDistribute.sh
