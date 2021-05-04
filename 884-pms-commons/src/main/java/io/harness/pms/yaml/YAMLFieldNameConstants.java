@@ -43,4 +43,5 @@ public class YAMLFieldNameConstants {
   public final String USE_ROLLBACK_STRATEGY = "useRollbackStrategy";
   public final String PIPELINE_GROUP = "PIPELINE";
   public final String STORE = "store";
+  public final String PIPELINE_INFRASTRUCTURE = "infrastructure";
 }
