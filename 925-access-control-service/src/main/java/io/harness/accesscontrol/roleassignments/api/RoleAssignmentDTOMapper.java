@@ -9,6 +9,7 @@ import io.harness.accesscontrol.commons.validation.ValidationResultMapper;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.RoleAssignment.RoleAssignmentBuilder;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationRequest;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
@@ -78,6 +79,25 @@ public class RoleAssignmentDTOMapper {
         .managed(false)
         .disabled(object.isDisabled())
         .build();
+  }
+
+  public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object, boolean managed) {
+    RoleAssignmentBuilder roleAssignmentBuilder =
+        RoleAssignment.builder()
+            .identifier(isEmpty(object.getIdentifier())
+                    ? "role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20))
+                    : object.getIdentifier())
+            .principalIdentifier(object.getPrincipal().getIdentifier())
+            .principalType(object.getPrincipal().getType())
+            .roleIdentifier(object.getRoleIdentifier())
+            .disabled(object.isDisabled());
+    if (managed) {
+      roleAssignmentBuilder.managed(true);
+    } else {
+      roleAssignmentBuilder.managed(false);
+      roleAssignmentBuilder.scopeIdentifier(scopeIdentifier);
+    }
+    return roleAssignmentBuilder.build();
   }
 
   public static RoleAssignmentFilter fromDTO(String scopeIdentifier, RoleAssignmentFilterDTO object) {
