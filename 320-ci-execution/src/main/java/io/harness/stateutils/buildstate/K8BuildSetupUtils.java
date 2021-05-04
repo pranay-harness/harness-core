@@ -123,6 +123,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -133,6 +134,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
@@ -149,6 +152,8 @@ public class K8BuildSetupUtils {
   @Inject CILogServiceUtils logServiceUtils;
   @Inject TIServiceUtils tiServiceUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
+  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
+  private final int MAX_ATTEMPTS = 3;
 
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
@@ -446,8 +451,14 @@ public class K8BuildSetupUtils {
     Map<String, String> envVars = new HashMap<>();
     final String logServiceBaseUrl = logServiceUtils.getLogServiceConfig().getBaseUrl();
 
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed call to fetch log service token attempt: {}"),
+            format("Failed to fetch log service token after retrying {} times"));
+
     // Make a call to the log service and get back the token
-    String logServiceToken = logServiceUtils.getLogServiceToken(accountID);
+    String logServiceToken =
+        Failsafe.with(retryPolicy).get(() -> { return logServiceUtils.getLogServiceToken(accountID); });
+
     envVars.put(LOG_SERVICE_TOKEN_VARIABLE, logServiceToken);
     envVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logServiceBaseUrl);
 
@@ -799,5 +810,14 @@ public class K8BuildSetupUtils {
       }
     }
     return imageName;
+  }
+
+  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }
