@@ -58,7 +58,7 @@ public class ArtifactStepHelper {
         GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) artifactConfig;
         connectorDTO = getConnector(gcrArtifactConfig.getConnectorRef().getValue(), ambiance);
         GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorConfig();
-        if (gcpConnectorDTO.getCredential() != null) {
+        if (gcpConnectorDTO.getCredential() != null && gcpConnectorDTO.getCredential().getConfig() != null) {
           encryptedDataDetails =
               secretManagerClientService.getEncryptionDetails(ngAccess, gcpConnectorDTO.getCredential().getConfig());
         }
