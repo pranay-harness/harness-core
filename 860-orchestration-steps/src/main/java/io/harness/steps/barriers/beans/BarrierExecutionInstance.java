@@ -90,7 +90,7 @@ public final class BarrierExecutionInstance implements PersistentEntity, UuidAwa
                  .field(BarrierExecutionInstanceKeys.stagesIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("identifier_planExecutionId_idx")
+                 .name("unique_identifier_planExecutionId_idx")
                  .field(BarrierExecutionInstanceKeys.identifier)
                  .field(BarrierExecutionInstanceKeys.planExecutionId)
                  .unique(true)
