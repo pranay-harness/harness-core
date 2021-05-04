@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.SUSPENDED;
 
@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
@@ -50,7 +50,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
   @Override
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    ChildChainExecutable childChainExecutable = extractExecutable(nodeExecution);
+    ChildChainExecutable childChainExecutable = extractStep(nodeExecution);
     ChildChainExecutableResponse childChainResponse;
     childChainResponse = childChainExecutable.executeFirstChild(nodeExecution.getAmbiance(),
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
@@ -61,7 +61,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
-    ChildChainExecutable childChainExecutable = extractExecutable(nodeExecution);
+    ChildChainExecutable childChainExecutable = extractStep(nodeExecution);
     ChildChainExecutableResponse lastChildChainExecutableResponse = Preconditions.checkNotNull(
         Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getChildChain());
     Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
@@ -84,7 +84,8 @@ public class ChildChainStrategy implements ExecuteStrategy {
     }
   }
 
-  ChildChainExecutable extractExecutable(NodeExecutionProto nodeExecution) {
+  @Override
+  public ChildChainExecutable extractStep(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
   }

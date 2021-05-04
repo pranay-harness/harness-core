@@ -9,7 +9,8 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
-import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
+import io.harness.ng.core.user.remote.dto.UserFilter;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +31,8 @@ public interface UserGroupService {
 
   List<UserGroup> list(UserGroupFilterDTO userGroupFilterDTO);
 
-  PageResponse<UserInfo> listUsersInUserGroup(Scope scope, String userGroupIdentifier, PageRequest pageRequest);
+  PageResponse<UserMetadataDTO> listUsersInUserGroup(
+      Scope scope, String userGroupIdentifier, UserFilter userFilter, PageRequest pageRequest);
 
   UserGroup delete(Scope scope, String identifier);
 

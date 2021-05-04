@@ -25,7 +25,7 @@ import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
 import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
-import io.harness.ng.core.invites.dto.UserSearchDTO;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.remote.mapper.UserSearchMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.utils.UserGroupMapper;
@@ -85,18 +85,18 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
                                        .distinct()
                                        .collect(Collectors.toList());
 
-    Map<String, UserSearchDTO> userSearchDTOMap =
+    Map<String, UserMetadataDTO> userSearchDTOMap =
         ngUserService.getUsersByIds(userIdentifiers, accountIdentifier)
             .stream()
             .map(UserSearchMapper::writeDTO)
-            .collect(Collectors.toMap(UserSearchDTO::getUuid, Function.identity()));
+            .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return PageUtils.getNGPageResponse(userGroupPageResponse.map(userGroup -> {
-      List<UserSearchDTO> users = getLastNElementsReversed(userGroup.getUsers(), userSize)
-                                      .stream()
-                                      .map(userSearchDTOMap::get)
-                                      .filter(Objects::nonNull)
-                                      .collect(toList());
+      List<UserMetadataDTO> users = getLastNElementsReversed(userGroup.getUsers(), userSize)
+                                        .stream()
+                                        .map(userSearchDTOMap::get)
+                                        .filter(Objects::nonNull)
+                                        .collect(toList());
       return UserGroupAggregateDTO.builder()
           .userGroupDTO(UserGroupMapper.toDTO(userGroup))
           .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroup.getIdentifier()))
@@ -142,15 +142,15 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
                                       .filter(Objects::nonNull)
                                       .collect(Collectors.toSet());
 
-    Map<String, UserSearchDTO> userSearchDTOMap =
+    Map<String, UserMetadataDTO> userSearchDTOMap =
         ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
             .stream()
             .map(UserSearchMapper::writeDTO)
-            .collect(Collectors.toMap(UserSearchDTO::getUuid, Function.identity()));
+            .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return userGroups.stream()
         .map(userGroup -> {
-          List<UserSearchDTO> users =
+          List<UserMetadataDTO> users =
               userGroup.getUsers().stream().map(userSearchDTOMap::get).filter(Objects::nonNull).collect(toList());
           return UserGroupAggregateDTO.builder()
               .userGroupDTO(UserGroupMapper.toDTO(userGroup))
@@ -180,10 +180,10 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     List<String> userIdentifiers =
         userGroupOpt.get().getUsers() == null ? new ArrayList<>() : userGroupOpt.get().getUsers();
 
-    List<UserSearchDTO> users = ngUserService.getUsersByIds(userIdentifiers, accountIdentifier)
-                                    .stream()
-                                    .map(UserSearchMapper::writeDTO)
-                                    .collect(toList());
+    List<UserMetadataDTO> users = ngUserService.getUsersByIds(userIdentifiers, accountIdentifier)
+                                      .stream()
+                                      .map(UserSearchMapper::writeDTO)
+                                      .collect(toList());
 
     return UserGroupAggregateDTO.builder()
         .userGroupDTO(UserGroupMapper.toDTO(userGroupOpt.get()))

@@ -7,6 +7,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
@@ -82,7 +83,7 @@ public class SecretUtils {
     SecretVariableDTO secret =
         SecretVariableDTO.builder().name(secretVariable.getName()).secret(secretRefData).type(secretType).build();
     log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType, secretIdentifier);
-    List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
+    List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(ngAccess, secret);
     if (isEmpty(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
@@ -121,7 +122,8 @@ public class SecretUtils {
             .build();
 
     log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType, secretIdentifier);
-    List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
+
+    List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(ngAccess, secret);
     if (isEmpty(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
@@ -173,13 +175,22 @@ public class SecretUtils {
 
     log.info(
         "Getting secret encryption details for secret type:[{}] ref:[{}]", secretDTOV2.getType(), secretIdentifier);
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManagerClientService.getEncryptionDetails(ngAccess, credentialSpecDTO);
+    List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(ngAccess, credentialSpecDTO);
     if (isEmpty(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
 
     return SSHKeyDetails.builder().encryptedDataDetails(encryptionDetails).sshKeyReference(credentialSpecDTO).build();
+  }
+
+  private List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed call to fetch secret Encryption details attempt: {}"),
+            format("Failed to fetch secret encryption details after retrying {} times"));
+
+    return Failsafe.with(retryPolicy).get(() -> {
+      return secretManagerClientService.getEncryptionDetails(ngAccess, consumer);
+    });
   }
 
   private SecretDTOV2 getSecret(IdentifierRef identifierRef) {

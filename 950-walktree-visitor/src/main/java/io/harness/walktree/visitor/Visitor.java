@@ -2,11 +2,18 @@ package io.harness.walktree.visitor;
 
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.beans.VisitableChild;
+import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import lombok.Getter;
 
 public abstract class Visitor {
+  @Getter Map<String, Object> contextMap = new ConcurrentHashMap<>();
+
   /**
    * Invoked for a directory before entries in the Element are visited.
    * @param element
@@ -49,22 +56,25 @@ public abstract class Visitor {
       if (!skipChildren) {
         Visitable visitable = (Visitable) currentElement;
         if (visitable.getChildrenToWalk() != null) {
-          List<Object> childrenToWalk = visitable.getChildrenToWalk()
-                                            .getVisitableChildList()
-                                            .stream()
-                                            .map(VisitableChild::getValue)
-                                            .collect(Collectors.toList());
-          for (Object child : childrenToWalk) {
-            // if child is null then we should not visit it
-            if (child == null) {
-              continue;
+          Map<String, List<Object>> childrenToWalk = new HashMap<>();
+          for (VisitableChild visitableChild : visitable.getChildrenToWalk().getVisitableChildList()) {
+            List<Object> children = childrenToWalk.getOrDefault(visitableChild.getFieldName(), new ArrayList<>());
+            if (visitableChild.getValue() != null) {
+              children.add(visitableChild.getValue());
             }
-            VisitElementResult childVisitResult = walkElementTree(child);
-            if (childVisitResult == VisitElementResult.TERMINATE) {
-              return childVisitResult;
-            }
-            if (childVisitResult == VisitElementResult.SKIP_SIBLINGS) {
-              break;
+            childrenToWalk.put(visitableChild.getFieldName(), children);
+          }
+          for (Map.Entry<String, List<Object>> fieldNameToChild : childrenToWalk.entrySet()) {
+            for (Object object : fieldNameToChild.getValue()) {
+              VisitorParentPathUtils.addToParentList(this.getContextMap(), fieldNameToChild.getKey());
+              VisitElementResult childVisitResult = walkElementTree(object);
+              VisitorParentPathUtils.removeFromParentList(this.getContextMap());
+              if (childVisitResult == VisitElementResult.TERMINATE) {
+                return childVisitResult;
+              }
+              if (childVisitResult == VisitElementResult.SKIP_SIBLINGS) {
+                break;
+              }
             }
           }
         }

@@ -8,7 +8,6 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.serializer.ProtoUtils;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
@@ -38,7 +37,6 @@ public class NodeExecutionMapper {
         .timeoutInstanceIds(Collections.emptyList())
         .timeoutDetails(null)
         .outcomeRefs(CollectionUtils.emptyIfNull(proto.getOutcomeRefsList()))
-        .progressDataMap(new LinkedHashMap<>())
         .retryIds(proto.getRetryIdsList())
         .oldRetry(proto.getOldRetry())
         .build();

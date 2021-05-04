@@ -82,7 +82,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
             if (!isEmpty(workflowExecutionBaseline.getPipelineExecutionId())) {
               updates.put("pipelineExecutionId", workflowExecutionBaseline.getPipelineExecutionId());
             }
-            updatePipleLineIfNecessary(executionBaseline.getPipelineExecutionId());
+            updatePipeLineIfNecessary(executionBaseline.getPipelineExecutionId());
           }
           wingsPersistence.updateFields(WorkflowExecutionBaseline.class, executionBaseline.getUuid(), updates);
         } else {
@@ -106,7 +106,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
       markPipelineWorkflowBaselineIfNecessary(workflowExecutionBaseline, isBaseline);
     }
 
-    updatePipleLineIfNecessary(executionId);
+    updatePipeLineIfNecessary(executionId);
   }
 
   private void markPipelineWorkflowBaselineIfNecessary(WorkflowExecutionBaseline baseline, boolean isBaseline) {
@@ -145,9 +145,9 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     wingsPersistence.merge(workflowExecution);
   }
 
-  private void updatePipleLineIfNecessary(String executionId) {
+  private void updatePipeLineIfNecessary(String executionId) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, executionId);
-    if (workflowExecution.getWorkflowType() != WorkflowType.PIPELINE) {
+    if (workflowExecution == null || workflowExecution.getWorkflowType() != WorkflowType.PIPELINE) {
       return;
     }
     boolean markBaseline = false;

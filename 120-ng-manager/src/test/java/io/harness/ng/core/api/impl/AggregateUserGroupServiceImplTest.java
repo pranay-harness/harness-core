@@ -24,7 +24,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.entities.UserGroup;
-import io.harness.ng.core.invites.dto.UserSearchDTO;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.rest.RestResponse;
@@ -104,15 +104,15 @@ public class AggregateUserGroupServiceImplTest extends CategoryTest {
     assertThat(response.getContent()).hasSize(4);
     assertThat(response.getContent().get(0).getUsers().size()).isEqualTo(2);
     assertThat(
-        response.getContent().get(0).getUsers().stream().map(UserSearchDTO::getUuid).collect(Collectors.toList()))
+        response.getContent().get(0).getUsers().stream().map(UserMetadataDTO::getUuid).collect(Collectors.toList()))
         .containsExactly("u7", "u6");
     assertThat(response.getContent().get(1).getUsers().size()).isEqualTo(2);
     assertThat(
-        response.getContent().get(1).getUsers().stream().map(UserSearchDTO::getUuid).collect(Collectors.toList()))
+        response.getContent().get(1).getUsers().stream().map(UserMetadataDTO::getUuid).collect(Collectors.toList()))
         .containsExactly("u8", "u7");
     assertThat(response.getContent().get(2).getUsers().size()).isEqualTo(1);
     assertThat(
-        response.getContent().get(2).getUsers().stream().map(UserSearchDTO::getUuid).collect(Collectors.toList()))
+        response.getContent().get(2).getUsers().stream().map(UserMetadataDTO::getUuid).collect(Collectors.toList()))
         .containsExactly("u2");
     assertThat(response.getContent().get(3).getUsers().size()).isEqualTo(0);
   }

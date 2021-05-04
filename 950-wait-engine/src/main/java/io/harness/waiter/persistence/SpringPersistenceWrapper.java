@@ -62,7 +62,7 @@ public class SpringPersistenceWrapper implements PersistenceWrapper {
 
   @Override
   public List<WaitInstance> fetchWaitInstances(String correlationId) {
-    Query query = query(where(WaitInstanceKeys.waitingOnCorrelationIds).is(correlationId));
+    Query query = query(where(WaitInstanceKeys.correlationIds).is(correlationId));
     return mongoTemplate.find(query, WaitInstance.class);
   }
 

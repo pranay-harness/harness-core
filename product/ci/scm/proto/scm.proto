@@ -384,6 +384,25 @@ message CreatePRResponse {
   int32 status = 1;
 }
 
+message FindFilesInPRRequest {
+  string slug = 1;
+  int32 number = 2;
+  PageRequest pagination = 3;
+  Provider provider = 4;
+}
+
+message PRFile {
+  string path = 1;
+  bool added = 2;
+  bool renamed = 3;
+  bool deleted = 4;
+}
+
+message FindFilesInPRResponse {
+  repeated PRFile files = 1;
+  PageResponse pagination = 2;
+}
+
 message CreateBranchRequest {
   string slug = 1;
   string name = 2;
@@ -492,6 +511,7 @@ service SCM {
 
   // Git functions. branch and commits
   rpc CreatePR(CreatePRRequest) returns (CreatePRResponse);
+  rpc FindFilesInPR(FindFilesInPRRequest) returns (FindFilesInPRResponse);
   rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse);
   rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);
   rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);

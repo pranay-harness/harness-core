@@ -106,7 +106,7 @@ public class EnvironmentResourceV2 {
       @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
                                                   environmentRequestDTO.getProjectIdentifier()),
-        Resource.NONE, ENVIRONMENT_CREATE_PERMISSION);
+        Resource.of(ENVIRONMENT, null), ENVIRONMENT_CREATE_PERMISSION);
 
     Environment environmentEntity = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     Environment createdEnvironment = environmentService.create(environmentEntity);
@@ -119,10 +119,10 @@ public class EnvironmentResourceV2 {
   @ApiOperation(value = "Delete en environment by identifier", nickname = "deleteEnvironmentV2")
   @NGAccessControlCheck(resourceType = ENVIRONMENT, permission = "core_environment_delete")
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @PathParam("environmentIdentifier") String environmentIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+      @PathParam("environmentIdentifier") @ResourceIdentifier String environmentIdentifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier) {
     return ResponseDTO.newResponse(environmentService.delete(accountId, orgIdentifier, projectIdentifier,
         environmentIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
@@ -134,7 +134,7 @@ public class EnvironmentResourceV2 {
       @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
                                                   environmentRequestDTO.getProjectIdentifier()),
-        Resource.NONE, ENVIRONMENT_UPDATE_PERMISSION);
+        Resource.of(ENVIRONMENT, environmentRequestDTO.getIdentifier()), ENVIRONMENT_UPDATE_PERMISSION);
 
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     requestEnvironment.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
@@ -151,7 +151,7 @@ public class EnvironmentResourceV2 {
       @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
                                                   environmentRequestDTO.getProjectIdentifier()),
-        Resource.NONE, ENVIRONMENT_UPDATE_PERMISSION);
+        Resource.of(ENVIRONMENT, environmentRequestDTO.getIdentifier()), ENVIRONMENT_UPDATE_PERMISSION);
 
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     requestEnvironment.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
@@ -169,17 +169,8 @@ public class EnvironmentResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
-    //    boolean hasAccess = accessControlClient
-    //                            .checkForAccess(Collections.singletonList(CDNGRbacUtility.getPermissionDTO(accountId,
-    //                                orgIdentifier, projectIdentifier,
-    //                                CDNGRbacPermissions.ENVIRONMENT_VIEW_PERMISSION)))
-    //                            .getAccessControlList()
-    //                            .get(0)
-    //                            .isPermitted();
-    //    if (!hasAccess) {
-    //      throw new AccessDeniedException(
-    //          "Unauthorized to list environments", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
-    //    }
+    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
+    //        Resource.of(ENVIRONMENT, null), ENVIRONMENT_VIEW_PERMISSION, "Unauthorized to list environments");
     Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     Pageable pageRequest;
 

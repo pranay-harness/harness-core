@@ -7,6 +7,7 @@ import io.harness.iterator.PersistentCronIterable;
 import io.harness.iterator.PersistentFibonacciIterable;
 import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
+import io.harness.iterator.PersistentNGCronIterable;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.migration.MigrationJobInstance;
 import io.harness.mongo.MorphiaMove;
@@ -60,6 +61,7 @@ public class PersistenceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(UuidAccess.class);
     set.add(UuidAware.class);
     set.add(ValidUntilAccess.class);
+    set.add(PersistentNGCronIterable.class);
   }
 
   @Override

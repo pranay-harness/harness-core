@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,7 +18,7 @@ public class ResourceScope {
   private String orgIdentifier;
   private String projectIdentifier;
 
-  public static ResourceScope of(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public static ResourceScope of(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return ResourceScope.builder()
         .accountIdentifier(accountIdentifier)
         .orgIdentifier(orgIdentifier)

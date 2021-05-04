@@ -8,7 +8,6 @@ import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 
@@ -39,8 +38,8 @@ public class ConnectorRefExtractorHelper implements EntityReferenceExtractor {
       if (ParameterField.isNull(connectorRef)) {
         return result;
       }
-      String fullQualifiedDomainName = VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR
-          + YAMLFieldNameConstants.SPEC + PATH_CONNECTOR + key;
+      String fullQualifiedDomainName =
+          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + key;
       result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier, projectIdentifier,
           fullQualifiedDomainName, connectorRef, EntityTypeProtoEnum.CONNECTORS));
     }
