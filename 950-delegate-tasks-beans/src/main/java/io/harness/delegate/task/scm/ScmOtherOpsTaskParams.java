@@ -10,6 +10,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -25,6 +26,6 @@ public class ScmOtherOpsTaskParams implements TaskParameters, ExecutionCapabilit
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return null;
+    return Collections.emptyList();
   }
 }
