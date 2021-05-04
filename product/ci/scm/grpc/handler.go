@@ -124,6 +124,11 @@ func (h *handler) CreatePR(ctx context.Context, in *pb.CreatePRRequest) (*pb.Cre
 	return git.CreatePR(ctx, in, h.log)
 }
 
+// FindFilesInPR lists the files in a PR.
+func (h *handler) FindFilesInPR(ctx context.Context, in *pb.FindFilesInPRRequest) (*pb.FindFilesInPRResponse, error) {
+	return git.FindFilesInPR(ctx, in, h.log)
+}
+
 // CreateBranch creates a Branch given a branch name and commit_id.
 func (h *handler) CreateBranch(ctx context.Context, in *pb.CreateBranchRequest) (*pb.CreateBranchResponse, error) {
 	return git.CreateBranch(ctx, in, h.log)
