@@ -271,7 +271,6 @@ public class TerraformStepHelper {
             .entityId(generateFullIdentifier(
                 ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
             .pipelineExecutionId(ambiance.getPlanExecutionId())
-            .createdAt(System.currentTimeMillis())
             .configFiles(inheritOutput.getConfigFiles().toGitStoreConfigDTO())
             .remoteVarFiles(CollectionUtils.emptyIfNull(inheritOutput.getRemoteVarFiles())
                                 .stream()
@@ -336,8 +335,7 @@ public class TerraformStepHelper {
             .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
             .entityId(generateFullIdentifier(
                 ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
-            .pipelineExecutionId(ambiance.getPlanExecutionId())
-            .createdAt(System.currentTimeMillis());
+            .pipelineExecutionId(ambiance.getPlanExecutionId());
 
     Map<String, String> commitIdMap = response.getCommitIdForConfigFilesMap();
     builder.configFiles(
@@ -490,7 +488,6 @@ public class TerraformStepHelper {
                          .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
                          .entityId(rollbackConfig.getEntityId())
                          .pipelineExecutionId(ambiance.getPlanExecutionId())
-                         .createdAt(System.currentTimeMillis())
                          .configFiles(rollbackConfig.getConfigFiles())
                          .remoteVarFiles(rollbackConfig.getRemoteVarFiles())
                          .inlineVarFiles(rollbackConfig.getInlineVarFiles())

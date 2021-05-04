@@ -9,6 +9,7 @@ import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.cdng.creator.variables.ShellScriptStepVariableCreator;
+import io.harness.cdng.provision.terraform.variablecreator.TerraformStepsVariableCreator;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
@@ -54,6 +55,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     variableCreators.add(new DeploymentStageVariableCreator());
     variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new K8sStepVariableCreator());
+    variableCreators.add(new TerraformStepsVariableCreator());
     variableCreators.add(new ShellScriptStepVariableCreator());
     return variableCreators;
   }
