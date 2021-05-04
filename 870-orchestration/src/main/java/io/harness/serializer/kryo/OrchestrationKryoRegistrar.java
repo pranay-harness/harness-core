@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.AbortInterruptCallback;
+import io.harness.engine.interrupts.callback.FailureInterruptCallback;
 import io.harness.engine.interrupts.handlers.AbortAllInterruptCallback;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
@@ -29,5 +30,6 @@ public class OrchestrationKryoRegistrar implements KryoRegistrar {
     kryo.register(EngineProgressCallback.class, 87007);
     kryo.register(AbortInterruptCallback.class, 87008);
     kryo.register(AbortAllInterruptCallback.class, 87009);
+    kryo.register(FailureInterruptCallback.class, 87010);
   }
 }
