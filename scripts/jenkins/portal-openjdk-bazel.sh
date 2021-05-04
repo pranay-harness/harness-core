@@ -263,6 +263,7 @@ cp ../../820-platform-service/config.yml .
 cp ../../820-platform-service/keystore.jks .
 cp ../../820-platform-service/key.pem .
 cp ../../820-platform-service/cert.pem .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/platform-service/scripts/ .
