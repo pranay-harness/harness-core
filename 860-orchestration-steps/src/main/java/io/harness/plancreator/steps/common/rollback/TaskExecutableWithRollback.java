@@ -18,7 +18,8 @@ public abstract class TaskExecutableWithRollback<R extends ResponseData>
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
-  public void handleFailure(Ambiance ambiance, StepElementParameters stepParameters, Map<String, String> metadata) {
+  public void handleFailureInterrupt(
+      Ambiance ambiance, StepElementParameters stepParameters, Map<String, String> metadata) {
     RollbackExecutableUtility.publishRollbackInfo(ambiance, stepParameters, metadata, executionSweepingOutputService);
   }
 }

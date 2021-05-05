@@ -1,5 +1,8 @@
 package io.harness.engine.interrupts;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.service.InterruptProtoServiceGrpc.InterruptProtoServiceImplBase;
 import io.harness.pms.contracts.service.InterruptRequest;
 import io.harness.pms.contracts.service.InterruptResponse;
@@ -13,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class InterruptGrpcService extends InterruptProtoServiceImplBase {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -27,7 +31,7 @@ public class InterruptGrpcService extends InterruptProtoServiceImplBase {
 
   @Override
   public void handleFailure(InterruptRequest request, StreamObserver<InterruptResponse> responseObserver) {
-    log.info("InterruptGrpcService#handleFailure reached.");
+    log.info("InterruptGrpcService#handleFailureInterrupt reached.");
     // adding a dummy response data object
     waitNotifyEngine.doneWith(request.getNotifyId(), BinaryResponseData.builder().build());
     responseObserver.onNext(InterruptResponse.newBuilder().build());

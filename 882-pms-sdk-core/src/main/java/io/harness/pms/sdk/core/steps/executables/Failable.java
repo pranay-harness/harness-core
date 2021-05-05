@@ -10,5 +10,5 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 public interface Failable<T extends StepParameters> {
-  void handleFailure(Ambiance ambiance, T stepParameters, Map<String, String> metadata);
+  void handleFailureInterrupt(Ambiance ambiance, T stepParameters, Map<String, String> metadata);
 }
