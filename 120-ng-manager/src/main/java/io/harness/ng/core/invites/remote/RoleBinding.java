@@ -20,4 +20,5 @@ public class RoleBinding {
   String resourceGroupIdentifier;
   String resourceGroupName;
   @ApiModelProperty(required = true) boolean managedRole;
+  @ApiModelProperty(required = true) boolean managedRoleAssignment;
 }
