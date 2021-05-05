@@ -35,7 +35,6 @@ import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationRequest;
@@ -86,7 +85,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testCreate() throws JsonProcessingException, ProducerShutdownException {
+  public void testCreate() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     OrganizationDTO organizationDTO = getOrganizationDTO(identifier);
@@ -137,7 +136,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testUpdate() throws JsonProcessingException, ProducerShutdownException {
+  public void testUpdate() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     OrganizationDTO oldOrganizationDTO = getOrganizationDTO(identifier);
@@ -175,7 +174,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testDelete() throws JsonProcessingException, ProducerShutdownException {
+  public void testDelete() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     OrganizationDTO organizationDTO = getOrganizationDTO(identifier);
@@ -210,7 +209,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testRestore() throws JsonProcessingException, ProducerShutdownException {
+  public void testRestore() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     OrganizationDTO organizationDTO = getOrganizationDTO(identifier);
@@ -244,7 +243,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   }
 
   private void verifyMethodInvocation(OutboxEvent outboxEvent, ArgumentCaptor<Message> messageArgumentCaptor,
-      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor) throws ProducerShutdownException {
+      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor) {
     when(producer.send(any())).thenReturn("");
     when(auditClientService.publishAudit(any(), any())).thenReturn(true);
 

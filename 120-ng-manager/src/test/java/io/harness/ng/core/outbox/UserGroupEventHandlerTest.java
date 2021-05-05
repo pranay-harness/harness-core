@@ -31,7 +31,6 @@ import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.events.UserGroupCreateEvent;
@@ -96,7 +95,7 @@ public class UserGroupEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testCreate() throws JsonProcessingException, ProducerShutdownException {
+  public void testCreate() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
@@ -147,7 +146,7 @@ public class UserGroupEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testUpdate() throws JsonProcessingException, ProducerShutdownException {
+  public void testUpdate() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
@@ -200,7 +199,7 @@ public class UserGroupEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testDelete() throws JsonProcessingException, ProducerShutdownException {
+  public void testDelete() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);

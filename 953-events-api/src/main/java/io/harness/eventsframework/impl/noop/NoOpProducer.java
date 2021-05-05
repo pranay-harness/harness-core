@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractProducer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 
 @OwnedBy(PL)
@@ -14,7 +13,7 @@ public class NoOpProducer extends AbstractProducer {
   }
 
   @Override
-  public String send(Message message) throws ProducerShutdownException {
+  public String send(Message message) {
     return "dummy-message-id";
   }
 

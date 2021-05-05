@@ -11,7 +11,6 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
@@ -97,7 +96,7 @@ public class PMSPipelineServiceHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testUpdatePipelineInfo() throws IOException, ProducerShutdownException {
+  public void testUpdatePipelineInfo() throws IOException {
     FilterCreatorMergeServiceResponse response =
         FilterCreatorMergeServiceResponse.builder()
             .stageCount(1)

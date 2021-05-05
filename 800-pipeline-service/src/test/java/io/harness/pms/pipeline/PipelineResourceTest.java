@@ -18,7 +18,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
@@ -188,7 +187,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testDeletePipeline() throws ProducerShutdownException {
+  public void testDeletePipeline() {
     doReturn(true)
         .when(pmsPipelineService)
         .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);

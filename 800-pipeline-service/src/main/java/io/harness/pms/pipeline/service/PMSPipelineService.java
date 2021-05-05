@@ -3,7 +3,6 @@ package io.harness.pms.pipeline.service;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
@@ -30,8 +29,8 @@ public interface PMSPipelineService {
   Optional<PipelineEntity> incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
 
-  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
-      Long version) throws ProducerShutdownException;
+  boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
 
   Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
 
