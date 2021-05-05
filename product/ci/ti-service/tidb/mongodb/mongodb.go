@@ -110,11 +110,14 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 
 	log.Infow("trying to connect to mongo", "connStr", connStr)
 	ctx := context.Background()
-	credential := options.Credential{
-		Username: username,
-		Password: password,
+	opts := options.Client().ApplyURI(connStr)
+	if len(username) > 0 {
+		credential := options.Credential{
+			Username: username,
+			Password: password,
+		}
+		opts = opts.SetAuth(credential)
 	}
-	opts := options.Client().ApplyURI(connStr).SetAuth(credential)
 	err := mgm.SetDefaultConfig(getDefaultConfig(), dbName, opts)
 	if err != nil {
 		return nil, err
