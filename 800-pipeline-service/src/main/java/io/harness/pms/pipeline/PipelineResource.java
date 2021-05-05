@@ -342,7 +342,7 @@ public class PipelineResource implements YamlSchemaResource {
     if (entityType != EntityType.PIPELINES) {
       throw new NotSupportedException(String.format("Entity type %s is not supported", entityType.getYamlName()));
     }
-    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(orgIdentifier, projectIdentifier, scope);
+    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(projectIdentifier, orgIdentifier, scope);
     if (schema == null) {
       throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
     }
