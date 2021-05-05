@@ -79,7 +79,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   private volatile Storage storage;
 
   @Inject
-  public GoogleCloudFileServiceImpl(WingsPersistence wingsPersistence, MainConfiguration configuration) {
+  public GoogleCloudFileServiceImpl(HPersistence wingsPersistence, MainConfiguration configuration) {
     this.wingsPersistence = wingsPersistence;
     this.configuration = configuration;
   }
