@@ -44,9 +44,11 @@ import static io.harness.obfuscate.Obfuscator.obfuscate;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
+import static software.wings.audit.AuditHeader.Builder.anAuditHeader;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
@@ -79,6 +81,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -200,6 +203,7 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.app.DelegateGrpcConfig;
 import software.wings.app.MainConfiguration;
+import software.wings.audit.AuditHeader;
 import software.wings.beans.Account;
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.CEDelegateStatus.CEDelegateStatusBuilder;
@@ -213,6 +217,7 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitValidationParameters;
 import software.wings.beans.HostValidationTaskParameters;
+import software.wings.beans.HttpMethod;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
@@ -222,6 +227,7 @@ import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.cdn.CdnConfig;
+import software.wings.common.AuditHelper;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -432,6 +438,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private CapabilityService capabilityService;
   @Inject private DelegateInsightsService delegateInsightsService;
   @Inject private DelegateSetupService delegateSetupService;
+  @Inject private AuditHelper auditHelper;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -947,6 +954,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action) {
     DelegateInstanceStatus newDelegateStatus = mapApprovalActionToDelegateStatus(action);
+    Type actionEventType = mapActionToEventType(action);
 
     Delegate currentDelegate = persistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, accountId)
@@ -964,8 +972,7 @@ public class DelegateServiceImpl implements DelegateService {
     log.debug("Updating approval status from {} to {}", currentDelegate.getStatus(), newDelegateStatus);
     Delegate updatedDelegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
 
-    auditServiceHelper.reportForAuditingUsingAccountId(
-        accountId, currentDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, currentDelegate, updatedDelegate, actionEventType);
 
     if (DelegateInstanceStatus.DELETED == newDelegateStatus) {
       broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
@@ -979,6 +986,14 @@ public class DelegateServiceImpl implements DelegateService {
       return DelegateInstanceStatus.ENABLED;
     } else {
       return DelegateInstanceStatus.DELETED;
+    }
+  }
+
+  private Type mapActionToEventType(DelegateApproval action) {
+    if (DelegateApproval.ACTIVATE == action) {
+      return Type.DELEGATE_APPROVAL;
+    } else {
+      return Type.DELEGATE_REJECTION;
     }
   }
 
@@ -1963,6 +1978,9 @@ public class DelegateServiceImpl implements DelegateService {
 
     log.info("Delegate saved: {}", savedDelegate);
 
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        accountId, savedDelegate, savedDelegate, Type.DELEGATE_REGISTRATION);
+
     // When polling is enabled for delegate, do not perform these event publishing
     if (isDelegateWithoutPollingEnabled(delegate)) {
       eventEmitter.send(Channel.DELEGATES,
@@ -2027,6 +2045,8 @@ public class DelegateServiceImpl implements DelegateService {
     persistence.delete(persistence.createQuery(Delegate.class)
                            .filter(DelegateKeys.accountId, accountId)
                            .filter(DelegateKeys.uuid, delegateId));
+    auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, existingDelegate);
+    log.info("Auditing deleting of Delegate for accountId={}", accountId);
   }
 
   @Override
@@ -2213,6 +2233,9 @@ public class DelegateServiceImpl implements DelegateService {
     if (existingDelegate == null) {
       log.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
           delegate.getHostName(), delegate.getIp());
+
+      createAuditHeaderForDelegateRegistration(delegate.getHostName());
+
       registeredDelegate = add(delegate);
     } else {
       log.info("Delegate exists, updating: {}", delegate.getUuid());
@@ -2242,6 +2265,18 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     return registeredDelegate;
+  }
+
+  private AuditHeader createAuditHeaderForDelegateRegistration(String delegateHostName) {
+    AuditHeader.Builder builder = anAuditHeader();
+    builder.withCreatedAt(System.currentTimeMillis())
+        .withCreatedBy(EmbeddedUser.builder().name(delegateHostName).uuid("delegate").build())
+        .withRemoteUser(anUser().name(delegateHostName).uuid("delegate").build())
+        .withRequestMethod(HttpMethod.POST)
+        .withRequestTime(System.currentTimeMillis())
+        .withUrl("/agent/delegates");
+
+    return auditHelper.create(builder.build());
   }
 
   private void updateBroadcastMessageIfEcsDelegate(
