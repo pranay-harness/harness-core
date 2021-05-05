@@ -45,11 +45,13 @@ public class ACLDAOImpl implements ACLDAO {
 
   private String getScope(ResourceScope resourceScope) {
     if (resourceScope != null && !StringUtils.isEmpty(resourceScope.getAccountIdentifier())) {
-      return scopeService.buildScopeFromParams(HarnessScopeParams.builder()
-                                                   .accountIdentifier(resourceScope.getAccountIdentifier())
-                                                   .orgIdentifier(resourceScope.getOrgIdentifier())
-                                                   .projectIdentifier(resourceScope.getProjectIdentifier())
-                                                   .build()).toString();
+      return scopeService
+          .buildScopeFromParams(HarnessScopeParams.builder()
+                                    .accountIdentifier(resourceScope.getAccountIdentifier())
+                                    .orgIdentifier(resourceScope.getOrgIdentifier())
+                                    .projectIdentifier(resourceScope.getProjectIdentifier())
+                                    .build())
+          .toString();
     }
     return "";
   }
