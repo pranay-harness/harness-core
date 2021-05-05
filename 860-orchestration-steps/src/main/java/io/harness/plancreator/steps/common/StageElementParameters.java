@@ -36,12 +36,12 @@ public class StageElementParameters implements StepParameters {
   List<NGVariable> originalVariables;
   Map<String, String> tags;
   String type;
-  SpecParameters spec;
+  SpecParameters specConfig;
 
   @Override
   public String toViewJson() {
     StageElementParameters stageElementParameters = cloneParameters();
-    stageElementParameters.setSpec(spec.getViewJsonObject());
+    stageElementParameters.setSpecConfig(specConfig.getViewJsonObject());
     return RecastOrchestrationUtils.toDocumentJson(stageElementParameters);
   }
 
