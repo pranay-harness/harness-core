@@ -757,7 +757,7 @@ func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo)
 }
 
 // upsertRelations is used to upload partial callagraph to db. If there is already a cg present with
-//the same commit, it udpdates that callgraph otherwise creates a new entry The algo for that is:
+// the same commit, it udpdates that callgraph otherwise creates a new entry The algo for that is:
 // 1. get all the existing relations for `repo` + `branch` + `commit_id`.
 // 2. Relations received in cg which are new will be inserted in relations collection.
 // relations which are already present in the db needs to be merged.
