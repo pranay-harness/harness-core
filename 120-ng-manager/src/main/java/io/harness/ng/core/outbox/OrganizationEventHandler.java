@@ -1,10 +1,14 @@
 package io.harness.ng.core.outbox;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.audit.beans.AuthenticationInfoDTO.fromSecurityPrincipal;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
+import static io.harness.security.PrincipalContextData.PRINCIPAL_CONTEXT;
 import static io.harness.security.SourcePrincipalContextData.SOURCE_PRINCIPAL;
 
 import io.harness.ModuleType;
@@ -37,8 +41,10 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.security.PrincipalContextData;
 import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.Principal;
+import io.harness.security.dto.ServicePrincipal;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.utils.ScopeUtils;
 
@@ -118,7 +124,15 @@ public class OrganizationEventHandler implements OutboxEventHandler {
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .insertId(outboxEvent.getId())
             .build();
-    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext)
+    Principal principal = null;
+    if (globalContext.get(PRINCIPAL_CONTEXT) == null
+        && DEFAULT_ORG_IDENTIFIER.equals(outboxEvent.getResource().getIdentifier())) {
+      principal = new ServicePrincipal(NG_MANAGER.getServiceId());
+    } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
+      principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
+    }
+    return publishedToRedis
+        && auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext)
         && setupOrgForUserAuthz(
             accountIdentifier, organizationCreateEvent.getOrganization().getIdentifier(), globalContext);
   }

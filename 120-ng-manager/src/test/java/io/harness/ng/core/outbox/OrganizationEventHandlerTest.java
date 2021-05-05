@@ -47,7 +47,9 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.rule.Owner;
+import io.harness.security.PrincipalContextData;
 import io.harness.security.SourcePrincipalContextData;
+import io.harness.security.dto.Principal;
 import io.harness.security.dto.UserPrincipal;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -91,12 +93,13 @@ public class OrganizationEventHandlerTest extends CategoryTest {
     OrganizationCreateEvent organizationCreateEvent = new OrganizationCreateEvent(accountIdentifier, organizationDTO);
     String eventData = objectMapper.writeValueAsString(organizationCreateEvent);
     GlobalContext globalContext = new GlobalContext();
+    Principal principal =
+        new UserPrincipal(randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10));
     SourcePrincipalContextData sourcePrincipalContextData =
-        SourcePrincipalContextData.builder()
-            .principal(new UserPrincipal(
-                randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10)))
-            .build();
-    globalContext.setGlobalContextRecord(sourcePrincipalContextData);
+        SourcePrincipalContextData.builder().principal(principal).build();
+    globalContext.upsertGlobalContextRecord(sourcePrincipalContextData);
+    PrincipalContextData principalContextData = PrincipalContextData.builder().principal(principal).build();
+    globalContext.upsertGlobalContextRecord(principalContextData);
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .id(randomAlphabetic(10))
                                   .blocked(false)
@@ -113,7 +116,13 @@ public class OrganizationEventHandlerTest extends CategoryTest {
     final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
     final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
     doNothing().when(ngUserService).addUserToScope(any(), any(), any(), any());
-    verifyMethodInvocation(outboxEvent, messageArgumentCaptor, auditEntryArgumentCaptor);
+    when(producer.send(any())).thenReturn("");
+    when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
+
+    organizationEventHandler.handle(outboxEvent);
+
+    verify(producer, times(1)).send(messageArgumentCaptor.capture());
+    verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
 
     Message message = messageArgumentCaptor.getValue();
     assertMessage(message, accountIdentifier, CREATE_ACTION);
