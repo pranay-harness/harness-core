@@ -16,6 +16,7 @@ import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecution.ExecutionMetadataKeys;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -32,10 +33,12 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -57,7 +60,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
    * Always use this method while updating statuses. This guarantees we a hopping from correct statuses.
    * As we don't have transactions it is possible that your execution state is manipulated by some other thread and
    * your transition is no longer valid.
-   *
+   * <p>
    * Like your workflow is aborted but some other thread try to set it to running. Same logic applied to plan execution
    * status as well
    */
@@ -126,6 +129,23 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   public List<PlanExecution> findAllByPlanExecutionIdIn(List<String> planExecutionIds) {
     Query query = query(where(PlanExecutionKeys.uuid).in(planExecutionIds));
     return mongoTemplate.find(query, PlanExecution.class);
+  }
+
+  @Override
+  public List<PlanExecution> findPrevUnTerminatedPlanExecutionsByExecutionTag(
+      PlanExecution planExecution, String executionTag) {
+    List<String> resumableStatuses =
+        StatusUtils.resumableStatuses().stream().map(status -> status.name()).collect(Collectors.toList());
+
+    Criteria criteria = new Criteria()
+                            .and(ExecutionMetadataKeys.tagExecutionKey)
+                            .is(executionTag)
+                            .and(PlanExecutionKeys.status)
+                            .in(resumableStatuses)
+                            .and(PlanExecutionKeys.createdAt)
+                            .lt(planExecution.getCreatedAt());
+
+    return mongoTemplate.find(new Query(criteria), PlanExecution.class);
   }
 
   public Status calculateStatus(String planExecutionId) {

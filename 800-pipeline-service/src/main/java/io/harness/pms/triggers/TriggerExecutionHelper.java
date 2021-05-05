@@ -16,10 +16,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.PlanExecution.ExecutionMetadataKeys;
-import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -32,7 +31,6 @@ import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
-import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -42,16 +40,13 @@ import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.PushHook;
-import io.harness.repositories.PlanExecutionRepository;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -59,7 +54,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class TriggerExecutionHelper {
   private final PMSPipelineService pmsPipelineService;
   private final PipelineExecuteHelper pipelineExecuteHelper;
-  private final PlanExecutionRepository planExecutionRepository;
+  private final PlanExecutionService planExecutionService;
   private final PMSExecutionService pmsExecutionService;
 
   public PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
@@ -207,7 +202,7 @@ public class TriggerExecutionHelper {
   void requestPipelineExecutionAbortForSameExecTagIfNeeded(PlanExecution planExecution, String executionTag) {
     try {
       List<PlanExecution> executionsToAbort =
-          planExecutionRepository.findAll(generateCriteria(planExecution, executionTag));
+          planExecutionService.findPrevUnTerminatedPlanExecutionsByExecutionTag(planExecution, executionTag);
       if (isEmpty(executionsToAbort)) {
         return;
       }
@@ -232,17 +227,5 @@ public class TriggerExecutionHelper {
     } catch (Exception e) {
       log.error("Exception white requesting Pipeline Execution Abort: " + executionTag, e);
     }
-  }
-
-  private Criteria generateCriteria(PlanExecution planExecution, String executionTag) {
-    List<String> resumableStatuses =
-        StatusUtils.resumableStatuses().stream().map(status -> status.name()).collect(Collectors.toList());
-    Criteria criteria = new Criteria();
-    return criteria.and(ExecutionMetadataKeys.tagExecutionKey)
-        .is(executionTag)
-        .and(PlanExecutionKeys.status)
-        .in(resumableStatuses)
-        .and(PlanExecutionKeys.createdAt)
-        .lt(planExecution.getCreatedAt());
   }
 }
