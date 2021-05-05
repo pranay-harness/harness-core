@@ -41,6 +41,8 @@ if ! dirname $(which gcloud) ;then
 fi
 
 gcloud components install docker-credential-gcr
+gcloud auth login
+gcloud auth configure-docker
 docker-credential-gcr configure-docker
 
 scripts/bazel/testDistribute.sh
