@@ -3,6 +3,7 @@ roles:
       name: Project Admin
       description: Administrate an existing project.
       permissions:
+        - core_user_invite
         - core_project_view
         - core_project_edit
         - core_project_delete
@@ -62,6 +63,7 @@ roles:
       name: Organization Admin
       description: Administer an existing organizationn
       permissions:
+        - core_user_invite
         - core_organization_view
         - core_organization_edit
         - core_organization_delete
@@ -120,6 +122,7 @@ roles:
       name: Account Admin
       description: Administer an account
       permissions:
+        - core_user_invite
         - core_organization_view
         - core_organization_create
         - core_secret_view

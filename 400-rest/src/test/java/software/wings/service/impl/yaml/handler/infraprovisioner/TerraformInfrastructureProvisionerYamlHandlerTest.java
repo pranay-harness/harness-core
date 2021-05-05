@@ -4,10 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
+import static software.wings.service.impl.yaml.handler.infraprovisioner.TestConstants.APP_ID;
+import static software.wings.service.impl.yaml.handler.infraprovisioner.TestConstants.SERVICE_ID;
+import static software.wings.service.impl.yaml.handler.infraprovisioner.TestConstants.SETTING_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,7 +55,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML)
 public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
@@ -121,11 +120,11 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
     assertThat(provisionerSaved).isNotNull();
     assertThat("TERRAFORM").isEqualTo(provisionerSaved.getInfrastructureProvisionerType());
     assertThat(APP_ID).isEqualTo(provisionerSaved.getAppId());
-    assertThat(SETTING_ID).isEqualTo(provisionerSaved.getSourceRepoSettingId());
+    assertThat(TestConstants.SETTING_ID).isEqualTo(provisionerSaved.getSourceRepoSettingId());
     assertThat(provisionerSaved.getRepoName()).isEqualTo("REPO_NAME");
     assertThat(provisionerSaved.getKmsId()).isEqualTo("KMSID");
 
-    Yaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
+    Yaml yamlFromObject = handler.toYaml(provisionerSaved, APP_ID);
     String yamlContent = getYamlContent(yamlFromObject);
     assertThat(yamlContent).isEqualTo(validYamlContent);
 
@@ -231,7 +230,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
 
   private ChangeContext<Yaml> getChangeContext() {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
-                                      .withAccountId(ACCOUNT_ID)
+                                      .withAccountId(TestConstants.ACCOUNT_ID)
                                       .withFilePath(validYamlFilePath)
                                       .withFileContent(validYamlContent)
                                       .build();

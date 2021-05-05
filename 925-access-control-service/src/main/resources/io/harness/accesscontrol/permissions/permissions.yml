@@ -289,3 +289,11 @@ permissions:
       - account
       - organization
       - project
+  - identifier: core_user_invite
+    name: Invite a user
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project

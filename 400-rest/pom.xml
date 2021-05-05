@@ -785,7 +785,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>870-cg-yaml-beans</artifactId>
+            <artifactId>870-cg-yaml</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

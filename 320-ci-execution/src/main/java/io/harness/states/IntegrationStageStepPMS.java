@@ -61,7 +61,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
     log.info("Executing integration stage with params [{}]", stepParameters);
 
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
-        (IntegrationStageStepParametersPMS) stepParameters.getSpec();
+        (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();
 
     Infrastructure infrastructure = integrationStageStepParametersPMS.getInfrastructure();
 
@@ -88,7 +88,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
       Ambiance ambiance, StageElementParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     log.info("executed integration stage =[{}]", stepParameters);
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
-        (IntegrationStageStepParametersPMS) stepParameters.getSpec();
+        (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();
     StepResponseBuilder stepResponseBuilder = createStepResponseFromChildResponse(responseDataMap).toBuilder();
     List<String> stepIdentifiers = integrationStageStepParametersPMS.getStepIdentifiers();
     if (isNotEmpty(stepIdentifiers)) {

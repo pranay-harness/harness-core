@@ -40,7 +40,7 @@ public class ApprovalStageStep implements ChildExecutable<StageElementParameters
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, StageElementParameters stepParameters, StepInputPackage inputPackage) {
     log.info("Executing approval stage with params [{}]", stepParameters);
-    ApprovalStageSpecParameters specParameters = (ApprovalStageSpecParameters) stepParameters.getSpec();
+    ApprovalStageSpecParameters specParameters = (ApprovalStageSpecParameters) stepParameters.getSpecConfig();
     String executionNodeId = specParameters.getChildNodeID();
     VariablesSweepingOutput variablesSweepingOutput = getVariablesSweepingOutput(ambiance, stepParameters);
     executionSweepingOutputResolver.consume(

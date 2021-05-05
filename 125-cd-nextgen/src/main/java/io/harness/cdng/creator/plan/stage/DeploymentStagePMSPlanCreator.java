@@ -17,6 +17,7 @@ import io.harness.plancreator.stages.GenericStagePlanCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.plancreator.steps.common.SpecParameters;
+import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -29,6 +30,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,20 +68,29 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     // Validate Stage Failure strategy.
     validateFailureStrategy(field);
 
-    // Adding service child
-    YamlField serviceField =
-        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.SERVICE_CONFIG);
+    YamlField specField =
+        Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.SPEC));
 
-    if (serviceField != null) {
-      PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
-          serviceField, ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer);
-      planCreationResponseMap.put(serviceField.getNode().getUuid(),
-          PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
+    // Adding service child
+    YamlField serviceField = specField.getNode().getField(YamlTypes.SERVICE_CONFIG);
+
+    if (serviceField == null) {
+      throw new InvalidRequestException("ServiceConfig Section cannot be absent in a pipeline");
     }
 
+    PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
+        serviceField, ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer);
+    planCreationResponseMap.put(serviceField.getNode().getUuid(),
+        PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
+
+    // Adding Spec node
+    PlanNode specPlanNode =
+        CommonPlanCreatorUtils.getSpecPlanNode(specField.getNode().getUuid(), serviceField.getNode().getUuid());
+    planCreationResponseMap.put(
+        specPlanNode.getUuid(), PlanCreationResponse.builder().node(specPlanNode.getUuid(), specPlanNode).build());
+
     // Adding infrastructure node
-    YamlField infraField =
-        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
+    YamlField infraField = specField.getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
     if (infraField == null) {
       throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
     }
@@ -114,8 +125,7 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     }
 
     // Add dependency for execution
-    YamlField executionField =
-        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
+    YamlField executionField = specField.getNode().getField(YAMLFieldNameConstants.EXECUTION);
     if (executionField == null) {
       throw new InvalidRequestException("Execution section cannot be absent in a pipeline");
     }
@@ -124,6 +134,7 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
 
     planCreationResponseMap.put(
         rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
+
     return planCreationResponseMap;
   }
 

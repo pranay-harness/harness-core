@@ -43,6 +43,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -134,6 +135,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private LogService logService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks @Spy private CloudFormationCreateStackState state = new CloudFormationCreateStackState("stateName");

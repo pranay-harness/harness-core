@@ -4,16 +4,11 @@ import static io.harness.common.CICommonPodConstants.POD_NAME_PREFIX;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI_CODE_BASE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PROPERTIES;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.SPEC;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGE;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
 import static java.lang.Character.toLowerCase;
 import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
-import io.harness.advisers.nextstep.NextStepAdviserParameters;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
@@ -25,39 +20,37 @@ import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.ci.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.GenericStagePlanCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.common.SpecParameters;
-import io.harness.pms.contracts.advisers.AdviserObtainment;
-import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
+import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
+import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
-import io.harness.serializer.KryoSerializer;
 import io.harness.states.IntegrationStageStepPMS;
+import io.harness.steps.common.NGSectionStep;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -65,12 +58,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
-  @Inject private KryoSerializer kryoSerializer;
-
-  public static final String STAGE_NAME = "CI";
   static final String SOURCE = "123456789bcdfghjklmnpqrstvwxyz";
   static final Integer RANDOM_LENGTH = 8;
-  @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
   private static final SecureRandom random = new SecureRandom();
 
@@ -80,7 +69,9 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
     final String podName = generatePodName(stageElementConfig.getIdentifier());
-    YamlField executionField = ctx.getCurrentField().getNode().getField(SPEC).getNode().getField(EXECUTION);
+    YamlField specField =
+        Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.SPEC));
+    YamlField executionField = specField.getNode().getField(EXECUTION);
 
     CodeBase ciCodeBase = getCICodebase(ctx);
     ExecutionElementConfig executionElementConfig;
@@ -105,27 +96,15 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     }
     planCreationResponseMap.put(
         executionField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
-    return planCreationResponseMap;
-  }
 
-  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
-    List<AdviserObtainment> adviserObtainments = new ArrayList<>();
-    if (currentField != null && currentField.getNode() != null) {
-      if (currentField.checkIfParentIsParallel(STAGES)) {
-        return adviserObtainments;
-      }
-      YamlField siblingField =
-          currentField.getNode().nextSiblingFromParentArray(currentField.getName(), Arrays.asList(STAGE, PARALLEL));
-      if (siblingField != null && siblingField.getNode().getUuid() != null) {
-        adviserObtainments.add(
-            AdviserObtainment.newBuilder()
-                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.NEXT_STEP.name()).build())
-                .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                    NextStepAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
-                .build());
-      }
-    }
-    return adviserObtainments;
+    BuildStatusUpdateParameter buildStatusUpdateParameter = obtainBuildStatusUpdateParameter(ctx, stageElementConfig);
+    PlanNode specPlanNode = getSpecPlanNode(specField,
+        IntegrationStageStepParametersPMS.getStepParameters(
+            stageElementConfig, executionField.getNode().getUuid(), buildStatusUpdateParameter, ctx));
+    planCreationResponseMap.put(
+        specPlanNode.getUuid(), PlanCreationResponse.builder().node(specPlanNode.getUuid(), specPlanNode).build());
+
+    return planCreationResponseMap;
   }
 
   @Override
@@ -151,9 +130,16 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     return StageElementConfig.class;
   }
 
-  @Override
-  public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap(STAGE, Collections.singleton(STAGE_NAME));
+  private PlanNode getSpecPlanNode(YamlField specField, IntegrationStageStepParametersPMS stepParameters) {
+    return PlanNode.builder()
+        .uuid(specField.getNode().getUuid())
+        .identifier(YAMLFieldNameConstants.SPEC)
+        .stepType(NGSectionStep.STEP_TYPE)
+        .name(YAMLFieldNameConstants.SPEC)
+        .stepParameters(stepParameters)
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .skipGraphType(SkipType.SKIP_NODE)
+        .build();
   }
 
   private String generatePodName(String identifier) {

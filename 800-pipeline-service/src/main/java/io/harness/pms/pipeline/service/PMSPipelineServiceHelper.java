@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
@@ -68,7 +67,7 @@ public class PMSPipelineServiceHelper {
     return criteria;
   }
 
-  public void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException, ProducerShutdownException {
+  public void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException {
     FilterCreatorMergeServiceResponse filtersAndStageCount = filterCreatorMergeService.getPipelineInfo(pipelineEntity);
     pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
     pipelineEntity.setStageNames(filtersAndStageCount.getStageNames());

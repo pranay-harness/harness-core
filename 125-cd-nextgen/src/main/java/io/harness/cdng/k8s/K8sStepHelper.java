@@ -138,7 +138,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(CDP)
 @Singleton
 public class K8sStepHelper {
-  private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
+  public static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
       ManifestType.K8Manifest, ManifestType.HelmChart, ManifestType.Kustomize, ManifestType.OpenshiftTemplate);
 
   private static final Set<String> VALUES_YAML_SUPPORTED_MANIFEST_TYPES =
@@ -777,11 +777,15 @@ public class K8sStepHelper {
             .filter(manifestOutcome -> K8S_SUPPORTED_MANIFEST_TYPES.contains(manifestOutcome.getType()))
             .collect(Collectors.toList());
     if (isEmpty(k8sManifests)) {
-      throw new InvalidRequestException("K8s Manifests are mandatory for k8s Rolling step", USER);
+      throw new InvalidRequestException(
+          "Manifests are mandatory for K8s step. Select one from " + String.join(", ", K8S_SUPPORTED_MANIFEST_TYPES),
+          USER);
     }
 
     if (k8sManifests.size() > 1) {
-      throw new InvalidRequestException("There can be only a single K8s manifest", USER);
+      throw new InvalidRequestException(
+          "There can be only a single manifest. Select one from " + String.join(", ", K8S_SUPPORTED_MANIFEST_TYPES),
+          USER);
     }
     return k8sManifests.get(0);
   }

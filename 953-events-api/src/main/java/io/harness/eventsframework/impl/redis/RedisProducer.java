@@ -5,21 +5,24 @@ import static io.harness.eventsframework.impl.redis.RedisUtils.REDIS_STREAM_INTE
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractProducer;
-import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.redis.RedisConfig;
 
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.vavr.control.Try;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.RedissonShutdownException;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamMessageId;
-import org.redisson.client.RedisException;
 
 @OwnedBy(PL)
 @Slf4j
@@ -33,29 +36,45 @@ public class RedisProducer extends AbstractProducer {
   // particular use-case which is pushing to the topic
   private final int maxTopicSize;
 
+  private Retry retry;
+
   public RedisProducer(String topicName, @NotNull RedisConfig redisConfig, int maxTopicSize, String producerName) {
     super(topicName, producerName);
     this.maxTopicSize = maxTopicSize;
-    this.redissonClient = RedisUtils.getClient(redisConfig);
-    this.stream = RedisUtils.getStream(topicName, redissonClient, redisConfig.getEnvNamespace());
+    this.redissonClient = io.harness.eventsframework.impl.redis.RedisUtils.getClient(redisConfig);
+    this.stream = io.harness.eventsframework.impl.redis.RedisUtils.getStream(
+        topicName, redissonClient, redisConfig.getEnvNamespace());
+    RetryConfig retryConfig =
+        RetryConfig.custom().intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 1.5)).maxAttempts(6).build();
+
+    this.retry = Retry.of("redisProducer:" + topicName, retryConfig);
   }
 
   @Override
-  public String send(Message message) throws ProducerShutdownException {
+  public String send(Message message) {
+    return handleMessage(message);
+  }
+
+  private String sendInternal(Message message) {
     Map<String, String> redisData = new HashMap<>(message.getMetadataMap());
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
     redisData.put(PRODUCER, this.getProducerName());
-    while (true) {
-      try {
-        StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
-        return messageId.toString();
-      } catch (RedissonShutdownException e) {
-        throw new ProducerShutdownException("Producer for topic: " + getTopicName() + " is shutdown.");
-      } catch (RedisException e) {
-        log.warn("Producer for topic: " + getTopicName() + " failed. Redis is not up", e);
-        waitForRedisToComeUp();
-      }
-    }
+    log.info("trying to add {}", message.getMetadataMap());
+    StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
+    return messageId.toString();
+  }
+
+  private String handleMessage(Message message) {
+    Supplier<String> sendMessageSupplier = () -> sendInternal(message);
+
+    Supplier<String> retryingSendMessage = Retry.decorateSupplier(retry, sendMessageSupplier);
+
+    return Try.ofSupplier(retryingSendMessage)
+        .recover(throwable -> {
+          // Exhausted exponential backoff to try operating on redis
+          throw new EventsFrameworkDownException(throwable.getMessage());
+        })
+        .get();
   }
 
   @Override

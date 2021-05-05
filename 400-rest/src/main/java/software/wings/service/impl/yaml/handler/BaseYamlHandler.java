@@ -1,5 +1,10 @@
 package software.wings.service.impl.yaml.handler;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.HarnessException;
 import io.harness.persistence.PersistentEntity;
 import io.harness.yaml.BaseYaml;
@@ -19,6 +24,8 @@ import java.util.List;
  *
  * @author rktummala on 10/16/17
  */
+@OwnedBy(DX)
+@TargetModule(_870_CG_YAML)
 public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
   @Inject(optional = true) protected HarnessTagYamlHelper harnessTagYamlHelper;
 

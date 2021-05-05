@@ -1,9 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.System.currentTimeMillis;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -45,6 +49,8 @@ import org.mongodb.morphia.annotations.Transient;
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @FieldNameConstants(innerTypeName = "BaseKeys")
 @Deprecated
+@OwnedBy(PL)
+@TargetModule(_871_CG_BEANS)
 // Do not use base class for your collection class. Instead use subset of the interfaces from the persistence layer:
 // PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware
 // To implement these interfaces simply define the respective field

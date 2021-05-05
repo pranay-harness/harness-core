@@ -18,4 +18,5 @@ public class RoleAssignmentMetadataDTO {
   @ApiModelProperty(required = true) String resourceGroupIdentifier;
   @ApiModelProperty(required = true) String resourceGroupName;
   @ApiModelProperty(required = true) boolean managedRole;
+  @ApiModelProperty(required = true) boolean managedRoleAssignment;
 }

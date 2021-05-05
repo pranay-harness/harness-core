@@ -4,7 +4,6 @@ import io.harness.accesscontrol.acl.services.ACLService;
 import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -50,9 +49,9 @@ public class ACLResource {
   public ResponseDTO<AccessCheckResponseDTO> get(@Valid @NotNull AccessCheckRequestDTO dto) {
     Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
     // TODO: make the level to DEBUG after things get stable
-    log.info("Access check request with contextPrincipal: {}, requestPrincipal: {} and permissions: {}",
-        contextPrincipal, dto.getPrincipal(),
-        dto.getPermissions().stream().map(PermissionCheckDTO::getPermission).collect(Collectors.toList()));
+    log.info("Access check request with contextPrincipal: TYPE/{}/NAME/{}, requestPrincipal: {} and permissions: {}",
+        contextPrincipal == null ? "" : contextPrincipal.getType(),
+        contextPrincipal == null ? "" : contextPrincipal.getName(), dto.getPrincipal(), dto.getPermissions());
 
     AccessCheckResponseDTO accessCheckResponseDTO = aclService.checkAccess(SecurityContextBuilder.getPrincipal(), dto);
     log.info("Permitted list: {}",

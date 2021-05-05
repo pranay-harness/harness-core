@@ -26,6 +26,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.when.utils.RunInfoUtils;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
@@ -64,7 +65,9 @@ public abstract class GenericStagePlanCreator extends ChildrenPlanCreator<StageE
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
     StageElementParametersBuilder stageParameters = StepParametersUtils.getStageParameters(stageElementConfig);
-    stageParameters.spec(getSpecParameters(childrenNodeIds.get(0), ctx, stageElementConfig));
+    YamlField specField =
+        Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.SPEC));
+    stageParameters.specConfig(getSpecParameters(specField.getNode().getUuid(), ctx, stageElementConfig));
     return PlanNode.builder()
         .uuid(stageElementConfig.getUuid())
         .name(stageElementConfig.getName())

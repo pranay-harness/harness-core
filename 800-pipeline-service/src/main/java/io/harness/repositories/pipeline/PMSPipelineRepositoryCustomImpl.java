@@ -114,7 +114,13 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
     return gitAwarePersistence.findOne(Criteria.where(PipelineEntityKeys.deleted)
                                            .is(!notDeleted)
                                            .and(PipelineEntityKeys.identifier)
-                                           .is(pipelineIdentifier),
+                                           .is(pipelineIdentifier)
+                                           .and(PipelineEntityKeys.projectIdentifier)
+                                           .is(projectIdentifier)
+                                           .and(PipelineEntityKeys.orgIdentifier)
+                                           .is(orgIdentifier)
+                                           .and(PipelineEntityKeys.accountId)
+                                           .is(accountId),
         projectIdentifier, orgIdentifier, accountId, PipelineEntity.class);
   }
 }

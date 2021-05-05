@@ -3,6 +3,8 @@ package software.wings.delegatetasks.delegatecapability;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.capability.ProcessExecutionCapabilityHelper.TERRAFORM;
+import static io.harness.delegate.capability.ProcessExecutionCapabilityHelper.TERRAGRUNT;
 
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
@@ -12,18 +14,24 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 
+import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.settings.SettingValue;
 
 import com.google.inject.Singleton;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +41,7 @@ import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jgit.transport.URIish;
 
 @OwnedBy(DEL)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -185,5 +194,86 @@ public class CapabilityHelper {
     }
 
     return executionCapabilities;
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForProcessExecutor(String category,
+      List<String> processExecutorArguments, List<EncryptedDataDetail> encryptedDataDetails,
+      ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    executionCapabilities.add(
+        ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(category, processExecutorArguments));
+
+    if (isNotEmpty(encryptedDataDetails)) {
+      List<ExecutionCapability> capabilitiesForEncryption =
+          EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+              encryptedDataDetails, maskingEvaluator);
+      if (isNotEmpty(capabilitiesForEncryption)) {
+        executionCapabilities.addAll(capabilitiesForEncryption);
+      }
+    }
+    return executionCapabilities;
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForTerraform(
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
+    List<String> processExecutorArguments = new ArrayList<>();
+    processExecutorArguments.add("/bin/sh");
+    processExecutorArguments.add("-c");
+    processExecutorArguments.add("terraform --version");
+
+    return generateExecutionCapabilitiesForProcessExecutor(
+        TERRAFORM, processExecutorArguments, encryptedDataDetails, maskingEvaluator);
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForTerragrunt(
+      List<EncryptedDataDetail> encryptedDataDetails, ExpressionEvaluator maskingEvaluator) {
+    List<String> processExecutorArguments = new ArrayList<>();
+    processExecutorArguments.add("/bin/sh");
+    processExecutorArguments.add("-c");
+    processExecutorArguments.add("terragrunt --version");
+
+    return generateExecutionCapabilitiesForProcessExecutor(
+        TERRAGRUNT, processExecutorArguments, encryptedDataDetails, maskingEvaluator);
+  }
+
+  public static List<ExecutionCapability> generateExecutionCapabilitiesForGit(GitConfig gitConfig) {
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    if (gitConfig != null) {
+      if (gitConfig.getRepoUrl().toLowerCase().startsWith("http")) {
+        executionCapabilities.add(HttpConnectionExecutionCapability.builder().url(gitConfig.getRepoUrl()).build());
+      } else {
+        int port = getPort(gitConfig.getRepoUrl());
+        HostConnectionAttributes hostConnectionAttributes =
+            (HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue();
+        executionCapabilities.add(
+            SocketConnectivityExecutionCapability.builder()
+                .port(port > -1 ? String.valueOf(port) : hostConnectionAttributes.getSshPort().toString())
+                .hostName(getHostname(gitConfig.getRepoUrl()))
+                .scheme("ssh")
+                .url(gitConfig.getRepoUrl())
+                .build());
+      }
+    }
+    return executionCapabilities;
+  }
+
+  private static int getPort(String repoUrl) {
+    try {
+      final URIish urIish = new URIish(repoUrl);
+      return urIish.getPort();
+    } catch (URISyntaxException e) {
+      log.error("Failed to construct uri for {} repo", repoUrl, e);
+      return -1;
+    }
+  }
+
+  private static String getHostname(String repoUrl) {
+    try {
+      final URIish urIish = new URIish(repoUrl);
+      return urIish.getHost();
+    } catch (URISyntaxException e) {
+      log.error("Failed to construct uri for {} repo", repoUrl, e);
+      return repoUrl;
+    }
   }
 }

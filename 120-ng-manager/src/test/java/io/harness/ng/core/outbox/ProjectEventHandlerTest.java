@@ -18,6 +18,7 @@ import static junit.framework.TestCase.assertNull;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -35,7 +36,6 @@ import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectRequest;
@@ -94,7 +94,7 @@ public class ProjectEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testCreate() throws JsonProcessingException, ProducerShutdownException {
+  public void testCreate() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
@@ -123,7 +123,7 @@ public class ProjectEventHandlerTest extends CategoryTest {
 
     final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
     final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
-    doNothing().when(ngUserService).addUserToScope(any(), any(), any(), any());
+    doNothing().when(ngUserService).addUserToScope(any(), any(), anyString(), any());
     verifyMethodInvocation(outboxEvent, messageArgumentCaptor, auditEntryArgumentCaptor);
 
     Message message = messageArgumentCaptor.getValue();
@@ -139,7 +139,7 @@ public class ProjectEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testUpdate() throws JsonProcessingException, ProducerShutdownException {
+  public void testUpdate() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
@@ -177,7 +177,7 @@ public class ProjectEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testDelete() throws JsonProcessingException, ProducerShutdownException {
+  public void testDelete() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
@@ -213,7 +213,7 @@ public class ProjectEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testRestore() throws JsonProcessingException, ProducerShutdownException {
+  public void testRestore() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
@@ -247,7 +247,7 @@ public class ProjectEventHandlerTest extends CategoryTest {
   }
 
   private void verifyMethodInvocation(OutboxEvent outboxEvent, ArgumentCaptor<Message> messageArgumentCaptor,
-      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor) throws ProducerShutdownException {
+      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor) {
     when(producer.send(any())).thenReturn("");
     when(auditClientService.publishAudit(any(), any())).thenReturn(true);
 

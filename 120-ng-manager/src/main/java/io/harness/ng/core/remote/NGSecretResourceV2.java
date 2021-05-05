@@ -6,6 +6,7 @@ import static io.harness.secrets.SecretPermissions.SECRET_ACCESS_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_DELETE_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_EDIT_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_RESOURCE_TYPE;
+import static io.harness.secrets.SecretPermissions.SECRET_VIEW_PERMISSION;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
@@ -161,9 +162,8 @@ public class NGSecretResourceV2 {
       @QueryParam(INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE) @DefaultValue("false") boolean includeSecretsFromEverySubScope,
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
-    //    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
-    //    projectIdentifier),
-    //        Resource.of(SECRET_RESOURCE_TYPE, null), SECRET_VIEW_PERMISSION);
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, null), SECRET_VIEW_PERMISSION);
 
     if (secretType != null) {
       secretTypes.add(secretType);
@@ -180,9 +180,8 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    //        accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier,
-    //        projectIdentifier),
-    //            Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_VIEW_PERMISSION);
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_VIEW_PERMISSION);
     return ResponseDTO.newResponse(
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null));
   }

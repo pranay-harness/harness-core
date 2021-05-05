@@ -12,6 +12,7 @@ import io.harness.iterator.PersistentRegularIterable;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
@@ -33,6 +34,7 @@ import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.UtilityClass;
 import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -52,6 +54,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("planExecution")
 @StoreIn(DbAliases.PMS)
 public class PlanExecution implements PersistentRegularIterable, UuidAccess {
+  public static final String EXEC_TAG_SET_BY_TRIGGER = "execution_trigger_tag_needed_for_abort";
   public static final Duration TTL = ofDays(21);
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
@@ -81,10 +84,22 @@ public class PlanExecution implements PersistentRegularIterable, UuidAccess {
     return nextIteration;
   }
 
+  @UtilityClass
+  public static class ExecutionMetadataKeys {
+    public static final String tagExecutionKey =
+        PlanExecutionKeys.metadata + ".triggerInfo.triggeredBy.extraInfo." + EXEC_TAG_SET_BY_TRIGGER;
+  }
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder().name("id_status_idx").field("_id").field(NodeExecutionKeys.status).build())
         .add(CompoundMongoIndex.builder().name("status_idx").field(NodeExecutionKeys.status).build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("exec_tag_status_idx")
+                 .field(ExecutionMetadataKeys.tagExecutionKey)
+                 .field(PlanExecutionKeys.status)
+                 .descSortField(PlanExecutionKeys.createdAt)
+                 .build())
         .build();
   }
 

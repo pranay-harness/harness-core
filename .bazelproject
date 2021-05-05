@@ -50,7 +50,7 @@ directories:
   860-orchestration-steps
   860-orchestration-visualization
   870-cg-orchestration
-  870-cg-yaml-beans
+  870-cg-yaml
   870-orchestration
   870-yaml-beans
   871-cg-beans
@@ -140,6 +140,8 @@ directories:
   scripts
   tools
   toolset
+  scripts
+  cargo
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
