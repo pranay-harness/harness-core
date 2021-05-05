@@ -4,10 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
@@ -38,7 +35,6 @@ import io.harness.supplier.ThrowingSupplier;
 import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +58,8 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
   public TaskRequest obtainTask(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     TerraformPlanStepParameters planStepParameters = (TerraformPlanStepParameters) stepElementParameters.getSpec();
+    helper.validatePlanStepConfigFiles(planStepParameters);
+    TerraformPlanExecutionDataParameters configuration = planStepParameters.getConfiguration();
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
@@ -71,26 +69,17 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
         .terraformCommandUnit(TerraformCommandUnit.Plan)
         .entityId(entityId)
         .currentStateFileId(helper.getLatestFileId(entityId))
-        .workspace(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getWorkspace()))
+        .workspace(ParameterFieldHelper.getParameterFieldValue(configuration.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
-            planStepParameters.getConfigFilesWrapper().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getInlineVarFiles()));
-    if (EmptyPredicate.isNotEmpty(planStepParameters.getRemoteVarFiles())) {
-      List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-      int i = 1;
-      for (StoreConfigWrapper varFileWrapper : planStepParameters.getRemoteVarFiles()) {
-        varFilesConfig.add(helper.getGitFetchFilesConfig(
-            varFileWrapper.getStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-        i++;
-      }
-      builder.remoteVarfiles(varFilesConfig);
-    }
-    builder.backendConfig(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getBackendConfig()))
-        .targets(ParameterFieldHelper.getParameterFieldValue(planStepParameters.getTargets()))
+            configuration.getConfigFiles().getStore().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+        .inlineVarFiles(helper.getInlineVarFiles(configuration.getVarFiles()))
+        .remoteVarfiles(helper.getOrderedFetchFilesConfigForRemoteFiles(configuration.getVarFiles(), ambiance))
+        .backendConfig(helper.getBackendConfig(configuration.getBackendConfig()))
+        .targets(ParameterFieldHelper.getParameterFieldValue(configuration.getTargets()))
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
-        .environmentVariables(helper.getEnvironmentVariablesMap(planStepParameters.getEnvironmentVariables()))
+        .environmentVariables(helper.getEnvironmentVariablesMap(configuration.getEnvironmentVariables()))
         .encryptionConfig(helper.getEncryptionConfig(ambiance, planStepParameters))
-        .terraformCommand(TerraformPlanCommand.APPLY == planStepParameters.getTerraformPlanCommand()
+        .terraformCommand(TerraformPlanCommand.APPLY == planStepParameters.getConfiguration().getCommand()
                 ? TerraformCommand.APPLY
                 : TerraformCommand.DESTROY);
 

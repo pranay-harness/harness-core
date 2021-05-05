@@ -508,7 +508,9 @@ public enum ErrorCode {
   GCP_SERVER_ERROR,
   HTTP_RESPONSE_EXCEPTION,
   DATA,
-  PROCESS_EXECUTION_EXCEPTION;
+  SCM_NOT_FOUND_ERROR,
+  SCM_CONFLICT_ERROR,
+  SCM_UNPROCESSABLE_ENTITY;
 
   private Status status = BAD_REQUEST;
   private String description;

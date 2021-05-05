@@ -1,5 +1,6 @@
 package software.wings.scim;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -40,6 +42,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class ScimUserServiceTest extends WingsBaseTest {
@@ -82,8 +85,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(userService.get(ACCOUNT_ID, USER_ID)).thenReturn(user);
     when(wingsPersistence.save(userGroup)).thenReturn("true");
     scimUserService.updateUser(ACCOUNT_ID, USER_ID, patchRequest);
-
-    verify(wingsPersistence, times(1)).update(user, updateOperations);
+    verify(userService, times(1)).updateUser(user, updateOperations);
   }
 
   @Test
@@ -319,7 +321,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.updateUser(user.getUuid(), account.getUuid(), scimUser);
-    verify(wingsPersistence, times(1)).update(user, updateOperations);
+    verify(userService, times(1)).updateUser(user, updateOperations);
 
     assertThat(response.getStatus()).isNotNull();
   }

@@ -1,9 +1,11 @@
 package io.harness.ngpipeline.pipeline.beans.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
@@ -40,6 +42,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("pipelinesNG")
 @TypeAlias("pipelinesNG")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.NG_MANAGER)
 public class NgPipelineEntity implements PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   private NgPipeline ngPipeline;

@@ -50,8 +50,10 @@ import static java.util.stream.Collectors.toList;
 import static org.springframework.util.StringUtils.trimLeadingCharacter;
 import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo.ConnectorConversionInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
@@ -102,15 +104,18 @@ import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.git.GitClientHelper;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logserviceclient.CILogServiceUtils;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tiserviceclient.TIServiceUtils;
 import io.harness.util.LiteEngineSecretEvaluator;
+import io.harness.utils.IdentifierRefHelper;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -118,6 +123,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -128,6 +134,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
@@ -143,6 +151,9 @@ public class K8BuildSetupUtils {
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
   @Inject CILogServiceUtils logServiceUtils;
   @Inject TIServiceUtils tiServiceUtils;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
+  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
+  private final int MAX_ATTEMPTS = 3;
 
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
@@ -271,6 +282,9 @@ public class K8BuildSetupUtils {
         LiteEngineSecretEvaluator.builder().secretUtils(secretUtils).build();
     List<SecretVariableDetails> secretVariableDetails =
         liteEngineSecretEvaluator.resolve(liteEngineTaskStepInfo, ngAccess, ambiance.getExpressionFunctorToken());
+    checkSecretAccess(ambiance, secretVariableDetails, accountId, AmbianceHelper.getProjectIdentifier(ambiance),
+        AmbianceHelper.getOrgIdentifier(ambiance));
+
     CIK8ContainerParams liteEngineContainerParams =
         createLiteEngineContainerParams(harnessInternalImageRegistryConnectorDetails, liteEngineTaskStepInfo,
             k8PodDetails, podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(),
@@ -289,6 +303,28 @@ public class K8BuildSetupUtils {
       containerParams.add(cik8ContainerParams);
     }
     return containerParams;
+  }
+
+  private void checkSecretAccess(Ambiance ambiance, List<SecretVariableDetails> secretVariableDetails,
+      String accountIdentifier, String projectIdentifier, String orgIdentifier) {
+    List<EntityDetail> entityDetails =
+        secretVariableDetails.stream()
+            .map(secretVariableDetail -> {
+              return createEntityDetails(secretVariableDetail.getSecretVariableDTO().getSecret().getIdentifier(),
+                  accountIdentifier, projectIdentifier, orgIdentifier);
+            })
+            .collect(Collectors.toList());
+
+    if (isNotEmpty(entityDetails)) {
+      pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails, false);
+    }
+  }
+
+  private EntityDetail createEntityDetails(
+      String secretIdentifier, String accountIdentifier, String projectIdentifier, String orgIdentifier) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(secretIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
+    return EntityDetail.builder().entityRef(connectorRef).type(EntityType.SECRETS).build();
   }
 
   private void consumePortDetails(Ambiance ambiance, List<ContainerDefinitionInfo> containerDefinitionInfos) {
@@ -415,8 +451,14 @@ public class K8BuildSetupUtils {
     Map<String, String> envVars = new HashMap<>();
     final String logServiceBaseUrl = logServiceUtils.getLogServiceConfig().getBaseUrl();
 
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed call to fetch log service token attempt: {}"),
+            format("Failed to fetch log service token after retrying {} times"));
+
     // Make a call to the log service and get back the token
-    String logServiceToken = logServiceUtils.getLogServiceToken(accountID);
+    String logServiceToken =
+        Failsafe.with(retryPolicy).get(() -> { return logServiceUtils.getLogServiceToken(accountID); });
+
     envVars.put(LOG_SERVICE_TOKEN_VARIABLE, logServiceToken);
     envVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logServiceBaseUrl);
 
@@ -768,5 +810,14 @@ public class K8BuildSetupUtils {
       }
     }
     return imageName;
+  }
+
+  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }
 }

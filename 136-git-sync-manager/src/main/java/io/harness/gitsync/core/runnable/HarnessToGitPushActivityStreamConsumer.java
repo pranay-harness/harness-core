@@ -6,7 +6,6 @@ import static io.harness.eventsframework.EventsFrameworkConstants.HARNESS_TO_GIT
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.security.SecurityContextBuilder;
@@ -49,7 +48,7 @@ public class HarnessToGitPushActivityStreamConsumer implements Runnable {
     SecurityContextBuilder.unsetCompleteContext();
   }
 
-  private void pollAndProcessMessages() throws ConsumerShutdownException {
+  private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;

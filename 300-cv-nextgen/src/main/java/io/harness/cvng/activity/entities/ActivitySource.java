@@ -109,6 +109,8 @@ public abstract class ActivitySource
     activitySourceDTOBuilder.name(name);
     activitySourceDTOBuilder.orgIdentifier(orgIdentifier);
     activitySourceDTOBuilder.projectIdentifier(projectIdentifier);
+    activitySourceDTOBuilder.lastUpdatedAt(lastUpdatedAt);
+    activitySourceDTOBuilder.createdAt(createdAt);
     return activitySourceDTOBuilder;
   }
 }

@@ -86,6 +86,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -164,7 +165,10 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
 
     Map<String, ResourceLookup> resourceLookupMap = new HashMap<>();
 
-    try (HIterator<ResourceLookup> iterator = new HIterator<>(query.fetch())) {
+    FindOptions findOptions = new FindOptions();
+    findOptions.modifier("$hint", "resourceIdResourceLookupIndex");
+
+    try (HIterator<ResourceLookup> iterator = new HIterator<>(query.fetch(findOptions))) {
       while (iterator.hasNext()) {
         ResourceLookup resourceLookup = iterator.next();
         resourceLookupMap.put(resourceLookup.getResourceId(), resourceLookup);

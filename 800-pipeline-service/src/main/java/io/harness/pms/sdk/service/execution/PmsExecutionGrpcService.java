@@ -68,11 +68,11 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         String key = String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey());
         if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
           Collection<Object> values = (Collection<Object>) entry.getValue();
-          for (Object value : values) {
-            update.addToSet(key, value);
-          }
+          update.addToSet(key).each(values);
         } else {
-          update.set(key, entry.getValue());
+          if (entry.getValue() != null) {
+            update.set(key, entry.getValue());
+          }
         }
       }
     }
@@ -111,11 +111,11 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         String key = String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey());
         if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
           Collection<Object> values = (Collection<Object>) entry.getValue();
-          for (Object value : values) {
-            update.addToSet(key, value);
-          }
+          update.addToSet(key).each(values);
         } else {
-          update.set(key, entry.getValue());
+          if (entry.getValue() != null) {
+            update.set(key, entry.getValue());
+          }
         }
       }
     }

@@ -27,7 +27,6 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.stateutils.buildstate.ConnectorUtils;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
@@ -135,12 +134,13 @@ public class CIStageFilterJsonCreator implements FilterJsonCreator<StageElementC
 
   private Set<EntityDetailProtoDTO> getReferences(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, IntegrationStageConfig integrationStageConfig, String stageIdentifier) {
-    List<LevelNode> levelNodes = new LinkedList<>();
-    levelNodes.add(LevelNode.builder().qualifierName(YAMLFieldNameConstants.PIPELINE).build());
-    levelNodes.add(LevelNode.builder().qualifierName(YAMLFieldNameConstants.STAGES).build());
-    levelNodes.add(LevelNode.builder().qualifierName(stageIdentifier).build());
+    List<String> qualifiedNameList = new LinkedList<>();
+    qualifiedNameList.add(YAMLFieldNameConstants.PIPELINE);
+    qualifiedNameList.add(YAMLFieldNameConstants.STAGES);
+    qualifiedNameList.add(stageIdentifier);
+    qualifiedNameList.add(YAMLFieldNameConstants.SPEC);
     EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
-        accountIdentifier, orgIdentifier, projectIdentifier, levelNodes);
+        accountIdentifier, orgIdentifier, projectIdentifier, qualifiedNameList);
     visitor.walkElementTree(integrationStageConfig);
     return visitor.getEntityReferenceSet();
   }

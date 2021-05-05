@@ -10,6 +10,7 @@ import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -47,22 +48,23 @@ public class ResourceRestraintFacilitator implements Facilitator {
   @Override
   public FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
+    StepElementParameters stepElementParameters = (StepElementParameters) stepParameters;
     Duration waitDuration = facilitatorUtils.extractWaitDurationFromDefaultParams(parameters);
     FacilitatorResponseBuilder responseBuilder = FacilitatorResponse.builder().initialWait(waitDuration);
 
-    ResourceRestraintStepParameters stepParams = (ResourceRestraintStepParameters) stepParameters;
+    ResourceRestraintSpecParameters specParameters = (ResourceRestraintSpecParameters) stepElementParameters.getSpec();
     final ResourceRestraint resourceRestraint = Preconditions.checkNotNull(
-        restraintService.getByNameAndAccountId(stepParams.getName(), AmbianceUtils.getAccountId(ambiance)));
+        restraintService.getByNameAndAccountId(specParameters.getName(), AmbianceUtils.getAccountId(ambiance)));
     final Constraint constraint = resourceRestraintService.createAbstraction(resourceRestraint);
 
-    int permits = stepParams.getPermits();
-    if (AcquireMode.ENSURE == stepParams.getAcquireMode()) {
-      permits -= resourceRestraintService.getAllCurrentlyAcquiredPermits(
-          stepParams.getHoldingScope().getScope(), getReleaseEntityId(stepParams, ambiance.getPlanExecutionId()));
+    int permits = specParameters.getPermits();
+    if (AcquireMode.ENSURE == specParameters.getAcquireMode()) {
+      permits -= resourceRestraintService.getAllCurrentlyAcquiredPermits(specParameters.getHoldingScope().getScope(),
+          getReleaseEntityId(specParameters, ambiance.getPlanExecutionId()));
     }
 
     ConstraintUnit renderedResourceUnit =
-        new ConstraintUnit(pmsEngineExpressionService.renderExpression(ambiance, stepParams.getResourceUnit()));
+        new ConstraintUnit(pmsEngineExpressionService.renderExpression(ambiance, specParameters.getResourceUnit()));
 
     if (permits <= 0) {
       return responseBuilder.executionMode(ExecutionMode.SYNC).build();
@@ -77,13 +79,13 @@ public class ResourceRestraintFacilitator implements Facilitator {
     return responseBuilder.executionMode(ExecutionMode.ASYNC).build();
   }
 
-  private String getReleaseEntityId(ResourceRestraintStepParameters stepParameters, String planExecutionId) {
+  private String getReleaseEntityId(ResourceRestraintSpecParameters specParameters, String planExecutionId) {
     String releaseEntityId;
-    if (PmsConstants.RELEASE_ENTITY_TYPE_PLAN.equals(stepParameters.getHoldingScope().getScope())) {
+    if (PmsConstants.RELEASE_ENTITY_TYPE_PLAN.equals(specParameters.getHoldingScope().getScope())) {
       releaseEntityId = ResourceRestraintService.getReleaseEntityId(planExecutionId);
     } else {
       releaseEntityId = ResourceRestraintService.getReleaseEntityId(
-          planExecutionId, stepParameters.getHoldingScope().getNodeSetupId());
+          planExecutionId, specParameters.getHoldingScope().getNodeSetupId());
     }
     return releaseEntityId;
   }

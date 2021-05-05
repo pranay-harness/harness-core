@@ -4,17 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
-import io.harness.accesscontrol.Principal;
-import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
-import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.AccessControlDTO;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
-import io.harness.accesscontrol.clients.ResourceScope;
-import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
@@ -27,21 +23,18 @@ import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
-import io.harness.connector.accesscontrol.ConnectorsAccessControlPermissions;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logstreaming.LogStreamingHelper;
+import io.harness.ng.core.EntityDetail;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -53,7 +46,7 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
+import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -64,10 +57,9 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.steps.executable.TaskExecutableWithRbac;
 import io.harness.supplier.ThrowingSupplier;
+import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,8 +70,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
 
 /**
  * This state will setup the build environment, clone the git repository for running CI job.
@@ -91,12 +81,10 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
-  @Inject @Named("PRIVILEGED") AccessControlClient accessControlClient;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
-  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
-  private final int MAX_ATTEMPTS = 3;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
 
   private static final String DEPENDENCY_OUTCOME = "dependencies";
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.STEP_TYPE;
@@ -118,47 +106,11 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
     }
 
     LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
-    List<PermissionCheckDTO> connectorPermissionCheckDTOs =
+    List<EntityDetail> connectorsEntityDetails =
         getConnectorIdentifiers(liteEngineTaskStepInfo, accountIdentifier, projectIdentifier, orgIdentifier);
 
-    PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
-        executionPrincipalInfo.getPrincipalType());
-
-    Optional<AccessCheckResponseDTO> accessCheckResponseDTO;
-    try {
-      RetryPolicy<Object> retryPolicy =
-          getRetryPolicy(format("[Retrying failed call to check connector permissions attempt: {}"),
-              format("Failed to check connector permissions after retrying {} times"));
-
-      accessCheckResponseDTO =
-          Failsafe.with(retryPolicy)
-              .get(()
-                       -> Optional.of(accessControlClient.checkForAccess(
-                           Principal.builder().principalIdentifier(principal).principalType(principalType).build(),
-                           connectorPermissionCheckDTOs)));
-
-    } catch (Exception e) {
-      log.error("Unable to check access for connectors", e);
-      throw new CIStageExecutionException("Unable to check access for connectors");
-    }
-
-    if (!accessCheckResponseDTO.isPresent()) {
-      throw new CIStageExecutionException("Unable to check access for connectors");
-    }
-    List<String> connectorsWithoutPermissions =
-        accessCheckResponseDTO.get()
-            .getAccessControlList()
-            .stream()
-            .filter(accessControlDTO -> { return !accessControlDTO.isPermitted(); })
-            .map(AccessControlDTO::getResourceIdentifier)
-            .collect(Collectors.toList());
-
-    if (!connectorsWithoutPermissions.isEmpty()) {
-      String connectorsWithoutPermissionsString = String.join(",", connectorsWithoutPermissions);
-
-      String errorMessage = format("Validation for initialise Step failed, No runtime access on connectors [%s]",
-          connectorsWithoutPermissionsString);
-      throw new AccessDeniedException(errorMessage, ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
+    if (isNotEmpty(connectorsEntityDetails)) {
+      pipelineRbacHelper.checkRuntimePermissions(ambiance, connectorsEntityDetails, true);
     }
   }
 
@@ -331,7 +283,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
     return LogStreamingHelper.generateLogBaseKey(logAbstractions);
   }
 
-  private List<PermissionCheckDTO> getConnectorIdentifiers(LiteEngineTaskStepInfo liteEngineTaskStepInfo,
+  private List<EntityDetail> getConnectorIdentifiers(LiteEngineTaskStepInfo liteEngineTaskStepInfo,
       String accountIdentifier, String projectIdentifier, String orgIdentifier) {
     K8BuildJobEnvInfo.PodsSetupInfo podSetupInfo =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();
@@ -343,75 +295,46 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
       throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
 
-    List<PermissionCheckDTO> permissionCheckDTOList = new ArrayList<>();
+    List<EntityDetail> entityDetails = new ArrayList<>();
 
     String infraConnectorRef = ((K8sDirectInfraYaml) infrastructure).getSpec().getConnectorRef();
 
     // Add Infra connector
-    permissionCheckDTOList.add(PermissionCheckDTO.builder()
-                                   .permission(ConnectorsAccessControlPermissions.ACCESS_CONNECTOR_PERMISSION)
-                                   .resourceIdentifier(infraConnectorRef)
-                                   .resourceScope(ResourceScope.builder()
-                                                      .accountIdentifier(accountIdentifier)
-                                                      .projectIdentifier(projectIdentifier)
-                                                      .orgIdentifier(orgIdentifier)
-                                                      .build())
-                                   .resourceType("CONNECTOR")
-                                   .build());
+    entityDetails.add(createEntityDetails(infraConnectorRef, accountIdentifier, projectIdentifier, orgIdentifier));
 
     // Add git clone connector
     if (!liteEngineTaskStepInfo.isSkipGitClone()) {
-      permissionCheckDTOList.add(PermissionCheckDTO.builder()
-                                     .permission(ConnectorsAccessControlPermissions.ACCESS_CONNECTOR_PERMISSION)
-                                     .resourceIdentifier(liteEngineTaskStepInfo.getCiCodebase().getConnectorRef())
-                                     .resourceScope(ResourceScope.builder()
-                                                        .accountIdentifier(accountIdentifier)
-                                                        .projectIdentifier(projectIdentifier)
-                                                        .orgIdentifier(orgIdentifier)
-                                                        .build())
-                                     .resourceType("CONNECTOR")
-                                     .build());
+      entityDetails.add(createEntityDetails(liteEngineTaskStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier,
+          projectIdentifier, orgIdentifier));
     }
 
     Optional<PodSetupInfo> podSetupInfoOptional = podSetupInfo.getPodSetupInfoList().stream().findFirst();
     try {
       if (podSetupInfoOptional.isPresent()) {
-        permissionCheckDTOList.addAll(podSetupInfoOptional.get()
-                                          .getPodSetupParams()
-                                          .getContainerDefinitionInfos()
-
-                                          .stream()
-                                          .map(ContainerDefinitionInfo::getContainerImageDetails)
-                                          .map(ContainerImageDetails::getConnectorIdentifier)
-                                          .filter(Objects::nonNull)
-                                          .map(connectorIdentifier -> {
-                                            return PermissionCheckDTO.builder()
-                                                .permission(
-                                                    ConnectorsAccessControlPermissions.ACCESS_CONNECTOR_PERMISSION)
-                                                .resourceIdentifier(connectorIdentifier)
-                                                .resourceScope(ResourceScope.builder()
-                                                                   .accountIdentifier(accountIdentifier)
-                                                                   .projectIdentifier(projectIdentifier)
-                                                                   .orgIdentifier(orgIdentifier)
-                                                                   .build())
-                                                .resourceType("CONNECTOR")
-                                                .build();
-                                          })
-                                          .collect(Collectors.toList()));
+        entityDetails.addAll(podSetupInfoOptional.get()
+                                 .getPodSetupParams()
+                                 .getContainerDefinitionInfos()
+                                 .stream()
+                                 .map(ContainerDefinitionInfo::getContainerImageDetails)
+                                 .map(ContainerImageDetails::getConnectorIdentifier)
+                                 .filter(Objects::nonNull)
+                                 .map(connectorIdentifier -> {
+                                   return createEntityDetails(
+                                       connectorIdentifier, accountIdentifier, projectIdentifier, orgIdentifier);
+                                 })
+                                 .collect(Collectors.toList()));
       }
     } catch (Exception ex) {
       throw new CIStageExecutionException("Failed to retrieve connector information", ex);
     }
 
-    return permissionCheckDTOList;
+    return entityDetails;
   }
 
-  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
-    return new RetryPolicy<>()
-        .handle(Exception.class)
-        .withDelay(RETRY_SLEEP_DURATION)
-        .withMaxAttempts(MAX_ATTEMPTS)
-        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
-        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+  private EntityDetail createEntityDetails(
+      String connectorIdentifier, String accountIdentifier, String projectIdentifier, String orgIdentifier) {
+    IdentifierRef connectorRef =
+        IdentifierRefHelper.getIdentifierRef(connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
+    return EntityDetail.builder().entityRef(connectorRef).type(EntityType.CONNECTORS).build();
   }
 }

@@ -10,6 +10,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
+import io.harness.delegate.capability.ProcessExecutionCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.terraform.TerraformCommand;
@@ -22,7 +23,6 @@ import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 
 import java.util.List;
@@ -88,8 +88,8 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    List<ExecutionCapability> capabilities =
-        CapabilityHelper.generateExecutionCapabilitiesForTerraform(sourceRepoEncryptionDetails, maskingEvaluator);
+    List<ExecutionCapability> capabilities = ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
+        sourceRepoEncryptionDetails, maskingEvaluator);
     if (sourceRepo != null) {
       capabilities.add(GitConnectionCapability.builder()
                            .gitConfig(sourceRepo)

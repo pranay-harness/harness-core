@@ -13,7 +13,6 @@ import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetrySdkTestBase;
 import io.harness.telemetry.segment.SegmentReporterImpl;
 
-import com.google.inject.Inject;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,13 +28,14 @@ import org.mockito.Mockito;
 @OwnedBy(HarnessTeam.GTM)
 public class TrackEventInterceptorTest extends TelemetrySdkTestBase {
   @Mock SegmentReporterImpl segmentReporterImpl;
-  @Inject @InjectMocks TrackEventInterceptor trackEventInterceptor;
+  @InjectMocks TrackEventInterceptor trackEventInterceptor;
   @Mock SendTrackEvent sendTrackEvent;
   @Captor private ArgumentCaptor<String> eventNameCaptor;
   @Captor private ArgumentCaptor<String> identityCaptor;
   @Captor private ArgumentCaptor<String> accountCaptor;
   @Captor private ArgumentCaptor<HashMap<String, Object>> propertyCaptor;
   @Captor private ArgumentCaptor<Map<Destination, Boolean>> destinationCaptor;
+  @Captor private ArgumentCaptor<String> categoryCaptor;
   private Input defaultInput;
   private EventProperty defaultEventProperty;
   private EventProperty exampletEventProperty;
@@ -158,17 +158,19 @@ public class TrackEventInterceptorTest extends TelemetrySdkTestBase {
     Mockito.when(sendTrackEvent.destinations()).thenReturn(new Destination[] {Destination.NATERO});
     Mockito.when(sendTrackEvent.eventName()).thenReturn(EVENT_NAME);
     Mockito.when(sendTrackEvent.properties()).thenReturn(new EventProperty[] {exampletEventProperty});
+    Mockito.when(sendTrackEvent.category()).thenReturn(io.harness.telemetry.Category.SIGN_UP);
 
     trackEventInterceptor.processTrackEvent(sendTrackEvent, ARGUMENTS);
     Mockito.verify(segmentReporterImpl)
         .sendTrackEvent(eventNameCaptor.capture(), identityCaptor.capture(), accountCaptor.capture(),
-            propertyCaptor.capture(), destinationCaptor.capture());
+            propertyCaptor.capture(), destinationCaptor.capture(), categoryCaptor.capture());
     assertThat(eventNameCaptor.getValue()).isEqualTo(EVENT_NAME);
     assertThat(identityCaptor.getValue()).isEqualTo(IDENTITY_NAME);
     assertThat(accountCaptor.getValue()).isEqualTo(ACCOUNT_ID);
     assertThat(propertyCaptor.getValue().get(INPUT_KEY)).isEqualTo(INPUT_VALUE);
     assertThat(destinationCaptor.getValue().get(Destination.NATERO)).isEqualTo(true);
     assertThat(destinationCaptor.getValue().get(Destination.ALL)).isEqualTo(false);
+    assertThat(categoryCaptor.getValue()).isEqualTo(io.harness.telemetry.Category.SIGN_UP);
   }
 
   @Test
@@ -210,6 +212,7 @@ public class TrackEventInterceptorTest extends TelemetrySdkTestBase {
     Mockito.when(sendTrackEvent.destinations()).thenReturn(new Destination[] {Destination.NATERO});
     Mockito.when(sendTrackEvent.eventName()).thenReturn(EVENT_NAME);
     Mockito.when(sendTrackEvent.properties()).thenReturn(new EventProperty[] {defaultEventProperty});
+    Mockito.when(sendTrackEvent.category()).thenReturn(io.harness.telemetry.Category.GLOBAL);
 
     trackEventInterceptor.processTrackEvent(sendTrackEvent, ARGUMENTS);
     Mockito.verifyZeroInteractions(segmentReporterImpl);
@@ -268,16 +271,18 @@ public class TrackEventInterceptorTest extends TelemetrySdkTestBase {
     Mockito.when(sendTrackEvent.destinations()).thenReturn(new Destination[] {Destination.NATERO});
     Mockito.when(sendTrackEvent.eventName()).thenReturn(EVENT_NAME);
     Mockito.when(sendTrackEvent.properties()).thenReturn(new EventProperty[] {defaultEventProperty});
+    Mockito.when(sendTrackEvent.category()).thenReturn(io.harness.telemetry.Category.SIGN_UP);
 
     trackEventInterceptor.processTrackEvent(sendTrackEvent, ARGUMENTS);
     Mockito.verify(segmentReporterImpl)
         .sendTrackEvent(eventNameCaptor.capture(), identityCaptor.capture(), accountCaptor.capture(),
-            propertyCaptor.capture(), destinationCaptor.capture());
+            propertyCaptor.capture(), destinationCaptor.capture(), categoryCaptor.capture());
     assertThat(eventNameCaptor.getValue()).isEqualTo(EVENT_NAME);
     assertThat(identityCaptor.getValue()).isNull();
     assertThat(accountCaptor.getValue()).isNull();
     assertThat(propertyCaptor.getValue().size()).isEqualTo(0);
     assertThat(destinationCaptor.getValue().get(Destination.NATERO)).isEqualTo(true);
     assertThat(destinationCaptor.getValue().get(Destination.ALL)).isEqualTo(false);
+    assertThat(categoryCaptor.getValue()).isEqualTo(io.harness.telemetry.Category.SIGN_UP);
   }
 }

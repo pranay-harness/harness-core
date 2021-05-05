@@ -35,7 +35,6 @@ import io.harness.audit.client.api.AuditClientService;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationRequest;
@@ -47,7 +46,9 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.rule.Owner;
+import io.harness.security.PrincipalContextData;
 import io.harness.security.SourcePrincipalContextData;
+import io.harness.security.dto.Principal;
 import io.harness.security.dto.UserPrincipal;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -84,19 +85,20 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testCreate() throws JsonProcessingException, ProducerShutdownException {
+  public void testCreate() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     OrganizationDTO organizationDTO = getOrganizationDTO(identifier);
     OrganizationCreateEvent organizationCreateEvent = new OrganizationCreateEvent(accountIdentifier, organizationDTO);
     String eventData = objectMapper.writeValueAsString(organizationCreateEvent);
     GlobalContext globalContext = new GlobalContext();
+    Principal principal =
+        new UserPrincipal(randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10));
     SourcePrincipalContextData sourcePrincipalContextData =
-        SourcePrincipalContextData.builder()
-            .principal(new UserPrincipal(
-                randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10), randomAlphabetic(10)))
-            .build();
-    globalContext.setGlobalContextRecord(sourcePrincipalContextData);
+        SourcePrincipalContextData.builder().principal(principal).build();
+    globalContext.upsertGlobalContextRecord(sourcePrincipalContextData);
+    PrincipalContextData principalContextData = PrincipalContextData.builder().principal(principal).build();
+    globalContext.upsertGlobalContextRecord(principalContextData);
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .id(randomAlphabetic(10))
                                   .blocked(false)
@@ -113,7 +115,13 @@ public class OrganizationEventHandlerTest extends CategoryTest {
     final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
     final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
     doNothing().when(ngUserService).addUserToScope(any(), any(), any(), any());
-    verifyMethodInvocation(outboxEvent, messageArgumentCaptor, auditEntryArgumentCaptor);
+    when(producer.send(any())).thenReturn("");
+    when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
+
+    organizationEventHandler.handle(outboxEvent);
+
+    verify(producer, times(1)).send(messageArgumentCaptor.capture());
+    verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
 
     Message message = messageArgumentCaptor.getValue();
     assertMessage(message, accountIdentifier, CREATE_ACTION);
@@ -128,7 +136,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testUpdate() throws JsonProcessingException, ProducerShutdownException {
+  public void testUpdate() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     OrganizationDTO oldOrganizationDTO = getOrganizationDTO(identifier);
@@ -166,7 +174,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testDelete() throws JsonProcessingException, ProducerShutdownException {
+  public void testDelete() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     OrganizationDTO organizationDTO = getOrganizationDTO(identifier);
@@ -201,7 +209,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testRestore() throws JsonProcessingException, ProducerShutdownException {
+  public void testRestore() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     OrganizationDTO organizationDTO = getOrganizationDTO(identifier);
@@ -235,7 +243,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
   }
 
   private void verifyMethodInvocation(OutboxEvent outboxEvent, ArgumentCaptor<Message> messageArgumentCaptor,
-      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor) throws ProducerShutdownException {
+      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor) {
     when(producer.send(any())).thenReturn("");
     when(auditClientService.publishAudit(any(), any())).thenReturn(true);
 

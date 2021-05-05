@@ -1,7 +1,9 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
-import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
@@ -10,6 +12,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.K8sManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -33,6 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = K8sManifestVisitorHelper.class)
 @TypeAlias("k8sManifest")
+@OwnedBy(CDC)
 public class K8sManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
@@ -68,7 +72,7 @@ public class K8sManifest implements ManifestAttributes, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("storeConfigWrapper", storeConfigWrapper);
+    children.add(YAMLFieldNameConstants.STORE, storeConfigWrapper);
     return children;
   }
 

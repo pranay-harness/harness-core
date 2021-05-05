@@ -15,6 +15,7 @@ import static software.wings.scheduler.LdapGroupSyncJob.add;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
@@ -35,7 +36,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.elasticsearch.common.util.set.Sets.newHashSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -116,6 +119,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class UserGroupServiceImpl implements UserGroupService {
   public static final String DEFAULT_USER_GROUP_DESCRIPTION = "Default account admin user group";
 
@@ -529,6 +533,9 @@ public class UserGroupServiceImpl implements UserGroupService {
           if (action != null && action.equals(EXECUTE)) {
             actionSet.add(EXECUTE_PIPELINE);
             actionSet.add(EXECUTE_WORKFLOW);
+            actionSet.add(EXECUTE_WORKFLOW_ROLLBACK);
+          } else if (action != null && action.equals(EXECUTE_WORKFLOW)) {
+            actionSet.add(EXECUTE_WORKFLOW_ROLLBACK);
           }
           actionSet.add(action);
         });

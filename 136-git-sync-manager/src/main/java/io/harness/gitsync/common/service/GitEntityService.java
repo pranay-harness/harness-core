@@ -26,7 +26,7 @@ public interface GitEntityService {
       ModuleType moduleType, String searchTerm, List<String> gitSyncConfigIdentifierList,
       List<EntityType> entityTypeList, int size);
 
-  GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType);
+  GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType, String branch);
 
   boolean save(String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String folderPath,
       String filePath, String commitId, String branchName);

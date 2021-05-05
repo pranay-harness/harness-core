@@ -24,11 +24,9 @@ public interface VerificationJobService {
       String accountId, String projectId, String orgIdentifier, Integer offset, Integer pageSize, String filter);
   boolean doesAVerificationJobExistsForThisProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfServicesUndergoingHealthVerification(String accountId, String orgIdentifier, String projectIdentifier);
-  List<VerificationJob> getHealthVerificationJobs(String accountIdentifier, String orgIdentifier,
+  VerificationJob getResolvedHealthVerificationJob(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String envIdentifier, String serviceIdentifier);
-  void createDefaultHealthVerificationJob(String accountId, String orgIdentifier, String projectIdentifier);
-  VerificationJob getOrCreateDefaultHealthVerificationJob(
-      String accountId, String orgIdentifier, String projectIdentifier);
+  VerificationJob getDefaultHealthVerificationJob(String accountId, String orgIdentifier, String projectIdentifier);
   VerificationJobDTO getDefaultHealthVerificationJobDTO(
       String accountId, String orgIdentifier, String projectIdentifier);
   VerificationJob getByUrl(String accountId, String verificationJobUrl);

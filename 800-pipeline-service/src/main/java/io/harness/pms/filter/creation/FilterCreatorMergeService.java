@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.pms.contracts.plan.ErrorResponse;
@@ -57,8 +56,7 @@ public class FilterCreatorMergeService {
     this.pipelineSetupUsageHelper = pipelineSetupUsageHelper;
   }
 
-  public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity)
-      throws IOException, ProducerShutdownException {
+  public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
     String yaml = pipelineEntity.getYaml();
     String processedYaml = YamlUtils.injectUuid(yaml);

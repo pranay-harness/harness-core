@@ -11,9 +11,9 @@ import io.harness.expression.ExpressionEvaluator;
 
 import java.util.List;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
-@Data
+@Value
 @Builder
 @OwnedBy(HarnessTeam.DX)
 public class ScmPushTaskParams implements TaskParameters, ExecutionCapabilityDemander {

@@ -6,6 +6,7 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanPara
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveListParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
+import static io.harness.common.CIExecutionConstants.PLUGIN_ARTIFACT_FILE_VALUE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -64,7 +65,7 @@ public class PluginSettingUtils {
   public static final String PLUGIN_BACKEND = "PLUGIN_BACKEND";
   public static final String PLUGIN_OVERRIDE = "PLUGIN_OVERRIDE";
   public static final String PLUGIN_ARCHIVE_FORMAT = "PLUGIN_ARCHIVE_FORMAT";
-
+  public static final String PLUGIN_ARTIFACT_FILE = "PLUGIN_ARTIFACT_FILE";
   public static final String ECR_REGISTRY_PATTERN = "%s.dkr.ecr.%s.amazonaws.com";
 
   public static Map<String, String> getPluginCompatibleEnvVariables(
@@ -153,6 +154,8 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
     }
 
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+
     return map;
   }
 
@@ -212,6 +215,7 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
     }
 
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
     return map;
   }
 
@@ -258,6 +262,7 @@ public class PluginSettingUtils {
     if (optimize) {
       setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
     }
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
 
     String remoteCacheImage = resolveStringParameter(
         "remoteCacheImage", "BuildAndPushDockerRegistry", identifier, stepInfo.getRemoteCacheImage(), false);
@@ -402,6 +407,7 @@ public class PluginSettingUtils {
         resolveStringParameter("sourcePath", "ArtifactoryUpload", identifier, stepInfo.getSourcePath(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_TARGET,
         resolveStringParameter("target", "ArtifactoryUpload", identifier, stepInfo.getTarget(), true));
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
 
     return map;
   }
@@ -422,6 +428,7 @@ public class PluginSettingUtils {
       target = format("%s", trimTrailingCharacter(stepInfoBucket, '/'));
     }
     setMandatoryEnvironmentVariable(map, PLUGIN_TARGET, target);
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
 
     return map;
   }
@@ -449,6 +456,8 @@ public class PluginSettingUtils {
     if (region != null && !region.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_REGION, region);
     }
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+
     return map;
   }
 

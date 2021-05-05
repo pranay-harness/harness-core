@@ -11,8 +11,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -24,6 +24,7 @@ import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
+import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -99,8 +100,8 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
         if (NGExpressionUtils.isRuntimeOrExpressionField(finalValue)) {
           continue;
         }
-        IdentifierRef identifierRef =
-            IdentifierRefHelper.getIdentifierRef(finalValue, accountIdentifier, orgIdentifier, projectIdentifier);
+        IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
+            finalValue, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
         entityDetails.add(EntityDetail.builder()
                               .name(referredUsage.getReferredEntity().getName())
                               .type(referredUsage.getReferredEntity().getType())
@@ -112,8 +113,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     return entityDetails;
   }
 
-  public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities)
-      throws ProducerShutdownException {
+  public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities) {
     if (EmptyPredicate.isEmpty(referredEntities)) {
       return;
     }
@@ -151,7 +151,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     }
   }
 
-  private void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) throws ProducerShutdownException {
+  private void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) {
     EntityDetailProtoDTO pipelineDetails =
         EntityDetailProtoDTO.newBuilder()
             .setIdentifierRef(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(pipelineEntity.getAccountId(),
@@ -183,7 +183,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
   public void onDelete(PipelineEntity pipelineEntity) {
     try {
       deleteSetupUsagesForGivenPipeline(pipelineEntity);
-    } catch (ProducerShutdownException ex) {
+    } catch (EventsFrameworkDownException ex) {
       log.error("Redis Producer shutdown", ex);
     }
   }

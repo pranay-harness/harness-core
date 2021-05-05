@@ -1,8 +1,8 @@
 package io.harness.delegate.task.artifacts.ecr;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
 import static software.wings.helpers.ext.ecr.EcrService.MAX_NO_OF_TAGS_PER_IMAGE;
@@ -10,7 +10,6 @@ import static software.wings.helpers.ext.ecr.EcrService.MAX_NO_OF_TAGS_PER_IMAGE
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
-import io.harness.artifacts.ecr.beans.EcrInternalConfig;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
@@ -18,9 +17,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.mappers.EcrRequestResponseMapper;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
-import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
 
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.impl.AwsApiHelperService;
@@ -29,7 +26,6 @@ import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegate;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -134,7 +130,7 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
     return getSuccessTaskExecutionResponse(ecrArtifactDelegateResponseList);
   }
 
-  private EcrInternalConfig getEcrInternalConfig(EcrArtifactDelegateRequest attributesRequest) throws IOException {
+  private AwsInternalConfig getAwsInternalConfig(EcrArtifactDelegateRequest attributesRequest) {
     AwsInternalConfig awsInternalConfig = AwsInternalConfig.builder().build();
     if (attributesRequest.getAwsConnectorDTO() != null) {
       AwsCredentialDTO credential = attributesRequest.getAwsConnectorDTO().getCredential();
@@ -146,28 +142,17 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
           throw new InvalidArgumentsException(Pair.of("accessKey", "Missing or empty"));
         }
 
-        awsInternalConfig =
-            AwsInternalConfig.builder()
-                .accessKey(accessKey.toCharArray())
-                .secretKey(
-                    SecretRefHelper.getSecretConfigString(awsManualConfigSpecDTO.getSecretKeyRef()).toCharArray())
-                .build();
+        awsInternalConfig = AwsInternalConfig.builder()
+                                .accessKey(accessKey.toCharArray())
+                                .secretKey(awsManualConfigSpecDTO.getSecretKeyRef().getDecryptedValue())
+                                .build();
+      } else if (INHERIT_FROM_DELEGATE == credential.getAwsCredentialType()) {
+        awsInternalConfig.setUseEc2IamCredentials(true);
       }
     }
     AmazonCloudWatchClientBuilder builder =
         AmazonCloudWatchClientBuilder.standard().withRegion(attributesRequest.getRegion());
     awsApiHelperService.attachCredentialsAndBackoffPolicy(builder, awsInternalConfig);
-    return EcrRequestResponseMapper.toEcrInternalConfig(attributesRequest, attributesRequest.getAwsConnectorDTO());
-  }
-
-  private AwsInternalConfig getAwsInternalConfig(EcrArtifactDelegateRequest attributesRequest) {
-    EcrInternalConfig ecrInternalConfig;
-    try {
-      ecrInternalConfig = getEcrInternalConfig(attributesRequest);
-    } catch (IOException e) {
-      log.error("Could not get secret keys", e);
-      throw new InvalidRequestException("Could not get secret keys - " + e.getMessage(), USER);
-    }
-    return EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig);
+    return awsInternalConfig;
   }
 }

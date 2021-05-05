@@ -16,8 +16,11 @@ import io.harness.licensing.interfaces.ModuleLicenseInterface;
 import io.harness.licensing.mappers.LicenseObjectMapper;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.repositories.ModuleLicenseRepository;
+import io.harness.telemetry.Category;
+import io.harness.telemetry.TelemetryReporter;
 
 import com.google.inject.Inject;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +37,10 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   private final LicenseObjectMapper licenseObjectMapper;
   private final ModuleLicenseInterface licenseInterface;
   private final AccountService accountService;
+  private final TelemetryReporter telemetryReporter;
+
+  static final String FAILED_OPERATION = "Start trial attempt failed";
+  static final String SUCCEED_OPERATION = "Start trial succeed";
 
   @Override
   public ModuleLicenseDTO getModuleLicense(String accountIdentifier, ModuleType moduleType) {
@@ -116,15 +123,25 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
   @Override
   public ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialRequestDTO startTrialRequestDTO) {
+    Edition edition = Edition.ENTERPRISE;
+    LicenseType licenseType = LicenseType.TRIAL;
     ModuleLicenseDTO trialLicense = licenseInterface.createTrialLicense(
-        Edition.ENTERPRISE, accountIdentifier, LicenseType.TRIAL, startTrialRequestDTO.getModuleType());
+        edition, accountIdentifier, licenseType, startTrialRequestDTO.getModuleType());
     ModuleLicense savedEntity;
     try {
       savedEntity = moduleLicenseRepository.save(licenseObjectMapper.toEntity(trialLicense));
-      // Send telemetry
+      sendSucceedTelemetryEvents(savedEntity, accountIdentifier);
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(format("Trial license for moduleType [%s] already exists in account [%s]",
-          startTrialRequestDTO.getModuleType(), accountIdentifier));
+      String cause = format("Trial license for moduleType [%s] already exists in account [%s]",
+          startTrialRequestDTO.getModuleType(), accountIdentifier);
+      HashMap<String, Object> properties = new HashMap<>();
+      properties.put("reason", cause);
+      properties.put("module", startTrialRequestDTO.getModuleType());
+      properties.put("licenseType", licenseType);
+      properties.put("licenseEdition", edition);
+      telemetryReporter.sendTrackEvent(FAILED_OPERATION, properties, null, Category.SIGN_UP);
+
+      throw new DuplicateFieldException(cause);
     }
 
     updateDefaultExperienceIfNull(accountIdentifier, startTrialRequestDTO.getModuleType());
@@ -135,5 +152,25 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     if (ModuleType.CI.equals(moduleType)) {
       accountService.updateDefaultExperienceIfNull(accountIdentifier, DefaultExperience.NG);
     }
+  }
+
+  private void sendSucceedTelemetryEvents(ModuleLicense moduleLicense, String accountIdentifier) {
+    HashMap<String, Object> properties = new HashMap<>();
+    properties.put("module", moduleLicense.getModuleType());
+    properties.put("licenseType", moduleLicense.getLicenseType());
+    properties.put("licenseEdition", moduleLicense.getEdition());
+    properties.put("startTime", moduleLicense.getStartTime());
+    properties.put("expiryTime", moduleLicense.getExpiryTime());
+    properties.put("licenseStatus", moduleLicense.getStatus());
+    telemetryReporter.sendTrackEvent(SUCCEED_OPERATION, properties, null, Category.SIGN_UP);
+
+    HashMap<String, Object> groupProperties = new HashMap<>();
+    String moduleType = moduleLicense.getModuleType().name();
+    groupProperties.put(format("%s%s", moduleType, "LicenseEdition"), moduleLicense.getEdition());
+    groupProperties.put(format("%s%s", moduleType, "LicenseType"), moduleLicense.getLicenseType());
+    groupProperties.put(format("%s%s", moduleType, "LicenseStartTinme"), moduleLicense.getStartTime());
+    groupProperties.put(format("%s%s", moduleType, "LicenseExpiryTinme"), moduleLicense.getExpiryTime());
+    groupProperties.put(format("%s%s", moduleType, "LicenseStatus"), moduleLicense.getStatus());
+    telemetryReporter.sendGroupEvent(accountIdentifier, groupProperties, null);
   }
 }

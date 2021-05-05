@@ -29,6 +29,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -180,6 +181,7 @@ import org.apache.commons.lang3.StringUtils;
 @FieldNameConstants(innerTypeName = "HelmDeployStateKeys")
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HelmDeployState extends State {
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;

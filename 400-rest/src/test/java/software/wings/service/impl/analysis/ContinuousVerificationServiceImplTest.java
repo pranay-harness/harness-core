@@ -349,10 +349,10 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
         continuousVerificationService.createDatadogMetricEndPointMap(dockerMetrics, ecsMetrics, null, customMetricsMap);
 
     assertThat(4).isEqualTo(metricEndPoints.size());
-    assertThat(metricEndPoints.keySet().contains(expectedDockerCPUMetricURL)).isTrue();
-    assertThat(metricEndPoints.keySet().contains(expectedDockerMEMMetricURL)).isTrue();
-    assertThat(metricEndPoints.keySet().contains(expectedECSMetricURL)).isTrue();
-    assertThat(metricEndPoints.keySet().contains(expectedCustomMetricURL)).isTrue();
+    assertThat(metricEndPoints.keySet()).contains(expectedDockerCPUMetricURL);
+    assertThat(metricEndPoints.keySet()).contains(expectedDockerMEMMetricURL);
+    assertThat(metricEndPoints.keySet()).contains(expectedECSMetricURL);
+    assertThat(metricEndPoints.keySet()).contains(expectedCustomMetricURL);
   }
 
   @Test

@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.entities.Organization;
@@ -84,18 +85,17 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
   private void setupNgUserService(String accountIdentifier, String orgIdentifier) {
     List<UserMembership> userMembershipList = new ArrayList<>();
     IntStream.range(0, 8).forEach(e
-        -> userMembershipList.add(UserMembership.builder()
-                                      .userId(randomAlphabetic(10))
-                                      .scopes(Collections.singletonList(UserMembership.Scope.builder()
-                                                                            .accountIdentifier(accountIdentifier)
-                                                                            .orgIdentifier(orgIdentifier)
-                                                                            .build()))
-                                      .build()));
+        -> userMembershipList.add(
+            UserMembership.builder()
+                .userId(randomAlphabetic(10))
+                .scopes(Collections.singletonList(
+                    Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build()))
+                .build()));
     when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
     when(ngUserService.getUsersByIds(any(), any())).thenReturn(getUsers(userMembershipList));
     List<String> adminIds =
         IntStream.range(0, 4).mapToObj(i -> userMembershipList.get(i).getUserId()).collect(toList());
-    when(ngUserService.getUserIdsWithRole(any(), any())).thenReturn(adminIds);
+    when(ngUserService.getUsers(any(), any())).thenReturn(adminIds);
   }
 
   @Test
@@ -177,13 +177,13 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
           -> userMembershipList.add(
               UserMembership.builder()
                   .userId(userIds.get(e))
-                  .scopes(Collections.singletonList(UserMembership.Scope.builder()
+                  .scopes(Collections.singletonList(Scope.builder()
                                                         .accountIdentifier(organization.getAccountIdentifier())
                                                         .orgIdentifier(organization.getIdentifier())
                                                         .build()))
                   .build()));
     }
-    when(ngUserService.getUserIdsWithRole(any(), any())).thenReturn(userIds.subList(0, 4));
+    when(ngUserService.getUsers(any(), any())).thenReturn(userIds.subList(0, 4));
     when(ngUserService.getUsersByIds(any(), any())).thenReturn(getUsers(userMembershipList));
     when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
     return userMembershipList;

@@ -19,11 +19,13 @@ import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This is a fork and join task which we are using to get all files belonging in
  * the folders.
  */
+@Slf4j
 @OwnedBy(DX)
 public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
   SCMGrpc.SCMBlockingStub scmBlockingStub;
@@ -72,10 +74,15 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
     FindFilesInBranchResponse filesInBranchResponse = null;
     List<FileChange> allFilesInThisFolder = new ArrayList<>();
     do {
-      filesInBranchResponse = scmBlockingStub.findFilesInBranch(findFilesInBranchRequest.build());
-      allFilesInThisFolder.addAll(filesInBranchResponse.getFileList());
-      findFilesInBranchRequest.setPagination(
-          PageRequest.newBuilder().setPage(filesInBranchResponse.getPagination().getNext()).build());
+      try {
+        filesInBranchResponse = scmBlockingStub.findFilesInBranch(findFilesInBranchRequest.build());
+        allFilesInThisFolder.addAll(filesInBranchResponse.getFileList());
+        findFilesInBranchRequest.setPagination(
+            PageRequest.newBuilder().setPage(filesInBranchResponse.getPagination().getNext()).build());
+      } catch (Exception ex) {
+        log.error("Error while getting files from git for the branch %s in slug %s for folder %s", branch, slug,
+            folderPath, ex);
+      }
     } while (hasMoreFiles(filesInBranchResponse));
     return allFilesInThisFolder;
   }

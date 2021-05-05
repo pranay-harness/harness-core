@@ -143,10 +143,14 @@ public class StatusUtils {
   }
 
   public EnumSet<Status> planAllowedStartSet(Status status) {
-    if (status == INTERVENTION_WAITING) {
-      return EnumSet.of(RUNNING);
+    switch (status) {
+      case INTERVENTION_WAITING:
+        return EnumSet.of(RUNNING, PAUSING, PAUSED);
+      case PAUSED:
+        return EnumSet.of(QUEUED, RUNNING, PAUSING, INTERVENTION_WAITING);
+      default:
+        return nodeAllowedStartSet(status);
     }
-    return nodeAllowedStartSet(status);
   }
 
   public boolean isFinalStatus(Status status) {
@@ -173,12 +177,12 @@ public class StatusUtils {
       return APPROVAL_WAITING;
     } else if (statuses.stream().anyMatch(status -> status == RESOURCE_WAITING)) {
       return RESOURCE_WAITING;
-    } else if (statuses.stream().anyMatch(status -> status == PAUSED)) {
-      return PAUSED;
     } else if (statuses.stream().anyMatch(status -> status == QUEUED)) {
       return QUEUED;
     } else if (!Collections.disjoint(statuses, FLOWING_STATUSES)) {
       return RUNNING;
+    } else if (statuses.stream().anyMatch(status -> status == PAUSED)) {
+      return PAUSED;
     } else {
       log.error("Cannot calculate the end status for PlanExecutionId : {}", planExecutionId);
       return ERRORED;

@@ -76,6 +76,7 @@ public abstract class VerificationJob
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("unique_query_idx")
+                 .unique(true)
                  .field(VerificationJobKeys.accountId)
                  .field(VerificationJobKeys.orgIdentifier)
                  .field(VerificationJobKeys.projectIdentifier)
@@ -133,7 +134,7 @@ public abstract class VerificationJob
           monitoringSources, generateErrorMessageFromParam(VerificationJobKeys.monitoringSources));
       Preconditions.checkArgument(!monitoringSources.isEmpty(), "Monitoring Sources can not be empty");
     }
-    Preconditions.checkNotNull(getType(), generateErrorMessageFromParam(VerificationJobKeys.type));
+    Preconditions.checkNotNull(type, generateErrorMessageFromParam(VerificationJobKeys.type));
     this.validateParams();
   }
 
@@ -360,6 +361,7 @@ public abstract class VerificationJob
     verificationJob.setServiceIdentifier(getRunTimeParameter(RUNTIME_PARAM_STRING, true));
     verificationJob.setEnvIdentifier(getRunTimeParameter(RUNTIME_PARAM_STRING, true));
     verificationJob.setDuration(RUNTIME_PARAM_STRING, true);
+    verificationJob.setType(verificationJob.getType());
     verificationJob.setDefaultJob(true);
   }
 }

@@ -12,7 +12,7 @@ import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
-import io.harness.pms.execution.SdkResponseEventInternal;
+import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.rule.Owner;
 
 import org.junit.After;
@@ -45,7 +45,7 @@ public class HandleStepResponseEventHandlerTest extends OrchestrationTestBase {
   public void testHandleEvent() {
     HandleStepResponseRequest handleStepResponseRequest = HandleStepResponseRequest.newBuilder().build();
     handleStepResponseEventHandler.handleEvent(
-        SdkResponseEventInternal.builder()
+        SdkResponseEvent.builder()
             .sdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(handleStepResponseRequest).build())
             .sdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)

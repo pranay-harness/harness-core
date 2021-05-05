@@ -17,4 +17,14 @@ public class DataCollectionInfo {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+
+  public void copy(DataCollectionInfo clone) {
+    clone.setAccountId(accountId);
+    clone.setApplicationId(applicationId);
+    clone.setStateExecutionId(stateExecutionId);
+    clone.setCvConfigId(cvConfigId);
+    clone.setWorkflowId(workflowId);
+    clone.setWorkflowExecutionId(workflowExecutionId);
+    clone.setServiceId(serviceId);
+  }
 }

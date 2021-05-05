@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractConsumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 
 import java.time.Duration;
@@ -18,12 +17,12 @@ public class NoOpConsumer extends AbstractConsumer {
   }
 
   @Override
-  public List<Message> read(Duration maxWaitTime) throws ConsumerShutdownException {
+  public List<Message> read(Duration maxWaitTime) {
     return Collections.emptyList();
   }
 
   @Override
-  public void acknowledge(String messageId) throws ConsumerShutdownException {}
+  public void acknowledge(String messageId) {}
 
   @Override
   public void shutdown() {}

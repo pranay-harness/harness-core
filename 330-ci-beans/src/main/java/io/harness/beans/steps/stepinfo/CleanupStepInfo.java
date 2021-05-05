@@ -1,7 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;

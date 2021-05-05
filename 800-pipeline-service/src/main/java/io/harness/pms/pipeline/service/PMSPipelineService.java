@@ -1,6 +1,8 @@
 package io.harness.pms.pipeline.service;
 
-import io.harness.eventsframework.api.ProducerShutdownException;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PIPELINE)
 public interface PMSPipelineService {
   PipelineEntity create(PipelineEntity pipelineEntity);
 
@@ -20,18 +23,18 @@ public interface PMSPipelineService {
 
   PipelineEntity update(PipelineEntity pipelineEntity);
 
-  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
-      Long version) throws ProducerShutdownException;
-
-  Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
-
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);
 
-  StepCategory getSteps(String module, String category, String accountId);
-
   Optional<PipelineEntity> incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
+
+  boolean delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
+
+  Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
+
+  StepCategory getSteps(String module, String category, String accountId);
 
   VariableMergeServiceResponse createVariablesResponse(PipelineEntity pipelineEntity);
 

@@ -62,6 +62,14 @@ public class ResourceGroupDBO implements PersistentRegularIterable, AccessContro
   @Setter @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Setter @Version Long version;
 
+  public boolean isFullScopeSelected() {
+    return fullScopeSelected != null && fullScopeSelected;
+  }
+
+  public boolean isManaged() {
+    return managed != null && managed;
+  }
+
   @Setter Long nextReconciliationIterationAt;
 
   public static List<MongoIndex> mongoIndexes() {

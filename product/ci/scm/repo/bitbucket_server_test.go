@@ -41,6 +41,24 @@ func TestCreateAndDeleteWebhookBitbucketServer(t *testing.T) {
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
 
+	list := &pb.ListWebhooksRequest{
+		Slug: "foo/quux",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_BitbucketServer{
+				BitbucketServer: &pb.BitbucketServerProvider{
+					Username:            "jcitizen",
+					PersonalAccessToken: os.Getenv("BITBUCKET_SERVER_TOKEN"),
+				},
+			},
+			Endpoint: "http://165.227.13.235:7990/",
+			Debug:    true,
+		},
+	}
+	got2, err2 := ListWebhooks(context.Background(), list, log.Sugar())
+
+	assert.Nil(t, err2, "no errors")
+	assert.Equal(t, 1, len(got2.Webhooks), "there is 1 webhook")
+
 	del := &pb.DeleteWebhookRequest{
 		Slug: "foo/quux",
 		Id:   got.Id,
@@ -55,8 +73,8 @@ func TestCreateAndDeleteWebhookBitbucketServer(t *testing.T) {
 			Debug:    true,
 		},
 	}
-	got2, err2 := DeleteWebhook(context.Background(), del, log.Sugar())
+	got3, err3 := DeleteWebhook(context.Background(), del, log.Sugar())
 
-	assert.Nil(t, err2, "no errors")
-	assert.Equal(t, int32(204), got2.Status, "Correct http response")
+	assert.Nil(t, err3, "no errors")
+	assert.Equal(t, int32(204), got3.Status, "Correct http response")
 }

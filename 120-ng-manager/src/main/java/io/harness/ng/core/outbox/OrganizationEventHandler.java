@@ -1,10 +1,14 @@
 package io.harness.ng.core.outbox;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.audit.beans.AuthenticationInfoDTO.fromSecurityPrincipal;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
-import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
+import static io.harness.security.PrincipalContextData.PRINCIPAL_CONTEXT;
 import static io.harness.security.SourcePrincipalContextData.SOURCE_PRINCIPAL;
 
 import io.harness.ModuleType;
@@ -14,11 +18,12 @@ import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
+import io.harness.beans.Scope;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidArgumentsException;
@@ -29,7 +34,6 @@ import io.harness.ng.core.events.OrganizationCreateEvent;
 import io.harness.ng.core.events.OrganizationDeleteEvent;
 import io.harness.ng.core.events.OrganizationRestoreEvent;
 import io.harness.ng.core.events.OrganizationUpdateEvent;
-import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -37,8 +41,10 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.security.PrincipalContextData;
 import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.Principal;
+import io.harness.security.dto.ServicePrincipal;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.utils.ScopeUtils;
 
@@ -118,7 +124,15 @@ public class OrganizationEventHandler implements OutboxEventHandler {
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .insertId(outboxEvent.getId())
             .build();
-    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext)
+    Principal principal = null;
+    if (globalContext.get(PRINCIPAL_CONTEXT) == null
+        && DEFAULT_ORG_IDENTIFIER.equals(outboxEvent.getResource().getIdentifier())) {
+      principal = new ServicePrincipal(NG_MANAGER.getServiceId());
+    } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
+      principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
+    }
+    return publishedToRedis
+        && auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext)
         && setupOrgForUserAuthz(
             accountIdentifier, organizationCreateEvent.getOrganization().getIdentifier(), globalContext);
   }
@@ -132,8 +146,8 @@ public class OrganizationEventHandler implements OutboxEventHandler {
     if (principal instanceof UserPrincipal) {
       String userId = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal().getName();
       ngUserService.addUserToScope(userId,
-          UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(),
-          ORG_ADMIN_ROLE, SYSTEM);
+          Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), ORG_ADMIN_ROLE,
+          SYSTEM);
     }
     return true;
   }
@@ -259,7 +273,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
                                  EventsFrameworkMetadataConstants.ACTION, action))
                              .setData(getOrganizationPayload(accountIdentifier, identifier))
                              .build());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework orgIdentifier: " + identifier, e);
       return false;
     }

@@ -12,7 +12,7 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.EndPlanAdvise;
 import io.harness.pms.contracts.execution.events.AdviserResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
-import io.harness.pms.execution.SdkResponseEventInternal;
+import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.rule.Owner;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -51,8 +51,8 @@ public class AdviserEventSdkResponseHandlerTest {
                                                                  .setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
                                                                  .build())
                                          .build();
-    SdkResponseEventInternal sdkResponseEventInternal =
-        SdkResponseEventInternal.builder()
+    SdkResponseEvent sdkResponseEventInternal =
+        SdkResponseEvent.builder()
             .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder().setAdviserResponseRequest(request).build())
             .build();
     adviserEventResponseHandler.handleEvent(sdkResponseEventInternal);

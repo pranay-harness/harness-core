@@ -594,8 +594,8 @@ public class ActivityServiceImpl implements ActivityService {
             activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
         return null;
       }
-      verificationJobs.addAll(
-          verificationJobService.getHealthVerificationJobs(activity.getAccountId(), activity.getOrgIdentifier(),
+      verificationJobs.add(
+          verificationJobService.getResolvedHealthVerificationJob(activity.getAccountId(), activity.getOrgIdentifier(),
               activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier()));
     } else {
       activity.getVerificationJobRuntimeDetails().forEach(jobDetail -> {

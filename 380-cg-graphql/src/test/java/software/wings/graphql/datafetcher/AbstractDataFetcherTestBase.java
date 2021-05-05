@@ -201,6 +201,19 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
     return wingsPersistence.insert(workflowExecution);
   }
 
+  public String createWorkflowExecution(
+      String accountId, String appId, String workflowId, EnvironmentType environmentType) {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .workflowId(workflowId)
+                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .accountId(accountId)
+                                              .appId(appId)
+                                              .envType(environmentType)
+                                              .build();
+    return wingsPersistence.insert(workflowExecution);
+  }
+
   public String createPipelineExecution(String accountId, String appId, String pipelineId) {
     long startTs = System.currentTimeMillis();
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
@@ -212,6 +225,23 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
                                               .duration(10L)
                                               .accountId(accountId)
                                               .appId(appId)
+                                              .build();
+    return wingsPersistence.insert(workflowExecution);
+  }
+
+  public String createPipelineExecution(
+      String accountId, String appId, String pipelineId, EnvironmentType environmentType) {
+    long startTs = System.currentTimeMillis();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .workflowId(pipelineId)
+                                              .workflowType(WorkflowType.PIPELINE)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .startTs(startTs)
+                                              .endTs(startTs + 10)
+                                              .duration(10L)
+                                              .accountId(accountId)
+                                              .appId(appId)
+                                              .envType(environmentType)
                                               .build();
     return wingsPersistence.insert(workflowExecution);
   }

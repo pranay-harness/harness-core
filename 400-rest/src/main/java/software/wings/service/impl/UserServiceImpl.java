@@ -60,8 +60,8 @@ import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.EventType;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.user.UserDTO;
 import io.harness.exception.ExceptionUtils;
@@ -364,8 +364,7 @@ public class UserServiceImpl implements UserService {
   public User createNewUserAndSignIn(User user, String accountId) {
     User savedUser = createNewUser(user, accountId);
 
-    return authenticationManager.defaultLoginWithoutEmailVerification(
-        savedUser.getEmail(), savedUser.getPasswordHash());
+    return authenticationManager.defaultLoginUsingPasswordHash(savedUser.getEmail(), savedUser.getPasswordHash());
   }
 
   @Override
@@ -689,10 +688,10 @@ public class UserServiceImpl implements UserService {
       });
 
     } else {
-      Map<String, Object> map = new HashMap<>();
-      map.put("name", user.getName());
-      map.put("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
-      wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
+      UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+      updateOperations.set(UserKeys.name, user.getName());
+      updateOperations.set(UserKeys.passwordHash, hashpw(new String(user.getPassword()), BCrypt.gensalt()));
+      updateUser(existingUser, updateOperations);
       return existingUser;
     }
   }
@@ -2076,7 +2075,7 @@ public class UserServiceImpl implements UserService {
             "Auditing updation of User Profile for user={} in account={}", user.getUuid(), account.getAccountName());
       });
     }
-    return applyUpdateOperations(user, updateOperations);
+    return updateUser(user, updateOperations);
   }
 
   @Override
@@ -2168,7 +2167,7 @@ public class UserServiceImpl implements UserService {
       updateOperations.set(UserKeys.lastLogin, user.getLastLogin());
     }
 
-    return applyUpdateOperations(user, updateOperations);
+    return updateUser(user, updateOperations);
   }
 
   @Override
@@ -2355,16 +2354,17 @@ public class UserServiceImpl implements UserService {
     log.info("Auditing deletion of user={} in account={}", user.getName(), accountId);
   }
 
-  private User updateUser(User oldUser, UpdateOperations<User> updateOperations) {
+  @Override
+  public User updateUser(User oldUser, UpdateOperations<User> updateOperations) {
     if (oldUser.getUuid() == null) {
       return null;
     }
-    User newUser = wingsPersistence.findAndModify(
+    User updatedUser = wingsPersistence.findAndModify(
         wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, oldUser.getUuid()), updateOperations,
         HPersistence.returnNewOptions);
     evictUserFromCache(oldUser.getUuid());
-    publishUserEvent(oldUser, newUser);
-    return newUser;
+    publishUserEvent(oldUser, updatedUser);
+    return updatedUser;
   }
 
   private void deleteUser(User user) {
@@ -2380,32 +2380,27 @@ public class UserServiceImpl implements UserService {
     if (oldUser == null && updatedUser == null) {
       return;
     }
-    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
+    UserDTO userDTO = null;
     boolean isUserCreated = oldUser == null;
     boolean isUserDeleted = updatedUser == null;
     String action;
     if (isUserCreated) {
       action = EventsFrameworkMetadataConstants.CREATE_ACTION;
-      userDTOBuilder.setUserId(updatedUser.getUuid());
-      userDTOBuilder.addAllNewAccountsUserAddedTo(updatedUser.getAccountIds());
+      userDTO = getEventDataForCreateEvent(updatedUser);
     } else if (isUserDeleted) {
       action = EventsFrameworkMetadataConstants.DELETE_ACTION;
-      userDTOBuilder.setUserId(oldUser.getUuid());
-      userDTOBuilder.addAllAccountsUserRemovedFrom(oldUser.getAccountIds());
+      userDTO = getEventDataForDeleteEvent(oldUser);
     } else {
       action = EventsFrameworkMetadataConstants.UPDATE_ACTION;
-      userDTOBuilder.setUserId(oldUser.getUuid());
-      Set<String> oldAccounts = new HashSet<>(oldUser.getAccountIds());
-      Set<String> newAccounts = new HashSet<>(updatedUser.getAccountIds());
-      userDTOBuilder.addAllNewAccountsUserAddedTo(Sets.difference(newAccounts, oldAccounts));
-      userDTOBuilder.addAllAccountsUserRemovedFrom(Sets.difference(oldAccounts, newAccounts));
+      userDTO = getEventDataForUpdateEvent(oldUser, updatedUser);
     }
 
     /**
-     * Dont send unnecessary events. Right now we only send events when user is added/removed from account
+     * Dont send unnecessary events. Right now we only send events when user is added/removed from account or when
+     * username is changed
      */
-    if (userDTOBuilder.getAccountsUserRemovedFromList().isEmpty()
-        && userDTOBuilder.getNewAccountsUserAddedToList().isEmpty()) {
+    if (userDTO.getAccountsUserRemovedFromList().isEmpty() && userDTO.getNewAccountsUserAddedToList().isEmpty()
+        && isBlank(userDTO.getName())) {
       return;
     }
 
@@ -2414,11 +2409,51 @@ public class UserServiceImpl implements UserService {
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of(EventsFrameworkMetadataConstants.ENTITY_TYPE,
                   EventsFrameworkMetadataConstants.USER_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
-              .setData(userDTOBuilder.build().toByteString())
+              .setData(userDTO.toByteString())
               .build());
-    } catch (ProducerShutdownException e) {
-      log.error("Failed to send event to events framework for user [userId: {}", userDTOBuilder.getUserId(), e);
+    } catch (EventsFrameworkDownException e) {
+      log.error("Failed to send event to events framework for user [userId: {}", userDTO.getUserId(), e);
     }
+  }
+
+  private UserDTO getEventDataForUpdateEvent(User oldUser, User updatedUser) {
+    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
+    userDTOBuilder.setUserId(oldUser.getUuid());
+    if (updatedUser.getName() != null
+        && (oldUser.getName() == null || !oldUser.getName().equals(updatedUser.getName()))) {
+      userDTOBuilder.setName(updatedUser.getName());
+    }
+    Set<String> oldAccounts =
+        new HashSet<>(Optional.ofNullable(oldUser.getAccountIds()).orElse(Collections.emptyList()));
+    Set<String> newAccounts =
+        new HashSet<>(Optional.ofNullable(updatedUser.getAccountIds()).orElse(Collections.emptyList()));
+    userDTOBuilder.addAllNewAccountsUserAddedTo(Sets.difference(newAccounts, oldAccounts));
+    userDTOBuilder.addAllAccountsUserRemovedFrom(Sets.difference(oldAccounts, newAccounts));
+    return userDTOBuilder.build();
+  }
+
+  private UserDTO getEventDataForDeleteEvent(User oldUser) {
+    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
+    if (oldUser.getName() != null) {
+      userDTOBuilder.setName(oldUser.getName());
+    }
+    userDTOBuilder.setUserId(oldUser.getUuid());
+    if (oldUser.getAccountIds() != null) {
+      userDTOBuilder.addAllAccountsUserRemovedFrom(oldUser.getAccountIds());
+    }
+    return userDTOBuilder.build();
+  }
+
+  private UserDTO getEventDataForCreateEvent(User updatedUser) {
+    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
+    if (updatedUser.getName() != null) {
+      userDTOBuilder.setName(updatedUser.getName());
+    }
+    userDTOBuilder.setUserId(updatedUser.getUuid());
+    if (updatedUser.getAccountIds() != null) {
+      userDTOBuilder.addAllNewAccountsUserAddedTo(updatedUser.getAccountIds());
+    }
+    return userDTOBuilder.build();
   }
 
   /* (non-Javadoc)
@@ -3171,12 +3206,12 @@ public class UserServiceImpl implements UserService {
   }
 
   public List<User> listUsers(PageRequest pageRequest, String accountId, String searchTerm, Integer offset,
-      Integer pageSize, boolean loadUserGroups) {
+      Integer pageSize, boolean loadUserGroups, boolean includeUsersPendingInviteAcceptance) {
     Query<User> query;
     if (isNotEmpty(searchTerm)) {
-      query = getSearchUserQuery(accountId, searchTerm);
+      query = getSearchUserQuery(accountId, searchTerm, includeUsersPendingInviteAcceptance);
     } else {
-      query = getListUserQuery(accountId, true);
+      query = getListUserQuery(accountId, includeUsersPendingInviteAcceptance);
     }
     query.criteria(UserKeys.disabled).notEqual(true);
     applySortFilter(pageRequest, query);
@@ -3200,16 +3235,16 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  public long getTotalUserCount(String accountId, boolean listPendingUsers) {
-    Query<User> query = getListUserQuery(accountId, listPendingUsers);
+  public long getTotalUserCount(String accountId, boolean includeUsersPendingInviteAcceptance) {
+    Query<User> query = getListUserQuery(accountId, includeUsersPendingInviteAcceptance);
     query.criteria(UserKeys.disabled).notEqual(true);
     return query.count();
   }
 
-  private Query<User> getListUserQuery(String accountId, boolean listPendingUsers) {
+  private Query<User> getListUserQuery(String accountId, boolean includeUsersPendingInviteAcceptance) {
     Query<User> listUserQuery = wingsPersistence.createQuery(User.class, excludeAuthority);
 
-    if (listPendingUsers) {
+    if (includeUsersPendingInviteAcceptance) {
       listUserQuery.or(listUserQuery.criteria(UserKeys.accounts).hasThisOne(accountId),
           listUserQuery.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
     } else {
@@ -3220,7 +3255,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @VisibleForTesting
-  Query<User> getSearchUserQuery(String accountId, String searchTerm) {
+  Query<User> getSearchUserQuery(String accountId, String searchTerm, boolean includeUsersPendingInviteAcceptance) {
     Query<User> query = wingsPersistence.createQuery(User.class, excludeAuthority);
 
     CriteriaContainer nameCriterion = query.and(
@@ -3228,6 +3263,11 @@ public class UserServiceImpl implements UserService {
 
     CriteriaContainer emailCriterion = query.and(
         getSearchCriterion(query, UserKeys.email, searchTerm), query.criteria(UserKeys.accounts).hasThisOne(accountId));
+
+    if (!includeUsersPendingInviteAcceptance) {
+      query.or(nameCriterion, emailCriterion);
+      return query;
+    }
 
     CriteriaContainer emailCriterionForPendingUsers = query.and(getSearchCriterion(query, UserKeys.email, searchTerm),
         query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
@@ -3331,10 +3371,10 @@ public class UserServiceImpl implements UserService {
   }
 
   private void completeUserInfo(UserInvite userInvite, User existingUser) {
-    Map<String, Object> map = new HashMap<>();
-    map.put(UserKeys.name, userInvite.getName().trim());
-    map.put(UserKeys.passwordHash, hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
-    wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set(UserKeys.name, userInvite.getName().trim());
+    updateOperations.set(UserKeys.passwordHash, hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
+    updateUser(existingUser, updateOperations);
   }
 
   private String setupAccountBasedOnProduct(User user, UserInvite userInvite, MarketPlace marketPlace) {

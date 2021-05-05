@@ -11,7 +11,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.iterator.PersistentCronIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedByAware;
@@ -23,6 +25,7 @@ import software.wings.yaml.BaseEntityYaml;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +54,21 @@ import org.mongodb.morphia.annotations.Id;
 @Slf4j
 public class GovernanceConfig
     implements PersistentEntity, UuidAware, UpdatedByAware, AccountAccess, ApplicationAccess, PersistentCronIterable {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("enableNextIterations_nextIterations")
+                 .field(GovernanceConfigKeys.enableNextIterations)
+                 .field(GovernanceConfigKeys.nextIterations)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("enableNextCloseIterations_nextCloseIterations")
+                 .field(GovernanceConfigKeys.enableNextCloseIterations)
+                 .field(GovernanceConfigKeys.nextCloseIterations)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   @Setter @JsonIgnore @SchemaIgnore private transient boolean syncFromGit;
   @FdIndex private String accountId;
@@ -59,6 +77,8 @@ public class GovernanceConfig
   private EmbeddedUser lastUpdatedBy;
   private List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs;
   private List<WeeklyFreezeConfig> weeklyFreezeConfigs;
+  private boolean enableNextIterations;
+  private boolean enableNextCloseIterations;
   @FdIndex
   private List<Long> nextIterations; // List of activation times for all freeze windows used by activation handler
   @FdIndex
@@ -87,8 +107,10 @@ public class GovernanceConfig
   @Override
   public List<Long> recalculateNextIterations(String fieldName, boolean skipMissing, long throttled) {
     if (EmptyPredicate.isEmpty(timeRangeBasedFreezeConfigs)) {
-      nextIterations = new ArrayList();
-      nextCloseIterations = new ArrayList();
+      nextIterations = new ArrayList<>();
+      nextCloseIterations = new ArrayList<>();
+      enableNextIterations = false;
+      enableNextCloseIterations = false;
       return new ArrayList<>();
     }
     try {
@@ -101,6 +123,7 @@ public class GovernanceConfig
                              .sorted()
                              .filter(time -> time > currentTime)
                              .collect(Collectors.toList());
+        recalculateEnableNextIterations();
         return nextIterations;
       } else {
         nextCloseIterations = timeRangeBasedFreezeConfigs.stream()
@@ -110,12 +133,21 @@ public class GovernanceConfig
                                   .sorted()
                                   .filter(time -> time > currentTime)
                                   .collect(Collectors.toList());
+        recalculateEnableNextCloseIterations();
         return nextCloseIterations;
       }
     } catch (Exception ex) {
       log.error("Failed to schedule notification for governance config {}", uuid, ex);
       throw ex;
     }
+  }
+
+  public void recalculateEnableNextCloseIterations() {
+    enableNextCloseIterations = EmptyPredicate.isNotEmpty(nextCloseIterations);
+  }
+
+  public void recalculateEnableNextIterations() {
+    enableNextIterations = EmptyPredicate.isNotEmpty(nextIterations);
   }
 
   @Override
