@@ -68,18 +68,7 @@ public class RoleAssignmentDTOMapper {
   }
 
   public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object) {
-    return RoleAssignment.builder()
-        .identifier(isEmpty(object.getIdentifier())
-                ? "role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20))
-                : object.getIdentifier())
-        .scopeIdentifier(scopeIdentifier)
-        .principalIdentifier(object.getPrincipal().getIdentifier())
-        .principalType(object.getPrincipal().getType())
-        .resourceGroupIdentifier(object.getResourceGroupIdentifier())
-        .roleIdentifier(object.getRoleIdentifier())
-        .managed(false)
-        .disabled(object.isDisabled())
-        .build();
+    return fromDTO(scopeIdentifier, object, false);
   }
 
   public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object, boolean managed) {
