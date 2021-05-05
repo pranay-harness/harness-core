@@ -32,4 +32,5 @@ public class RoleAssignmentDTO {
   @ApiModelProperty(required = true) final String roleIdentifier;
   @ApiModelProperty(required = true) final PrincipalDTO principal;
   @Setter boolean disabled;
+  final boolean managed;
 }

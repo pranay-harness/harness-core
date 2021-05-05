@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
@@ -40,7 +40,7 @@ public class PipelineEntityCrudObserver implements PipelineActionObserver {
                   EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.DELETE_ACTION))
               .setData(pipelineEntityChangeDTOBuilder.build().toByteString())
               .build());
-    } catch (ProducerShutdownException ex) {
+    } catch (EventsFrameworkDownException ex) {
       throw new InvalidRequestException("Redis Producer shutdown unexpectedly", ex);
     }
   }

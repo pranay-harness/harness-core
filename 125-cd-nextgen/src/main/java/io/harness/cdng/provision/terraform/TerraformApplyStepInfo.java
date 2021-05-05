@@ -3,7 +3,6 @@ package io.harness.cdng.provision.terraform;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.provision.terraform.TerraformApplyStepParameters.TerraformApplyStepParametersBuilder;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
@@ -55,15 +54,11 @@ public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implement
 
   @Override
   public SpecParameters getSpecParameters() {
-    TerraformApplyStepParametersBuilder builder =
-        TerraformApplyStepParameters.infoBuilder().provisionerIdentifier(provisionerIdentifier);
     Validator.notNullCheck("Terraform Step configuration is null", terrformStepConfiguration);
-    TerraformStepConfigurationType stepConfigurationType =
-        terrformStepConfiguration.getTerraformStepConfigurationType();
-    if (TerraformStepConfigurationType.INLINE == stepConfigurationType) {
-      builder.configuration(terrformStepConfiguration.toStepParameters());
-    }
-    return builder.build();
+    return TerraformApplyStepParameters.infoBuilder()
+        .provisionerIdentifier(provisionerIdentifier)
+        .configuration(terrformStepConfiguration.toStepParameters())
+        .build();
   }
 
   @Override

@@ -1,11 +1,13 @@
 package io.harness.pms.triggers.webhook.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.pms.contracts.triggers.Type.CUSTOM;
 import static io.harness.pms.contracts.triggers.Type.GIT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.PlanExecution;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class TriggerWebhookExecutionHelper {
   private final WebhookEventMapperHelper webhookEventMapperHelper;
   private final TriggerExecutionHelper triggerExecutionHelper;

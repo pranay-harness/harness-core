@@ -6,7 +6,6 @@ import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
@@ -49,7 +48,7 @@ public class UserMembershipStreamConsumer implements Runnable {
     SecurityContextBuilder.unsetCompleteContext();
   }
 
-  private void pollAndProcessMessages() throws ConsumerShutdownException {
+  private void pollAndProcessMessages() {
     String messageId;
     boolean messageProcessed;
     List<Message> messages;

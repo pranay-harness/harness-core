@@ -24,8 +24,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.SignupException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.dto.AccountDTO;
-import io.harness.ng.core.dto.OrganizationDTO;
-import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.rest.RestResponse;
@@ -51,7 +49,6 @@ public class SignupServiceImplTest extends SignupTestBase {
   @InjectMocks SignupServiceImpl signupServiceImpl;
   @Mock SignupValidator signupValidator;
   @Mock AccountService accountService;
-  @Mock OrganizationService organizationService;
   @Mock UserClient userClient;
   @Mock ReCaptchaVerifier reCaptchaVerifier;
   @Mock TelemetryReporter telemetryReporter;
@@ -78,7 +75,6 @@ public class SignupServiceImplTest extends SignupTestBase {
 
     UserInfo returnedUser = signupServiceImpl.signup(signupDTO, null);
 
-    verify(organizationService, times(1)).create(eq(accountDTO.getIdentifier()), any(OrganizationDTO.class));
     verify(reCaptchaVerifier, times(1)).verifyInvisibleCaptcha(anyString());
     verify(telemetryReporter, times(1))
         .sendTrackEvent(
@@ -105,7 +101,6 @@ public class SignupServiceImplTest extends SignupTestBase {
 
     UserInfo returnedUser = signupServiceImpl.oAuthSignup(oAuthSignupDTO);
 
-    verify(organizationService, times(1)).create(eq(accountDTO.getIdentifier()), any(OrganizationDTO.class));
     verify(telemetryReporter, times(1))
         .sendTrackEvent(
             eq(SUCCEED_EVENT_NAME), eq(EMAIL), eq(ACCOUNT_ID), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));

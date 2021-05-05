@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.SetupMetadata;
@@ -112,7 +111,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testGetPipelineInfo() throws IOException, ProducerShutdownException {
+  public void testGetPipelineInfo() throws IOException {
     Map<String, Set<String>> stepToSupportedTypes = new HashMap<>();
     stepToSupportedTypes.put("pipeline", Collections.singleton("__any__"));
     Map<String, PlanCreatorServiceInfo> sdkInstances = new HashMap<>();

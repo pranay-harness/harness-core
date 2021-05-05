@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.CREATE_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.DELETE_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.EDIT_PROJECT_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -22,7 +23,11 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
@@ -103,7 +108,7 @@ public class ProjectResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets a Project by identifier", nickname = "getProject")
-  //  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<ProjectResponse> get(
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
@@ -186,23 +191,22 @@ public class ProjectResource {
     } else {
       orgIdentifiers = Collections.singleton(orgIdentifier);
     }
-    return orgIdentifiers;
 
-    //    List<PermissionCheckDTO> permissionChecks =
-    //        orgIdentifiers.stream()
-    //            .map(oi
-    //                -> PermissionCheckDTO.builder()
-    //                       .permission(VIEW_PROJECT_PERMISSION)
-    //                       .resourceScope(
-    //                           ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(oi).build())
-    //                       .resourceType(PROJECT)
-    //                       .build())
-    //            .collect(Collectors.toList());
-    //    AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
-    //    return accessCheckResponse.getAccessControlList()
-    //        .stream()
-    //        .filter(AccessControlDTO::isPermitted)
-    //        .map(AccessControlDTO::getResourceIdentifier)
-    //        .collect(Collectors.toSet());
+    List<PermissionCheckDTO> permissionChecks =
+        orgIdentifiers.stream()
+            .map(oi
+                -> PermissionCheckDTO.builder()
+                       .permission(VIEW_PROJECT_PERMISSION)
+                       .resourceScope(
+                           ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(oi).build())
+                       .resourceType(PROJECT)
+                       .build())
+            .collect(Collectors.toList());
+    AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
+    return accessCheckResponse.getAccessControlList()
+        .stream()
+        .filter(AccessControlDTO::isPermitted)
+        .map(AccessControlDTO::getResourceIdentifier)
+        .collect(Collectors.toSet());
   }
 }

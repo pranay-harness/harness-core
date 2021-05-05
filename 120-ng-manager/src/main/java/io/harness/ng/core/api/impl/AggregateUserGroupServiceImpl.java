@@ -220,6 +220,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
                        .roleName(roleMap.get(roleAssignment.getRoleIdentifier()).getRole().getName())
                        .resourceGroupName(resourceGroupMap.get(roleAssignment.getResourceGroupIdentifier()).getName())
                        .managedRole(roleMap.get(roleAssignment.getRoleIdentifier()).isHarnessManaged())
+                       .managedRoleAssignment(roleAssignment.isManaged())
                        .build(),
                 toList())));
   }

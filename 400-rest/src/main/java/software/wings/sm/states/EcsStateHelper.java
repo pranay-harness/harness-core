@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
+import static io.harness.beans.FeatureName.ECS_BG_DOWNSIZE;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -446,6 +447,8 @@ public class EcsStateHelper {
         .serviceName(requestConfigData.getServiceName())
         .awsConfig(awsConfig)
         .downsizeOldService(requestConfigData.isDownsizeOldService())
+        .downsizeOldServiceDelayInSecs(requestConfigData.getDownsizeOldServiceDelayInSecs())
+        .ecsBgDownsizeDelayEnabled(featureFlagService.isEnabled(ECS_BG_DOWNSIZE, accountId))
         .serviceNameDownsized(requestConfigData.getServiceNameDownsized())
         .serviceCountDownsized(requestConfigData.getServiceCountDownsized())
         .rollback(requestConfigData.isRollback())

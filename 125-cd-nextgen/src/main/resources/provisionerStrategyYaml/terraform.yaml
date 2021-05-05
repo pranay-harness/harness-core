@@ -3,7 +3,7 @@ provisioner:
     - step:
         type: TerraformPlan
         name: Terraform Plan
-        identifier:
+        identifier: tf_plan
         timeout: 10m
         spec:
           provisionerIdentifier:
@@ -20,14 +20,14 @@ provisioner:
                   folderPath:
             varFiles:
               - varFile:
-                identifier:
-                type: Inline
-                spec:
-                  content
+                  identifier: var_file_1
+                  type: Inline
+                  spec:
+                    content:
     - step:
         type: HarnessApproval
         name: Harness Approval
-        identifier:
+        identifier: approval
         timeout: 1d
         spec:
           approvalMessage:
@@ -42,7 +42,7 @@ provisioner:
     - step:
         type: TerraformApply
         name: Terraform Apply
-        identifier:
+        identifier: tf_apply
         timeout: 10m
         spec:
           provisionerIdentifier:
@@ -52,7 +52,7 @@ provisioner:
     - step:
         type: TerraformRollback
         name: Terraform Rollback
-        identifier:
+        identifier: tf_rollback
         timeout: 10m
         spec:
           provisionerIdentifier:

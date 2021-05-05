@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -203,7 +204,7 @@ public class HelmDeployState extends State {
   @Inject private K8sStateHelper k8sStateHelper;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private HelmHelper helmHelper;
-  @Inject private FeatureFlagService featureFlagService;
+  @Inject protected FeatureFlagService featureFlagService;
   @Inject private LogService logService;
   @Inject private SweepingOutputService sweepingOutputService;
 
@@ -351,7 +352,9 @@ public class HelmDeployState extends State {
             .helmVersion(helmVersion)
             .helmCommandFlag(helmCommandFlag)
             .mergeCapabilities(
-                featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()));
+                featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
+            .isGitHostConnectivityCheck(
+                featureFlagService.isEnabled(FeatureName.GIT_HOST_CONNECTIVITY, context.getAccountId()));
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -397,6 +400,7 @@ public class HelmDeployState extends State {
             .commandFlags(commandFlags)
             .helmCommandFlag(helmCommandFlag)
             .helmVersion(helmVersion)
+            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, context.getAccountId()))
             .build();
 
     ContainerInfrastructureMapping containerInfraMapping =

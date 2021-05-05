@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.encryption.ScopeHelper;
-import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
@@ -78,7 +78,7 @@ public class PipelineEntityGitSyncHelper implements GitSdkEntityHandlerInterface
     try {
       return pmsPipelineService.delete(entityReference.getAccountIdentifier(), entityReference.getOrgIdentifier(),
           entityReference.getProjectIdentifier(), entityReference.getIdentifier(), null);
-    } catch (ProducerShutdownException ex) {
+    } catch (EventsFrameworkDownException ex) {
       throw new UnexpectedException("Producer shutdown: " + ExceptionUtils.getMessage(ex));
     }
   }

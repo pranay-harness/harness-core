@@ -12,8 +12,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
@@ -231,7 +231,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
                   EventsFrameworkMetadataConstants.ACTION, action))
               .setData(environmentChangeEvent.build().toByteString())
               .build());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework environment Identifier: {}", identifier, e);
     }
   }

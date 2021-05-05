@@ -8,7 +8,6 @@ import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.repository.ACLRepository;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.ResourceScope;
-import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
@@ -44,18 +43,23 @@ public class ACLDAOImpl implements ACLDAO {
     return PATH_DELIMITER.concat(resourceType).concat(PATH_DELIMITER).concat(resourceIdentifier);
   }
 
-  private Scope getScope(ResourceScope resourceScope) {
-    return scopeService.buildScopeFromParams(HarnessScopeParams.builder()
-                                                 .accountIdentifier(resourceScope.getAccountIdentifier())
-                                                 .orgIdentifier(resourceScope.getOrgIdentifier())
-                                                 .projectIdentifier(resourceScope.getProjectIdentifier())
-                                                 .build());
+  private String getScope(ResourceScope resourceScope) {
+    if (resourceScope != null && !StringUtils.isEmpty(resourceScope.getAccountIdentifier())) {
+      return scopeService
+          .buildScopeFromParams(HarnessScopeParams.builder()
+                                    .accountIdentifier(resourceScope.getAccountIdentifier())
+                                    .orgIdentifier(resourceScope.getOrgIdentifier())
+                                    .projectIdentifier(resourceScope.getProjectIdentifier())
+                                    .build())
+          .toString();
+    }
+    return "";
   }
 
   private List<ACL> processACLQueries(List<PermissionCheckDTO> permissionsRequired, Principal principal) {
     List<ACL> aclList = new ArrayList<>();
     permissionsRequired.forEach(permissionCheckDTO -> {
-      String scope = getScope(permissionCheckDTO.getResourceScope()).toString();
+      String scope = getScope(permissionCheckDTO.getResourceScope());
       List<String> queryStrings = new ArrayList<>();
 
       // query for resource=/RESOURCE_TYPE/{resourceIdentifier} in given scope

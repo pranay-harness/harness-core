@@ -25,6 +25,7 @@ go_test(
     ],
     data = [
         "testdata/webhook.json",
+        "testdata/webhooks.json",
     ],
     embed = [":go_default_library"],
     deps = [

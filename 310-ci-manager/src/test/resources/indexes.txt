@@ -63,7 +63,6 @@ orchestrationEventLog {"name": "planExecutionId_createdAt", "background": true} 
 orchestrationEventLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-pipelinesNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
 podDetails {"name": "accountId_1", "background": true} {"accountId": 1}
 primaryVersion {"name": "createdAt_1", "background": true} {"createdAt": 1}
 primaryVersion {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}

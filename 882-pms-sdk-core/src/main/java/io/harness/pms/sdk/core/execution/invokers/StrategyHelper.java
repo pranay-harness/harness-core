@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.GeneralException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureData;
@@ -34,6 +35,9 @@ public class StrategyHelper {
       }
       ResponseData data = responseDataMap.values().iterator().next();
       if (data instanceof ErrorResponseData) {
+        if (((ErrorResponseData) data).getException() == null) {
+          throw new GeneralException(((ErrorResponseData) data).getErrorMessage());
+        }
         throw((ErrorResponseData) data).getException();
       }
       return data;

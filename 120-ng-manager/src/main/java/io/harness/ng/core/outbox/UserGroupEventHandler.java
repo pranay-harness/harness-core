@@ -14,8 +14,8 @@ import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidArgumentsException;
@@ -129,7 +129,7 @@ public class UserGroupEventHandler implements OutboxEventHandler {
               .setData(getUserGroupPayload(userGroup))
               .build());
       return true;
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework for user group identifier {}", userGroup.getIdentifier(), e);
       return false;
     }

@@ -11,7 +11,6 @@ import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.PR
 
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -92,7 +91,7 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     SecurityContextBuilder.unsetCompleteContext();
   }
 
-  private void pollAndProcessMessages() throws ConsumerShutdownException {
+  private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;

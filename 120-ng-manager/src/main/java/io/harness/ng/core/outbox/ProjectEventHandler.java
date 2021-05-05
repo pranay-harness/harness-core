@@ -17,8 +17,8 @@ import io.harness.beans.Scope;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidArgumentsException;
@@ -271,7 +271,7 @@ public class ProjectEventHandler implements OutboxEventHandler {
                            .toByteString())
               .build());
       return true;
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework projectIdentifier: " + identifier, e);
       return false;
     }
