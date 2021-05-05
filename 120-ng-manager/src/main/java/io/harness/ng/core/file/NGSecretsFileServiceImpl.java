@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 import javax.validation.executable.ValidateOnExecution;
 import org.apache.commons.io.IOUtils;
 import org.bson.types.ObjectId;
@@ -61,7 +62,7 @@ public class NGSecretsFileServiceImpl implements SecretsFileService {
     }
     try {
       InputStream inputStream = gridFsOperations.getResource(gridFSFile).getInputStream();
-      return IOUtils.toCharArray(inputStream);
+      return IOUtils.toCharArray(inputStream, StandardCharsets.UTF_8);
     } catch (IOException exception) {
       throw new UnexpectedException("IOException occurred while fetching secret file content");
     }

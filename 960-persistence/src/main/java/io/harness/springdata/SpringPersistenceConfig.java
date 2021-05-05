@@ -1,9 +1,12 @@
 package io.harness.springdata;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
 
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Injector;
 import com.mongodb.MongoClient;
@@ -28,6 +31,7 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.guice.annotation.GuiceModule;
 
+@OwnedBy(PIPELINE)
 @Configuration
 @GuiceModule
 @EnableMongoRepositories(basePackages = {"io.harness.repositories"},
