@@ -79,14 +79,11 @@ public class RoleAssignmentDTOMapper {
                     : object.getIdentifier())
             .principalIdentifier(object.getPrincipal().getIdentifier())
             .principalType(object.getPrincipal().getType())
+            .resourceGroupIdentifier(object.getResourceGroupIdentifier())
             .roleIdentifier(object.getRoleIdentifier())
-            .disabled(object.isDisabled());
-    if (managed) {
-      roleAssignmentBuilder.managed(true);
-    } else {
-      roleAssignmentBuilder.managed(false);
-      roleAssignmentBuilder.scopeIdentifier(scopeIdentifier);
-    }
+            .disabled(object.isDisabled())
+            .managed(managed)
+            .scopeIdentifier(scopeIdentifier);
     return roleAssignmentBuilder.build();
   }
 

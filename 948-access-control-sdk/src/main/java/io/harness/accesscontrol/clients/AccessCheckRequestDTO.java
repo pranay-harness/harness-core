@@ -14,7 +14,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @Builder
@@ -23,6 +22,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ApiModel(value = "AccessCheckRequest")
 @OwnedBy(HarnessTeam.PL)
 public class AccessCheckRequestDTO {
-  @NotEmpty @Size(max = 1000) @Valid List<PermissionCheckDTO> permissions;
+  @Size(max = 1000) @Valid List<PermissionCheckDTO> permissions;
   @Valid @Nullable Principal principal;
 }
