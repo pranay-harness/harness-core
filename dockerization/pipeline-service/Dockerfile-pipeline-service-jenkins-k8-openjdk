@@ -1,5 +1,5 @@
 # Builder Stage
-FROM us.gcr.io/platform-205701/alpine:jdk-experimental AS builder
+FROM harness/alpine:safe-alpine3.12-sec1096 AS builder
 
 # Add the capsule JAR and config.yml
 
@@ -9,17 +9,17 @@ COPY scripts /opt/harness
 
 RUN chmod +x /opt/harness/*.sh \
     && mkdir /opt/harness/plugins \
-    && chown -R 65534:65534 /opt/harness/ /tmp \
+    && chown -R 65534:65534 /opt/harness/ \
     && chmod 700 -R /opt/harness/
 
 # Final Stage
-FROM us.gcr.io/platform-205701/alpine:jdk-experimental
+FROM harness/alpine:safe-alpine3.12-sec1096
 
 RUN addgroup -S 65534 && adduser -S 65534 -G 65534
 
 COPY --from=builder /opt/harness/ /opt/harness/
 
-RUN chmod 700 -R /tmp
+RUN chown -R 65534:65534 /tmp && chmod 700 -R /tmp
 
 USER 65534
 
