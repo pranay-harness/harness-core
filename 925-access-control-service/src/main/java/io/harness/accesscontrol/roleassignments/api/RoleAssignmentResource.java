@@ -46,6 +46,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.outbox.api.OutboxService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -71,6 +72,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -208,20 +210,13 @@ public class RoleAssignmentResource {
     }));
   }
 
-  /**
-   * idempotent call, calling it multiple times won't create any side effect,
-   * returns all role assignments which were created ignoring duplicates or failures, if any.
-   */
-  @POST
-  @Path("/multi")
-  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
-  public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
-      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
+  private List<RoleAssignmentResponseDTO> createRoleAssignments(
+      HarnessScopeParams harnessScopeParams, RoleAssignmentCreateRequestDTO requestDTO, boolean managed) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     List<RoleAssignment> roleAssignmentsPayload =
-        roleAssignmentCreateRequestDTO.getRoleAssignments()
+        requestDTO.getRoleAssignments()
             .stream()
-            .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO))
+            .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO, managed))
             .collect(Collectors.toList());
     List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
     for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
@@ -244,7 +239,27 @@ public class RoleAssignmentResource {
         log.error(String.format("Could not create role assignment %s", roleAssignment), e);
       }
     }
-    return ResponseDTO.newResponse(createdRoleAssignments);
+    return createdRoleAssignments;
+  }
+  /**
+   * idempotent call, calling it multiple times won't create any side effect,
+   * returns all role assignments which were created ignoring duplicates or failures, if any.
+   */
+  @POST
+  @Path("/multi")
+  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
+  public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
+    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
+  }
+
+  @POST
+  @Path("/multi/internal")
+  @InternalApi
+  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignmentsInternal")
+  public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO, @QueryParam("managed") boolean managed) {
+    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed));
   }
 
   @POST

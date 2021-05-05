@@ -30,6 +30,7 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.migrator.Migrator;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.Store;
 import io.harness.threading.Morpheus;
 
@@ -161,8 +162,10 @@ public class IndexManagerSession {
       DBCollection collection = datastore.getCollection(mc.getClazz());
 
       StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
-      if (storeIn != null && (store == null || !store.getName().equals(storeIn.value()))) {
-        return;
+      if (storeIn != null && !DbAliases.ALL.equals(storeIn.value())) {
+        if (store == null || !store.getName().equals(storeIn.value())) {
+          return;
+        }
       }
 
       try (AutoLogContext ignore = new CollectionLogContext(collection.getName(), OVERRIDE_ERROR)) {

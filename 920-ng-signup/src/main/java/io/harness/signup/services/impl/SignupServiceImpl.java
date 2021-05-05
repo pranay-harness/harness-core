@@ -12,8 +12,6 @@ import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.dto.AccountDTO;
-import io.harness.ng.core.dto.OrganizationDTO;
-import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.remote.client.RestClientUtils;
@@ -43,7 +41,6 @@ public class SignupServiceImpl implements SignupService {
   private AccountService accountService;
   private UserClient userClient;
   private SignupValidator signupValidator;
-  private OrganizationService organizationService;
   private ReCaptchaVerifier reCaptchaVerifier;
   private final TelemetryReporter telemetryReporter;
 
@@ -56,7 +53,6 @@ public class SignupServiceImpl implements SignupService {
     verifyEmailAndPassword(dto);
 
     AccountDTO account = createAccount(dto);
-    createOrganization(account, dto);
     UserInfo user = createUser(dto, account);
     sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account, user);
     return user;
@@ -103,22 +99,9 @@ public class SignupServiceImpl implements SignupService {
 
     SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
     AccountDTO account = createAccount(signupDTO);
-    createOrganization(account, signupDTO);
     UserInfo oAuthUser = createOAuthUser(dto, account);
     sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account, oAuthUser);
     return oAuthUser;
-  }
-
-  private void createOrganization(AccountDTO account, SignupDTO signupDTO) {
-    try {
-      OrganizationDTO dto =
-          OrganizationDTO.builder().name("Default").identifier("default").description("Default Organization").build();
-      organizationService.create(account.getIdentifier(), dto);
-    } catch (Exception e) {
-      sendFailedTelemetryEvent(
-          signupDTO.getEmail(), signupDTO.getUtmInfo(), e, account, "Default Organization creation");
-      throw e;
-    }
   }
 
   private UserInfo createUser(SignupDTO signupDTO, AccountDTO account) {

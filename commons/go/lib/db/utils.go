@@ -11,7 +11,7 @@ import (
 func logQuery(log *zap.SugaredLogger, start time.Time, query string, args []interface{}, err error) {
 	logw := log.Infow
 	if err != nil {
-		logw = log.Warnw
+		logw = log.Errorw
 	}
 
 	logw("sql query execute", "sql.query", collapseSpaces(query), "sql.hash", hash(query),

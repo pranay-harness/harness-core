@@ -6,10 +6,12 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.sm.StateType;
 
+import com.google.api.client.util.Lists;
 import java.util.List;
 import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.assertj.core.util.Sets;
 
 /**
  * Common Log Data Collection Info class containing attributes used by Log Verification providers while
@@ -46,5 +48,20 @@ public abstract class LogDataCollectionInfo
     this.stateType = stateType;
     this.encryptedDataDetails = encryptedDataDetails;
     this.initialDelayMinutes = initialDelayMinutes;
+  }
+
+  public void copy(LogDataCollectionInfo clone) {
+    super.copy(clone);
+    clone.setQuery(this.getQuery());
+    clone.setStartTime(this.getStartTime());
+    clone.setEndTime(this.getEndTime());
+    clone.setStartMinute(this.getStartMinute());
+    clone.setCollectionTime(this.getCollectionTime());
+    clone.setHostnameField(this.getHostnameField());
+    clone.setHosts(hosts == null ? null : Sets.newHashSet(this.getHosts()));
+    clone.setStateType(this.getStateType());
+    clone.setEncryptedDataDetails(
+        encryptedDataDetails == null ? null : Lists.newArrayList(this.getEncryptedDataDetails()));
+    clone.setInitialDelayMinutes(this.getInitialDelayMinutes());
   }
 }

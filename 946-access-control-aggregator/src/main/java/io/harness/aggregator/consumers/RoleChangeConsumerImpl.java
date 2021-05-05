@@ -49,7 +49,7 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
     do {
       Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.roleIdentifier).is(updatedEntity.getIdentifier());
       if (!StringUtils.isEmpty(updatedEntity.getScopeIdentifier())) {
-        criteria.and(RoleAssignmentDBOKeys.managed).is(true);
+        criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).is(updatedEntity.getScopeIdentifier());
       }
       roleAssignments = roleAssignmentRepository.findAll(
           criteria, getPageRequest(PageRequest.builder().pageIndex(pageIdx).pageSize(pageSize).build()));
