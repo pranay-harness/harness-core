@@ -3,17 +3,26 @@ package io.harness.service.instance;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.dto.Instance;
+import io.harness.dto.SyncStatus;
+import io.harness.repository.syncstatus.SyncStatusRepository;
 
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
-import software.wings.beans.infrastructure.instance.SyncStatus;
 
+import com.google.inject.Inject;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
+@Slf4j
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceServiceImpl implements InstanceService {
+  private SyncStatusRepository syncStatusRepository;
+
   @Override
   public Instance save(Instance instance) {
     return null;
@@ -69,9 +78,64 @@ public class InstanceServiceImpl implements InstanceService {
       String appId, String serviceId, String envId, String infraMappingId, String infraMappingName, long timestamp) {}
 
   @Override
-  public boolean handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
-      String infraMappingName, long timestamp, String errorMsg) {
-    return false;
+  public boolean handleSyncFailure(String orgId, String projectId, String serviceId, String envId,
+      String infraMappingId, String infraMappingName, long timestamp, String errorMsg) {
+    SyncStatus syncStatus = syncStatusRepository.getSyncStatus(orgId, projectId, serviceId, envId, infraMappingId);
+    if (syncStatus != null) {
+      if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofDays(7).toMillis()) {
+        log.info("Deleting the instances since sync has been failing for more than a week for infraMappingId: {}",
+            infraMappingId);
+        syncStatusRepository.deleteById(syncStatus.getId());
+        pruneByInfrastructureMapping(appId, infraMappingId);
+        return false;
+      }
+    }
+
+    @Override
+    public List<SyncStatus> getSyncStatus(String appId, String serviceId, String envId) {
+      return null;
+    }
+
+    @Override
+    public void saveManualSyncJob(ManualSyncJob manualSyncJob) {}
+
+    @Override
+    public void deleteManualSyncJob(String appId, String manualSyncJobId) {}
+
+    @Override
+    public List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet) {
+      return null;
+    }
+
+    @Override
+    public List<Instance> getInstancesForAppAndInframappingNotRemovedFully(String appId, String infraMappingId) {
+      return null;
+    }
+
+    @Override
+    public List<Instance> getInstancesForAppAndInframapping(String appId, String infraMappingId) {
+      return null;
+    }
+
+    @Override
+    public long getInstanceCount(String appId, String infraMappingId) {
+      return 0;
+    }
+
+    @Override
+    public void deleteByAccountId(String accountId) {}
+
+    @Override
+    public void pruneByApplication(String appId) {}
+
+    @Override
+    public void pruneByEnvironment(String appId, String envId) {}
+
+    @Override
+    public void pruneByInfrastructureMapping(String appId, String infrastructureMappingId) {}
+
+    @Override
+    public void pruneByService(String appId, String serviceId) {}
   }
 
   @Override

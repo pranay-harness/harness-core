@@ -10,8 +10,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceRepositoryImpl implements InstanceRepository {
   private MongoTemplate mongoTemplate;
 

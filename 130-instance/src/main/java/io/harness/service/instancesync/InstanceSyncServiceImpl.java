@@ -6,6 +6,8 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.dto.DeploymentSummary;
@@ -31,18 +33,23 @@ import software.wings.utils.Utils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
+@OwnedBy(HarnessTeam.DX)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceSyncServiceImpl implements InstanceSyncService {
-  @Inject private PersistentLocker persistentLocker;
-  @Inject private InstanceHandlerFactoryService instanceHandlerFactory;
-  @Inject private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
-  @Inject private InstanceService instanceService;
-  @Inject private PerpetualTaskService perpetualTaskService;
-  @Inject private InfrastructureMappingService infrastructureMappingService;
+  private PersistentLocker persistentLocker;
+  private InstanceHandlerFactoryService instanceHandlerFactory;
+  private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
+  private InstanceService instanceService;
+  private PerpetualTaskService perpetualTaskService;
+  private final InfrastructureMappingService infrastructureMappingService;
 
   public void processDeploymentEvent(DeploymentEvent deploymentEvent) {
     try {
