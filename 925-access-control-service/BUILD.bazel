@@ -62,14 +62,21 @@ load("@io_bazel_rules_docker//docker/package_managers:download_pkgs.bzl", "downl
 load("@io_bazel_rules_docker//docker/package_managers:install_pkgs.bzl", "install_pkgs")
 load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
 
-container_image(
-    name = "base_image_access_control",
-    base = "@platform_alpine//image",
-    directory = "/opt/harness",
-    cmd = [
+container_run_and_commit(
+    name = "base_image",
+    commands = [
         "wget https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 -O /usr/bin/yq -O /usr/bin/yq",
         "chmod +x /usr/bin/yq",
         "mkdir /opt/harness/plugins",
+    ],
+    image = "@platform_alpine//image",
+)
+
+container_image(
+    name = "base_image_access_control",
+    base = "base_image_commit.tar",
+    directory = "/opt/harness",
+    cmd = [
         "chmod +x /opt/harness/*.sh",
     ],
     files = [
@@ -78,8 +85,8 @@ container_image(
         "container-image/scripts/start_process.sh",
         "config.yml",
         "keystore.jks",
+        ":module_deploy.jar",
     ],
-
 )
 
 container_image(

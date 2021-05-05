@@ -21,7 +21,7 @@ fi
 echo "Using memory " "$MEMORY"
 
 if [[ -z "$CAPSULE_JAR" ]]; then
-   export CAPSULE_JAR=/opt/harness/accesscontrol-service-capsule.jar
+   export CAPSULE_JAR=/opt/harness/module_deploy.jar
 fi
 
 export GC_PARAMS=" -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=40 -XX:MaxGCPauseMillis=1000 -Dfile.encoding=UTF-8"
