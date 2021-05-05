@@ -1,5 +1,7 @@
 package io.harness.fieldrecaster;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
 import io.harness.core.Recaster;
 import io.harness.utils.RecastReflectionUtils;
@@ -9,6 +11,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class ComplexFieldRecaster implements FieldRecaster {
   @Override
@@ -25,8 +28,8 @@ public class ComplexFieldRecaster implements FieldRecaster {
         } else {
           Document value = (Document) docVal;
           if (!value.containsKey(Recaster.RECAST_CLASS_KEY)) {
-            // this is a map ex. Dummy<Map<String,String>>
-            refObj = new LinkedHashMap<>(value);
+            // this is a map ex. Dummy<Map<String,Object>>
+            refObj = recaster.getTransformer().decode(LinkedHashMap.class, value, null);
           } else if (recaster.getTransformer().hasCustomTransformer(RecastReflectionUtils.getClass(value))) {
             refObj = recaster.getTransformer().decode(RecastReflectionUtils.getClass(value), value, cf);
           } else {
