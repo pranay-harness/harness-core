@@ -23,6 +23,7 @@ import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 
 import java.util.List;
@@ -85,17 +86,23 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
    * terraform plan
    */
   private boolean skipRefreshBeforeApplyingPlan;
+  private boolean isGitHostConnectivityCheck;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities = ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
         sourceRepoEncryptionDetails, maskingEvaluator);
     if (sourceRepo != null) {
-      capabilities.add(GitConnectionCapability.builder()
-                           .gitConfig(sourceRepo)
-                           .settingAttribute(sourceRepo.getSshSettingAttribute())
-                           .encryptedDataDetails(sourceRepoEncryptionDetails)
-                           .build());
+      if (isGitHostConnectivityCheck) {
+        capabilities.addAll(CapabilityHelper.generateExecutionCapabilitiesForGit(sourceRepo));
+
+      } else {
+        capabilities.add(GitConnectionCapability.builder()
+                             .gitConfig(sourceRepo)
+                             .settingAttribute(sourceRepo.getSshSettingAttribute())
+                             .encryptedDataDetails(sourceRepoEncryptionDetails)
+                             .build());
+      }
     }
     if (secretManagerConfig != null) {
       capabilities.addAll(

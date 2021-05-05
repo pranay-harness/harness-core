@@ -1,6 +1,6 @@
 package io.harness;
 
-import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.eventsframework.impl.redis.RedisProducer;
@@ -51,7 +51,7 @@ public class MessageProducer implements Runnable {
       try {
         messageId = client.send(projectEvent);
         log.info("{}Pushed pid: {} in redis, received: {}{}", color, count, messageId, ColorConstants.TEXT_RESET);
-      } catch (ProducerShutdownException e) {
+      } catch (EventsFrameworkDownException e) {
         e.printStackTrace();
         log.error("{}Pushing message {} failed due to producer shutdown.{}", color, count, ColorConstants.TEXT_RESET);
         break;

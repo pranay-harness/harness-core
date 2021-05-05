@@ -6,6 +6,7 @@ import static io.harness.beans.DelegateTask.Status.ERROR;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
@@ -3138,7 +3139,11 @@ public class DelegateServiceImpl implements DelegateService {
         List<EncryptedDataDetail> encryptedDataDetails = (List<EncryptedDataDetail>) params[2];
         Object[] newParamsArr = Arrays.copyOf(params, params.length + 1);
         newParamsArr[newParamsArr.length - 1] =
-            GitValidationParameters.builder().gitConfig(config).encryptedDataDetails(encryptedDataDetails).build();
+            GitValidationParameters.builder()
+                .gitConfig(config)
+                .encryptedDataDetails(encryptedDataDetails)
+                .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, task.getAccountId()))
+                .build();
         task.getData().setParameters(newParamsArr);
         return;
       default:

@@ -21,4 +21,5 @@ public class PlatformPermissions {
   public static final String MANAGE_USERGROUP_PERMISSION = "core_usergroup_manage";
   public static final String VIEW_USER_PERMISSION = "core_user_view";
   public static final String MANAGE_USER_PERMISSION = "core_user_manage";
+  public static final String INVITE_PERMISSION_IDENTIFIER = "core_user_invite";
 }

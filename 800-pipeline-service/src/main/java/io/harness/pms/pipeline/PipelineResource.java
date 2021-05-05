@@ -22,7 +22,6 @@ import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
@@ -196,7 +195,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
-      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) throws ProducerShutdownException {
+      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
     log.info("Deleting pipeline");
 
     return ResponseDTO.newResponse(pmsPipelineService.delete(
@@ -343,7 +342,7 @@ public class PipelineResource implements YamlSchemaResource {
     if (entityType != EntityType.PIPELINES) {
       throw new NotSupportedException(String.format("Entity type %s is not supported", entityType.getYamlName()));
     }
-    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(orgIdentifier, projectIdentifier, scope);
+    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(projectIdentifier, orgIdentifier, scope);
     if (schema == null) {
       throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
     }

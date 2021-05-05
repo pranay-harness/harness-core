@@ -98,8 +98,8 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch) {
-    return scmServiceClient.listFiles(connector, filePaths, branch, scmBlockingStub);
+  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branch) {
+    return scmServiceClient.listFiles(connector, foldersList, branch, scmBlockingStub);
   }
 
   @Override

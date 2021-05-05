@@ -11,8 +11,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -113,8 +113,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     return entityDetails;
   }
 
-  public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities)
-      throws ProducerShutdownException {
+  public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities) {
     if (EmptyPredicate.isEmpty(referredEntities)) {
       return;
     }
@@ -152,7 +151,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     }
   }
 
-  private void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) throws ProducerShutdownException {
+  private void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) {
     EntityDetailProtoDTO pipelineDetails =
         EntityDetailProtoDTO.newBuilder()
             .setIdentifierRef(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(pipelineEntity.getAccountId(),
@@ -184,7 +183,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
   public void onDelete(PipelineEntity pipelineEntity) {
     try {
       deleteSetupUsagesForGivenPipeline(pipelineEntity);
-    } catch (ProducerShutdownException ex) {
+    } catch (EventsFrameworkDownException ex) {
       log.error("Redis Producer shutdown", ex);
     }
   }

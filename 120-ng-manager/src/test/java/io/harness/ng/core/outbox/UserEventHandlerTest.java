@@ -33,7 +33,6 @@ import io.harness.audit.client.api.AuditClientService;
 import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.ng.core.events.AddCollaboratorEvent;
 import io.harness.ng.core.events.RemoveCollaboratorEvent;
@@ -191,7 +190,7 @@ public class UserEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testMembershipAdd() throws JsonProcessingException, ProducerShutdownException {
+  public void testMembershipAdd() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
@@ -236,7 +235,7 @@ public class UserEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testMembershipRemove() throws JsonProcessingException, ProducerShutdownException {
+  public void testMembershipRemove() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
@@ -280,7 +279,7 @@ public class UserEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testCollaboratorAdd() throws JsonProcessingException, ProducerShutdownException {
+  public void testCollaboratorAdd() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
@@ -314,7 +313,7 @@ public class UserEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testCollaboratorRemove() throws JsonProcessingException, ProducerShutdownException {
+  public void testCollaboratorRemove() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
@@ -345,7 +344,7 @@ public class UserEventHandlerTest extends CategoryTest {
   }
 
   private void verifyInvocation(ArgumentCaptor<Message> messageArgumentCaptor,
-      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor, OutboxEvent outboxEvent) throws ProducerShutdownException {
+      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor, OutboxEvent outboxEvent) {
     when(producer.send(any())).thenReturn("");
     when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
 

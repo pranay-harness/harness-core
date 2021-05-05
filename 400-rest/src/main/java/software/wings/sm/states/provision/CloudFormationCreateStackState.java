@@ -1,6 +1,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -28,6 +29,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -107,6 +109,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Attributes(title = "Parameters file path") @Getter @Setter protected List<String> parametersFilePaths;
   @Attributes(title = "Use parameters file") @Getter @Setter protected boolean useParametersFile;
@@ -441,6 +444,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .gitFetchFilesConfigMap(gitFetchFileConfigMap)
         .isFinalState(false)
         .executionLogName(FETCH_FILES_COMMAND_UNIT)
+        .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, context.getAccountId()))
         .build();
   }
 
