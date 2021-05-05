@@ -14,8 +14,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
@@ -77,7 +77,7 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
     try {
       verify(eventProducer, times(1)).send(argumentCaptor.capture());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       e.printStackTrace();
     }
     EntitySetupUsageCreateDTO entityReferenceDTO = null;
@@ -117,7 +117,7 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedDataDTO);
     try {
       verify(eventProducer, times(1)).send(argumentCaptor.capture());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       e.printStackTrace();
     }
     DeleteSetupUsageDTO deleteSetupUsageDTO = null;

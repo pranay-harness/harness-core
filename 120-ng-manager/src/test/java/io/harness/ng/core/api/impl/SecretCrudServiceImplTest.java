@@ -1,4 +1,5 @@
 package io.harness.ng.core.api.impl;
+
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -19,8 +20,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -148,7 +149,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
     try {
       verify(eventProducer, times(1)).send(producerMessage.capture());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       e.printStackTrace();
     }
 
@@ -224,7 +225,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
     try {
       verify(eventProducer, times(1)).send(producerMessage.capture());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       e.printStackTrace();
     }
 

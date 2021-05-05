@@ -11,7 +11,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.observer.Subject;
@@ -72,7 +72,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
-    } catch (IOException | ProducerShutdownException exception) {
+    } catch (IOException | EventsFrameworkDownException exception) {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));
@@ -104,7 +104,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       }
 
       return updateResult;
-    } catch (IOException | ProducerShutdownException exception) {
+    } catch (IOException | EventsFrameworkDownException exception) {
       throw new InvalidRequestException(String.format(
           "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
           pipelineEntity.getIdentifier()));

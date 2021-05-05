@@ -22,8 +22,8 @@ import io.harness.beans.Scope;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidArgumentsException;
@@ -273,7 +273,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
                                  EventsFrameworkMetadataConstants.ACTION, action))
                              .setData(getOrganizationPayload(accountIdentifier, identifier))
                              .build());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework orgIdentifier: " + identifier, e);
       return false;
     }

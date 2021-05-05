@@ -18,8 +18,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
@@ -268,7 +268,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
                       EventsFrameworkMetadataConstants.SECRET_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
               .setData(secretEntityChangeDTOBuilder.build().toByteString())
               .build());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework secret Identifier: {}", identifier, e);
     }
   }
@@ -348,7 +348,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
                   EventsFrameworkMetadataConstants.ACTION, action))
               .setData(secretEntityChangeDTOBuilder.build().toByteString())
               .build());
-    } catch (ProducerShutdownException e) {
+    } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework secret Identifier: " + secret.getIdentifier(), e);
     }
   }
