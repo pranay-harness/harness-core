@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
@@ -182,6 +183,7 @@ public class ApplicationManifestUtils {
         .gitFetchFilesConfigMap(gitFetchFileConfigMap)
         .containerServiceParams(containerServiceParams)
         .isBindTaskFeatureSet(isBindTaskFeatureSet)
+        .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, context.getAccountId()))
         .build();
   }
 

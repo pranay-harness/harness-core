@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -386,6 +387,7 @@ public class EcsRunTaskDeploy extends State {
         .containerServiceParams(containerServiceParams)
         .isBindTaskFeatureSet(isBindTaskFeatureSet)
         .executionLogName(GIT_FETCH_FILES_TASK_NAME)
+        .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, context.getAccountId()))
         .build();
   }
 

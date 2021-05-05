@@ -58,7 +58,7 @@ public interface ScmServiceClient {
   ListCommitsResponse listCommits(ScmConnector scmConnector, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   FileBatchContentResponse listFiles(
-      ScmConnector connector, List<String> filePaths, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
+      ScmConnector connector, List<String> foldersList, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   void createNewBranch(
       ScmConnector scmConnector, String branch, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub);
