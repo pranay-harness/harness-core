@@ -1,11 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -58,6 +60,7 @@ import org.mongodb.morphia.annotations.Version;
 @FieldNameConstants(innerTypeName = "ServiceKeys")
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@TargetModule(_871_CG_BEANS)
 public class Service
     extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware {
   public static List<MongoIndex> mongoIndexes() {

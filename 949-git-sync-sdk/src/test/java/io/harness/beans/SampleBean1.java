@@ -31,6 +31,8 @@ public class SampleBean1 implements PersistentEntity, YamlDTO, GitSyncableEntity
   String name;
   String objectIdOfYaml;
   Boolean isFromDefaultBranch;
-  transient String branch;
+  String branch;
   String yamlGitConfigRef;
+  String filePath;
+  String rootFolder;
 }

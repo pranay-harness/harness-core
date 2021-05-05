@@ -45,7 +45,8 @@ message GetProfileResponse {
 }
 
 message AddProfileRequest {
-  DelegateProfileGrpc profile = 1;
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  DelegateProfileGrpc profile = 2;
 }
 
 message AddProfileResponse {
@@ -62,8 +63,9 @@ message UpdateProfileResponse {
 }
 
 message DeleteProfileRequest {
-  delegate.AccountId account_id = 1;
-  ProfileId profile_id = 2;
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  delegate.AccountId account_id = 2;
+  ProfileId profile_id = 3;
 }
 
 message DeleteProfileResponse {}
@@ -79,9 +81,10 @@ message UpdateProfileScopingRulesResponse {
 }
 
 message UpdateProfileSelectorsRequest {
-  delegate.AccountId account_id = 1;
-  ProfileId profile_id = 2;
-  repeated ProfileSelector selectors = 3;
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  delegate.AccountId account_id = 2;
+  ProfileId profile_id = 3;
+  repeated ProfileSelector selectors = 4;
 }
 
 message UpdateProfileSelectorsResponse {

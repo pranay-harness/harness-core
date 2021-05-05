@@ -9,6 +9,7 @@ import io.harness.cdng.Deployment.DeploymentCount;
 import io.harness.cdng.Deployment.DeploymentDateAndCount;
 import io.harness.cdng.Deployment.DeploymentInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfo;
+import io.harness.cdng.Deployment.DeploymentStatusInfoList;
 import io.harness.cdng.Deployment.ExecutionDeployment;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
@@ -238,6 +239,29 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return TimeAndStatusDeployment.builder().status(status).time(time).build();
   }
 
+  public List<String> queryCalculatorEnvType(String queryEnvironmentType) {
+    List<String> envType = new ArrayList<>();
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(queryEnvironmentType)) {
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          envType.add(resultSet.getString("env_type"));
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return envType;
+  }
+
   @Override
   public HealthDeploymentDashboard getHealthDeploymentDashboard(String accountId, String orgId, String projectId,
       String startInterval, String endInterval, String previousStartInterval) {
@@ -284,14 +308,14 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           currentSuccess++;
           successCountMap.put(variableDate.toString(), successCountMap.get(variableDate.toString()) + 1);
-        } else if (status.get(i).contentEquals(ExecutionStatus.FAILED.name())) {
+        } else if (failedStatusList.contains(status.get(i))) {
           currentFailed++;
           failedCountMap.put(variableDate.toString(), failedCountMap.get(variableDate.toString()) + 1);
         }
       } else {
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           previousSuccess++;
-        } else if (status.get(i).contentEquals(ExecutionStatus.FAILED.name())) {
+        } else if (failedStatusList.contains(status.get(i))) {
           previousFailed++;
         }
       }
@@ -299,23 +323,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     String queryEnvironmentType =
         queryBuilderEnvironmentType(accountId, orgId, projectId, startInterval, endDate.plusDays(1).toString());
-    int totalTries = 0;
-    boolean successfulOperation = false;
-    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(queryEnvironmentType)) {
-        resultSet = statement.executeQuery();
-        while (resultSet != null && resultSet.next()) {
-          envType.add(resultSet.getString("env_type"));
-        }
-        successfulOperation = true;
-      } catch (SQLException ex) {
-        totalTries++;
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    }
+    envType = queryCalculatorEnvType(queryEnvironmentType);
 
     long production = Collections.frequency(envType, EnvironmentType.Production.name());
     long nonProduction = Collections.frequency(envType, EnvironmentType.PreProduction.name());
@@ -374,6 +382,38 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .build();
   }
 
+  public HashMap<String, List<ServiceDeploymentInfo>> queryCalculatorServiceTagMag(String queryServiceTag) {
+    HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(queryServiceTag)) {
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          String planExecutionId = resultSet.getString("pipeline_execution_summary_cd_id");
+          String service_name = resultSet.getString("service_name");
+          String tag = resultSet.getString("tag");
+          if (serviceTagMap.containsKey(planExecutionId)) {
+            serviceTagMap.get(planExecutionId).add(getServiceDeployment(service_name, tag));
+          } else {
+            List<ServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
+            serviceDeploymentInfos.add(getServiceDeployment(service_name, tag));
+            serviceTagMap.put(planExecutionId, serviceDeploymentInfos);
+          }
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return serviceTagMap;
+  }
+
   @Override
   public ExecutionDeploymentInfo getExecutionDeploymentDashboard(
       String accountId, String orgId, String projectId, String startInterval, String endInterval) {
@@ -407,7 +447,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       totalCountMap.put(variableDate, totalCountMap.get(variableDate) + 1);
       if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
         successCountMap.put(variableDate, successCountMap.get(variableDate) + 1);
-      } else if (status.get(i).contentEquals(ExecutionStatus.FAILED.name())) {
+      } else if (failedStatusList.contains(status.get(i))) {
         failedCountMap.put(variableDate, failedCountMap.get(variableDate) + 1);
       }
     }
@@ -424,15 +464,12 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return ExecutionDeploymentInfo.builder().executionDeploymentList(executionDeployments).build();
   }
 
-  public List<DeploymentStatusInfo> getDeploymentStatusInfo(
-      String accountId, String orgId, String projectId, String queryStatus, List<String> statusList) {
+  public DeploymentStatusInfoList queryCalculatorDeploymentInfo(String queryStatus) {
     List<String> planExecutionIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
     List<String> startTs = new ArrayList<>();
     List<String> endTs = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
-
-    HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
 
     int totalTries = 0;
     boolean successfulOperation = false;
@@ -459,35 +496,35 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
+    return DeploymentStatusInfoList.builder()
+        .planExecutionIdList(planExecutionIdList)
+        .deploymentStatus(deploymentStatus)
+        .endTs(endTs)
+        .namePipelineList(namePipelineList)
+        .startTs(startTs)
+        .build();
+  }
+
+  public List<DeploymentStatusInfo> getDeploymentStatusInfo(
+      String accountId, String orgId, String projectId, String queryStatus, List<String> statusList) {
+    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> namePipelineList = new ArrayList<>();
+    List<String> startTs = new ArrayList<>();
+    List<String> endTs = new ArrayList<>();
+    List<String> deploymentStatus = new ArrayList<>();
+
+    HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
+
+    DeploymentStatusInfoList deploymentStatusInfoList = queryCalculatorDeploymentInfo(queryStatus);
+    deploymentStatus = deploymentStatusInfoList.getDeploymentStatus();
+    endTs = deploymentStatusInfoList.getEndTs();
+    namePipelineList = deploymentStatusInfoList.getNamePipelineList();
+    planExecutionIdList = deploymentStatusInfoList.getPlanExecutionIdList();
+    startTs = deploymentStatusInfoList.getStartTs();
 
     String queryServiceTag = queryBuilderServiceTag(accountId, orgId, projectId, planExecutionIdList, statusList);
 
-    totalTries = 0;
-    successfulOperation = false;
-    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(queryServiceTag)) {
-        resultSet = statement.executeQuery();
-        while (resultSet != null && resultSet.next()) {
-          String planExecutionId = resultSet.getString("pipeline_execution_summary_cd_id");
-          String service_name = resultSet.getString("service_name");
-          String tag = resultSet.getString("tag");
-          if (serviceTagMap.containsKey(planExecutionId)) {
-            serviceTagMap.get(planExecutionId).add(getServiceDeployment(service_name, tag));
-          } else {
-            List<ServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
-            serviceDeploymentInfos.add(getServiceDeployment(service_name, tag));
-            serviceTagMap.put(planExecutionId, serviceDeploymentInfos);
-          }
-        }
-        successfulOperation = true;
-      } catch (SQLException ex) {
-        totalTries++;
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    }
+    serviceTagMap = queryCalculatorServiceTagMag(queryServiceTag);
 
     List<DeploymentStatusInfo> statusInfo = new ArrayList<>();
     for (int i = 0; i < planExecutionIdList.size(); i++) {
@@ -566,51 +603,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .build();
   }
 
-  @Override
-  public DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String startInterval, String endInterval, String previousStartInterval) {
-    LocalDate startDate = LocalDate.parse(startInterval);
-    LocalDate endDate = LocalDate.parse(endInterval);
-    String query = queryBuilderSelectWorkload(
-        accountIdentifier, orgIdentifier, projectIdentifier, previousStartInterval, endDate.plusDays(1).toString());
-
-    List<String> workloads = new ArrayList<>();
-    List<String> status = new ArrayList<>();
-    List<String> startTs = new ArrayList<>();
-    List<String> endTs = new ArrayList<>();
-    List<String> deploymentTypeList = new ArrayList<>();
-    List<String> planExecutionIdList = new ArrayList<>();
-
-    HashMap<String, Integer> uniqueWorkloadName = new HashMap<>();
-
-    int totalTries = 0;
-    boolean successfulOperation = false;
-    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(query)) {
-        resultSet = statement.executeQuery();
-        while (resultSet != null && resultSet.next()) {
-          String serviceName = resultSet.getString("service_name");
-          String startTime = resultSet.getString("startTs");
-          workloads.add(serviceName);
-          status.add(resultSet.getString("status"));
-          startTs.add(startTime);
-          endTs.add(resultSet.getString("endTs"));
-          planExecutionIdList.add(resultSet.getString("pipeline_execution_summary_cd_id"));
-          deploymentTypeList.add(resultSet.getString("deployment_type"));
-
-          if (!uniqueWorkloadName.containsKey(serviceName)) {
-            uniqueWorkloadName.put(serviceName, 1);
-          }
-        }
-        successfulOperation = true;
-      } catch (SQLException ex) {
-        totalTries++;
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    }
+  public DashboardWorkloadDeployment getWorkloadDeploymentInfoCalculation(List<String> workloads, List<String> status,
+      List<String> startTs, List<String> deploymentTypeList, List<String> planExecutionIdList,
+      HashMap<String, Integer> uniqueWorkloadName, LocalDate startDate, LocalDate endDate) {
     List<WorkloadDeploymentInfo> workloadDeploymentInfoList = new ArrayList<>();
 
     for (String workload : uniqueWorkloadName.keySet()) {
@@ -677,5 +672,54 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
     return DashboardWorkloadDeployment.builder().workloadDeploymentInfoList(workloadDeploymentInfoList).build();
+  }
+
+  @Override
+  public DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String startInterval, String endInterval, String previousStartInterval) {
+    LocalDate startDate = LocalDate.parse(startInterval);
+    LocalDate endDate = LocalDate.parse(endInterval);
+    String query = queryBuilderSelectWorkload(
+        accountIdentifier, orgIdentifier, projectIdentifier, previousStartInterval, endDate.plusDays(1).toString());
+
+    List<String> workloads = new ArrayList<>();
+    List<String> status = new ArrayList<>();
+    List<String> startTs = new ArrayList<>();
+    List<String> endTs = new ArrayList<>();
+    List<String> deploymentTypeList = new ArrayList<>();
+    List<String> planExecutionIdList = new ArrayList<>();
+
+    HashMap<String, Integer> uniqueWorkloadName = new HashMap<>();
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          String serviceName = resultSet.getString("service_name");
+          String startTime = resultSet.getString("startTs");
+          workloads.add(serviceName);
+          status.add(resultSet.getString("status"));
+          startTs.add(startTime);
+          endTs.add(resultSet.getString("endTs"));
+          planExecutionIdList.add(resultSet.getString("pipeline_execution_summary_cd_id"));
+          deploymentTypeList.add(resultSet.getString("deployment_type"));
+
+          if (!uniqueWorkloadName.containsKey(serviceName)) {
+            uniqueWorkloadName.put(serviceName, 1);
+          }
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return getWorkloadDeploymentInfoCalculation(
+        workloads, status, startTs, deploymentTypeList, planExecutionIdList, uniqueWorkloadName, startDate, endDate);
   }
 }

@@ -16,7 +16,7 @@ shared_dependencies = [
     "//470-alert:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
-    "//870-cg-yaml-beans:module",
+    "//870-cg-yaml:module",
     "//870-cg-orchestration:module",
     "//874-orchestration-delay:module",
     "//890-sm-core:module",

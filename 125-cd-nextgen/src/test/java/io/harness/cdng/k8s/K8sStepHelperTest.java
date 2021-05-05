@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.cdng.k8s.K8sStepHelper.K8S_SUPPORTED_MANIFEST_TYPES;
 import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
@@ -224,7 +225,8 @@ public class K8sStepHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetK8sManifestsOutcome() {
     assertThatThrownBy(() -> k8sStepHelper.getK8sSupportedManifestOutcome(Collections.emptyList()))
-        .hasMessageContaining("K8s Manifests are mandatory for k8s Rolling step");
+        .hasMessageContaining(
+            "Manifests are mandatory for K8s step. Select one from " + String.join(", ", K8S_SUPPORTED_MANIFEST_TYPES));
 
     K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder().build();
     ValuesManifestOutcome valuesManifestOutcome = ValuesManifestOutcome.builder().build();
@@ -239,7 +241,8 @@ public class K8sStepHelperTest extends CategoryTest {
     serviceManifestOutcomes.add(anotherK8sManifest);
 
     assertThatThrownBy(() -> k8sStepHelper.getK8sSupportedManifestOutcome(serviceManifestOutcomes))
-        .hasMessageContaining("There can be only a single K8s manifest");
+        .hasMessageContaining(
+            "There can be only a single manifest. Select one from " + String.join(", ", K8S_SUPPORTED_MANIFEST_TYPES));
   }
 
   @Test

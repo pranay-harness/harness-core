@@ -80,6 +80,8 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   Boolean isFromDefaultBranch;
   String branch;
   String yamlGitConfigRef;
+  String filePath;
+  String rootFolder;
 
   @Override
   public String getAccountIdentifier() {

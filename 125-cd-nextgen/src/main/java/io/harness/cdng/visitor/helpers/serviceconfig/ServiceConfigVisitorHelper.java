@@ -78,8 +78,8 @@ public class ServiceConfigVisitorHelper implements ConfigValidator, EntityRefere
     Set<EntityDetailProtoDTO> result = new HashSet<>();
     if (serviceConfig.getService() != null) {
       ServiceYaml serviceYaml = serviceConfig.getService();
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.SERVICE_REF;
+      String fullQualifiedDomainName = VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR
+          + YamlTypes.SERVICE_ENTITY + PATH_CONNECTOR + "identifier";
       Map<String, String> metadata =
           new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
       metadata.put("new", "true");

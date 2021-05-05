@@ -1,5 +1,8 @@
 package software.wings.infra;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.beans.InfrastructureType.AWS_AMI;
 import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
@@ -15,6 +18,9 @@ import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.InfrastructureMapping;
 
@@ -42,6 +48,8 @@ import java.util.Set;
       @JsonSubTypes.Type(value = PhysicalInfraWinrm.class, name = PHYSICAL_INFRA_WINRM),
       @JsonSubTypes.Type(value = CustomInfrastructure.class, name = CUSTOM_INFRASTRUCTURE)
 })
+@OwnedBy(CDC)
+@TargetModule(_871_CG_BEANS)
 public interface InfraMappingInfrastructureProvider extends CloudProviderInfrastructure {
   @JsonIgnore InfrastructureMapping getInfraMapping();
 
