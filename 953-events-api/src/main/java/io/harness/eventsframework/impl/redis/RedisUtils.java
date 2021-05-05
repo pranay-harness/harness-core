@@ -56,9 +56,6 @@ public class RedisUtils {
         serverConfig.setPassword(redisPassword);
       }
 
-      serverConfig.setRetryAttempts(5);
-      serverConfig.setRetryInterval(10000);
-
       RedisSSLConfig sslConfig = redisConfig.getSslConfig();
       if (sslConfig != null && sslConfig.isEnabled()) {
         try {
