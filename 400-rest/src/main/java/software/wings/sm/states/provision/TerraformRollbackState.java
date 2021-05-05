@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.FileBucket.TERRAFORM_STATE;
 import static io.harness.validation.Validator.notNullCheck;
@@ -220,6 +221,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
               .tfVarSource(getTfVarSource(context))
               .workspace(workspace)
               .delegateTag(configParameter.getDelegateTag())
+              .isGitHostConnectivityCheck(
+                  featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()))
               .build();
 
       return createAndRunTask(activityId, executionContext, parameters, configParameter.getDelegateTag());

@@ -14,6 +14,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.beans.appmanifest.AppManifestKind;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -39,6 +40,7 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
   private boolean isBindTaskFeatureSet; // BIND_FETCH_FILES_TASK_TO_DELEGATE
   private String executionLogName;
   private Set<String> delegateSelectors;
+  private boolean isGitHostConnectivityCheck;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
@@ -49,13 +51,21 @@ public class GitFetchFilesTaskParams implements ActivityAccess, TaskParameters, 
     }
 
     if (isNotEmpty(gitFetchFilesConfigMap)) {
-      for (Map.Entry<String, GitFetchFilesConfig> entry : gitFetchFilesConfigMap.entrySet()) {
-        GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
-        executionCapabilities.add(GitConnectionCapability.builder()
-                                      .gitConfig(gitFetchFileConfig.getGitConfig())
-                                      .settingAttribute(gitFetchFileConfig.getGitConfig().getSshSettingAttribute())
-                                      .encryptedDataDetails(gitFetchFileConfig.getEncryptedDataDetails())
-                                      .build());
+      if (isGitHostConnectivityCheck) {
+        for (Map.Entry<String, GitFetchFilesConfig> entry : gitFetchFilesConfigMap.entrySet()) {
+          GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
+          executionCapabilities.addAll(
+              CapabilityHelper.generateExecutionCapabilitiesForGit(gitFetchFileConfig.getGitConfig()));
+        }
+      } else {
+        for (Map.Entry<String, GitFetchFilesConfig> entry : gitFetchFilesConfigMap.entrySet()) {
+          GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
+          executionCapabilities.add(GitConnectionCapability.builder()
+                                        .gitConfig(gitFetchFileConfig.getGitConfig())
+                                        .settingAttribute(gitFetchFileConfig.getGitConfig().getSshSettingAttribute())
+                                        .encryptedDataDetails(gitFetchFileConfig.getEncryptedDataDetails())
+                                        .build());
+        }
       }
     }
 

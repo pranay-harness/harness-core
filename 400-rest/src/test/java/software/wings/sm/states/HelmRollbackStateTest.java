@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doNothing;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
@@ -33,6 +34,7 @@ import org.mockito.Mock;
 public class HelmRollbackStateTest extends WingsBaseTest {
   @Mock private ExecutionContext executionContext;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks HelmRollbackState helmRollbackState = new HelmRollbackState("Helm-Rollback");
 
   @Test

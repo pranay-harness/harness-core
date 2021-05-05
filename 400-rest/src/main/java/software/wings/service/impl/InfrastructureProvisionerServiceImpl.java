@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -756,20 +757,22 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         DelegateTask.builder()
             .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-            .data(TaskData.builder()
-                      .async(false)
-                      .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
-                      .parameters(new Object[] {
-                          TerraformProvisionParameters.builder()
-                              .scriptPath(terraformDirectory)
-                              .sourceRepoSettingId(gitSettingAttribute.getUuid())
-                              .sourceRepo(gitConfig)
-                              .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
-                              .sourceRepoBranch(sourceRepoBranch)
-                              .commitId(commitId)
-                              .build()})
-                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                      .build())
+            .data(
+                TaskData.builder()
+                    .async(false)
+                    .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
+                    .parameters(new Object[] {
+                        TerraformProvisionParameters.builder()
+                            .scriptPath(terraformDirectory)
+                            .sourceRepoSettingId(gitSettingAttribute.getUuid())
+                            .sourceRepo(gitConfig)
+                            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                            .sourceRepoBranch(sourceRepoBranch)
+                            .commitId(commitId)
+                            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, accountId))
+                            .build()})
+                    .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                    .build())
             .build();
 
     DelegateResponseData notifyResponseData;
@@ -835,21 +838,22 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
         DelegateTask.builder()
             .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-            .data(TaskData.builder()
-                      .async(false)
-                      .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
-                      .parameters(new Object[] {
-                          TerraformProvisionParameters.builder()
-                              .sourceRepoSettingId(settingAttribute.getUuid())
-                              .sourceRepo(gitConfig)
-                              .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
-                              .commitId(terraformInfrastructureProvisioner.getCommitId())
-
-                              .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
-                              .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
-                              .build()})
-                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                      .build())
+            .data(
+                TaskData.builder()
+                    .async(false)
+                    .taskType(TaskType.TERRAFORM_FETCH_TARGETS_TASK.name())
+                    .parameters(new Object[] {
+                        TerraformProvisionParameters.builder()
+                            .sourceRepoSettingId(settingAttribute.getUuid())
+                            .sourceRepo(gitConfig)
+                            .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
+                            .commitId(terraformInfrastructureProvisioner.getCommitId())
+                            .scriptPath(normalizeScriptPath(terraformInfrastructureProvisioner.getPath()))
+                            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, accountId))
+                            .build()})
+                    .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                    .build())
             .build();
     DelegateResponseData responseData;
     try {
