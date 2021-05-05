@@ -2459,12 +2459,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private CustomLogDataCollectionInfo createCustomLogDataCollectionInfo(
       DatadogConfig datadogConfig, AnalysisContext context, long collectionStartMinute, Set<String> hostBatch) {
     CustomLogDataCollectionInfo savedDataCollectionInfo = (CustomLogDataCollectionInfo) context.getDataCollectionInfo();
-    savedDataCollectionInfo.setHosts(hostBatch);
-    savedDataCollectionInfo.setStartMinute((int) collectionStartMinute);
-    savedDataCollectionInfo.setCollectionTime(1);
-    savedDataCollectionInfo.setEncryptedDataDetails(
+    CustomLogDataCollectionInfo cloned = savedDataCollectionInfo.clone();
+    cloned.setHosts(hostBatch);
+    cloned.setStartMinute((int) collectionStartMinute);
+    cloned.setCollectionTime(1);
+    cloned.setEncryptedDataDetails(
         secretManager.getEncryptionDetails(datadogConfig, context.getAppId(), context.getWorkflowExecutionId()));
-    return savedDataCollectionInfo;
+    return cloned;
   }
 
   private StackDriverLogDataCollectionInfo createStackDriverLogDataCollectionInfo(
