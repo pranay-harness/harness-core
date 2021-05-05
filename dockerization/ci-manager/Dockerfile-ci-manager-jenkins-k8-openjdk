@@ -10,8 +10,7 @@ COPY scripts /opt/harness
 RUN chmod +x /opt/harness/*.sh \
     && mkdir /opt/harness/plugins \
     && chown -R 65534:65534 /opt/harness/ /tmp \
-    && chmod 700 -R /opt/harness/ \
-    && chmod 700 -R /tmp
+    && chmod 700 -R /opt/harness/
 
 # Final Stage
 FROM us.gcr.io/platform-205701/alpine:jdk-experimental
@@ -19,7 +18,8 @@ FROM us.gcr.io/platform-205701/alpine:jdk-experimental
 RUN addgroup -S 65534 && adduser -S 65534 -G 65534
 
 COPY --from=builder /opt/harness/ /opt/harness/
-COPY /tmp /tmp
+
+RUN chmod 700 -R /tmp
 
 USER 65534
 
