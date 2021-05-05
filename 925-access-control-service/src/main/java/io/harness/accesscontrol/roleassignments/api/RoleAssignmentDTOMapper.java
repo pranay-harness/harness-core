@@ -63,6 +63,7 @@ public class RoleAssignmentDTOMapper {
         .resourceGroupIdentifier(object.getResourceGroupIdentifier())
         .roleIdentifier(object.getRoleIdentifier())
         .disabled(object.isDisabled())
+        .managed(object.isManaged())
         .build();
   }
 
