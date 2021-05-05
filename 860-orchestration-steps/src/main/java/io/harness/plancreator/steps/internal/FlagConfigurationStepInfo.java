@@ -7,11 +7,10 @@ import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.cf.FeatureUpdateStep;
-import io.harness.steps.cf.FeatureUpdateStepParameters;
+import io.harness.steps.cf.FlagConfigurationStep;
+import io.harness.steps.cf.FlagConfigurationStepParameters;
 import io.harness.steps.cf.PatchInstruction;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
@@ -28,22 +27,20 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-@JsonTypeName("FeatureUpdate")
-@TypeAlias("featureUpdateStepInfo")
-public class FeatureUpdateStepInfo implements PMSStepInfo {
+@JsonTypeName("FlagConfiguration")
+@TypeAlias("flagConfigurationStepInfo")
+public class FlagConfigurationStepInfo implements PMSStepInfo {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
-  @JsonProperty("featureUpdateRef") @NotNull String identifier;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> feature;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> environment;
   @NotNull List<PatchInstruction> instructions;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> state;
 
   @Builder
-  @ConstructorProperties({"name", "identifier", "feature", "environment", "instructions", "state"})
-  public FeatureUpdateStepInfo(String name, String identifier, ParameterField<String> feature,
-      ParameterField<String> environment, List<PatchInstruction> instructions, ParameterField<String> state) {
+  @ConstructorProperties({"name", "feature", "environment", "instructions", "state"})
+  public FlagConfigurationStepInfo(String name, ParameterField<String> feature, ParameterField<String> environment,
+      List<PatchInstruction> instructions, ParameterField<String> state) {
     this.name = name;
-    this.identifier = identifier;
     this.feature = feature;
     this.environment = environment;
     this.instructions = instructions;
@@ -52,7 +49,7 @@ public class FeatureUpdateStepInfo implements PMSStepInfo {
 
   @Override
   public StepType getStepType() {
-    return FeatureUpdateStep.STEP_TYPE;
+    return FlagConfigurationStep.STEP_TYPE;
   }
 
   @Override
@@ -62,8 +59,9 @@ public class FeatureUpdateStepInfo implements PMSStepInfo {
 
   @Override
   public SpecParameters getSpecParameters() {
-    return FeatureUpdateStepParameters.builder()
-        .identifier(identifier)
+    return FlagConfigurationStepParameters
+        .builder()
+        //.identifier(identifier)
         .name(name)
         .feature(feature)
         .environment(environment)

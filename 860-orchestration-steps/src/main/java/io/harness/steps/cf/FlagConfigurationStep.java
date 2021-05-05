@@ -1,22 +1,28 @@
 package io.harness.steps.cf;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CFApi;
 import io.harness.cf.openapi.model.Feature;
 import io.harness.cf.openapi.model.PatchInstruction;
 import io.harness.cf.openapi.model.PatchOperation;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
+import io.harness.logging.UnitProgress;
+import io.harness.logging.UnitStatus;
+import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.steps.cf.AddSegmentToVariationTargetMapYaml.AddSegmentToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.AddTargetsToVariationTargetMapYaml.AddTargetsToVariationTargetMapYamlSpec;
@@ -28,13 +34,17 @@ import io.harness.steps.cf.SetFeatureFlagStateYaml.SetFeatureFlagStateYamlSpec;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CF)
 @Slf4j
-public class FeatureUpdateStep implements SyncExecutable<StepElementParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.FEATURE_UPDATE).build();
+public class FlagConfigurationStep implements SyncExecutable<StepElementParameters> {
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(OrchestrationStepTypes.FLAG_CONFIGURATION).build();
+  private static String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
+  @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject @Named("cfPipelineAPI") private CFApi cfApi;
 
   @Override
@@ -46,13 +56,18 @@ public class FeatureUpdateStep implements SyncExecutable<StepElementParameters> 
   public StepResponse executeSync(Ambiance ambiance, StepElementParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     log.info("Executing feature update step..");
-    StepResponseBuilder stepResponseBuilder = StepResponse.builder();
+    long startTime = System.currentTimeMillis();
+    NGLogCallback ngManagerLogCallback =
+        new NGLogCallback(logStreamingStepClientFactory, ambiance, INFRASTRUCTURE_COMMAND_UNIT, true);
     try {
-      FeatureUpdateStepParameters featureUpdateStepParameters = (FeatureUpdateStepParameters) stepParameters.getSpec();
+      FlagConfigurationStepParameters flagConfigurationStepParameters =
+          (FlagConfigurationStepParameters) stepParameters.getSpec();
+      String featureIdentifier = flagConfigurationStepParameters.getFeature().getValue();
+      ngManagerLogCallback.saveExecutionLog(format("Updating feature flag %s", featureIdentifier));
 
       List<PatchInstruction> instructions = new ArrayList<>();
 
-      for (io.harness.steps.cf.PatchInstruction patchInstruction : featureUpdateStepParameters.getInstructions()) {
+      for (io.harness.steps.cf.PatchInstruction patchInstruction : flagConfigurationStepParameters.getInstructions()) {
         if (patchInstruction.getType().equals(Type.SET_FEATURE_FLAG_STATE)) {
           SetFeatureFlagStateYamlSpec spec = ((SetFeatureFlagStateYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
@@ -94,18 +109,37 @@ public class FeatureUpdateStep implements SyncExecutable<StepElementParameters> 
 
       PatchOperation patchOperation = PatchOperation.builder().instructions(instructions).build();
 
-      Feature feature = cfApi.patchFeature(featureUpdateStepParameters.getFeature().getValue(),
-          ambiance.getSetupAbstractionsMap().get("accountId"), ambiance.getSetupAbstractionsMap().get("orgIdentifier"),
+      Feature feature = cfApi.patchFeature(featureIdentifier, ambiance.getSetupAbstractionsMap().get("accountId"),
+          ambiance.getSetupAbstractionsMap().get("orgIdentifier"),
           ambiance.getSetupAbstractionsMap().get("projectIdentifier"),
-          featureUpdateStepParameters.getEnvironment().getValue(), patchOperation);
+          flagConfigurationStepParameters.getEnvironment().getValue(), patchOperation);
     } catch (Exception e) {
-      stepResponseBuilder.status(Status.FAILED);
-      stepResponseBuilder.failureInfo(
-          FailureInfo.newBuilder().addFailureData(FailureData.newBuilder().setMessage(e.getMessage()).build()).build());
+      ngManagerLogCallback.saveExecutionLog(
+          "Feature flag update failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+      return StepResponse.builder()
+          .status(Status.FAILED)
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getMessage()).build())
+          .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
+                                                          .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
+                                                          .setStatus(UnitStatus.FAILURE)
+                                                          .setStartTime(startTime)
+                                                          .setEndTime(System.currentTimeMillis())
+                                                          .build()))
+          .build();
     }
 
-    stepResponseBuilder.status(Status.SUCCEEDED);
-    return stepResponseBuilder.build();
+    ngManagerLogCallback.saveExecutionLog(
+        "Feature flag update completed", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
+
+    return StepResponse.builder()
+        .status(Status.SUCCEEDED)
+        .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
+                                                        .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
+                                                        .setStatus(UnitStatus.SUCCESS)
+                                                        .setStartTime(startTime)
+                                                        .setEndTime(System.currentTimeMillis())
+                                                        .build()))
+        .build();
   }
 
   public StepType getType() {

@@ -12,8 +12,8 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(HarnessTeam.CF)
 @Value
 @Builder
-@TypeAlias("featureStageStepParameters")
-public class FeatureStageStepParameters implements StepParameters {
+@TypeAlias("featureFlagStageStepParameters")
+public class FeatureFlagStageStepParameters implements StepParameters {
   String identifier;
   String name;
   String type;

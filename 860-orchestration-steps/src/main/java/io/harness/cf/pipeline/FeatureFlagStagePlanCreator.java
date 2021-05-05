@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.CF)
-public class FeatureStagePlanCreator extends ChildrenPlanCreator<StageElementConfig> {
+public class FeatureFlagStagePlanCreator extends ChildrenPlanCreator<StageElementConfig> {
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, StageElementConfig config) {
@@ -58,7 +58,6 @@ public class FeatureStagePlanCreator extends ChildrenPlanCreator<StageElementCon
         .stepType(NGSectionStep.STEP_TYPE)
         .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        //.adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
   }
 
@@ -69,6 +68,6 @@ public class FeatureStagePlanCreator extends ChildrenPlanCreator<StageElementCon
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("Feature"));
+    return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("FeatureFlag"));
   }
 }
