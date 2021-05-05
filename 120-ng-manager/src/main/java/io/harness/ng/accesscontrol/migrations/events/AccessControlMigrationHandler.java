@@ -3,6 +3,7 @@ package io.harness.ng.accesscontrol.migrations.events;
 import static io.harness.beans.FeatureName.NG_ACCESS_CONTROL_MIGRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
@@ -31,7 +32,6 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.service.NgUserService;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
@@ -95,17 +95,23 @@ public class AccessControlMigrationHandler implements MessageListener {
         PROJECT_LEVEL, ImmutableList.of(PROJECT_ADMIN_ROLE_IDENTIFIER, PROJECT_VIEWER_ROLE_IDENTIFIER));
   }
 
-  private String getRoleIdentifierForUser(
+  private Optional<RoleAssignmentDTO> getManagedRoleAssignment(
+      UserInfo user, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    String roleIdentifier =
+        levelToRolesMapping.get(getLevel(accountIdentifier, orgIdentifier, projectIdentifier).orElse(ACCOUNT_LEVEL))
+            .get(1);
+    return Optional.of(getRoleAssignments(user.getUuid(), roleIdentifier, ALL_RESOURCES_RESOURCE_GROUP));
+  }
+
+  private Optional<RoleAssignmentDTO> getUserRoleAssignment(
       UserInfo user, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     if (user.isAdmin()) {
-      return levelToRolesMapping
-          .get(getLevel(accountIdentifier, orgIdentifier, projectIdentifier).orElse(ACCOUNT_LEVEL))
-          .get(0);
-    } else {
-      return levelToRolesMapping
-          .get(getLevel(accountIdentifier, orgIdentifier, projectIdentifier).orElse(ACCOUNT_LEVEL))
-          .get(1);
+      String roleIdentifier =
+          levelToRolesMapping.get(getLevel(accountIdentifier, orgIdentifier, projectIdentifier).orElse(ACCOUNT_LEVEL))
+              .get(0);
+      return Optional.of(getRoleAssignments(user.getUuid(), roleIdentifier, ALL_RESOURCES_RESOURCE_GROUP));
     }
+    return Optional.empty();
   }
 
   private Optional<String> getLevel(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -123,25 +129,38 @@ public class AccessControlMigrationHandler implements MessageListener {
 
   private RoleAssignmentMetadata createRoleAssignments(
       String account, String org, String project, List<UserInfo> users) {
-    List<RoleAssignmentDTO> roleAssignmentsToCreate = new ArrayList<>();
+    List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
+    List<RoleAssignmentDTO> userRoleAssignments = new ArrayList<>();
     for (UserInfo user : users) {
-      String roleIdentifier = getRoleIdentifierForUser(user, account, org, project);
-      roleAssignmentsToCreate.add(getRoleAssignment(user.getUuid(), roleIdentifier));
+      getManagedRoleAssignment(user, account, org, project).ifPresent(managedRoleAssignments::add);
+      getUserRoleAssignment(user, account, org, project).ifPresent(userRoleAssignments::add);
     }
 
-    List<RoleAssignmentResponseDTO> createdRoleAssignments =
-        NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project,
-            RoleAssignmentCreateRequestDTO.builder().roleAssignments(roleAssignmentsToCreate).build()));
+    List<RoleAssignmentDTO> allRoleAssignments = new ArrayList<>();
+    List<RoleAssignmentResponseDTO> createdRoleAssignmentResponses = new ArrayList<>();
+    allRoleAssignments.addAll(managedRoleAssignments);
+    allRoleAssignments.addAll(userRoleAssignments);
 
-    Set<RoleAssignmentDTO> createdRoleAssignmentsSet =
-        createdRoleAssignments.stream().map(RoleAssignmentResponseDTO::getRoleAssignment).collect(Collectors.toSet());
+    RoleAssignmentCreateRequestDTO createRequestDTO =
+        RoleAssignmentCreateRequestDTO.builder().roleAssignments(managedRoleAssignments).build();
+    List<RoleAssignmentResponseDTO> response =
+        getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project, true, createRequestDTO));
+    createdRoleAssignmentResponses.addAll(response);
 
-    List<RoleAssignmentDTO> failedRoleAssignments = roleAssignmentsToCreate.stream()
-                                                        .filter(x -> !createdRoleAssignmentsSet.contains(x))
-                                                        .collect(Collectors.toList());
+    createRequestDTO = RoleAssignmentCreateRequestDTO.builder().roleAssignments(userRoleAssignments).build();
+    response =
+        getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project, false, createRequestDTO));
+    createdRoleAssignmentResponses.addAll(response);
+
+    Set<RoleAssignmentDTO> createdRoleAssignmentSet = createdRoleAssignmentResponses.stream()
+                                                          .map(RoleAssignmentResponseDTO::getRoleAssignment)
+                                                          .collect(Collectors.toSet());
+
+    List<RoleAssignmentDTO> failedRoleAssignments =
+        allRoleAssignments.stream().filter(x -> !createdRoleAssignmentSet.contains(x)).collect(Collectors.toList());
 
     return RoleAssignmentMetadata.builder()
-        .createdRoleAssignments(createdRoleAssignments)
+        .createdRoleAssignments(createdRoleAssignmentResponses)
         .failedRoleAssignments(failedRoleAssignments)
         .build();
   }
@@ -249,12 +268,13 @@ public class AccessControlMigrationHandler implements MessageListener {
     return true;
   }
 
-  private RoleAssignmentDTO getRoleAssignment(String principalIdentifier, String roleIdentifier) {
+  private RoleAssignmentDTO getRoleAssignments(
+      String principalIdentifier, String roleIdentifier, String resourceGroupIdentifier) {
     return RoleAssignmentDTO.builder()
         .disabled(false)
         .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
         .roleIdentifier(roleIdentifier)
-        .resourceGroupIdentifier(ALL_RESOURCES_RESOURCE_GROUP)
+        .resourceGroupIdentifier(resourceGroupIdentifier)
         .principal(PrincipalDTO.builder().identifier(principalIdentifier).type(PrincipalType.USER).build())
         .build();
   }
