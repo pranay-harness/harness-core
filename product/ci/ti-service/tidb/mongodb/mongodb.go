@@ -382,7 +382,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	for i, rel := range cg.Relations {
 		rels[i] = *NewRelation(rel.Source, rel.Tests, info, acc, org, proj)
 	}
-	// query for partial callgraph for the filter -(repo + branch + commitId != currentCommit) and delete old entries.
+	// query for partial callgraph for the filter -(repo + branch + (commitId != currentCommit)) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
 	f := bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
 	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
@@ -830,11 +830,11 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 
 // getMap takes slice of int as an input and returns a map with all elements of slice as keys
 func getMap(ids []int) map[int]bool {
-	srcMap := make(map[int]bool)
+	mp := make(map[int]bool)
 	for _, id := range ids {
-		srcMap[id] = true
+		mp[id] = true
 	}
-	return srcMap
+	return mp
 }
 
 // getRelMap takes two Relation records A and B and returns a map[source]tests object
