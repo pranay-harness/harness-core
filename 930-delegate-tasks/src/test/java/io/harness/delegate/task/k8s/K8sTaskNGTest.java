@@ -232,6 +232,7 @@ public class K8sTaskNGTest extends CategoryTest {
         .when(rollingRequestHandler)
         .executeTask(eq(k8sDeployRequest), any(K8sDelegateTaskParams.class), eq(logStreamingTaskClient),
             eq(emptyCommandUnitsProgress));
+    doReturn(thrownException).when(rollingRequestHandler).handleTaskFailure(k8sDeployRequest, thrownException);
 
     assertThatThrownBy(() -> k8sTaskNG.run(k8sDeployRequest))
         .isInstanceOf(TaskNGDataException.class)

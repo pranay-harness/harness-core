@@ -18,4 +18,9 @@ public interface KubernetesExceptionExplanation {
   String DRY_RUN_MANIFEST_FAILED = "Performed local manifest validation failed";
   String APPLY_MANIFEST_FAILED = "Unable to apply Kubernetes manifest";
   String WAIT_FOR_STEADY_STATE_FAILED = "One of managed workloads failed to rollout";
+
+  String CANARY_NO_WORKLOADS_FOUND =
+      "No workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type";
+  String CANARY_MULTIPLE_WORKLOADS =
+      "More than one workloads found in the Manifests. Canary deploy supports only one workload";
 }

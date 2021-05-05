@@ -13,6 +13,7 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sNGTaskResponse;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
@@ -89,13 +90,20 @@ public abstract class K8sRequestHandler {
     return false;
   }
 
-  public void handleTaskFailure(K8sDeployRequest k8sDeployRequest, Exception exception) {
+  public Exception handleTaskFailure(K8sDeployRequest k8sDeployRequest, Exception exception) {
     currentLogCallback.saveExecutionLog(ExceptionUtils.getMessage(exception), ERROR);
     currentLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
-    onTaskFailed(k8sDeployRequest);
+    try {
+      onTaskFailed(k8sDeployRequest);
+    } catch (Exception ex) {
+      log.error("Error while handling task failure: " + ex.getMessage(), ex);
+      return handleException(new ExplanationException(ex.getMessage(), exception));
+    }
+
+    return handleException(exception);
   }
 
-  public LogCallback getCurrentLogCallback() {
+  protected LogCallback getCurrentLogCallback() {
     return currentLogCallback;
   }
 
@@ -109,6 +117,10 @@ public abstract class K8sRequestHandler {
   }
 
   protected void onTaskFailed(K8sDeployRequest deployRequest) {}
+
+  protected Exception handleException(Exception exception) {
+    return exception;
+  }
 
   protected K8sDeployResponse getGenericFailureResponse(K8sNGTaskResponse taskResponse) {
     return K8sDeployResponse.builder()

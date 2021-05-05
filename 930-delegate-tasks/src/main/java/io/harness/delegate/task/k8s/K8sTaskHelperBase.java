@@ -1017,7 +1017,7 @@ public class K8sTaskHelperBase {
   }
 
   public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId, String workingDirectory, String ocPath,
-      String kubeconfigPath, LogCallback executionLogCallback) throws Exception {
+      String kubeconfigPath, LogCallback executionLogCallback, boolean denoteOverallFailure) throws Exception {
     final String eventFormat = "%-7s: %s";
     final String statusFormat = "%n%-7s: %s";
 
@@ -1093,7 +1093,9 @@ public class K8sTaskHelperBase {
       return success;
     } catch (Exception e) {
       log.error("Exception while doing statusCheck", e);
-      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+      if (denoteOverallFailure) {
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+      }
       return false;
     } finally {
       if (eventWatchProcess != null) {
@@ -1102,7 +1104,7 @@ public class K8sTaskHelperBase {
       if (success) {
         executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
 
-      } else {
+      } else if (!success && denoteOverallFailure) {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       }
     }
@@ -1110,8 +1112,15 @@ public class K8sTaskHelperBase {
 
   public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) throws Exception {
+    return doStatusCheck(client, resourceId, k8sDelegateTaskParams, executionLogCallback, true);
+  }
+
+  public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallFailure)
+      throws Exception {
     return doStatusCheck(client, resourceId, k8sDelegateTaskParams.getWorkingDirectory(),
-        k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath(), executionLogCallback);
+        k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath(), executionLogCallback,
+        denoteOverallFailure);
   }
 
   public boolean getJobStatus(K8sDelegateTaskParams k8sDelegateTaskParams, LogOutputStream statusInfoStream,

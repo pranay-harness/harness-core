@@ -15,7 +15,12 @@ import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
+import io.harness.delegate.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.k8s.exception.KubernetesExceptionMessage;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
@@ -47,7 +52,8 @@ public class K8sCanaryBaseHandler {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
 
   public boolean prepareForCanary(K8sCanaryHandlerConfig canaryHandlerConfig,
-      K8sDelegateTaskParams k8sDelegateTaskParams, Boolean skipVersioning, LogCallback logCallback) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, Boolean skipVersioning, LogCallback logCallback,
+      boolean throwOnFailure) throws Exception {
     if (isNotTrue(skipVersioning)) {
       markVersionedResources(canaryHandlerConfig.getResources());
     }
@@ -59,10 +65,22 @@ public class K8sCanaryBaseHandler {
 
     if (workloads.size() != 1) {
       if (workloads.isEmpty()) {
+        if (throwOnFailure) {
+          throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.CANARY_NO_WORKLOADS_FOUND,
+              KubernetesExceptionExplanation.CANARY_NO_WORKLOADS_FOUND,
+              new KubernetesTaskException(KubernetesExceptionMessage.CANARY_NO_WORKLOADS_FOUND));
+        }
+
         logCallback.saveExecutionLog(
             "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.",
             ERROR, FAILURE);
       } else {
+        if (throwOnFailure) {
+          throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.CANARY_MULTIPLE_WORKLOADS,
+              KubernetesExceptionExplanation.CANARY_MULTIPLE_WORKLOADS,
+              new KubernetesTaskException(KubernetesExceptionMessage.CANARY_MULTIPLE_WORKLOADS));
+        }
+
         logCallback.saveExecutionLog(
             "\nMore than one workloads found in the Manifests. Canary deploy supports only one workload. Others should be marked with annotation "
                 + HarnessAnnotations.directApply + ": true",

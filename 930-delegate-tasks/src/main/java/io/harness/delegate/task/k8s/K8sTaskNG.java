@@ -28,7 +28,6 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -126,22 +125,12 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
         k8sDeployResponse.setCommandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
         return k8sDeployResponse;
-      } catch (WingsException ex) {
-        log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
-        if (k8sRequestHandler.isErrorFrameworkSupported()) {
-          k8sRequestHandler.handleTaskFailure(k8sDeployRequest, ex);
-          throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), ex);
-        }
-
-        return K8sDeployResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(ExceptionUtils.getMessage(ex))
-            .commandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
-            .build();
       } catch (Exception ex) {
         log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
         if (k8sRequestHandler.isErrorFrameworkSupported()) {
-          k8sRequestHandler.handleTaskFailure(k8sDeployRequest, ex);
+          Exception processedException = k8sRequestHandler.handleTaskFailure(k8sDeployRequest, ex);
+          throw new TaskNGDataException(
+              UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), processedException);
         }
 
         return K8sDeployResponse.builder()

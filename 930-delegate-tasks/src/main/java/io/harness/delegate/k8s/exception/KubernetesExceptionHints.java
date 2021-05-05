@@ -3,6 +3,7 @@ package io.harness.delegate.k8s.exception;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.k8s.model.HarnessAnnotations;
 
 @OwnedBy(CDP)
 public interface KubernetesExceptionHints {
@@ -16,4 +17,8 @@ public interface KubernetesExceptionHints {
   String DRY_RUN_MANIFEST_FAILED = "Verify manifest output for invalid fields names and types or manifest is not empty";
   String APPLY_MANIFEST_FAILED = "Verify Kubernetes manifest for invalid values or conflicting resources";
   String WAIT_FOR_STEADY_STATE_FAILED = "Check deployment pods probe checks, nodes availability or image pull secrets";
+
+  String CANARY_NO_WORKLOADS_FOUND = "Add Deployment (or DeploymentConfig for Openshift) workload in manifest";
+  String CANARY_MULTIPLE_WORKLOADS =
+      "Mark non-primary workloads with annotation " + HarnessAnnotations.directApply + ": true";
 }

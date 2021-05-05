@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static io.harness.delegate.k8s.K8sTestConstants.DEPLOYMENT_DIRECT_APPLY_YAML;
 import static io.harness.delegate.k8s.K8sTestConstants.DEPLOYMENT_YAML;
@@ -23,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -56,6 +58,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public class K8sCanaryBaseHandlerTest extends CategoryTest {
   @Mock private K8sTaskHelperBase k8sTaskHelperBase;
   @InjectMocks private K8sCanaryBaseHandler k8sCanaryBaseHandler;
@@ -82,7 +85,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     k8sCanaryHandlerConfig.setResources(kubernetesResources);
 
     boolean result =
-        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
     assertInvalidWorkloadsInManifest(result,
         "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.");
 
@@ -92,7 +95,8 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     reset(k8sTaskHelperBase);
     reset(logCallback);
 
-    result = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
+    result =
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
     assertInvalidWorkloadsInManifest(result,
         "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.");
 
@@ -102,7 +106,8 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     reset(k8sTaskHelperBase);
     reset(logCallback);
 
-    result = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
+    result =
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
     assertInvalidWorkloadsInManifest(result,
         "\nMore than one workloads found in the Manifests. Canary deploy supports only one workload. Others should be marked with annotation harness.io/direct-apply: true");
 
@@ -114,7 +119,8 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     reset(logCallback);
 
     doNothing().when(k8sTaskHelperBase).cleanup(any(), any(), any(), any());
-    result = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
+    result =
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
     assertThat(result).isTrue();
     verify(k8sTaskHelperBase, times(1)).cleanup(any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).getResourcesInTableFormat(any());
@@ -132,7 +138,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     k8sCanaryHandlerConfig.setResources(kubernetesResources);
 
     boolean result =
-        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback);
+        k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, delegateTaskParams, false, logCallback, false);
     assertInvalidWorkloadsInManifest(result,
         "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.");
   }
@@ -208,7 +214,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     canaryHandlerConfig.setResources(resources);
 
     boolean success = k8sCanaryBaseHandler.prepareForCanary(
-        canaryHandlerConfig, K8sDelegateTaskParams.builder().build(), false, logCallback);
+        canaryHandlerConfig, K8sDelegateTaskParams.builder().build(), false, logCallback, false);
 
     assertThat(success).isFalse();
   }
@@ -222,7 +228,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     canaryHandlerConfig.setResources(resources);
 
     boolean success = k8sCanaryBaseHandler.prepareForCanary(
-        canaryHandlerConfig, K8sDelegateTaskParams.builder().build(), false, logCallback);
+        canaryHandlerConfig, K8sDelegateTaskParams.builder().build(), false, logCallback, false);
 
     assertThat(success).isFalse();
   }
@@ -244,7 +250,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
     canaryHandlerConfig.setClient(client);
 
     boolean success =
-        k8sCanaryBaseHandler.prepareForCanary(canaryHandlerConfig, delegateTaskParams, false, logCallback);
+        k8sCanaryBaseHandler.prepareForCanary(canaryHandlerConfig, delegateTaskParams, false, logCallback, false);
 
     assertThat(success).isTrue();
     assertThat(canaryHandlerConfig.getCanaryWorkload()).isNotNull();

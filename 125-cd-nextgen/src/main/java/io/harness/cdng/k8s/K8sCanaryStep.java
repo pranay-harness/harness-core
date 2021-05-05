@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.K8sCanaryOutcome.K8sCanaryOutcomeBuilder;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestType;
@@ -13,10 +14,11 @@ import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.k8s.exception.K8sCanaryDataException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollback;
@@ -37,7 +39,9 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(CDP)
 public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8sStepExecutor {
   public static final StepType STEP_TYPE =
@@ -103,34 +107,47 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }
 
+    K8sCanaryOutcomeBuilder k8sCanaryOutcomeBuilder = K8sCanaryOutcome.builder();
     if (passThroughData instanceof HelmValuesFetchResponsePassThroughData) {
       return k8sStepHelper.handleHelmValuesFetchFailure((HelmValuesFetchResponsePassThroughData) passThroughData);
     }
 
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-    StepResponseBuilder responseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
-    K8sCanaryDeployResponse k8sCanaryDeployResponse =
-        (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+    k8sCanaryOutcomeBuilder.releaseName(k8sStepHelper.getReleaseName(infrastructure));
+    StepResponseBuilder responseBuilder;
 
-    K8sCanaryOutcome k8sCanaryOutcome = K8sCanaryOutcome.builder()
-                                            .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-                                            .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
-                                            .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
-                                            .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
-                                            .canaryWorkloadDeployed(k8sCanaryDeployResponse.isCanaryWorkloadDeployed())
-                                            .build();
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
+      responseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
-    executionSweepingOutputService.consume(
-        ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STAGE.name());
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
+      K8sCanaryDeployResponse k8sCanaryDeployResponse =
+          (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+
+      k8sCanaryOutcomeBuilder.releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
+          .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
+          .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
+          .canaryWorkloadDeployed(k8sCanaryDeployResponse.isCanaryWorkloadDeployed());
+
+    } catch (Exception ex) {
+      K8sCanaryDataException dataException = ExceptionUtils.cause(K8sCanaryDataException.class, ex);
+      if (dataException != null) {
+        k8sCanaryOutcomeBuilder.canaryWorkload(dataException.getCanaryWorkload())
+            .canaryWorkloadDeployed(dataException.isCanaryWorkloadDeployed());
+      } else {
+        log.warn("Got null K8sCanaryDataException", ex);
+      }
+
+      throw ex;
+    } finally {
+      executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME,
+          k8sCanaryOutcomeBuilder.build(), StepOutcomeGroup.STAGE.name());
     }
+
     return responseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
-                         .outcome(k8sCanaryOutcome)
+                         .outcome(k8sCanaryOutcomeBuilder.build())
                          .build())
         .build();
   }

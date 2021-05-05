@@ -22,6 +22,7 @@ import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.k8s.exception.K8sCanaryDataException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -33,6 +34,8 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.supplier.ThrowingSupplier;
+import io.harness.tasks.ResponseData;
 
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -70,6 +73,62 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
     assertThat(request.isSkipResourceVersioning()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFinalizeExecution() throws Exception {
+    ThrowingSupplier<ResponseData> response = ()
+        -> K8sDeployResponse.builder()
+               .commandExecutionStatus(SUCCESS)
+               .k8sNGTaskResponse(K8sCanaryDeployResponse.builder()
+                                      .canaryWorkloadDeployed(true)
+                                      .currentInstances(2)
+                                      .releaseNumber(4)
+                                      .canaryWorkload("workload")
+                                      .build())
+               .commandUnitsProgress(UnitProgressData.builder().build())
+               .build();
+    StepResponse stepResponse = k8sCanaryStep.finalizeExecution(
+        ambiance, StepElementParameters.builder().build(), infrastructureOutcome, response);
+    ArgumentCaptor<K8sCanaryOutcome> canaryOutcomeCaptor = ArgumentCaptor.forClass(K8sCanaryOutcome.class);
+
+    verify(executionSweepingOutputService)
+        .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_CANARY_OUTCOME), canaryOutcomeCaptor.capture(),
+            eq(StepOutcomeGroup.STAGE.name()));
+
+    K8sCanaryOutcome k8sCanaryOutcome = canaryOutcomeCaptor.getValue();
+    assertThat(k8sCanaryOutcome.isCanaryWorkloadDeployed()).isTrue();
+    assertThat(k8sCanaryOutcome.getCanaryWorkload()).isEqualTo("workload");
+    assertThat(k8sCanaryOutcome.getReleaseNumber()).isEqualTo(4);
+    assertThat(k8sCanaryOutcome.getTargetInstances()).isEqualTo(2);
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFinalizeExecutionFailed() {
+    InvalidRequestException thrownException = new InvalidRequestException("Some issue",
+        K8sCanaryDataException.dataBuilder().canaryWorkload("workload").canaryWorkloadDeployed(true).build());
+    ThrowingSupplier<ResponseData> response = () -> {
+      throw thrownException;
+    };
+
+    assertThatThrownBy(()
+                           -> k8sCanaryStep.finalizeExecution(
+                               ambiance, StepElementParameters.builder().build(), infrastructureOutcome, response))
+        .isSameAs(thrownException);
+
+    ArgumentCaptor<K8sCanaryOutcome> canaryOutcomeCaptor = ArgumentCaptor.forClass(K8sCanaryOutcome.class);
+    verify(executionSweepingOutputService)
+        .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_CANARY_OUTCOME), canaryOutcomeCaptor.capture(),
+            eq(StepOutcomeGroup.STAGE.name()));
+
+    K8sCanaryOutcome k8sCanaryOutcome = canaryOutcomeCaptor.getValue();
+    assertThat(k8sCanaryOutcome.isCanaryWorkloadDeployed()).isTrue();
+    assertThat(k8sCanaryOutcome.getCanaryWorkload()).isEqualTo("workload");
   }
 
   @Test
