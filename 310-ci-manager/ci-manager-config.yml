@@ -53,8 +53,8 @@ cimanager-mongo:
   indexManagerMode: AUTO
   mongoSSLConfig:
     mongoSSLEnabled: false
-    trustStorePath:
-    trustStorePassword:
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 pmsMongo:
   uri: mongodb://localhost:27017/pms-harness
   connectTimeout: 30000
@@ -62,6 +62,10 @@ pmsMongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 
 enableAuth: false
 
