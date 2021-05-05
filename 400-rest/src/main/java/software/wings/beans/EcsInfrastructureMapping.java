@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -9,13 +11,14 @@ import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REG
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
 import software.wings.annotation.Blueprint;
-import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -40,6 +43,8 @@ import lombok.experimental.FieldNameConstants;
  */
 @JsonTypeName("AWS_ECS")
 @FieldNameConstants(innerTypeName = "EcsInfrastructureMappingKeys")
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Region")
   @DefaultValue(AWS_DEFAULT_REGION)

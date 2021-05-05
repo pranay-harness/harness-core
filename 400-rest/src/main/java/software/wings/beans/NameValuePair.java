@@ -1,7 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 import io.harness.expression.Expression;
 import io.harness.yaml.BaseYaml;
@@ -25,6 +29,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(_871_CG_BEANS)
+@OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "NameValuePairKeys")
 public class NameValuePair {
   @NotEmpty @Trimmed private String name;

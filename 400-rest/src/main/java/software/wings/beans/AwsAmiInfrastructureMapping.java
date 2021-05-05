@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
@@ -10,12 +11,12 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.annotation.Blueprint;
-import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -28,9 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 
@@ -40,6 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 @JsonTypeName("AWS_AMI")
 @FieldNameConstants(innerTypeName = "AwsAmiInfrastructureMappingKeys")
 @OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Region")
   @DefaultValue(AWS_DEFAULT_REGION)
@@ -367,43 +366,6 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
 
     public AwsAmiInfrastructureMapping build() {
       return awsAmiInfrastructureMapping;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
-    private String region;
-    private String autoScalingGroupName;
-    private List<String> classicLoadBalancers;
-    private List<String> targetGroupArns;
-    private String hostNameConvention;
-    private List<String> stageClassicLoadBalancers;
-    private List<String> stageTargetGroupArns;
-    private AmiDeploymentType amiDeploymentType;
-    private String spotinstElastiGroupJson;
-    private String spotinstCloudProviderName;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String region,
-        String autoScalingGroupName, List<String> classicLoadBalancers, List<String> targetGroupArns,
-        String hostNameConvention, List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns,
-        Map<String, Object> blueprints, AmiDeploymentType amiDeploymentType, String spotinstElastiGroupJson,
-        String spotinstCloudProviderName) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, blueprints);
-      this.region = region;
-      this.autoScalingGroupName = autoScalingGroupName;
-      this.classicLoadBalancers = classicLoadBalancers;
-      this.targetGroupArns = targetGroupArns;
-      this.hostNameConvention = hostNameConvention;
-      this.stageClassicLoadBalancers = stageClassicLoadBalancers;
-      this.stageTargetGroupArns = stageTargetGroupArns;
-      this.amiDeploymentType = amiDeploymentType;
-      this.spotinstElastiGroupJson = spotinstElastiGroupJson;
-      this.spotinstCloudProviderName = spotinstCloudProviderName;
     }
   }
 }

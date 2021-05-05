@@ -1,7 +1,10 @@
 package software.wings.beans;
 
-import io.harness.annotations.dev.HarnessTeam;
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 
 import java.util.List;
@@ -11,7 +14,8 @@ import lombok.Value;
 
 @Value
 @Builder
-@OwnedBy(HarnessTeam.CDP)
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public class InfrastructureProvisionerDetails {
   private String uuid;
   private String name;

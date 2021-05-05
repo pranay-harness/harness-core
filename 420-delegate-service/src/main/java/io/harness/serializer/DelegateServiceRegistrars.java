@@ -1,6 +1,7 @@
 package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateServiceKryoRegister;
@@ -18,6 +19,7 @@ public class DelegateServiceRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(CgOrchestrationRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
+          .add(CgOrchestrationBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
           .add(DelegateAgentBeansKryoRegister.class)
           .add(DelegateServiceKryoRegister.class)

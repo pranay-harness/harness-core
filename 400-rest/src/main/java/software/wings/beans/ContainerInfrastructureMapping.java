@@ -1,5 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.annotation.Blueprint;
@@ -16,6 +21,8 @@ import lombok.experimental.FieldNameConstants;
  * Created by rishi on 5/18/17.
  */
 @FieldNameConstants(innerTypeName = "ContainerInfrastructureMappingKeys")
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public abstract class ContainerInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Cluster Name") @Blueprint private String clusterName;
 
@@ -69,7 +76,7 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends InfrastructureMapping.Yaml {
+  public abstract static class Yaml extends InfraMappingYaml {
     private String cluster;
 
     public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
@@ -82,7 +89,7 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public abstract static class YamlWithComputeProvider extends InfrastructureMapping.YamlWithComputeProvider {
+  public abstract static class YamlWithComputeProvider extends software.wings.beans.YamlWithComputeProvider {
     private String cluster;
 
     public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,

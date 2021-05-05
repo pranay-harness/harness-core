@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.serializer.morphia.CECommonsMorphiaRegistrar;
+import io.harness.morphia.CgOrchestrationBeansMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateAgentKryoRegister;
@@ -36,6 +38,7 @@ public class ManagerRegistrars {
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(CgOrchestrationRegistrars.kryoRegistrars)
+          .add(CgOrchestrationBeansKryoRegistrar.class)
           .add(ManagerKryoRegistrar.class)
           .add(ProjectAndOrgKryoRegistrar.class)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
@@ -69,6 +72,7 @@ public class ManagerRegistrars {
           .add(ManagerMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
           .add(ViewsMorphiaRegistrar.class)
+          .add(CgOrchestrationBeansMorphiaRegistrar.class)
           .addAll(NotificationSenderRegistrars.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();

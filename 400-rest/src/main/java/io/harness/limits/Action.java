@@ -1,5 +1,9 @@
 package io.harness.limits;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.slf4j.helpers.MessageFormatter;
@@ -9,6 +13,7 @@ import org.slf4j.helpers.MessageFormatter;
  */
 @Value
 @AllArgsConstructor
+@OwnedBy(PL)
 public class Action {
   private String accountId;
   private ActionType actionType;
