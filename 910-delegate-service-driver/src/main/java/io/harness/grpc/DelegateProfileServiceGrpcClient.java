@@ -95,7 +95,10 @@ public class DelegateProfileServiceGrpcClient {
     try {
       validateScopingRules(delegateProfileGrpc.getScopingRulesList());
       AddProfileResponse addProfileResponse = delegateProfileServiceBlockingStub.addProfile(
-          AddProfileRequest.newBuilder().setProfile(delegateProfileGrpc).build());
+          AddProfileRequest.newBuilder()
+              .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+              .setProfile(delegateProfileGrpc)
+              .build());
 
       return addProfileResponse.getProfile();
     } catch (StatusRuntimeException ex) {
@@ -125,7 +128,11 @@ public class DelegateProfileServiceGrpcClient {
   public void deleteProfile(AccountId accountId, ProfileId profileId) {
     try {
       delegateProfileServiceBlockingStub.deleteProfile(
-          DeleteProfileRequest.newBuilder().setAccountId(accountId).setProfileId(profileId).build());
+          DeleteProfileRequest.newBuilder()
+              .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+              .setAccountId(accountId)
+              .setProfileId(profileId)
+              .build());
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while deleting profile.", ex);
     }
@@ -139,11 +146,13 @@ public class DelegateProfileServiceGrpcClient {
       }
 
       UpdateProfileSelectorsResponse updateProfileSelectorsResponse =
-          delegateProfileServiceBlockingStub.updateProfileSelectors(UpdateProfileSelectorsRequest.newBuilder()
-                                                                        .setAccountId(accountId)
-                                                                        .setProfileId(profileId)
-                                                                        .addAllSelectors(selectors)
-                                                                        .build());
+          delegateProfileServiceBlockingStub.updateProfileSelectors(
+              UpdateProfileSelectorsRequest.newBuilder()
+                  .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+                  .setAccountId(accountId)
+                  .setProfileId(profileId)
+                  .addAllSelectors(selectors)
+                  .build());
 
       if (!updateProfileSelectorsResponse.hasProfile()) {
         return null;

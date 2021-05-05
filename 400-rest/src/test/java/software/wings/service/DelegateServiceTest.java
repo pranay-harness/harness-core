@@ -604,7 +604,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(existingDelegate).isEqualToIgnoringGivenFields(updatedDelegate, DelegateKeys.status);
     assertThat(DelegateInstanceStatus.DELETED).isEqualTo(updatedDelegate.getStatus());
     verify(auditServiceHelper)
-        .reportForAuditingUsingAccountId(accountId, existingDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
+        .reportForAuditingUsingAccountId(accountId, existingDelegate, updatedDelegate, Type.DELEGATE_REJECTION);
     verify(broadcaster).broadcast(SELF_DESTRUCT + delegateId);
   }
 
