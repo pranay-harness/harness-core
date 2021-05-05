@@ -35,7 +35,7 @@ public interface AsyncExecutable<T extends StepParameters>
   StepResponse handleAsyncResponse(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
 
   @Override
-  default void handleFailure(Ambiance ambiance, T stepParameters, Map<String, String> metadata) {
+  default void handleFailureInterrupt(Ambiance ambiance, T stepParameters, Map<String, String> metadata) {
     // NOOP : By default this is noop as task failure is handled by the PMS but you are free to override it
   }
 }

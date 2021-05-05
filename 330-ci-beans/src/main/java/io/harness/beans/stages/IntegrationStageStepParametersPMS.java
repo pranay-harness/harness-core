@@ -16,6 +16,7 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
@@ -30,7 +31,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("integrationStageStepParameters")
 @OwnedBy(HarnessTeam.CI)
-public class IntegrationStageStepParametersPMS implements SpecParameters {
+public class IntegrationStageStepParametersPMS implements SpecParameters, StepParameters {
   Infrastructure infrastructure;
   List<DependencyElement> dependencies;
   ParameterField<List<String>> sharedPaths;
