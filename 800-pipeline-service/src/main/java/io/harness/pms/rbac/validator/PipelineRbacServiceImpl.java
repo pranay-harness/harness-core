@@ -1,5 +1,7 @@
 package io.harness.pms.rbac.validator;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.AccessControlDTO;
@@ -36,16 +38,18 @@ public class PipelineRbacServiceImpl implements PipelineRbacService {
       String projectIdentifier, String pipelineId, String pipelineYaml, List<EntityDetail> entityDetails) {
     List<PermissionCheckDTO> permissionCheckDTOS =
         entityDetails.stream().map(pipelineRbacHelper::convertToPermissionCheckDTO).collect(Collectors.toList());
-    AccessCheckResponseDTO accessCheckResponseDTO = accessControlClient.checkForAccess(permissionCheckDTOS);
-    if (accessCheckResponseDTO == null) {
-      return;
-    }
-    List<AccessControlDTO> nonPermittedResources = accessCheckResponseDTO.getAccessControlList()
-                                                       .stream()
-                                                       .filter(accessControlDTO -> !accessControlDTO.isPermitted())
-                                                       .collect(Collectors.toList());
-    if (nonPermittedResources.size() != 0) {
-      PipelineRbacHelper.throwAccessDeniedError(nonPermittedResources);
+    if (isNotEmpty(permissionCheckDTOS)) {
+      AccessCheckResponseDTO accessCheckResponseDTO = accessControlClient.checkForAccess(permissionCheckDTOS);
+      if (accessCheckResponseDTO == null) {
+        return;
+      }
+      List<AccessControlDTO> nonPermittedResources = accessCheckResponseDTO.getAccessControlList()
+                                                         .stream()
+                                                         .filter(accessControlDTO -> !accessControlDTO.isPermitted())
+                                                         .collect(Collectors.toList());
+      if (nonPermittedResources.size() != 0) {
+        PipelineRbacHelper.throwAccessDeniedError(nonPermittedResources);
+      }
     }
   }
 }

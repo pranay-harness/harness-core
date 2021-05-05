@@ -1,5 +1,7 @@
 package io.harness.pms.rbac;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 
 import io.harness.accesscontrol.Principal;
@@ -78,24 +80,26 @@ public class PipelineRbacHelper {
     RetryPolicy<Object> retryPolicy = getRetryPolicy(format("[Retrying failed call to check permissions attempt: {}"),
         format("Failed to check permissions after retrying {} times"));
 
-    accessCheckResponseDTO =
-        Failsafe.with(retryPolicy)
-            .get(()
-                     -> Optional.of(accessControlClient.checkForAccess(
-                         Principal.builder().principalIdentifier(principal).principalType(principalType).build(),
-                         permissionCheckDTOS)));
+    if (isNotEmpty(permissionCheckDTOS)) {
+      accessCheckResponseDTO =
+          Failsafe.with(retryPolicy)
+              .get(()
+                       -> Optional.of(accessControlClient.checkForAccess(
+                           Principal.builder().principalIdentifier(principal).principalType(principalType).build(),
+                           permissionCheckDTOS)));
 
-    if (!accessCheckResponseDTO.isPresent()) {
-      return;
-    }
+      if (!accessCheckResponseDTO.isPresent()) {
+        return;
+      }
 
-    List<AccessControlDTO> nonPermittedResources = accessCheckResponseDTO.get()
-                                                       .getAccessControlList()
-                                                       .stream()
-                                                       .filter(accessControlDTO -> !accessControlDTO.isPermitted())
-                                                       .collect(Collectors.toList());
-    if (nonPermittedResources.size() != 0) {
-      throwAccessDeniedError(nonPermittedResources);
+      List<AccessControlDTO> nonPermittedResources = accessCheckResponseDTO.get()
+                                                         .getAccessControlList()
+                                                         .stream()
+                                                         .filter(accessControlDTO -> !accessControlDTO.isPermitted())
+                                                         .collect(Collectors.toList());
+      if (nonPermittedResources.size() != 0) {
+        throwAccessDeniedError(nonPermittedResources);
+      }
     }
   }
 
