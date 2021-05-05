@@ -102,7 +102,7 @@ modules = [
     "//860-orchestration-visualization",
     "//861-cg-orchestration-states",
     "//870-cg-orchestration",
-    "//870-cg-yaml-beans",
+    "//870-cg-yaml",
     "//870-orchestration",
     "//870-yaml-beans",
     "//871-cg-beans",

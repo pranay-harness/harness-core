@@ -1,8 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.iterator.PersistentRegularIterable;
@@ -17,7 +21,6 @@ import io.harness.validation.Update;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,8 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -52,6 +53,8 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
+@TargetModule(_871_CG_BEANS)
+@OwnedBy(CDP)
 public abstract class InfrastructureMapping
     extends Base implements EncryptableSetting, PersistentRegularIterable, NameAccess, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -434,40 +437,6 @@ public abstract class InfrastructureMapping
 
   public String getDisplayName() {
     return isNotEmpty(displayName) ? displayName : name;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends BaseEntityYaml {
-    private String serviceName;
-    private String infraMappingType;
-    private String deploymentType;
-    private Map<String, Object> blueprints;
-
-    public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion);
-      this.serviceName = serviceName;
-      this.infraMappingType = infraMappingType;
-      this.deploymentType = deploymentType;
-      this.blueprints = blueprints;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class YamlWithComputeProvider extends Yaml {
-    private String computeProviderType;
-    private String computeProviderName;
-
-    public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, blueprints);
-      this.computeProviderType = computeProviderType;
-      this.computeProviderName = computeProviderName;
-    }
   }
 
   protected List<String> getList(Object input) {

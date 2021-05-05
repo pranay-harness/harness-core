@@ -1,7 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.joor.Reflect.on;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 
@@ -22,6 +27,8 @@ import java.util.List;
 /**
  * The enum Infra mapping type.
  */
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public enum InfrastructureMappingType implements InfrastructureMappingDescriptor {
   /**
    * Physical data center ssh infra mapping type.

@@ -176,7 +176,7 @@ aeriform("//870-cg-orchestration:module")
 
 aeriform("//870-cg-orchestration:tests")
 
-aeriform("//870-cg-yaml-beans:module")
+aeriform("//870-cg-yaml:module")
 
 aeriform("//870-orchestration:module")
 

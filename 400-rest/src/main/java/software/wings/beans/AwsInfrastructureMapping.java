@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -9,12 +10,12 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
 import software.wings.annotation.Blueprint;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.AwsInstanceFilter.Tag.TagBuilder;
@@ -22,19 +23,15 @@ import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.Utils;
 
-import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -47,6 +44,7 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonTypeName("AWS_SSH")
 @FieldNameConstants(innerTypeName = "AwsInfrastructureMappingKeys")
 @OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public class AwsInfrastructureMapping extends InfrastructureMapping {
   private String restrictionType;
   private String restrictionExpression;
@@ -244,7 +242,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   @JsonPropertyOrder({"type", "harnessApiVersion", "connectionType"})
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
+  public static final class Yaml extends YamlWithComputeProvider {
     // maps to restrictionType
     private String restrictions;
     // maps to restrictionExpression
@@ -600,24 +598,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     public Map<String, String> getData(String appId, Map<String, String> params) {
       return Arrays.stream(RestrictionType.values())
           .collect(toMap(RestrictionType::name, RestrictionType::getDisplayName));
-    }
-  }
-
-  /**
-   * The type Aws region data provider.
-   */
-  public static class AwsRegionDataProvider implements DataProvider {
-    @Inject private MainConfiguration mainConfiguration;
-
-    @Override
-    public Map<String, String> getData(String appId, Map<String, String> params) {
-      return Arrays.stream(Regions.values())
-          .filter(regions -> regions != Regions.GovCloud)
-          .collect(toMap(Regions::getName,
-              regions
-              -> Optional.ofNullable(mainConfiguration.getAwsRegionIdToName())
-                     .orElse(ImmutableMap.of(regions.getName(), regions.getName()))
-                     .get(regions.getName())));
     }
   }
 

@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
@@ -11,6 +14,8 @@ import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderT
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.api.DeploymentType;
@@ -27,6 +32,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @Builder
+@TargetModule(_871_CG_BEANS)
+@OwnedBy(CDP)
 public class InfrastructureMappingBlueprint {
   public static final String CLOUD_PROVIDER_TYPE_KEY = "cloudProviderType";
   public static final String DEPLOYMENT_TYPE_KEY = "deploymentType";
