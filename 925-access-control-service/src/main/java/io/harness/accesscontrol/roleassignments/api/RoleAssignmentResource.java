@@ -9,6 +9,7 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
 import static java.util.stream.Collectors.toList;
@@ -40,6 +41,7 @@ import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -282,6 +284,10 @@ public class RoleAssignmentResource {
         roleAssignmentService.get(identifier, scopeIdentifier).<InvalidRequestException>orElseThrow(() -> {
           throw new InvalidRequestException("Invalid Role Assignment");
         });
+    if (roleAssignment.isManaged()) {
+      throw new InvalidRequestException(
+          "Cannot create a managed role assignment.", INVALID_REQUEST, WingsException.USER);
+    }
     checkPermission(harnessScopeParams, roleAssignment);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       RoleAssignment deletedRoleAssignment =
