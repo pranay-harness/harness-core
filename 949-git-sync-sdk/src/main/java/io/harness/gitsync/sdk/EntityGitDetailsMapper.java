@@ -17,7 +17,8 @@ public class EntityGitDetailsMapper {
         .branch(gitSyncableEntity.getBranch())
         .objectId(gitSyncableEntity.getObjectIdOfYaml())
         .repoIdentifier(gitSyncableEntity.getYamlGitConfigRef())
+        .rootFolder(gitSyncableEntity.getRootFolder())
+        .filePath(gitSyncableEntity.getFilePath())
         .build();
-    // todo(abhinav): add file path and folder path
   }
 }
