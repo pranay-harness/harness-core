@@ -1,7 +1,7 @@
 package io.harness.service.instancesyncperpetualtask;
 
+import io.harness.dto.DeploymentSummary;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
-import io.harness.entity.DeploymentSummary;
 
 public interface InstanceSyncPerpetualTaskService {
   void createPerpetualTasks(InfrastructureMapping infrastructureMapping);

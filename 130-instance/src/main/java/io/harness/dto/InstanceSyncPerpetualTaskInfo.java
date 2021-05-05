@@ -1,5 +1,7 @@
 package io.harness.dto;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAccess;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "InstanceSyncPerpetualTaskInfoKeys")
 @Entity(value = "instanceSyncPerpetualTasksInfo", noClassnameStored = true)
+@OwnedBy(HarnessTeam.DX)
 public class InstanceSyncPerpetualTaskInfo implements PersistentEntity, UuidAware, UuidAccess, AccountAccess,
                                                       CreatedAtAccess, CreatedAtAware, UpdatedAtAware, UpdatedAtAccess {
   @Id String uuid;

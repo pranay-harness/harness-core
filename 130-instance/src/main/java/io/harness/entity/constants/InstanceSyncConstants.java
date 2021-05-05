@@ -1,5 +1,9 @@
 package io.harness.entity.constants;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.DX)
 public final class InstanceSyncConstants {
   private InstanceSyncConstants() {}
 

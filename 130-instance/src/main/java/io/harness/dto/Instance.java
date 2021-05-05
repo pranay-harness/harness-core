@@ -1,5 +1,7 @@
 package io.harness.dto;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.dto.instanceinfo.InstanceInfo;
 
@@ -12,12 +14,16 @@ import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
+@OwnedBy(HarnessTeam.DX)
 public class Instance {
   public static final String ACCOUNT_ID_FIELD = "accountId";
   public static final String CREATED_AT_FIELD = "createdAt";
   public static final String IS_DELETED_FIELD = "isDeleted";
   public static final String DELETED_AT_FIELD = "deletedAt";
 
+  private String accountId;
+  private String orgId;
+  private String projectId;
   @NotEmpty private InstanceType instanceType;
   private String infrastructureMappingId;
   private HostInstanceKey hostInstanceKey;
@@ -28,7 +34,7 @@ public class Instance {
   private String envId;
   private String envName;
   private EnvironmentType envType;
-  private String accountId;
+
   private String serviceId;
   private String serviceName;
   private String appName;

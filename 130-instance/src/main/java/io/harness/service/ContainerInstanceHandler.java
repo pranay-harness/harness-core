@@ -2,10 +2,10 @@ package io.harness.service;
 
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.dto.DeploymentSummary;
+import io.harness.dto.deploymentinfo.OnDemandRollbackInfo;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
-import io.harness.entity.DeploymentSummary;
 import io.harness.entity.InstanceSyncFlowType;
-import io.harness.entity.deploymentinfo.OnDemandRollbackInfo;
 
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.service.impl.ContainerMetadata;

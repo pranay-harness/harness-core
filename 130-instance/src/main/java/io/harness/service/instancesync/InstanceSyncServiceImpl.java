@@ -8,11 +8,11 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.dto.DeploymentSummary;
+import io.harness.dto.deploymentinfo.OnDemandRollbackInfo;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.DeploymentEvent;
-import io.harness.entity.DeploymentSummary;
 import io.harness.entity.InstanceSyncFlowType;
-import io.harness.entity.deploymentinfo.OnDemandRollbackInfo;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;

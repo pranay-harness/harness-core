@@ -1,7 +1,9 @@
-package io.harness.entity;
+package io.harness.dto;
 
-import io.harness.entity.deploymentinfo.DeploymentInfo;
-import io.harness.entity.deploymentinfo.OnDemandRollbackInfo;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.dto.deploymentinfo.DeploymentInfo;
+import io.harness.dto.deploymentinfo.OnDemandRollbackInfo;
 
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +12,11 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @NoArgsConstructor
+@OwnedBy(HarnessTeam.DX)
 public class DeploymentSummary {
   private String accountId;
+  private String orgId;
+  private String projectId;
   private String pipelineExecutionId;
   private String pipelineExecutionName;
   private String artifactId;
@@ -22,7 +27,4 @@ public class DeploymentSummary {
   private String infrastructureMappingId;
   private long deployedAt;
   private DeploymentInfo deploymentInfo;
-
-  private boolean isRollback;
-  private OnDemandRollbackInfo onDemandRollbackInfo;
 }

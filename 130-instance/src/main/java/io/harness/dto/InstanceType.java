@@ -1,5 +1,9 @@
 package io.harness.dto;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.DX)
 public enum InstanceType {
   PHYSICAL_HOST_INSTANCE,
   EC2_CLOUD_INSTANCE,
