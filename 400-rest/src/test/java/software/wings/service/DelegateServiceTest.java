@@ -831,8 +831,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
 
     DelegateSizeDetails sizeDetails = DelegateSizeDetails.builder()
-                                          .size(DelegateSize.EXTRA_SMALL)
-                                          .label("Extra Small")
+                                          .size(DelegateSize.LAPTOP)
+                                          .label("Laptop")
                                           .replicas(1)
                                           .taskLimit(50)
                                           .cpu(0.5)
@@ -842,7 +842,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
                                 .sessionIdentifier("sessionId")
-                                .delegateSize(DelegateSize.EXTRA_SMALL.name())
+                                .delegateSize(DelegateSize.LAPTOP.name())
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
                                 .delegateType(DOCKER_DELEGATE)
@@ -3101,8 +3101,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateSizeDetails).hasSize(4);
     assertThat(delegateSizeDetails)
         .containsExactlyInAnyOrder(DelegateSizeDetails.builder()
-                                       .size(DelegateSize.EXTRA_SMALL)
-                                       .label("Extra Small")
+                                       .size(DelegateSize.LAPTOP)
+                                       .label("Laptop")
                                        .taskLimit(50)
                                        .replicas(1)
                                        .ram(1650)

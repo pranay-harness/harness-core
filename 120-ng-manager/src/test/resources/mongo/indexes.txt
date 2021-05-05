@@ -238,6 +238,7 @@ encryptedRecords {"name": "nextAwsToGcpKmsMigrationIteration_1", "background": t
 encryptedRecords {"name": "nextLocalToGcpKmsMigrationIteration_1", "background": true} {"nextLocalToGcpKmsMigrationIteration": 1}
 encryptedRecords {"name": "nextMigrationIteration_1", "background": true} {"nextMigrationIteration": 1}
 encryptedRecords {"name": "ngSecretManagerIdx", "background": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.secretManagerIdentifier": 1}
+encryptedRecords {"name": "ngSecretManagerTypeIdx", "background": true} {"accountId": 1, "type": 1, "createdAt": 1}
 encryptedRecords {"name": "parents_1", "background": true} {"parents": 1}
 encryptedRecords {"name": "path_1", "background": true} {"path": 1}
 entityActivity {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
@@ -591,8 +592,10 @@ secretChangeLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretManagerRuntimeParameters {"name": "executionId_1", "background": true} {"executionId": 1}
 secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}
 secretManagers {"name": "createdAt_1", "background": true} {"createdAt": 1}
+secretManagers {"name": "identifierCheckIdx", "background": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
 secretManagers {"name": "manuallyEnteredSecretEngineMigrationIteration_1", "background": true} {"manuallyEnteredSecretEngineMigrationIteration": 1}
 secretManagers {"name": "nextTokenRenewIteration_1", "background": true} {"nextTokenRenewIteration": 1}
+secretManagers {"name": "renewCheckIdx", "background": true} {"encryptionType": 1, "nextTokenRenewIteration": 1}
 secretManagers {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1, "encryptionType": 1, "ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
 secretUsageLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
 secretUsageLogs {"name": "appId_1", "background": true} {"appId": 1}

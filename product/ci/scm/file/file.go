@@ -128,10 +128,20 @@ func UpdateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 		Email: fileRequest.GetSignature().GetEmail(),
 	}
 	response, err := client.Contents.Update(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), inputParams)
+
 	if err != nil {
 		log.Errorw("UpdateFile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", fileRequest.GetBranch(), "sha", inputParams.Sha, "branch", inputParams.Branch,
 			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+		// this is a hard error with no response
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from the git provider, e.g. the git tree has moved on.
+		out = &pb.UpdateFileResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+		return out, nil
 	}
 	log.Infow("UpdateFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", fileRequest.GetBranch(), "sha", inputParams.Sha, "branch", inputParams.Branch,
 		"elapsed_time_ms", utils.TimeSince(start))

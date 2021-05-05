@@ -79,8 +79,8 @@ public class PipelineInfrastructureVisitorHelper implements ConfigValidator, Ent
     Set<EntityDetailProtoDTO> result = new HashSet<>();
     if (pipelineInfrastructure.getEnvironment() != null) {
       EnvironmentYaml environmentYaml = pipelineInfrastructure.getEnvironment();
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.ENVIRONMENT_REF;
+      String fullQualifiedDomainName = VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR
+          + YamlTypes.ENVIRONMENT_YAML + PATH_CONNECTOR + "identifier";
       Map<String, String> metadata =
           new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
       metadata.put("new", "true");

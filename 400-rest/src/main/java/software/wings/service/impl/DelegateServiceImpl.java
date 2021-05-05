@@ -389,7 +389,7 @@ public class DelegateServiceImpl implements DelegateService {
   private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
 
   private static final int WATCHER_RAM_IN_MB = 500;
-  // Calculated as 30% of total RAM for delegate + watcher, in EXTRA_SMALL delegate which was 1250 (500 watcher + 250
+  // Calculated as 30% of total RAM for delegate + watcher, in LAPTOP delegate which was 1250 (500 watcher + 250
   // base delegate memory + 250 to handle 50 tasks + 250 for ramp down for old version delegate during release)
   private static final int POD_BASE_RAM_IN_MB = 400;
 

@@ -1,8 +1,8 @@
 {
   "availableSizes" : [
     {
-      "size" : "EXTRA_SMALL",
-      "label" : "Extra Small",
+      "size" : "LAPTOP",
+      "label" : "Laptop",
       "taskLimit" : "50",
       "replicas" : "1",
       "ram" : "1650",
