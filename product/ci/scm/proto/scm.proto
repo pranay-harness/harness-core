@@ -287,6 +287,7 @@ message CreateFileResponse {
 
 message UpdateFileResponse {
   int32 status = 1;
+  string error = 2;
 }
 
 message FileModifyRequest {

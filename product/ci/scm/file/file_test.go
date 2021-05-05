@@ -158,6 +158,46 @@ func TestUpdateFile(t *testing.T) {
 	assert.Equal(t, got.Status, int32(200), "status matches")
 }
 
+func TestUpdateFileNoMatch(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(409)
+		content, _ := ioutil.ReadFile("testdata/FileUpdateNoMatch.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+
+	in := &pb.FileModifyRequest{
+		Slug:    "tphoney/scm-test",
+		Path:    "jello",
+		Message: "message",
+		Branch:  "main",
+		Content: "data",
+		BlobId:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
+		Signature: &pb.Signature{
+			Name:  "tp honey",
+			Email: "tp@harness.io",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := UpdateFile(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, got.Status, int32(409), "status matches")
+	assert.Equal(t, got.Error, "newfile does not match ff9b1a04-7828-4288-8135-b331a38e9fac", "error matches")
+}
+
 func TestDeleteFile(t *testing.T) {
 	in := &pb.DeleteFileRequest{
 		Slug: "tphoney/scm-test",
