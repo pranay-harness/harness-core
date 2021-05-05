@@ -16,9 +16,9 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(HarnessTeam.CF)
 @Value
 @Builder
-@TypeAlias("featureUpdateStepParameters")
-public class FeatureUpdateStepParameters implements SpecParameters {
-  String type = "FeatureUpdate";
+@TypeAlias("flagConfigurationStepParameters")
+public class FlagConfigurationStepParameters implements SpecParameters {
+  String type = "FlagConfiguration";
   String identifier;
   String name;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> feature;

@@ -30,9 +30,9 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@JsonTypeName("Feature")
-@TypeAlias("featureStageConfig")
-public class FeatureStageConfig implements StageInfoConfig, Visitable {
+@JsonTypeName("FeatureFlag")
+@TypeAlias("featureFlagStageConfig")
+public class FeatureFlagStageConfig implements StageInfoConfig, Visitable {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)

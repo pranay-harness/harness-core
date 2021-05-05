@@ -8,9 +8,9 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.CF)
-public class FeatureUpdatePlanCreator extends GenericStepPMSPlanCreator {
+public class FlagConfigurationPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet("FeatureUpdate");
+    return Sets.newHashSet("FlagConfiguration");
   }
 }

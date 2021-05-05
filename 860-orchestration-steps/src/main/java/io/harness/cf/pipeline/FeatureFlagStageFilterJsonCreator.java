@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.CF)
-public class FeatureStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
+public class FeatureFlagStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
   @Override
   public Class<StageElementConfig> getFieldClass() {
     return StageElementConfig.class;
@@ -21,7 +21,7 @@ public class FeatureStageFilterJsonCreator implements FilterJsonCreator<StageEle
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("stage", Collections.singleton("Feature"));
+    return Collections.singletonMap("stage", Collections.singleton("FeatureFlag"));
   }
 
   @Override
