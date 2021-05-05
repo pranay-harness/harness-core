@@ -306,7 +306,8 @@ public enum TaskType {
   HTTP_HELM_CONNECTIVITY_TASK(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
   NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG),
   TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG, "Terraform Task"),
-  SCM_PUSH_TASK(TaskGroup.GIT, "SCM Push Task");
+  SCM_PUSH_TASK(TaskGroup.GIT, "SCM Push Task"),
+  SCM_FILTER_QUERY_TASK(TaskGroup.GIT, "SCM Filter Query Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;
