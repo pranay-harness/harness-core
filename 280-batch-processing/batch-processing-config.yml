@@ -4,7 +4,6 @@ harness-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 50
-
 events-mongo:
   uri: mongodb://localhost:27017/events
   connectTimeout: 30000
