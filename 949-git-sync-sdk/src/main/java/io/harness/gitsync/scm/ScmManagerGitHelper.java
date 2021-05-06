@@ -38,7 +38,8 @@ public class ScmManagerGitHelper implements ScmGitHelper {
     switch (changeType) {
       case ADD:
         final CreateFileResponse createFileResponse = doScmCreateFile(yaml, gitBranchInfo, infoForPush);
-        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createFileResponse.getStatus());
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+            createFileResponse.getStatus(), createFileResponse.getError());
         return ScmCreateFileResponse.builder()
             .folderPath(infoForPush.getFolderPath())
             .filePath(infoForPush.getFilePath())
@@ -52,7 +53,8 @@ public class ScmManagerGitHelper implements ScmGitHelper {
             .build();
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
-        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(deleteFileResponse.getStatus());
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+            deleteFileResponse.getStatus(), deleteFileResponse.getError());
         return ScmDeleteFileResponse.builder()
             .accountIdentifier(infoForPush.getAccountId())
             .orgIdentifier(infoForPush.getOrgIdentifier())
@@ -67,7 +69,8 @@ public class ScmManagerGitHelper implements ScmGitHelper {
         throw new NotImplementedException("Not implemented");
       case MODIFY:
         final UpdateFileResponse updateFileResponse = doScmUpdateFile(yaml, gitBranchInfo, infoForPush);
-        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(updateFileResponse.getStatus());
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+            updateFileResponse.getStatus(), updateFileResponse.getError());
         return ScmUpdateFileResponse.builder()
             .folderPath(infoForPush.getFolderPath())
             .filePath(infoForPush.getFilePath())

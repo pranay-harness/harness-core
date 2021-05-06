@@ -89,7 +89,7 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
   }
 
   GitFileContent validateAndGetGitFileContent(FileContent fileContent) {
-    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(fileContent.getStatus());
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(fileContent.getStatus(), fileContent.getError());
     return GitFileContent.builder().content(fileContent.getContent()).objectId(fileContent.getBlobId()).build();
   }
 }
