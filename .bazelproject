@@ -24,6 +24,7 @@ directories:
   340-ce-nextgen
   350-event-server
   360-cg-manager
+  374-ceng-graphql
   375-ce-graphql
   380-cg-graphql
   390-db-migration
