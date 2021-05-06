@@ -7,9 +7,13 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNEC
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.retry.MethodExecutionHelper;
+import io.harness.annotations.retry.RetryOnException;
+import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagModule;
+import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ProviderModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.AbstractMongoModule;
@@ -35,6 +39,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.Map;
@@ -106,6 +111,8 @@ public class CENextGenModule extends AbstractModule {
     bind(DSLContext.class)
         .toInstance(new DSLContextService(configuration.getTimeScaleDBConfig()).getDefaultDSLContext());
 
+    bindRetryOnExceptionInterceptor();
+
     install(new AbstractModule() {
       @Override
       protected void configure() {
@@ -122,6 +129,13 @@ public class CENextGenModule extends AbstractModule {
         });
       }
     });
+  }
+
+  private void bindRetryOnExceptionInterceptor() {
+    bind(MethodExecutionHelper.class).asEagerSingleton();
+    ProviderMethodInterceptor retryOnExceptionInterceptor =
+        new ProviderMethodInterceptor(getProvider(RetryOnExceptionInterceptor.class));
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
   }
 
   @Provides
