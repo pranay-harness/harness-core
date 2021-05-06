@@ -18,15 +18,15 @@ if [[ "" != "$MONGO_URI" ]]; then
 fi
 
 if [[ "" != "$MONGO_SSL_CONFIG" ]]; then
-  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoSSLEnabled "$MONGO_SSL_CONFIG"
+  yq write -i /opt/harness/verification-config.yml mongo.mongoSSLConfig.mongoSSLEnabled "$MONGO_SSL_CONFIG"
 fi
 
 if [[ "" != "$MONGO_SSL_CA_TRUST_STORE_PATH" ]]; then
-  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoTrustStorePath "$MONGO_SSL_CA_TRUST_STORE_PATH"
+  yq write -i /opt/harness/verification-config.yml mongo.mongoSSLConfig.mongoTrustStorePath "$MONGO_SSL_CA_TRUST_STORE_PATH"
 fi
 
 if [[ "" != "$MONGO_SSL_CA_TRUST_STORE_PASSWORD" ]]; then
-  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoTrustStorePassword "$MONGO_SSL_CA_TRUST_STORE_PASSWORD"
+  yq write -i /opt/harness/verification-config.yml mongo.mongoSSLConfig.mongoTrustStorePassword "$MONGO_SSL_CA_TRUST_STORE_PASSWORD"
 fi
 
 if [[ "" != "$MANAGER_URL" ]]; then
