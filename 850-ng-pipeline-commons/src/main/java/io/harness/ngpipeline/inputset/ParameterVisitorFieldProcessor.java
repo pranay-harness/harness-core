@@ -1,8 +1,11 @@
 package io.harness.ngpipeline.inputset;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.registries.visitorfield.VisitableFieldProcessor;
 
+@ToBeDeleted
+@Deprecated
 public class ParameterVisitorFieldProcessor implements VisitableFieldProcessor<ParameterField<?>> {
   @Override
   public String getExpressionFieldValue(ParameterField<?> actualField) {

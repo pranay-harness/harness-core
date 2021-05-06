@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.beans.yaml.serializer;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
+@ToBeDeleted
+@Deprecated
 public class InputSetConfigSerializer extends JsonSerializer<InputSetConfig> {
   @Override
   public void serializeWithType(InputSetConfig inputSetConfig, JsonGenerator jsonGenerator,
