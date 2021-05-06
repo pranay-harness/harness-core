@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 import static io.harness.yaml.core.LevelNodeQualifierName.PATH_CONNECTOR;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
@@ -23,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(PIPELINE)
+@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public abstract class GenericStepPMSFilterJsonCreator implements FilterJsonCreator<StepElementConfig> {
   public abstract Set<String> getSupportedStepTypes();
 

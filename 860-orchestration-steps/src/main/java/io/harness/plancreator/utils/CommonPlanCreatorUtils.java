@@ -2,7 +2,9 @@ package io.harness.plancreator.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
@@ -16,6 +18,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(PIPELINE)
+@TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
 public class CommonPlanCreatorUtils {
   public PlanNode getStepsPlanNode(String nodeUuid, String childNodeId, String logMessage) {
     StepParameters stepParameters =

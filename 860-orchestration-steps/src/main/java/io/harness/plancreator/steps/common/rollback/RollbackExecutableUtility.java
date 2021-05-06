@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.advisers.rollback.OnFailRollbackOutput;
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.advisers.rollback.RollbackStrategy;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -19,6 +21,7 @@ import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
 @UtilityClass
+@TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
 public class RollbackExecutableUtility {
   private final String ROLLBACK = "ROLLBACK";
   public void publishRollbackInfo(Ambiance ambiance, StepElementParameters stepParameters, Map<String, String> metadata,
