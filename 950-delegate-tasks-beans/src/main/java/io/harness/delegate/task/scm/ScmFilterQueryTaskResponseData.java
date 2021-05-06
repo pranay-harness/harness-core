@@ -13,5 +13,5 @@ import lombok.Data;
 public class ScmFilterQueryTaskResponseData implements DelegateResponseData {
   // TRUE if for each condition there exists a file that matches it, FALSE if there exists a
   // condition where there does not exist a file that matches it
-  boolean conditionResponse;
+  boolean matched;
 }
