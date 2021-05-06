@@ -6,6 +6,7 @@ import io.harness.beans.KeyValuePair;
 import io.harness.encryption.Scope;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ArtifactoryServerException;
+import io.harness.exception.ContextException;
 import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GeneralException;
@@ -55,6 +56,7 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(KryoHandlerNotFoundException.class, 31013);
     kryo.register(ExceptionHandlerNotFoundException.class, 31014);
     kryo.register(ImageNotFoundException.class, 31015);
+    kryo.register(ContextException.class, 31016);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);
