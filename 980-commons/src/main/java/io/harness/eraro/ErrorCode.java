@@ -514,7 +514,8 @@ public enum ErrorCode {
   SCM_NOT_FOUND_ERROR,
   SCM_CONFLICT_ERROR,
   SCM_UNPROCESSABLE_ENTITY,
-  DATA;
+  DATA,
+  CONTEXT;
 
   private Status status = BAD_REQUEST;
   private String description;
