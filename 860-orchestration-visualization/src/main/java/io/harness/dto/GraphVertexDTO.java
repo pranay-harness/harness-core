@@ -50,6 +50,7 @@ public class GraphVertexDTO {
   List<String> retryIds;
 
   List<UnitProgress> unitProgresses;
+  Document progressData;
 
   // skip
   SkipType skipType;

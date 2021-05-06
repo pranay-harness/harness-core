@@ -70,6 +70,22 @@ public class PipelineRbacHelperTest extends CategoryTest {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
+  public void testCheckRuntimePermissionsWithEmptyPrincipal() {
+    List<EntityDetail> entityDetails = getEntityDetailsWithoutMetadata();
+    when(entityDetailProtoToRestMapper.createEntityDetailsDTO(Mockito.anyList())).thenReturn(entityDetails);
+    Ambiance ambiance =
+        Ambiance.newBuilder()
+            .setMetadata(
+                ExecutionMetadata.newBuilder().setPrincipalInfo(ExecutionPrincipalInfo.newBuilder().build()).build())
+            .build();
+    pipelineRbacHelper.checkRuntimePermissions(ambiance, new HashSet<>());
+
+    verify(entityDetailProtoToRestMapper).createEntityDetailsDTO(Mockito.anyList());
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
   public void testCheckRuntimePermissions() {
     List<EntityDetail> entityDetails = getEntityDetailsWithoutMetadata();
     when(entityDetailProtoToRestMapper.createEntityDetailsDTO(Mockito.anyList())).thenReturn(entityDetails);

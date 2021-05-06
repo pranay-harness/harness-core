@@ -38,5 +38,6 @@ public class GraphVertexDTOConverter {
              .skipType(graphVertex.getSkipType())
              .outcomes(graphVertex.getOutcomeDocuments())
              .unitProgresses(graphVertex.getUnitProgresses())
+             .progressData(graphVertex.getProgressData())
              .build();
 }

@@ -6,7 +6,6 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -83,7 +82,7 @@ public class AggregateUserGroupServiceImplTest extends CategoryTest {
         .when(userGroupService)
         .list(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, null, getPageRequest(pageRequest));
 
-    doReturn(userInfoList).when(ngUserService).getUsersByIds(any(), anyString());
+    doReturn(userInfoList).when(ngUserService).listCurrentGenUsers(any(), any());
 
     Call<RestResponse<SecretManagerConfigDTO>> request = mock(Call.class);
     doReturn(request)

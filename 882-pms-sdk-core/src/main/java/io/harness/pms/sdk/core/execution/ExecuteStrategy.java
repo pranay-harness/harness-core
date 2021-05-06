@@ -14,4 +14,8 @@ public interface ExecuteStrategy {
   }
 
   <T extends Step> T extractStep(NodeExecutionProto proto);
+
+  default void progress(ProgressPackage progressPackage) {
+    throw new UnsupportedOperationException();
+  };
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -78,7 +79,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
@@ -183,7 +183,7 @@ import org.mongodb.morphia.query.UpdateResults;
  *
  * @author Rishi
  */
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(CDC)
 @Listeners(GeneralNotifyEventListener.class)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceTest extends WingsBaseTest {
@@ -1219,8 +1219,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         "artifacts/expected_artifact_variables_continue_pipeline.json", new TypeReference<List<ArtifactVariable>>() {});
 
     verify(updateOperations).set(eq(WorkflowExecutionKeys.startTs), anyLong());
-    verify(updateOperations).set(eq(WorkflowExecutionKeys.artifacts), eq(expectedArtifacts));
     verify(updateOperations).set(eq(WorkflowExecutionKeys.executionArgs_artifact_variables), eq(expectedArtifactVars));
+    verify(updateOperations).set(eq(WorkflowExecutionKeys.artifacts), eq(expectedArtifacts));
     verify(updateOperations).set(eq(WorkflowExecutionKeys.executionArgs_artifacts), eq(expectedArtifacts));
   }
 
@@ -1327,6 +1327,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         APP_ID, WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.status, WorkflowExecutionKeys.envId);
   }
 
+  @Test
   @Owner(developers = {SRINIVAS})
   @Category(UnitTests.class)
   public void shouldFetchWorkflowExecutionWithoutProjectedFields() {

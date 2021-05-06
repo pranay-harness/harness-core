@@ -8,6 +8,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
+import io.harness.remote.client.RestClientExecutor;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -22,6 +23,7 @@ import lombok.AllArgsConstructor;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class SecretManagerClientServiceImpl implements SecretManagerClientService {
+  private final RestClientExecutor restClientExecutor;
   private final SecretManagerClient secretManagerClient;
 
   @Override
@@ -32,7 +34,7 @@ public class SecretManagerClientServiceImpl implements SecretManagerClientServic
                                     .projectIdentifier(ngAccess.getProjectIdentifier())
                                     .identifier(ngAccess.getIdentifier())
                                     .build();
-    return getResponse(secretManagerClient.getEncryptionDetails(
+    return restClientExecutor.getResponse(secretManagerClient.getEncryptionDetails(
         NGAccessWithEncryptionConsumer.builder().ngAccess(baseNGAccess).decryptableEntity(consumer).build()));
   }
 

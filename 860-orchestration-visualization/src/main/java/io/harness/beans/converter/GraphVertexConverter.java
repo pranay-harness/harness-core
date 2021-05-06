@@ -36,6 +36,7 @@ public class GraphVertexConverter {
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .unitProgresses(nodeExecution.getUnitProgresses())
+        .progressData(nodeExecution.getProgressData())
         .build();
   }
 
@@ -63,6 +64,7 @@ public class GraphVertexConverter {
         .skipType(nodeExecution.getNode().getSkipType())
         .outcomeDocuments(outcomes)
         .unitProgresses(nodeExecution.getUnitProgresses())
+        .progressData(nodeExecution.getProgressData())
         .build();
   }
 }

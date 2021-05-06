@@ -14,7 +14,9 @@ import io.harness.advisers.rollback.OnFailRollbackAdviser;
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.advisers.rollback.OnFailRollbackParameters.OnFailRollbackParametersBuilder;
 import io.harness.advisers.rollback.RollbackStrategy;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
@@ -79,6 +81,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(PIPELINE)
+@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
   @Inject protected KryoSerializer kryoSerializer;
 

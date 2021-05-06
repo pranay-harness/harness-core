@@ -1,7 +1,9 @@
 package io.harness.plancreator.execution;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.yaml.YamlNode;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -19,6 +21,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("executionElementConfig")
+// TODO (sahil) this needs to go to yaml commons right now as we have no module marking it for PMS commons
+@TargetModule(HarnessModule._884_PMS_COMMONS)
 public class ExecutionElementConfig {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })

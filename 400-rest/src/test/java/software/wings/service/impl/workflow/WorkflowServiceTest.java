@@ -18,6 +18,7 @@ import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -431,10 +432,10 @@ import org.mongodb.morphia.query.UpdateOperations;
  *
  * @author Rishi
  */
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 @OwnedBy(CDC)
 @Listeners(GeneralNotifyEventListener.class)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowServiceTest extends WingsBaseTest {
   private static final String CLONE = " - (clone)";
   private static String envId = generateUuid();
@@ -5093,6 +5094,48 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThatThrownBy(
         () -> workflowService.updateWorkflowPhase(savedWorkflow.getAppId(), savedWorkflow.getUuid(), workflowPhase))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetArtifactVariableDefaultArtifactForParameterizedSource() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifactVariables(
+        asList(ArtifactVariable.builder()
+                   .entityType(SERVICE)
+                   .entityId(SERVICE_ID)
+                   .name("art_srv")
+                   .value("art_stream1")
+                   .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                               .artifactStreamId(ARTIFACT_STREAM_ID)
+                                               .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                               .build())
+                   .build()));
+    executionArgs.setArtifacts(asList(anArtifact()
+                                          .withUuid("art1")
+                                          .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                          .withMetadata(Collections.singletonMap("buildNo", "1"))
+                                          .build(),
+        anArtifact().withUuid("art2").build(), anArtifact().withUuid("art3").build()));
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().executionArgs(executionArgs).build();
+    when(artifactService.get("art1"))
+        .thenReturn(anArtifact().withUuid("art1").withArtifactStreamId(ARTIFACT_STREAM_ID).build());
+    Artifact artifact = workflowService.getArtifactVariableDefaultArtifact(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId(SERVICE_ID)
+            .name("art_srv")
+            .value("art1")
+            .allowedList(Collections.singletonList(ARTIFACT_STREAM_ID))
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build(),
+        workflowExecution);
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getUuid()).isEqualTo("art1");
   }
 
   @Test

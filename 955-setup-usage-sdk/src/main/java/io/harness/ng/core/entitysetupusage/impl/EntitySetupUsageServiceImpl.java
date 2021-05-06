@@ -59,8 +59,8 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
   @Override
   public Page<EntitySetupUsageDTO> listAllEntityUsage(int page, int size, String accountIdentifier,
       String referredEntityFQN, EntityType referredEntityType, String searchTerm) {
-    Criteria criteria =
-        entitySetupUsageFilterHelper.createCriteriaFromEntityFilter(accountIdentifier, referredEntityFQN, searchTerm);
+    Criteria criteria = entitySetupUsageFilterHelper.createCriteriaFromEntityFilter(
+        accountIdentifier, referredEntityFQN, referredEntityType, searchTerm);
     Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, EntitySetupUsageKeys.createdAt));
     Page<EntitySetupUsage> entityReferences = entityReferenceRepository.findAll(criteria, pageable);
     return entityReferences.map(entityReference -> setupUsageEntityToDTO.createEntityReferenceDTO(entityReference));
@@ -81,8 +81,9 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
 
   @Override
   public Boolean isEntityReferenced(String accountIdentifier, String referredEntityFQN, EntityType referredEntityType) {
-    return entityReferenceRepository.existsByReferredEntityFQNAndReferredEntityTypeAndAccountIdentifier(
-        referredEntityFQN, referredEntityType.toString(), accountIdentifier);
+    Criteria criteria = entitySetupUsageFilterHelper.createCriteriaToCheckWhetherThisEntityIsReferred(
+        accountIdentifier, referredEntityFQN, referredEntityType);
+    return entityReferenceRepository.exists(criteria);
   }
 
   @Override
@@ -116,22 +117,13 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
 
   private Boolean deleteAllReferredByEntity(String accountIdentifier, String referredByEntityFQN,
       EntityType referredByEntityType, EntityType referredEntityType) {
+    // todo @deepak Change this function to take branch into consideration in next pr
     long numberOfRecordsDeleted = 0;
     numberOfRecordsDeleted =
         entityReferenceRepository
             .deleteAllByAccountIdentifierAndReferredByEntityFQNAndReferredByEntityTypeAndReferredEntityType(
                 accountIdentifier, referredByEntityFQN, referredByEntityType.toString(), referredEntityType.toString());
     log.info("Deleted {} records for the referredBy entity {}", numberOfRecordsDeleted, referredByEntityFQN);
-    return numberOfRecordsDeleted > 0;
-  }
-
-  @Override
-  public Boolean deleteAllReferredByEntityRecords(
-      String accountIdentifier, String referredByEntityFQN, EntityType referredByEntityType) {
-    long numberOfRecordsDeleted = 0;
-    numberOfRecordsDeleted =
-        entityReferenceRepository.deleteByReferredByEntityFQNAndReferredByEntityTypeAndAccountIdentifier(
-            referredByEntityFQN, referredByEntityType.toString(), accountIdentifier);
     return numberOfRecordsDeleted > 0;
   }
 

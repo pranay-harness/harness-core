@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -79,6 +80,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@ToBeDeleted
+@Deprecated
 public class InputSetResource {
   private final InputSetEntityService inputSetEntityService;
   private final NGPipelineService ngPipelineService;

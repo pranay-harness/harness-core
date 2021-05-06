@@ -78,6 +78,12 @@ public class VerificationTestRule extends WingsRule {
       DistributedLockImplementation distributedLockImplementation() {
         return NOOP;
       }
+
+      @Provides
+      @Singleton
+      MongoConfig mongoConfig() {
+        return MongoConfig.builder().build();
+      }
     });
     return modules;
   }

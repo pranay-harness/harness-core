@@ -131,6 +131,10 @@ if [[ "" != "$PIPELINE_SERVICE_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE pipelineServiceBaseUrl "$PIPELINE_SERVICE_BASE_URL"
 fi
 
+if [[ "" != "$PMS_API_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE pmsApiBaseUrl "$PMS_API_BASE_URL"
+fi
+
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq delete -i $CONFIG_FILE logging.appenders[0]
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
@@ -209,3 +213,4 @@ replace_key_value logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE
 
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
+replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"

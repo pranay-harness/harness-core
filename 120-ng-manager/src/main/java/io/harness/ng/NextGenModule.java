@@ -17,7 +17,6 @@ import io.harness.Microservice;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
-import io.harness.OrchestrationVisualizationModule;
 import io.harness.YamlBaseUrlServiceImpl;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.accesscontrol.AccessControlAdminClientModule;
@@ -412,7 +411,6 @@ public class NextGenModule extends AbstractModule {
     });
     install(OrchestrationModule.getInstance(getOrchestrationConfig()));
     install(OrchestrationStepsModule.getInstance(null));
-    install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
     install(PersistentLockModule.getInstance());
