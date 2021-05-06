@@ -93,7 +93,7 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     List<UserInfo> users = new ArrayList<>();
     try {
       users =
-          RestClientUtils.getResponse(userClient.listUsers(UserFilterNG.builder().userIds(userIds).build(), accountId));
+          RestClientUtils.getResponse(userClient.listUsers(accountId, UserFilterNG.builder().userIds(userIds).build()));
     } catch (Exception exception) {
       log.error("Failure while fetching emails of users from userIds", exception);
     }

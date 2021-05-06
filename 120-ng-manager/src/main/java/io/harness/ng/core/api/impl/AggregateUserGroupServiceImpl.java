@@ -26,9 +26,10 @@ import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.invites.dto.UserMetadataDTO;
-import io.harness.ng.core.user.remote.mapper.UserSearchMapper;
+import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.utils.UserGroupMapper;
+import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
 
 import com.google.common.collect.Lists;
@@ -85,16 +86,16 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
                                        .distinct()
                                        .collect(Collectors.toList());
 
-    Map<String, UserMetadataDTO> userSearchDTOMap =
-        ngUserService.getUsersByIds(userIdentifiers, accountIdentifier)
+    Map<String, UserMetadataDTO> userMetadataMap =
+        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIdentifiers).build())
             .stream()
-            .map(UserSearchMapper::writeDTO)
+            .map(UserMetadataMapper::writeDTO)
             .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return PageUtils.getNGPageResponse(userGroupPageResponse.map(userGroup -> {
       List<UserMetadataDTO> users = getLastNElementsReversed(userGroup.getUsers(), userSize)
                                         .stream()
-                                        .map(userSearchDTOMap::get)
+                                        .map(userMetadataMap::get)
                                         .filter(Objects::nonNull)
                                         .collect(toList());
       return UserGroupAggregateDTO.builder()
@@ -142,16 +143,18 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
                                       .filter(Objects::nonNull)
                                       .collect(Collectors.toSet());
 
-    Map<String, UserMetadataDTO> userSearchDTOMap =
-        ngUserService.getUsersByIds(new ArrayList<>(userIdentifiers), accountIdentifier)
+    Map<String, UserMetadataDTO> userMetadataMap =
+        ngUserService
+            .listCurrentGenUsers(
+                accountIdentifier, UserFilterNG.builder().userIds(new ArrayList<>(userIdentifiers)).build())
             .stream()
-            .map(UserSearchMapper::writeDTO)
+            .map(UserMetadataMapper::writeDTO)
             .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return userGroups.stream()
         .map(userGroup -> {
           List<UserMetadataDTO> users =
-              userGroup.getUsers().stream().map(userSearchDTOMap::get).filter(Objects::nonNull).collect(toList());
+              userGroup.getUsers().stream().map(userMetadataMap::get).filter(Objects::nonNull).collect(toList());
           return UserGroupAggregateDTO.builder()
               .userGroupDTO(UserGroupMapper.toDTO(userGroup))
               .roleAssignmentsMetadataDTO(userGroupRoleAssignmentsMap.get(userGroup.getIdentifier()))
@@ -180,10 +183,11 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     List<String> userIdentifiers =
         userGroupOpt.get().getUsers() == null ? new ArrayList<>() : userGroupOpt.get().getUsers();
 
-    List<UserMetadataDTO> users = ngUserService.getUsersByIds(userIdentifiers, accountIdentifier)
-                                      .stream()
-                                      .map(UserSearchMapper::writeDTO)
-                                      .collect(toList());
+    List<UserMetadataDTO> users =
+        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIdentifiers).build())
+            .stream()
+            .map(UserMetadataMapper::writeDTO)
+            .collect(toList());
 
     return UserGroupAggregateDTO.builder()
         .userGroupDTO(UserGroupMapper.toDTO(userGroupOpt.get()))
