@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
 import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
+import static io.harness.pcf.model.PcfConstants.AUTOSCALING_APPS_PLUGIN_NAME;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
 import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
 import static io.harness.pcf.model.PcfConstants.CF_DOCKER_CREDENTIALS;
@@ -52,7 +53,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.cfcli.CfCliCommandResolver;
 import io.harness.pcf.cfcli.CfCliCommandType;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -923,7 +926,7 @@ public class PivotalClientTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCreateExecutorForAutoscalarPluginCheck() throws Exception {
+  public void testCreateExecutorForAutoscalarPluginCheck() {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
         PcfAppAutoscalarRequestData.builder()
             .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
@@ -931,9 +934,11 @@ public class PivotalClientTest extends CategoryTest {
             .build());
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
+    String command =
+        CfCliCommandResolver.getCheckingPluginsCliCommand("cf", CfCliVersion.V6, AUTOSCALING_APPS_PLUGIN_NAME);
 
     ProcessExecutor processExecutor =
-        PcfUtils.createExecutorForAutoscalarPluginCheck(appAutoscalarEnvMapForCustomPlugin);
+        PcfUtils.createExecutorForAutoscalarPluginCheck(command, appAutoscalarEnvMapForCustomPlugin);
 
     assertThat(processExecutor.getCommand()).containsExactly("/bin/bash", "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR);
     assertThat(processExecutor.getEnvironment()).isEqualTo(appAutoscalarEnvMapForCustomPlugin);

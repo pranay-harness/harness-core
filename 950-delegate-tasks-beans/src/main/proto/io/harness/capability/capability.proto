@@ -113,7 +113,15 @@ message KustomizeParameters {
   string plugin_root_dir = 1;
 }
 
-message PcfAutoScalarParameters {}
+message PcfAutoScalarParameters {
+  // Next ID: 3
+  enum CfCliVersion {
+    CF_VERSION_UNSPECIFIED = 0;
+    V6 = 1;
+    V7 = 2;
+  }
+  CfCliVersion cf_cli_version = 1;
+}
 
 message PcfConnectivityParameters {
   string endpoint_url = 1;

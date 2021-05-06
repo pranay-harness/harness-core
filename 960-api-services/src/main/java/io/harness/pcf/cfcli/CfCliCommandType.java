@@ -21,7 +21,8 @@ public enum CfCliCommandType {
   DISABLE_AUTOSCALING("disable-autoscaling"),
   ENABLE_AUTOSCALING("enable-autoscaling"),
   AUTOSCALING_APPS("autoscaling-apps"),
-  PUSH("push");
+  PUSH("push"),
+  PLUGINS("plugins");
 
   CfCliCommandType(String value) {
     this.value = value;

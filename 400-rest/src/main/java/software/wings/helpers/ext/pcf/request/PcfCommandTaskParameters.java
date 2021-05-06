@@ -45,7 +45,8 @@ public class PcfCommandTaskParameters implements ExecutionCapabilityDemander {
     }
 
     if (needToCheckAppAutoscalarPluginInstall()) {
-      capabilities.add(PcfAutoScalarCapability.builder().build());
+      CfCliVersion cfCliVersion = pcfCommandRequest.getCfCliVersion();
+      capabilities.add(PcfAutoScalarCapability.builder().version(cfCliVersion).build());
     }
     return capabilities;
   }

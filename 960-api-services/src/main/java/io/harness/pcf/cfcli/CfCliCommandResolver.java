@@ -10,6 +10,7 @@ import io.harness.pcf.cfcli.command.EnableAutoscalingCliCommand;
 import io.harness.pcf.cfcli.command.LogsCliCommand;
 import io.harness.pcf.cfcli.command.MapRouteCliCommand;
 import io.harness.pcf.cfcli.command.MapRouteCliCommand.MapRouteOptions;
+import io.harness.pcf.cfcli.command.PluginsCliCommand;
 import io.harness.pcf.cfcli.command.PushCliCommand;
 import io.harness.pcf.cfcli.command.PushCliCommand.PushOptions;
 import io.harness.pcf.cfcli.command.SetEnvCliCommand;
@@ -185,6 +186,20 @@ public interface CfCliCommandResolver {
         .cliPath(cfCliPath)
         .cliVersion(cfCliVersion)
         .options(PushOptions.builder().pathToManifest(pathToManifest).variableFilePaths(variableFilePaths).build())
+        .build()
+        .getCommand();
+  }
+
+  static String getCheckingPluginsCliCommand(
+      final String cfCliPath, CfCliVersion cfCliVersion, final String pluginName) {
+    List<String> arguments = new LinkedList<>();
+    arguments.add(GREP);
+    arguments.add(pluginName);
+
+    return PluginsCliCommand.builder()
+        .cliPath(cfCliPath)
+        .cliVersion(cfCliVersion)
+        .arguments(arguments)
         .build()
         .getCommand();
   }

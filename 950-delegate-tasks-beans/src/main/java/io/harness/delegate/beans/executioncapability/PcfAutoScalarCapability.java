@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.executioncapability;
 
+import io.harness.pcf.model.CfCliVersion;
+
 import java.time.Duration;
 import lombok.Builder;
 import lombok.Value;
@@ -7,6 +9,7 @@ import lombok.Value;
 @Value
 @Builder
 public class PcfAutoScalarCapability implements ExecutionCapability {
+  CfCliVersion version;
   private final CapabilityType capabilityType = CapabilityType.PCF_AUTO_SCALAR;
 
   @Override

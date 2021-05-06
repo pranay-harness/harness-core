@@ -357,10 +357,6 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     return PCF_CONNECTIVITY_SUCCESS;
   }
 
-  public static boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
-    return PcfUtils.checkIfAppAutoscalarInstalled();
-  }
-
   @Override
   public boolean checkIfAppHasAutoscalarAttached(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
