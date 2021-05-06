@@ -31,6 +31,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
+import io.harness.pms.utils.PmsConstants;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.GraphGenerationService;
@@ -98,7 +99,11 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
 
     if (EmptyPredicate.isNotEmpty(moduleName)) {
-      criteria.orOperator(Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
+      // Check for pipeline with no filters also - empty pipeline or pipelines with only approval stage
+      criteria.orOperator(Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.emptyList()),
+          Criteria.where(PlanExecutionSummaryKeys.modules)
+              .is(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME)),
+          Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
           Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
     }
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
