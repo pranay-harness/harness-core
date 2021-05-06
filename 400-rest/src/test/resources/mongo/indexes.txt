@@ -258,6 +258,7 @@ environments {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 environmentsNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 executionInterrupts {"name": "accountId_1", "background": true} {"accountId": 1}
 executionInterrupts {"name": "appId_1", "background": true} {"appId": 1}
+executionInterrupts {"name": "appId_seized_executionUuid", "background": true} {"appId": 1, "seized": 1, "executionUuid": 1}
 executionInterrupts {"name": "createdAt_1", "background": true} {"createdAt": 1}
 executionInterrupts {"name": "executionUuid_1", "background": true} {"executionUuid": 1}
 executionInterrupts {"name": "stateExecutionInstanceId_1", "background": true} {"stateExecutionInstanceId": 1}
