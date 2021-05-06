@@ -16,7 +16,6 @@ shared_dependencies = [
     "//490-ce-commons:module",
     "//835-notification-senders:module",
     "//860-orchestration-steps:module",
-    "//860-orchestration-visualization:module",
     "//870-orchestration:module",
     "//876-orchestration-beans:module",
     "//878-pipeline-service-utilities:module",

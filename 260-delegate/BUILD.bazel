@@ -18,7 +18,6 @@ shared_dependencies = [
     "//835-notification-senders:module",
     "//850-execution-plan:module",
     "//860-orchestration-steps:module",
-    "//860-orchestration-visualization:module",
     "//870-orchestration:module",
     "//870-yaml-beans:module",
     "//876-orchestration-beans:module",
