@@ -3,7 +3,9 @@ package io.harness.steps.section.chain;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
@@ -23,7 +25,9 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.Map;
 
+// TODO make this step abstact and let individual services create their own copies, Remove step type from here
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
 public class SectionChainStep implements ChildChainExecutable<SectionChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.SECTION_CHAIN).build();
 
