@@ -14,6 +14,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.AccessDeniedException;
@@ -68,7 +69,7 @@ public class PipelineRbacHelper {
     }
     ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
     String principal = executionPrincipalInfo.getPrincipal();
-    if (principal == null) {
+    if (EmptyPredicate.isEmpty(principal)) {
       return;
     }
     PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
