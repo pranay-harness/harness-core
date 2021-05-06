@@ -19,6 +19,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.repository.infrastructuremapping.InfrastructureMappingRepository;
 import io.harness.service.InstanceHandler;
 import io.harness.service.infrastructuremapping.InfrastructureMappingService;
 import io.harness.service.instance.InstanceService;
@@ -48,7 +49,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
   private InstanceService instanceService;
   private PerpetualTaskService perpetualTaskService;
-  private final InfrastructureMappingService infrastructureMappingService;
+  private InfrastructureMappingRepository infrastructureMappingRepository;
 
   public void processDeploymentEvent(DeploymentEvent deploymentEvent) {
     try {
@@ -162,7 +163,9 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
              InfrastructureMapping.class, infrastructureMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
       //            log.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
 
-      InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(infrastructureMappingId);
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingRepository.get(deploymentSummary.getAccountId(), deploymentSummary.getOrgId(),
+              deploymentSummary.getProjectId(), infrastructureMappingId);
       notNullCheck("Infra mapping is null for the given id: " + infrastructureMappingId, infrastructureMapping);
 
       InfrastructureMappingType infrastructureMappingType =
