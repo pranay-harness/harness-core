@@ -7,4 +7,5 @@ public interface CVVerificationJobConstants {
   String DURATION_KEY = "duration";
   String SENSITIVITY_KEY = "sensitivity";
   String RUNTIME_STRING = "<+input>";
+  String TRAFFIC_SPLIT_PERCENTAGE_KEY = "trafficSplitPercentage";
 }
