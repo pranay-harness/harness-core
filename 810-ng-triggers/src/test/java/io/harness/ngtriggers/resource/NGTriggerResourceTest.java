@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.resource;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
@@ -52,6 +54,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PIPELINE)
 public class NGTriggerResourceTest extends CategoryTest {
   @Mock NGTriggerService ngTriggerService;
   @InjectMocks NGTriggerResource ngTriggerResource;
@@ -140,7 +143,8 @@ public class NGTriggerResourceTest extends CategoryTest {
     when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
 
     NGTriggerResponseDTO responseDTO =
-        ngTriggerResource.create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, ngTriggerYaml).getData();
+        ngTriggerResource.create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, ngTriggerYaml)
+            .getData();
     assertThat(responseDTO).isEqualTo(ngTriggerResponseDTO);
   }
 
@@ -169,7 +173,9 @@ public class NGTriggerResourceTest extends CategoryTest {
     when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
 
     NGTriggerResponseDTO responseDTO =
-        ngTriggerResource.update("0", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, IDENTIFIER, ngTriggerYaml).getData();
+        ngTriggerResource
+            .update("0", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, ngTriggerYaml)
+            .getData();
 
     assertThat(responseDTO).isEqualTo(ngTriggerResponseDTO);
   }
