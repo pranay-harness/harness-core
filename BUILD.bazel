@@ -63,7 +63,7 @@ modules = [
     "//200-functional-test",
     "//210-command-library-server",
     #"//220-graphql-test",
-    "//230-model-test",
+    #"//230-model-test",
     "//250-watcher",
     "//260-delegate",
     "//270-verification",
