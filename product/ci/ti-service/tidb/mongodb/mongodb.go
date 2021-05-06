@@ -407,6 +407,8 @@ func (mdb *MongoDb) Find(coll string, ctx context.Context, f bson.M, results int
 		return err
 	}
 	switch coll {
+	// We can use reflection here but since we have only 2 classes currently, I did not wanted to
+	// add  extra complexity and overhead
 	case nodeColl:
 		res := (results).(*[]Node)
 		err = cur.All(ctx, res)
@@ -414,7 +416,7 @@ func (mdb *MongoDb) Find(coll string, ctx context.Context, f bson.M, results int
 		res := (results).(*[]Relation)
 		err = cur.All(ctx, res)
 	default:
-		return fmt.Errorf("unknown collection in find operation %s", coll)
+		return fmt.Errorf("find operation called with unknown collection %s", coll)
 	}
 	mdb.Log.Infow("find operation", "filter", f, "collection", coll, "query_time", time.Since(start))
 	return err
