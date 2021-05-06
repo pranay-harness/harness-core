@@ -65,7 +65,7 @@ public class ContainerServiceParams implements ExecutionCapabilityDemander {
 
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     if (value instanceof AwsConfig) {
-      return executionCapabilities;
+      return value.fetchRequiredExecutionCapabilities(maskingEvaluator);
     } else if (value instanceof KubernetesClusterConfig
         && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
       executionCapabilities.add(
