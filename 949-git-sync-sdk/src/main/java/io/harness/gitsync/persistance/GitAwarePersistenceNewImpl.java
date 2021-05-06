@@ -178,11 +178,21 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
             new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
                 Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
       } else {
-        return new Criteria()
-            .and(gitSdkEntityHandlerInterface.getBranchKey())
-            .is(gitBranchInfo.getBranch())
-            .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
-            .is(gitBranchInfo.getYamlGitConfigId());
+        // case 1: list from branch only
+        // case 2: list from branch in context and default of others.
+        final Criteria criteria = new Criteria()
+                                      .and(gitSdkEntityHandlerInterface.getBranchKey())
+                                      .is(gitBranchInfo.getBranch())
+                                      .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
+                                      .is(gitBranchInfo.getYamlGitConfigId());
+        if (gitBranchInfo.isFindDefaultFromOtherBranches()) {
+          return new Criteria().orOperator(criteria,
+              Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey())
+                  .is(true)
+                  .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
+                  .ne(gitBranchInfo.getYamlGitConfigId()));
+        }
+        return criteria;
       }
     }
     return new Criteria();

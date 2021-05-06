@@ -81,7 +81,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testSave_0() {
-    doSave(sampleBean, false, "branch", false);
+    doSave(sampleBean, false, "branch", false, "ygs");
   }
 
   @Test
@@ -91,8 +91,8 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
     final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
-      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch", true);
-      final SampleBean sampleBean_saved_1 = doSave(sampleBean1, false, "branch", true);
+      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch", true, "ygs");
+      final SampleBean sampleBean_saved_1 = doSave(sampleBean1, false, "branch", true, "ygs");
       assertFindReturnsObject(sampleBean_saved);
       assertFindReturnsObject(sampleBean_saved_1);
     }
@@ -105,7 +105,8 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
     assertThat(retObject.isPresent()).isTrue();
   }
 
-  private SampleBean doSave(SampleBean sampleBean, boolean isDefaultBranch, String branch, boolean isGitSyncEnabled) {
+  private SampleBean doSave(
+      SampleBean sampleBean, boolean isDefaultBranch, String branch, boolean isGitSyncEnabled, String ygs) {
     doReturn(new SampleBeanEntityGitPersistenceHelperServiceImpl())
         .when(gitPersistenceHelperServiceMap)
         .get(anyString());
@@ -113,7 +114,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
     doReturn(ScmCreateFileResponse.builder()
                  .accountIdentifier("acc")
                  .objectId(objectIdOfYaml)
-                 .yamlGitConfigId("ygs")
+                 .yamlGitConfigId(ygs)
                  .branch(branch)
                  .pushToDefaultBranch(isDefaultBranch)
                  .build())
@@ -130,7 +131,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
     final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
-      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch", true);
+      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch", true, "ygs");
     }
     final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
@@ -143,7 +144,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
                                     .accountIdentifier(accountIdentifier)
                                     .identifier(identifier)
                                     .build();
-      final SampleBean sampleBean_saved = doSave(sampleBean_1, true, "master", true);
+      final SampleBean sampleBean_saved = doSave(sampleBean_1, true, "master", true, "ygs");
     }
   }
 
@@ -154,7 +155,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
     final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
-      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch", true);
+      final SampleBean sampleBean_saved = doSave(sampleBean, false, "branch", true, "ygs");
     }
     final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
@@ -167,7 +168,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
                                     .accountIdentifier(accountIdentifier)
                                     .identifier(identifier)
                                     .build();
-      final SampleBean sampleBean_saved = doSave(sampleBean_1, true, "master", true);
+      final SampleBean sampleBean_saved = doSave(sampleBean_1, true, "master", true, "ygs");
     }
 
     final long count = mongoTemplate.count(query(new Criteria()), SampleBean.class);
@@ -181,7 +182,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
     final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
-      SampleBean sampleBean_saved = doSave(sampleBean, true, "branch", true);
+      SampleBean sampleBean_saved = doSave(sampleBean, true, "branch", true, "ygs");
       assertFindReturnsObject(sampleBean_saved);
     }
     final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
@@ -194,7 +195,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
                                     .accountIdentifier(accountIdentifier)
                                     .identifier(identifier)
                                     .build();
-      SampleBean sampleBean_saved_1 = doSave(sampleBean_1, false, "master", true);
+      SampleBean sampleBean_saved_1 = doSave(sampleBean_1, false, "master", true, "ygs");
       assertFindReturnsObject(sampleBean_saved_1);
     }
 
@@ -210,8 +211,8 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
     final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
-      sampleBean_saved = doSave(sampleBean, true, "branch", true);
-      doSave(sampleBean1, true, "branch", true);
+      sampleBean_saved = doSave(sampleBean, true, "branch", true, "ygs");
+      doSave(sampleBean1, true, "branch", true, "ygs");
     }
     final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs").build();
     SampleBean sampleBean_saved_1;
@@ -224,7 +225,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
                                     .accountIdentifier(accountIdentifier)
                                     .identifier(identifier)
                                     .build();
-      sampleBean_saved_1 = doSave(sampleBean_1, false, "master", true);
+      sampleBean_saved_1 = doSave(sampleBean_1, false, "master", true, "ygs");
     }
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
@@ -237,6 +238,53 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
       final List<SampleBean> sampleBeans = gitAwarePersistence.find(
           new Criteria(), Pageable.unpaged(), projectIdentifier, orgIdentifier, accountIdentifier, SampleBean.class);
       assertThat(sampleBeans.size()).isEqualTo(1);
+    }
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testListFromDefault() {
+    SampleBean sampleBean_saved;
+    final GitEntityInfo newBranch = GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").build();
+    try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
+      sampleBean_saved = doSave(sampleBean, true, "branch", true, "ygs");
+    }
+    final GitEntityInfo branch_1 = GitEntityInfo.builder().branch("master").yamlGitConfigId("ygs1").build();
+    SampleBean sampleBean_saved_1;
+    try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(branch_1).build());
+      SampleBean sampleBean_1 = SampleBean.builder()
+                                    .test1("test2")
+                                    .projectIdentifier(projectIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .identifier(identifier)
+                                    .build();
+      sampleBean_saved_1 = doSave(sampleBean_1, true, "master", true, "ygs1");
+    }
+
+    final GitEntityInfo branch_2 = GitEntityInfo.builder().branch("master1").yamlGitConfigId("ygs1").build();
+
+    try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(branch_1).build());
+      SampleBean sampleBean_1 = SampleBean.builder()
+                                    .test1("test2")
+                                    .projectIdentifier(projectIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .identifier(identifier)
+                                    .build();
+      sampleBean_saved_1 = doSave(sampleBean_1, false, "master1", true, "ygs1");
+    }
+    try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      final GitEntityInfo finalBranch =
+          GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").findDefaultFromOtherBranches(true).build();
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(finalBranch).build());
+      final List<SampleBean> sampleBeans = gitAwarePersistence.find(
+          new Criteria(), Pageable.unpaged(), projectIdentifier, orgIdentifier, accountIdentifier, SampleBean.class);
+      assertThat(sampleBeans.size()).isEqualTo(2);
     }
   }
 }
