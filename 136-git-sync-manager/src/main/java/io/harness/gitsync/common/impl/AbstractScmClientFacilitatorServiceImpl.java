@@ -64,7 +64,7 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
                              -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
                                  identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
                                  identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())));
-    return (ScmConnector) connectorResponseDTO.getConnector();
+    return (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
   }
 
   IdentifierRef getYamlGitConfigIdentifierRef(
