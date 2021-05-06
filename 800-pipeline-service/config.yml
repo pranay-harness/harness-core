@@ -135,6 +135,7 @@ accessControlClient:
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 pipelineServiceBaseUrl: https://localhost:8181/#
+pmsApiBaseUrl: http://localhost:12001/api/
 
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079

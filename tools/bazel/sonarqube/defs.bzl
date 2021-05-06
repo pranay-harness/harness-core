@@ -18,7 +18,6 @@ def sonarqube_coverage_generator_binary():
     )
 
 def _build_sonar_project_properties(ctx, sq_properties_file):
-    print("Entering Inside BuildSonarQube Function. {}".format(ctx.build_file_path))
     module_path = ctx.build_file_path.replace("BUILD", "")
     depth = len(module_path.split("/")) - 1
     parent_path = "../" * depth
@@ -232,7 +231,6 @@ def sonarqube(
     )
 
 def _sq_project_impl(ctx):
-    print("SonarQube Running for {}".format(ctx.attr.project_name))
     local_runfiles = _build_sonar_project_properties(ctx, ctx.outputs.sq_properties)
 
     return [DefaultInfo(

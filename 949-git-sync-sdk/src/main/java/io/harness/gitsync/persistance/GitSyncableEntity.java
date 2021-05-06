@@ -17,7 +17,6 @@ public interface GitSyncableEntity extends NGAccess {
 
   void setIsFromDefaultBranch(Boolean isFromDefaultBranch);
 
-  // make transient.
   void setBranch(String branch);
 
   String getBranch();
@@ -25,4 +24,12 @@ public interface GitSyncableEntity extends NGAccess {
   String getYamlGitConfigRef();
 
   void setYamlGitConfigRef(String yamlGitConfigRef);
+
+  String getRootFolder();
+
+  void setRootFolder(String rootFolder);
+
+  String getFilePath();
+
+  void setFilePath(String filePath);
 }

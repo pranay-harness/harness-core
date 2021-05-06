@@ -11,7 +11,6 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.R
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -44,8 +43,8 @@ public class RollbackPlanCreator {
     YamlField infraField = executionField.getNode().nextSiblingNodeFromParentObject(YamlTypes.PIPELINE_INFRASTRUCTURE);
     PlanCreationResponse infraRollbackPlan = InfraRollbackPMSPlanCreator.createInfraRollbackPlan(infraField);
     if (isNotEmpty(infraRollbackPlan.getNodes())) {
-      String infraNodeFullIdentifier = String.join(".", PlanCreatorConstants.STAGES_NODE_IDENTIFIER,
-          stageNode.getIdentifier(), PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER);
+      String infraNodeFullIdentifier =
+          YamlUtils.getQualifiedNameTillGivenField(infraField.getNode(), YAMLFieldNameConstants.STAGES);
       stepParametersBuilder.childNode(
           RollbackNode.builder()
               .nodeId(infraField.getNode().getUuid() + InfraRollbackPMSPlanCreator.INFRA_ROLLBACK_NODE_ID_SUFFIX)
@@ -59,8 +58,8 @@ public class RollbackPlanCreator {
     if (EmptyPredicate.isNotEmpty(executionRollbackPlanNode.getNodes())) {
       String executionRollbackUuid =
           executionStepsField.getNode().getUuid() + OrchestrationConstants.ROLLBACK_EXECUTION_NODE_ID_SUFFIX;
-      String executionNodeFullIdentifier = String.join(".", PlanCreatorConstants.STAGES_NODE_IDENTIFIER,
-          stageNode.getIdentifier(), PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER);
+      String executionNodeFullIdentifier =
+          YamlUtils.getQualifiedNameTillGivenField(executionField.getNode(), YAMLFieldNameConstants.STAGES);
       stepParametersBuilder.childNode(RollbackNode.builder()
                                           .nodeId(executionRollbackUuid)
                                           .dependentNodeIdentifier(executionNodeFullIdentifier)

@@ -7,7 +7,6 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -38,8 +37,8 @@ public class ExecutionRollbackPMSPlanCreator {
     PlanCreationResponse stepGroupsRollbackPlanNode =
         StepGroupsRollbackPMSPlanCreator.createStepGroupsRollbackPlanNode(executionStepsField);
 
-    String executionNodeFullIdentifier = String.join(".", PlanCreatorConstants.STAGES_NODE_IDENTIFIER,
-        stageNode.getIdentifier(), PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER);
+    String executionNodeFullIdentifier =
+        YamlUtils.getQualifiedNameTillGivenField(executionField, YAMLFieldNameConstants.STAGES);
     if (EmptyPredicate.isNotEmpty(stepGroupsRollbackPlanNode.getNodes())) {
       stepParametersBuilder.childNode(RollbackNode.builder()
                                           .nodeId(executionStepsField.getNode().getUuid()

@@ -1,7 +1,9 @@
 package io.harness.pms.sdk.core.interrupt;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.govern.Switch.noop;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.execution.ExecutableResponse;
@@ -23,6 +25,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public class InterruptEventListener extends QueueListener<InterruptEvent> {
   @Inject private PMSInterruptService pmsInterruptService;
   @Inject private StepRegistry stepRegistry;
@@ -58,7 +61,7 @@ public class InterruptEventListener extends QueueListener<InterruptEvent> {
       if (step instanceof Failable) {
         StepParameters stepParameters = RecastOrchestrationUtils.fromDocumentJson(
             nodeExecutionProto.getResolvedStepParameters(), StepParameters.class);
-        ((Failable) step).handleFailure(nodeExecutionProto.getAmbiance(), stepParameters, event.getMetadata());
+        ((Failable) step).handleFailureInterrupt(nodeExecutionProto.getAmbiance(), stepParameters, event.getMetadata());
       }
       pmsInterruptService.handleFailure(event.getNotifyId());
     } catch (Exception ex) {

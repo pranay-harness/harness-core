@@ -9,6 +9,7 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
 import static java.util.stream.Collectors.toList;
@@ -40,6 +41,7 @@ import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -65,6 +67,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
@@ -210,8 +213,8 @@ public class RoleAssignmentResource {
     }));
   }
 
-  private List<RoleAssignmentResponseDTO> createRoleAssignments(
-      HarnessScopeParams harnessScopeParams, RoleAssignmentCreateRequestDTO requestDTO, boolean managed) {
+  private List<RoleAssignmentResponseDTO> createRoleAssignments(HarnessScopeParams harnessScopeParams,
+      RoleAssignmentCreateRequestDTO requestDTO, boolean managed, boolean applyAccessChecks) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     List<RoleAssignment> roleAssignmentsPayload =
         requestDTO.getRoleAssignments()
@@ -225,7 +228,9 @@ public class RoleAssignmentResource {
         if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
           harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
         }
-        checkPermission(harnessScopeParams, roleAssignment);
+        if (applyAccessChecks) {
+          checkPermission(harnessScopeParams, roleAssignment);
+        }
         RoleAssignmentResponseDTO roleAssignmentResponseDTO =
             Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
               RoleAssignmentResponseDTO response =
@@ -250,7 +255,8 @@ public class RoleAssignmentResource {
   @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
   public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
-    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
+    return ResponseDTO.newResponse(
+        createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false, true));
   }
 
   @POST
@@ -258,8 +264,10 @@ public class RoleAssignmentResource {
   @InternalApi
   @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignmentsInternal")
   public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
-      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO, @QueryParam("managed") boolean managed) {
-    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed));
+      @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO,
+      @QueryParam("managed") @DefaultValue("false") Boolean managed) {
+    return ResponseDTO.newResponse(
+        createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed, false));
   }
 
   @POST
@@ -283,6 +291,10 @@ public class RoleAssignmentResource {
           throw new InvalidRequestException("Invalid Role Assignment");
         });
     checkPermission(harnessScopeParams, roleAssignment);
+    if (roleAssignment.isManaged()) {
+      throw new InvalidRequestException(
+          "Cannot create a managed role assignment.", INVALID_REQUEST, WingsException.USER);
+    }
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       RoleAssignment deletedRoleAssignment =
           roleAssignmentService.delete(identifier, scopeIdentifier).<NotFoundException>orElseThrow(() -> {

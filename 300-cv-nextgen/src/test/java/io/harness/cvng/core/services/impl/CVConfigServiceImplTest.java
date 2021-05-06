@@ -314,18 +314,17 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testList_withConnectorAndProductNameGroupId() {
+  public void testList_withAccountOrgAndProjectId() {
     List<CVConfig> cvConfigs = createCVConfigs(4);
-    String connectorIdentifier1 = generateUuid();
     cvConfigs.forEach(cvConfig -> {
-      cvConfig.setConnectorIdentifier(connectorIdentifier1);
-      cvConfig.setProductName("product1");
+      cvConfig.setOrgIdentifier(orgIdentifier);
+      cvConfig.setProjectIdentifier(projectIdentifier);
       cvConfig.setIdentifier("group1");
       cvConfig.setMonitoringSourceName("group1");
     });
-    cvConfigs.get(0).setProductName("product2");
+    cvConfigs.get(0).setProjectIdentifier("project2");
     save(cvConfigs);
-    assertThat(cvConfigService.list(accountId, connectorIdentifier1, "product1", "group1")).hasSize(3);
+    assertThat(cvConfigService.list(accountId, orgIdentifier, projectIdentifier, "group1")).hasSize(3);
   }
 
   @Test

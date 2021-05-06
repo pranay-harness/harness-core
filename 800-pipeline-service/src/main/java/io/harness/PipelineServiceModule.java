@@ -169,7 +169,7 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
     install(new SecretManagementClientModule(
         configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(), MANAGER.getServiceId()));
-    install(NGTriggersModule.getInstance());
+    install(NGTriggersModule.getInstance(configuration.getPmsApiBaseUrl()));
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());

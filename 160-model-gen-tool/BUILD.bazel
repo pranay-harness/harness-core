@@ -3,6 +3,7 @@ load("//:macros.bzl", "run_analysis")
 
 java_binary(
     name = "module",
+    testonly = True,
     srcs = glob(["src/main/**/*.java"]),
     main_class = "io.harness.DataGenApplication",
     resources = [

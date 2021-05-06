@@ -61,7 +61,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
     log.info("Executing integration stage with params [{}]", stepParameters);
 
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
-        (IntegrationStageStepParametersPMS) stepParameters.getSpec();
+        (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();
 
     Infrastructure infrastructure = integrationStageStepParametersPMS.getInfrastructure();
 
@@ -88,7 +88,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
       Ambiance ambiance, StageElementParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     log.info("executed integration stage =[{}]", stepParameters);
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
-        (IntegrationStageStepParametersPMS) stepParameters.getSpec();
+        (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();
     StepResponseBuilder stepResponseBuilder = createStepResponseFromChildResponse(responseDataMap).toBuilder();
     List<String> stepIdentifiers = integrationStageStepParametersPMS.getStepIdentifiers();
     if (isNotEmpty(stepIdentifiers)) {
@@ -99,22 +99,26 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
                                    .filter(OptionalOutcome::isFound)
                                    .map(OptionalOutcome::getOutcome)
                                    .collect(Collectors.toList());
-      IntegrationStageOutcomeBuilder integrationStageOutcomeBuilder = IntegrationStageOutcome.builder();
-      for (Outcome outcome : outcomes) {
-        if (CI_STEP_ARTIFACT_OUTCOME.equals(outcome.getType())) {
-          CIStepArtifactOutcome ciStepArtifactOutcome = (CIStepArtifactOutcome) outcome;
 
-          if (ciStepArtifactOutcome.getStepArtifacts() != null) {
-            if (isNotEmpty(ciStepArtifactOutcome.getStepArtifacts().getPublishedFileArtifacts())) {
-              ciStepArtifactOutcome.getStepArtifacts().getPublishedFileArtifacts().forEach(
-                  integrationStageOutcomeBuilder::fileArtifact);
-            }
-            if (isNotEmpty(ciStepArtifactOutcome.getStepArtifacts().getPublishedImageArtifacts())) {
-              ciStepArtifactOutcome.getStepArtifacts().getPublishedImageArtifacts().forEach(
-                  integrationStageOutcomeBuilder::imageArtifact);
+      if (isNotEmpty(outcomes)) {
+        IntegrationStageOutcomeBuilder integrationStageOutcomeBuilder = IntegrationStageOutcome.builder();
+        for (Outcome outcome : outcomes) {
+          if (CI_STEP_ARTIFACT_OUTCOME.equals(outcome.getType())) {
+            CIStepArtifactOutcome ciStepArtifactOutcome = (CIStepArtifactOutcome) outcome;
+
+            if (ciStepArtifactOutcome.getStepArtifacts() != null) {
+              if (isNotEmpty(ciStepArtifactOutcome.getStepArtifacts().getPublishedFileArtifacts())) {
+                ciStepArtifactOutcome.getStepArtifacts().getPublishedFileArtifacts().forEach(
+                    integrationStageOutcomeBuilder::fileArtifact);
+              }
+              if (isNotEmpty(ciStepArtifactOutcome.getStepArtifacts().getPublishedImageArtifacts())) {
+                ciStepArtifactOutcome.getStepArtifacts().getPublishedImageArtifacts().forEach(
+                    integrationStageOutcomeBuilder::imageArtifact);
+              }
             }
           }
         }
+
         stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
                                             .name(INTEGRATION_STAGE_OUTCOME)
                                             .outcome(integrationStageOutcomeBuilder.build())

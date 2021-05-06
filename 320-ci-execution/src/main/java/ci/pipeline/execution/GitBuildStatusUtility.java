@@ -72,7 +72,7 @@ public class GitBuildStatusUtility {
         RecastOrchestrationUtils.fromDocument(nodeExecution.getResolvedStepParameters(), StageElementParameters.class);
 
     IntegrationStageStepParametersPMS integrationStageStepParameters =
-        (IntegrationStageStepParametersPMS) stageElementParameters.getSpec();
+        (IntegrationStageStepParametersPMS) stageElementParameters.getSpecConfig();
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();
 

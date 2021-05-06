@@ -1,6 +1,7 @@
 package io.harness.pms.serializer.recaster;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.ParameterFieldValueWrapper;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +28,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -245,6 +248,20 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
 
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void shouldTestGenericMapInsideWrapper() {
+    DummyC dummyC = new DummyC(
+        new ParameterFieldValueWrapper<>(ImmutableMap.of("a", 123, "b", ParameterField.createValueField(123))));
+    Document doc = RecastOrchestrationUtils.toDocument(dummyC);
+    assertThat(doc).isNotNull();
+
+    DummyC dummyC1 = RecastOrchestrationUtils.fromDocument(doc, DummyC.class);
+    assertThat(dummyC1).isNotNull();
+    assertThat(dummyC1).isEqualTo(dummyC);
+  }
+
   @Data
   @Builder
   public static class DummyB {
@@ -263,6 +280,12 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     private String strVal;
     private long aLong;
     private List<DummyB> list;
+  }
+
+  @Data
+  @AllArgsConstructor
+  public static class DummyC {
+    ParameterFieldValueWrapper<Map<String, Object>> wrapper;
   }
 
   @Data

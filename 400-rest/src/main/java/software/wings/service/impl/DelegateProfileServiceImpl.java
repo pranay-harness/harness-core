@@ -136,6 +136,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     Query<DelegateProfile> delegateProfileQuery = persistence.createQuery(DelegateProfile.class)
                                                       .filter(DelegateProfileKeys.accountId, accountId)
                                                       .filter(DelegateProfileKeys.uuid, delegateProfileId);
+    DelegateProfile originalProfile = delegateProfileQuery.get();
+
     UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
 
     setUnset(updateOperations, DelegateProfileKeys.selectors, selectors);
@@ -150,6 +152,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       delegateProfileSubject.fireInform(
           DelegateProfileObxxxxxxxx:onProfileSelectorsUpdated, accountId, delegateProfileId);
     }
+
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        accountId, originalProfile, delegateProfileSelectorsUpdated, Event.Type.UPDATE);
+    log.info("Auditing update of Selectors of Delegate Profile for accountId={}", accountId);
 
     return delegateProfileSelectorsUpdated;
   }

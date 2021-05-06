@@ -1,11 +1,18 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 8/16/16.
  */
+@TargetModule(HarnessModule._360_CG_MANAGER)
+@OwnedBy(HarnessTeam.PL)
 public class Event {
   private String orgId = "*";
   private String appId = "all";
@@ -255,6 +262,14 @@ public class Event {
      * Delegate Approval type.
      */
     DELEGATE_APPROVAL,
+    /**
+     * Delegate Rejection type.
+     */
+    DELEGATE_REJECTION,
+    /**
+     * Delegate Registration type.
+     */
+    DELEGATE_REGISTRATION,
     /**
      * for non-whitelisted users login attempt
      */

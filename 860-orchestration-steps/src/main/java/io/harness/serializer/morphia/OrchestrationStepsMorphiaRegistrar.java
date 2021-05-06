@@ -10,7 +10,7 @@ import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
 import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
-import io.harness.steps.cf.FeatureUpdateStepParameters;
+import io.harness.steps.cf.FlagConfigurationStepParameters;
 import io.harness.steps.dummy.DummySectionOutcome;
 import io.harness.steps.dummy.DummySectionStepParameters;
 import io.harness.steps.fork.ForkStepParameters;
@@ -48,6 +48,6 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.section.SectionStepParameters", SectionStepParameters.class);
 
     // Feature Flag
-    h.put("steps.cf.FeatureUpdateStepParameters", FeatureUpdateStepParameters.class);
+    h.put("steps.cf.FlagConfigurationStepParameters", FlagConfigurationStepParameters.class);
   }
 }

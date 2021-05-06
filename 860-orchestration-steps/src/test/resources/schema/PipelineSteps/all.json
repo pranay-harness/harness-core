@@ -251,7 +251,7 @@
         }
       ]
     },
-    "FeatureUpdateStepInfo": {
+    "FlagConfigurationStepInfo": {
       "allOf": [
         {
           "$ref": "#/definitions/PMSStepInfo"
@@ -261,7 +261,6 @@
           "required": [
             "environment",
             "feature",
-            "featureUpdateRef",
             "instructions",
             "state"
           ],
@@ -270,9 +269,6 @@
               "type": "string"
             },
             "feature": {
-              "type": "string"
-            },
-            "featureUpdateRef": {
               "type": "string"
             },
             "instructions": {

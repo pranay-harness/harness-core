@@ -2,8 +2,10 @@ package io.harness.pms.sdk.core.pipeline.variables;
 
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;
@@ -24,6 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public abstract class GenericStepVariableCreator extends ChildrenVariableCreator {
   public abstract Set<String> getSupportedStepTypes();
 

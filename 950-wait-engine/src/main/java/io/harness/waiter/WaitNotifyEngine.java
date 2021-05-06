@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class WaitNotifyEngine {
-  @Inject private PersistenceWrapper presistenceWrapper;
+  @Inject private PersistenceWrapper persistenceWrapper;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private NotifyQueuePublisherRegister publisherRegister;
 
@@ -81,10 +81,10 @@ public class WaitNotifyEngine {
 
     waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list);
 
-    final String waitInstanceId = presistenceWrapper.save(waitInstanceBuilder.build());
+    final String waitInstanceId = persistenceWrapper.save(waitInstanceBuilder.build());
 
     WaitInstance waitInstance;
-    if ((waitInstance = presistenceWrapper.modifyAndFetchWaitInstanceForExistingResponse(waitInstanceId, list))
+    if ((waitInstance = persistenceWrapper.modifyAndFetchWaitInstanceForExistingResponse(waitInstanceId, list))
         != null) {
       if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
           && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
@@ -103,7 +103,7 @@ public class WaitNotifyEngine {
     }
 
     try {
-      presistenceWrapper.save(ProgressUpdate.builder()
+      persistenceWrapper.save(ProgressUpdate.builder()
                                   .uuid(generateUuid())
                                   .correlationId(correlationId)
                                   .createdAt(currentTimeMillis())
@@ -126,7 +126,7 @@ public class WaitNotifyEngine {
     }
 
     try {
-      presistenceWrapper.save(NotifyResponse.builder()
+      persistenceWrapper.save(NotifyResponse.builder()
                                   .uuid(correlationId)
                                   .createdAt(currentTimeMillis())
                                   .responseData(kryoSerializer.asDeflatedBytes(response))
@@ -161,7 +161,7 @@ public class WaitNotifyEngine {
 
   public void handleNotifyResponse(String uuid) {
     WaitInstance waitInstance;
-    while ((waitInstance = presistenceWrapper.modifyAndFetchWaitInstance(uuid)) != null) {
+    while ((waitInstance = persistenceWrapper.modifyAndFetchWaitInstance(uuid)) != null) {
       if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
         sendNotification(waitInstance);
       }
