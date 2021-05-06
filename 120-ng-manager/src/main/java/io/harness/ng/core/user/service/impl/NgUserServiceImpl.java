@@ -74,6 +74,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -233,7 +234,8 @@ public class NgUserServiceImpl implements NgUserService {
       String username = userInfo.get().getName();
       user.setName(username);
       userMembership.setName(username);
-      update(userMembership);
+      Update update = new Update().set(UserMembershipKeys.name, username);
+      update(userId, update);
     }
     return Optional.of(user);
   }
@@ -302,6 +304,7 @@ public class NgUserServiceImpl implements NgUserService {
 
   private void addUserToScope(
       String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
+    ensureUserMembership(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
 
     // Adding user to the account for sign in flow to work
@@ -323,11 +326,19 @@ public class NgUserServiceImpl implements NgUserService {
     return ACCOUNT_VIEWER;
   }
 
-  private UserMembership createNewUserMembership(String userId) {
+  private void ensureUserMembership(String userId) {
+    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
+    if (userMembershipOptional.isPresent()) {
+      return;
+    }
     Optional<UserInfo> userInfoOptional = getUserById(userId);
     UserInfo userInfo = userInfoOptional.orElseThrow(
         () -> new InvalidRequestException(String.format("User with id %s doesn't exists", userId)));
-    return UserMembership.builder().userId(userId).emailId(userInfo.getEmail()).scopes(new ArrayList<>()).build();
+    Update update = new Update();
+    update.set(UserMembershipKeys.userId, userInfo.getUuid());
+    update.set(UserMembershipKeys.name, userInfo.getName());
+    update.set(UserMembershipKeys.emailId, userInfo.getEmail());
+    userMembershipRepository.upsert(userId, update);
   }
 
   private void addUserToParentScope(String userId, Scope scope, UserMembershipUpdateSource source) {
@@ -351,14 +362,14 @@ public class NgUserServiceImpl implements NgUserService {
   private UserMembership addUserToScopeInternal(
       String userId, UserMembershipUpdateSource source, Scope scope, String roleIdentifier) {
     Optional<UserMembership> userMembershipOpt = getUserMembership(userId);
-    UserMembership userMembership = userMembershipOpt.orElse(createNewUserMembership(userId));
+    UserMembership userMembership =
+        userMembershipOpt.orElseThrow(() -> new IllegalStateException("Usermembership doesn't exist for " + userId));
     if (!userMembership.getScopes().contains(scope)) {
-      userMembership.getScopes().add(scope);
-      UserMembership finalUserMembership = userMembership;
+      Update update = new Update().push(UserMembershipKeys.scopes, scope);
+      String email = userMembership.getEmailId();
       userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
-        outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), scope,
-            finalUserMembership.getEmailId(), finalUserMembership.getUserId(), source));
+        UserMembership updatedUserMembership = userMembershipRepository.update(userId, update);
+        outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, email, userId, source));
         return updatedUserMembership;
       }));
     }
@@ -409,8 +420,8 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public boolean update(UserMembership userMembership) {
-    return userMembershipRepository.save(userMembership) != null;
+  public boolean update(String userId, Update update) {
+    return userMembershipRepository.update(userId, update) != null;
   }
 
   @Override
@@ -437,9 +448,9 @@ public class NgUserServiceImpl implements NgUserService {
       return true;
     }
     scopes.remove(scope);
-
+    Update update = new Update().pull(UserMembershipKeys.scopes, scope);
     Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-      UserMembership updatedUserMembership = userMembershipRepository.save(userMembership);
+      UserMembership updatedUserMembership = userMembershipRepository.update(userId, update);
       outboxService.save(new RemoveCollaboratorEvent(
           scope.getAccountIdentifier(), scope, userMembership.getEmailId(), userId, source));
       return updatedUserMembership;
