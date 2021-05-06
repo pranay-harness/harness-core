@@ -61,7 +61,7 @@ func TestCreateAndDeleteWebhookBitbucketServer(t *testing.T) {
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "foo/quux",
-		Id:   got.Id,
+		Id:   got.Webhook.Id,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_BitbucketServer{
 				BitbucketServer: &pb.BitbucketServerProvider{

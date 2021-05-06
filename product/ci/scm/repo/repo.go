@@ -48,13 +48,15 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 	log.Infow("CreateWebhook success", "slug", request.GetSlug(), "name", request.GetName(), "target", request.GetTarget(), "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.CreateWebhookResponse{
-		Id:         hook.ID,
-		Name:       hook.Name,
-		Target:     hook.Target,
-		Events:     hook.Events,
-		Active:     hook.Active,
-		SkipVerify: hook.SkipVerify,
-		Status:     int32(response.Status),
+		Webhook: &pb.WebhookResponse{
+			Id:         hook.ID,
+			Name:       hook.Name,
+			Target:     hook.Target,
+			Events:     hook.Events,
+			Active:     hook.Active,
+			SkipVerify: hook.SkipVerify,
+		},
+		Status: int32(response.Status),
 	}
 	return out, nil
 }
@@ -114,6 +116,7 @@ func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap
 
 	out = &pb.ListWebhooksResponse{
 		Webhooks: hooks,
+		Status:   int32(response.Status),
 		Pagination: &pb.PageResponse{
 			Next: int32(response.Page.Next),
 		},

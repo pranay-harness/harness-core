@@ -61,7 +61,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "tphoney/scm-test",
-		Id:   got.Id,
+		Id:   got.Webhook.Id,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{

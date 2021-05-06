@@ -55,11 +55,11 @@ func TestCreateAndDeleteWebhookBitbucketCloud(t *testing.T) {
 	got2, err2 := ListWebhooks(context.Background(), list, log.Sugar())
 
 	assert.Nil(t, err2, "no errors")
-	assert.Equal(t, 2, len(got2.Webhooks), "there are 2 webhooks")
+	assert.Equal(t, 1, len(got2.Webhooks), "there is 1 webhook")
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "tphoney/scm-test",
-		Id:   got.Id,
+		Id:   got.Webhook.Id,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{

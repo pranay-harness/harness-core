@@ -61,7 +61,7 @@ func TestCreateAndDeleteWebhookGitlab(t *testing.T) {
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "tphoney/test_repo",
-		Id:   got.Id,
+		Id:   got.Webhook.Id,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{

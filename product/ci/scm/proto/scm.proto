@@ -475,14 +475,18 @@ message CreateWebhookRequest {
   Provider provider = 7;
 }
 
-message CreateWebhookResponse {
+message WebhookResponse {
   string id = 1;
   string name = 2;
   string target = 3;
   repeated string events = 4;
   bool active = 5;
   bool skipVerify = 6;
-  int32 status = 7;
+}
+
+message CreateWebhookResponse {
+  WebhookResponse webhook = 1;
+  int32 status = 2;
 }
 
 message DeleteWebhookRequest {
@@ -501,18 +505,10 @@ message ListWebhooksRequest {
   Provider provider = 3;
 }
 
-message WebhookResponse {
-  string id = 1;
-  string name = 2;
-  string target = 3;
-  repeated string events = 4;
-  bool active = 5;
-  bool skipVerify = 6;
-}
-
 message ListWebhooksResponse {
   repeated WebhookResponse webhooks = 1;
-  PageResponse pagination = 2;
+  int32 status = 2;
+  PageResponse pagination = 3;
 }
 
 service SCM {
