@@ -154,6 +154,7 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApprovalDetails.Action;
+import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
@@ -251,6 +252,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.beans.artifact.ArtifactSummary;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -1769,7 +1771,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerragruntExecutionData.class, 8507);
     kryo.register(TerragruntOutputVariables.class, 8508);
     kryo.register(ApiException.class, 8125);
-
+    kryo.register(ArtifactStreamMetadata.class, 8126);
+    kryo.register(ArtifactSummary.class, 8127);
     kryo.register(CommandParameters.class, 8509);
 
     kryo.register(StateMachineResumeCallback.class, 40001);

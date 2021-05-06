@@ -279,10 +279,12 @@ message DeleteFileRequest {
 
 message DeleteFileResponse {
   int32 status = 1;
+  string error = 2;
 }
 
 message CreateFileResponse {
   int32 status = 1;
+  string error = 2;
 }
 
 message UpdateFileResponse {

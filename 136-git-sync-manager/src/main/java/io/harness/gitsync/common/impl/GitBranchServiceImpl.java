@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.gitsync.GitSyncModule.SCM_ON_MANAGER;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
@@ -25,6 +26,7 @@ import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -50,7 +52,7 @@ public class GitBranchServiceImpl implements GitBranchService {
   @Inject
   public GitBranchServiceImpl(GitBranchesRepository gitBranchesRepository, YamlGitConfigService yamlGitConfigService,
       ExecutorService executorService, HarnessToGitHelperService harnessToGitHelperService,
-      ScmClientFacilitatorService scmClientFacilitatorService) {
+      @Named(SCM_ON_MANAGER) ScmClientFacilitatorService scmClientFacilitatorService) {
     this.gitBranchesRepository = gitBranchesRepository;
     this.yamlGitConfigService = yamlGitConfigService;
     this.executorService = executorService;

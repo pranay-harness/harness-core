@@ -110,11 +110,14 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 
 	log.Infow("trying to connect to mongo", "connStr", connStr)
 	ctx := context.Background()
-	credential := options.Credential{
-		Username: username,
-		Password: password,
+	opts := options.Client().ApplyURI(connStr)
+	if len(username) > 0 {
+		credential := options.Credential{
+			Username: username,
+			Password: password,
+		}
+		opts = opts.SetAuth(credential)
 	}
-	opts := options.Client().ApplyURI(connStr).SetAuth(credential)
 	err := mgm.SetDefaultConfig(getDefaultConfig(), dbName, opts)
 	if err != nil {
 		return nil, err
@@ -374,17 +377,17 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
 func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, acc, org, proj string) error {
-	nodes := make([]interface{}, len(cg.Nodes))
-	rels := make([]interface{}, len(cg.Relations))
+	nodes := make([]Node, len(cg.Nodes))
+	rels := make([]Relation, len(cg.Relations))
 	for i, node := range cg.Nodes {
 		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, info, acc, org, proj)
 	}
 	for i, rel := range cg.Relations {
 		rels[i] = *NewRelation(rel.Source, rel.Tests, info, acc, org, proj)
 	}
-	// query for partial callgraph for the filter -(repo + branch) and delete old entries.
+	// query for partial callgraph for the filter -(repo + branch + (commitId != currentCommit)) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
-	f := bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}
+	f := bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
 	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return errors.Wrap(
@@ -393,7 +396,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 				" repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
 	}
 	// this will delete all the relations create by older commits for current pull request
-	f = bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch}
+	f = bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
 	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return errors.Wrap(
@@ -404,33 +407,14 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	mdb.Log.Infow(
 		fmt.Sprintf("deleted %d records from nodes and %d records from relns collection",
 			r1.DeletedCount, r2.DeletedCount), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
-	// dump new relations and nodes to db
-	mdb.Log.Infow(
-		fmt.Sprintf("writing %d records in nodes and %d records in relations collection",
-			len(nodes), len(rels)), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
-	if len(nodes) > 0 {
-		res, err := mdb.Database.Collection(nodeColl).InsertMany(ctx, nodes)
-		if err != nil {
-			return errors.Wrap(
-				err,
-				fmt.Sprintf("failed to write partial cg in nodes collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
-		}
-		mdb.Log.Infow(fmt.Sprintf("inserted %d records in nodes collection", len(res.InsertedIDs)),
-			"repo", info.Repo,
-			"branch", info.Branch,
-		)
+
+	err = mdb.upsertNodes(ctx, nodes, info)
+	if err != nil {
+		return err
 	}
-	if len(rels) > 0 {
-		res, err := mdb.Database.Collection(relnsColl).InsertMany(ctx, rels)
-		if err != nil {
-			return errors.Wrap(
-				err,
-				fmt.Sprintf("failed to write partial cg in relns collection, repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
-		}
-		mdb.Log.Infow(fmt.Sprintf("inserted %d records in relns colection", len(res.InsertedIDs)),
-			"repo", info.Repo,
-			"branch", info.Branch,
-		)
+	err = mdb.upsertRelations(ctx, rels, info)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -735,6 +719,125 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 		"commit", commit,
 	)
 	return nil
+}
+
+// upsertNodes upserts partial callgraph for a repo + branch + commitId. Steps are:
+// New nodes received in the cg will be added to db only if they are not already present in db.
+// The algo to do it is
+// 1. get list of node ids for `repo` + `branch` + `commmit_id`. These nodes are uploaded as part of some other job running
+// for the same PR.
+// 2. In new nodes received as part of current pr callgraph, only the nodes which are not already present in db will be created.
+// it is checked using Id key. If the Id already exists, skip the node.
+func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo) error {
+	mdb.Log.Infow("uploading partialcg in nodes collection",
+		"#nodes", len(nodes), "repo", info.Repo, "branch", info.Branch)
+	// fetch existing records for branch
+	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo}
+	NIds, err := mdb.getNodeIds(ctx, info.CommitId, info.Branch, info.Repo, f)
+	if err != nil {
+		return err
+	}
+	existingNodes := getMap(NIds)
+	nodesToAdd := make([]interface{}, 0)
+	for _, node := range nodes {
+		if !existingNodes[node.Id] {
+			nodesToAdd = append(nodesToAdd, node)
+		}
+	}
+	if len(nodesToAdd) > 0 {
+		res, err := mdb.Database.Collection(nodeColl).InsertMany(ctx, nodesToAdd)
+		if err != nil {
+			return errors.Wrap(
+				err,
+				fmt.Sprintf("failed to add nodes while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
+		}
+		mdb.Log.Infow(fmt.Sprintf("inserted %d records in nodes collection", len(res.InsertedIDs)),
+			"repo", info.Repo,
+			"branch", info.Branch,
+		)
+	}
+	return nil
+}
+
+// upsertRelations is used to upload partial callagraph to db. If there is already a cg present with
+// the same commit, it udpdates that callgraph otherwise creates a new entry The algo for that is:
+// 1. get all the existing relations for `repo` + `branch` + `commit_id`.
+// 2. Relations received in cg which are new will be inserted in relations collection.
+// relations which are already present in the db needs to be merged.
+func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info VCSInfo) error {
+	mdb.Log.Infow("uploading partialcg in relations collection",
+		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
+	// fetch existing records for branch
+	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo}
+	Ids, err := mdb.getRelIds(ctx, info.CommitId, info.Branch, info.Repo, f)
+	if err != nil {
+		return err
+	}
+	existingRel := getMap(Ids)
+	relToAdd := make([]interface{}, 0)
+	relToUpdate := make([]Relation, 0)
+	for _, rel := range relns {
+		if existingRel[rel.Source] {
+			relToUpdate = append(relToUpdate, rel)
+		} else {
+			relToAdd = append(relToAdd, rel)
+		}
+	}
+	if len(relToAdd) > 0 {
+		res, err := mdb.Database.Collection(relnsColl).InsertMany(ctx, relToAdd)
+		if err != nil {
+			return errors.Wrap(
+				err,
+				fmt.Sprintf("failed to add relns while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
+		}
+		mdb.Log.Infow(fmt.Sprintf("inserted %d records in relns collection", len(res.InsertedIDs)),
+			"repo", info.Repo,
+			"branch", info.Branch,
+		)
+	}
+	if len(relToUpdate) > 0 {
+		var idToUpdate []int
+		var existingRelns []Relation
+		for _, rel := range relToUpdate {
+			idToUpdate = append(idToUpdate, rel.Source)
+		}
+		f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "source": bson.M{"$in": idToUpdate}}
+		cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
+		if err != nil {
+			return formatError(err, "failed in find query in rel collection", info.Repo, info.Repo, info.CommitId)
+		}
+		if err = cur.All(ctx, &existingRelns); err != nil {
+			return formatError(err, "failed to iterate on records using cursor in existingRelns collection", info.Repo, info.Branch, info.CommitId)
+		}
+		finalRelations := getRelMap(relToUpdate, existingRelns)
+		var operations []mongo.WriteModel
+		for src, tests := range finalRelations {
+			operation := mongo.NewUpdateOneModel()
+			operation.SetFilter(bson.M{"source": src, "vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch})
+			operation.SetUpdate(bson.M{"$set": bson.M{"tests": tests}})
+			operations = append(operations, operation)
+		}
+		res, err := mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+		if err != nil {
+			return formatError(err, "failed to update relations collection", info.Repo, info.Branch, info.CommitId)
+		}
+		mdb.Log.Infow(
+			fmt.Sprintf("relations updated: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"repo", info.Repo,
+			"branch", info.Branch,
+			"commit", info.CommitId,
+		)
+	}
+	return nil
+}
+
+// getMap takes slice of int as an input and returns a map with all elements of slice as keys
+func getMap(ids []int) map[int]bool {
+	mp := make(map[int]bool)
+	for _, id := range ids {
+		mp[id] = true
+	}
+	return mp
 }
 
 // getRelMap takes two Relation records A and B and returns a map[source]tests object

@@ -58,6 +58,7 @@ import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.invites.spring.InviteRepository;
+import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
 import io.harness.utils.RetryUtils;
 
@@ -523,15 +524,16 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private Map<String, UserMetadataDTO> getPendingUserMap(List<String> userEmails, String accountIdentifier) {
-    List<UserInfo> users = ngUserService.getUsersFromEmail(userEmails, accountIdentifier);
-    Map<String, UserMetadataDTO> userSearchMap = new HashMap<>();
+    List<UserInfo> users =
+        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().emailIds(userEmails).build());
+    Map<String, UserMetadataDTO> userMetadataMap = new HashMap<>();
     users.forEach(user
-        -> userSearchMap.put(user.getEmail(),
+        -> userMetadataMap.put(user.getEmail(),
             UserMetadataDTO.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build()));
     for (String email : userEmails) {
-      userSearchMap.computeIfAbsent(email, email1 -> UserMetadataDTO.builder().email(email1).build());
+      userMetadataMap.computeIfAbsent(email, email1 -> UserMetadataDTO.builder().email(email1).build());
     }
-    return userSearchMap;
+    return userMetadataMap;
   }
 
   private List<InviteDTO> aggregatePendingUsers(List<Invite> invites, Map<String, UserMetadataDTO> userMap) {

@@ -13,9 +13,9 @@ import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
+import io.harness.pms.sdk.core.execution.ProgressableStrategy;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -36,7 +36,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(PIPELINE)
-public class TaskChainStrategy implements ExecuteStrategy {
+public class TaskChainStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
@@ -47,6 +47,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     TaskChainExecutable taskChainExecutable = extractStep(nodeExecution);
+
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskChainResponse taskChainResponse;
     taskChainResponse = taskChainExecutable.startChainLink(ambiance,

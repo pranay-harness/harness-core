@@ -1,5 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
@@ -45,9 +48,11 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+
 @Data
 @FieldNameConstants(innerTypeName = "CVNGStateKeys")
 @Slf4j
+@OwnedBy(CV)
 public class CVNGState extends State {
   @VisibleForTesting static final String DEFAULT_HOSTNAME_TEMPLATE = "${instanceDetails.hostName}";
   private static final Duration DEFAULT_INITIAL_DELAY = Duration.ofMinutes(2);
@@ -305,4 +310,6 @@ public class CVNGState extends State {
     private Set<String> newVersionHosts;
     private Optional<Integer> newNodesTrafficShiftPercent;
   }
+
+  public enum StepStatus { SUCCESS, FAILED }
 }

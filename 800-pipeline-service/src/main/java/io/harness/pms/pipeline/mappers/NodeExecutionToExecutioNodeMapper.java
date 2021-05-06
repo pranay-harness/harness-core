@@ -57,6 +57,7 @@ public class NodeExecutionToExecutioNodeMapper {
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
         .executableResponses(nodeExecution.getExecutableResponses())
         .unitProgresses(nodeExecution.getUnitProgresses())
+        .progressData(nodeExecution.getProgressData())
         .outcomes(outcomes)
         .baseFqn(null)
         .delegateInfoList(delegateInfoList)

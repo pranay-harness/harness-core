@@ -5,7 +5,6 @@ set -ex
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]; then
-  GCP="--google_credentials=${GCP_KEY}"
   bazelrc=--bazelrc=bazelrc.remote
   local_repo=/root/.m2/repository
   if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]; then
@@ -20,10 +19,6 @@ if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
 fi
 
-if [ "${STEP}" == "dockerization" ]; then
-  GCP=""
-fi
-
 # Enable caching by default. Turn it off by exporting CACHE_TEST_RESULTS=no
 # to generate full call-graph for Test Intelligence
 if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
@@ -31,20 +26,20 @@ if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
 fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
-  bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/... || true
+  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
+  bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/... || true
   exit 0
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "checkstyle", //...:*)')
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
+  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
 
 if [ "${RUN_PMDS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "pmd", //...:*)')
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
+  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
 
@@ -52,7 +47,7 @@ BAZEL_MODULES="\
   //990-commons-test:module \
 "
 
-bazel ${bazelrc} build `bazel query //...:* | grep module_deploy.jar` ${GCP} ${BAZEL_ARGUMENTS} --remote_download_outputs=all
+bazel ${bazelrc} build `bazel query //...:* | grep module_deploy.jar` ${BAZEL_ARGUMENTS} --remote_download_outputs=all
 
 build_bazel_module() {
   module=$1
@@ -104,7 +99,7 @@ build_bazel_application() {
   BAZEL_MODULE="//${module}:module"
   BAZEL_DEPLOY_MODULE="//${module}:module_deploy.jar"
 
-  bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS}
+  bazel ${bazelrc} build $BAZEL_MODULES ${BAZEL_ARGUMENTS}
 
   if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
@@ -148,7 +143,7 @@ build_bazel_application_module() {
   BAZEL_DEPLOY_MODULE="//${module}:module_deploy.jar"
 
   if [ "${BUILD_BAZEL_DEPLOY_JAR}" == "true" ]; then
-    bazel ${bazelrc} build $BAZEL_DEPLOY_MODULE ${GCP} ${BAZEL_ARGUMENTS}
+    bazel ${bazelrc} build $BAZEL_DEPLOY_MODULE ${BAZEL_ARGUMENTS}
   fi
 
   if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then

@@ -5,6 +5,7 @@ load("//:macros.bzl", "run_analysis")
 shared_dependencies = [
     "//850-execution-plan:module",
     "//850-ng-pipeline-commons:module",
+    "//860-orchestration-visualization:module",
     "//930-delegate-tasks:module",
     "//960-persistence:module",
     "//product/ci/engine/proto:ciengine_java_proto",

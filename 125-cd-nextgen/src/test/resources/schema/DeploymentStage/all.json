@@ -829,7 +829,7 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "FeatureUpdateStepInfo": {
+    "FlagConfigurationStepInfo": {
       "allOf": [
         {
           "$ref": "#/definitions/StepSpecType"
@@ -839,7 +839,6 @@
           "required": [
             "environment",
             "feature",
-            "featureUpdateRef",
             "instructions",
             "state"
           ],
@@ -848,9 +847,6 @@
               "type": "string"
             },
             "feature": {
-              "type": "string"
-            },
-            "featureUpdateRef": {
               "type": "string"
             },
             "instructions": {
@@ -3580,14 +3576,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "FeatureUpdate"
+                "const": "FlagConfiguration"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/FeatureUpdateStepInfo"
+                "$ref": "#/definitions/FlagConfigurationStepInfo"
               }
             }
           }

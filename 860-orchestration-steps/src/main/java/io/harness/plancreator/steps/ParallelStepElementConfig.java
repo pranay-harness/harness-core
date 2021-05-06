@@ -1,5 +1,7 @@
 package io.harness.plancreator.steps;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.yaml.core.serializer.ParallelStepElementSerializer;
 
@@ -21,6 +23,8 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @JsonTypeName("parallel")
 @JsonSerialize(using = ParallelStepElementSerializer.class)
+// TODO this should go to yaml commons
+@TargetModule(HarnessModule._884_PMS_COMMONS)
 @TypeAlias("io.harness.yaml.core.parallelStepElementConfig")
 public class ParallelStepElementConfig {
   @NotNull List<ExecutionWrapperConfig> sections;

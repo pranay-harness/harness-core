@@ -688,6 +688,7 @@ java_library(
 
 java_library(
     name = "supporter-test",
+    testonly = True,
     srcs = glob(
         ["src/supporter-test/**/*.java"],
     ),
@@ -710,11 +711,11 @@ java_library(
         "@maven//:io_github_benas_random_beans",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:pl_pragmatists_JUnitParams",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     ],
 )
 
@@ -728,8 +729,6 @@ test_dependencies = shared_dependencies + [
     "@maven//:io_github_benas_random_beans",
     "@maven//:junit_junit",
     "@maven//:org_assertj_assertj_core",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     "@maven//:org_mockito_mockito_core",
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",

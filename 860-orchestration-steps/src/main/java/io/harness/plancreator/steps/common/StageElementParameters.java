@@ -2,7 +2,9 @@ package io.harness.plancreator.steps.common;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
@@ -23,6 +25,8 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stageElementParameters")
 @OwnedBy(CDC)
+// TODO this should go to yaml commons
+@TargetModule(HarnessModule._884_PMS_COMMONS)
 public class StageElementParameters implements StepParameters {
   String uuid;
   String identifier;

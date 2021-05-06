@@ -38,8 +38,8 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.states.CISpecStep;
 import io.harness.states.IntegrationStageStepPMS;
-import io.harness.steps.common.NGSectionStep;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
@@ -134,7 +134,7 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     return PlanNode.builder()
         .uuid(specField.getNode().getUuid())
         .identifier(YAMLFieldNameConstants.SPEC)
-        .stepType(NGSectionStep.STEP_TYPE)
+        .stepType(CISpecStep.STEP_TYPE)
         .name(YAMLFieldNameConstants.SPEC)
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())

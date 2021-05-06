@@ -44,7 +44,7 @@ public class ScmGitFileTask extends AbstractDelegateRunnableTask {
         GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmGitFileTaskParams.getScmConnector()),
         scmGitFileTaskParams.getEncryptedDataDetails());
     switch (scmGitFileTaskParams.getGitFileTaskType()) {
-      case LIST_FILES:
+      case GET_FILE_CONTENT_BATCH:
         final FileBatchContentResponse fileBatchContentResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listFiles(scmGitFileTaskParams.getScmConnector(), scmGitFileTaskParams.getFoldersList(),
                 scmGitFileTaskParams.getBranchName(), SCMGrpc.newBlockingStub(c)));

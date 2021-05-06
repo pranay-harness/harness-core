@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.deserialiser;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.yaml.utils.YamlPipelineUtils;
@@ -13,6 +14,8 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@ToBeDeleted
+@Deprecated
 public class InputSetDeserializer extends StdDeserializer<InputSetConfig> {
   public InputSetDeserializer() {
     super(InputSetDeserializer.class);

@@ -13,6 +13,7 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.user.remote.UserFilterNG;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,17 +25,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 public interface NgUserService {
-  List<UserInfo> getUsersByIds(List<String> userIds, String accountIdentifier);
-
   Optional<UserInfo> getUserById(String userId);
 
   Optional<UserInfo> getUserFromEmail(String emailIds);
-
-  List<UserInfo> getUsersFromEmail(List<String> emailIds, String accountIdentifier);
-
-  List<String> getUsers(Scope scope, String roleIdentifier);
-
-  Optional<UserMembership> getUserMembership(String userId);
 
   Optional<UserMetadataDTO> getUserMetadata(String userId);
 
@@ -42,6 +35,12 @@ public interface NgUserService {
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
    */
   Page<UserInfo> listCurrentGenUsers(String accountIdentifier, String searchString, Pageable page);
+
+  List<UserInfo> listCurrentGenUsers(String accountId, UserFilterNG userFilter);
+
+  List<String> listUsersHavingRole(Scope scope, String roleIdentifier);
+
+  Optional<UserMembership> getUserMembership(String userId);
 
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.

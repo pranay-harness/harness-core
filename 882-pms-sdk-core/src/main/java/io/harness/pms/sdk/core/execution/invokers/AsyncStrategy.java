@@ -12,9 +12,10 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
 import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
-import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
+import io.harness.pms.sdk.core.execution.ProgressableStrategy;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -30,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(PIPELINE)
 @Slf4j
-public class AsyncStrategy implements ExecuteStrategy {
+public class AsyncStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private AsyncWaitEngine asyncWaitEngine;
@@ -65,7 +66,9 @@ public class AsyncStrategy implements ExecuteStrategy {
     }
 
     AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    asyncWaitEngine.waitForAllOn(callback, response.getCallbackIdsList().toArray(new String[0]));
+    AsyncSdkProgressCallback progressCallback =
+        AsyncSdkProgressCallback.builder().nodeExecutionBytes(nodeExecution.toByteArray()).build();
+    asyncWaitEngine.waitForAllOn(callback, progressCallback, response.getCallbackIdsList().toArray(new String[0]));
     sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), extractStatus(response),
         ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());
   }

@@ -18,4 +18,8 @@ public class ExecutableProcessor {
   public void handleResume(ResumePackage resumePackage) {
     executeStrategy.resume(resumePackage);
   }
+
+  public void handleProgress(ProgressPackage progressPackage) {
+    executeStrategy.progress(progressPackage);
+  }
 }

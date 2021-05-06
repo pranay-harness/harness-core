@@ -10,7 +10,8 @@ import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
 import io.harness.gitsync.common.impl.HarnessToGitHelperServiceImpl;
-import io.harness.gitsync.common.impl.ScmClientFacilitatorServiceImpl;
+import io.harness.gitsync.common.impl.ScmDelegateFacilitatorServiceImpl;
+import io.harness.gitsync.common.impl.ScmManagerFacilitatorServiceImpl;
 import io.harness.gitsync.common.impl.YamlGitConfigServiceImpl;
 import io.harness.gitsync.common.impl.gittoharness.GitToHarnessProcessorServiceImpl;
 import io.harness.gitsync.common.service.GitBranchService;
@@ -46,6 +47,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @OwnedBy(DX)
 public class GitSyncModule extends AbstractModule {
   private static final AtomicReference<GitSyncModule> instanceRef = new AtomicReference<>();
+  public static final String SCM_ON_MANAGER = "scmOnManager";
+  public static final String SCM_ON_DELEGATE = "scmOnDelegate";
 
   public static GitSyncModule getInstance() {
     if (instanceRef.get() == null) {
@@ -80,7 +83,12 @@ public class GitSyncModule extends AbstractModule {
     bind(GitSyncTriggerService.class).to(GitSyncTriggerServiceImpl.class);
     bind(HarnessToGitHelperService.class).to(HarnessToGitHelperServiceImpl.class);
     bind(GitToHarnessProcessorService.class).to(GitToHarnessProcessorServiceImpl.class);
-    bind(ScmClientFacilitatorService.class).to(ScmClientFacilitatorServiceImpl.class);
+    bind(ScmClientFacilitatorService.class)
+        .annotatedWith(Names.named(SCM_ON_MANAGER))
+        .to(ScmManagerFacilitatorServiceImpl.class);
+    bind(ScmClientFacilitatorService.class)
+        .annotatedWith(Names.named(SCM_ON_DELEGATE))
+        .to(ScmDelegateFacilitatorServiceImpl.class);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));

@@ -23,8 +23,6 @@ public class NGExecutionEventHandlerRegistrar {
       engineEventHandlersMap.put(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
           Sets.newHashSet(PipelineExecutionUpdateEventHandler.class));
       OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-          engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-      OrchestrationModuleRegistrarHelper.mergeEventHandlers(
           engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
     }
     return engineEventHandlersMap;

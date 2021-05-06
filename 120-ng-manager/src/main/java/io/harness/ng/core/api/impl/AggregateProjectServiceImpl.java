@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
-import static io.harness.ng.core.user.remote.mapper.UserSearchMapper.writeDTO;
+import static io.harness.ng.core.user.remote.mapper.UserMetadataMapper.writeDTO;
 
 import static java.util.stream.Collectors.toList;
 
@@ -28,6 +28,7 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
+import io.harness.user.remote.UserFilterNG;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -118,17 +119,18 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
 
   private List<UserMetadataDTO> getAdmins(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, Map<String, UserMetadataDTO> userMap) {
-    List<String> userIds = ngUserService.getUsers(Scope.builder()
-                                                      .accountIdentifier(accountIdentifier)
-                                                      .orgIdentifier(orgIdentifier)
-                                                      .projectIdentifier(projectIdentifier)
-                                                      .build(),
+    List<String> userIds = ngUserService.listUsersHavingRole(Scope.builder()
+                                                                 .accountIdentifier(accountIdentifier)
+                                                                 .orgIdentifier(orgIdentifier)
+                                                                 .projectIdentifier(projectIdentifier)
+                                                                 .build(),
         PROJECT_ADMIN_ROLE);
     return userIds.stream().filter(userMap::containsKey).map(userMap::get).collect(toList());
   }
 
   private Map<String, UserMetadataDTO> getUserMap(List<String> userIds, String accountIdentifier) {
-    List<UserInfo> users = ngUserService.getUsersByIds(userIds, accountIdentifier);
+    List<UserInfo> users =
+        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIds).build());
     Map<String, UserMetadataDTO> userMap = new HashMap<>();
     users.forEach(user -> userMap.put(user.getUuid(), writeDTO(user)));
     return userMap;
