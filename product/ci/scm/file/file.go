@@ -28,17 +28,27 @@ func FindFile(ctx context.Context, fileRequest *pb.GetFileRequest, log *zap.Suga
 		return nil, err
 	}
 
-	response, _, err := client.Contents.Find(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref)
+	content, response, err := client.Contents.Find(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref)
 	if err != nil {
 		log.Errorw("Findfile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+		// this is a hard error with no response
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from the git provider, e.g. the file doesnt exist.
+		out = &pb.FileContent{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+		return out, nil
 	}
 	log.Infow("Findfile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "ref", ref, "commit id",
-		response.Sha, "blob id", response.BlobID, "elapsed_time_ms", utils.TimeSince(start))
+		content.Sha, "blob id", content.BlobID, "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.FileContent{
-		Content:  string(response.Data),
-		CommitId: response.Sha,
-		BlobId:   response.BlobID,
+		Content:  string(content.Data),
+		CommitId: content.Sha,
+		BlobId:   content.BlobID,
+		Status:   int32(response.Status),
 		Path:     fileRequest.Path,
 	}
 	return out, nil
@@ -91,7 +101,16 @@ func DeleteFile(ctx context.Context, fileRequest *pb.DeleteFileRequest, log *zap
 	response, err := client.Contents.Delete(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), fileRequest.GetRef())
 	if err != nil {
 		log.Errorw("DeleteFile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+		// this is a hard error with no response
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from the git provider, e.g. the file doesnt exist.
+		out = &pb.DeleteFileResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+		return out, nil
 	}
 	log.Infow("DeleteFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.DeleteFileResponse{
@@ -232,7 +251,16 @@ func CreateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 	response, err := client.Contents.Create(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), inputParams)
 	if err != nil {
 		log.Errorw("CreateFile failure", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", inputParams.Branch, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+		// this is a hard error with no response
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from the git provider, e.g. the file exists.
+		out = &pb.CreateFileResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+		return out, nil
 	}
 	log.Infow("CreateFile success", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "branch", inputParams.Branch, "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.CreateFileResponse{

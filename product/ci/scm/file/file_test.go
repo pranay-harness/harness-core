@@ -78,8 +78,9 @@ func TestFindFileNegativePath(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	got, err := FindFile(context.Background(), in, log.Sugar())
 
-	assert.NotNil(t, err, "error thrown")
-	assert.Nil(t, got, "Nothing returned")
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, int32(404), got.Status, "Nothing returned")
+	assert.Equal(t, "Not Found", got.Error, "Not found")
 }
 func TestCreateFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -117,6 +118,46 @@ func TestCreateFile(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, got.Status, int32(201), "status matches")
+}
+
+func TestCreateFileConflict(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(409)
+		content, _ := ioutil.ReadFile("testdata/FileCreateNoMatch.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+
+	in := &pb.FileModifyRequest{
+		Slug:    "tphoney/scm-test",
+		Path:    "jello",
+		Message: "message",
+		Branch:  "main",
+		Content: "data",
+		BlobId:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
+		Signature: &pb.Signature{
+			Name:  "tp honey",
+			Email: "tp@harness.io",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := CreateFile(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, got.Status, int32(409), "status matches")
+	assert.Equal(t, got.Error, "newfile does not match ", "error matches")
 }
 
 func TestUpdateFile(t *testing.T) {
