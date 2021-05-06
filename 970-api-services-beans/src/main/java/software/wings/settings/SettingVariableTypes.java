@@ -134,9 +134,9 @@ public enum SettingVariableTypes {
   AZURE("Microsoft Azure"),
 
   /**
-   * Pivotal Cloud Foundry
+   * Tanzu Application Service
    */
-  PCF("Pivotal Cloud Foundry"),
+  PCF("Tanzu Application Service"),
 
   /**
    * Direct connection setting variable types.

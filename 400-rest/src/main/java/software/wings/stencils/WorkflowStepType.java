@@ -32,7 +32,7 @@ public enum WorkflowStepType {
   // Helm
   HELM("Helm"),
   // PCF
-  PCF("Pivotal Cloud Foundry"),
+  PCF("Tanzu Application Service"),
 
   // Infrastructure Provisioner,
   INFRASTRUCTURE_PROVISIONER("Infrastructure Provisioner"),
