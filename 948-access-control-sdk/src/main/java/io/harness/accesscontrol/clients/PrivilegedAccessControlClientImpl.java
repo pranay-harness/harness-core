@@ -116,13 +116,19 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
     AccessCheckResponseDTO accessCheckResponseDTO =
         checkForAccess(principal, Collections.singletonList(permissionCheckDTO));
     AccessControlDTO accessControlDTO = accessCheckResponseDTO.getAccessControlList().get(0);
+    String finalMessage;
+    if (!StringUtils.isEmpty(exceptionMessage)) {
+      finalMessage = exceptionMessage;
+    } else {
+      finalMessage = String.format("Missing permission %s on %s", accessControlDTO.getPermission(),
+          accessControlDTO.getResourceType().toLowerCase());
+      if (!StringUtils.isEmpty(accessControlDTO.getResourceIdentifier())) {
+        finalMessage =
+            finalMessage.concat(String.format(" with identifier %s", accessControlDTO.getResourceIdentifier()));
+      }
+    }
     if (!accessControlDTO.isPermitted()) {
-      throw new AccessDeniedException(StringUtils.isEmpty(exceptionMessage)
-              ? String.format("Principal [%s] does not have permission [%s] on resource [%s]",
-                  accessCheckResponseDTO.getPrincipal().getPrincipalIdentifier(), permission,
-                  accessControlDTO.getResourceIdentifier())
-              : exceptionMessage,
-          ErrorCode.NG_ACCESS_DENIED, USER);
+      throw new AccessDeniedException(finalMessage, ErrorCode.NG_ACCESS_DENIED, USER);
     }
   }
 
