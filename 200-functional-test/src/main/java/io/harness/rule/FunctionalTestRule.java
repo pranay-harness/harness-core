@@ -1,7 +1,6 @@
 package io.harness.rule;
 
 import static io.harness.cache.CacheBackend.NOOP;
-import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 
 import static org.mockito.Mockito.mock;
 
@@ -35,6 +34,7 @@ import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
 import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
@@ -147,7 +147,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     String mongoUri =
         new AsymmetricDecryptor(new ScmSecret()).decryptText(mongoConfigRestResponse.getResource().getEncryptedUri());
 
-    MongoClientURI clientUri = new MongoClientURI(mongoUri, MongoClientOptions.builder(defaultMongoClientOptions));
+    MongoConfig mongoConfig = MongoConfig.builder().build();
+    MongoClientURI clientUri =
+        new MongoClientURI(mongoUri, MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig)));
     String dbName = clientUri.getDatabase();
 
     MongoClient mongoClient = new MongoClient(clientUri);
