@@ -4,6 +4,7 @@ import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.dto.DeploymentSummary;
 import io.harness.dto.deploymentinfo.OnDemandRollbackInfo;
+import io.harness.dto.infrastructureMapping.DirectKubernetesInfrastructureMapping;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.InstanceSyncFlowType;
 
@@ -15,7 +16,8 @@ import software.wings.service.impl.instance.Status;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-public class ContainerInstanceHandler extends InstanceHandler {
+public class ContainerInstanceHandler
+    extends InstanceHandler<ContainerMetadata, DirectKubernetesInfrastructureMapping> {
   @Override
   public void handleNewDeployment(
       DeploymentSummary deploymentSummary, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {}
@@ -46,19 +48,19 @@ public class ContainerInstanceHandler extends InstanceHandler {
   protected void validateDeploymentInfo(DeploymentSummary deploymentSummary) {}
 
   @Override
-  protected <T> Multimap<T, Instance> createDeploymentInstanceMap(DeploymentSummary deploymentSummary) {
+  protected Multimap<ContainerMetadata, Instance> createDeploymentInstanceMap(DeploymentSummary deploymentSummary) {
     Multimap<ContainerMetadata, Instance> deploymentMap = ArrayListMultimap.create();
-    return (Multimap<T, Instance>) deploymentMap;
+    return deploymentMap;
   }
 
   @Override
-  protected <T extends InfrastructureMapping> T getDeploymentInfrastructureMapping(
+  protected DirectKubernetesInfrastructureMapping getDeploymentInfrastructureMapping(
       DeploymentSummary deploymentSummary) {
-    return null;
+    return new DirectKubernetesInfrastructureMapping();
   }
 
   @Override
-  protected <T extends InfrastructureMapping, O> void syncInstancesInternal(T inframapping,
-      Multimap<O, Instance> deploymentInstanceMap, DeploymentSummary newDeploymentSummary, boolean rollback,
-      DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow) {}
+  protected void syncInstancesInternal(DirectKubernetesInfrastructureMapping inframapping,
+      Multimap<ContainerMetadata, Instance> deploymentInstanceMap, DeploymentSummary newDeploymentSummary,
+      boolean rollback, DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow) {}
 }

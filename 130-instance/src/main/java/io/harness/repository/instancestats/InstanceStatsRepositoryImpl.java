@@ -23,6 +23,7 @@ public class InstanceStatsRepositoryImpl implements InstanceStatsRepository {
     } catch (SQLException exception) {
       // TODO handle exception
       exception.printStackTrace();
+      return null;
     }
   }
 

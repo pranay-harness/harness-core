@@ -4,8 +4,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Data
+@NoArgsConstructor
 @OwnedBy(HarnessTeam.DX)
 public abstract class ContainerInfrastructureMapping extends InfrastructureMapping {
   private String clusterName;

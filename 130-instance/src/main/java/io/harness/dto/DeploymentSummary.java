@@ -3,15 +3,12 @@ package io.harness.dto;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dto.deploymentinfo.DeploymentInfo;
-import io.harness.dto.deploymentinfo.OnDemandRollbackInfo;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
 @OwnedBy(HarnessTeam.DX)
 public class DeploymentSummary {
   private String accountId;

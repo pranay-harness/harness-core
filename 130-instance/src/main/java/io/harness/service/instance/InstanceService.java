@@ -3,12 +3,12 @@ package io.harness.service.instance;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.dto.Instance;
+import io.harness.dto.SyncStatus;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
-import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;

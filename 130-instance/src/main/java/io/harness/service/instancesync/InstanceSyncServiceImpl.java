@@ -1,6 +1,5 @@
 package io.harness.service.instancesync;
 
-import static io.harness.instancesync.entity.constants.InstanceSyncConstants.HARNESS_ACCOUNT_ID;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -68,7 +67,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(perpetualTaskId);
     Map<String, String> clientParams = perpetualTaskRecord.getClientContext().getClientParams();
 
-    String accountId = clientParams.get(HARNESS_ACCOUNT_ID);
+    //    String accountId = clientParams.get(HARNESS_ACCOUNT_ID);
     // TODO create method to fetch field by field from client params and create inframapping details object
     InfrastructureMapping infrastructureMapping = fetchInframappingDetailsFromClientContext(clientParams);
 
@@ -100,19 +99,20 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
   // TODO check how to perform this, what should be the inputs
   public String manualSync(String appId, String infraMappingId) {
-    String syncJobId = UUIDGenerator.generateUuid();
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(infraMappingId);
-    String accountId = infrastructureMapping.getAccountId();
-    instanceService.saveManualSyncJob(
-        ManualSyncJob.builder().uuid(syncJobId).accountId(accountId).appId(appId).build());
-    executorService.submit(() -> {
-      try {
-        syncNow(appId, infrastructureMapping, MANUAL);
-      } finally {
-        instanceService.deleteManualSyncJob(appId, syncJobId);
-      }
-    });
-    return syncJobId;
+    //    String syncJobId = UUIDGenerator.generateUuid();
+    //    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(infraMappingId);
+    //    String accountId = infrastructureMapping.getAccountId();
+    //    instanceService.saveManualSyncJob(
+    //        ManualSyncJob.builder().uuid(syncJobId).accountId(accountId).appId(appId).build());
+    //    executorService.submit(() -> {
+    //      try {
+    //        syncNow(appId, infrastructureMapping, MANUAL);
+    //      } finally {
+    //        instanceService.deleteManualSyncJob(appId, syncJobId);
+    //      }
+    //    });
+    //    return syncJobId;
+    return null;
   }
 
   public void syncNow(String appId, InfrastructureMapping infraMapping, InstanceSyncFlowType instanceSyncFlowType) {
@@ -137,16 +137,18 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
         log.info("Instance sync started for infraMapping");
         instanceHandler.syncInstances(appId, infraMappingId, instanceSyncFlowType);
         // TODO check if we require display name here
-        instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
-            infraMapping.getDisplayName(), System.currentTimeMillis());
+        //        instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(),
+        //        infraMappingId,
+        //            infraMapping.getDisplayName(), System.currentTimeMillis());
         log.info("Instance sync completed for infraMapping");
       } catch (Exception ex) {
         log.warn("Instance sync failed for infraMapping", ex);
         String errorMsg = getErrorMsg(ex);
 
         // TODO check if we require display name here
-        instanceService.handleSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(), infraMappingId,
-            infraMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
+        //        instanceService.handleSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(),
+        //        infraMappingId,
+        //            infraMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
       }
     }
   }
@@ -214,33 +216,36 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
           infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
       String errorMsg = getErrorMsg(ex);
 
-      boolean stopSync = instanceService.handleSyncFailure(infrastructureMapping.getAppId(),
-          infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(),
-          infrastructureMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
+      //      boolean stopSync = instanceService.handleSyncFailure(infrastructureMapping.getAppId(),
+      //          infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(),
+      //          infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(), System.currentTimeMillis(),
+      //          errorMsg);
 
-      if (stopSync) {
-        log.info("Sync Failure. Deleting Perpetual Tasks. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
-            infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
-        instanceSyncPerpetualTaskService.deletePerpetualTasks(infrastructureMapping);
-      }
+      //      if (stopSync) {
+      //        log.info("Sync Failure. Deleting Perpetual Tasks. Infrastructure Mapping : [{}], Perpetual Task Id :
+      //        [{}]",
+      //            infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
+      //        instanceSyncPerpetualTaskService.deletePerpetualTasks(infrastructureMapping);
+      //      }
 
       throw ex;
     } finally {
       Status status = instanceHandler.getStatus(infrastructureMapping, response);
       if (status.isSuccess()) {
-        instanceService.updateSyncSuccess(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(),
-            infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(),
-            System.currentTimeMillis());
+        //        instanceService.updateSyncSuccess(infrastructureMapping.getAppId(),
+        //        infrastructureMapping.getServiceId(),
+        //            infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(),
+        //            infrastructureMapping.getDisplayName(), System.currentTimeMillis());
       }
       if (!status.isRetryable()) {
         log.info("Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
-            infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+            infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.deletePerpetualTask(
             infrastructureMapping.getAccountId(), infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
       }
       if (!status.isSuccess()) {
         log.info("Sync Failure. Reset Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
-            infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+            infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.resetPerpetualTask(
             infrastructureMapping.getAccountId(), perpetualTaskRecord.getUuid());
       }

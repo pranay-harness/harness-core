@@ -142,8 +142,8 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
   private boolean shouldCreatePerpetualTasks(InfrastructureMapping infrastructureMapping) {
     // TODO Fix the method acc to NG
-    long instanceCount =
-        instanceService.getInstanceCount(infrastructureMapping.getAppId(), infrastructureMapping.getId());
+    long instanceCount = 0;
+    //        instanceService.getInstanceCount(infrastructureMapping.getAppId(), infrastructureMapping.getId());
     return instanceCount > 0 && !perpetualTasksAlreadyExists(infrastructureMapping);
   }
 

@@ -86,56 +86,11 @@ public class InstanceServiceImpl implements InstanceService {
         log.info("Deleting the instances since sync has been failing for more than a week for infraMappingId: {}",
             infraMappingId);
         syncStatusRepository.deleteById(syncStatus.getId());
-        pruneByInfrastructureMapping(appId, infraMappingId);
+        //        pruneByInfrastructureMapping(appId, infraMappingId);
         return false;
       }
     }
-
-    @Override
-    public List<SyncStatus> getSyncStatus(String appId, String serviceId, String envId) {
-      return null;
-    }
-
-    @Override
-    public void saveManualSyncJob(ManualSyncJob manualSyncJob) {}
-
-    @Override
-    public void deleteManualSyncJob(String appId, String manualSyncJobId) {}
-
-    @Override
-    public List<Boolean> getManualSyncJobsStatus(String accountId, Set<String> manualJobIdSet) {
-      return null;
-    }
-
-    @Override
-    public List<Instance> getInstancesForAppAndInframappingNotRemovedFully(String appId, String infraMappingId) {
-      return null;
-    }
-
-    @Override
-    public List<Instance> getInstancesForAppAndInframapping(String appId, String infraMappingId) {
-      return null;
-    }
-
-    @Override
-    public long getInstanceCount(String appId, String infraMappingId) {
-      return 0;
-    }
-
-    @Override
-    public void deleteByAccountId(String accountId) {}
-
-    @Override
-    public void pruneByApplication(String appId) {}
-
-    @Override
-    public void pruneByEnvironment(String appId, String envId) {}
-
-    @Override
-    public void pruneByInfrastructureMapping(String appId, String infrastructureMappingId) {}
-
-    @Override
-    public void pruneByService(String appId, String serviceId) {}
+    return true;
   }
 
   @Override

@@ -5,9 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 
 import java.util.HashSet;
 import java.util.Set;
-import lombok.Data;
+import lombok.Builder;
 
-@Data
 @OwnedBy(HarnessTeam.DX)
 public class K8sDeploymentInfo extends DeploymentInfo {
   private String namespace;
@@ -15,4 +14,14 @@ public class K8sDeploymentInfo extends DeploymentInfo {
   private Integer releaseNumber;
   private Set<String> namespaces = new HashSet<>();
   private String blueGreenStageColor;
+
+  @Builder
+  public K8sDeploymentInfo(
+      String namespace, String releaseName, Integer releaseNumber, Set<String> namespaces, String blueGreenStageColor) {
+    this.namespace = namespace;
+    this.releaseName = releaseName;
+    this.releaseNumber = releaseNumber;
+    this.namespaces = namespaces;
+    this.blueGreenStageColor = blueGreenStageColor;
+  }
 }

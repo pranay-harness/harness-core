@@ -5,7 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Data;
 
-@Data
 @OwnedBy(HarnessTeam.DX)
 public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
   private String namespace;

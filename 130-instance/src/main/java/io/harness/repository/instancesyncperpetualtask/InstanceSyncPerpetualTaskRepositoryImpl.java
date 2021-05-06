@@ -42,11 +42,11 @@ public class InstanceSyncPerpetualTaskRepositoryImpl implements InstanceSyncPerp
   }
 
   public void delete(String infrastructureMappingId) {
-    Query<InstanceSyncPerpetualTaskInfo> deleteQuery =
-        wingsPersistence.createQuery(InstanceSyncPerpetualTaskInfo.class, excludeAuthority)
-            .filter(InstanceSyncPerpetualTaskInfoKeys.infrastructureMappingId, infrastructureMappingId);
-
-    wingsPersistence.delete(deleteQuery);
+    //    Query<InstanceSyncPerpetualTaskInfo> deleteQuery =
+    //        wingsPersistence.createQuery(InstanceSyncPerpetualTaskInfo.class, excludeAuthority)
+    //            .filter(InstanceSyncPerpetualTaskInfoKeys.infrastructureMappingId, infrastructureMappingId);
+    //
+    //    wingsPersistence.delete(deleteQuery);
   }
 
   public Optional<InstanceSyncPerpetualTaskInfo> getByAccountIdAndInfrastructureMappingId(
