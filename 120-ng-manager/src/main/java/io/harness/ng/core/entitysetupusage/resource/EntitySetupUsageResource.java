@@ -64,9 +64,10 @@ public class EntitySetupUsageResource {
 
   @GET
   @Path("internal")
-  @ApiOperation(value = "Get Entities referring this resource", nickname = "listAllEntityUsage", hidden = true)
-  public ResponseDTO<Page<EntitySetupUsageDTO>> listAllEntityUsage(
-      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+  @ApiOperation(
+      value = "Get Entities referring this resource if fqn is given", nickname = "listAllEntityUsage", hidden = true)
+  public ResponseDTO<Page<EntitySetupUsageDTO>>
+  listAllEntityUsage(@QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN,
@@ -86,6 +87,7 @@ public class EntitySetupUsageResource {
       @QueryParam(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
       @QueryParam(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    // todo: Just fqn is not sufficient here, we should have referredBy entity type also here
     return ResponseDTO.newResponse(entitySetupUsageService.listAllReferredUsages(
         page, size, accountIdentifier, referredByEntityFQN, referredEntityType, searchTerm));
   }
@@ -99,6 +101,7 @@ public class EntitySetupUsageResource {
                              String accountIdentifier, @Size(max = 50) @Body List<String> referredByEntityFQNList,
       @NotNull @QueryParam(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType,
       @NotNull @QueryParam(REFERRED_ENTITY_TYPE) EntityType referredEntityType) {
+    // todo @deepak: Will have to add branch and repo, which might be a breaking change
     return ResponseDTO.newResponse(entitySetupUsageService.listAllReferredUsagesBatch(
         accountIdentifier, referredByEntityFQNList, referredByEntityType, referredEntityType));
   }
@@ -125,6 +128,8 @@ public class EntitySetupUsageResource {
   }
 
   // use event fmwk
+  // We no longer support this api, the branching support is also not their for this api
+  // for any crud of setup usage use the event framework
   @DELETE
   @Path("internal")
   @Deprecated
@@ -137,19 +142,5 @@ public class EntitySetupUsageResource {
       @QueryParam(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {
     return ResponseDTO.newResponse(entitySetupUsageService.delete(
         accountIdentifier, referredEntityFQN, referredEntityType, referredByEntityFQN, referredByEntityType));
-  }
-
-  // use event fmwk
-  @Deprecated
-  @DELETE
-  @Path("/internal/deleteAllReferredByRecords")
-  @ApiOperation(value = "Deletes the entity reference records for referredByEntity",
-      nickname = "deleteAllReferredByEntityRecords", hidden = true)
-  public ResponseDTO<Boolean>
-  deleteAllReferredByEntityRecords(@NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
-      @QueryParam(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {
-    return ResponseDTO.newResponse(entitySetupUsageService.deleteAllReferredByEntityRecords(
-        accountIdentifier, referredByEntityFQN, referredByEntityType));
   }
 }

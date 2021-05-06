@@ -3,6 +3,7 @@ package io.harness.ng.core.entitysetupusage.mappers;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetail;
@@ -16,16 +17,31 @@ public class EntitySetupUsageDTOtoEntity {
   public EntitySetupUsage toEntityReference(EntitySetupUsageDTO entitySetupUsageDTO) {
     EntityDetail referredEntity = entitySetupUsageDTO.getReferredEntity();
     EntityDetail referredByEntity = entitySetupUsageDTO.getReferredByEntity();
+    EntityReference referredByEntityRef = referredByEntity.getEntityRef();
+    EntityReference referredEntityRef = referredEntity.getEntityRef();
     SetupUsageDetail setupUsageDetail = entitySetupUsageDTO.getDetail();
     return EntitySetupUsage.builder()
         .accountIdentifier(entitySetupUsageDTO.getAccountIdentifier())
         .referredByEntity(referredByEntity)
-        .referredByEntityFQN(referredByEntity.getEntityRef().getFullyQualifiedName())
+        .referredByEntityFQN(referredByEntityRef.getFullyQualifiedName())
         .referredByEntityType(referredByEntity.getType().toString())
-        .referredEntityFQN(referredEntity.getEntityRef().getFullyQualifiedName())
+        .referredByEntityRepoIdentifier(referredByEntityRef.getRepoIdentifier())
+        .referredByEntityBranch(referredByEntityRef.getBranch())
+        .referredByEntityIsDefault(checkWhetherDefaultEntity(referredByEntityRef))
+        .referredEntityFQN(referredEntityRef.getFullyQualifiedName())
         .referredEntityType(referredEntity.getType().toString())
         .referredEntity(referredEntity)
+        .referredEntityRepoIdentifier(referredEntityRef.getRepoIdentifier())
+        .referredEntityBranch(referredEntityRef.getBranch())
+        .referredEntityIsDefault(checkWhetherDefaultEntity(referredEntityRef))
         .detail(setupUsageDetail)
         .build();
+  }
+
+  private Boolean checkWhetherDefaultEntity(EntityReference referredByEntityRef) {
+    if (referredByEntityRef.getBranch() == null && referredByEntityRef.getRepoIdentifier() == null) {
+      return true;
+    }
+    return referredByEntityRef.isDefault();
   }
 }
