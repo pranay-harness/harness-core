@@ -375,6 +375,62 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 	}, nil
 }
 
+// DeleteMany is wrapper over deleteMany fn in mongo driver and logs time taken in the query
+func (mdb *MongoDb) DeleteMany(coll string, ctx context.Context, f bson.M, d *options.DeleteOptions) (*mongo.DeleteResult, error) {
+	start := time.Now()
+	res, err := mdb.Database.Collection(coll).DeleteMany(ctx, f, d)
+	mdb.Log.Infow("deleteMany operation", "filter", f, "collection", coll, "query_time", time.Since(start))
+	return res, err
+}
+
+// InsertMany is wrapper over insertMany fn in mongo driver and logs time taken in the query
+func (mdb *MongoDb) InsertMany(coll string, ctx context.Context, add []interface{}) (*mongo.InsertManyResult, error) {
+	start := time.Now()
+	res, err := mdb.Database.Collection(coll).InsertMany(ctx, add)
+	mdb.Log.Infow("insertMany operation", "collection", coll, "query_time", time.Since(start))
+	return res, err
+}
+
+// UpdateMany is wrapper over updateMany fn in mongo driver and logs time taken in the query
+func (mdb *MongoDb) UpdateMany(coll string, ctx context.Context, f bson.M, update bson.M) (*mongo.UpdateResult, error) {
+	start := time.Now()
+	res, err := mdb.Database.Collection(coll).UpdateMany(ctx, f, update)
+	mdb.Log.Infow("updateMany operation", "filter", f, "collection", coll, "query_time", time.Since(start))
+	return res, err
+}
+
+// Find is wrapper over Find fn in mongo driver and logs time taken in the query
+func (mdb *MongoDb) Find(coll string, ctx context.Context, f bson.M, results interface{}) error {
+	start := time.Now()
+	cur, err := mdb.Database.Collection(coll).Find(ctx, f)
+	if err != nil {
+		return err
+	}
+	switch coll {
+	case nodeColl:
+		res := (results).(*[]Node)
+		err = cur.All(ctx, res)
+	case relnsColl:
+		res := (results).(*[]Relation)
+		err = cur.All(ctx, res)
+	default:
+		return fmt.Errorf("unknown collection in find operation %s", coll)
+	}
+	mdb.Log.Infow("find operation", "filter", f, "collection", coll, "query_time", time.Since(start))
+	return err
+}
+
+// BulkWrite is wrapper over BulkWrite fn in mongo driver and logs time taken in the query
+func (mdb *MongoDb) BulkWrite(coll string, ctx context.Context, operations []mongo.WriteModel, b *options.BulkWriteOptions) (*mongo.BulkWriteResult, error) {
+	start := time.Now()
+	res, err := mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+	if err != nil {
+		return nil, err
+	}
+	mdb.Log.Infow("bulk operation", "collection", coll, "query_time", time.Since(start))
+	return res, nil
+}
+
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
 func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, acc, org, proj string) error {
 	nodes := make([]Node, len(cg.Nodes))
@@ -388,7 +444,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	// query for partial callgraph for the filter -(repo + branch + (commitId != currentCommit)) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
 	f := bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
-	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	r1, err := mdb.DeleteMany(nodeColl, ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return errors.Wrap(
 			err,
@@ -397,7 +453,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 	// this will delete all the relations create by older commits for current pull request
 	f = bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
-	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	r2, err := mdb.DeleteMany(relnsColl, ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return errors.Wrap(
 			err,
@@ -495,31 +551,27 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.branch": branch, "vcs_info.repo": repo})
 	}
 	f = bson.M{"$or": cond}
-	cur, err := mdb.Database.Collection(nodeColl).Find(ctx, f, &options.FindOptions{})
+	var tNodes []Node
+	err = mdb.Find(nodeColl, ctx, f, &tNodes)
 	if err != nil {
 		return formatError(err, "failed to query nodes coll for deleted files", repo, branch, commit)
 	}
 	delIDs := []int{} // delIDs is list of ids of nodes which are deleted
-	for cur.Next(ctx) {
-		var node Node
-		err = cur.Decode(&node)
-		if err != nil {
-			return formatError(err, "failed to fetch node for deleted files", repo, branch, commit)
-		}
+	for _, node := range tNodes {
 		delIDs = append(delIDs, node.Id)
 	}
 	mdb.Log.Infow(fmt.Sprintf("node ids to be deleted: [%v]", delIDs), "branch", branch, "repo", repo)
 	if len(delIDs) > 0 {
 		// delete nodes with id in delIDs
 		f = bson.M{"id": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch}
-		r, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+		r, err := mdb.DeleteMany(nodeColl, ctx, f, &options.DeleteOptions{})
 		if err != nil {
 			return formatError(err, fmt.Sprintf("failed to delete records from nodes coll delIDs: %v", delIDs), repo, branch, commit)
 		}
 
 		// delete relations with source in delIDs
 		f = bson.M{"source": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch}
-		r1, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+		r1, err := mdb.DeleteMany(relnsColl, ctx, f, &options.DeleteOptions{})
 		if err != nil {
 			return formatError(err, fmt.Sprintf("failed to delete records from relns coll delIDs: %v", delIDs), repo, branch, commit)
 		}
@@ -529,7 +581,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		// update tests fields which contains delIDs in relations
 		f = bson.M{"tests": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch}
 		update := bson.M{"$pull": bson.M{"tests": bson.M{"$in": delIDs}}}
-		res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, update)
+		res, err := mdb.UpdateMany(relnsColl, ctx, f, update)
 		if err != nil {
 			return formatError(err, "failed to get records in relations collection", repo, branch, commit)
 		}
@@ -565,15 +617,12 @@ func merge(tests []int, tests2 []int) []int {
 }
 
 // getNodeIds queries mongo and returns list of node ID's for the given filter
-func (mdb *MongoDb) getNodeIds(ctx context.Context, commit, branch, repo string, f interface{}) ([]int, error) {
+func (mdb *MongoDb) getNodeIds(ctx context.Context, commit, branch, repo string, f bson.M) ([]int, error) {
 	var nodes []Node
 	var nIds []int
-	cur, err := mdb.Database.Collection(nodeColl).Find(ctx, f)
+	err := mdb.Find(nodeColl, ctx, f, &nodes)
 	if err != nil {
 		return []int{}, formatError(err, "failed in find query in nodes collection", repo, branch, commit)
-	}
-	if err = cur.All(ctx, &nodes); err != nil {
-		return []int{}, formatError(err, "failed to iterate on records using cursor in nodes collection", repo, branch, commit)
 	}
 	for _, v := range nodes {
 		nIds = append(nIds, v.Id)
@@ -582,15 +631,12 @@ func (mdb *MongoDb) getNodeIds(ctx context.Context, commit, branch, repo string,
 }
 
 // getRelIds queries mongo and returns list of relation ID's for the given filter
-func (mdb *MongoDb) getRelIds(ctx context.Context, commit, branch, repo string, f interface{}) ([]int, error) {
+func (mdb *MongoDb) getRelIds(ctx context.Context, commit, branch, repo string, f bson.M) ([]int, error) {
 	var relations []Relation
 	var relIDS []int
-	cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
+	err := mdb.Find(relnsColl, ctx, f, &relations)
 	if err != nil {
 		return []int{}, formatError(err, "failed in find query in rel collection", repo, branch, commit)
-	}
-	if err = cur.All(ctx, &relations); err != nil {
-		return []int{}, formatError(err, "failed to iterate on records using cursor in relations collection", repo, branch, commit)
 	}
 	for _, v := range relations {
 		relIDS = append(relIDS, v.Source)
@@ -606,7 +652,7 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo string,
 	if len(nodesToMove) > 0 {
 		f := bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$in": nodesToMove}, "vcs_info.repo": repo}
 		update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
-		res, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, f, update)
+		res, err := mdb.UpdateMany(nodeColl, ctx, f, update)
 		if err != nil {
 			return formatError(err, "failed to merge cg in nodes collection for", repo, branch, commit)
 		}
@@ -621,7 +667,7 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo string,
 	// delete remaining records of src branch from nodes collection
 	// todo(AMAN):  find a better filter than $ne
 	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "vcs_info.branch": bson.M{"$ne": branch}}
-	res, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	res, err := mdb.DeleteMany(nodeColl, ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return formatError(err, "failed to delete records in nodes collection", repo, branch, commit)
 	}
@@ -645,7 +691,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 	if len(relToMove) > 0 {
 		f := bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$in": relToMove}, "vcs_info.repo": repo}
 		u := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
-		res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, u)
+		res, err := mdb.UpdateMany(relnsColl, ctx, f, u)
 		if err != nil {
 			return formatError(err, "failed to merge cg in nodes collection for", repo, branch, commit)
 		}
@@ -670,21 +716,15 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 	if len(relIDToUpdate) > 0 {
 		f := bson.M{"vcs_info.branch": branch, "source": bson.M{"$in": relIDToUpdate}, "vcs_info.repo": repo}
 		// filter for getting relations from destination branch
-		cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
+		err := mdb.Find(relnsColl, ctx, f, &destRelation)
 		if err != nil {
 			return formatError(err, "failed in find query in rel collection", repo, branch, commit)
-		}
-		if err = cur.All(ctx, &destRelation); err != nil {
-			return formatError(err, "failed to iterate on records using cursor in relations collection", repo, branch, commit)
 		}
 		// filter for getting relations from source branch
 		f = bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$in": relIDToUpdate}, "vcs_info.repo": repo}
-		cur, err = mdb.Database.Collection(relnsColl).Find(ctx, f)
+		err = mdb.Find(relnsColl, ctx, f, &srcRelation)
 		if err != nil {
 			return formatError(err, "failed in find query in rel collection", repo, branch, commit)
-		}
-		if err = cur.All(ctx, &srcRelation); err != nil {
-			return formatError(err, "failed to iterate on records using cursor in relations collection", repo, branch, commit)
 		}
 		destMap := getRelMap(srcRelation, destRelation)
 		var operations []mongo.WriteModel
@@ -694,7 +734,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 			operation.SetUpdate(bson.M{"$set": bson.M{"tests": tests}})
 			operations = append(operations, operation)
 		}
-		res, err := mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+		res, err := mdb.BulkWrite(relnsColl, ctx, operations, &options.BulkWriteOptions{})
 		if err != nil {
 			return formatError(err, "failed to merge relations collection", repo, branch, commit)
 		}
@@ -709,7 +749,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 	// delete remaining records of src branch from relations collection
 	// todo(AMAN):  find a better filter than $ne
 	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "vcs_info.branch": bson.M{"$ne": branch}}
-	res, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	res, err := mdb.DeleteMany(relnsColl, ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return formatError(err, "failed to delete records in relations collection", repo, branch, commit)
 	}
@@ -745,7 +785,7 @@ func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo)
 		}
 	}
 	if len(nodesToAdd) > 0 {
-		res, err := mdb.Database.Collection(nodeColl).InsertMany(ctx, nodesToAdd)
+		res, err := mdb.InsertMany(nodeColl, ctx, nodesToAdd)
 		if err != nil {
 			return errors.Wrap(
 				err,
@@ -784,7 +824,7 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 		}
 	}
 	if len(relToAdd) > 0 {
-		res, err := mdb.Database.Collection(relnsColl).InsertMany(ctx, relToAdd)
+		res, err := mdb.InsertMany(relnsColl, ctx, relToAdd)
 		if err != nil {
 			return errors.Wrap(
 				err,
@@ -802,12 +842,9 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 			idToUpdate = append(idToUpdate, rel.Source)
 		}
 		f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "source": bson.M{"$in": idToUpdate}}
-		cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
+		err := mdb.Find(relnsColl, ctx, f, &existingRelns)
 		if err != nil {
 			return formatError(err, "failed in find query in rel collection", info.Repo, info.Repo, info.CommitId)
-		}
-		if err = cur.All(ctx, &existingRelns); err != nil {
-			return formatError(err, "failed to iterate on records using cursor in existingRelns collection", info.Repo, info.Branch, info.CommitId)
 		}
 		finalRelations := getRelMap(relToUpdate, existingRelns)
 		var operations []mongo.WriteModel
@@ -817,7 +854,7 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 			operation.SetUpdate(bson.M{"$set": bson.M{"tests": tests}})
 			operations = append(operations, operation)
 		}
-		res, err := mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+		res, err := mdb.BulkWrite(relnsColl, ctx, operations, &options.BulkWriteOptions{})
 		if err != nil {
 			return formatError(err, "failed to update relations collection", info.Repo, info.Branch, info.CommitId)
 		}
