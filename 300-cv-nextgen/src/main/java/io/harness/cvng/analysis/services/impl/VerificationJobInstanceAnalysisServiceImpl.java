@@ -244,8 +244,8 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
     Integer trafficSplitPercentage = canaryBlueGreenVerificationJob.getTrafficSplitPercentage();
     if (trafficSplitPercentage != null) {
       return TrafficSplitPercentage.builder()
-          .preDeploymentPercentage(trafficSplitPercentage)
-          .postDeploymentPercentage(100 - trafficSplitPercentage)
+          .preDeploymentPercentage(100 - trafficSplitPercentage)
+          .postDeploymentPercentage(trafficSplitPercentage)
           .build();
     }
     return null;

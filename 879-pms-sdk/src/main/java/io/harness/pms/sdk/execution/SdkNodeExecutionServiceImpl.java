@@ -12,6 +12,7 @@ import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.AdviserResponseRequest;
 import io.harness.pms.contracts.execution.events.EventErrorRequest;
 import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
+import io.harness.pms.contracts.execution.events.HandleProgressRequest;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.ResumeNodeExecutionRequest;
@@ -33,6 +34,7 @@ import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.response.events.SdkResponseEventPublisher;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -180,6 +182,24 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
                                          .setSpawnChildRequest(spawnChildRequest)
                                          .setNodeExecutionId(spawnChildRequest.getNodeExecutionId())
                                          .build())
+            .build());
+  }
+
+  @Override
+  public void handleProgressResponse(NodeExecutionProto nodeExecutionProto, ProgressData progressData) {
+    String progressJson = RecastOrchestrationUtils.toDocumentJson(progressData);
+    sdkResponseEventPublisher.send(
+        SdkResponseEvent.builder()
+            .sdkResponseEventType(SdkResponseEventType.HANDLE_PROGRESS)
+            .sdkResponseEventRequest(
+                SdkResponseEventRequest.newBuilder()
+                    .setProgressRequest(HandleProgressRequest.newBuilder()
+                                            .setNodeExecutionId(nodeExecutionProto.getUuid())
+                                            .setPlanExecutionId(nodeExecutionProto.getAmbiance().getPlanExecutionId())
+                                            .setProgressJson(progressJson)
+                                            .build())
+                    .setNodeExecutionId(nodeExecutionProto.getUuid())
+                    .build())
             .build());
   }
 

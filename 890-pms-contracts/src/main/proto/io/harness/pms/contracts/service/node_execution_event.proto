@@ -5,8 +5,10 @@ package io.harness.pms.contracts.plan;
 option java_multiple_files = true;
 
 enum NodeExecutionEventType {
-  FACILITATE = 0;
-  START = 1;
-  RESUME = 2;
-  ADVISE = 3;
+  UNKNOWN_NODE_EVENT = 0;
+  FACILITATE = 1;
+  START = 2;
+  RESUME = 3;
+  ADVISE = 4;
+  PROGRESS = 5;
 }

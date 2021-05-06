@@ -1,0 +1,51 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "run_analysis")
+
+HarnessTeam = "CE"
+
+shared_dependencies = [
+    "@ce_nextgen//:com_graphql_java_graphql_java",
+    "@ce_nextgen//:org_antlr_antlr4_runtime",
+] + [
+    "//:lombok",
+    "//490-ce-commons:module",
+    "//970-ng-commons:module",
+    "@maven//:com_google_inject_guice",
+    "@maven//:io_leangen_graphql_spqr",
+]
+
+java_library(
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    tags = [
+        "aeriform",
+        "manual",
+    ],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    tags = [
+        "aeriform",
+        "manual",
+    ],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies + [
+        ":module",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+run_tests()
+
+run_analysis()

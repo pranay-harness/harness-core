@@ -14,6 +14,7 @@ import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.AccessLevel;
@@ -61,7 +62,7 @@ public class UserMembership implements PersistentRegularIterable, PersistentEnti
   @NotEmpty String userId;
   @NotEmpty String emailId;
   String name;
-  @Valid List<Scope> scopes;
+  @Valid @Builder.Default List<Scope> scopes = new ArrayList<>();
   @Version Long version;
 
   @FdIndex private Long nextIteration;

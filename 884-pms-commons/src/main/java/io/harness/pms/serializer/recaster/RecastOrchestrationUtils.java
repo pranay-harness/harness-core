@@ -26,7 +26,9 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.json.JsonMode;
+import org.bson.json.JsonParseException;
 import org.bson.json.JsonWriterSettings;
+import org.json.JSONException;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
@@ -123,12 +125,11 @@ public class RecastOrchestrationUtils {
     }
     if (value instanceof Document) {
       Document value1 = (Document) value;
-      if (value1.containsKey(Recaster.RECAST_CLASS_KEY)
-          && value1.get(Recaster.RECAST_CLASS_KEY).equals(ParameterField.class.getName())) {
+      if (isParameterField(value1)) {
         return handleParameterField(value1);
       }
       if (value1.containsKey(Recaster.ENCODED_VALUE)) {
-        return value1.get(Recaster.ENCODED_VALUE);
+        return handleEncodeValue(value1);
       }
       traverse(value1);
     } else if (RecastReflectionUtils.implementsInterface(value.getClass(), Iterable.class)) {
@@ -138,6 +139,28 @@ public class RecastOrchestrationUtils {
       traverse((Document) value);
     }
     return value;
+  }
+
+  private static Object handleEncodeValue(Document value1) {
+    Object encodedValue = value1.get(Recaster.ENCODED_VALUE);
+    if (encodedValue instanceof String) {
+      try {
+        return check(Document.parse((String) encodedValue));
+      } catch (JsonParseException ex) {
+        return value1.get(Recaster.ENCODED_VALUE);
+      } catch (ClassCastException ex) {
+        throw new JSONException("Cannot parse encoded value");
+      }
+    }
+    if (needConversion(encodedValue.getClass())) {
+      return check(encodedValue);
+    }
+    return value1.get(Recaster.ENCODED_VALUE);
+  }
+
+  private static boolean isParameterField(Document value1) {
+    return value1.containsKey(Recaster.RECAST_CLASS_KEY)
+        && value1.get(Recaster.RECAST_CLASS_KEY).equals(ParameterField.class.getName());
   }
 
   @SuppressWarnings("unchecked")
@@ -165,6 +188,9 @@ public class RecastOrchestrationUtils {
       } catch (JsonProcessingException e) {
         log.error("Cannot serialize collection to Json", e);
       }
+    }
+    if (encodedValue instanceof Document) {
+      return ((Document) encodedValue).toJson();
     }
     return encodedValue.toString();
   }

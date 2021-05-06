@@ -21,7 +21,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -63,34 +62,25 @@ public class K8sRecommendationDAO {
         .asList();
   }
 
-  @RetryOnException(retryCount = 3)
+  @RetryOnException(retryCount = RETRY_COUNT)
   public List<CeRecommendations> fetchRecommendationsOverview(
       @NotNull String accountId, @Nullable Condition condition, @NotNull Long offset, @NotNull Long limit) {
-    final Condition finalCondition = CE_RECOMMENDATIONS.ACCOUNTID.eq(accountId)
-                                         .and(CE_RECOMMENDATIONS.ISVALID.eq(true))
-                                         // based on current-gen workload recommendation dataFetcher
-                                         .and(CE_RECOMMENDATIONS.LASTPROCESSEDAT.greaterOrEqual(
-                                             OffsetDateTime.now(ZONE_OFFSET).truncatedTo(ChronoUnit.DAYS).minusDays(2)))
-                                         .and(firstNonNull(condition, DSL.noCondition()));
-
     return dslContext.selectFrom(CE_RECOMMENDATIONS)
-        .where(finalCondition)
+        .where(CE_RECOMMENDATIONS.ACCOUNTID.eq(accountId).and(firstNonNull(condition, DSL.noCondition())))
         .orderBy(CE_RECOMMENDATIONS.MONTHLYSAVING.desc().nullsLast())
         .offset(offset)
         .limit(limit)
         .fetchInto(CeRecommendations.class);
   }
 
-  @RetryOnException(retryCount = 3)
+  @RetryOnException(retryCount = RETRY_COUNT)
   public RecommendationOverviewStats fetchRecommendationsOverviewStats(
       @NotNull String accountId, @Nullable Condition condition) {
     return dslContext
         .select(sum(CE_RECOMMENDATIONS.MONTHLYCOST).as("totalMonthlyCost"),
             sum(CE_RECOMMENDATIONS.MONTHLYSAVING).as("totalMonthlySaving"))
         .from(CE_RECOMMENDATIONS)
-        .where(CE_RECOMMENDATIONS.ACCOUNTID.eq(accountId)
-                   .and(CE_RECOMMENDATIONS.ISVALID.eq(true))
-                   .and(firstNonNull(condition, DSL.noCondition())))
+        .where(CE_RECOMMENDATIONS.ACCOUNTID.eq(accountId).and(firstNonNull(condition, DSL.noCondition())))
         .fetchOneInto(RecommendationOverviewStats.class);
   }
 

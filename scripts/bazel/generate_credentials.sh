@@ -5,11 +5,14 @@ then
 fi
 
 #Setting up remote cache related config BT-282
-GOOGLE_CREDENTIALS_FILE="platform-bazel-cache-dev.json"
-REMOTE_CACHE="https://storage.googleapis.com/harness-bazel-cache-us-dev"
-if date +"%Z" | grep -q 'IST'; then
-  echo "Setting remote-cache in asia region"
-  REMOTE_CACHE="https://storage.googleapis.com/harness-bazel-cache-blr-dev"
+if [ -z "${GOOGLE_CREDENTIALS_FILE}" ]
+then
+  GOOGLE_CREDENTIALS_FILE="platform-bazel-cache-dev.json"
+  REMOTE_CACHE="https://storage.googleapis.com/harness-bazel-cache-us-dev"
+  if date +"%Z" | grep -q 'IST'; then
+    echo "Setting remote-cache in asia region"
+    REMOTE_CACHE="https://storage.googleapis.com/harness-bazel-cache-blr-dev"
+  fi
 fi
 
 echo build --google_credentials=${GOOGLE_CREDENTIALS_FILE} > bazelrc.gcp

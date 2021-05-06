@@ -1,5 +1,6 @@
 package io.harness.repositories.pipeline.custom;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.mappers.NgPipelineFilterHelper;
 
@@ -26,6 +27,8 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@ToBeDeleted
+@Deprecated
 public class NgPipelineRepositoryCustomImpl implements NgPipelineRepositoryCustom {
   private final MongoTemplate mongoTemplate;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);

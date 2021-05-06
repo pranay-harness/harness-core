@@ -2,8 +2,10 @@ package io.harness.ngpipeline.expressions.functors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.LateBindingValue;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@TargetModule(HarnessModule._810_NG_TRIGGERS)
 public class TriggerFunctor implements LateBindingValue {
   private final Ambiance ambiance;
 

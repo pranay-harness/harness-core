@@ -99,6 +99,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   @Singular List<UnitProgress> unitProgresses;
 
+  org.bson.Document progressData;
+
   AdviserResponse adviserResponse;
   // Timeouts for advisers
   List<String> adviserTimeoutInstanceIds;

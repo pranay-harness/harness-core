@@ -272,14 +272,11 @@ public class OrchestrationEngine {
 
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    PlanNodeProto node = nodeExecution.getNode();
-    if (isEmpty(node.getAdviserObtainmentsList())) {
-      endNodeExecutionHelper.endNodeExecutionWithNoAdvisers(nodeExecution, stepResponse);
-      return;
+    try {
+      handleStepResponseInternal(nodeExecution, stepResponse);
+    } catch (Exception ex) {
+      handleError(nodeExecution.getAmbiance(), ex);
     }
-    NodeExecution updatedNodeExecution =
-        endNodeExecutionHelper.handleStepResponsePreAdviser(nodeExecution, stepResponse);
-    queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status, EnumSet<Status> overrideStatusSet) {
@@ -315,6 +312,18 @@ public class OrchestrationEngine {
     nodeExecutionEventQueuePublisher.send(adviseEvent);
     waitNotifyEngine.waitForAllOn(publisherName,
         EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), adviseEvent.getNotifyId());
+  }
+
+  private void handleStepResponseInternal(
+      @NonNull NodeExecution nodeExecution, @NonNull StepResponseProto stepResponse) {
+    PlanNodeProto node = nodeExecution.getNode();
+    if (isEmpty(node.getAdviserObtainmentsList())) {
+      endNodeExecutionHelper.endNodeExecutionWithNoAdvisers(nodeExecution, stepResponse);
+      return;
+    }
+    NodeExecution updatedNodeExecution =
+        endNodeExecutionHelper.handleStepResponsePreAdviser(nodeExecution, stepResponse);
+    queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
   public void endTransition(NodeExecution nodeExecution) {
@@ -395,7 +404,8 @@ public class OrchestrationEngine {
                                   .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(exception))
                                   .build())
               .build();
-      handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), response);
+      NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+      handleStepResponseInternal(nodeExecution, response);
     } catch (RuntimeException ex) {
       log.error("Error when trying to obtain the advice ", ex);
     }

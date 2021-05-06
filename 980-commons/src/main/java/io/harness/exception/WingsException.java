@@ -195,6 +195,11 @@ public class WingsException extends RuntimeException {
     return this;
   }
 
+  public WingsException context(String key, String value) {
+    contextObjects.put(key, value);
+    return this;
+  }
+
   @Deprecated
   // Use param instead, from a helper class
   public WingsException addParam(String key, Object value) {

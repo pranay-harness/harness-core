@@ -1,6 +1,7 @@
 package io.harness.ngpipeline.overlayinputset.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -27,6 +28,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "inputSetsNG", noClassnameStored = true)
 @Document("inputSetsNG")
 @HarnessEntity(exportable = true)
+@ToBeDeleted
+@Deprecated
 public abstract class BaseInputSetEntity implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id private String id;
   @Trimmed @NotEmpty String accountId;

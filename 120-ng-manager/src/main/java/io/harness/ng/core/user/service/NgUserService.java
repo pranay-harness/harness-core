@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PL)
 public interface NgUserService {
@@ -67,7 +68,7 @@ public interface NgUserService {
 
   boolean isUserAtScope(String userId, Scope scope);
 
-  boolean update(UserMembership userMembership);
+  boolean update(String userId, Update update);
 
   boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source);
 
