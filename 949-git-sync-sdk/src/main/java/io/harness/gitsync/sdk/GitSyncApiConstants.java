@@ -4,7 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import lombok.experimental.UtilityClass;
+
 @OwnedBy(DX)
+@UtilityClass
 public class GitSyncApiConstants {
   public static final String BRANCH_KEY = "branch";
   public static final String REPO_IDENTIFIER_KEY = "repoIdentifier";

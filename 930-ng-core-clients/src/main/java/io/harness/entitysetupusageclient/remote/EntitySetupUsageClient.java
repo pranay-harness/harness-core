@@ -64,6 +64,7 @@ public interface EntitySetupUsageClient {
   @POST(INTERNAL_ENTITY_REFERENCE_API)
   Call<ResponseDTO<EntitySetupUsageDTO>> save(@Body EntitySetupUsageDTO entitySetupUsageDTO);
 
+  // This is depreceated, please use this event framework, we no longer support
   @Deprecated
   @DELETE(INTERNAL_ENTITY_REFERENCE_API)
   Call<ResponseDTO<Boolean>> delete(@NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,

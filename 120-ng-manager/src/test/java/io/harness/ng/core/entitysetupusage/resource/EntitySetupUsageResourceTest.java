@@ -1,10 +1,13 @@
 package io.harness.ng.core.entitysetupusage.resource;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -19,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DX)
 public class EntitySetupUsageResourceTest extends CategoryTest {
   @InjectMocks EntitySetupUsageResource entitySetupUsageResource;
   @Mock EntitySetupUsageService entitySetupUsageService;
