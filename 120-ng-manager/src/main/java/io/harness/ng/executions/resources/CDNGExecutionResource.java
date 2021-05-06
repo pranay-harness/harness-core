@@ -5,7 +5,6 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo;
 import io.harness.cdng.pipeline.executions.beans.CDStageModuleInfo;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
 import io.harness.ng.beans.PageResponse;
@@ -91,19 +90,6 @@ public class CDNGExecutionResource {
                 accountId, orgId, projectId, getPageRequest(page, size, sort), pipelineExecutionSummaryFilter)
             .map(ExecutionToDtoMapper::writeExecutionDto);
     return ResponseDTO.newResponse(getNGPageResponse(pipelines));
-  }
-
-  @GET
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "Gets Execution Detail", nickname = "getPipelineExecutionDetail")
-  @Path("/{planExecutionId}")
-  public ResponseDTO<PipelineExecutionDetail> getPipelineExecutionDetail(
-      @NotNull @QueryParam("accountIdentifier") String accountId, @NotNull @QueryParam("orgIdentifier") String orgId,
-      @NotNull @QueryParam("projectIdentifier") String projectId,
-      @NotNull @PathParam("planExecutionId") String planExecutionId,
-      @QueryParam("stageIdentifier") String stageIdentifier) {
-    return ResponseDTO.newResponse(executionService.getPipelineExecutionDetail(planExecutionId, stageIdentifier));
   }
 
   @GET
