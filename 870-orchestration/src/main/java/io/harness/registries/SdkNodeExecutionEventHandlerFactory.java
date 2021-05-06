@@ -6,6 +6,7 @@ import io.harness.event.handlers.AddExecutableResponseEventHandler;
 import io.harness.event.handlers.AdviserEventResponseHandler;
 import io.harness.event.handlers.ErrorEventResponseHandler;
 import io.harness.event.handlers.FacilitateResponseRequestHandler;
+import io.harness.event.handlers.HandleProgressResponseEventHandler;
 import io.harness.event.handlers.HandleStepResponseEventHandler;
 import io.harness.event.handlers.QueueTaskResponseHandler;
 import io.harness.event.handlers.ResumeNodeExecutionResponseEventHandler;
@@ -47,6 +48,8 @@ public class SdkNodeExecutionEventHandlerFactory {
         return injector.getInstance(SpawnChildResponseEventHandler.class);
       case SPAWN_CHILDREN:
         return injector.getInstance(SpawnChildrenResponseEventHandler.class);
+      case HANDLE_PROGRESS:
+        return injector.getInstance(HandleProgressResponseEventHandler.class);
       default:
         throw new InvalidRequestException("Unknown sdkResponseEventType.");
     }

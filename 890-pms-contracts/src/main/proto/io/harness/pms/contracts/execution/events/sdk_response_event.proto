@@ -25,6 +25,7 @@ message SdkResponseEventRequest {
     SuspendChainRequest suspendChainRequest = 11;
     SpawnChildRequest spawnChildRequest = 12;
     SpawnChildrenRequest spawnChildrenRequest = 13;
+    HandleProgressRequest progressRequest = 14;
   }
   string nodeExecutionId = 3;
 }
@@ -95,6 +96,12 @@ message QueueTaskRequest {
   io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 5;
 }
 
+message HandleProgressRequest {
+  string planExecutionId = 1;
+  string nodeExecutionId = 2;
+  string progressJson = 3;
+}
+
 enum SdkResponseEventType {
   UNKNOWN_EVENT_TYPE = 0;
   ADD_EXECUTABLE_RESPONSE = 2;
@@ -107,4 +114,5 @@ enum SdkResponseEventType {
   SPAWN_CHILD = 10;
   QUEUE_TASK = 11;
   SPAWN_CHILDREN = 12;
+  HANDLE_PROGRESS = 13;
 }
