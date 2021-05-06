@@ -175,13 +175,13 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public List<UserInfo> getUsersFromEmail(List<String> emailIds, String accountId) {
-    return RestClientUtils.getResponse(
-        userClient.listUsers(UserFilterNG.builder().emailIds(emailIds).build(), accountId));
+  public List<UserInfo> listCurrentGenUsers(String accountId, UserFilterNG userFilter) {
+    return RestClientUtils.getResponse(userClient.listUsers(
+        accountId, UserFilterNG.builder().emailIds(userFilter.getEmailIds()).userIds(userFilter.getUserIds()).build()));
   }
 
   @Override
-  public List<String> getUsers(Scope scope, String roleIdentifier) {
+  public List<String> listUsersHavingRole(Scope scope, String roleIdentifier) {
     PageResponse<RoleAssignmentResponseDTO> roleAssignmentPage =
         getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
             scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, DEFAULT_PAGE_SIZE,
@@ -240,12 +240,12 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateSource source) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, true, source);
+    addUserToScope(user.getUuid(), scope, true, source);
   }
 
   @Override
   public void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source) {
-    addUserToScope(user.getUuid(), user.getEmail(), scope, postCreation, source);
+    addUserToScope(user.getUuid(), scope, postCreation, source);
   }
 
   @Override
@@ -266,12 +266,7 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public void addUserToScope(
       String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs, UserMembershipUpdateSource source) {
-    Optional<UserInfo> userOptional = getUserById(userId);
-    if (!userOptional.isPresent()) {
-      return;
-    }
-    UserInfo user = userOptional.get();
-    addUserToScope(user.getUuid(), user.getEmail(), scope, true, source);
+    addUserToScope(userId, scope, true, source);
     createRoleAssignments(userId, scope, roleAssignmentDTOs);
   }
 
@@ -306,86 +301,86 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   private void addUserToScope(
-      String userId, String emailId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
-    Optional<UserMembership> userMembershipOptional = userMembershipRepository.findDistinctByUserId(userId);
-    UserMembership userMembership = userMembershipOptional.orElseGet(
-        () -> UserMembership.builder().userId(userId).emailId(emailId).scopes(new ArrayList<>()).build());
-    boolean userAlreadyAdded = userMembership.getScopes().contains(scope);
-    if (!userAlreadyAdded) {
-      userMembership.getScopes().add(scope);
-      UserMembership finalUserMembership = userMembership;
-      userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
-        outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, emailId, userId, source));
-        return updatedUserMembership;
-      }));
-      //    Adding user to the account for signin flow to work
-      addUserToAccount(userId, scope);
-      if (addUserToParentScope) {
-        addUserToParentScope(userMembership, userId, scope, source);
-      }
+      String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
+    addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
+
+    // Adding user to the account for sign in flow to work
+    addUserToAccount(userId, scope);
+    if (addUserToParentScope) {
+      addUserToParentScope(userId, scope, source);
     }
   }
 
-  private void addUserToParentScope(
-      UserMembership userMembership, String userId, Scope scope, UserMembershipUpdateSource source) {
+  private String getDefaultRoleIdentifier(Scope scope) {
+    if (scope == null) {
+      return null;
+    }
+    if (!isBlank(scope.getProjectIdentifier())) {
+      return PROJECT_VIEWER;
+    } else if (!isBlank(scope.getOrgIdentifier())) {
+      return ORGANIZATION_VIEWER;
+    }
+    return ACCOUNT_VIEWER;
+  }
+
+  private UserMembership createNewUserMembership(String userId) {
+    Optional<UserInfo> userInfoOptional = getUserById(userId);
+    UserInfo userInfo = userInfoOptional.orElseThrow(
+        () -> new InvalidRequestException(String.format("User with id %s doesn't exists", userId)));
+    return UserMembership.builder().userId(userId).emailId(userInfo.getEmail()).scopes(new ArrayList<>()).build();
+  }
+
+  private void addUserToParentScope(String userId, Scope scope, UserMembershipUpdateSource source) {
     //  Adding user to the parent scopes as well
     if (!isBlank(scope.getProjectIdentifier())) {
       Scope orgScope = Scope.builder()
                            .accountIdentifier(scope.getAccountIdentifier())
                            .orgIdentifier(scope.getOrgIdentifier())
                            .build();
-      if (!userMembership.getScopes().contains(orgScope)) {
-        userMembership.getScopes().add(orgScope);
-        UserMembership finalUserMembership = userMembership;
-        userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-          UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
-          outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), orgScope,
-              finalUserMembership.getEmailId(), finalUserMembership.getUserId(), source));
-          return updatedUserMembership;
-        }));
-      }
-      RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
-                                                .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
-                                                .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-                                                .disabled(false)
-                                                .roleIdentifier(ORGANIZATION_VIEWER)
-                                                .build();
-
-      try {
-        NGRestUtils.getResponse(accessControlAdminClient.createRoleAssignment(
-            scope.getAccountIdentifier(), scope.getOrgIdentifier(), null, roleAssignmentDTO));
-      } catch (Exception e) {
-        log.error("Couldn't add user to org scope as org viewer", e);
-      }
+      Failsafe.with(transactionRetryPolicy)
+          .get(() -> addUserToScopeInternal(userId, source, orgScope, ORGANIZATION_VIEWER));
     }
 
     if (!isBlank(scope.getOrgIdentifier())) {
       Scope accountScope = Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build();
-      if (!userMembership.getScopes().contains(accountScope)) {
-        userMembership.getScopes().add(accountScope);
-        UserMembership finalUserMembership = userMembership;
-        Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-          UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
-          outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), accountScope,
-              finalUserMembership.getEmailId(), finalUserMembership.getUserId(), source));
-          return updatedUserMembership;
-        }));
-      }
+      Failsafe.with(transactionRetryPolicy)
+          .get(() -> addUserToScopeInternal(userId, source, accountScope, ACCOUNT_VIEWER));
+    }
+  }
+
+  private UserMembership addUserToScopeInternal(
+      String userId, UserMembershipUpdateSource source, Scope scope, String roleIdentifier) {
+    Optional<UserMembership> userMembershipOpt = getUserMembership(userId);
+    UserMembership userMembership = userMembershipOpt.orElse(createNewUserMembership(userId));
+    if (!userMembership.getScopes().contains(scope)) {
+      userMembership.getScopes().add(scope);
+      UserMembership finalUserMembership = userMembership;
+      userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        UserMembership updatedUserMembership = userMembershipRepository.save(finalUserMembership);
+        outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), scope,
+            finalUserMembership.getEmailId(), finalUserMembership.getUserId(), source));
+        return updatedUserMembership;
+      }));
+    }
+
+    try {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
                                                 .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
                                                 .disabled(false)
-                                                .roleIdentifier(ACCOUNT_VIEWER)
+                                                .roleIdentifier(roleIdentifier)
                                                 .build();
-
-      try {
-        NGRestUtils.getResponse(
-            accessControlAdminClient.createRoleAssignment(scope.getAccountIdentifier(), null, null, roleAssignmentDTO));
-      } catch (Exception e) {
-        log.error("Couldn't add user to the account scope", e);
-      }
+      NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(scope.getAccountIdentifier(),
+          scope.getOrgIdentifier(), scope.getProjectIdentifier(), true,
+          RoleAssignmentCreateRequestDTO.builder()
+              .roleAssignments(Collections.singletonList(roleAssignmentDTO))
+              .build()));
+    } catch (Exception e) {
+      /**
+       *  It's expected that user will already have this roleassignment.
+       */
     }
+    return userMembership;
   }
 
   private void addUserToAccount(String userId, Scope scope) {
@@ -395,12 +390,6 @@ public class NgUserServiceImpl implements NgUserService {
     } catch (Exception e) {
       log.error("Couldn't add user to the account", e);
     }
-  }
-
-  @Override
-  public List<UserInfo> getUsersByIds(List<String> userIds, String accountId) {
-    return RestClientUtils.getResponse(
-        userClient.listUsers(UserFilterNG.builder().userIds(userIds).build(), accountId));
   }
 
   @Override
@@ -436,7 +425,7 @@ public class NgUserServiceImpl implements NgUserService {
     }
     if (ScopeUtils.isAccountScope(scope)) {
       List<String> accountAdmins =
-          getUsers(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build(), ACCOUNT_ADMIN);
+          listUsersHavingRole(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build(), ACCOUNT_ADMIN);
       accountAdmins.remove(userId);
       if (accountAdmins.isEmpty()) {
         throw new InvalidRequestException("This user is the only account admin left. Can't Remove it");

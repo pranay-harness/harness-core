@@ -83,10 +83,10 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
                                                                             .build()))
                                       .build()));
     when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
-    when(ngUserService.getUsersByIds(any(), any())).thenReturn(getUsers(userMembershipList));
+    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(getUsers(userMembershipList));
     List<String> adminIds =
         IntStream.range(0, 4).mapToObj(i -> userMembershipList.get(i).getUserId()).collect(toList());
-    when(ngUserService.getUsers(any(), any())).thenReturn(adminIds);
+    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(adminIds);
   }
 
   private List<UserInfo> getUsers(List<UserMembership> userMemberships) {
@@ -142,7 +142,7 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
 
     when(ngUserService.listUserMemberships(any())).thenReturn(emptyList());
 
-    when(ngUserService.getUsersByIds(any(), any())).thenReturn(emptyList());
+    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(emptyList());
 
     ProjectAggregateDTO projectAggregateDTO =
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, projectIdentifier);
@@ -191,8 +191,8 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
                                                         .build()))
                   .build()));
     }
-    when(ngUserService.getUsers(any(), any())).thenReturn(userIds.subList(0, 4));
-    when(ngUserService.getUsersByIds(any(), any())).thenReturn(getUsers(userMembershipList));
+    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(userIds.subList(0, 4));
+    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(getUsers(userMembershipList));
     when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
     return userMembershipList;
   }
@@ -248,7 +248,7 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
 
     when(ngUserService.listUserMemberships(any())).thenReturn(emptyList());
 
-    when(ngUserService.getUsersByIds(any(), any())).thenReturn(emptyList());
+    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(emptyList());
 
     Page<ProjectAggregateDTO> projectAggregateDTOs =
         aggregateProjectService.listProjectAggregateDTO(accountIdentifier, Pageable.unpaged(), null);

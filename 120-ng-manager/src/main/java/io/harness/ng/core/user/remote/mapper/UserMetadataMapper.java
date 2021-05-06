@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(HarnessTeam.PL)
-public class UserSearchMapper {
+public class UserMetadataMapper {
   public static UserMetadataDTO writeDTO(UserInfo user) {
     return UserMetadataDTO.builder().name(user.getName()).email(user.getEmail()).uuid(user.getUuid()).build();
   }
