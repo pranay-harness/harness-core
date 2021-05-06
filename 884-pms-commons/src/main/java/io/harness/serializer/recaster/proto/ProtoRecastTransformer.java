@@ -1,5 +1,7 @@
 package io.harness.serializer.recaster.proto;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.transformers.RecastTransformer;
@@ -11,6 +13,7 @@ import com.google.protobuf.util.JsonFormat;
 import lombok.SneakyThrows;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ProtoRecastTransformer extends RecastTransformer implements CustomValueTransformer {
   @SneakyThrows
   @Override
