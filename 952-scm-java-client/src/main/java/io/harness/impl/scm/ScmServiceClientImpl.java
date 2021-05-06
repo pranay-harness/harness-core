@@ -22,6 +22,8 @@ import io.harness.product.ci.scm.proto.FindFilesInBranchRequest;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitRequest;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
+import io.harness.product.ci.scm.proto.FindFilesInPRRequest;
+import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
 import io.harness.product.ci.scm.proto.GetBatchFileRequest;
 import io.harness.product.ci.scm.proto.GetFileRequest;
 import io.harness.product.ci.scm.proto.GetLatestCommitRequest;
@@ -163,6 +165,21 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   @Override
+  public FindFilesInCommitResponse findFilesInCommit(
+      ScmConnector scmConnector, String commitHash, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    FindFilesInCommitRequest findFilesInCommitRequest = getFindFilesInCommitRequest(scmConnector, commitHash);
+    return scmBlockingStub.findFilesInCommit(findFilesInCommitRequest);
+  }
+
+  @Override
+  public FindFilesInPRResponse findFilesInPR(
+      ScmConnector scmConnector, int prNumber, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    FindFilesInPRRequest findFilesInPRRequest = getFindFilesInPRRequest(scmConnector, prNumber);
+    // still to be resolved
+    return scmBlockingStub.findFilesInPR(findFilesInPRRequest);
+  }
+
+  @Override
   public GetLatestCommitResponse getLatestCommit(
       ScmConnector scmConnector, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     GetLatestCommitRequest getLatestCommitRequest = getLatestCommitRequestObject(scmConnector, branch);
@@ -250,11 +267,27 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         .build();
   }
 
+  private FindFilesInPRRequest getFindFilesInPRRequest(ScmConnector scmConnector, int prNumber) {
+    return FindFilesInPRRequest.newBuilder()
+        .setSlug(scmGitProviderHelper.getSlug(scmConnector))
+        .setNumber(prNumber)
+        .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
+        .build();
+  }
+
   private FindFilesInCommitRequest getFindFilesInCommitRequest(
       ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
     return FindFilesInCommitRequest.newBuilder()
         .setSlug(scmGitProviderHelper.getSlug(scmConnector))
         .setRef(gitFilePathDetails.getBranch()) // How to get Ref for files????????????
+        .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
+        .build();
+  }
+
+  private FindFilesInCommitRequest getFindFilesInCommitRequest(ScmConnector scmConnector, String commitHash) {
+    return FindFilesInCommitRequest.newBuilder()
+        .setSlug(scmGitProviderHelper.getSlug(scmConnector))
+        .setRef(commitHash)
         .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
         .build();
   }
