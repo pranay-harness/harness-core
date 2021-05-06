@@ -25,6 +25,7 @@ import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
