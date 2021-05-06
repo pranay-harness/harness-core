@@ -68,7 +68,7 @@ public class BillingDataServiceImpl {
       "SELECT COUNT(*) as ENTRIESCOUNT, SUM(billingamount) as BILLINGAMOUNTSUM from BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME = '%s' ;";
 
   private static final String READER_QUERY =
-      "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' OFFSET %s LIMIT %s;";
+      "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' ORDER BY accountid, clusterid, instanceid OFFSET %s LIMIT %s;";
 
   private static final List<InstanceType> PREAGG_INSTANCES =
       ImmutableList.of(InstanceType.K8S_POD, InstanceType.ECS_CONTAINER_INSTANCE, InstanceType.ECS_TASK_EC2,

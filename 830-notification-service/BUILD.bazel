@@ -149,7 +149,6 @@ shared_dependencies = [
     "@maven//:io_dropwizard_dropwizard_metrics",
     "@maven//:io_dropwizard_dropwizard_request_logging",
     "@maven//:io_dropwizard_dropwizard_servlets",
-    "@maven//:io_dropwizard_dropwizard_testing",
     "@maven//:io_dropwizard_dropwizard_util",
     "@maven//:io_dropwizard_dropwizard_validation",
     "@maven//:io_dropwizard_dropwizard_views",

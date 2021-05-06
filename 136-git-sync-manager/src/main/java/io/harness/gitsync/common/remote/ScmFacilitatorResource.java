@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.gitsync.GitSyncModule.SCM_ON_MANAGER;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,6 +18,7 @@ import io.harness.ng.core.utils.URLDecoderUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -29,7 +31,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotBlank;
 
 @Api("/scm")
@@ -42,10 +43,14 @@ import org.hibernate.validator.constraints.NotBlank;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @NextGenManagerAuth
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
 public class ScmFacilitatorResource {
   private final ScmClientFacilitatorService scmClientFacilitatorService;
+
+  @Inject
+  public ScmFacilitatorResource(@Named(SCM_ON_MANAGER) ScmClientFacilitatorService scmClientFacilitatorService) {
+    this.scmClientFacilitatorService = scmClientFacilitatorService;
+  }
 
   @GET
   @Path("listRepoBranches")

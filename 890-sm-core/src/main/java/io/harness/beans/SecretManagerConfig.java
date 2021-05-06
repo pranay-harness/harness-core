@@ -83,6 +83,18 @@ public abstract class SecretManagerConfig
                  .field(SecretManagerConfigKeys.projectIdentifier)
                  .field(SecretManagerConfigKeys.identifier)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("identifierCheckIdx")
+                 .field(SecretManagerConfigKeys.accountIdentifier)
+                 .field(SecretManagerConfigKeys.orgIdentifier)
+                 .field(SecretManagerConfigKeys.projectIdentifier)
+                 .field(SecretManagerConfigKeys.identifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("renewCheckIdx")
+                 .field(SecretManagerConfigKeys.encryptionType)
+                 .field(SecretManagerConfigKeys.nextTokenRenewIteration)
+                 .build())
         .build();
   }
 

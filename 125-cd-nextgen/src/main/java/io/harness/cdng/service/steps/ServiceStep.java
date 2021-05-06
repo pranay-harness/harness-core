@@ -140,9 +140,12 @@ public class ServiceStep implements TaskChainExecutableWithRbac<ServiceStepParam
     Set<EntityDetailProtoDTO> entityDetails =
         entityReferenceExtractorUtils.extractReferredEntities(ambiance, stepParameters.getService());
     pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
-    accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
-        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of("SERVICE", null),
-        CDNGRbacPermissions.SERVICE_CREATE_PERMISSION, "Validation for Service Step failed");
+    ServiceConfig serviceConfig = stepParameters.getService();
+    if (serviceConfig.getServiceRef() == null || EmptyPredicate.isEmpty(serviceConfig.getServiceRef().getValue())) {
+      accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
+          ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of("SERVICE", null),
+          CDNGRbacPermissions.SERVICE_CREATE_PERMISSION, "Validation for Service Step failed");
+    }
   }
 
   @Override

@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.shell.ScriptType.POWERSHELL;
 
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -35,6 +37,9 @@ import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
@@ -50,6 +55,8 @@ import java.util.List;
 /**
  * The Enum ArtifactType.
  */
+@OwnedBy(CDC)
+@TargetModule(_871_CG_BEANS)
 public enum ArtifactType {
   /**
    * Jar artifact type.

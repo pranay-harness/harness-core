@@ -40,8 +40,6 @@ shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "@maven//:org_apache_avro_avro",
     "@maven//:org_apache_httpcomponents_httpclient",
     "@maven//:org_apache_httpcomponents_httpcore",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     "@maven//:org_jetbrains_kotlin_kotlin_stdlib",
     "@maven//:org_mongodb_mongo_java_driver",
     "@maven//:org_springframework_batch_spring_batch_core",

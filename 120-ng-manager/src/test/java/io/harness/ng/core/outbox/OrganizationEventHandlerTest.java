@@ -18,6 +18,7 @@ import static junit.framework.TestCase.assertNull;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -114,7 +115,7 @@ public class OrganizationEventHandlerTest extends CategoryTest {
 
     final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
     final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
-    doNothing().when(ngUserService).addUserToScope(any(), any(), any(), any());
+    doNothing().when(ngUserService).addUserToScope(any(), any(), anyString(), any());
     when(producer.send(any())).thenReturn("");
     when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
 

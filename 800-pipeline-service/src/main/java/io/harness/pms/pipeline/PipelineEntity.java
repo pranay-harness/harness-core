@@ -96,6 +96,8 @@ public class PipelineEntity
   @Setter @NonFinal Boolean isFromDefaultBranch;
   @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
+  @Setter @NonFinal String filePath;
+  @Setter @NonFinal String rootFolder;
 
   @Override
   public String getAccountIdentifier() {

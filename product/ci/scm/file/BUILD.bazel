@@ -27,6 +27,7 @@ go_test(
         "testdata/FileErrorSource.json",
         "testdata/FileFindSource.json",
         "testdata/FileList.json",
+        "testdata/FileUpdateNoMatch.json",
         "testdata/FileUpdateSource.json",
     ],
     embed = [":go_default_library"],

@@ -1,10 +1,14 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.validation.Validator.ensureType;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 import io.harness.exception.InvalidRequestException;
 
@@ -27,6 +31,8 @@ import org.apache.commons.lang3.StringUtils;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AzureWebAppsInfrastructureMappingKeys")
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public class AzureWebAppInfrastructureMapping extends InfrastructureMapping {
   @Trimmed @Attributes(title = "SubscriptionId") @Getter @Setter private String subscriptionId;
   @Trimmed @Attributes(title = "Resource Group") @Getter @Setter private String resourceGroup;
@@ -97,7 +103,7 @@ public class AzureWebAppInfrastructureMapping extends InfrastructureMapping {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
+  public static class Yaml extends YamlWithComputeProvider {
     private String subscriptionId;
     private String resourceGroup;
 

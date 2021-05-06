@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
@@ -16,6 +16,20 @@ go_library(
         "@org_mongodb_go_mongo_driver//mongo:go_default_library",
         "@org_mongodb_go_mongo_driver//mongo/options:go_default_library",
         "@org_mongodb_go_mongo_driver//mongo/readpref:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["mongodb_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//commons/go/lib/logs:go_default_library",
+        "//product/ci/addon/ti:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@org_mongodb_go_mongo_driver//bson:go_default_library",
+        "@org_mongodb_go_mongo_driver//mongo/options:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
 )

@@ -16,6 +16,7 @@ import io.harness.testing.DelegateTaskStressTestStage;
 import software.wings.beans.delegation.ShellScriptParameters;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.util.Durations;
 
 @OwnedBy(HarnessTeam.DEL)
 public class CapabilityStressTestGenerator extends StressTestGenerator {
@@ -69,8 +70,10 @@ public class CapabilityStressTestGenerator extends StressTestGenerator {
             TaskDetails.newBuilder()
                 .setMode(TaskMode.ASYNC)
                 .setType(TaskType.newBuilder().setType("SCRIPT"))
+                .setExecutionTimeout(Durations.fromMinutes(5))
                 .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(shellScriptTaskParameters))))
         .addCapabilities(generateTestCapability(key, value))
+        .setQueueTimeout(Durations.fromMinutes(1))
         .build();
   }
 

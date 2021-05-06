@@ -46,8 +46,8 @@ public class EntityReferenceExtractorVisitorTest extends CDNGTestBase {
         "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.manifests.manifest1.spec.store.spec.connectorRef",
         "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.manifests.values.spec.store.spec.connectorRef",
         "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef",
-        "pipeline.stages.stage_1.spec.serviceConfig.serviceRef",
-        "pipeline.stages.stage_1.spec.infrastructure.environmentRef");
+        "pipeline.stages.stage_1.spec.serviceConfig.service.identifier",
+        "pipeline.stages.stage_1.spec.infrastructure.environment.identifier");
 
     ClassLoader classLoader = getClass().getClassLoader();
     String pipelineFilename = "visitor-framework-pipeline.yml";

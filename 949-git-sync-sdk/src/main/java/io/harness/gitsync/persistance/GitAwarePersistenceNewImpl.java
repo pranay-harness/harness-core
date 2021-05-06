@@ -74,6 +74,8 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
     objectToSave.setYamlGitConfigRef(scmPushResponse.getYamlGitConfigId());
     objectToSave.setIsFromDefaultBranch(scmPushResponse.isPushToDefaultBranch());
     objectToSave.setBranch(scmPushResponse.getBranch());
+    objectToSave.setFilePath(scmPushResponse.getFilePath());
+    objectToSave.setRootFolder(scmPushResponse.getFolderPath());
   }
 
   private GitEntityInfo getGitEntityInfo() {

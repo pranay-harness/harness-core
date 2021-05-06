@@ -17,4 +17,6 @@ public class EntityGitDetails {
   String objectId;
   String branch;
   String repoIdentifier;
+  String rootFolder;
+  String filePath;
 }

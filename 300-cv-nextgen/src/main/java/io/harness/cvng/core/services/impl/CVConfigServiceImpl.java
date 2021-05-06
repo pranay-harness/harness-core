@@ -179,11 +179,11 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
   @Override
   public List<CVConfig> list(
-      String accountId, String connectorIdentifier, String productName, String monitoringSourceIdentifier) {
+      String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier) {
     Query<CVConfig> query = hPersistence.createQuery(CVConfig.class, excludeAuthority)
                                 .filter(CVConfigKeys.accountId, accountId)
-                                .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
-                                .filter(CVConfigKeys.productName, productName)
+                                .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
                                 .filter(CVConfigKeys.identifier, monitoringSourceIdentifier);
     return query.asList();
   }

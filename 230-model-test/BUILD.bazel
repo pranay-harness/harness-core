@@ -2,6 +2,7 @@ load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "module",
+    testonly = True,
     srcs = glob([
         "src/main/**/*.java",
     ]),
@@ -11,8 +12,9 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//400-rest:supporter-test",
+        "//400-rest:module",
         "//970-rbac-core:module",
+        "//990-commons-test:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_module_jackson_module_afterburner",

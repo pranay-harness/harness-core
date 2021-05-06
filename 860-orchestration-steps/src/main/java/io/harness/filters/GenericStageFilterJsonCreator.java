@@ -2,7 +2,9 @@ package io.harness.filters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -32,6 +34,7 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(PIPELINE)
+@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
   @Inject private SimpleVisitorFactory simpleVisitorFactory;
 

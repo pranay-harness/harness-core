@@ -150,7 +150,7 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(NGResourceFilterConstants.TYPE_KEY) ConnectorType type,
-      @QueryParam(CATEGORY_KEY) ConnectorCategory category) {
+      @QueryParam(CATEGORY_KEY) ConnectorCategory category, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(

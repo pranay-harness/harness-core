@@ -3,6 +3,7 @@ package io.harness.ng.core.invites.api.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
 import static io.harness.ng.core.invites.InviteOperationResponse.FAIL;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
@@ -16,12 +17,12 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.Team;
-import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -55,7 +56,6 @@ import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.channeldetails.EmailChannel.EmailChannelBuilder;
 import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.outbox.api.OutboxService;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.invites.spring.InviteRepository;
 import io.harness.utils.PageUtils;
@@ -114,11 +114,11 @@ public class InviteServiceImpl implements InviteService {
   private final boolean useMongoTransactions;
   private final TransactionTemplate transactionTemplate;
   private final NotificationClient notificationClient;
-  private final AccessControlAdminClient accessControlAdminClient;
   private final AccountClient accountClient;
   private final OutboxService outboxService;
   private final OrganizationService organizationService;
   private final ProjectService projectService;
+  private final AccessControlClient accessControlClient;
   private final String currentGenUiUrl;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
@@ -129,22 +129,21 @@ public class InviteServiceImpl implements InviteService {
   @Inject
   public InviteServiceImpl(@Named("userVerificationSecret") String jwtPasswordSecret, MongoConfig mongoConfig,
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
-      InviteRepository inviteRepository, NotificationClient notificationClient,
-      AccessControlAdminClient accessControlAdminClient, AccountClient accountClient, OutboxService outboxService,
-      OrganizationService organizationService, ProjectService projectService,
-      @Named("currentGenUiUrl") String currentGenUiUrl) {
+      InviteRepository inviteRepository, NotificationClient notificationClient, AccountClient accountClient,
+      OutboxService outboxService, OrganizationService organizationService, ProjectService projectService,
+      AccessControlClient accessControlClient, @Named("currentGenUiUrl") String currentGenUiUrl) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
     this.ngUserService = ngUserService;
     this.inviteRepository = inviteRepository;
     this.transactionTemplate = transactionTemplate;
     this.notificationClient = notificationClient;
-    this.accessControlAdminClient = accessControlAdminClient;
     this.accountClient = accountClient;
     this.outboxService = outboxService;
     this.organizationService = organizationService;
     this.projectService = projectService;
     this.currentGenUiUrl = currentGenUiUrl;
+    this.accessControlClient = accessControlClient;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -154,6 +153,7 @@ public class InviteServiceImpl implements InviteService {
     if (invite == null) {
       return FAIL;
     }
+    checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
     preCreateInvite(invite);
     if (checkIfUserAlreadyAdded(invite)) {
       return InviteOperationResponse.USER_ALREADY_ADDED;
@@ -225,12 +225,10 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public Optional<Invite> deleteInvite(String inviteId) {
-    return wrapperForTransactions(this::deleteInviteInternal, inviteId);
-  }
-
-  private Optional<Invite> deleteInviteInternal(String inviteId) {
     Optional<Invite> inviteOptional = getInvite(inviteId);
     if (inviteOptional.isPresent()) {
+      Invite invite = inviteOptional.get();
+      checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
       Update update = new Update().set(InviteKeys.deleted, TRUE);
       Invite updatedInvite = inviteRepository.updateInvite(inviteId, update);
       if (updatedInvite != null) {
@@ -256,6 +254,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private Invite resendInvite(Invite existingInvite, Invite newInvite) {
+    checkPermissions(newInvite.getAccountIdentifier(), newInvite.getOrgIdentifier(), newInvite.getProjectIdentifier());
     Update update = new Update()
                         .set(InviteKeys.createdAt, new Date())
                         .set(InviteKeys.validUntil,
@@ -358,29 +357,16 @@ public class InviteServiceImpl implements InviteService {
     return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
 
-  private List<RoleAssignmentDTO> createRoleAssignments(Invite invite, String userId) {
+  private List<RoleAssignmentDTO> createRoleAssignmentDTOs(Invite invite, String userId) {
     List<RoleBinding> roleBindings = invite.getRoleBindings();
-    List<RoleAssignmentDTO> newRoleAssignments =
-        roleBindings.stream()
-            .map(roleBinding
-                -> RoleAssignmentDTO.builder()
-                       .roleIdentifier(roleBinding.getRoleIdentifier())
-                       .resourceGroupIdentifier(roleBinding.getResourceGroupIdentifier())
-                       .principal(PrincipalDTO.builder().type(PrincipalType.USER).identifier(userId).build())
-                       .disabled(false)
-                       .build())
-            .collect(Collectors.toList());
-    List<RoleAssignmentResponseDTO> createdRoleAssignmentResponseDTOs;
-    try {
-      createdRoleAssignmentResponseDTOs = NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(
-          invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(),
-          RoleAssignmentCreateRequestDTO.builder().roleAssignments(newRoleAssignments).build()));
-    } catch (Exception e) {
-      log.error("Can't create roleassignments while inviting {}", invite.getEmail());
-      return Collections.emptyList();
-    }
-    return createdRoleAssignmentResponseDTOs.stream()
-        .map(RoleAssignmentResponseDTO::getRoleAssignment)
+    return roleBindings.stream()
+        .map(roleBinding
+            -> RoleAssignmentDTO.builder()
+                   .roleIdentifier(roleBinding.getRoleIdentifier())
+                   .resourceGroupIdentifier(roleBinding.getResourceGroupIdentifier())
+                   .principal(PrincipalDTO.builder().type(PrincipalType.USER).identifier(userId).build())
+                   .disabled(false)
+                   .build())
         .collect(Collectors.toList());
   }
 
@@ -461,7 +447,7 @@ public class InviteServiceImpl implements InviteService {
     Invite invite = inviteOpt.get();
     String email = invite.getEmail();
     Optional<UserInfo> userOpt = ngUserService.getUserFromEmail(email);
-    Preconditions.checkState(userOpt.isPresent(), "Illegal state: user doesn't exits");
+    Preconditions.checkState(userOpt.isPresent(), "Illegal state: user doesn't exists");
     UserInfo user = userOpt.get();
     Scope scope = Scope.builder()
                       .accountIdentifier(invite.getAccountIdentifier())
@@ -469,8 +455,8 @@ public class InviteServiceImpl implements InviteService {
                       .projectIdentifier(invite.getProjectIdentifier())
                       .build();
 
-    ngUserService.addUserToScope(user, scope, ACCEPTED_INVITE);
-    createRoleAssignments(invite, user.getUuid());
+    List<RoleAssignmentDTO> roleAssignmentDTOs = createRoleAssignmentDTOs(invite, user.getUuid());
+    ngUserService.addUserToScope(user.getUuid(), scope, roleAssignmentDTOs, ACCEPTED_INVITE);
     markInviteApprovedAndDeleted(invite);
     return true;
   }
@@ -563,6 +549,11 @@ public class InviteServiceImpl implements InviteService {
                          .build());
     }
     return inviteDTOs;
+  }
+
+  private void checkPermissions(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of("USER", null), INVITE_PERMISSION_IDENTIFIER);
   }
 
   private <T, S> S wrapperForTransactions(Function<T, S> function, T arg) {

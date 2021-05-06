@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
+import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 
@@ -23,6 +24,28 @@ public interface TriggerFilter {
     return WebhookEventMappingResponse.builder().isCustomTrigger(filterRequestData.isCustomTrigger());
   }
 
+  default String getTriggerSkipMessage(NGTriggerEntity ngTriggerEntity) {
+    String triggerRef = new StringBuilder(128)
+                            .append(ngTriggerEntity.getAccountId())
+                            .append(':')
+                            .append(ngTriggerEntity.getOrgIdentifier())
+                            .append(':')
+                            .append(ngTriggerEntity.getProjectIdentifier())
+                            .append(':')
+                            .append(ngTriggerEntity.getTargetIdentifier())
+                            .append(':')
+                            .append(ngTriggerEntity.getIdentifier())
+                            .toString();
+
+    return new StringBuilder(128)
+        .append("Exception while evaluating Trigger: ")
+        .append(triggerRef)
+        .append(", Filter: ")
+        .append(getClass().getSimpleName())
+        .append(", Skipping this one.")
+        .toString();
+  }
+
   default WebhookEventMappingResponse getWebhookResponseForException(FilterRequestData filterRequestData, Exception e) {
     return WebhookEventMappingResponse.builder()
         .failedToFindTrigger(true)
@@ -34,8 +57,8 @@ public interface TriggerFilter {
                 .append(getClass().getSimpleName())
                 .append(", for Account: ")
                 .append(filterRequestData.getWebhookPayloadData().getOriginalEvent().getAccountId())
-                .append(". ExceptionMessage: ")
-                .append(e.getMessage())
+                .append(". Exception: ")
+                .append(e)
                 .toString(),
             null))
         .build();

@@ -79,6 +79,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
         }
       }
     } catch (Exception e) {
+      log.error("Exception while evaluating Triggers: ", e);
       return triggerFilterInAction.getWebhookResponseForException(filterRequestData, e);
     }
 

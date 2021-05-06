@@ -9,6 +9,7 @@ import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
@@ -52,6 +53,8 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
+import io.harness.webhook.WebhookConfigProvider;
+import io.harness.webhook.WebhookHelper;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -83,6 +86,7 @@ public class NGTriggerElementMapper {
   public static final int DAYS_BEFORE_CURRENT_DATE = 6;
   private TriggerEventHistoryRepository triggerEventHistoryRepository;
   private WebhookEventPayloadParser webhookEventPayloadParser;
+  private WebhookConfigProvider webhookConfigProvider;
 
   public NGTriggerConfig toTriggerConfig(String yaml) {
     try {
@@ -248,6 +252,9 @@ public class NGTriggerElementMapper {
 
   public NGTriggerDetailsResponseDTO toNGTriggerDetailsResponseDTO(
       NGTriggerEntity ngTriggerEntity, boolean includeYaml) {
+    String webhookUrl = ngTriggerEntity.getType() == WEBHOOK
+        ? WebhookHelper.generateWebhookUrl(webhookConfigProvider, ngTriggerEntity.getAccountId())
+        : null;
     NGTriggerDetailsResponseDTOBuilder ngTriggerDetailsResponseDTO =
         NGTriggerDetailsResponseDTO.builder()
             .name(ngTriggerEntity.getName())
@@ -256,10 +263,11 @@ public class NGTriggerElementMapper {
             .type(ngTriggerEntity.getType())
             .yaml(includeYaml ? ngTriggerEntity.getYaml() : StringUtils.EMPTY)
             .tags(TagMapper.convertToMap(ngTriggerEntity.getTags()))
-            .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled());
+            .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled())
+            .webhookUrl(webhookUrl);
 
     // Webhook Details
-    if (ngTriggerEntity.getType() == NGTriggerType.WEBHOOK) {
+    if (ngTriggerEntity.getType() == WEBHOOK) {
       WebhookDetailsBuilder webhookDetails = WebhookDetails.builder();
 
       webhookDetails.webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType()).build();

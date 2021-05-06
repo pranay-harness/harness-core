@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.pipeline.variables;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
 public class VariableCreatorHelper {
   public void addVariablesForVariables(
       YamlField variablesField, Map<String, YamlProperties> yamlPropertiesMap, String fieldName) {

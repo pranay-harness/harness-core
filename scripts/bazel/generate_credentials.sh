@@ -12,10 +12,11 @@ if date +"%Z" | grep -q 'IST'; then
   REMOTE_CACHE="https://storage.googleapis.com/harness-bazel-cache-blr-dev"
 fi
 
+echo build --google_credentials=${GOOGLE_CREDENTIALS_FILE} > bazelrc.gcp
+
 cat <<EOT > bazelrc.cache
 #Remote cache configuration
 build --remote_cache=${REMOTE_CACHE}
-build --google_credentials=${GOOGLE_CREDENTIALS_FILE}
 build --remote_upload_local_results=false
 build --incompatible_remote_results_ignore_disk=true
 build --experimental_guard_against_concurrent_changes

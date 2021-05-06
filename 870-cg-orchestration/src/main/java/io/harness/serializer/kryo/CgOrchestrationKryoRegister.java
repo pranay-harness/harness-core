@@ -11,7 +11,6 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.RepairActionCode;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.WorkflowType;
-import io.harness.context.ContextElementType;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -20,7 +19,6 @@ import com.esotericsoftware.kryo.Kryo;
 public class CgOrchestrationKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
-    kryo.register(ContextElementType.class, 4004);
     kryo.register(ExecutionStatus.class, 5136);
     kryo.register(OrchestrationWorkflowType.class, 5148);
     kryo.register(WorkflowType.class, 5025);

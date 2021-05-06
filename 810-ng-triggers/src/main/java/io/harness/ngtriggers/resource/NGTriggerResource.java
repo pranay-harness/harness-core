@@ -46,7 +46,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -64,7 +63,6 @@ import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -98,6 +96,7 @@ public class NGTriggerResource {
   create(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     NGTriggerEntity createdEntity = null;
     try {
@@ -121,7 +120,7 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
-      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier) {
+      @PathParam("triggerIdentifier") String triggerIdentifier) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
     return ResponseDTO.newResponse(ngTriggerEntity.get().getVersion().toString(),
@@ -141,7 +140,8 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier,
+      @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
+      @PathParam("triggerIdentifier") String triggerIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
     try {
       TriggerDetails triggerDetails =
@@ -166,8 +166,7 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
-      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier,
-      @NotNull @QueryParam("status") boolean status) {
+      @PathParam("triggerIdentifier") String triggerIdentifier, @NotNull @QueryParam("status") boolean status) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
     return ResponseDTO.newResponse(ngTriggerService.updateTriggerStatus(ngTriggerEntity.get(), status));
@@ -182,7 +181,7 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier,
-      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier) {
+      @PathParam("triggerIdentifier") String triggerIdentifier) {
     return ResponseDTO.newResponse(ngTriggerService.delete(accountIdentifier, orgIdentifier, projectIdentifier,
         targetIdentifier, triggerIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
@@ -220,7 +219,7 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam("triggerIdentifier") @ResourceIdentifier String triggerIdentifier,
+      @PathParam("triggerIdentifier") String triggerIdentifier,
       @NotNull @QueryParam("targetIdentifier") @ResourceIdentifier String targetIdentifier) {
     Optional<NGTriggerEntity> ngTriggerEntity = ngTriggerService.get(
         accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, false);
@@ -231,27 +230,6 @@ public class NGTriggerResource {
 
     return ResponseDTO.newResponse(ngTriggerEntity.get().getVersion().toString(),
         ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity.get(), true));
-  }
-
-  @GET
-  @Path("/triggersList")
-  @ApiOperation(value = "Gets Triggers list for Repo URL", nickname = "getTriggerListForRepoURL")
-  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<PageResponse<NGTriggerResponseDTO>> getListForRepoURL(
-      @NotNull @QueryParam("repoURL") String repoURL, @QueryParam("filter") String filterQuery,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
-      @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    Criteria criteria = TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(
-        null, null, null, Arrays.asList(repoURL), searchTerm, false, false);
-    Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntityKeys.createdAt));
-    } else {
-      pageRequest = PageUtils.getPageRequest(page, size, sort);
-    }
-    Page<NGTriggerResponseDTO> triggers =
-        ngTriggerService.list(criteria, pageRequest).map(ngTriggerElementMapper::toResponseDTO);
-    return ResponseDTO.newResponse(getNGPageResponse(triggers));
   }
 
   @GET

@@ -2,6 +2,7 @@ package io.harness.ng.core.user.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
@@ -59,6 +60,9 @@ public interface NgUserService {
   void addUserToScope(String user, Scope scope, String roleIdentifier, UserMembershipUpdateSource source);
 
   void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source);
+
+  void addUserToScope(
+      String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs, UserMembershipUpdateSource source);
 
   boolean isUserInAccount(String accountId, String userId);
 

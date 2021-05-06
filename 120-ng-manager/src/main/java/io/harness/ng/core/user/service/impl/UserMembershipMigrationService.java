@@ -8,6 +8,7 @@ import static java.time.Duration.ofMinutes;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -54,7 +55,7 @@ public class UserMembershipMigrationService implements MongoPersistenceIterator.
       }
       UserInfo user = userOpt.get();
       userMembership.setName(user.getName());
-    } catch (InvalidRequestException e) {
+    } catch (InvalidRequestException | UnexpectedException e) {
       /**
        * Do nothing. This exception will occur for users are present in nextgen but not registered in currentgen. This
        * will happen for stale users. It is to be decided whether to clean them up in nextgen or not

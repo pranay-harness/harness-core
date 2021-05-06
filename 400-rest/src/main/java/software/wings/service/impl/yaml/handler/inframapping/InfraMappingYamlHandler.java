@@ -1,14 +1,19 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.HarnessException;
 import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfraMappingYaml;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
@@ -32,7 +37,9 @@ import org.mongodb.morphia.Key;
 /**
  * @author rktummala on 10/15/17
  */
-public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Yaml, B extends InfrastructureMapping>
+@OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
+public abstract class InfraMappingYamlHandler<Y extends InfraMappingYaml, B extends InfrastructureMapping>
     extends BaseYamlHandler<Y, B> {
   @Inject SettingsService settingsService;
   @Inject EnvironmentService environmentService;

@@ -15,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
@@ -62,6 +63,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
@@ -82,7 +84,10 @@ public class NgUserServiceImpl implements NgUserService {
   private static final String ACCOUNT_ADMIN = "_account_admin";
   public static final String ACCOUNT_VIEWER = "_account_viewer";
   public static final String ORGANIZATION_VIEWER = "_organization_viewer";
+  public static final String PROJECT_VIEWER = "_project_viewer";
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
+  private final List<String> MANAGED_ROLE_IDENTIFIERS =
+      ImmutableList.of(ACCOUNT_VIEWER, ORGANIZATION_VIEWER, PROJECT_VIEWER);
   public static final int DEFAULT_PAGE_SIZE = 1000;
   private final UserClient userClient;
   private final UserMembershipRepository userMembershipRepository;
@@ -245,12 +250,7 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public void addUserToScope(String userId, Scope scope, String roleIdentifier, UserMembershipUpdateSource source) {
-    Optional<UserInfo> userOptional = getUserById(userId);
-    if (!userOptional.isPresent()) {
-      return;
-    }
-    UserInfo user = userOptional.get();
-    addUserToScope(user.getUuid(), user.getEmail(), scope, true, source);
+    List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>(1);
     if (!StringUtils.isBlank(roleIdentifier)) {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .roleIdentifier(roleIdentifier)
@@ -258,16 +258,51 @@ public class NgUserServiceImpl implements NgUserService {
                                                 .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
                                                 .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
                                                 .build();
-      try {
-        getResponse(accessControlAdminClient.createRoleAssignment(
-            scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), roleAssignmentDTO));
-      } catch (Exception e) {
-        log.error(
-            "Can't create role assignment with roleIdentifier {} and resourceGroupIdentifier {} for user {} at {}",
-            roleIdentifier, DEFAULT_RESOURCE_GROUP_IDENTIFIER, userId,
-            ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-      }
+      roleAssignmentDTOs.add(roleAssignmentDTO);
     }
+    addUserToScope(userId, scope, roleAssignmentDTOs, source);
+  }
+
+  @Override
+  public void addUserToScope(
+      String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs, UserMembershipUpdateSource source) {
+    Optional<UserInfo> userOptional = getUserById(userId);
+    if (!userOptional.isPresent()) {
+      return;
+    }
+    UserInfo user = userOptional.get();
+    addUserToScope(user.getUuid(), user.getEmail(), scope, true, source);
+    createRoleAssignments(userId, scope, roleAssignmentDTOs);
+  }
+
+  private void createRoleAssignments(String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs) {
+    List<RoleAssignmentDTO> managedRoleAssignments =
+        roleAssignmentDTOs.stream().filter(this::isRoleAssignmentManaged).collect(toList());
+    List<RoleAssignmentDTO> userRoleAssignments =
+        roleAssignmentDTOs.stream()
+            .filter(((Predicate<RoleAssignmentDTO>) this::isRoleAssignmentManaged).negate())
+            .collect(toList());
+
+    try {
+      RoleAssignmentCreateRequestDTO createRequestDTO =
+          RoleAssignmentCreateRequestDTO.builder().roleAssignments(managedRoleAssignments).build();
+      getResponse(accessControlAdminClient.createMultiRoleAssignment(scope.getAccountIdentifier(),
+          scope.getOrgIdentifier(), scope.getProjectIdentifier(), true, createRequestDTO));
+
+      createRequestDTO = RoleAssignmentCreateRequestDTO.builder().roleAssignments(userRoleAssignments).build();
+      getResponse(accessControlAdminClient.createMultiRoleAssignment(scope.getAccountIdentifier(),
+          scope.getOrgIdentifier(), scope.getProjectIdentifier(), false, createRequestDTO));
+
+    } catch (Exception e) {
+      log.error("Cannot create all of the role assignments in [{}] for user [{}] at [{}]", roleAssignmentDTOs, userId,
+          ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
+    }
+  }
+
+  private boolean isRoleAssignmentManaged(RoleAssignmentDTO roleAssignmentDTO) {
+    return MANAGED_ROLE_IDENTIFIERS.stream().anyMatch(
+               roleIdentifier -> roleIdentifier.equals(roleAssignmentDTO.getRoleIdentifier()))
+        && DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleAssignmentDTO.getResourceGroupIdentifier());
   }
 
   private void addUserToScope(
@@ -354,6 +389,7 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   private void addUserToAccount(String userId, Scope scope) {
+    log.info("Adding user {} to account {}", userId, scope.getAccountIdentifier());
     try {
       RestClientUtils.getResponse(userClient.addUserToAccount(userId, scope.getAccountIdentifier()));
     } catch (Exception e) {

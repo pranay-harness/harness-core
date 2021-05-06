@@ -10,6 +10,7 @@ import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.ExceptionHandlerNotFoundException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.HttpResponseException;
+import io.harness.exception.ImageNotFoundException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.ServiceNowException;
@@ -53,6 +54,7 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(DelegateErrorHandlerException.class, 31012);
     kryo.register(KryoHandlerNotFoundException.class, 31013);
     kryo.register(ExceptionHandlerNotFoundException.class, 31014);
+    kryo.register(ImageNotFoundException.class, 31015);
 
     kryo.register(PrincipalContextData.class, 980001);
     kryo.register(UserPrincipal.class, 980002);

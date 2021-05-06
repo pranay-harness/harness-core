@@ -187,7 +187,6 @@ import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
-import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitValidationParameters;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphGroup;
@@ -1048,7 +1047,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GitConfig.class, 5191);
     kryo.register(GitFetchFilesConfig.class, 5616);
     kryo.register(GitFetchFilesTaskParams.class, 5575);
-    kryo.register(GitFileConfig.class, 5472);
     kryo.register(Graph.class, 5060);
     kryo.register(GraphGroup.class, 5063);
     kryo.register(GraphLink.class, 5062);

@@ -4,7 +4,6 @@ import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 
-import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
@@ -14,7 +13,6 @@ import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.user.entities.UserProjectMap;
 import io.harness.ng.core.user.entities.UserProjectMap.UserProjectMapKeys;
 import io.harness.ng.core.user.service.NgUserService;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.user.spring.UserProjectMapRepository;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
@@ -30,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -40,18 +39,15 @@ public class UserProjectMigrationService implements Managed {
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private final UserProjectMapRepository userProjectMapRepository;
   private final NgUserService ngUserService;
-  private final AccessControlAdminClient accessControlAdminClient;
   private final ExecutorService executorService = Executors.newSingleThreadExecutor(
       new ThreadFactoryBuilder().setNameFormat("usermembership-migration-worker-thread").build());
   private Future userMembershipMigrationJob;
   Map<String, String> oldToNewRoleMap = new HashMap<>();
 
   @Inject
-  public UserProjectMigrationService(UserProjectMapRepository userProjectMapRepository, NgUserService ngUserService,
-      AccessControlAdminClient accessControlAdminClient) {
+  public UserProjectMigrationService(UserProjectMapRepository userProjectMapRepository, NgUserService ngUserService) {
     this.userProjectMapRepository = userProjectMapRepository;
     this.ngUserService = ngUserService;
-    this.accessControlAdminClient = accessControlAdminClient;
     oldToNewRoleMap.put("Project Viewer", "_project_viewer");
     oldToNewRoleMap.put("Project Member", "_project_viewer");
     oldToNewRoleMap.put("Project Admin", "_project_admin");
@@ -111,28 +107,25 @@ public class UserProjectMigrationService implements Managed {
                       .orgIdentifier(userProjectMap.getOrgIdentifier())
                       .projectIdentifier(userProjectMap.getProjectIdentifier())
                       .build();
-    ngUserService.addUserToScope(userProjectMap.getUserId(), scope, null, SYSTEM);
 
-    //    Create role assignment for the user
     List<Role> roles = userProjectMap.getRoles();
-    for (Role role : roles) {
-      if (!oldToNewRoleMap.containsKey(role.getName())) {
-        log.error("unidentified rolename {} found while migrating userProjectMap to userMembership", role.getName());
-        continue;
-      }
-      RoleAssignmentDTO roleAssignmentDTO =
-          RoleAssignmentDTO.builder()
-              .roleIdentifier(oldToNewRoleMap.get(role.getName()))
-              .disabled(false)
-              .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-              .principal(PrincipalDTO.builder().identifier(userProjectMap.getUserId()).type(PrincipalType.USER).build())
-              .build();
-      try {
-        NGRestUtils.getResponse(accessControlAdminClient.createRoleAssignment(userProjectMap.getAccountIdentifier(),
-            userProjectMap.getOrgIdentifier(), userProjectMap.getProjectIdentifier(), roleAssignmentDTO));
-      } catch (Exception e) {
-        log.error("Couldn't migrate role {} for user {}", role, userProjectMap.getUserId(), e);
-      }
+    List<RoleAssignmentDTO> roleAssignments = roles.stream()
+                                                  .filter(role -> oldToNewRoleMap.containsKey(role.getName()))
+                                                  .map(role
+                                                      -> RoleAssignmentDTO.builder()
+                                                             .roleIdentifier(oldToNewRoleMap.get(role.getName()))
+                                                             .disabled(false)
+                                                             .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+                                                             .principal(PrincipalDTO.builder()
+                                                                            .identifier(userProjectMap.getUserId())
+                                                                            .type(PrincipalType.USER)
+                                                                            .build())
+                                                             .build())
+                                                  .collect(Collectors.toList());
+    try {
+      ngUserService.addUserToScope(userProjectMap.getUserId(), scope, roleAssignments, SYSTEM);
+    } catch (Exception e) {
+      log.error("Couldn't migrate userprojectmap for user {}", userProjectMap.getUserId(), e);
     }
   }
 }
