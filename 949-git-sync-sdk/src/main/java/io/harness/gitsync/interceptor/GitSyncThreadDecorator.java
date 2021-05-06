@@ -51,7 +51,8 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter, Container
         getRequestParamFromContext(GitSyncApiConstants.NEW_BRANCH, pathParameters, queryParameters);
     final String targetBranch =
         getRequestParamFromContext(GitSyncApiConstants.TARGET_BRANCH_FOR_PR, pathParameters, queryParameters);
-    // todo(abhinav): see how we can add repo and other details automatically, if not we expect it in every request.
+    final String findDefaultFromOtherBranches =
+        getRequestParamFromContext(GitSyncApiConstants.DEFAULT_FROM_OTHER_REPO, pathParameters, queryParameters);
     final GitEntityInfo branchInfo = GitEntityInfo.builder()
                                          .branch(branchName)
                                          .filePath(filePath)
@@ -62,6 +63,7 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter, Container
                                          .createPr(Boolean.valueOf(createPrKey))
                                          .isNewBranch(Boolean.valueOf(isNewBranch))
                                          .targetBranch(targetBranch)
+                                         .findDefaultFromOtherBranches(Boolean.valueOf(findDefaultFromOtherBranches))
                                          .build();
     if (!GlobalContextManager.isAvailable()) {
       GlobalContextManager.set(new GlobalContext());
