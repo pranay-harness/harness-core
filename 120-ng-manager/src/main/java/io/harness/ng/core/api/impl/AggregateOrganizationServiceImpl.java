@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.api.impl.AggregateProjectServiceImpl.removeAdmins;
 import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
-import static io.harness.ng.core.user.remote.mapper.UserSearchMapper.writeDTO;
+import static io.harness.ng.core.user.remote.mapper.UserMetadataMapper.writeDTO;
 
 import static java.util.Collections.singletonList;
 
@@ -25,6 +25,7 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
+import io.harness.user.remote.UserFilterNG;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -115,7 +116,8 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   }
 
   private Map<String, UserMetadataDTO> getUserMap(List<String> userIds, String accountIdentifier) {
-    List<UserInfo> users = ngUserService.getUsersByIds(userIds, accountIdentifier);
+    List<UserInfo> users =
+        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIds).build());
     Map<String, UserMetadataDTO> userMap = new HashMap<>();
     users.forEach(user -> userMap.put(user.getUuid(), writeDTO(user)));
     return userMap;
@@ -197,7 +199,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
 
   private List<UserMetadataDTO> getAdmins(
       String accountIdentifier, String orgId, Map<String, UserMetadataDTO> userMap) {
-    List<String> userIds = ngUserService.getUsers(
+    List<String> userIds = ngUserService.listUsersHavingRole(
         Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgId).build(), ORG_ADMIN_ROLE);
     return userIds.stream().filter(userMap::containsKey).map(userMap::get).collect(Collectors.toList());
   }

@@ -383,7 +383,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   private void validateUsers(List<String> usersIds, String accountId) {
     Failsafe.with(retryPolicy).run(() -> {
       Set<String> returnedUsersIds =
-          RestClientUtils.getResponse(userClient.listUsers(UserFilterNG.builder().userIds(usersIds).build(), accountId))
+          RestClientUtils.getResponse(userClient.listUsers(accountId, UserFilterNG.builder().userIds(usersIds).build()))
               .stream()
               .map(UserInfo::getUuid)
               .collect(Collectors.toSet());

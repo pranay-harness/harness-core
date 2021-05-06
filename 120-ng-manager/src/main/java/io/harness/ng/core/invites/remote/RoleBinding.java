@@ -14,11 +14,9 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @OwnedBy(PL)
 public class RoleBinding {
-  String identifier;
   @ApiModelProperty(required = true) String roleIdentifier;
   @ApiModelProperty(required = true) String roleName;
   String resourceGroupIdentifier;
   String resourceGroupName;
-  @ApiModelProperty(required = true) boolean managedRole;
-  @ApiModelProperty(required = true) boolean managedRoleAssignment;
+  @ApiModelProperty(required = true) @Builder.Default Boolean managedRole = Boolean.FALSE;
 }

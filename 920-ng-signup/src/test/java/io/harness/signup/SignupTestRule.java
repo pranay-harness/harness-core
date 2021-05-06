@@ -1,7 +1,6 @@
 package io.harness.signup;
 
 import static io.harness.lock.DistributedLockImplementation.NOOP;
-import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 
 import static org.mockito.Mockito.mock;
 
@@ -11,6 +10,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.lock.DistributedLockImplementation;
+import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.index.migrator.Migrator;
 import io.harness.ng.core.services.OrganizationService;
@@ -58,11 +59,13 @@ import org.mongodb.morphia.Morphia;
 public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   @Override
   public List<Module> modules(List<Annotation> annotations) {
+    MongoConfig mongoConfig = MongoConfig.builder().build();
+
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
     List<Module> modules = new ArrayList<>();
 
-    MongoClientURI clientUri =
-        new MongoClientURI("mongodb://localhost:7457", MongoClientOptions.builder(defaultMongoClientOptions));
+    MongoClientURI clientUri = new MongoClientURI(
+        "mongodb://localhost:7457", MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig)));
     String dbName = clientUri.getDatabase();
 
     MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:7457"));

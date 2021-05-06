@@ -3,8 +3,8 @@ package io.harness.ng.core.user.remote.dto;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
 import io.harness.ng.core.invites.dto.UserMetadataDTO;
-import io.harness.ng.core.invites.remote.RoleBinding;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -18,5 +18,5 @@ import lombok.Data;
 @OwnedBy(PL)
 public class UserAggregateDTO {
   @ApiModelProperty(required = true) UserMetadataDTO user;
-  List<RoleBinding> roleBindings;
+  @ApiModelProperty(required = true) List<RoleAssignmentMetadataDTO> roleAssignmentMetadata;
 }

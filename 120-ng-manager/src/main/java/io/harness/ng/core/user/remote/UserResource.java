@@ -6,6 +6,7 @@ import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.clients.AccessControlClient;
@@ -13,6 +14,7 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.beans.PageRequest;
@@ -28,7 +30,7 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
 import io.harness.ng.core.user.remote.dto.UserFilter;
-import io.harness.ng.core.user.remote.mapper.UserSearchMapper;
+import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.security.annotations.InternalApi;
@@ -113,18 +115,6 @@ public class UserResource {
   }
 
   @GET
-  @Path("/aggregate/{userId}")
-  @ApiOperation(value = "Get a user by userId for access control", nickname = "getAggregatedUser")
-  public ResponseDTO<UserAggregateDTO> getAggregatedUser(@PathParam("userId") String userId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    UserAggregateDTO aclUserAggregateDTOs =
-        aggregateUserService.getAggregatedUser(userId, accountIdentifier, orgIdentifier, projectIdentifier);
-    return ResponseDTO.newResponse(aclUserAggregateDTOs);
-  }
-
-  @GET
   @Path("currentgen")
   @ApiOperation(value = "Get users from current gen for an account", nickname = "getCurrentGenUsers")
   public ResponseDTO<PageResponse<UserMetadataDTO>> getCurrentGenUsers(
@@ -132,7 +122,7 @@ public class UserResource {
       @QueryParam("searchString") @DefaultValue("") String searchString, @BeanParam PageRequest pageRequest) {
     Pageable pageable = getPageRequest(pageRequest);
     Page<UserInfo> users = ngUserService.listCurrentGenUsers(accountIdentifier, searchString, pageable);
-    return ResponseDTO.newResponse(PageUtils.getNGPageResponse(users.map(UserSearchMapper::writeDTO)));
+    return ResponseDTO.newResponse(PageUtils.getNGPageResponse(users.map(UserMetadataMapper::writeDTO)));
   }
 
   @GET
@@ -159,6 +149,22 @@ public class UserResource {
     return ResponseDTO.newResponse(ngUserService.listUsers(scope, pageRequest, userFilter));
   }
 
+  @GET
+  @Path("/aggregate/{userId}")
+  @ApiOperation(value = "Get a user by userId for access control", nickname = "getAggregatedUser")
+  public ResponseDTO<UserAggregateDTO> getAggregatedUser(@PathParam("userId") String userId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    UserAggregateDTO aclUserAggregateDTOs = aggregateUserService.getAggregatedUser(scope, userId);
+    return ResponseDTO.newResponse(aclUserAggregateDTOs);
+  }
+
   @POST
   @Path("aggregate")
   @ApiOperation(value = "Get a page of active users for access control", nickname = "getAggregatedUsers")
@@ -168,9 +174,18 @@ public class UserResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam("searchTerm") String searchTerm, @BeanParam PageRequest pageRequest,
       ACLAggregateFilter aclAggregateFilter) {
-    PageResponse<UserAggregateDTO> aclUserAggregateDTOs = aggregateUserService.getAggregatedUsers(
-        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, pageRequest, aclAggregateFilter);
-    return ResponseDTO.newResponse(aclUserAggregateDTOs);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    if (ACLAggregateFilter.isFilterApplied(aclAggregateFilter) && isNotBlank(searchTerm)) {
+      throw new InvalidRequestException("Search and Filter are not supported together");
+    }
+    if (ACLAggregateFilter.isFilterApplied(aclAggregateFilter)) {
+      return ResponseDTO.newResponse(aggregateUserService.getAggregatedUsers(scope, aclAggregateFilter, pageRequest));
+    }
+    return ResponseDTO.newResponse(aggregateUserService.getAggregatedUsers(scope, searchTerm, pageRequest));
   }
 
   @PUT
