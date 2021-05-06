@@ -2,7 +2,9 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
@@ -19,6 +21,7 @@ import java.util.Map;
  * The Interface FileService.
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._960_PERSISTENCE)
 public interface FileService {
   String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
 
