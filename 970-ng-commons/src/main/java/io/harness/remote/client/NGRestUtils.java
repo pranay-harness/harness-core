@@ -1,5 +1,8 @@
 package io.harness.remote.client;
 
+import static io.harness.remote.client.RestClientUtils.DEFAULT_CONNECTION_ERROR_MESSAGE;
+import static io.harness.remote.client.RestClientUtils.DEFAULT_ERROR_MESSAGE;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -22,6 +25,15 @@ import retrofit2.Response;
 @OwnedBy(HarnessTeam.PL)
 public class NGRestUtils {
   public static <T> T getResponse(Call<ResponseDTO<T>> request) {
+    return getResponse(request, DEFAULT_ERROR_MESSAGE, DEFAULT_CONNECTION_ERROR_MESSAGE);
+  }
+
+  public static <T> T getResponse(Call<ResponseDTO<T>> request, String defaultErrorMessage) {
+    return getResponse(request, defaultErrorMessage, DEFAULT_CONNECTION_ERROR_MESSAGE);
+  }
+
+  public static <T> T getResponse(
+      Call<ResponseDTO<T>> request, String defaultErrorMessage, String connectionErrorMessage) {
     try {
       Response<ResponseDTO<T>> response = request.execute();
       if (response.isSuccessful()) {
@@ -35,13 +47,12 @@ public class NGRestUtils {
         } catch (Exception e) {
           log.error("Error while converting rest response to ErrorDTO", e);
         }
-        throw new InvalidRequestException(
-            StringUtils.isEmpty(errorMessage) ? "Error occurred while performing this operation" : errorMessage);
+        throw new InvalidRequestException(StringUtils.isEmpty(errorMessage) ? defaultErrorMessage : errorMessage);
       }
     } catch (IOException ex) {
       String url = Optional.ofNullable(request.request()).map(x -> x.url().encodedPath()).orElse(null);
       log.error("IO error while connecting to the service: {}", url, ex);
-      throw new UnexpectedException("Unable to connect, please try again.");
+      throw new UnexpectedException(connectionErrorMessage);
     }
   }
 }
