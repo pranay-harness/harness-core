@@ -24,7 +24,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class WaiterModule extends AbstractModule {
   private static WaiterModule instance;
 
-  static WaiterModule getInstance() {
+  public static WaiterModule getInstance() {
     if (instance == null) {
       instance = new WaiterModule();
     }

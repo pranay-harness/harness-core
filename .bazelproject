@@ -140,8 +140,6 @@ directories:
   scripts
   tools
   toolset
-  scripts
-  cargo
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
