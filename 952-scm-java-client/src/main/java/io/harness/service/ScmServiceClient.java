@@ -12,6 +12,7 @@ import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
+import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
@@ -50,8 +51,13 @@ public interface ScmServiceClient {
   FindFilesInCommitResponse findFilesInCommit(
       ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
+  FindFilesInPRResponse findFilesInPR(ScmConnector scmConnector, int prNumber, SCMGrpc.SCMBlockingStub scmBlockingStub);
+
   GetLatestCommitResponse getLatestCommit(
       ScmConnector scmConnector, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
+
+  FindFilesInCommitResponse findFilesInCommit(
+      ScmConnector scmConnector, String commitHash, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   ListBranchesResponse listBranches(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
