@@ -42,6 +42,7 @@ public class NGPipelineObjectMapperHelper {
     mapper.registerModule(new JavaTimeModule());
     mapper.registerModule(new HarnessJacksonModule());
     mapper.registerModule(new NGHarnessJacksonModule());
+    // These should ne removed form here
     mapper.registerModule(new PmsBeansJacksonModule());
   }
 }
