@@ -5,6 +5,8 @@ import static io.harness.pcf.model.PcfConstants.AUTOSCALING_APPS_PLUGIN_NAME;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
 import static io.harness.pcf.model.PcfConstants.SYS_VAR_CF_PLUGIN_HOME;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pcf.cfcli.CfCliCommandResolver;
 import io.harness.pcf.model.CfCliVersion;
 
@@ -14,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 
+@OwnedBy(HarnessTeam.CDP)
 public class PcfUtils {
   public static final String BIN_BASH = "/bin/bash";
 

@@ -2,6 +2,8 @@ package io.harness.delegate.task.executioncapability;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
@@ -19,6 +21,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class PcfAutoScalarCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Inject private CfCliDelegateResolver cfCliDelegateResolver;
 

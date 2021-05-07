@@ -565,11 +565,11 @@ public class PcfClientImpl implements PcfClient {
   public boolean checkIfAppHasAutoscalarWithExpectedState(PcfAppAutoscalarRequestData appAutoscalarRequestData,
       ExecutionLogCallback logCallback) throws PivotalClientApiException {
     boolean appAutoscalarInExpectedState = false;
+    PcfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getPcfRequestConfig();
     logCallback.saveExecutionLog("\n# Checking if Application: " + appAutoscalarRequestData.getApplicationName()
         + " has Autoscalar Bound to it");
 
     try {
-      PcfRequestConfig pcfRequestConfig = appAutoscalarRequestData.getPcfRequestConfig();
       boolean loginSuccessful = logInForAppAutoscalarCliCommand(appAutoscalarRequestData, logCallback);
       if (loginSuccessful) {
         ProcessExecutor executor = createProccessExecutorForPcfTask(1,

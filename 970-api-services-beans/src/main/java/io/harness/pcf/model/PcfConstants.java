@@ -17,9 +17,7 @@ public interface PcfConstants {
   String CF_PLUGIN_HOME = "CF_PLUGIN_HOME";
   String SYS_VAR_CF_PLUGIN_HOME = "harness.pcf.plugin.home";
   String BIN_BASH = "/bin/bash";
-  String CF_COMMAND_FOR_CHECKING_AUTOSCALAR = "cf plugins | grep autoscaling-apps";
   String AUTOSCALING_APPS_PLUGIN_NAME = "autoscaling-apps";
-  String CF_COMMAND_FOR_APP_LOG_TAILING = "cf logs <APP_NAME>";
   String APP_TOKEN = "<APP_NAME>";
   String ENABLE_AUTOSCALING = "enable-autoscaling";
   String DISABLE_AUTOSCALING = "disable-autoscaling";

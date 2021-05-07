@@ -1,5 +1,7 @@
 package io.harness.pcf.cfcli;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pcf.cfcli.command.ApiCliCommand;
 import io.harness.pcf.cfcli.command.ApiCliCommand.ApiOptions;
 import io.harness.pcf.cfcli.command.AuthCliCommand;
@@ -26,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CDP)
 public interface CfCliCommandResolver {
   String GREP = "| grep";
 

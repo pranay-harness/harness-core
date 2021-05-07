@@ -8,6 +8,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
@@ -31,6 +33,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PcfUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(HarnessTeam.CDP)
 public class PcfAutoScalarCapabilityCheckTest extends CategoryTest {
   @Mock CfCliDelegateResolver cfCliDelegateResolver;
   @Inject @InjectMocks private PcfAutoScalarCapabilityCheck pcfAutoScalarCapabilityCheck;

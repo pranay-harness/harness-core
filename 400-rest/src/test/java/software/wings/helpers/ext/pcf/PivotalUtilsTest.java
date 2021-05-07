@@ -11,6 +11,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
@@ -32,6 +34,7 @@ import org.zeroturnaround.exec.ProcessResult;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PcfUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(HarnessTeam.CDP)
 public class PivotalUtilsTest extends WingsBaseTest {
   public static final String DEFAULT_CF_CLI_PATH = "cf";
 
