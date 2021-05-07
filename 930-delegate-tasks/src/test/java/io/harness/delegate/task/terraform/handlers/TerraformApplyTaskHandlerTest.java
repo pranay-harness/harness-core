@@ -41,7 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -104,7 +103,6 @@ public class TerraformApplyTaskHandlerTest extends CategoryTest {
         .taskType(TFTaskType.APPLY)
         .entityId("provisionerIdentifier")
         .encryptedTfPlan(encryptedPlanContent)
-        .remoteVarfiles(new ArrayList<>())
         .configFile(
             GitFetchFilesConfig.builder()
                 .gitStoreDelegateConfig(

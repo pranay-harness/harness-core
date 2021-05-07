@@ -25,6 +25,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InterruptedRuntimeException;
 import io.harness.exception.InvalidRequestException;
@@ -79,6 +80,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -454,7 +456,7 @@ public class AwsAsgHelperServiceDelegateImpl
   private void waitForAutoScalingGroupToBeDeleted(
       AmazonAutoScalingClient amazonAutoScalingClient, AutoScalingGroup autoScalingGroup, LogCallback callback) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1), () -> {
         Set<String> completedActivities = new HashSet<>();
         while (true) {
           tracker.trackASGCall("Describe Autoscaling Group");
@@ -468,7 +470,7 @@ public class AwsAsgHelperServiceDelegateImpl
               completedActivities, callback, false);
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
-      }, 1L, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT)
           .addParam("message", "Timed out waiting for autoscaling group to be deleted");
@@ -522,7 +524,7 @@ public class AwsAsgHelperServiceDelegateImpl
       String region, String autoScalingGroupName, Integer desiredCount, ExecutionLogCallback logCallback,
       Integer autoScalingSteadyStateTimeout) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
         AmazonAutoScalingClient amazonAutoScalingClient =
             getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
         Set<String> completedActivities = new HashSet<>();
@@ -537,7 +539,7 @@ public class AwsAsgHelperServiceDelegateImpl
           }
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
-      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       logCallback.saveExecutionLog("Request timeout. AutoScaling group couldn't reach steady state", ERROR);
       throw new WingsException(INIT_TIMEOUT)

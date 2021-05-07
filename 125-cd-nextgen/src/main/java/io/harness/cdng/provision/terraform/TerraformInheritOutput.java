@@ -22,8 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class TerraformInheritOutput implements ExecutionSweepingOutput {
   String workspace;
   GitStoreConfig configFiles;
-  List<String> inlineVarFiles;
-  List<GitStoreConfig> remoteVarFiles;
+  List<TerraformVarFileConfig> varFileConfigs;
   String backendConfig;
   List<String> targets;
   Map<String, String> environmentVariables;

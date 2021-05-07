@@ -36,8 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilitatorServiceImpl {
-  private final SecretManagerClientService secretManagerClientService;
-  private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  private SecretManagerClientService secretManagerClientService;
+  private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Inject
   public ScmDelegateFacilitatorServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,

@@ -22,7 +22,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.Objects;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -40,11 +39,6 @@ public class PMSPipelineServiceHelper {
 
   public static void validatePresenceOfRequiredFields(Object... fields) {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
-  }
-
-  public static Criteria getPipelineEqualityCriteria(@Valid PipelineEntity requestPipeline, boolean deleted) {
-    return getPipelineEqualityCriteria(requestPipeline.getAccountId(), requestPipeline.getOrgIdentifier(),
-        requestPipeline.getProjectIdentifier(), requestPipeline.getIdentifier(), deleted, requestPipeline.getVersion());
   }
 
   public static Criteria getPipelineEqualityCriteria(String accountId, String orgIdentifier, String projectIdentifier,
@@ -67,14 +61,14 @@ public class PMSPipelineServiceHelper {
     return criteria;
   }
 
-  public void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException {
+  public PipelineEntity updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException {
     FilterCreatorMergeServiceResponse filtersAndStageCount = filterCreatorMergeService.getPipelineInfo(pipelineEntity);
-    pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
-    pipelineEntity.setStageNames(filtersAndStageCount.getStageNames());
+    PipelineEntity newEntity = pipelineEntity.withStageCount(filtersAndStageCount.getStageCount())
+                                   .withStageNames(filtersAndStageCount.getStageNames());
     if (isNotEmpty(filtersAndStageCount.getFilters())) {
-      filtersAndStageCount.getFilters().forEach(
-          (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
+      filtersAndStageCount.getFilters().forEach((key, value) -> newEntity.getFilters().put(key, Document.parse(value)));
     }
+    return newEntity;
   }
 
   public void populateFilterUsingIdentifier(Criteria criteria, String accountIdentifier, String orgIdentifier,

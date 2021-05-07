@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofHours;
-import static java.time.Duration.ofSeconds;
+import static java.time.Duration.ofMinutes;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -64,13 +64,13 @@ public class UserMembershipMigrationService implements MongoPersistenceIterator.
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name(this.getClass().getName())
             .poolSize(3)
-            .interval(ofSeconds(1))
+            .interval(ofMinutes(1))
             .build(),
         ResourceGroup.class,
         MongoPersistenceIterator.<UserMembership, SpringFilterExpander>builder()
             .clazz(UserMembership.class)
             .fieldName(UserMembershipKeys.nextIteration)
-            .targetInterval(ofSeconds(30))
+            .targetInterval(ofMinutes(30))
             .acceptableNoAlertDelay(ofHours(1))
             .handler(this)
             .schedulingType(REGULAR)

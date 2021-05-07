@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
 public interface PMSPipelineService {
@@ -21,7 +22,9 @@ public interface PMSPipelineService {
   Optional<PipelineEntity> get(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean deleted);
 
-  PipelineEntity update(PipelineEntity pipelineEntity);
+  PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity);
+
+  PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations);
 
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);

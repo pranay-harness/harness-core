@@ -1,8 +1,12 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -24,16 +28,17 @@ import software.wings.sm.states.KubernetesSteadyStateCheckResponse;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -73,10 +78,9 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
 
     List<ContainerInfo> containerInfos = new ArrayList<>();
     try {
-      timeLimiter.callWithTimeout(
-          ()
-              -> containerInfos.addAll(doSteadyStateCheck(kubernetesSteadyStateCheckParams, executionLogCallback)),
-          kubernetesSteadyStateCheckParams.getTimeoutMillis(), TimeUnit.MILLISECONDS, true);
+      HTimeLimiter.callInterruptible(timeLimiter,
+          Duration.ofMillis(kubernetesSteadyStateCheckParams.getTimeoutMillis()),
+          () -> containerInfos.addAll(doSteadyStateCheck(kubernetesSteadyStateCheckParams, executionLogCallback)));
 
       executionLogCallback.saveExecutionLog(
           "Command finished with status " + ExecutionStatus.SUCCESS, LogLevel.INFO, CommandExecutionStatus.SUCCESS);

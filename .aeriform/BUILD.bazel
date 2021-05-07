@@ -76,6 +76,10 @@ aeriform("//350-event-xxxxxxxxtests")
 
 aeriform("//360-cg-manager:module")
 
+aeriform("//374-ceng-graphql:module")
+
+aeriform("//374-ceng-graphql:tests")
+
 aeriform("//375-ce-graphql:module")
 
 aeriform("//375-ce-graphql:tests")

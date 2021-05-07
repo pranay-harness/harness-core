@@ -55,8 +55,8 @@ public class PipelineResourceTest extends CategoryTest {
   @Mock PMSExecutionService pmsExecutionService;
   @Mock PMSYamlSchemaService pmsYamlSchemaService;
   @Mock NodeExecutionService nodeExecutionService;
-  @Mock AccessControlClient accessControlClient;
   @Mock NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
+  @Mock AccessControlClient accessControlClient;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -178,7 +178,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testUpdatePipeline() {
-    doReturn(entityWithVersion).when(pmsPipelineService).update(entity);
+    doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity);
     ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData()).isEqualTo(PIPELINE_IDENTIFIER);
