@@ -29,18 +29,17 @@ import lombok.experimental.UtilityClass;
 public class NgTriggersTestHelper {
   public TriggerDetails getAwsRepoTriggerDetails() {
     return TriggerDetails.builder()
-        .ngTriggerEntity(
-            NGTriggerEntity.builder()
-                .accountId("acc")
-                .orgIdentifier("org")
-                .projectIdentifier("proj")
-                .metadata(NGTriggerMetadata.builder()
-                              .webhook(WebhookMetadata.builder()
-                                           .type("AWS_CODECOMMIT")
-                                           .git(GitMetadata.builder().connectorIdentifier("conRepo").build())
+        .ngTriggerEntity(NGTriggerEntity.builder()
+                             .accountId("acc")
+                             .orgIdentifier("org")
+                             .projectIdentifier("proj")
+                             .metadata(NGTriggerMetadata.builder()
+                                           .webhook(WebhookMetadata.builder()
+                                                        .type("AWS_CODECOMMIT")
+                                                        .git(GitMetadata.builder().connectorRef("conRepo").build())
+                                                        .build())
                                            .build())
-                              .build())
-                .build())
+                             .build())
         .build();
   }
   public TriggerDetails getAwsRegionTriggerDetails() {
@@ -52,11 +51,10 @@ public class NgTriggersTestHelper {
                 .projectIdentifier("proj")
                 .metadata(
                     NGTriggerMetadata.builder()
-                        .webhook(
-                            WebhookMetadata.builder()
-                                .type("AWS_CODECOMMIT")
-                                .git(GitMetadata.builder().repoName("test").connectorIdentifier("conRegion").build())
-                                .build())
+                        .webhook(WebhookMetadata.builder()
+                                     .type("AWS_CODECOMMIT")
+                                     .git(GitMetadata.builder().repoName("test").connectorRef("conRegion").build())
+                                     .build())
                         .build())
                 .build())
         .build();
@@ -64,18 +62,17 @@ public class NgTriggersTestHelper {
 
   public TriggerDetails getAwsRepoTriggerDetails2() {
     return TriggerDetails.builder()
-        .ngTriggerEntity(
-            NGTriggerEntity.builder()
-                .accountId("acc")
-                .orgIdentifier("org")
-                .projectIdentifier("proj")
-                .metadata(NGTriggerMetadata.builder()
-                              .webhook(WebhookMetadata.builder()
-                                           .type("AWS_CODECOMMIT")
-                                           .git(GitMetadata.builder().connectorIdentifier("conRepo2").build())
+        .ngTriggerEntity(NGTriggerEntity.builder()
+                             .accountId("acc")
+                             .orgIdentifier("org")
+                             .projectIdentifier("proj")
+                             .metadata(NGTriggerMetadata.builder()
+                                           .webhook(WebhookMetadata.builder()
+                                                        .type("AWS_CODECOMMIT")
+                                                        .git(GitMetadata.builder().connectorRef("conRepo2").build())
+                                                        .build())
                                            .build())
-                              .build())
-                .build())
+                             .build())
         .build();
   }
 

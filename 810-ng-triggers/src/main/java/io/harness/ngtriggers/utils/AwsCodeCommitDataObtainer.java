@@ -65,8 +65,7 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
 
     for (TriggerDetails details : filterRequestData.getDetails()) {
       try {
-        String connectorIdentifier =
-            details.getNgTriggerEntity().getMetadata().getWebhook().getGit().getConnectorIdentifier();
+        String connectorIdentifier = details.getNgTriggerEntity().getMetadata().getWebhook().getGit().getConnectorRef();
         AwsCodeCommitApiTaskResponse taskResponse =
             buildAndExecuteAwsCodeCommitDelegateTask(webhookPayloadData, details, connectorIdentifier);
         if (taskResponse.getCommandExecutionStatus() == SUCCESS) {

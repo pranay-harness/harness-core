@@ -177,8 +177,7 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
     String json = EMPTY;
     for (TriggerDetails details : filterRequestData.getDetails()) {
       try {
-        String connectorIdentifier =
-            details.getNgTriggerEntity().getMetadata().getWebhook().getGit().getConnectorIdentifier();
+        String connectorIdentifier = details.getNgTriggerEntity().getMetadata().getWebhook().getGit().getConnectorRef();
         GitApiTaskResponse taskResponse = buildAndFireDelegateTask(webhookPayloadData, details, connectorIdentifier);
         if (taskResponse.getCommandExecutionStatus() == SUCCESS) {
           GitApiFindPRTaskResponse gitApiResult = (GitApiFindPRTaskResponse) taskResponse.getGitApiResult();

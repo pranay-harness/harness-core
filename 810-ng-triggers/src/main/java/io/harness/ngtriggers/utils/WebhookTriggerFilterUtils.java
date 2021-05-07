@@ -193,12 +193,13 @@ public class WebhookTriggerFilterUtils {
     return allConditionsMatched;
   }
 
-  public boolean checkIfCustomHeaderConditionsMatch(List<HeaderConfig> headers, WebhookTriggerSpec triggerSpec) {
-    if (triggerSpec == null || isEmpty(triggerSpec.getHeaderConditions())) {
+  public boolean checkIfCustomHeaderConditionsMatch(
+      List<HeaderConfig> headers, List<WebhookCondition> headerConditions) {
+    if (isEmpty(headerConditions) || isEmpty(headers)) {
       return true;
     }
 
-    for (WebhookCondition webhookHeaderCondition : triggerSpec.getHeaderConditions()) {
+    for (WebhookCondition webhookHeaderCondition : headerConditions) {
       HeaderConfig header = headers.stream()
                                 .filter(headerConfig -> headerConfig.getKey().equals(webhookHeaderCondition.getKey()))
                                 .findAny()

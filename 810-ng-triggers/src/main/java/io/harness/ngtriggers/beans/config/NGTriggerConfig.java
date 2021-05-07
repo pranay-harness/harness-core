@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class NGTriggerConfig implements NGTriggerInterface {
+public class NGTriggerConfig {
   String name;
   @NotNull String identifier;
   String description;

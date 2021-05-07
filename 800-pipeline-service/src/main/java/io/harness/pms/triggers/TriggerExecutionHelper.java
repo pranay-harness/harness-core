@@ -19,11 +19,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
-import io.harness.ngtriggers.beans.target.TargetSpec;
-import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
@@ -80,7 +77,7 @@ public class TriggerExecutionHelper {
             USER);
       }
 
-      String runtimeInputYaml = readRuntimeInputFromConfig(triggerDetails.getNgTriggerConfig());
+      String runtimeInputYaml = triggerDetails.getNgTriggerConfigV1().getInputYaml();
 
       ExecutionMetadata.Builder executionMetaDataBuilder =
           ExecutionMetadata.newBuilder()
@@ -121,12 +118,6 @@ public class TriggerExecutionHelper {
       builder.putExtraInfo(PlanExecution.EXEC_TAG_SET_BY_TRIGGER, executionTagForGitEvent);
     }
     return builder.build();
-  }
-
-  private String readRuntimeInputFromConfig(NGTriggerConfig ngTriggerConfig) {
-    TargetSpec targetSpec = ngTriggerConfig.getTarget().getSpec();
-    PipelineTargetSpec pipelineTargetSpec = (PipelineTargetSpec) targetSpec;
-    return pipelineTargetSpec.getRuntimeInputYaml();
   }
 
   private TriggerType findTriggerType(TriggerPayload triggerPayload) {

@@ -136,7 +136,14 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
         Arrays.asList(HeaderConfig.builder().key("X-GITHUB-EVENT").values(Arrays.asList("push")).build(),
             HeaderConfig.builder().key(X_HARNESS_TRIGGER_ID).values(Arrays.asList("customertriggerspec")).build());
 
-    assertThat(WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(headerConfigList, webhookTriggerSpec))
+    assertThat(
+        WebhookTriggerFilterUtils.checkIfCustomHeaderConditionsMatch(headerConfigList,
+            Arrays.asList(WebhookCondition.builder()
+                              .key("X-HARNESS-TRIGGER-IDENTIFIER")
+                              .operator("equals")
+                              .value("customertriggerspec")
+                              .build(),
+                WebhookCondition.builder().key("X-GITHUB-EVENT").operator("in").value("push, pull_request").build())))
         .isFalse();
   }
 

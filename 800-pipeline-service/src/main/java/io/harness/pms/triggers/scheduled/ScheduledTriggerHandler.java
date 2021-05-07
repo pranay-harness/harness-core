@@ -77,7 +77,7 @@ public class ScheduledTriggerHandler implements Handler<NGTriggerEntity> {
       PlanExecution response = ngTriggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(
           TriggerDetails.builder()
               .ngTriggerEntity(entity)
-              .ngTriggerConfig(ngTriggerElementMapper.toTriggerConfig(entity.getYaml()))
+              .ngTriggerConfigV1(ngTriggerElementMapper.toTriggerConfig(entity.getYaml()))
               .build(),
           TriggerPayload.newBuilder().setType(Type.SCHEDULED).build());
       triggerEventHistoryRepository.save(toHistoryRecord(

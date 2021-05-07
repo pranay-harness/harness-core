@@ -26,10 +26,10 @@ import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.webhook.AwsCodeCommitTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.GithubTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.beans.source.webhook.v1.github.GithubTriggerSpec;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
@@ -162,7 +162,7 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
 
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();
     assertThat(webhookEventMappingResponse.getTriggers().size()).isEqualTo(1);
-    assertThat(webhookEventMappingResponse.getTriggers().get(0).getNgTriggerConfig()).isEqualTo(ngTriggerConfig2);
+    assertThat(webhookEventMappingResponse.getTriggers().get(0).getNgTriggerConfigV1()).isEqualTo(ngTriggerConfig2);
   }
 
   @Test
@@ -221,6 +221,6 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
 
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();
     assertThat(webhookEventMappingResponse.getTriggers().size()).isEqualTo(1);
-    assertThat(webhookEventMappingResponse.getTriggers().get(0).getNgTriggerConfig()).isEqualTo(ngTriggerConfig);
+    assertThat(webhookEventMappingResponse.getTriggers().get(0).getNgTriggerConfigV1()).isEqualTo(ngTriggerConfig);
   }
 }

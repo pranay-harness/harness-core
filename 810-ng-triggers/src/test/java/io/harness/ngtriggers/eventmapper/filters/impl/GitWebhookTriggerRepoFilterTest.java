@@ -80,7 +80,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
                     .metadata(NGTriggerMetadata.builder()
                                   .webhook(WebhookMetadata.builder()
                                                .type("GITHUB")
-                                               .git(GitMetadata.builder().connectorIdentifier("account.con1").build())
+                                               .git(GitMetadata.builder().connectorRef("account.con1").build())
                                                .build())
                                   .build())
                     .build())
@@ -105,12 +105,10 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
                     .projectIdentifier("proj")
                     .metadata(
                         NGTriggerMetadata.builder()
-                            .webhook(
-                                WebhookMetadata.builder()
-                                    .type("GITHUB")
-                                    .git(
-                                        GitMetadata.builder().repoName("repo2").connectorIdentifier("org.con1").build())
-                                    .build())
+                            .webhook(WebhookMetadata.builder()
+                                         .type("GITHUB")
+                                         .git(GitMetadata.builder().repoName("repo2").connectorRef("org.con1").build())
+                                         .build())
                             .build())
                     .build())
             .build();
@@ -135,11 +133,10 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
                     .projectIdentifier("proj")
                     .metadata(
                         NGTriggerMetadata.builder()
-                            .webhook(
-                                WebhookMetadata.builder()
-                                    .type("GITHUB")
-                                    .git(GitMetadata.builder().repoName("repo3").connectorIdentifier("con1").build())
-                                    .build())
+                            .webhook(WebhookMetadata.builder()
+                                         .type("GITHUB")
+                                         .git(GitMetadata.builder().repoName("repo3").connectorRef("con1").build())
+                                         .build())
                             .build())
                     .build())
             .build();

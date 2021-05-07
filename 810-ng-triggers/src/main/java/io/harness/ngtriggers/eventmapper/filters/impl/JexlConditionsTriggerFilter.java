@@ -5,15 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV1;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
-import io.harness.ngtriggers.beans.source.NGTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.NGTriggerSpecV1;
+import io.harness.ngtriggers.beans.source.webhook.v1.WebhookTriggerConfigV1;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
+import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.utils.WebhookTriggerFilterUtils;
@@ -39,13 +39,13 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
 
     for (TriggerDetails trigger : filterRequestData.getDetails()) {
       try {
-        NGTriggerConfig ngTriggerConfig = trigger.getNgTriggerConfig();
+        NGTriggerConfigV1 ngTriggerConfig = trigger.getNgTriggerConfigV1();
         if (ngTriggerConfig == null) {
           ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(trigger.getNgTriggerEntity().getYaml());
         }
 
         TriggerDetails triggerDetails = TriggerDetails.builder()
-                                            .ngTriggerConfig(ngTriggerConfig)
+                                            .ngTriggerConfigV1(ngTriggerConfig)
                                             .ngTriggerEntity(trigger.getNgTriggerEntity())
                                             .build();
         if (checkTriggerEligibility(filterRequestData, triggerDetails)) {
@@ -71,16 +71,17 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
   }
 
   boolean checkTriggerEligibility(FilterRequestData filterRequestData, TriggerDetails triggerDetails) {
-    NGTriggerSpec spec = triggerDetails.getNgTriggerConfig().getSource().getSpec();
-    if (!WebhookTriggerConfig.class.isAssignableFrom(spec.getClass())) {
+    NGTriggerSpecV1 spec = triggerDetails.getNgTriggerConfigV1().getSource().getSpec();
+    if (!WebhookTriggerConfigV1.class.isAssignableFrom(spec.getClass())) {
       log.error("Trigger spec is not a WebhookTriggerConfig");
       return false;
     }
 
-    WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
+    WebhookTriggerConfigV1 webhookTriggerSpecV1 = (WebhookTriggerConfigV1) spec;
     return WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
         filterRequestData.getWebhookPayloadData().getParseWebhookResponse(),
         filterRequestData.getWebhookPayloadData().getOriginalEvent().getHeaders(),
-        filterRequestData.getWebhookPayloadData().getOriginalEvent().getPayload(), triggerSpec.getJexlCondition());
+        filterRequestData.getWebhookPayloadData().getOriginalEvent().getPayload(),
+        WebhookConfigHelper.retrieveJexlExpression(webhookTriggerSpecV1));
   }
 }

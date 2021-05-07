@@ -21,7 +21,7 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
-import io.harness.ngtriggers.beans.source.NGTriggerSource;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV1;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
@@ -264,7 +264,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     // for the validation.
 
     // trigger source validation
-    NGTriggerSource triggerSource = triggerDetails.getNgTriggerConfig().getSource();
+    NGTriggerSourceV1 triggerSource = triggerDetails.getNgTriggerConfigV1().getSource();
     switch (triggerSource.getType()) {
       case WEBHOOK:
         return; // TODO(adwait): define trigger source validation

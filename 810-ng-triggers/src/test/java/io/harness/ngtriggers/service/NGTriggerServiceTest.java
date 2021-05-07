@@ -7,9 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV1;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
-import io.harness.ngtriggers.beans.source.NGTriggerSource;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV1;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
@@ -33,15 +33,17 @@ public class NGTriggerServiceTest extends CategoryTest {
   public void testCronTriggerFailure() {
     TriggerDetails triggerDetails =
         TriggerDetails.builder()
-            .ngTriggerConfig(NGTriggerConfig.builder()
-                                 .source(NGTriggerSource.builder()
-                                             .type(NGTriggerType.SCHEDULED)
-                                             .spec(ScheduledTriggerConfig.builder()
-                                                       .type("Cron")
-                                                       .spec(CronTriggerSpec.builder().expression("not a cron").build())
-                                                       .build())
-                                             .build())
-                                 .build())
+            .ngTriggerConfigV1(
+                NGTriggerConfigV1
+                    .builder()
+                    //                                 .source(NGTriggerSource.builder()
+                    //                                             .type(NGTriggerType.SCHEDULED)
+                    //                                             .spec(ScheduledTriggerConfig.builder()
+                    //                                                       .type("Cron")
+                    //                                                       .spec(CronTriggerSpec.builder().expression("not
+                    //                                                       a cron").build()) .build())
+                    //                                             .build())
+                    .build())
             .build();
     try {
       ngTriggerServiceImpl.validateTriggerConfig(triggerDetails);
@@ -57,15 +59,16 @@ public class NGTriggerServiceTest extends CategoryTest {
   public void testCronTrigger() {
     TriggerDetails triggerDetails =
         TriggerDetails.builder()
-            .ngTriggerConfig(NGTriggerConfig.builder()
-                                 .source(NGTriggerSource.builder()
-                                             .type(NGTriggerType.SCHEDULED)
-                                             .spec(ScheduledTriggerConfig.builder()
-                                                       .type("Cron")
-                                                       .spec(CronTriggerSpec.builder().expression("20 4 * * *").build())
-                                                       .build())
-                                             .build())
-                                 .build())
+            .ngTriggerConfigV1(
+                NGTriggerConfigV1.builder()
+                    .source(NGTriggerSourceV1.builder()
+                                .type(NGTriggerType.SCHEDULED)
+                                .spec(ScheduledTriggerConfig.builder()
+                                          .type("Cron")
+                                          .spec(CronTriggerSpec.builder().expression("20 4 * * *").build())
+                                          .build())
+                                .build())
+                    .build())
             .build();
     ngTriggerServiceImpl.validateTriggerConfig(triggerDetails);
   }

@@ -5,14 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_EVENT_ACTION;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV1;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.WebhookEventMappingResponseBuilder;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
-import io.harness.ngtriggers.beans.source.NGTriggerSpec;
+import io.harness.ngtriggers.beans.source.NGTriggerSpecV1;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.v1.WebhookTriggerConfigV1;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
@@ -40,13 +41,13 @@ public class EventActionTriggerFilter implements TriggerFilter {
 
     for (TriggerDetails trigger : filterRequestData.getDetails()) {
       try {
-        NGTriggerConfig ngTriggerConfig = trigger.getNgTriggerConfig();
+        NGTriggerConfigV1 ngTriggerConfig = trigger.getNgTriggerConfigV1();
         if (ngTriggerConfig == null) {
           ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(trigger.getNgTriggerEntity().getYaml());
         }
 
         TriggerDetails triggerDetails = TriggerDetails.builder()
-                                            .ngTriggerConfig(ngTriggerConfig)
+                                            .ngTriggerConfigV1(ngTriggerConfig)
                                             .ngTriggerEntity(trigger.getNgTriggerEntity())
                                             .build();
         if (checkTriggerEligibility(filterRequestData, triggerDetails)) {
@@ -72,8 +73,8 @@ public class EventActionTriggerFilter implements TriggerFilter {
 
   boolean checkTriggerEligibility(FilterRequestData filterRequestData, TriggerDetails triggerDetails) {
     try {
-      NGTriggerSpec spec = triggerDetails.getNgTriggerConfig().getSource().getSpec();
-      if (!WebhookTriggerConfig.class.isAssignableFrom(spec.getClass())) {
+      NGTriggerSpecV1 spec = triggerDetails.getNgTriggerConfigV1().getSource().getSpec();
+      if (!WebhookTriggerConfigV1.class.isAssignableFrom(spec.getClass())) {
         log.error("Trigger spec is not a WebhookTriggerConfig");
         return false;
       }
