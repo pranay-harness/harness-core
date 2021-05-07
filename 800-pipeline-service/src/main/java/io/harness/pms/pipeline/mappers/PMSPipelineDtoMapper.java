@@ -14,7 +14,7 @@ import io.harness.pms.pipeline.PMSPipelineResponseDTO;
 import io.harness.pms.pipeline.PMSPipelineSummaryResponseDTO;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.yaml.BasicPipeline;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -36,7 +36,7 @@ public class PMSPipelineDtoMapper {
 
   public PipelineEntity toPipelineEntity(String accountId, String orgId, String projectId, String yaml) {
     try {
-      BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
+      BasicPipeline basicPipeline = PmsYamlUtils.read(yaml, BasicPipeline.class);
       if (NGExpressionUtils.matchesInputSetPattern(basicPipeline.getIdentifier())) {
         throw new InvalidRequestException("Pipeline identifier cannot be runtime input");
       }

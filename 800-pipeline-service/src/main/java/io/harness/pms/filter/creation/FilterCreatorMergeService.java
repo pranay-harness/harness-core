@@ -20,8 +20,8 @@ import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
-import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -59,8 +59,8 @@ public class FilterCreatorMergeService {
   public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
     String yaml = pipelineEntity.getYaml();
-    String processedYaml = YamlUtils.injectUuid(yaml);
-    YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
+    String processedYaml = PmsYamlUtils.injectUuid(yaml);
+    YamlField pipelineField = PmsYamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
 

@@ -19,7 +19,7 @@ import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.pipeline.yaml.BasicPipeline;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.steps.StepOutcomeGroup;
 
 import com.google.common.collect.ImmutableMap;
@@ -130,7 +130,7 @@ public class NotificationHelper {
   }
 
   private List<NotificationRules> getNotificationRulesFromYaml(String yaml) throws IOException {
-    BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
+    BasicPipeline basicPipeline = PmsYamlUtils.read(yaml, BasicPipeline.class);
     return basicPipeline.getNotificationRules();
   }
 

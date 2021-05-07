@@ -12,7 +12,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.preflight.PreFlightStatus;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -42,7 +42,7 @@ public class ConnectorPreflightHandlerTest extends CategoryTest {
     String filename = "failure-strategy.yaml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
 
-    Map<FQN, Object> fqnObjectMap = FQNUtils.generateFQNMap(YamlUtils.readTree(yaml).getNode().getCurrJsonNode());
+    Map<FQN, Object> fqnObjectMap = FQNUtils.generateFQNMap(PmsYamlUtils.readTree(yaml).getNode().getCurrJsonNode());
     fqnObjectMap.keySet().forEach(fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
   }
 

@@ -7,10 +7,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 
@@ -30,9 +30,9 @@ public class SecretRefExtractorHelper {
       for (YamlNode variable : variables) {
         YamlField uuidNode = variable.getField(YAMLFieldNameConstants.UUID);
         if (uuidNode != null) {
-          String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
+          String fqn = PmsYamlUtils.getFullyQualifiedName(uuidNode.getNode());
           if (variable.getType().equals(NGVariableType.SECRET.getYamlProperty())) {
-            SecretNGVariable secretNGVariable = YamlUtils.read(variable.toString(), SecretNGVariable.class);
+            SecretNGVariable secretNGVariable = PmsYamlUtils.read(variable.toString(), SecretNGVariable.class);
             fqnToSecretRefs.put(fqn, secretNGVariable.getValue());
           }
         }

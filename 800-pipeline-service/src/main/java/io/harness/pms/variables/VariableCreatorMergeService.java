@@ -14,8 +14,8 @@ import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
-import io.harness.pms.yaml.YamlUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,15 +46,15 @@ public class VariableCreatorMergeService {
   public VariableMergeServiceResponse createVariablesResponse(@NotNull String yaml) throws IOException {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
-    YamlField processedYaml = YamlUtils.injectUuidWithLeafUuid(yaml);
-    YamlField pipelineField = YamlUtils.getPipelineField(Objects.requireNonNull(processedYaml).getNode());
+    YamlField processedYaml = PmsYamlUtils.injectUuidWithLeafUuid(yaml);
+    YamlField pipelineField = PmsYamlUtils.getPipelineField(Objects.requireNonNull(processedYaml).getNode());
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
 
     VariablesCreationBlobResponse response = createVariablesForDependenciesRecursive(services, dependencies);
 
     return VariableCreationBlobResponseUtils.getMergeServiceResponse(
-        YamlUtils.writeYamlString(processedYaml), response);
+        PmsYamlUtils.writeYamlString(processedYaml), response);
   }
 
   private VariablesCreationBlobResponse createVariablesForDependenciesRecursive(

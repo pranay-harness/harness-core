@@ -44,11 +44,11 @@ public class YamlField {
    * @return
    */
   public boolean checkIfParentIsParallel(String expectedParent) {
-    YamlNode parallelNode = YamlUtils.findParentNode(getNode(), YAMLFieldNameConstants.PARALLEL);
+    YamlNode parallelNode = PmsYamlUtils.findParentNode(getNode(), YAMLFieldNameConstants.PARALLEL);
     if (parallelNode != null) {
       // YamlUtils#findParentNode might return the parallel node which might not be the direct parent therefore check if
       // parallelNode is part of expected Parent. Currently expected parent can be Stage, Step and StepGroup
-      return YamlUtils.findParentNode(parallelNode, expectedParent) != null;
+      return PmsYamlUtils.findParentNode(parallelNode, expectedParent) != null;
     }
     return false;
   }

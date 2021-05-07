@@ -21,9 +21,9 @@ import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.chain.TaskChainFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.protobuf.ByteString;
@@ -75,7 +75,7 @@ public class ServicePMSPlanCreator {
       }
       try {
         //  Add validation for not chaining of stages
-        StageElementConfig stageElementConfig = YamlUtils.read(
+        StageElementConfig stageElementConfig = PmsYamlUtils.read(
             PlanCreatorUtils.getStageConfig(serviceField, serviceConfig.getUseFromStage().getStage().getValue())
                 .getNode()
                 .toString(),

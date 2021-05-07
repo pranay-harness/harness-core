@@ -8,7 +8,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -41,7 +41,7 @@ public class FQNUtilsTest extends CategoryTest {
 
       String resFile = resFiles.get(i);
       String res = Resources.toString(Objects.requireNonNull(classLoader.getResource(resFile)), StandardCharsets.UTF_8);
-      List<String> resKeys = YamlUtils.read(res, ArrayList.class);
+      List<String> resKeys = PmsYamlUtils.read(res, ArrayList.class);
       assertThat(keys).isEqualTo(resKeys);
     }
   }

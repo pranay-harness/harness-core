@@ -23,10 +23,10 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.steps.stepgroup.StepGroupStep;
@@ -83,7 +83,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
     StepParameters stepParameters = StepGroupStepParameters.getStepParameters(config, stepsField.getNode().getUuid());
 
     boolean isStepGroupInsideRollback = false;
-    if (YamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
+    if (PmsYamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
       isStepGroupInsideRollback = true;
     }
 
@@ -123,7 +123,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
      */
     if (currentField != null && currentField.getNode() != null) {
       // Check if step is inside RollbackStep
-      if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+      if (PmsYamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
         addOnSuccessAdviser(currentField, adviserObtainments);
       } else {
         // Adding NextStep Adviser at last due to giving priority to Failure strategy more. DO NOT CHANGE.

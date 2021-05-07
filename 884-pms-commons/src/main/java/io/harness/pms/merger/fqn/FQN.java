@@ -2,8 +2,8 @@ package io.harness.pms.merger.fqn;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.pms.yaml.YamlUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +48,7 @@ public class FQN {
     for (int i = 0; i < fqnList.size(); i++) {
       FQNNode currNode = fqnList.get(i);
       if (currNode.getNodeType() == FQNNode.NodeType.KEY
-          && !YamlUtils.shouldNotIncludeInQualifiedName(currNode.getKey())) {
+          && !PmsYamlUtils.shouldNotIncludeInQualifiedName(currNode.getKey())) {
         res.append(currNode.getKey()).append('.');
       } else if (currNode.getNodeType() == FQNNode.NodeType.KEY_WITH_UUID) {
         res.append(currNode.getUuidValue()).append('.');

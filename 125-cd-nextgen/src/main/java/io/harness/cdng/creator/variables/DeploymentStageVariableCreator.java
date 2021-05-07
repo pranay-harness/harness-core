@@ -7,10 +7,10 @@ import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -56,7 +56,7 @@ public class DeploymentStageVariableCreator extends ChildrenVariableCreator {
     yamlPropertiesMap.put(stageUUID,
         YamlProperties.newBuilder()
             .setLocalName(YAMLFieldNameConstants.STAGE)
-            .setFqn(YamlUtils.getFullyQualifiedName(node))
+            .setFqn(PmsYamlUtils.getFullyQualifiedName(node))
             .build());
     addVariablesForStage(yamlPropertiesMap, node);
     return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).build();
@@ -65,16 +65,16 @@ public class DeploymentStageVariableCreator extends ChildrenVariableCreator {
   private void addVariablesForStage(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
     YamlField nameField = yamlNode.getField(YAMLFieldNameConstants.NAME);
     if (nameField != null) {
-      String nameFQN = YamlUtils.getFullyQualifiedName(nameField.getNode());
-      String nameLocal = YamlUtils.getQualifiedNameTillGivenField(nameField.getNode(), YAMLFieldNameConstants.STAGE);
+      String nameFQN = PmsYamlUtils.getFullyQualifiedName(nameField.getNode());
+      String nameLocal = PmsYamlUtils.getQualifiedNameTillGivenField(nameField.getNode(), YAMLFieldNameConstants.STAGE);
       yamlPropertiesMap.put(nameField.getNode().getCurrJsonNode().textValue(),
           YamlProperties.newBuilder().setLocalName(getStageLocalName(nameLocal)).setFqn(nameFQN).build());
     }
     YamlField descriptionField = yamlNode.getField(YAMLFieldNameConstants.DESCRIPTION);
     if (descriptionField != null) {
-      String descriptionFQN = YamlUtils.getFullyQualifiedName(descriptionField.getNode());
+      String descriptionFQN = PmsYamlUtils.getFullyQualifiedName(descriptionField.getNode());
       String descriptionLocal =
-          YamlUtils.getQualifiedNameTillGivenField(descriptionField.getNode(), YAMLFieldNameConstants.STAGE);
+          PmsYamlUtils.getQualifiedNameTillGivenField(descriptionField.getNode(), YAMLFieldNameConstants.STAGE);
       yamlPropertiesMap.put(descriptionField.getNode().getCurrJsonNode().textValue(),
           YamlProperties.newBuilder().setLocalName(getStageLocalName(descriptionLocal)).setFqn(descriptionFQN).build());
     }
@@ -90,8 +90,9 @@ public class DeploymentStageVariableCreator extends ChildrenVariableCreator {
     variableNodes.forEach(variableNode -> {
       YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
       if (uuidNode != null) {
-        String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
-        String localName = YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.STAGE);
+        String fqn = PmsYamlUtils.getFullyQualifiedName(uuidNode.getNode());
+        String localName =
+            PmsYamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.STAGE);
         YamlField valueNode = variableNode.getField(YAMLFieldNameConstants.VALUE);
         String variableName =
             Objects.requireNonNull(variableNode.getField(YAMLFieldNameConstants.NAME)).getNode().asText();

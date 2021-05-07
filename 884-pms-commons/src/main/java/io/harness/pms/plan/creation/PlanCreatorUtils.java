@@ -3,10 +3,10 @@ package io.harness.pms.plan.creation;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.base.Preconditions;
 import java.util.Collections;
@@ -50,7 +50,7 @@ public class PlanCreatorUtils {
         || yamlField.getName().equals(YAMLFieldNameConstants.STAGES)) {
       return null;
     }
-    YamlNode stages = YamlUtils.getGivenYamlNodeFromParentPath(yamlField.getNode(), YAMLFieldNameConstants.STAGES);
+    YamlNode stages = PmsYamlUtils.getGivenYamlNodeFromParentPath(yamlField.getNode(), YAMLFieldNameConstants.STAGES);
     List<YamlField> stageYamlFields = getStageYamlFields(stages);
     for (YamlField stageYamlField : stageYamlFields) {
       if (stageYamlField.getNode().getIdentifier().equals(stageIdentifier)) {

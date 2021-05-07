@@ -3,10 +3,10 @@ package io.harness.steps.barriers.service.visitor;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.steps.barriers.beans.BarrierPositionInfo;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.beans.StageDetail;
@@ -140,7 +140,7 @@ public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
   }
 
   private boolean isInsideStepGroupRollback(YamlNode currentElement) {
-    YamlNode rollbackSteps = YamlUtils.findParentNode(currentElement, YAMLFieldNameConstants.ROLLBACK_STEPS);
+    YamlNode rollbackSteps = PmsYamlUtils.findParentNode(currentElement, YAMLFieldNameConstants.ROLLBACK_STEPS);
     if (rollbackSteps == null) {
       return false;
     }
@@ -150,7 +150,7 @@ public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
   }
 
   private YamlNode findStepGroupBottomUp(YamlNode currentElement) {
-    return YamlUtils.findParentNode(currentElement, YAMLFieldNameConstants.STEP_GROUP);
+    return PmsYamlUtils.findParentNode(currentElement, YAMLFieldNameConstants.STEP_GROUP);
   }
 
   public Map<String, BarrierSetupInfo> getBarrierIdentifierMap() {

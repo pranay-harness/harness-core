@@ -9,9 +9,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.base.Charsets;
@@ -31,7 +31,7 @@ public class ParallelPlanCreatorTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    YamlField yamlField = PmsYamlUtils.readTree(PmsYamlUtils.injectUuid(yamlContent));
     // Pipeline Node
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
 

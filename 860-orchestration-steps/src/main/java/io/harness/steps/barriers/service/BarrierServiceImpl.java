@@ -37,8 +37,8 @@ import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.BarrierNodeRepository;
 import io.harness.springdata.HMongoTemplate;
 import io.harness.steps.barriers.BarrierStep;
@@ -375,7 +375,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Override
   public List<BarrierSetupInfo> getBarrierSetupInfoList(String yaml) {
     try {
-      YamlNode yamlNode = YamlUtils.extractPipelineField(yaml).getNode();
+      YamlNode yamlNode = PmsYamlUtils.extractPipelineField(yaml).getNode();
       BarrierVisitor barrierVisitor = new BarrierVisitor(injector);
       barrierVisitor.walkElementTree(yamlNode);
       return new ArrayList<>(barrierVisitor.getBarrierIdentifierMap().values());
@@ -391,7 +391,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   @Override
   public Map<String, List<BarrierPositionInfo.BarrierPosition>> getBarrierPositionInfoList(String yaml) {
     try {
-      YamlNode yamlNode = YamlUtils.extractPipelineField(yaml).getNode();
+      YamlNode yamlNode = PmsYamlUtils.extractPipelineField(yaml).getNode();
       BarrierVisitor barrierVisitor = new BarrierVisitor(injector);
       barrierVisitor.walkElementTree(yamlNode);
       return barrierVisitor.getBarrierPositionInfoMap();

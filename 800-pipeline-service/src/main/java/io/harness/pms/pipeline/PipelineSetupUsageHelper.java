@@ -26,7 +26,7 @@ import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -73,7 +73,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
     try {
       Map<FQN, Object> fqnObjectMap =
-          FQNUtils.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
+          FQNUtils.generateFQNMap(PmsYamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
       fqnObjectMap.keySet().forEach(fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid merged pipeline yaml");

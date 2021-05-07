@@ -13,7 +13,7 @@ import io.harness.pms.preflight.PreflightCommonUtils;
 import io.harness.pms.preflight.connector.ConnectorCheckResponse;
 import io.harness.pms.preflight.entity.PreFlightEntity;
 import io.harness.pms.preflight.service.PreflightService;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class AsyncPreFlightHandler implements Runnable {
       Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
       try {
         Map<FQN, Object> fqnObjectMap =
-            FQNUtils.generateFQNMap(YamlUtils.readTree(entity.getPipelineYaml()).getNode().getCurrJsonNode());
+            FQNUtils.generateFQNMap(PmsYamlUtils.readTree(entity.getPipelineYaml()).getNode().getCurrJsonNode());
         fqnObjectMap.keySet().forEach(
             fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
       } catch (IOException e) {

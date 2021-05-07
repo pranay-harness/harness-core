@@ -5,8 +5,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.fqn.FQNNode;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -168,7 +168,7 @@ public class FQNUtils {
 
     Map<String, Object> tempMap = new LinkedHashMap<>();
     generateYamlMap(getSubMap(fqnMap, currentFQN), currentFQN, originalYaml.get(topKey), tempMap, topKey);
-    return YamlUtils.readTree(YamlUtils.write(tempMap).replace("---\n", "")).getNode().getCurrJsonNode();
+    return PmsYamlUtils.readTree(PmsYamlUtils.write(tempMap).replace("---\n", "")).getNode().getCurrJsonNode();
   }
 
   private void generateYamlMap(

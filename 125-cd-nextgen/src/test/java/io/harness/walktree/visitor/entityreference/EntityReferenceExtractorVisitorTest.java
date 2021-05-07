@@ -9,10 +9,10 @@ import io.harness.cdng.CDNGTestBase;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 
@@ -54,7 +54,7 @@ public class EntityReferenceExtractorVisitorTest extends CDNGTestBase {
     String pipelineYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(pipelineFilename)), StandardCharsets.UTF_8);
 
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(pipelineYaml));
+    YamlField yamlField = PmsYamlUtils.readTree(PmsYamlUtils.injectUuid(pipelineYaml));
     // Pipeline Node
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
 
@@ -62,7 +62,8 @@ public class EntityReferenceExtractorVisitorTest extends CDNGTestBase {
     YamlField stagesNode = pipelineNode.getField("stages");
     // Stage1 Node
     YamlField stage1Node = stagesNode.getNode().asArray().get(0).getField("stage");
-    StageElementConfig stageElementConfig = YamlUtils.read(stage1Node.getNode().toString(), StageElementConfig.class);
+    StageElementConfig stageElementConfig =
+        PmsYamlUtils.read(stage1Node.getNode().toString(), StageElementConfig.class);
     List<String> qualifiedNameList = new LinkedList<>();
     qualifiedNameList.add(YAMLFieldNameConstants.PIPELINE);
     qualifiedNameList.add(YAMLFieldNameConstants.STAGES);

@@ -16,8 +16,8 @@ import io.harness.pms.exception.YamlNodeErrorInfo;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
@@ -104,7 +104,7 @@ public class FilterCreatorService {
             FilterCreationContext.builder().currentField(yamlField).setupMetadata(setupMetadata).build(), yamlField);
       } else {
         try {
-          Object obj = YamlUtils.read(yamlField.getNode().toString(), clazz);
+          Object obj = PmsYamlUtils.read(yamlField.getNode().toString(), clazz);
           response = filterJsonCreator.handleNode(
               FilterCreationContext.builder().currentField(yamlField).setupMetadata(setupMetadata).build(), obj);
         } catch (IOException e) {

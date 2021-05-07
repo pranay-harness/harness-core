@@ -9,7 +9,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
@@ -102,13 +102,13 @@ public class MergeHelper {
 
   public String getPipelineComponent(String inputSetYaml) {
     try {
-      JsonNode node = YamlUtils.readTree(inputSetYaml).getNode().getCurrJsonNode();
+      JsonNode node = PmsYamlUtils.readTree(inputSetYaml).getNode().getCurrJsonNode();
       ObjectNode innerMap = (ObjectNode) node.get("inputSet");
       JsonNode pipelineNode = innerMap.get("pipeline");
       innerMap.removeAll();
       innerMap.putObject("pipeline");
       innerMap.set("pipeline", pipelineNode);
-      return YamlUtils.write(innerMap).replace("---\n", "");
+      return PmsYamlUtils.write(innerMap).replace("---\n", "");
     } catch (IOException e) {
       throw new InvalidRequestException("Input set yaml is invalid");
     }
@@ -169,7 +169,7 @@ public class MergeHelper {
       return inputSetValue;
     }
     try {
-      ParameterField<?> parameterField = YamlUtils.read(pipelineValText, ParameterField.class);
+      ParameterField<?> parameterField = PmsYamlUtils.read(pipelineValText, ParameterField.class);
       if (parameterField.getInputSetValidator() == null) {
         return inputSetValue;
       }

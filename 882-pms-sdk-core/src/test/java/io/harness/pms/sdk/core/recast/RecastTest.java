@@ -15,8 +15,8 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -185,7 +185,7 @@ public class RecastTest extends PmsSdkCoreTestBase {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    YamlField yamlField = PmsYamlUtils.readTree(PmsYamlUtils.injectUuid(yamlContent));
 
     ObjectNode objectNode = new ObjectNode(JsonNodeFactory.instance);
     objectNode.set("stage", yamlField.getNode().getCurrJsonNode());

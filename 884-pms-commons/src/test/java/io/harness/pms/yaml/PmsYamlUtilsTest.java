@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(PIPELINE)
-public class YamlUtilsTest extends CategoryTest {
+public class PmsYamlUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
@@ -28,7 +28,7 @@ public class YamlUtilsTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    YamlField yamlField = PmsYamlUtils.readTree(PmsYamlUtils.injectUuid(yamlContent));
     // Pipeline Node
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
 
@@ -72,7 +72,7 @@ public class YamlUtilsTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    YamlField yamlField = PmsYamlUtils.readTree(PmsYamlUtils.injectUuid(yamlContent));
     // Pipeline Node
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
 
@@ -81,11 +81,11 @@ public class YamlUtilsTest extends CategoryTest {
     // Stage1 Node
     YamlNode stage1Node = stagesNode.getNode().asArray().get(0).getField("stage").getNode();
 
-    String stageFQN = YamlUtils.getFullyQualifiedName(stage1Node);
+    String stageFQN = PmsYamlUtils.getFullyQualifiedName(stage1Node);
     assertThat(stageFQN).isEqualTo("pipeline.stages.qaStage");
     // Stage1 Service Node
     YamlNode serviceNode = stage1Node.getField("spec").getNode().getField("service").getNode();
-    assertThat(YamlUtils.getFullyQualifiedName(serviceNode)).isEqualTo("pipeline.stages.qaStage.spec.service");
+    assertThat(PmsYamlUtils.getFullyQualifiedName(serviceNode)).isEqualTo("pipeline.stages.qaStage.spec.service");
 
     // image Path qualified Name
     YamlNode imagePath = serviceNode.getField("serviceDefinition")
@@ -100,18 +100,18 @@ public class YamlUtilsTest extends CategoryTest {
                              .getNode()
                              .getField("imagePath")
                              .getNode();
-    assertThat(YamlUtils.getFullyQualifiedName(imagePath))
+    assertThat(PmsYamlUtils.getFullyQualifiedName(imagePath))
         .isEqualTo("pipeline.stages.qaStage.spec.service.serviceDefinition.spec.artifacts.primary.spec.imagePath");
 
     // infrastructure qualified name
     YamlNode infraNode = stage1Node.getField("spec").getNode().getField("infrastructure").getNode();
-    assertThat(YamlUtils.getFullyQualifiedName(infraNode)).isEqualTo("pipeline.stages.qaStage.spec.infrastructure");
+    assertThat(PmsYamlUtils.getFullyQualifiedName(infraNode)).isEqualTo("pipeline.stages.qaStage.spec.infrastructure");
 
     // step qualified name
     YamlNode stepsNode =
         stage1Node.getField("spec").getNode().getField("execution").getNode().getField("steps").getNode();
     YamlNode step1Node = stepsNode.asArray().get(0).getField("step").getNode();
-    assertThat(YamlUtils.getFullyQualifiedName(step1Node))
+    assertThat(PmsYamlUtils.getFullyQualifiedName(step1Node))
         .isEqualTo("pipeline.stages.qaStage.spec.execution.steps.rolloutDeployment");
   }
 
@@ -122,7 +122,7 @@ public class YamlUtilsTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    YamlField yamlField = PmsYamlUtils.readTree(PmsYamlUtils.injectUuid(yamlContent));
     // Pipeline Node
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
 
@@ -147,13 +147,13 @@ public class YamlUtilsTest extends CategoryTest {
                              .getNode()
                              .getField("imagePath")
                              .getNode();
-    assertThat(YamlUtils.getQNBetweenTwoFields(imagePath, "stages", "service")).isEqualTo("stages.service");
+    assertThat(PmsYamlUtils.getQNBetweenTwoFields(imagePath, "stages", "service")).isEqualTo("stages.service");
 
     // step qualified name
     YamlNode stepsNode =
         stage1Node.getField("spec").getNode().getField("execution").getNode().getField("steps").getNode();
     YamlNode step1Node = stepsNode.asArray().get(0).getField("step").getNode();
-    assertThat(YamlUtils.getQNBetweenTwoFields(step1Node, "execution", "steps")).isEqualTo("execution.steps");
+    assertThat(PmsYamlUtils.getQNBetweenTwoFields(step1Node, "execution", "steps")).isEqualTo("execution.steps");
   }
 
   @Test
@@ -163,7 +163,7 @@ public class YamlUtilsTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    YamlField yamlField = PmsYamlUtils.readTree(PmsYamlUtils.injectUuid(yamlContent));
     // Pipeline Node
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
 
@@ -172,11 +172,11 @@ public class YamlUtilsTest extends CategoryTest {
     // Stage1 Node
     YamlNode stage1Node = stagesNode.getNode().asArray().get(0).getField("stage").getNode();
 
-    String stageFQN = YamlUtils.getQualifiedNameTillGivenField(stage1Node, "stage");
+    String stageFQN = PmsYamlUtils.getQualifiedNameTillGivenField(stage1Node, "stage");
     assertThat(stageFQN).isEqualTo("qaStage");
     // Stage1 Service Node
     YamlNode serviceNode = stage1Node.getField("spec").getNode().getField("service").getNode();
-    assertThat(YamlUtils.getQualifiedNameTillGivenField(serviceNode, "stage")).isEqualTo("qaStage.spec.service");
+    assertThat(PmsYamlUtils.getQualifiedNameTillGivenField(serviceNode, "stage")).isEqualTo("qaStage.spec.service");
 
     // image Path qualified Name
     YamlNode imagePath = serviceNode.getField("serviceDefinition")
@@ -191,18 +191,18 @@ public class YamlUtilsTest extends CategoryTest {
                              .getNode()
                              .getField("imagePath")
                              .getNode();
-    assertThat(YamlUtils.getQualifiedNameTillGivenField(imagePath, "service"))
+    assertThat(PmsYamlUtils.getQualifiedNameTillGivenField(imagePath, "service"))
         .isEqualTo("service.serviceDefinition.spec.artifacts.primary.spec.imagePath");
 
     // infrastructure qualified name
     YamlNode infraNode = stage1Node.getField("spec").getNode().getField("infrastructure").getNode();
-    assertThat(YamlUtils.getQualifiedNameTillGivenField(infraNode, "infrastructure")).isEqualTo("infrastructure");
+    assertThat(PmsYamlUtils.getQualifiedNameTillGivenField(infraNode, "infrastructure")).isEqualTo("infrastructure");
 
     // step qualified name
     YamlNode stepsNode =
         stage1Node.getField("spec").getNode().getField("execution").getNode().getField("steps").getNode();
     YamlNode step1Node = stepsNode.asArray().get(0).getField("step").getNode();
-    assertThat(YamlUtils.getQualifiedNameTillGivenField(step1Node, "execution"))
+    assertThat(PmsYamlUtils.getQualifiedNameTillGivenField(step1Node, "execution"))
         .isEqualTo("execution.steps.rolloutDeployment");
   }
 }

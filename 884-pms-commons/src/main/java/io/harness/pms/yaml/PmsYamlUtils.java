@@ -32,7 +32,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(PIPELINE)
-public class YamlUtils {
+public class PmsYamlUtils {
   private static final List<String> ignorableStringForQualifiedName = Arrays.asList("step", "parallel");
 
   private final ObjectMapper mapper;

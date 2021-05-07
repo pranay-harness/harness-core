@@ -15,10 +15,10 @@ import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 
 import java.util.List;
 
@@ -31,7 +31,7 @@ public class StepGroupsRollbackPMSPlanCreator {
     List<YamlNode> stepsArrayFields = executionStepsField.getNode().asArray();
 
     YamlNode stageNode =
-        YamlUtils.getGivenYamlNodeFromParentPath(executionStepsField.getNode(), YAMLFieldNameConstants.STAGE);
+        PmsYamlUtils.getGivenYamlNodeFromParentPath(executionStepsField.getNode(), YAMLFieldNameConstants.STAGE);
     RollbackOptionalChildChainStepParametersBuilder sectionOptionalChildChainStepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 
@@ -47,7 +47,7 @@ public class StepGroupsRollbackPMSPlanCreator {
             YamlField rollbackStepsNode = yamlField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
             RollbackNode rollbackNode = RollbackNode.builder()
                                             .nodeId(rollbackStepsNode.getNode().getUuid())
-                                            .dependentNodeIdentifier(YamlUtils.getQualifiedNameTillGivenField(
+                                            .dependentNodeIdentifier(PmsYamlUtils.getQualifiedNameTillGivenField(
                                                 yamlField.getNode(), YAMLFieldNameConstants.STAGES))
                                             .build();
             sectionOptionalChildChainStepParametersBuilder.childNode(rollbackNode);

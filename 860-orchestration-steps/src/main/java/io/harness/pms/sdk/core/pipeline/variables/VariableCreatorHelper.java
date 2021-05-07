@@ -6,10 +6,10 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.base.Preconditions;
 import java.util.Collections;
@@ -31,8 +31,8 @@ public class VariableCreatorHelper {
     variableNodes.forEach(variableNode -> {
       YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
       if (uuidNode != null) {
-        String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
-        String localName = YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), fieldName);
+        String fqn = PmsYamlUtils.getFullyQualifiedName(uuidNode.getNode());
+        String localName = PmsYamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), fieldName);
         YamlField valueNode = variableNode.getField(YAMLFieldNameConstants.VALUE);
         String variableName =
             Objects.requireNonNull(variableNode.getField(YAMLFieldNameConstants.NAME)).getNode().asText();
@@ -54,8 +54,8 @@ public class VariableCreatorHelper {
 
   public void addFieldToPropertiesMap(
       YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap, String fieldName) {
-    String fqn = YamlUtils.getFullyQualifiedName(fieldNode.getNode());
-    String localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), fieldName);
+    String fqn = PmsYamlUtils.getFullyQualifiedName(fieldNode.getNode());
+    String localName = PmsYamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), fieldName);
     yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
         YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
   }

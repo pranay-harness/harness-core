@@ -12,10 +12,10 @@ import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,7 +47,7 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
     yamlPropertiesMap.put(stepUUID,
         YamlProperties.newBuilder()
             .setLocalName(YAMLFieldNameConstants.STEP)
-            .setFqn(YamlUtils.getFullyQualifiedName(node))
+            .setFqn(PmsYamlUtils.getFullyQualifiedName(node))
             .build());
     addVariablesForStep(yamlPropertiesMap, node);
     return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).build();
@@ -99,13 +99,13 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
   }
 
   protected void addFieldToPropertiesMapUnderStep(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    String fqn = YamlUtils.getFullyQualifiedName(fieldNode.getNode());
+    String fqn = PmsYamlUtils.getFullyQualifiedName(fieldNode.getNode());
     String localName;
     if (fqn.contains(YAMLFieldNameConstants.PIPELINE_INFRASTRUCTURE)) {
-      localName =
-          YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.PIPELINE_INFRASTRUCTURE);
+      localName = PmsYamlUtils.getQualifiedNameTillGivenField(
+          fieldNode.getNode(), YAMLFieldNameConstants.PIPELINE_INFRASTRUCTURE);
     } else {
-      localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.EXECUTION);
+      localName = PmsYamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.EXECUTION);
     }
 
     yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
@@ -117,9 +117,9 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
     variableNodes.forEach(variableNode -> {
       YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
       if (uuidNode != null) {
-        String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
+        String fqn = PmsYamlUtils.getFullyQualifiedName(uuidNode.getNode());
         String localName =
-            YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.EXECUTION);
+            PmsYamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.EXECUTION);
         YamlField valueNode = variableNode.getField(YAMLFieldNameConstants.VALUE);
         String variableName =
             Objects.requireNonNull(variableNode.getField(YAMLFieldNameConstants.NAME)).getNode().asText();

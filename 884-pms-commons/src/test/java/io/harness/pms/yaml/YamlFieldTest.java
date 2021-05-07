@@ -23,7 +23,7 @@ public class YamlFieldTest extends CategoryTest {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    YamlField yamlField = PmsYamlUtils.readTree(PmsYamlUtils.injectUuid(yamlContent));
     // Pipeline Node
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
 

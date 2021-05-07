@@ -8,8 +8,8 @@ import io.harness.OrchestrationStepsTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.beans.StageDetail;
@@ -60,7 +60,7 @@ public class BarrierVisitorTest extends OrchestrationStepsTestBase {
         BarrierSetupInfo.builder().identifier("myBarrierId1").name("myBarrier1Name").stages(new HashSet<>()).build(),
         "myBarrierId2",
         BarrierSetupInfo.builder().identifier("myBarrierId2").name("myBarrier2Name").stages(new HashSet<>()).build());
-    YamlNode yamlNode = YamlUtils.extractPipelineField(yaml).getNode();
+    YamlNode yamlNode = PmsYamlUtils.extractPipelineField(yaml).getNode();
     barrierVisitor.walkElementTree(yamlNode);
 
     assertThat(barrierVisitor.getBarrierIdentifierMap()).isNotEmpty();
@@ -76,7 +76,7 @@ public class BarrierVisitorTest extends OrchestrationStepsTestBase {
     String yamlFile = "barriers.yaml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(yamlFile)), StandardCharsets.UTF_8);
 
-    YamlNode yamlNode = YamlUtils.extractPipelineField(yaml).getNode();
+    YamlNode yamlNode = PmsYamlUtils.extractPipelineField(yaml).getNode();
     barrierVisitor.walkElementTree(yamlNode);
 
     String vbStage = "VBStage";

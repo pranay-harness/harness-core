@@ -21,8 +21,8 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
@@ -47,7 +47,7 @@ public class IntegrationStageUtils {
 
   public ParallelStepElementConfig getParallelStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
     try {
-      return YamlUtils.read(executionWrapperConfig.getParallel().toString(), ParallelStepElementConfig.class);
+      return PmsYamlUtils.read(executionWrapperConfig.getParallel().toString(), ParallelStepElementConfig.class);
     } catch (Exception ex) {
       throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig parallel node", ex);
     }
@@ -55,14 +55,14 @@ public class IntegrationStageUtils {
 
   public StepElementConfig getStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
     try {
-      return YamlUtils.read(executionWrapperConfig.getStep().toString(), StepElementConfig.class);
+      return PmsYamlUtils.read(executionWrapperConfig.getStep().toString(), StepElementConfig.class);
     } catch (Exception ex) {
       throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig step node", ex);
     }
   }
   public CodeBase getCiCodeBase(YamlNode ciCodeBase) {
     try {
-      return YamlUtils.read(ciCodeBase.toString(), CodeBase.class);
+      return PmsYamlUtils.read(ciCodeBase.toString(), CodeBase.class);
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid yaml", e);
     }

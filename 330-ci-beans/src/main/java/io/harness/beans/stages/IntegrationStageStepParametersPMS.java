@@ -18,8 +18,8 @@ import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
-import io.harness.pms.yaml.YamlUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +83,7 @@ public class IntegrationStageStepParametersPMS implements SpecParameters, StepPa
     try {
       YamlField stageYamlField = PlanCreatorUtils.getStageConfig(yamlField, identifier);
       StageElementConfig stageElementConfig =
-          YamlUtils.read(YamlUtils.writeYamlString(stageYamlField), StageElementConfig.class);
+          PmsYamlUtils.read(PmsYamlUtils.writeYamlString(stageYamlField), StageElementConfig.class);
       return (IntegrationStageConfig) stageElementConfig.getStageType();
 
     } catch (Exception ex) {
@@ -115,7 +115,7 @@ public class IntegrationStageStepParametersPMS implements SpecParameters, StepPa
 
   private static StepElementConfig getStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
     try {
-      return YamlUtils.read(executionWrapperConfig.getStep().toString(), StepElementConfig.class);
+      return PmsYamlUtils.read(executionWrapperConfig.getStep().toString(), StepElementConfig.class);
     } catch (Exception ex) {
       throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig step node", ex);
     }
@@ -123,7 +123,7 @@ public class IntegrationStageStepParametersPMS implements SpecParameters, StepPa
 
   private static ParallelStepElementConfig getParallelStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
     try {
-      return YamlUtils.read(executionWrapperConfig.getParallel().toString(), ParallelStepElementConfig.class);
+      return PmsYamlUtils.read(executionWrapperConfig.getParallel().toString(), ParallelStepElementConfig.class);
     } catch (Exception ex) {
       throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig parallel node", ex);
     }

@@ -25,8 +25,8 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.variables.VariableCreatorService;
 import io.harness.pms.utils.CompletableFutures;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
@@ -150,7 +150,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
           obj = field;
         } else {
           try {
-            obj = YamlUtils.read(field.getNode().toString(), cls);
+            obj = PmsYamlUtils.read(field.getNode().toString(), cls);
           } catch (IOException e) {
             throw new InvalidRequestException(
                 format("Invalid yaml in node [%s]", JsonUtils.asJson(YamlNodeErrorInfo.fromField(field))), e);

@@ -34,10 +34,10 @@ import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.states.CISpecStep;
 import io.harness.states.IntegrationStageStepPMS;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
@@ -77,7 +77,7 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     ExecutionElementConfig executionElementConfig;
 
     try {
-      executionElementConfig = YamlUtils.read(executionField.getNode().toString(), ExecutionElementConfig.class);
+      executionElementConfig = PmsYamlUtils.read(executionField.getNode().toString(), ExecutionElementConfig.class);
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid yaml", e);
     }
@@ -213,7 +213,7 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
   private CodeBase getCICodebase(PlanCreationContext ctx) {
     CodeBase ciCodeBase = null;
     try {
-      YamlNode properties = YamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), PROPERTIES);
+      YamlNode properties = PmsYamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), PROPERTIES);
       YamlNode ciCodeBaseNode = properties.getField(CI).getNode().getField(CI_CODE_BASE).getNode();
       ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
     } catch (Exception ex) {

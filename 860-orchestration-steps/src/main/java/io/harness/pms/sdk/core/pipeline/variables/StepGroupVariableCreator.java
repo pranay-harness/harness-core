@@ -6,10 +6,10 @@ import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.base.Preconditions;
 import java.util.Collections;
@@ -54,7 +54,7 @@ public class StepGroupVariableCreator extends ChildrenVariableCreator {
     yamlPropertiesMap.put(stepGroupUUID,
         YamlProperties.newBuilder()
             .setLocalName(YAMLFieldNameConstants.STEP_GROUP)
-            .setFqn(YamlUtils.getFullyQualifiedName(node))
+            .setFqn(PmsYamlUtils.getFullyQualifiedName(node))
             .build());
     addVariablesForStepGroup(yamlPropertiesMap, node);
     return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).build();
@@ -63,9 +63,9 @@ public class StepGroupVariableCreator extends ChildrenVariableCreator {
   private void addVariablesForStepGroup(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
     YamlField nameField = yamlNode.getField(YAMLFieldNameConstants.NAME);
     if (nameField != null) {
-      String nameFQN = YamlUtils.getFullyQualifiedName(nameField.getNode());
+      String nameFQN = PmsYamlUtils.getFullyQualifiedName(nameField.getNode());
       String localName = YAMLFieldNameConstants.STEP_GROUP + "."
-          + YamlUtils.getQualifiedNameTillGivenField(nameField.getNode(), YAMLFieldNameConstants.STEP_GROUP);
+          + PmsYamlUtils.getQualifiedNameTillGivenField(nameField.getNode(), YAMLFieldNameConstants.STEP_GROUP);
       yamlPropertiesMap.put(nameField.getNode().getCurrJsonNode().textValue(),
           YamlProperties.newBuilder().setLocalName(localName).setFqn(nameFQN).build());
     }

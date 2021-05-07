@@ -2,7 +2,7 @@ package io.harness.pms.merger;
 
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.FQNUtils;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
@@ -17,7 +17,7 @@ public class PipelineYamlConfig {
 
   public PipelineYamlConfig(String yaml) throws IOException {
     this.yaml = yaml;
-    yamlMap = YamlUtils.readTree(yaml).getNode().getCurrJsonNode();
+    yamlMap = PmsYamlUtils.readTree(yaml).getNode().getCurrJsonNode();
     fqnToValueMap = FQNUtils.generateFQNMap(yamlMap);
   }
 
@@ -25,7 +25,7 @@ public class PipelineYamlConfig {
     this.fqnToValueMap = fqnToValueMap;
     yamlMap = FQNUtils.generateYamlMap(fqnToValueMap, originalYaml);
     if (yamlMap.size() != 0) {
-      yaml = YamlUtils.write(yamlMap).replace("---\n", "");
+      yaml = PmsYamlUtils.write(yamlMap).replace("---\n", "");
     }
   }
 }

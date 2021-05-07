@@ -21,7 +21,7 @@ import io.harness.pms.preflight.PreFlightStatus;
 import io.harness.pms.preflight.PreflightCommonUtils;
 import io.harness.pms.preflight.connector.ConnectorCheckResponse.ConnectorCheckResponseBuilder;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -110,7 +110,8 @@ public class ConnectorPreflightHandler {
     List<ConnectorCheckResponse> connectorCheckResponses = new ArrayList<>();
     connectorResponses.forEach(connectorResponse -> {
       String connectorIdentifier = connectorResponse.getConnector().getIdentifier();
-      String stageIdentifier = YamlUtils.getStageIdentifierFromFqn(connectorIdentifierToFqn.get(connectorIdentifier));
+      String stageIdentifier =
+          PmsYamlUtils.getStageIdentifierFromFqn(connectorIdentifierToFqn.get(connectorIdentifier));
       ConnectorCheckResponseBuilder checkResponse =
           ConnectorCheckResponse.builder()
               .connectorIdentifier(connectorIdentifier)
@@ -142,7 +143,7 @@ public class ConnectorPreflightHandler {
       if (availableConnectors.contains(connectorRef)) {
         continue;
       }
-      String stageIdentifier = YamlUtils.getStageIdentifierFromFqn(connectorIdentifierToFqn.get(connectorRef));
+      String stageIdentifier = PmsYamlUtils.getStageIdentifierFromFqn(connectorIdentifierToFqn.get(connectorRef));
       connectorCheckResponses.add(
           ConnectorCheckResponse.builder()
               .connectorIdentifier(connectorRef)

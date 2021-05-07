@@ -31,10 +31,10 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
@@ -133,7 +133,7 @@ public class InfrastructurePmsPlanCreator {
       }
       try {
         //  Add validation for not chaining of stages
-        StageElementConfig stageElementConfig = YamlUtils.read(
+        StageElementConfig stageElementConfig = PmsYamlUtils.read(
             PlanCreatorUtils.getStageConfig(infraField, pipelineInfrastructure.getUseFromStage().getStage())
                 .getNode()
                 .toString(),

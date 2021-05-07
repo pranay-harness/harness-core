@@ -10,10 +10,10 @@ import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.common.collect.ImmutableList;
@@ -36,7 +36,7 @@ public class FilterCreatorHelper {
       String errorMsg = "Variable name " + variableName + " is a jexl reserved keyword";
       YamlField uuidNode = variable.getField(YAMLFieldNameConstants.UUID);
       if (uuidNode != null) {
-        String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
+        String fqn = PmsYamlUtils.getFullyQualifiedName(uuidNode.getNode());
         errorMsg = errorMsg + ". FQN: " + fqn;
       }
       throw new InvalidRequestException(errorMsg);

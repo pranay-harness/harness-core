@@ -18,10 +18,10 @@ import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 
 import lombok.experimental.UtilityClass;
 
@@ -35,7 +35,7 @@ public class RollbackPlanCreator {
       return PlanCreationResponse.builder().build();
     }
     YamlNode stageNode =
-        YamlUtils.getGivenYamlNodeFromParentPath(executionField.getNode(), YAMLFieldNameConstants.STAGE);
+        PmsYamlUtils.getGivenYamlNodeFromParentPath(executionField.getNode(), YAMLFieldNameConstants.STAGE);
     RollbackOptionalChildChainStepParametersBuilder stepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 
@@ -44,7 +44,7 @@ public class RollbackPlanCreator {
     PlanCreationResponse infraRollbackPlan = InfraRollbackPMSPlanCreator.createInfraRollbackPlan(infraField);
     if (isNotEmpty(infraRollbackPlan.getNodes())) {
       String infraNodeFullIdentifier =
-          YamlUtils.getQualifiedNameTillGivenField(infraField.getNode(), YAMLFieldNameConstants.STAGES);
+          PmsYamlUtils.getQualifiedNameTillGivenField(infraField.getNode(), YAMLFieldNameConstants.STAGES);
       stepParametersBuilder.childNode(
           RollbackNode.builder()
               .nodeId(infraField.getNode().getUuid() + InfraRollbackPMSPlanCreator.INFRA_ROLLBACK_NODE_ID_SUFFIX)
@@ -59,7 +59,7 @@ public class RollbackPlanCreator {
       String executionRollbackUuid =
           executionStepsField.getNode().getUuid() + OrchestrationConstants.ROLLBACK_EXECUTION_NODE_ID_SUFFIX;
       String executionNodeFullIdentifier =
-          YamlUtils.getQualifiedNameTillGivenField(executionField.getNode(), YAMLFieldNameConstants.STAGES);
+          PmsYamlUtils.getQualifiedNameTillGivenField(executionField.getNode(), YAMLFieldNameConstants.STAGES);
       stepParametersBuilder.childNode(RollbackNode.builder()
                                           .nodeId(executionRollbackUuid)
                                           .dependentNodeIdentifier(executionNodeFullIdentifier)

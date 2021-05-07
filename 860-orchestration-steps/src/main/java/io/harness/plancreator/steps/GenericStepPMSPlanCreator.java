@@ -47,9 +47,9 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.PmsYamlUtils;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.timeout.TimeoutParameters;
@@ -106,7 +106,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     StepParameters stepParameters = stepElement.getStepSpecType().getStepParameters();
 
     boolean isStepInsideRollback = false;
-    if (YamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
+    if (PmsYamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
       isStepInsideRollback = true;
     }
 
@@ -183,7 +183,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     List<AdviserObtainment> adviserObtainmentList = new ArrayList<>();
 
     boolean isStepInsideRollback = false;
-    if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+    if (PmsYamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
       isStepInsideRollback = true;
     }
 
@@ -393,12 +393,12 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
   }
 
   private String getStepGroupRollbackStepsNodeId(YamlField currentField) {
-    YamlNode stepGroup = YamlUtils.findParentNode(currentField.getNode(), STEP_GROUP);
+    YamlNode stepGroup = PmsYamlUtils.findParentNode(currentField.getNode(), STEP_GROUP);
     return getRollbackStepsNodeId(stepGroup);
   }
 
   private String getStageNodeId(YamlField currentField) {
-    YamlNode stageNode = YamlUtils.findParentNode(currentField.getNode(), STAGE);
+    YamlNode stageNode = PmsYamlUtils.findParentNode(currentField.getNode(), STAGE);
     if (stageNode == null) {
       return null;
     }
@@ -442,10 +442,10 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   private List<FailureStrategyConfig> getFieldFailureStrategies(
       YamlField currentField, String fieldName, boolean isStepInsideRollback) {
-    YamlNode fieldNode = YamlUtils.getGivenYamlNodeFromParentPath(currentField.getNode(), fieldName);
+    YamlNode fieldNode = PmsYamlUtils.getGivenYamlNodeFromParentPath(currentField.getNode(), fieldName);
     if (isStepInsideRollback && fieldNode != null) {
       // Check if found fieldNode is within rollbackSteps section
-      YamlNode rollbackNode = YamlUtils.findParentNode(fieldNode, ROLLBACK_STEPS);
+      YamlNode rollbackNode = PmsYamlUtils.findParentNode(fieldNode, ROLLBACK_STEPS);
       if (rollbackNode == null) {
         return Collections.emptyList();
       }
@@ -462,8 +462,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
     try {
       if (failureStrategy != null) {
-        failureStrategyConfigs =
-            YamlUtils.read(failureStrategy.getNode().toString(), new TypeReference<List<FailureStrategyConfig>>() {});
+        failureStrategyConfigs = PmsYamlUtils.read(
+            failureStrategy.getNode().toString(), new TypeReference<List<FailureStrategyConfig>>() {});
       }
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid yaml", e);
@@ -477,7 +477,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     if (currentField != null && currentField.getNode() != null) {
       if (currentField.checkIfParentIsParallel(STEPS) || currentField.checkIfParentIsParallel(ROLLBACK_STEPS)) {
         // Check if step is inside StepGroup and StepGroup is inside Parallel but not the step.
-        return YamlUtils.findParentNode(currentField.getNode(), STEP_GROUP) == null
+        return PmsYamlUtils.findParentNode(currentField.getNode(), STEP_GROUP) == null
             || currentField.checkIfParentIsParallel(STEP_GROUP);
       }
     }

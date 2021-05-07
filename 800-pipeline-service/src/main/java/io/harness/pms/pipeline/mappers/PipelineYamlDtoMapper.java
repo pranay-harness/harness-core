@@ -8,7 +8,7 @@ import io.harness.ng.core.utils.NGYamlUtils;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 
 import java.io.IOException;
 import lombok.experimental.UtilityClass;
@@ -18,7 +18,7 @@ import lombok.experimental.UtilityClass;
 public class PipelineYamlDtoMapper {
   public PipelineConfig toDto(PipelineEntity entity) {
     try {
-      return YamlUtils.read(entity.getYaml(), PipelineConfig.class);
+      return PmsYamlUtils.read(entity.getYaml(), PipelineConfig.class);
     } catch (IOException ex) {
       throw new InvalidRequestException("Cannot create pipeline yaml: " + ex.getMessage(), ex);
     }

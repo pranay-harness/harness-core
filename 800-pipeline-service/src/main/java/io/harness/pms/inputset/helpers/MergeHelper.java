@@ -13,7 +13,7 @@ import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.yaml.PmsYamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -72,7 +72,7 @@ public class MergeHelper {
 
   private String getInputSetIdentifier(String inputSetYaml) {
     try {
-      JsonNode node = YamlUtils.readTree(inputSetYaml).getNode().getCurrJsonNode();
+      JsonNode node = PmsYamlUtils.readTree(inputSetYaml).getNode().getCurrJsonNode();
       ObjectNode innerMap = (ObjectNode) node.get("inputSet");
       JsonNode identifier = innerMap.get("identifier");
       return identifier.asText();
