@@ -1,5 +1,6 @@
 package io.harness.delegate.task.gcp.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.ALL_LOCATIONS;
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
 import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
@@ -10,6 +11,8 @@ import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -32,13 +35,14 @@ import com.google.inject.Singleton;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class GkeClusterHelper {
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
   @Inject private TimeLimiter timeLimiter;
@@ -179,7 +183,7 @@ public class GkeClusterHelper {
       String location, String operationLogMessage) {
     log.info(operationLogMessage + "...");
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(gcpHelperService.getTimeoutMins()), () -> {
         while (true) {
           String status =
               gkeContainerService.projects()
@@ -194,7 +198,7 @@ public class GkeClusterHelper {
           }
           sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
         }
-      }, gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out checking operation status");
       return "UNKNOWN";

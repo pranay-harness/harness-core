@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmSubCommandType.TEMPLATE;
@@ -49,7 +50,9 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -114,9 +117,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -129,6 +130,7 @@ import org.mockito.Mock;
 import wiremock.com.google.common.collect.ImmutableMap;
 
 @OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private HelmClient helmClient;
   @Mock private GitService gitService;
@@ -345,9 +347,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.upgrade(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
 
-    doThrow(new UncheckedTimeoutException("Timed out"))
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenThrow(new UncheckedTimeoutException("Timed out"));
 
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
@@ -1043,9 +1043,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     on(helmDeployService).set("timeLimiter", mockTimeLimiter);
     HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
 
-    doThrow(new UncheckedTimeoutException("Timed out"))
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenThrow(new UncheckedTimeoutException("Timed out"));
     doReturn(
         HelmInstallCommandResponse.builder().output("Rollback was a success.").commandExecutionStatus(SUCCESS).build())
         .when(helmClient)
