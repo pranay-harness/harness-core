@@ -544,10 +544,6 @@ fn check_for_promotion(
 ) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
-    if class.deprecated {
-        return results;
-    }
-
     let target_module_name = class.target_module.as_ref();
     if target_module_name.is_none() {
         return results;
@@ -571,6 +567,10 @@ fn check_for_promotion(
         let &dependent_class = classes
             .get(src)
             .expect(&format!("The source {} is not find in any module", src));
+
+        if dependent_class.deprecated {
+            return ();
+        }
 
         let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
             "The class {} is not find in the modules",
@@ -678,7 +678,7 @@ fn check_for_promotion(
         });
     }
 
-    if !not_ready_yet.is_empty() {
+    if !issue && !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
 
         results.push(Report {
@@ -850,7 +850,7 @@ fn check_for_demotion(
         });
     }
 
-    if !not_ready_yet.is_empty() {
+    if !issue && !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
 
         results.push(Report {
