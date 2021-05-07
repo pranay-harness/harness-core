@@ -1648,7 +1648,6 @@ maven_install(
         "javax.xml.ws:jaxws-api:2.3.1",
         "jaxen:jaxen:1.1.6",
         "joda-time:joda-time:2.10.1",
-        "junit:junit:4.12",
         "me.snowdrop:istio-client-uberjar:1.0.1",
         "me.snowdrop:istio-client:1.0.1",
         "me.snowdrop:istio-common:1.0.1",
@@ -1844,18 +1843,6 @@ maven_install(
         "org.glassfish.jersey.ext:jersey-metainf-services:2.25.1",
         "org.glassfish.jersey.media:jersey-media-jaxb:2.25.1",
         "org.glassfish.jersey.media:jersey-media-multipart:2.25.1",
-        maven.artifact(
-            "org.glassfish.jersey.test-framework.providers",
-            "jersey-test-framework-provider-grizzly2",
-            "2.23.1",
-            testonly = True,
-        ),
-        maven.artifact(
-            "org.glassfish.jersey.test-framework.providers",
-            "jersey-test-framework-provider-inmemory",
-            "2.23.1",
-            testonly = True,
-        ),
         "org.glassfish:javax.el:3.0.0",
         "org.hamcrest:hamcrest-core:1.3",
         "org.hamcrest:hamcrest-all:1.3",
@@ -1885,7 +1872,6 @@ maven_install(
         "io.rest-assured:rest-assured:3.2.0",
         "org.jboss.aerogear:aerogear-otp-java:1.0.0",
         "org.jsoup:jsoup:1.8.3",
-        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
         "org.jsr107.ri:cache-annotations-ri-common:1.0.0",
         "org.jsr107.ri:cache-annotations-ri-guice:1.0.0",
         "org.jvnet.mimepull:mimepull:1.9.6",
@@ -2006,17 +1992,10 @@ maven_install(
         "xpp3:xpp3:1.1.3.3",
         "io.netty:netty-all:4.1.51.Final",
         "com.github.spullara.mustache.java:compiler:0.9.5",
-        maven.artifact(
-            "io.dropwizard",
-            "dropwizard-testing",
-            "1.3.24",
-            testonly = True,
-        ),
         "com.spotify:docker-client:8.16.0",
         "io.rest-assured:rest-assured:3.2.0",
         "org.jboss.aerogear:aerogear-otp-java:1.0.0",
         "org.jsoup:jsoup:1.8.3",
-        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
         "com.github.heremaps:oksse:0.9.0",
         "io.prometheus:simpleclient_servlet:0.3.0",
         "com.slack.api:slack-api-client:1.5.3",
@@ -2030,6 +2009,12 @@ maven_install(
         "org.springframework.boot:spring-boot-starter-test:2.1.6.RELEASE",
     ],
     excluded_artifacts = [
+        "com.github.tomakehurst:wiremock-jre8-standalone",
+        "io.dropwizard:dropwizard-testing",
+        "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2",
+        "org.glassfish.jersey.test-framework:jersey-test-framework-provider-inmemory",
+        "org.glassfish.jersey.test-framework:jersey-test-framework-core",
+        "junit:junit",
         "org.clojure:clojure",
         "io.netty:netty-all",
     ],
@@ -2078,26 +2063,71 @@ maven_install(
 )
 
 maven_install(
-    name = "delegate",
+    name = "maven_test",
     artifacts = [
-        "org.apache.httpcomponents:httpmime:4.5.1",
-        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
+        maven.artifact(
+            "com.github.tomakehurst",
+            "wiremock-jre8-standalone",
+            "2.27.2",
+            testonly = True,
+        ),
+        maven.artifact(
+            "io.dropwizard",
+            "dropwizard-testing",
+            "1.3.24",
+            testonly = True,
+        ),
+        maven.artifact(
+            "org.glassfish.jersey.test-framework.providers",
+            "jersey-test-framework-provider-grizzly2",
+            "2.23.1",
+            testonly = True,
+        ),
+        maven.artifact(
+            "org.glassfish.jersey.test-framework.providers",
+            "jersey-test-framework-provider-inmemory",
+            "2.23.1",
+            testonly = True,
+        ),
+        maven.artifact(
+            "org.glassfish.jersey.test-framework",
+            "jersey-test-framework-core",
+            "2.23.1",
+            testonly = True,
+        ),
+        maven.artifact(
+            "junit",
+            "junit",
+            "4.12",
+            testonly = True,
+        ),
     ],
+    maven_install_json = "//project:test_maven_install.json",
     repositories = [
         "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
-        "http://packages.confluent.io/maven",
     ],
     version_conflict_policy = "pinned",
 )
+
+load("@maven_test//:defs.bzl", "pinned_maven_install")
+
+pinned_maven_install()
+
+maven_install(
+    name = "maven_delegate",
+    artifacts = [
+        "org.apache.httpcomponents:httpmime:4.5.1",
+    ],
+    maven_install_json = "//project:delegate_maven_install.json",
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+load("@maven_delegate//:defs.bzl", "pinned_maven_install")
+
+pinned_maven_install()
 
 maven_install(
     name = "ce_nextgen",

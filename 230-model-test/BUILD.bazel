@@ -18,7 +18,6 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_module_jackson_module_afterburner",
-        "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_code_gson_gson",
         "@maven//:com_google_guava_guava",
@@ -26,7 +25,6 @@ java_library(
         "@maven//:com_spotify_docker_client",
         "@maven//:io_github_benas_random_beans",
         "@maven//:io_rest_assured_rest_assured",
-        "@maven//:junit_junit",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_eclipse_jgit_org_eclipse_jgit",
@@ -34,6 +32,8 @@ java_library(
         "@maven//:org_jsoup_jsoup",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_slf4j_slf4j_api",
+        "@maven_test//:com_github_tomakehurst_wiremock_jre8_standalone",
+        "@maven_test//:junit_junit",
     ],
 )
 

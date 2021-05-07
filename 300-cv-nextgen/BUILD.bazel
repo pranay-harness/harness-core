@@ -139,10 +139,8 @@ java_library(
         "@maven//:commons_io_commons_io",
         "@maven//:de_bwaldvogel_mongo_java_server_core",
         "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
-        "@maven//:io_dropwizard_dropwizard_testing",
         "@maven//:io_github_benas_random_beans",
         "@maven//:io_specto_hoverfly_java",
-        "@maven//:junit_junit",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_apache_logging_log4j_log4j_api",
         "@maven//:org_assertj_assertj_core",
@@ -151,6 +149,8 @@ java_library(
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:ru_vyarus_guice_validator",
         "@maven_harness//:io_harness_cv_data_collection_dsl",
+        "@maven_test//:io_dropwizard_dropwizard_testing",
+        "@maven_test//:junit_junit",
     ],
 )
 

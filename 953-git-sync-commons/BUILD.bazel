@@ -3,17 +3,6 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:macros.bzl", "run_analysis")
 
 java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//954-connector-beans:module",
-        "//980-commons:module",
-        "@maven//:org_eclipse_jgit_org_eclipse_jgit",
-        "@maven//:org_slf4j_slf4j_api",
-    ],
-)
-
-java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resource_jars = [
@@ -21,8 +10,11 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
         "//:lombok",
+        "//954-connector-beans:module",
+        "//980-commons:module",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 

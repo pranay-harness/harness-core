@@ -33,7 +33,7 @@ java_binary(
 test_dependencies = shared_dependencies + [
     "//990-commons-test:module",
     "//400-rest:supporter-test",
-    "@maven//:io_dropwizard_dropwizard_testing",
+    "@maven_test//:io_dropwizard_dropwizard_testing",
     "module",
 ]
 

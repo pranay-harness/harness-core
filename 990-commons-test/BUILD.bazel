@@ -15,6 +15,7 @@ java_library(
 
 java_library(
     name = "module",
+    testonly = True,
     srcs = glob(["src/main/**/*.java"]),
     resource_jars = [
         ":abstract-module",
@@ -36,6 +37,7 @@ java_library(
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_slf4j_slf4j_api",
+        "@maven_test//:junit_junit",
     ],
 )
 

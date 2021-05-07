@@ -42,9 +42,9 @@ java_library(
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:com_google_inject_guice",
-        "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_jooq_joor",
+        "@maven_test//:junit_junit",
     ],
 )
 

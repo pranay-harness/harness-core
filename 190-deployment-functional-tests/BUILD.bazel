@@ -11,10 +11,9 @@ shared_dependencies = [
     "@jira_client//jar",
 ]
 
-test_dependencies = [
-    "@delegate//:com_github_tomakehurst_wiremock_jre8_standalone",
-    "@delegate//:org_apache_httpcomponents_httpmime",
-] + shared_dependencies + [
+test_dependencies = shared_dependencies + [
+    "@maven_delegate//:org_apache_httpcomponents_httpmime",
+    "@maven_test//:com_github_tomakehurst_wiremock_jre8_standalone",
     "//990-commons-test:module",
     "//200-functional-test:module",
     "//200-functional-test:tests",
@@ -23,10 +22,10 @@ test_dependencies = [
     "@maven//:com_icegreen_greenmail",
     "@maven//:com_openpojo_openpojo",
     "@maven//:io_github_benas_random_beans",
-    "@maven//:junit_junit",
+    "@maven_test//:junit_junit",
     "@maven//:org_assertj_assertj_core",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+    "@maven_test//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+    "@maven_test//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     "@maven//:org_mockito_mockito_core",
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",

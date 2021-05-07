@@ -41,7 +41,7 @@ test_dependencies = shared_dependencies + [
     "//400-rest:supporter-test",
     "//960-persistence:supporter-test",
     "//990-commons-test:module",
-    "@maven//:io_dropwizard_dropwizard_testing",
+    "@maven_test//:io_dropwizard_dropwizard_testing",
     "@maven//:org_assertj_assertj_core",
     "@maven//:org_glassfish_javax_el",
     "@maven//:org_powermock_powermock_module_junit4",
