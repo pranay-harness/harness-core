@@ -106,12 +106,13 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse executeDeleteUsingFiles(K8sDeleteRequest k8sDeleteRequest,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
-      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) {
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeleteRequest.getTimeoutIntervalInMin());
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sDeleteRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles, true, commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            k8sDeleteRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         steadyStateTimeoutInMillis, k8sDeleteRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(null);

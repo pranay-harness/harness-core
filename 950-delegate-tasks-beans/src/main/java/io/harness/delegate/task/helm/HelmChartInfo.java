@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.helm.response;
+package io.harness.delegate.task.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 

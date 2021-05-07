@@ -259,7 +259,10 @@ import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmValuesFetchRequest;
+import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
@@ -736,5 +739,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(TerraformVarFileInfo.class, 543307);
     kryo.register(InlineTerraformVarFileInfo.class, 543308);
     kryo.register(RemoteTerraformVarFileInfo.class, 543309);
+    kryo.register(HelmValuesFetchRequest.class, 543310);
+    kryo.register(HelmValuesFetchResponse.class, 543311);
+    kryo.register(HelmChartInfo.class, 543312);
   }
 }

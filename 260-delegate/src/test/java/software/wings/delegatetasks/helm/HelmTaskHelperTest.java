@@ -2,7 +2,6 @@ package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -44,6 +43,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.chartmuseum.ChartMuseumServer;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
@@ -67,7 +67,6 @@ import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 

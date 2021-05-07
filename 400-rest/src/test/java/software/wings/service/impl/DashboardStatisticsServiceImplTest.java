@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
@@ -94,12 +95,14 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.event.usagemetrics.UsageMetricsHelper;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
@@ -134,7 +137,6 @@ import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.service.CurrentActiveInstances;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
@@ -171,6 +173,7 @@ import org.mockito.Mock;
 /**
  * @author rktummala on 9/4/18
  */
+@OwnedBy(DX)
 public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   public static final String CHART_NAME = "CHART_NAME";
   public static final String REPO_URL = "REPO_URL";
