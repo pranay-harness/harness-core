@@ -180,8 +180,9 @@ public class PipelineResource implements YamlSchemaResource {
       throw new InvalidRequestException("Pipeline identifier in URL does not match pipeline identifier in yaml");
     }
 
-    pipelineEntity.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
-    PipelineEntity updatedEntity = pmsPipelineService.update(pipelineEntity);
+    PipelineEntity withVersion = pipelineEntity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+
+    PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion);
 
     return ResponseDTO.newResponse(updatedEntity.getVersion().toString(), updatedEntity.getIdentifier());
   }
