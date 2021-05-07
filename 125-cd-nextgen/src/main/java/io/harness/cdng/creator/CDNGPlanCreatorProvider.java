@@ -29,6 +29,8 @@ import java.util.List;
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
 public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
+  private static final String TERRAFORM_STEP_METADATA = "Terraform";
+
   @Inject InjectorUtils injectorUtils;
   @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
@@ -120,8 +122,36 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
             .setType(StepSpecTypeConstants.K8S_ROLLING_ROLLBACK)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
-    List<StepInfo> stepInfos = new ArrayList<>();
 
+    StepInfo terraformApply =
+        StepInfo.newBuilder()
+            .setName("Terraform Apply")
+            .setType(StepSpecTypeConstants.TERRAFORM_APPLY)
+            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
+            .build();
+
+    StepInfo terraformPlan =
+        StepInfo.newBuilder()
+            .setName("Terraform Plan")
+            .setType(StepSpecTypeConstants.TERRAFORM_PLAN)
+            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
+            .build();
+
+    StepInfo terraformDestroy =
+        StepInfo.newBuilder()
+            .setName("Terraform Destroy")
+            .setType(StepSpecTypeConstants.TERRAFORM_DESTROY)
+            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
+            .build();
+
+    StepInfo terraformRollback =
+        StepInfo.newBuilder()
+            .setName("Terraform Rollback")
+            .setType(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
+            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
+            .build();
+
+    List<StepInfo> stepInfos = new ArrayList<>();
     stepInfos.add(k8sRolling);
     stepInfos.add(delete);
     stepInfos.add(canaryDeploy);
@@ -131,6 +161,10 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     stepInfos.add(apply);
     stepInfos.add(scale);
     stepInfos.add(k8sRollingRollback);
+    stepInfos.add(terraformApply);
+    stepInfos.add(terraformPlan);
+    stepInfos.add(terraformDestroy);
+    stepInfos.add(terraformRollback);
     return stepInfos;
   }
 }
