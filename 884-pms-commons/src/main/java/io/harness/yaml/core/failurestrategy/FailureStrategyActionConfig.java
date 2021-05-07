@@ -12,6 +12,10 @@ import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.yaml.core.failurestrategy.abort.AbortFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.ignore.IgnoreFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
@@ -34,6 +38,9 @@ import javax.validation.constraints.NotNull;
       @Type(value = StageRollbackFailureActionConfig.class, name = STAGE_ROLLBACK),
       @Type(value = StepGroupFailureActionConfig.class, name = STEP_GROUP_ROLLBACK)
 })
+@OwnedBy(HarnessTeam.PIPELINE)
+// TODO this should go to yaml commons
+@TargetModule(HarnessModule._884_PMS_COMMONS)
 public interface FailureStrategyActionConfig {
   @NotNull NGFailureActionType getType();
 }

@@ -1,8 +1,9 @@
 package io.harness.yaml.core.failurestrategy.retry;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.timeout.Timeout;
@@ -15,7 +16,9 @@ import lombok.Value;
 
 @Value
 @Builder
-@OwnedBy(PIPELINE)
+@OwnedBy(HarnessTeam.PIPELINE)
+// TODO this should go to yaml commons
+@TargetModule(HarnessModule._884_PMS_COMMONS)
 public class RetryFailureSpecConfig {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.INTEGER_CLASSPATH) ParameterField<Integer> retryCount;
   @NotNull

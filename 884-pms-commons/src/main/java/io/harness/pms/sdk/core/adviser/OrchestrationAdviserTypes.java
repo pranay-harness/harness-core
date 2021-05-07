@@ -1,10 +1,13 @@
 package io.harness.pms.sdk.core.adviser;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
+// TODO this should go to yaml commons
+@TargetModule(HarnessModule._884_PMS_COMMONS)
 public enum OrchestrationAdviserTypes {
   // Provided From the orchestration layer system advisers
 
