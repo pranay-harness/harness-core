@@ -28,6 +28,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.exception.GeneralException;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.expression.ExpressionEvaluator;
@@ -72,7 +73,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.ContainerInstanceSyncPerpetualTaskCreator;

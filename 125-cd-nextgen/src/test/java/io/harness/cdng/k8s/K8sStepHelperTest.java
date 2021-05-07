@@ -6,6 +6,8 @@ import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -29,6 +31,7 @@ import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
@@ -69,6 +72,8 @@ import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
+import io.harness.delegate.task.helm.HelmValuesFetchRequest;
+import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
@@ -87,12 +92,15 @@ import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
+import io.harness.pms.sdk.core.execution.invokers.StrategyHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.supplier.ThrowingSupplier;
+import io.harness.tasks.ResponseData;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -762,7 +770,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldAutomaticallyFetchValuesYamlForK8sGit() {
+  public void testShouldPrepareK8sGitValuesFetchTask() {
     K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
         K8sDirectInfrastructureOutcome.builder().namespace("default").build();
     GitStore gitStore = GitStore.builder()
@@ -828,7 +836,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldAutomaticallyFetchValuesYamlForHelmGit() {
+  public void testShouldPrepareHelmGitValuesFetchTask() {
     K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
         K8sDirectInfrastructureOutcome.builder().namespace("default").build();
     GitStore gitStore = GitStore.builder()
@@ -890,5 +898,278 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().get(0))
         .isEqualTo("path/to/helm/chart/values.yaml");
     assertThat(taskParametersArgumentCaptor.getAllValues().get(1)).isInstanceOf(GitConnectionNGCapability.class);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldPrepareHelmS3ValuesFetchTask() {
+    K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
+        K8sDirectInfrastructureOutcome.builder().namespace("default").build();
+    S3StoreConfig s3Store = S3StoreConfig.builder()
+                                .bucketName(ParameterField.createValueField("bucket"))
+                                .region(ParameterField.createValueField("us-east-1"))
+                                .folderPath(ParameterField.createValueField("path/to/helm/chart"))
+                                .connectorRef(ParameterField.createValueField("aws-connector"))
+                                .build();
+
+    HelmChartManifestOutcome helmChartManifestOutcome =
+        HelmChartManifestOutcome.builder().identifier("helm").store(s3Store).build();
+    Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
+    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
+    RefObject service = RefObject.newBuilder()
+                            .setName(OutcomeExpressionConstants.SERVICE)
+                            .setKey(OutcomeExpressionConstants.SERVICE)
+                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                            .build();
+
+    RefObject infra = RefObject.newBuilder()
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                          .build();
+
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
+
+    doReturn(Optional.of(
+                 ConnectorResponseDTO.builder()
+                     .connector(ConnectorInfoDTO.builder()
+                                    .connectorConfig(
+                                        AwsConnectorDTO.builder()
+                                            .credential(AwsCredentialDTO.builder()
+                                                            .awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
+                                                            .build())
+                                            .build())
+                                    .name("helm-s3-repo-display")
+                                    .identifier("helm-s3-repo")
+                                    .connectorType(AWS)
+                                    .build())
+                     .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    TaskChainResponse taskChainResponse =
+        k8sStepHelper.startChainLink(k8sStepExecutor, ambiance, rollingStepElementParams);
+    assertThat(taskChainResponse).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isInstanceOf(K8sStepPassThroughData.class);
+    ArgumentCaptor<TaskParameters> taskParametersArgumentCaptor = ArgumentCaptor.forClass(TaskParameters.class);
+    verify(kryoSerializer).asDeflatedBytes(taskParametersArgumentCaptor.capture());
+    TaskParameters taskParameters = taskParametersArgumentCaptor.getValue();
+    assertThat(taskParameters).isInstanceOf(HelmValuesFetchRequest.class);
+    HelmValuesFetchRequest helmValuesFetchRequest = (HelmValuesFetchRequest) taskParameters;
+    assertThat(helmValuesFetchRequest.getTimeout()).isNotNull();
+    assertThat(helmValuesFetchRequest.getHelmChartManifestDelegateConfig().getStoreDelegateConfig())
+        .isInstanceOf(S3HelmStoreDelegateConfig.class);
+    S3HelmStoreDelegateConfig s3StoreConfig =
+        (S3HelmStoreDelegateConfig) helmValuesFetchRequest.getHelmChartManifestDelegateConfig()
+            .getStoreDelegateConfig();
+    assertThat(s3StoreConfig.getBucketName()).isEqualTo("bucket");
+    assertThat(s3StoreConfig.getRegion()).isEqualTo("us-east-1");
+    assertThat(s3StoreConfig.getFolderPath()).isEqualTo("path/to/helm/chart");
+    assertThat(s3StoreConfig.getRepoName()).isEqualTo("helm-s3-repo");
+    assertThat(s3StoreConfig.getRepoDisplayName()).isEqualTo("helm-s3-repo-display");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldPrepareHelmGcsValuesFetchTask() {
+    K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
+        K8sDirectInfrastructureOutcome.builder().namespace("default").build();
+    GcsStoreConfig gcsStore = GcsStoreConfig.builder()
+                                  .bucketName(ParameterField.createValueField("bucket"))
+                                  .folderPath(ParameterField.createValueField("path/to/helm/chart"))
+                                  .connectorRef(ParameterField.createValueField("gcs-connector"))
+                                  .build();
+
+    HelmChartManifestOutcome helmChartManifestOutcome =
+        HelmChartManifestOutcome.builder().identifier("helm").store(gcsStore).build();
+    Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
+    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
+    RefObject service = RefObject.newBuilder()
+                            .setName(OutcomeExpressionConstants.SERVICE)
+                            .setKey(OutcomeExpressionConstants.SERVICE)
+                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                            .build();
+
+    RefObject infra = RefObject.newBuilder()
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                          .build();
+
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
+
+    doReturn(Optional.of(
+                 ConnectorResponseDTO.builder()
+                     .connector(ConnectorInfoDTO.builder()
+                                    .connectorConfig(
+                                        GcpConnectorDTO.builder()
+                                            .credential(GcpConnectorCredentialDTO.builder()
+                                                            .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
+                                                            .build())
+                                            .build())
+                                    .name("helm-gcs-repo-display")
+                                    .identifier("helm-gcs-repo")
+                                    .connectorType(GCP)
+                                    .build())
+                     .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    TaskChainResponse taskChainResponse =
+        k8sStepHelper.startChainLink(k8sStepExecutor, ambiance, rollingStepElementParams);
+    assertThat(taskChainResponse).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isInstanceOf(K8sStepPassThroughData.class);
+    ArgumentCaptor<TaskParameters> taskParametersArgumentCaptor = ArgumentCaptor.forClass(TaskParameters.class);
+    verify(kryoSerializer).asDeflatedBytes(taskParametersArgumentCaptor.capture());
+    TaskParameters taskParameters = taskParametersArgumentCaptor.getValue();
+    assertThat(taskParameters).isInstanceOf(HelmValuesFetchRequest.class);
+    HelmValuesFetchRequest helmValuesFetchRequest = (HelmValuesFetchRequest) taskParameters;
+    assertThat(helmValuesFetchRequest.getTimeout()).isNotNull();
+    assertThat(helmValuesFetchRequest.getHelmChartManifestDelegateConfig().getStoreDelegateConfig())
+        .isInstanceOf(GcsHelmStoreDelegateConfig.class);
+    GcsHelmStoreDelegateConfig gcsStoreConfig =
+        (GcsHelmStoreDelegateConfig) helmValuesFetchRequest.getHelmChartManifestDelegateConfig()
+            .getStoreDelegateConfig();
+    assertThat(gcsStoreConfig.getBucketName()).isEqualTo("bucket");
+    assertThat(gcsStoreConfig.getFolderPath()).isEqualTo("path/to/helm/chart");
+    assertThat(gcsStoreConfig.getRepoName()).isEqualTo("helm-gcs-repo");
+    assertThat(gcsStoreConfig.getRepoDisplayName()).isEqualTo("helm-gcs-repo-display");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldPrepareHelmHttpValuesFetchTask() {
+    K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
+        K8sDirectInfrastructureOutcome.builder().namespace("default").build();
+    HttpStoreConfig httpStore =
+        HttpStoreConfig.builder().connectorRef(ParameterField.createValueField("http-connector")).build();
+
+    HelmChartManifestOutcome helmChartManifestOutcome =
+        HelmChartManifestOutcome.builder().identifier("helm").store(httpStore).build();
+    Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
+    ServiceOutcome serviceOutcome = ServiceOutcome.builder().manifestResults(manifestOutcomeMap).build();
+    RefObject service = RefObject.newBuilder()
+                            .setName(OutcomeExpressionConstants.SERVICE)
+                            .setKey(OutcomeExpressionConstants.SERVICE)
+                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                            .build();
+
+    RefObject infra = RefObject.newBuilder()
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE)
+                          .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                          .build();
+
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+    doReturn(serviceOutcome).when(outcomeService).resolve(eq(ambiance), eq(service));
+    doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
+
+    doReturn(
+        Optional.of(
+            ConnectorResponseDTO.builder()
+                .connector(
+                    ConnectorInfoDTO.builder()
+                        .connectorConfig(
+                            HttpHelmConnectorDTO.builder()
+                                .auth(HttpHelmAuthenticationDTO.builder().authType(HttpHelmAuthType.ANONYMOUS).build())
+                                .build())
+                        .name("helm-http-repo-display")
+                        .identifier("helm-http-repo")
+                        .connectorType(HTTP_HELM_REPO)
+                        .build())
+                .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    TaskChainResponse taskChainResponse =
+        k8sStepHelper.startChainLink(k8sStepExecutor, ambiance, rollingStepElementParams);
+    assertThat(taskChainResponse).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isNotNull();
+    assertThat(taskChainResponse.getPassThroughData()).isInstanceOf(K8sStepPassThroughData.class);
+    ArgumentCaptor<TaskParameters> taskParametersArgumentCaptor = ArgumentCaptor.forClass(TaskParameters.class);
+    verify(kryoSerializer).asDeflatedBytes(taskParametersArgumentCaptor.capture());
+    TaskParameters taskParameters = taskParametersArgumentCaptor.getValue();
+    assertThat(taskParameters).isInstanceOf(HelmValuesFetchRequest.class);
+    HelmValuesFetchRequest helmValuesFetchRequest = (HelmValuesFetchRequest) taskParameters;
+    assertThat(helmValuesFetchRequest.getTimeout()).isNotNull();
+    assertThat(helmValuesFetchRequest.getHelmChartManifestDelegateConfig().getStoreDelegateConfig())
+        .isInstanceOf(HttpHelmStoreDelegateConfig.class);
+    HttpHelmStoreDelegateConfig httpStoreConfig =
+        (HttpHelmStoreDelegateConfig) helmValuesFetchRequest.getHelmChartManifestDelegateConfig()
+            .getStoreDelegateConfig();
+    assertThat(httpStoreConfig.getRepoName()).isEqualTo("helm-http-repo");
+    assertThat(httpStoreConfig.getRepoDisplayName()).isEqualTo("helm-http-repo-display");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldHandleHelmValueFetchResponse() throws Exception {
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+
+    K8sStepPassThroughData passThroughData = K8sStepPassThroughData.builder()
+                                                 .k8sManifestOutcome(K8sManifestOutcome.builder().build())
+                                                 .infrastructure(K8sDirectInfrastructureOutcome.builder().build())
+                                                 .build();
+
+    HelmValuesFetchResponse helmValuesFetchResponse = HelmValuesFetchResponse.builder()
+                                                          .valuesFileContent("values yaml payload")
+                                                          .commandExecutionStatus(SUCCESS)
+                                                          .build();
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of("helm-value-fetch-response", helmValuesFetchResponse);
+    ThrowingSupplier responseDataSuplier = StrategyHelper.buildResponseDataSupplier(responseDataMap);
+
+    k8sStepHelper.executeNextLink(
+        k8sStepExecutor, ambiance, rollingStepElementParams, passThroughData, responseDataSuplier);
+
+    ArgumentCaptor<List> valuesFilesContentCaptor = ArgumentCaptor.forClass(List.class);
+    verify(k8sStepExecutor, times(1))
+        .executeK8sTask(eq(passThroughData.getK8sManifestOutcome()), eq(ambiance), eq(rollingStepElementParams),
+            valuesFilesContentCaptor.capture(), eq(passThroughData.getInfrastructure()), eq(false));
+
+    List<String> valuesFilesContent = valuesFilesContentCaptor.getValue();
+    assertThat(valuesFilesContent).isNotEmpty();
+    assertThat(valuesFilesContent.get(0)).isEqualTo("values yaml payload");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldHandleHelmValueFetchResponseFailure() throws Exception {
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+
+    K8sStepPassThroughData passThroughData = K8sStepPassThroughData.builder()
+                                                 .k8sManifestOutcome(K8sManifestOutcome.builder().build())
+                                                 .infrastructure(K8sDirectInfrastructureOutcome.builder().build())
+                                                 .build();
+
+    HelmValuesFetchResponse helmValuesFetchResponse =
+        HelmValuesFetchResponse.builder().commandExecutionStatus(FAILURE).errorMessage("Something went wrong").build();
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of("helm-value-fetch-response", helmValuesFetchResponse);
+    ThrowingSupplier responseDataSuplier = StrategyHelper.buildResponseDataSupplier(responseDataMap);
+
+    TaskChainResponse response = k8sStepHelper.executeNextLink(
+        k8sStepExecutor, ambiance, rollingStepElementParams, passThroughData, responseDataSuplier);
+
+    assertThat(response.getPassThroughData()).isNotNull();
+    assertThat(response.isChainEnd()).isTrue();
+    assertThat(response.getPassThroughData()).isInstanceOf(HelmValuesFetchResponsePassThroughData.class);
+    HelmValuesFetchResponsePassThroughData helmPassThroughData =
+        (HelmValuesFetchResponsePassThroughData) response.getPassThroughData();
+    assertThat(helmPassThroughData.getErrorMsg()).isEqualTo("Something went wrong");
   }
 }
