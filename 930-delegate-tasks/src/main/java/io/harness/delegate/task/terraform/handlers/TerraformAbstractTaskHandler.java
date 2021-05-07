@@ -11,13 +11,14 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDP)
 public abstract class TerraformAbstractTaskHandler {
-  public abstract TerraformTaskNGResponse executeTaskInternal(
-      TerraformTaskNGParameters taskParameters, String delegateId, String taskId, LogCallback logCallback);
+  public abstract TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters,
+      String delegateId, String taskId, LogCallback logCallback) throws IOException;
 
   public TerraformTaskNGResponse executeTask(TerraformTaskNGParameters taskParameters, String delegateId, String taskId,
       LogCallback logCallback, CommandUnitsProgress commandUnitsProgress) {

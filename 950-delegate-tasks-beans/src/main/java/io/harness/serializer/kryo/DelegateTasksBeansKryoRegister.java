@@ -328,11 +328,14 @@ import io.harness.delegate.task.stepstatus.artifact.DockerArtifactDescriptor;
 import io.harness.delegate.task.stepstatus.artifact.DockerArtifactMetadata;
 import io.harness.delegate.task.stepstatus.artifact.FileArtifactDescriptor;
 import io.harness.delegate.task.stepstatus.artifact.FileArtifactMetadata;
+import io.harness.delegate.task.terraform.InlineTerraformVarFileInfo;
+import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
+import io.harness.delegate.task.terraform.TerraformVarFileInfo;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHAuthDTO;
 import io.harness.ng.core.dto.secrets.SSHConfigDTO;
@@ -730,5 +733,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DockerArtifactDescriptor.class, 543304);
     kryo.register(FileArtifactMetadata.class, 543305);
     kryo.register(FileArtifactDescriptor.class, 543306);
+    kryo.register(TerraformVarFileInfo.class, 543307);
+    kryo.register(InlineTerraformVarFileInfo.class, 543308);
+    kryo.register(RemoteTerraformVarFileInfo.class, 543309);
   }
 }
