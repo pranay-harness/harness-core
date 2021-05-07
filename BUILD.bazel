@@ -60,7 +60,7 @@ modules = [
     #"//160-model-gen-tool",
     "//160-stress-tester",
     #"//190-deployment-functional-tests",
-    "//200-functional-test",
+    #"//200-functional-test",
     "//210-command-library-server",
     #"//220-graphql-test",
     #"//230-model-test",
