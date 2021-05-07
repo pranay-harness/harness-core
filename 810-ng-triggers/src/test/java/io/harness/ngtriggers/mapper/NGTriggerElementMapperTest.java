@@ -23,24 +23,44 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfig_1;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
+import io.harness.ngtriggers.beans.source.NGTriggerSource_1;
+import io.harness.ngtriggers.beans.source.WebhookTriggerType;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig_1;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.bitbucket.BitbucketSpec;
+import io.harness.ngtriggers.beans.source.webhook.bitbucket.action.BitbucketPRAction;
+import io.harness.ngtriggers.beans.source.webhook.bitbucket.event.BitbucketPRSpec;
+import io.harness.ngtriggers.beans.source.webhook.bitbucket.event.BitbucketTriggerEvent;
+import io.harness.ngtriggers.beans.source.webhook.github.GithubSpec;
+import io.harness.ngtriggers.beans.source.webhook.github.action.GithubPRAction;
+import io.harness.ngtriggers.beans.source.webhook.github.event.GithubPRSpec;
+import io.harness.ngtriggers.beans.source.webhook.github.event.GithubTriggerEvent;
+import io.harness.ngtriggers.beans.source.webhook.gitlab.GitlabSpec;
+import io.harness.ngtriggers.beans.source.webhook.gitlab.action.GitlabPRAction;
+import io.harness.ngtriggers.beans.source.webhook.gitlab.event.GitlabPRSpec;
+import io.harness.ngtriggers.beans.source.webhook.gitlab.event.GitlabTriggerEvent;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.rule.Owner;
 import io.harness.webhook.WebhookConfigProvider;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -94,8 +114,118 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testToTriggerConfig() {
+  public void testToTriggerConfig() throws Exception {
+    NGTriggerConfig_1 ngTriggerConfig_1 =
+        NGTriggerConfig_1.builder()
+            .description("test")
+            .enabled(true)
+            .identifier("id")
+            .orgIdentifier("org")
+            .projectIdentifier("proj")
+            .pipelineIdentifier("pipeline")
+            .name("adwait")
+            .inputYaml("| \n input")
+            .source(
+                NGTriggerSource_1.builder()
+                    .type(WEBHOOK)
+                    .spec(WebhookTriggerConfig_1.builder()
+                              .type(WebhookTriggerType.GITHUB)
+                              .spec(GithubSpec.builder()
+                                        .type(GithubTriggerEvent.PULL_REQUEST)
+                                        .spec(GithubPRSpec.builder()
+                                                  .connectorRef("account.myConn")
+                                                  .repoName("repo")
+                                                  .actions(Arrays.asList(GithubPRAction.CLOSED, GithubPRAction.EDITED,
+                                                      GithubPRAction.LABELED))
+                                                  .payloadConditions(asList(
+                                                      WebhookCondition.builder().key("key").value("val").build()))
+                                                  .headerConditions(asList(
+                                                      WebhookCondition.builder().key("header").value("val").build()))
+                                                  .jexlCondition("jexl")
+                                                  .build())
+                                        .build())
+                              .build())
+                    .build())
+            .build();
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    String s = mapper.writeValueAsString(ngTriggerConfig_1);
+
+    ngTriggerConfig_1 =
+        NGTriggerConfig_1.builder()
+            .description("test")
+            .enabled(true)
+            .identifier("id")
+            .orgIdentifier("org")
+            .projectIdentifier("proj")
+            .pipelineIdentifier("pipeline")
+            .name("adwait")
+            .inputYaml("| \n input")
+            .source(
+                NGTriggerSource_1.builder()
+                    .type(WEBHOOK)
+                    .spec(WebhookTriggerConfig_1.builder()
+                              .type(WebhookTriggerType.GITLAB)
+                              .spec(GitlabSpec.builder()
+                                        .type(GitlabTriggerEvent.MERGE_REQUEST)
+                                        .spec(GitlabPRSpec.builder()
+                                                  .autoAbortPreviousExecutions(true)
+                                                  .connectorRef("account.myConn")
+                                                  .repoName("repo")
+                                                  .actions(asList(GitlabPRAction.CLOSE, GitlabPRAction.OPEN))
+                                                  .payloadConditions(asList(
+                                                      WebhookCondition.builder().key("key").value("val").build()))
+                                                  .headerConditions(asList(
+                                                      WebhookCondition.builder().key("header").value("val").build()))
+                                                  .jexlCondition("jexl")
+                                                  .build())
+                                        .build())
+                              .build())
+                    .build())
+            .build();
+
+    mapper = new ObjectMapper(new YAMLFactory());
+    s = mapper.writeValueAsString(ngTriggerConfig_1);
+
+    ngTriggerConfig_1 =
+        NGTriggerConfig_1.builder()
+            .description("test")
+            .enabled(true)
+            .identifier("id")
+            .orgIdentifier("org")
+            .projectIdentifier("proj")
+            .pipelineIdentifier("pipeline")
+            .name("adwait")
+            .inputYaml("| \n input")
+            .source(
+                NGTriggerSource_1.builder()
+                    .type(WEBHOOK)
+                    .spec(WebhookTriggerConfig_1.builder()
+                              .type(WebhookTriggerType.BITBUCKET)
+                              .spec(BitbucketSpec.builder()
+                                        .type(BitbucketTriggerEvent.PULL_REQUEST)
+                                        .spec(BitbucketPRSpec.builder()
+                                                  .autoAbortPreviousExecutions(true)
+                                                  .connectorRef("account.myConn")
+                                                  .repoName("repo")
+                                                  .actions(asList(BitbucketPRAction.PULL_REQUEST_CREATED,
+                                                      BitbucketPRAction.PULL_REQUEST_MERGED))
+                                                  .payloadConditions(asList(
+                                                      WebhookCondition.builder().key("key").value("val").build()))
+                                                  .headerConditions(asList(
+                                                      WebhookCondition.builder().key("header").value("val").build()))
+                                                  .jexlCondition("jexl")
+                                                  .build())
+                                        .build())
+                              .build())
+                    .build())
+            .build();
+
+    mapper = new ObjectMapper(new YAMLFactory());
+    s = mapper.writeValueAsString(ngTriggerConfig_1);
+
     NGTriggerConfig trigger = ngTriggerElementMapper.toTriggerConfig(ngTriggerYaml);
+
     assertThat(trigger).isNotNull();
     assertThat(trigger.getIdentifier()).isEqualTo("first_trigger");
     assertThat(trigger.getSource().getType()).isEqualTo(WEBHOOK);

@@ -16,6 +16,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngtriggers.service.NGTriggerYamlSchemaService;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
+import io.harness.security.annotations.PublicApi;
 import io.harness.yaml.schema.YamlSchemaResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,6 +52,7 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
 
   @GET
   @ApiOperation(value = "Get Yaml Schema", nickname = "getSchemaYaml")
+  @PublicApi
   public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType,
       @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
       @QueryParam("scope") Scope scope, @QueryParam(IDENTIFIER_KEY) String identifier) {
