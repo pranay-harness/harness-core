@@ -18,7 +18,6 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
 import io.harness.ngtriggers.beans.response.WebhookEventResponse;
-import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.helpers.WebhookEventMapperHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.pms.contracts.triggers.ParsedPayload;
@@ -87,8 +86,7 @@ public class TriggerWebhookExecutionHelper {
     String runtimeInputYaml = null;
     NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
     try {
-      runtimeInputYaml =
-          ((PipelineTargetSpec) triggerDetails.getNgTriggerConfig().getTarget().getSpec()).getRuntimeInputYaml();
+      runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
 
       PlanExecution response =
           triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerPayload);

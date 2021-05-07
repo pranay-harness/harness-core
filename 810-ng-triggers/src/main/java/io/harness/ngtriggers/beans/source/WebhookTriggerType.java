@@ -14,7 +14,7 @@ public enum WebhookTriggerType {
   @JsonProperty("Gitlab") GITLAB("Gitlab"),
   @JsonProperty("Bitbucket") BITBUCKET("Bitbucket"),
   @JsonProperty("Custom") CUSTOM("Custom"),
-  @JsonProperty("Aws CodeCommit") AWS_CODECOMMIT("Aws CodeCommit");
+  @JsonProperty("AWS CodeCommit") AWS_CODECOMMIT("AWS CodeCommit");
 
   private String value;
 

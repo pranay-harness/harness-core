@@ -4,11 +4,16 @@ import static io.harness.beans.WebhookEvent.Type.BRANCH;
 import static io.harness.constants.Constants.BITBUCKET_CLOUD_HEADER_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
+import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ngtriggers.Constants.ISSUE_COMMENT_EVENT_TYPE;
+import static io.harness.ngtriggers.Constants.MERGE_REQUEST_EVENT_TYPE;
+import static io.harness.ngtriggers.Constants.PULL_REQUEST_EVENT_TYPE;
+import static io.harness.ngtriggers.Constants.PUSH_EVENT_TYPE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -16,10 +21,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HeaderConfig;
 import io.harness.exception.TriggerException;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
-import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
-import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerSpecV2;
+import io.harness.ngtriggers.beans.source.webhook.v2.bitbucket.action.BitbucketPRAction;
+import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAction;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
@@ -35,31 +41,41 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WebhookTriggerFilterUtils {
   public boolean evaluateEventAndActionFilters(
-      WebhookPayloadData webhookPayloadData, WebhookTriggerSpec webhookTriggerConfigSpec) {
-    return checkIfEventTypeMatches(webhookPayloadData.getWebhookEvent().getType(), webhookTriggerConfigSpec.getEvent())
+      WebhookPayloadData webhookPayloadData, WebhookTriggerSpecV2 webhookTriggerConfigSpec) {
+    return checkIfEventTypeMatches(webhookPayloadData.getWebhookEvent().getType(), webhookTriggerConfigSpec)
         && checkIfActionMatches(webhookPayloadData, webhookTriggerConfigSpec);
   }
 
   public boolean checkIfEventTypeMatches(
-      io.harness.beans.WebhookEvent.Type eventTypeFromPayload, WebhookEvent eventTypeFromTrigger) {
+      io.harness.beans.WebhookEvent.Type eventTypeFromPayload, WebhookTriggerSpecV2 webhookTriggerSpec) {
+    if (webhookTriggerSpec.fetchGitAware() == null) {
+      throw new TriggerException(
+          "Invalid Filter used. Event Filter is not compatible with class: " + webhookTriggerSpec.getClass(), USER_SRE);
+    }
+
+    String gitEvent = webhookTriggerSpec.fetchGitAware().fetchEvent().getValue();
+
     if (eventTypeFromPayload.equals(io.harness.beans.WebhookEvent.Type.PR)) {
-      return eventTypeFromTrigger.equals(WebhookEvent.PULL_REQUEST)
-          || eventTypeFromTrigger.equals(WebhookEvent.MERGE_REQUEST);
+      return gitEvent.equals(PULL_REQUEST_EVENT_TYPE) || gitEvent.equals(MERGE_REQUEST_EVENT_TYPE);
     }
 
     if (eventTypeFromPayload.equals(BRANCH)) {
-      return eventTypeFromTrigger.equals(WebhookEvent.PUSH);
+      return gitEvent.equals(PUSH_EVENT_TYPE);
     }
 
     if (eventTypeFromPayload.equals(io.harness.beans.WebhookEvent.Type.ISSUE_COMMENT)) {
-      return eventTypeFromTrigger.equals(WebhookEvent.ISSUE_COMMENT);
+      return gitEvent.equals(ISSUE_COMMENT_EVENT_TYPE);
     }
     return false;
   }
 
-  public boolean checkIfActionMatches(
-      WebhookPayloadData webhookPayloadData, WebhookTriggerSpec webhookTriggerConfigSpec) {
-    List<WebhookAction> actions = webhookTriggerConfigSpec.getActions();
+  public boolean checkIfActionMatches(WebhookPayloadData webhookPayloadData, WebhookTriggerSpecV2 webhookTriggerSpec) {
+    if (webhookTriggerSpec.fetchGitAware() == null) {
+      throw new TriggerException(
+          "Invalid Filter used. Event Filter is not compatible with class: " + webhookTriggerSpec.getClass(), USER_SRE);
+    }
+
+    List<GitAction> actions = webhookTriggerSpec.fetchGitAware().fetchActions();
     // No filter means any actions is valid for trigger invocation
     if (isEmpty(actions)) {
       return true;
@@ -78,7 +94,7 @@ public class WebhookTriggerFilterUtils {
   // So, For BT_PULL_REQUEST_UPDATED, we have associated "sync" as parsedValue,
   // So, here are adding "open" in case, it was bitbucker server payload
   private static void specialHandlingForBBSPullReqUpdate(
-      WebhookPayloadData webhookPayloadData, List<WebhookAction> actions, Set<String> parsedActionValueSet) {
+      WebhookPayloadData webhookPayloadData, List<GitAction> actions, Set<String> parsedActionValueSet) {
     Set<String> headerKeys = webhookPayloadData.getOriginalEvent()
                                  .getHeaders()
                                  .stream()
@@ -88,13 +104,13 @@ public class WebhookTriggerFilterUtils {
     if (!headerKeys.contains(BITBUCKET_CLOUD_HEADER_KEY)
         && !headerKeys.contains(BITBUCKET_CLOUD_HEADER_KEY.toLowerCase())
         && !headerKeys.stream().anyMatch(BITBUCKET_CLOUD_HEADER_KEY::equalsIgnoreCase)) {
-      parsedActionValueSet.add(BT_PULL_REQUEST_CREATED.getParsedValue());
+      parsedActionValueSet.add(BitbucketPRAction.CREATE.getParsedValue());
     }
   }
 
   public boolean checkIfPayloadConditionsMatch(
-      WebhookPayloadData webhookPayloadData, List<WebhookCondition> payloadConditions) {
-    if (isEmpty(payloadConditions)) {
+      WebhookPayloadData webhookPayloadData, WebhookTriggerSpecV2 webhookTriggerSpec) {
+    if (isEmpty(webhookTriggerSpec.fetchPayloadAware().fetchPayloadConditions())) {
       return true;
     }
 
@@ -103,9 +119,9 @@ public class WebhookTriggerFilterUtils {
     String operator;
     TriggerExpressionEvaluator triggerExpressionEvaluator = null;
     boolean allConditionsMatched = true;
-    for (WebhookCondition webhookCondition : payloadConditions) {
+    for (WebhookCondition webhookCondition : webhookTriggerSpec.fetchPayloadAware().fetchPayloadConditions()) {
       standard = webhookCondition.getValue();
-      operator = webhookCondition.getOperator();
+      operator = webhookCondition.getOperator() != null ? webhookCondition.getOperator().getValue() : EMPTY;
 
       if (webhookCondition.getKey().equals("sourceBranch")) {
         input = webhookPayloadData.getWebhookEvent().getBaseAttributes().getSource();
@@ -175,7 +191,7 @@ public class WebhookTriggerFilterUtils {
 
     for (WebhookCondition webhookCondition : triggerSpec.getPayloadConditions()) {
       standard = webhookCondition.getValue();
-      operator = webhookCondition.getOperator();
+      operator = webhookCondition.getOperator().getValue();
       input = readFromPayload(webhookCondition.getKey(), triggerExpressionEvaluator);
       allConditionsMatched = allConditionsMatched && ConditionEvaluator.evaluate(input, standard, operator);
       if (!allConditionsMatched) {
@@ -186,12 +202,13 @@ public class WebhookTriggerFilterUtils {
     return allConditionsMatched;
   }
 
-  public boolean checkIfCustomHeaderConditionsMatch(List<HeaderConfig> headers, WebhookTriggerSpec triggerSpec) {
-    if (triggerSpec == null || isEmpty(triggerSpec.getHeaderConditions())) {
+  public boolean checkIfCustomHeaderConditionsMatch(
+      List<HeaderConfig> headers, List<WebhookCondition> headerConditions) {
+    if (isEmpty(headerConditions) || isEmpty(headers)) {
       return true;
     }
 
-    for (WebhookCondition webhookHeaderCondition : triggerSpec.getHeaderConditions()) {
+    for (WebhookCondition webhookHeaderCondition : headerConditions) {
       HeaderConfig header = headers.stream()
                                 .filter(headerConfig -> headerConfig.getKey().equals(webhookHeaderCondition.getKey()))
                                 .findAny()
@@ -200,12 +217,12 @@ public class WebhookTriggerFilterUtils {
       if (header != null) {
         for (String value : header.getValues()) {
           if (!ConditionEvaluator.evaluate(
-                  value, webhookHeaderCondition.getValue(), webhookHeaderCondition.getOperator())) {
+                  value, webhookHeaderCondition.getValue(), webhookHeaderCondition.getOperator().getValue())) {
             return false;
           }
         }
       } else {
-        if (!webhookHeaderCondition.getOperator().contains("not")) {
+        if (!webhookHeaderCondition.getOperator().getValue().contains("not")) {
           return false;
         }
       }

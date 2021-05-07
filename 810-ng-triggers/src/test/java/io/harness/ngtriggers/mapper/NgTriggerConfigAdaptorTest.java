@@ -3,6 +3,7 @@ package io.harness.ngtriggers.mapper;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.SCHEDULED;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
+import static io.harness.ngtriggers.conditionchecker.ConditionOperator.EQUALS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static java.util.Arrays.asList;
@@ -83,8 +84,8 @@ public class NgTriggerConfigAdaptorTest extends CategoryTest {
                           .identifier(TRIGGER_ID)
                           .build();
 
-    payloadConditions = asList(WebhookCondition.builder().key("key").operator("equals").value("val").build());
-    headerConditions = asList(WebhookCondition.builder().key("header").operator("equals").value("val").build());
+    payloadConditions = asList(WebhookCondition.builder().key("key").operator(EQUALS).value("val").build());
+    headerConditions = asList(WebhookCondition.builder().key("header").operator(EQUALS).value("val").build());
   }
 
   @Test

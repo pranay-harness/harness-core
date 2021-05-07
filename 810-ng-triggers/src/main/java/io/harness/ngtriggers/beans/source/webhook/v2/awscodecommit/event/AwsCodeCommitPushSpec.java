@@ -24,7 +24,6 @@ import lombok.experimental.FieldDefaults;
 public class AwsCodeCommitPushSpec implements AwsCodeCommitEventSpec {
   String connectorRef;
   String repoName;
-  List<WebhookCondition> headerConditions;
   List<WebhookCondition> payloadConditions;
   String jexlCondition;
 
@@ -50,7 +49,7 @@ public class AwsCodeCommitPushSpec implements AwsCodeCommitEventSpec {
 
   @Override
   public List<WebhookCondition> fetchHeaderConditions() {
-    return headerConditions;
+    return emptyList();
   }
 
   @Override

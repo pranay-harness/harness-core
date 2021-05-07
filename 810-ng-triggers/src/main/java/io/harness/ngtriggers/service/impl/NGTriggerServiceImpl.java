@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
@@ -21,7 +22,7 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
-import io.harness.ngtriggers.beans.source.NGTriggerSource;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
@@ -54,6 +55,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class NGTriggerServiceImpl implements NGTriggerService {
+  public static final long TRIGGER_CURRENT_YML_VERSION = 2l;
   private final NGTriggerRepository ngTriggerRepository;
   private final TriggerWebhookEventRepository webhookEventQueueRepository;
   private final ConnectorResourceClient connectorResourceClient;
@@ -80,6 +82,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   @Override
   public NGTriggerEntity update(NGTriggerEntity ngTriggerEntity) {
+    ngTriggerEntity.setYmlVersion(TRIGGER_CURRENT_YML_VERSION);
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
     NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
     if (updatedEntity == null) {
@@ -264,7 +267,15 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     // for the validation.
 
     // trigger source validation
-    NGTriggerSource triggerSource = triggerDetails.getNgTriggerConfig().getSource();
+    if (isBlank(triggerDetails.getNgTriggerEntity().getIdentifier())) {
+      throw new InvalidArgumentsException("Identifier can not be empty");
+    }
+
+    if (isBlank(triggerDetails.getNgTriggerEntity().getName())) {
+      throw new InvalidArgumentsException("Name can not be empty");
+    }
+
+    NGTriggerSourceV2 triggerSource = triggerDetails.getNgTriggerConfigV2().getSource();
     switch (triggerSource.getType()) {
       case WEBHOOK:
         return; // TODO(adwait): define trigger source validation

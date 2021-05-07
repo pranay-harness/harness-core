@@ -60,6 +60,25 @@ public class ConditionEvaluatorTest extends CategoryTest {
     assertThat(ConditionEvaluator.evaluate("prod", "qa, stage, uat", NOT_IN_OPERATOR)).isTrue();
     assertThat(ConditionEvaluator.evaluate("prod", "prod, qa, stage, uat", NOT_IN_OPERATOR)).isFalse();
 
-    assertThat(ConditionEvaluator.evaluate("21699507", "[0-9]+", REGEX_OPERATOR)).isTrue();
+    assertThat(
+        ConditionEvaluator.evaluate("trigger recencycheck, unit-tests-1, unit-tests-2, unit-tests-3, author-metadata",
+            "^.*trigger.*[, ](unit-tests-2$|unit-tests-2,.*)", REGEX_OPERATOR))
+        .isTrue();
+    assertThat(
+        ConditionEvaluator.evaluate("trigger unit-tests-2, recencycheck, unit-tests-1, unit-tests-3, author-metadata",
+            "^.*trigger.*[, ](unit-tests-2$|unit-tests-2,.*)", REGEX_OPERATOR))
+        .isTrue();
+    assertThat(
+        ConditionEvaluator.evaluate("trigger recencycheck, unit-tests-1, unit-tests-3, author-metadata, unit-tests-2",
+            "^.*trigger.*[, ](unit-tests-2$|unit-tests-2,.*)", REGEX_OPERATOR))
+        .isTrue();
+    assertThat(
+        ConditionEvaluator.evaluate("trigger recencycheck, unit-tests-1, unit-tests-3, author-metadata, unit-tests-20",
+            "^.*trigger.*[, ](unit-tests-2$|unit-tests-2,.*)", REGEX_OPERATOR))
+        .isFalse();
+    assertThat(
+        ConditionEvaluator.evaluate("trigger unit-tests-22, recencycheck, unit-tests-1, unit-tests-3, author-metadata",
+            "^.*trigger.*[, ](unit-tests-2$|unit-tests-2,.*)", REGEX_OPERATOR))
+        .isFalse();
   }
 }
