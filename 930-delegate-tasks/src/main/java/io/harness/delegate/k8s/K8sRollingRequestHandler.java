@@ -29,6 +29,7 @@ import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.k8s.exception.KubernetesExceptionExplanation;
 import io.harness.delegate.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.k8s.exception.KubernetesExceptionMessage;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -61,7 +62,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -107,7 +107,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       // Don't expect to this to happen, we always throwing exception in case of failure
       // Leaving as it is just to be sure
       throw new ExplanationException(KubernetesExceptionExplanation.FETCH_MANIFEST_FAILED,
-          new KubernetesTaskException("Fetch manifest failed to complete"));
+          new KubernetesTaskException(KubernetesExceptionMessage.FETCH_MANIFEST_FAILED));
     }
 
     startNewCommandUnit(Init, true);
@@ -125,7 +125,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     if (!success) {
       throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.APPLY_MANIFEST_FAILED,
           KubernetesExceptionExplanation.APPLY_MANIFEST_FAILED,
-          new KubernetesTaskException("Apply manifest failed to complete"));
+          new KubernetesTaskException(KubernetesExceptionMessage.APPLY_MANIFEST_FAILED));
     }
 
     shouldSaveReleaseHistory = true;
@@ -157,7 +157,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
         throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_FAILED,
             KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED
                 + ". Managed workloads: " + managedWorkloadsInfo,
-            new KubernetesTaskException("Wait for steady state failed"));
+            new KubernetesTaskException(KubernetesExceptionMessage.WAIT_FOR_STEADY_STATE_FAILED));
       }
     }
 
@@ -203,7 +203,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
           kubernetesConfig, k8sRollingDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
     } catch (YamlException ex) {
       log.error("Failed to save release history", ex);
-      throw new KubernetesTaskException("Corrupted or invalid release history. " + ex.getMessage());
+      throw new KubernetesTaskException(
+          KubernetesExceptionMessage.RELEASE_HISTORY_YAML_EXCEPTION + ". " + ex.getMessage());
     }
   }
 
@@ -251,7 +252,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     if (!k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback)) {
       throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.DRY_RUN_MANIFEST_FAILED,
           KubernetesExceptionExplanation.DRY_RUN_MANIFEST_FAILED,
-          new KubernetesTaskException("Manifest dry run failed to complete"));
+          new KubernetesTaskException(KubernetesExceptionMessage.DRY_RUN_MANIFEST_FAILED));
     }
   }
 
