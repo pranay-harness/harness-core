@@ -52,6 +52,7 @@ import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.container.ContainerInfo.ContainerInfoBuilder;
 import io.harness.container.ContainerInfo.Status;
@@ -148,6 +149,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.nio.file.Paths;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -159,7 +161,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -247,7 +248,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace) {
     try {
       Callable<HasMetadata> controller = getControllerInternal(kubernetesConfig, name, namespace);
-      return timeLimiter.callWithTimeout(controller, 2L, TimeUnit.MINUTES, true);
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(2), controller);
     } catch (WingsException e) {
       throw e;
     } catch (UncheckedTimeoutException e) {
@@ -1503,7 +1504,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           sleep(ofSeconds(5));
         }
       };
-      timeLimiter.callWithTimeout(callable, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), callable);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
       log.error(msg, e);
@@ -1634,7 +1635,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
         }
       };
-      return timeLimiter.callWithTimeout(callable, waitMinutes, TimeUnit.MINUTES, true);
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(waitMinutes), callable);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
       log.error(msg, e);
