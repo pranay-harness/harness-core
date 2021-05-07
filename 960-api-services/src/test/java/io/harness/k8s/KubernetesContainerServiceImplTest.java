@@ -1,5 +1,6 @@
 package io.harness.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.InvalidRequestException;
@@ -151,6 +153,7 @@ import org.mockito.junit.MockitoRule;
 /**
  * Created by brett on 2/10/17.
  */
+@OwnedBy(CDP)
 public class KubernetesContainerServiceImplTest extends CategoryTest {
   public static final String MASTER_URL = "masterUrl";
   public static final char[] USERNAME = "username".toCharArray();
