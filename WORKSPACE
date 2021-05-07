@@ -2033,7 +2033,7 @@ maven_install(
         "org.clojure:clojure",
         "io.netty:netty-all",
     ],
-    maven_install_json = "//:maven_install.json",
+    maven_install_json = "//project:main_maven_install.json",
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
     },
@@ -2080,32 +2080,8 @@ maven_install(
 maven_install(
     name = "delegate",
     artifacts = [
-        "com.squareup.okhttp3:logging-interceptor:3.14.3",
-        "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-        "com.squareup.okhttp3:okhttp:3.6.0",
         "org.apache.httpcomponents:httpmime:4.5.1",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
-        "http://packages.confluent.io/maven",
-    ],
-    version_conflict_policy = "pinned",
-)
-
-maven_install(
-    name = "batch",
-    artifacts = [
-        "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

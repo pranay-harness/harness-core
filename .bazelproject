@@ -137,6 +137,7 @@ directories:
   990-commons-test
   cargo
   dockerization
+  project
   run-configurations
   scripts
   tools
