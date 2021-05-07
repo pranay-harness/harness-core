@@ -34,6 +34,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -75,22 +76,24 @@ public class PipelineEntity
   @Trimmed @NotEmpty String projectIdentifier;
   @NotEmpty String identifier;
 
-  @NotEmpty String yaml;
-  @Setter @NonFinal int stageCount;
+  @Wither @NotEmpty String yaml;
 
   @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
-  @Default Boolean deleted = Boolean.FALSE;
+  @Wither @Default Boolean deleted = Boolean.FALSE;
 
-  @EntityName String name;
-  @Size(max = 1024) String description;
-  @Singular @Size(max = 128) List<NGTag> tags;
+  @Wither @EntityName String name;
+  @Wither @Size(max = 1024) String description;
+  @Wither @Singular @Size(max = 128) List<NGTag> tags;
 
-  @Setter @NonFinal @Version Long version;
+  @Wither @Version Long version;
+
   @Default Map<String, org.bson.Document> filters = new HashMap<>();
   ExecutionSummaryInfo executionSummaryInfo;
   int runSequence;
-  @Setter @NonFinal @Singular List<String> stageNames;
+
+  @Wither int stageCount;
+  @Wither @Singular List<String> stageNames;
 
   @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
