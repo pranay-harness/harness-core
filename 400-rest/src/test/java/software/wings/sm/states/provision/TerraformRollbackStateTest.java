@@ -84,8 +84,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.query.FieldEndImpl;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.QueryImpl;
 import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDP)
@@ -230,9 +232,12 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     Environment environment = new Environment();
     environment.setUuid(UUID);
     doReturn(environment).when(executionContext).getEnv();
-    Query<TerraformConfig> query = mock(Query.class);
+    QueryImpl<TerraformConfig> query = mock(QueryImpl.class);
+    FieldEndImpl fieldEnd = mock(FieldEndImpl.class);
+    when(fieldEnd.in(any())).thenReturn(query);
     when(wingsPersistence.createQuery(any(Class.class))).thenReturn(query);
     when(query.filter(anyString(), any(Object.class))).thenReturn(query);
+    when(query.field(anyString())).thenReturn(fieldEnd);
     when(query.order(any(Sort.class))).thenReturn(query);
 
     TerraformConfig terraformConfig =
@@ -335,7 +340,8 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     TerraformConfig terraformConfig = captor.getValue();
     assertThat(terraformConfig).isNotNull();
     assertThat(terraformConfig.getWorkflowExecutionId()).isEqualTo(WORKFLOW_EXECUTION_ID);
-    assertThat(terraformConfig.getEntityId()).isEqualTo(String.format("%s-%s", PROVISIONER_ID, UUID));
+    assertThat(terraformConfig.getEntityId())
+        .isEqualTo(String.format("%s-%s-%s", PROVISIONER_ID, UUID, "sourceRepoBranch".hashCode()));
   }
 
   @Test
@@ -358,14 +364,47 @@ public class TerraformRollbackStateTest extends WingsBaseTest {
     Query<TerraformConfig> query = mock(Query.class);
     when(wingsPersistence.createQuery(any(Class.class))).thenReturn(query);
     when(query.filter(anyString(), any(Object.class))).thenReturn(query);
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
 
     verify(fileService, times(1))
         .updateParentEntityIdAndVersion(
             any(Class.class), anyString(), anyInt(), anyString(), anyMap(), any(FileBucket.class));
     verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
-    verify(wingsPersistence, times(1)).createQuery(TerraformConfig.class);
-    verify(wingsPersistence, times(1)).delete(query);
+    verify(wingsPersistence, times(2)).createQuery(TerraformConfig.class);
+    verify(wingsPersistence, times(2)).delete(query);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseDestroyRetryDeleteWithOldEntityId() {
+    when(executionContext.getAppId()).thenReturn(APP_ID);
+    terraformRollbackState.setProvisionerId(PROVISIONER_ID);
+    TerraformInfrastructureProvisioner terraformInfrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().build();
+    when(infrastructureProvisionerService.get(APP_ID, PROVISIONER_ID)).thenReturn(terraformInfrastructureProvisioner);
+    Map<String, ResponseData> response = new HashMap<>();
+    TerraformExecutionData terraformExecutionData = TerraformExecutionData.builder()
+                                                        .executionStatus(ExecutionStatus.SUCCESS)
+                                                        .stateFileId("stateFileId")
+                                                        .commandExecuted(TerraformCommand.DESTROY)
+                                                        .build();
+    response.put("activityId", terraformExecutionData);
+
+    Query<TerraformConfig> query = mock(Query.class);
+    when(wingsPersistence.createQuery(any(Class.class))).thenReturn(query);
+    when(query.filter(anyString(), any(Object.class))).thenReturn(query);
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(false);
+    ExecutionResponse executionResponse = terraformRollbackState.handleAsyncResponse(executionContext, response);
+
+    verify(fileService, times(1))
+        .updateParentEntityIdAndVersion(
+            any(Class.class), anyString(), anyInt(), anyString(), anyMap(), any(FileBucket.class));
+    verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
+    verify(wingsPersistence, times(2)).createQuery(TerraformConfig.class);
+    verify(wingsPersistence, times(2)).delete(query);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
