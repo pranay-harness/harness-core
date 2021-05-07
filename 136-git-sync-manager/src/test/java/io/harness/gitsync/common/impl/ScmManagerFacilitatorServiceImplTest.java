@@ -18,8 +18,6 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.delegate.task.scm.GitFileTaskResponseData;
-import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -27,11 +25,10 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.rule.Owner;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
-import io.harness.service.DelegateGrpcClientWrapper;
+import io.harness.service.ScmClient;
+import io.harness.tasks.DecryptGitApiAccessHelper;
 
 import com.google.inject.Inject;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -42,14 +39,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.DX)
-public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
-  @Mock SecretManagerClientService secretManagerClientService;
+public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
+  @Mock ScmClient scmClient;
+  @Mock DecryptGitApiAccessHelper decryptGitApiAccessHelper;
   @Mock ConnectorService connectorService;
-  @Mock DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock AbstractScmClientFacilitatorServiceImpl abstractScmClientFacilitatorService;
   @Mock YamlGitConfigService yamlGitConfigService;
-  @InjectMocks @Inject ScmDelegateFacilitatorServiceImpl scmDelegateFacilitatorService;
-  FileContent fileContent = FileContent.newBuilder().build();
+  @InjectMocks @Inject ScmManagerFacilitatorServiceImpl scmManagerFacilitatorService;
   String accountIdentifier = "accountIdentifier";
   String projectIdentifier = "projectIdentifier";
   String orgIdentifier = "orgIdentifier";
@@ -57,14 +53,18 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   String repoURL = "repoURL";
   String yamlGitConfigIdentifier = "yamlGitConfigIdentifier";
   String filePath = "filePath";
-  String branch = "branch";
+  final String branch = "branch";
+  FileContent fileContent = FileContent.newBuilder().build();
   final ListBranchesResponse listBranchesResponse =
       ListBranchesResponse.newBuilder().addBranches("master").addBranches("feature").build();
 
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
-    when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(Collections.emptyList());
+    when(decryptGitApiAccessHelper.decryptScmApiAccess(any(), any(), any(), any()))
+        .thenReturn(GithubConnectorDTO.builder().build());
+    when(scmClient.getFileContent(any(), any())).thenReturn(fileContent);
+    when(scmClient.listBranches(any())).thenReturn(listBranchesResponse);
     GithubConnectorDTO githubConnector =
         GithubConnectorDTO.builder().apiAccess(GithubApiAccessDTO.builder().build()).build();
     ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder().connectorConfig(githubConnector).build();
@@ -87,11 +87,9 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = HARI)
   @Category(UnitTests.class)
   public void listBranchesForRepoByConnectorTest() {
-    when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(ScmGitRefTaskResponseData.builder().listBranchesResponse(listBranchesResponse).build());
-    final List<String> branches = scmDelegateFacilitatorService.listBranchesForRepoByConnector(accountIdentifier,
-        orgIdentifier, projectIdentifier, connectorIdentifierRef, repoURL,
-        PageRequest.builder().pageIndex(0).pageSize(10).build(), "");
+    final List<String> branches =
+        scmManagerFacilitatorService.listBranchesForRepoByConnector(accountIdentifier, orgIdentifier, projectIdentifier,
+            connectorIdentifierRef, repoURL, PageRequest.builder().pageIndex(0).pageSize(10).build(), "");
     assertThat(branches).isEqualTo(listBranchesResponse.getBranchesList());
   }
 
@@ -99,9 +97,7 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = HARI)
   @Category(UnitTests.class)
   public void getFileContentTest() {
-    when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(GitFileTaskResponseData.builder().fileContent(fileContent).build());
-    final GitFileContent gitFileContent = scmDelegateFacilitatorService.getFileContent(
+    final GitFileContent gitFileContent = scmManagerFacilitatorService.getFileContent(
         yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, filePath, branch, null);
     assertThat(gitFileContent)
         .isEqualTo(

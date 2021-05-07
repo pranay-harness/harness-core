@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitatorServiceImpl {
-  private final ScmClient scmClient;
-  private final DecryptGitApiAccessHelper decryptGitApiAccessHelper;
+  private ScmClient scmClient;
+  private DecryptGitApiAccessHelper decryptGitApiAccessHelper;
 
   @Inject
   public ScmManagerFacilitatorServiceImpl(ScmClient scmClient,
