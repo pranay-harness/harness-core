@@ -12,6 +12,7 @@ import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
 import io.harness.app.beans.entities.RepositoryBuildInfo;
 import io.harness.app.beans.entities.RepositoryInfo;
+import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.ExecutionStatus;
@@ -27,7 +28,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -46,60 +46,6 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
 
   private static final int MAX_RETRY_COUNT = 5;
-
-  private String queryBuilder(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval, String status) {
-    StringBuilder totalBuildSqlBuilder = new StringBuilder();
-    totalBuildSqlBuilder.append(staticQuery);
-    if (accountId != null) {
-      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
-    }
-
-    if (orgId != null) {
-      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
-    }
-
-    if (projectId != null) {
-      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
-    }
-
-    if (status != null) {
-      totalBuildSqlBuilder.append("status='");
-      totalBuildSqlBuilder.append(status);
-      totalBuildSqlBuilder.append("' and ");
-    }
-
-    if (startInterval != null && endInterval != null) {
-      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", startInterval, endInterval));
-    }
-
-    return totalBuildSqlBuilder.toString();
-  }
-
-  private String queryBuilderSelectStatus(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval) {
-    String selectStatusQuery = "select status from " + tableName + " where ";
-    StringBuilder totalBuildSqlBuilder = new StringBuilder();
-    totalBuildSqlBuilder.append(selectStatusQuery);
-
-    if (accountId != null) {
-      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
-    }
-
-    if (orgId != null) {
-      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
-    }
-
-    if (projectId != null) {
-      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
-    }
-
-    if (startInterval != null && endInterval != null) {
-      totalBuildSqlBuilder.append(String.format("startts between '%s' and '%s';", startInterval, endInterval));
-    }
-
-    return totalBuildSqlBuilder.toString();
-  }
 
   private String queryBuilderSelectStatusAndTime(
       String accountId, String orgId, String projectId, String startInterval, String endInterval) {
@@ -217,52 +163,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return totalBuildSqlBuilder.toString();
   }
 
-  private long queryCalculator(String query) {
-    long totalTries = 0;
-    long resultCount = 0;
-    boolean successfulOperation = false;
-    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(query)) {
-        resultSet = statement.executeQuery();
-        while (resultSet != null && resultSet.next()) {
-          resultCount++;
-        }
-        successfulOperation = true;
-      } catch (SQLException ex) {
-        totalTries++;
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    }
-    return resultCount;
-  }
-
-  private List<String> queryCalculatorForStatus(String query) {
-    long totalTries = 0;
-
-    List<String> statusList = new ArrayList<>();
-    boolean successfulOperation = false;
-    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(query)) {
-        resultSet = statement.executeQuery();
-        while (resultSet != null && resultSet.next()) {
-          statusList.add(resultSet.getString("status"));
-        }
-        successfulOperation = true;
-      } catch (SQLException ex) {
-        totalTries++;
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    }
-    return statusList;
-  }
-
-  private StatusAndTime queryCalculatorForStatusAndTime(String query) {
+  public StatusAndTime queryCalculatorForStatusAndTime(String query) {
     long totalTries = 0;
 
     List<String> status = new ArrayList<>();
@@ -287,7 +188,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return StatusAndTime.builder().status(status).time(time).build();
   }
 
-  BuildFailureInfo getBuildFailureInfo(
+  public BuildFailureInfo getBuildFailureInfo(
       String name, String branch_name, String commit, String commit_id, String startTs, String endTs) {
     return BuildFailureInfo.builder()
         .piplineName(name)
@@ -299,7 +200,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .build();
   }
 
-  BuildActiveInfo getBuildActiveInfo(
+  public BuildActiveInfo getBuildActiveInfo(
       String name, String branch_name, String commit, String commit_id, String startTs, String status, String endTs) {
     return BuildActiveInfo.builder()
         .piplineName(name)
@@ -310,26 +211,6 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .status(status)
         .endTs(endTs)
         .build();
-  }
-
-  @Override
-  public long totalBuilds(String accountId, String orgId, String projectId, String startInterval, String endInterval) {
-    String query = queryBuilder(accountId, orgId, projectId, startInterval, endInterval, null);
-    return queryCalculator(query);
-  }
-
-  @Override
-  public long successfulBuilds(
-      String accountId, String orgId, String projectId, String startInterval, String endInterval) {
-    String query =
-        queryBuilder(accountId, orgId, projectId, startInterval, endInterval, ExecutionStatus.SUCCESS.name());
-    return queryCalculator(query);
-  }
-
-  @Override
-  public long failedBuilds(String accountId, String orgId, String projectId, String startInterval, String endInterval) {
-    String query = queryBuilder(accountId, orgId, projectId, startInterval, endInterval, ExecutionStatus.FAILED.name());
-    return queryCalculator(query);
   }
 
   @Override
@@ -421,21 +302,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return DashboardBuildExecutionInfo.builder().buildExecutionInfoList(buildExecutionInfoList).build();
   }
 
-  private long getDuration(String endts, String startts) {
-    // assuming endts and starts in yyyy-mm-dd HH:MM:SS.{number}
-    // replacing space with T
-    long duration = ChronoUnit.SECONDS.between(
-        LocalDateTime.parse(endts.replace(' ', 'T')), LocalDateTime.parse(startts.replace(' ', 'T')));
-    if (duration < 0) {
-      duration = duration * (-1);
-    }
-    return duration;
-  }
-
-  @Override
-  public List<BuildFailureInfo> getDashboardBuildFailureInfo(
-      String accountId, String orgId, String projectId, long days) {
-    String query = queryBuilderFailedStatusOrderBy(accountId, orgId, projectId, days);
+  public List<BuildFailureInfo> queryCalculatorBuildFailureInfo(String query) {
     List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
     int totalTries = 0;
     boolean successfulOperation = false;
@@ -457,14 +324,10 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
-
     return buildFailureInfos;
   }
 
-  @Override
-  public List<BuildActiveInfo> getDashboardBuildActiveInfo(
-      String accountId, String orgId, String projectId, long days) {
-    String query = queryBuilderActiveStatusOrderBy(accountId, orgId, projectId, days);
+  public List<BuildActiveInfo> queryCalculatorBuildActiveInfo(String query) {
     List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
     int totalTries = 0;
     boolean successfulOperation = false;
@@ -486,8 +349,57 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
-
     return buildActiveInfos;
+  }
+  @Override
+  public List<BuildFailureInfo> getDashboardBuildFailureInfo(
+      String accountId, String orgId, String projectId, long days) {
+    String query = queryBuilderFailedStatusOrderBy(accountId, orgId, projectId, days);
+
+    return queryCalculatorBuildFailureInfo(query);
+  }
+
+  @Override
+  public List<BuildActiveInfo> getDashboardBuildActiveInfo(
+      String accountId, String orgId, String projectId, long days) {
+    String query = queryBuilderActiveStatusOrderBy(accountId, orgId, projectId, days);
+
+    return queryCalculatorBuildActiveInfo(query);
+  }
+
+  public RepositoryInformation queryRepositoryCalculator(String query) {
+    List<String> repoName = new ArrayList<>();
+    List<String> status = new ArrayList<>();
+    List<String> time = new ArrayList<>();
+    List<String> commitMessage = new ArrayList<>();
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          repoName.add(resultSet.getString("moduleinfo_repository"));
+          status.add(resultSet.getString("status"));
+          time.add(resultSet.getString("startts"));
+          commitMessage.add(resultSet.getString("moduleinfo_branch_commit_message"));
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+
+    return RepositoryInformation.builder()
+        .repoName(repoName)
+        .status(status)
+        .time(time)
+        .commitMessage(commitMessage)
+        .build();
   }
 
   @Override
@@ -505,31 +417,17 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
     HashMap<String, Integer> uniqueRepoName = new HashMap<>();
 
-    int totalTries = 0;
-    boolean successfulOperation = false;
-    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           PreparedStatement statement = connection.prepareStatement(query)) {
-        resultSet = statement.executeQuery();
-        while (resultSet != null && resultSet.next()) {
-          repoName.add(resultSet.getString("moduleinfo_repository"));
-          status.add(resultSet.getString("status"));
-          time.add(resultSet.getString("startts"));
-          commitMessage.add(resultSet.getString("moduleinfo_branch_commit_message"));
+    RepositoryInformation repositoryInformation = queryRepositoryCalculator(query);
+    repoName = repositoryInformation.getRepoName();
+    status = repositoryInformation.getStatus();
+    time = repositoryInformation.getTime();
+    commitMessage = repositoryInformation.getCommitMessage();
 
-          if (!uniqueRepoName.containsKey(resultSet.getString("moduleinfo_repository"))) {
-            uniqueRepoName.put(resultSet.getString("moduleinfo_repository"), 1);
-          }
-        }
-        successfulOperation = true;
-      } catch (SQLException ex) {
-        totalTries++;
-      } finally {
-        DBUtils.close(resultSet);
+    for (String repository_name : repoName) {
+      if (repository_name != null && !uniqueRepoName.containsKey(repository_name)) {
+        uniqueRepoName.put(repository_name, 1);
       }
     }
-
     List<RepositoryInfo> repositoryInfoList = new ArrayList<>();
     for (String repositoryName : uniqueRepoName.keySet()) {
       long totalBuild = 0;
