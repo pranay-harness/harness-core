@@ -31,3 +31,8 @@ RUN apt-get update && \
 RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz
 RUN tar -xzf gsutil.tar.gz -C /opt
 ENV PATH ${PATH}:/opt/gsutil
+
+RUN curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.7.4/bazelisk-linux-amd64 && \
+    chown root:root /usr/local/bin/bazel && \
+    chmod 0755 /usr/local/bin/bazel
+RUN bazel version
