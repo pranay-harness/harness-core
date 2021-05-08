@@ -32,8 +32,7 @@ public class SecretNGManagerClientModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(SecretManagerClientService.class)
-        .to(SecretNGManagerClientServiceImpl.class);
+    bind(SecretManagerClientService.class).to(SecretNGManagerClientServiceImpl.class);
     bind(SecretNGManagerClient.class).toProvider(SecretNGManagerHttpClientFactory.class).in(Scopes.SINGLETON);
   }
 }
