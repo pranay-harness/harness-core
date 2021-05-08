@@ -8,18 +8,16 @@ import static software.wings.service.impl.FileServiceUtils.isMongoFileIdFormat;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
+import io.harness.file.HarnessFile;
+import io.harness.file.dao.GcsHarnessFileMetadataDao;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.DataStorageMode;
-import software.wings.app.MainConfiguration;
-import software.wings.beans.BaseFile;
-import software.wings.beans.GcsFileMetadata;
-import software.wings.beans.GcsFileMetadata.GcsFileMetadataKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,22 +39,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class FileServiceImpl implements FileService {
-  private WingsPersistence wingsPersistence;
+  public static final String FILE_SERVICE_DATA_STORAGE_MODE = "FILE_SERVICE_DATA_STORAGE_MODE";
+  private GcsHarnessFileMetadataDao gcsHarnessFileMetadataDao;
   private MongoFileServiceImpl mongoFileService;
   private GoogleCloudFileServiceImpl googleCloudFileService;
-  private MainConfiguration configuration;
+  private DataStorageMode dataStorageMode;
 
   private boolean gcsStorageEnabled;
 
   @Inject
-  public FileServiceImpl(WingsPersistence wingsPersistence, MongoFileServiceImpl mongoFileService,
-      GoogleCloudFileServiceImpl googleCloudFileService, MainConfiguration configuration) {
-    this.wingsPersistence = wingsPersistence;
+  public FileServiceImpl(GcsHarnessFileMetadataDao gcsHarnessFileMetadataDao, MongoFileServiceImpl mongoFileService,
+      GoogleCloudFileServiceImpl googleCloudFileService,
+      @Named(FILE_SERVICE_DATA_STORAGE_MODE) DataStorageMode dataStorageMode) {
+    this.gcsHarnessFileMetadataDao = gcsHarnessFileMetadataDao;
     this.mongoFileService = mongoFileService;
     this.googleCloudFileService = googleCloudFileService;
-    this.configuration = configuration;
+    this.dataStorageMode = dataStorageMode;
 
-    if (configuration.getFileStorageMode() == DataStorageMode.GOOGLE_CLOUD_STORAGE) {
+    if (dataStorageMode == DataStorageMode.GOOGLE_CLOUD_STORAGE) {
       gcsStorageEnabled = true;
       // Initialize storage and create necessary buckets if GCS storage is enabled.
       googleCloudFileService.initialize();
@@ -80,11 +80,11 @@ public class FileServiceImpl implements FileService {
     String gcsFileId;
     if (isMongoFileId) {
       mongoFileId = fileId;
-      gcsFileId = getGcsFileIdByMongoFileId(mongoFileId);
+      gcsFileId = gcsHarnessFileMetadataDao.getGcsFileIdByMongoFileId(mongoFileId);
     } else {
       // Won't reach here if not GCS storage enabled
       gcsFileId = fileId;
-      mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
+      mongoFileId = gcsHarnessFileMetadataDao.getMongoFileIdByGcsFileId(gcsFileId);
     }
     if (gcsStorageEnabled) {
       return googleCloudFileService.updateParentEntityIdAndVersion(
@@ -96,7 +96,7 @@ public class FileServiceImpl implements FileService {
   }
 
   @Override
-  public String saveFile(BaseFile baseFile, InputStream in, FileBucket fileBucket) {
+  public String saveFile(HarnessFile baseFile, InputStream in, FileBucket fileBucket) {
     if (gcsStorageEnabled) {
       return googleCloudFileService.saveFile(baseFile, in, fileBucket);
     } else {
@@ -110,18 +110,18 @@ public class FileServiceImpl implements FileService {
     String mongoFileId, gcsFileId;
     if (isMongoFileId) {
       mongoFileId = fileId;
-      gcsFileId = getGcsFileIdByMongoFileId(mongoFileId);
+      gcsFileId = gcsHarnessFileMetadataDao.getGcsFileIdByMongoFileId(mongoFileId);
     } else {
       // Won't reach here if GCS storage is not enabled
       gcsFileId = fileId;
-      mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
+      mongoFileId = gcsHarnessFileMetadataDao.getMongoFileIdByGcsFileId(gcsFileId);
     }
     if (isNotEmpty(gcsFileId)) {
       googleCloudFileService.deleteFile(gcsFileId, fileBucket);
     }
     if (isNotEmpty(mongoFileId)) {
       mongoFileService.deleteFile(mongoFileId, fileBucket);
-      deleteGcsFileMetadataByMongoFileId(mongoFileId);
+      gcsHarnessFileMetadataDao.deleteGcsFileMetadataByMongoFileId(mongoFileId);
     }
   }
 
@@ -135,7 +135,7 @@ public class FileServiceImpl implements FileService {
       if (gcsStorageEnabled) {
         return googleCloudFileService.download(gcsFileId, file, fileBucket);
       } else {
-        String mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
+        String mongoFileId = gcsHarnessFileMetadataDao.getMongoFileIdByGcsFileId(gcsFileId);
         return mongoFileService.download(mongoFileId, file, fileBucket);
       }
     }
@@ -151,7 +151,7 @@ public class FileServiceImpl implements FileService {
       if (gcsStorageEnabled) {
         googleCloudFileService.downloadToStream(gcsFileId, op, fileBucket);
       } else {
-        String mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
+        String mongoFileId = gcsHarnessFileMetadataDao.getMongoFileIdByGcsFileId(gcsFileId);
         mongoFileService.downloadToStream(mongoFileId, op, fileBucket);
       }
     }
@@ -167,7 +167,7 @@ public class FileServiceImpl implements FileService {
       if (gcsStorageEnabled) {
         return googleCloudFileService.openDownloadStream(fileId, fileBucket);
       } else {
-        String mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
+        String mongoFileId = gcsHarnessFileMetadataDao.getMongoFileIdByGcsFileId(gcsFileId);
         return mongoFileService.openDownloadStream(mongoFileId, fileBucket);
       }
     }
@@ -183,7 +183,7 @@ public class FileServiceImpl implements FileService {
       if (gcsStorageEnabled) {
         return googleCloudFileService.getFileMetadata(fileId, fileBucket);
       } else {
-        String mongoFileId = getMongoFileIdByGcsFileId(gcsFileId);
+        String mongoFileId = gcsHarnessFileMetadataDao.getMongoFileIdByGcsFileId(gcsFileId);
         return mongoFileService.getFileMetadata(mongoFileId, fileBucket);
       }
     }
@@ -248,26 +248,6 @@ public class FileServiceImpl implements FileService {
     mongoFileService.deleteAllFilesForEntity(entityId, fileBucket);
     if (gcsStorageEnabled) {
       googleCloudFileService.deleteAllFilesForEntity(entityId, fileBucket);
-    }
-  }
-
-  private String getGcsFileIdByMongoFileId(String mongoFileId) {
-    GcsFileMetadata mapping =
-        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.fileId, mongoFileId).get();
-    return mapping == null ? null : mapping.getGcsFileId();
-  }
-
-  private String getMongoFileIdByGcsFileId(String gcsFileId) {
-    GcsFileMetadata mapping =
-        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.gcsFileId, gcsFileId).get();
-    return mapping == null ? null : mapping.getFileId();
-  }
-
-  private void deleteGcsFileMetadataByMongoFileId(String mongoFileId) {
-    GcsFileMetadata mapping =
-        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.fileId, mongoFileId).get();
-    if (mapping != null) {
-      wingsPersistence.delete(mapping);
     }
   }
 }

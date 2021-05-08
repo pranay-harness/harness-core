@@ -127,6 +127,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>958-ng-file-service-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-notification-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

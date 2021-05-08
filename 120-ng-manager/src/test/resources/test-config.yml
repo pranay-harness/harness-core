@@ -125,6 +125,10 @@ gitSyncServerConfig:
 
 shouldDeployWithGitSync: false
 
+fileServiceConfiguration:
+  fileStorageMode: MONGO
+  clusterName: ""
+
 shouldConfigureWithPMS: false
 
 ceAwsSetupConfig:

@@ -2,8 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.service.impl.FileServiceUtils.FILE_PATH_SEPARATOR;
 import static software.wings.service.impl.FileServiceUtils.GCS_ID_PREFIX;
@@ -18,13 +16,12 @@ import io.harness.delegate.beans.FileMetadata;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GCPStorageFileReadException;
 import io.harness.exception.WingsException;
+import io.harness.file.CommonGcsHarnessFileMetadata;
+import io.harness.file.GcsHarnessFileMetadata;
+import io.harness.file.HarnessFile;
+import io.harness.file.dao.GcsHarnessFileMetadataDao;
 import io.harness.stream.BoundedInputStream;
 
-import software.wings.app.MainConfiguration;
-import software.wings.beans.BaseFile;
-import software.wings.beans.GcsFileMetadata;
-import software.wings.beans.GcsFileMetadata.GcsFileMetadataKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 
 import com.google.api.gax.paging.Page;
@@ -40,6 +37,7 @@ import com.google.cloud.storage.StorageClass;
 import com.google.cloud.storage.StorageOptions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -54,12 +52,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 
 /**
  * Use Google Cloud Storage as file/blob storage.
@@ -72,15 +66,17 @@ import org.mongodb.morphia.query.UpdateResults;
 public class GoogleCloudFileServiceImpl implements FileService {
   private static final String METADATA_FILE_NAME = "fileName";
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
+  public static final String FILE_SERVICE_CLUSTER_NAME = "FILE_SERVICE_CLUSTER_NAME";
 
-  private WingsPersistence wingsPersistence;
-  private MainConfiguration configuration;
+  private GcsHarnessFileMetadataDao gcsHarnessFileMetadataDao;
+  private String clusterName;
   private volatile Storage storage;
 
   @Inject
-  public GoogleCloudFileServiceImpl(WingsPersistence wingsPersistence, MainConfiguration configuration) {
-    this.wingsPersistence = wingsPersistence;
-    this.configuration = configuration;
+  public GoogleCloudFileServiceImpl(
+      GcsHarnessFileMetadataDao gcsHarnessFileMetadataDao, @Named(FILE_SERVICE_CLUSTER_NAME) String clusterName) {
+    this.gcsHarnessFileMetadataDao = gcsHarnessFileMetadataDao;
+    this.clusterName = clusterName;
   }
 
   @Override
@@ -116,7 +112,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   }
 
   @Override
-  public String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket) {
+  public String saveFile(HarnessFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket) {
     String accountId = baseFile.getAccountId();
     String fileUuid = baseFile.getFileUuid();
     if (isEmpty(fileUuid)) {
@@ -151,7 +147,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   public void deleteFile(String fileId, FileBucket fileBucket) {
     log.info("Deleting file {}", fileId);
     // delete gcs file metadata first.
-    deleteGcsFileMetadataByGcsFileId(fileId);
+    gcsHarnessFileMetadataDao.deleteGcsFileMetadataByGcsFileId(fileId);
 
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
     getStorage().delete(blobId);
@@ -206,7 +202,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
     GoogleCloudFileIdComponent component = parseGoogleCloudFileId(fileId);
     BlobId blobId = BlobId.of(getBucketName(fileBucket), component.filePath);
 
-    GcsFileMetadata gcsFileMetadata = getFileMetadataByFileId(fileId);
+    GcsHarnessFileMetadata gcsFileMetadata = gcsHarnessFileMetadataDao.getFileMetadataByGcsFileId(fileId);
     if (gcsFileMetadata == null) {
       throw new WingsException(
           " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
@@ -242,27 +238,27 @@ public class GoogleCloudFileServiceImpl implements FileService {
       Map<String, Object> others, FileBucket fileBucket) {
     // Note that 'entityClass' won't be persisted since it's not used at all.
     // Update the gcs file metadata with entity class/id/version info.
-    return updateGcsFileMetadata(fileId, entityId, version, others);
+    return gcsHarnessFileMetadataDao.updateGcsFileMetadata(fileId, entityId, version, others);
   }
 
   @Override
   public List<String> getAllFileIds(String entityId, FileBucket fileBucket) {
-    return getAllFileIdsFromGcsFileMetadata(entityId, fileBucket);
+    return gcsHarnessFileMetadataDao.getAllGcsFileIdsFromGcsFileMetadata(entityId, fileBucket);
   }
 
   @Override
   public String getLatestFileId(String entityId, FileBucket fileBucket) {
-    return getLatestFileIdFromGcsFileMetadata(entityId, fileBucket);
+    return gcsHarnessFileMetadataDao.getLatestGcsFileIdFromGcsFileMetadata(entityId, fileBucket);
   }
 
   @Override
   public String getLatestFileIdByQualifier(String entityId, FileBucket fileBucket, String qualifier) {
-    return getLatestFileIdFromGcsFileMetadataByQualifier(entityId, fileBucket, qualifier);
+    return gcsHarnessFileMetadataDao.getLatestGcsFileIdFromGcsFileMetadataByQualifier(entityId, fileBucket, qualifier);
   }
 
   @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
-    return getFileIdFromGcsFileMetadataByVersion(entityId, version, fileBucket);
+    return gcsHarnessFileMetadataDao.getGcsFileIdFromGcsFileMetadataByVersion(entityId, version, fileBucket);
   }
 
   @Override
@@ -307,7 +303,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
       throw new WingsException("Invalid credentials found at " + googleCredentialsPath);
     }
 
-    if (isEmpty(configuration.getClusterName())) {
+    if (isEmpty(clusterName)) {
       throw new WingsException("Cluster name should be configured when google cloud storage is used for file storage!");
     }
 
@@ -316,7 +312,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
     log.info("Google cloud storage based file service has been initialized.");
   }
 
-  void saveGcsFileMetadata(BaseFile baseFile, FileBucket fileBucket, String mongoFileId, String gcsFileId) {
+  void saveGcsFileMetadata(HarnessFile baseFile, FileBucket fileBucket, String mongoFileId, String gcsFileId) {
     GoogleCloudFileIdComponent component = parseGoogleCloudFileId(gcsFileId);
     BlobId blobId = BlobId.of(getBucketName(fileBucket), component.filePath);
     Blob blob = getStorage().get(blobId);
@@ -325,18 +321,18 @@ public class GoogleCloudFileServiceImpl implements FileService {
           " File with id " + gcsFileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
     }
 
-    GcsFileMetadata gcsFileMetadata = GcsFileMetadata.builder()
-                                          .accountId(baseFile.getAccountId())
-                                          .fileId(mongoFileId)
-                                          .gcsFileId(gcsFileId)
-                                          .fileName(baseFile.getFileName())
-                                          .fileLength(blob.getSize())
-                                          .checksum(blob.getMd5())
-                                          .checksumType(ChecksumType.MD5)
-                                          .mimeType(baseFile.getMimeType())
-                                          .fileBucket(fileBucket)
-                                          .build();
-    wingsPersistence.save(gcsFileMetadata);
+    CommonGcsHarnessFileMetadata gcsFileMetadata = CommonGcsHarnessFileMetadata.builder()
+                                                       .accountId(baseFile.getAccountId())
+                                                       .fileId(mongoFileId)
+                                                       .gcsFileId(gcsFileId)
+                                                       .fileName(baseFile.getFileName())
+                                                       .fileLength(blob.getSize())
+                                                       .checksum(blob.getMd5())
+                                                       .checksumType(ChecksumType.MD5)
+                                                       .mimeType(baseFile.getMimeType())
+                                                       .fileBucket(fileBucket)
+                                                       .build();
+    gcsHarnessFileMetadataDao.save(gcsFileMetadata);
   }
 
   void saveGcsFileMetadata(FileMetadata fileMetadata, FileBucket fileBucket, String mongoFileId, String gcsFileId) {
@@ -348,19 +344,19 @@ public class GoogleCloudFileServiceImpl implements FileService {
           " File with id " + gcsFileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
     }
 
-    GcsFileMetadata gcsFileMetadata = GcsFileMetadata.builder()
-                                          .accountId(fileMetadata.getAccountId())
-                                          .fileId(mongoFileId)
-                                          .gcsFileId(gcsFileId)
-                                          .fileName(fileMetadata.getFileName())
-                                          .fileLength(blob.getSize())
-                                          .checksum(blob.getMd5())
-                                          .checksumType(ChecksumType.MD5)
-                                          .mimeType(fileMetadata.getMimeType())
-                                          .others(fileMetadata.getMetadata())
-                                          .fileBucket(fileBucket)
-                                          .build();
-    wingsPersistence.save(gcsFileMetadata);
+    CommonGcsHarnessFileMetadata gcsFileMetadata = CommonGcsHarnessFileMetadata.builder()
+                                                       .accountId(fileMetadata.getAccountId())
+                                                       .fileId(mongoFileId)
+                                                       .gcsFileId(gcsFileId)
+                                                       .fileName(fileMetadata.getFileName())
+                                                       .fileLength(blob.getSize())
+                                                       .checksum(blob.getMd5())
+                                                       .checksumType(ChecksumType.MD5)
+                                                       .mimeType(fileMetadata.getMimeType())
+                                                       .others(fileMetadata.getMetadata())
+                                                       .fileBucket(fileBucket)
+                                                       .build();
+    gcsHarnessFileMetadataDao.save(gcsFileMetadata);
   }
 
   /**
@@ -369,7 +365,6 @@ public class GoogleCloudFileServiceImpl implements FileService {
    *    https://cloud.google.com/storage/docs/storage-classes
    */
   private void createFileBucketsInGCS() {
-    String clusterName = configuration.getClusterName();
     Page<Bucket> buckets = getStorage().list(BucketListOption.pageSize(500), BucketListOption.prefix(clusterName));
     Set<String> bucketNames = new HashSet<>();
     for (Bucket bucket : buckets.iterateAll()) {
@@ -397,7 +392,7 @@ public class GoogleCloudFileServiceImpl implements FileService {
   }
 
   private String getBucketName(FileBucket fileBucket) {
-    return configuration.getClusterName() + "-" + fileBucket.representationName();
+    return clusterName + "-" + fileBucket.representationName();
   }
 
   private Storage getStorage() {
@@ -411,86 +406,5 @@ public class GoogleCloudFileServiceImpl implements FileService {
       }
     }
     return result;
-  }
-
-  private boolean updateGcsFileMetadata(
-      String gcsFileId, String entityId, Integer version, Map<String, Object> others) {
-    log.info("Updating GCS file '{}' with parent entity '{}' and version '{}' with {} other metadata entries.",
-        gcsFileId, entityId, version, others == null ? 0 : others.size());
-    GcsFileMetadata gcsFileMetadata =
-        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.gcsFileId, gcsFileId).get();
-    if (gcsFileMetadata == null) {
-      log.warn("Can't update GCS file metadata since no corresponding entry is found for file with id '{}'", gcsFileId);
-      return false;
-    }
-
-    UpdateOperations<GcsFileMetadata> updateOperations = wingsPersistence.createUpdateOperations(GcsFileMetadata.class);
-    if (entityId != null) {
-      updateOperations.set("entityId", entityId);
-    }
-    if (version != null) {
-      updateOperations.set("version", version);
-    }
-    if (isNotEmpty(others)) {
-      updateOperations.set("others", others);
-    }
-
-    UpdateResults results = wingsPersistence.update(gcsFileMetadata, updateOperations);
-    return results.getUpdatedCount() > 0;
-  }
-
-  private GcsFileMetadata getFileMetadataByFileId(String gcsFileId) {
-    return wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
-        .filter(GcsFileMetadataKeys.gcsFileId, gcsFileId)
-        .get();
-  }
-
-  private List<String> getAllFileIdsFromGcsFileMetadata(String entityId, FileBucket fileBucket) {
-    List<GcsFileMetadata> gcsFileMetadatas = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
-                                                 .filter(GcsFileMetadataKeys.entityId, entityId)
-                                                 .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
-                                                 .asList();
-
-    return gcsFileMetadatas.stream().map(GcsFileMetadata::getGcsFileId).distinct().collect(Collectors.toList());
-  }
-
-  private String getLatestFileIdFromGcsFileMetadata(String entityId, FileBucket fileBucket) {
-    GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
-                                          .filter(GcsFileMetadataKeys.entityId, entityId)
-                                          .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
-                                          .order(Sort.descending(GcsFileMetadataKeys.createdAt))
-                                          .get();
-
-    return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();
-  }
-
-  private String getLatestFileIdFromGcsFileMetadataByQualifier(
-      String entityId, FileBucket fileBucket, String qualifier) {
-    GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
-                                          .filter(GcsFileMetadataKeys.entityId, entityId)
-                                          .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
-                                          .filter("others.qualifier", qualifier)
-                                          .order(Sort.descending(GcsFileMetadataKeys.createdAt))
-                                          .get();
-
-    return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();
-  }
-
-  private String getFileIdFromGcsFileMetadataByVersion(String entityId, Integer version, FileBucket fileBucket) {
-    GcsFileMetadata gcsFileMetadata = wingsPersistence.createQuery(GcsFileMetadata.class, excludeAuthority)
-                                          .filter(GcsFileMetadataKeys.entityId, entityId)
-                                          .filter(GcsFileMetadataKeys.fileBucket, fileBucket)
-                                          .filter(GcsFileMetadataKeys.version, version)
-                                          .get();
-
-    return gcsFileMetadata == null ? null : gcsFileMetadata.getGcsFileId();
-  }
-
-  private void deleteGcsFileMetadataByGcsFileId(String gcsFileId) {
-    GcsFileMetadata mapping =
-        wingsPersistence.createQuery(GcsFileMetadata.class).filter(GcsFileMetadataKeys.gcsFileId, gcsFileId).get();
-    if (mapping != null) {
-      wingsPersistence.delete(mapping);
-    }
   }
 }

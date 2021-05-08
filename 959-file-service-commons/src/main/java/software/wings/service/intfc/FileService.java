@@ -7,9 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
+import io.harness.file.HarnessFile;
 import io.harness.stream.BoundedInputStream;
-
-import software.wings.beans.BaseFile;
 
 import java.io.File;
 import java.io.InputStream;
@@ -28,7 +27,7 @@ public interface FileService {
   boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,
       Map<String, Object> others, FileBucket fileBucket);
 
-  String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket);
+  String saveFile(HarnessFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket);
 
   void deleteFile(String fileId, FileBucket fileBucket);
 

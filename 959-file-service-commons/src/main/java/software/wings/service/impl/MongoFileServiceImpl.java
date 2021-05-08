@@ -17,10 +17,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ChecksumType;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
+import io.harness.file.HarnessFile;
+import io.harness.persistence.HPersistence;
 import io.harness.stream.BoundedInputStream;
 
-import software.wings.beans.BaseFile;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 
 import com.google.inject.Inject;
@@ -58,7 +58,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 @Slf4j
 @OwnedBy(PL)
 public class MongoFileServiceImpl implements FileService {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence hPersistence;
 
   /**
    * {@inheritDoc}
@@ -226,7 +226,7 @@ public class MongoFileServiceImpl implements FileService {
   public boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,
       Map<String, Object> others, FileBucket fileBucket) {
     DBCollection collection =
-        wingsPersistence.getDatastore(DEFAULT_STORE).getDB().getCollection(fileBucket.representationName() + ".files");
+        hPersistence.getDatastore(DEFAULT_STORE).getDB().getCollection(fileBucket.representationName() + ".files");
 
     // TODO: creating this index here makes no sense
     collection.createIndex(
@@ -258,7 +258,7 @@ public class MongoFileServiceImpl implements FileService {
    * {@inheritDoc}
    */
   @Override
-  public String saveFile(BaseFile baseFile, InputStream inputStream, FileBucket bucket) {
+  public String saveFile(HarnessFile baseFile, InputStream inputStream, FileBucket bucket) {
     GridFSUploadOptions gridFSOptions = new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize());
     String fileId = getOrCreateGridFSBucket(bucket.representationName())
                         .uploadFromStream(baseFile.getFileName(), inputStream, gridFSOptions)
@@ -296,7 +296,7 @@ public class MongoFileServiceImpl implements FileService {
   }
 
   GridFSBucket getOrCreateGridFSBucket(String bucketName) {
-    final AdvancedDatastore datastore = wingsPersistence.getDatastore(DEFAULT_STORE);
+    final AdvancedDatastore datastore = hPersistence.getDatastore(DEFAULT_STORE);
     return GridFSBuckets.create(datastore.getMongo().getDatabase(datastore.getDB().getName()), bucketName);
   }
 }
