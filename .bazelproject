@@ -117,6 +117,8 @@ directories:
   955-outbox-sdk
   955-setup-usage-sdk
   958-migration-sdk
+  958-ng-file-service-sdk
+  959-file-service-commons
   959-psql-database-models
   960-api-services
   960-continuous-features

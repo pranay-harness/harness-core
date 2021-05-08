@@ -7,6 +7,7 @@ shared_dependencies = [
     "//952-scm-java-client:module",
     "//954-connector-beans:module",
     "//955-delegate-beans:module",
+    "//959-file-service-commons:module",
     "//960-api-services:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",

@@ -73,6 +73,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
+import software.wings.DataStorageMode;
 import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
@@ -341,6 +342,9 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
 
     configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());

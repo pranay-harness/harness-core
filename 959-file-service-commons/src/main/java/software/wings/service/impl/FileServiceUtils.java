@@ -8,8 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.exception.WingsException;
-
-import software.wings.beans.BaseFile;
+import io.harness.file.HarnessFile;
 
 import java.nio.charset.Charset;
 import java.util.Base64;
@@ -58,7 +57,7 @@ public class FileServiceUtils {
     }
   }
 
-  static void verifyFileIntegrity(BaseFile baseFile, FileMetadata fileMetadata) {
+  static void verifyFileIntegrity(HarnessFile baseFile, FileMetadata fileMetadata) {
     if (isNotBlank(baseFile.getChecksum()) && !fileMetadata.getChecksum().equals(baseFile.getChecksum())) {
       throw new WingsException(FILE_INTEGRITY_CHECK_FAILED);
     }

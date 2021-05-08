@@ -388,6 +388,10 @@ aeriform("//958-migration-sdk:module")
 
 aeriform("//958-migration-sdk:tests")
 
+aeriform("//958-ng-file-service-sdk:module")
+
+aeriform("//959-file-service-commons:module")
+
 aeriform("//959-psql-database-models:module")
 
 aeriform("//960-api-services:module")
