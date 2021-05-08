@@ -4,9 +4,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 @OwnedBy(HarnessTeam.DX)
 public abstract class InfrastructureMapping implements PersistentEntity {
   private String id;
@@ -19,5 +21,4 @@ public abstract class InfrastructureMapping implements PersistentEntity {
   private String envId;
   private String deploymentType;
   private String serviceId;
-  private String infrastructureDefinitionId;
 }

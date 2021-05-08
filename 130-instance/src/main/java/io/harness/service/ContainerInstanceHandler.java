@@ -3,14 +3,13 @@ package io.harness.service;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.dto.DeploymentSummary;
-import io.harness.dto.deploymentinfo.OnDemandRollbackInfo;
+import io.harness.dto.deploymentinfo.RollbackInfo;
 import io.harness.dto.infrastructureMapping.DirectKubernetesInfrastructureMapping;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.InstanceSyncFlowType;
 
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.service.impl.ContainerMetadata;
-import software.wings.service.impl.instance.InstanceSyncFlow;
 import software.wings.service.impl.instance.Status;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -18,13 +17,6 @@ import com.google.common.collect.Multimap;
 
 public class ContainerInstanceHandler
     extends InstanceHandler<ContainerMetadata, DirectKubernetesInfrastructureMapping> {
-  @Override
-  public void handleNewDeployment(
-      DeploymentSummary deploymentSummary, boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo) {}
-
-  @Override
-  public void syncInstances(String appId, String infraMappingId, InstanceSyncFlowType instanceSyncFlowType) {}
-
   @Override
   public FeatureName getFeatureFlagToEnablePerpetualTaskForInstanceSync() {
     return null;
@@ -34,10 +26,6 @@ public class ContainerInstanceHandler
   public IInstanceSyncPerpetualTaskCreator getInstanceSyncPerpetualTaskCreator() {
     return null;
   }
-
-  @Override
-  public void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {}
 
   @Override
   public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
@@ -54,13 +42,21 @@ public class ContainerInstanceHandler
   }
 
   @Override
-  protected DirectKubernetesInfrastructureMapping getDeploymentInfrastructureMapping(
-      DeploymentSummary deploymentSummary) {
-    return new DirectKubernetesInfrastructureMapping();
+  protected void syncInstancesInternal(DirectKubernetesInfrastructureMapping inframapping,
+      Multimap<ContainerMetadata, Instance> deploymentInstanceMap, DeploymentSummary newDeploymentSummary,
+      RollbackInfo rollbackInfo, DelegateResponseData responseData, InstanceSyncFlowType instanceSyncFlow) {}
+
+  @Override
+  protected DirectKubernetesInfrastructureMapping validateAndReturnInfrastructureMapping(
+      InfrastructureMapping infrastructureMapping) {
+    return null;
   }
 
   @Override
-  protected void syncInstancesInternal(DirectKubernetesInfrastructureMapping inframapping,
-      Multimap<ContainerMetadata, Instance> deploymentInstanceMap, DeploymentSummary newDeploymentSummary,
-      boolean rollback, DelegateResponseData responseData, InstanceSyncFlow instanceSyncFlow) {}
+  protected void validatePerpetualTaskDelegateResponse(DelegateResponseData response) {}
+
+  @Override
+  protected String getInstanceUniqueIdentifier(Instance instance) {
+    return null;
+  }
 }

@@ -7,10 +7,9 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.dto.DeploymentSummary;
-import io.harness.dto.deploymentinfo.OnDemandRollbackInfo;
+import io.harness.dto.deploymentinfo.RollbackInfo;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.DeploymentEvent;
 import io.harness.entity.InstanceSyncFlowType;
@@ -21,13 +20,11 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.repository.infrastructuremapping.InfrastructureMappingRepository;
 import io.harness.service.InstanceHandler;
-import io.harness.service.infrastructuremapping.InfrastructureMappingService;
 import io.harness.service.instance.InstanceService;
 import io.harness.service.instancehandlerfactory.InstanceHandlerFactoryService;
 import io.harness.service.instancesyncperpetualtask.InstanceSyncPerpetualTaskService;
 
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.service.impl.instance.Status;
 import software.wings.utils.Utils;
 
@@ -57,8 +54,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
       // TODO save deployment summary if required
 
-      processDeploymentSummary(
-          deploymentSummary, deploymentEvent.isRollback(), deploymentEvent.getOnDemandRollbackInfo());
+      processDeploymentSummary(deploymentSummary, deploymentEvent.getRollbackInfo());
     } catch (Exception ex) {
       log.error("Error while processing deployment event {}. Skipping the deployment event", deploymentEvent.getId());
     }
@@ -99,7 +95,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   }
 
   // TODO check how to perform this, what should be the inputs
-  public String manualSync(String appId, String infraMappingId) {
+  public String manualSync(String accountId, String orgId, String projectId, String infrastructureMappingId) {
     //    String syncJobId = UUIDGenerator.generateUuid();
     //    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(infraMappingId);
     //    String accountId = infrastructureMapping.getAccountId();
@@ -136,7 +132,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
           return;
         }
         log.info("Instance sync started for infraMapping");
-        instanceHandler.syncInstances(appId, infraMappingId, instanceSyncFlowType);
+        instanceHandler.syncInstances(appId, , , infraMappingId, instanceSyncFlowType);
         // TODO check if we require display name here
         //        instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(),
         //        infraMappingId,
@@ -156,8 +152,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
   // ------------------------- PRIVATE METHODS ---------------------------
 
-  private void processDeploymentSummary(
-      DeploymentSummary deploymentSummary, boolean isRollback, OnDemandRollbackInfo onDemandRollbackInfo) {
+  private void processDeploymentSummary(DeploymentSummary deploymentSummary, RollbackInfo rollbackInfo) {
     String infrastructureMappingId = deploymentSummary.getInfrastructureMappingId();
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              InfrastructureMapping.class, infrastructureMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
@@ -173,7 +168,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
       Preconditions.checkNotNull(infrastructureMappingType, "InfrastructureMappingType should not be null");
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMapping);
-        instanceHandler.handleNewDeployment(deploymentSummary, isRollback, onDemandRollbackInfo);
+        instanceHandler.handleNewDeployment(deploymentSummary, rollbackInfo);
         createPerpetualTaskForNewDeploymentIfEnabled(infrastructureMapping, deploymentSummary);
         log.info("Handled deployment event for infraMappingId [{}] successfully", infrastructureMappingId);
       } else {

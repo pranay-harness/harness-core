@@ -9,7 +9,7 @@ import io.harness.entity.DeploymentEvent;
 public interface InstanceSyncService {
   void processDeploymentEvent(DeploymentEvent deploymentEvent);
 
-  String manualSync(String appId, String infraMappingId);
+  String manualSync(String accountId, String orgId, String projectId, String infrastructureMappingId);
 
   void processInstanceSyncResponseFromPerpetualTask(String perpetualTaskId, DelegateResponseData response);
 }
