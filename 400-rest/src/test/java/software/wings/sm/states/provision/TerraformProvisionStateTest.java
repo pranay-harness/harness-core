@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -358,7 +359,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testExecuteTerraformDestroyWithConfigurationAndStateFile() {
+  public void testExecuteTerraformDestroyWithConfigurationAndStateFileForNewEntityId() {
     destroyProvisionState.setVariables(getTerraformVariables());
     destroyProvisionState.setBackendConfigs(getTerraformBackendConfigs());
     destroyProvisionState.setProvisionerId(PROVISIONER_ID);
@@ -396,6 +397,53 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isFalse();
     assertParametersVariables(parameters);
     assertParametersBackendConfigs(parameters);
+    verify(fileService, times(1)).getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE));
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteTerraformDestroyWithConfigurationAndStateFileForOldEntityId() {
+    destroyProvisionState.setVariables(getTerraformVariables());
+    destroyProvisionState.setBackendConfigs(getTerraformBackendConfigs());
+    destroyProvisionState.setProvisionerId(PROVISIONER_ID);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .variables(getTerraformVariables())
+                                                         .kmsId("kmsId")
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+    FileMetadata fileMetadata =
+        FileMetadata.builder()
+            .metadata(ImmutableMap.of("variables", ImmutableMap.of("region", "us-west"), "backend_configs",
+                ImmutableMap.of("bucket", "tf-remote-state", "key", "old_terraform.tfstate")))
+            .build();
+
+    when(fileService.getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE)))
+        .thenReturn(null)
+        .thenReturn("fileId");
+    doReturn(fileMetadata).when(fileService).getFileMetadata("fileId", FileBucket.TERRAFORM_STATE);
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    ExecutionResponse response = destroyProvisionState.execute(executionContext);
+
+    ArgumentCaptor<DelegateTask> taskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(taskCaptor.capture());
+    DelegateTask createdTask = taskCaptor.getValue();
+
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+    assertThat(response.isAsync()).isTrue();
+    assertThat(createdTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
+    assertThat(createdTask.getData().getParameters()).isNotEmpty();
+    TerraformProvisionParameters parameters = (TerraformProvisionParameters) createdTask.getData().getParameters()[0];
+    assertThat(parameters.getVariables()).isNotEmpty();
+    assertThat(parameters.getBackendConfigs()).isNotEmpty();
+    assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isFalse();
+    assertParametersVariables(parameters);
+    assertParametersBackendConfigs(parameters);
+    verify(fileService, times(2)).getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE));
   }
 
   @Test
@@ -425,9 +473,9 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
                     .build())
             .build();
 
-    doReturn("fileId")
-        .when(fileService)
-        .getLatestFileIdByQualifier(anyString(), eq(FileBucket.TERRAFORM_STATE), eq("apply"));
+    when(fileService.getLatestFileIdByQualifier(anyString(), eq(FileBucket.TERRAFORM_STATE), eq("apply")))
+        .thenReturn(null)
+        .thenReturn("fileId");
     doReturn(fileMetadata).when(fileService).getFileMetadata("fileId", FileBucket.TERRAFORM_STATE);
     doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
     doReturn("taskId").when(delegateService).queueTask(any(DelegateTask.class));
@@ -458,6 +506,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     TfVarScriptRepositorySource source = (TfVarScriptRepositorySource) parameters.getTfVarSource();
     assertThat(source.getTfVarFilePaths()).containsExactlyInAnyOrder("file1-rendered", "file2-rendered");
     assertThat(parameters.getTargets()).containsExactlyInAnyOrder("target1-rendered", "target2-rendered");
+    verify(fileService, times(2)).getLatestFileIdByQualifier(anyString(), eq(FileBucket.TERRAFORM_STATE), eq("apply"));
   }
 
   @Test
@@ -553,6 +602,69 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo("uuid");
     assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
         .isEqualTo("uuid");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteInheritApprovedPlanWithStateFileForOldEntityId() {
+    state.setInheritApprovedPlan(true);
+    EncryptedRecordData encryptedPlan =
+        EncryptedRecordData.builder().name("terraformPlan").encryptedValue("terraformPlan".toCharArray()).build();
+    List<ContextElement> terraformProvisionInheritPlanElements = new ArrayList<>();
+    TerraformProvisionInheritPlanElement terraformProvisionInheritPlanElement =
+        TerraformProvisionInheritPlanElement.builder()
+            .provisionerId(PROVISIONER_ID)
+            .workspace("workspace")
+            .sourceRepoReference("sourceRepoReference")
+            .backendConfigs(getTerraformBackendConfigs())
+            .environmentVariables(getTerraformEnvironmentVariables())
+            .targets(Arrays.asList("target1"))
+            .variables(getTerraformVariables())
+            .encryptedTfPlan(encryptedPlan)
+            .build();
+    terraformProvisionInheritPlanElements.add(terraformProvisionInheritPlanElement);
+    when(executionContext.getContextElementList(TERRAFORM_INHERIT_PLAN))
+        .thenReturn(terraformProvisionInheritPlanElements);
+
+    when(executionContext.getAppId()).thenReturn(APP_ID);
+    doReturn(Environment.Builder.anEnvironment().build()).when(executionContext).getEnv();
+    state.setProvisionerId(PROVISIONER_ID);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder()
+                                                         .appId(APP_ID)
+                                                         .path("current/working/directory")
+                                                         .sourceRepoBranch("sourceRepoBranch")
+                                                         .kmsId("kmsId")
+                                                         .build();
+    GitConfig gitConfig = GitConfig.builder().branch("master").build();
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    when(fileService.getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE)))
+        .thenReturn(null)
+        .thenReturn("fileId");
+    doReturn(ACCOUNT_ID).when(executionContext).getAccountId();
+    doReturn(gitConfig).when(gitUtilsManager).getGitConfig(anyString());
+    when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+    when(executionContext.prepareSweepingOutputInquiryBuilder()).thenReturn(SweepingOutputInquiry.builder());
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    when(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, WORKFLOW_EXECUTION_ID))
+        .thenReturn(encryptedDataDetails);
+    ExecutionResponse executionResponse = state.execute(executionContext);
+
+    verify(gitConfigHelperService).convertToRepoGitConfig(any(GitConfig.class), anyString());
+    verify(infrastructureProvisionerService, times(1)).get(APP_ID, PROVISIONER_ID);
+    verify(gitUtilsManager, times(1)).getGitConfig(anyString());
+    verify(infrastructureProvisionerService, times(1)).extractTextVariables(anyList(), any(ExecutionContext.class));
+    // once for environment variables, once for variables, once for backend configs
+    verify(infrastructureProvisionerService, times(3))
+        .extractEncryptedTextVariables(anyList(), eq(APP_ID), anyString());
+    // once for environment variables, once for variables
+    verify(infrastructureProvisionerService, times(2)).extractUnresolvedTextVariables(anyList());
+    verify(secretManager, times(1)).getEncryptionDetails(any(GitConfig.class), anyString(), anyString());
+    verify(secretManagerConfigService, times(1)).getSecretManager(anyString(), anyString(), anyBoolean());
+    assertThat(executionResponse.getCorrelationIds().get(0)).isEqualTo("uuid");
+    assertThat(((ScriptStateExecutionData) executionResponse.getStateExecutionData()).getActivityId())
+        .isEqualTo("uuid");
+    verify(fileService, times(2)).getLatestFileId(anyString(), eq(FileBucket.TERRAFORM_STATE));
   }
 
   @Test
@@ -924,13 +1036,23 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     verify(wingsPersistence, times(1)).save(any(TerraformConfig.class));
     verify(wingsPersistence, never()).delete(any(Query.class));
 
-    // Delete terraform config if no any targets
+    // Delete terraform config if no any targets, try to delete with old entityId
     reset(wingsPersistence);
     doReturn(mock(Query.class)).when(wingsPersistence).createQuery(any());
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(false);
     destroyProvisionState.setTargets(Collections.emptyList());
     destroyProvisionState.handleAsyncResponse(executionContext, responseMap);
     verify(wingsPersistence, never()).save(any(TerraformConfig.class));
-    verify(wingsPersistence, times(1)).delete(any(Query.class));
+    verify(wingsPersistence, times(2)).delete(any(Query.class));
+
+    // Delete terraform config if no any targets
+    reset(wingsPersistence);
+    doReturn(mock(Query.class)).when(wingsPersistence).createQuery(any());
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
+    destroyProvisionState.setTargets(Collections.emptyList());
+    destroyProvisionState.handleAsyncResponse(executionContext, responseMap);
+    verify(wingsPersistence, never()).save(any(TerraformConfig.class));
+    verify(wingsPersistence, times(2)).delete(any(Query.class));
 
     // Don't do anything if the status is not SUCCESS
     reset(wingsPersistence);
@@ -1404,5 +1526,75 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     assertThat(parameters.getEncryptedEnvironmentVariables().size()).isEqualTo(1);
     assertThat(parameters.getEncryptedVariables()).isEmpty();
     assertThat(parameters.isSkipRefreshBeforeApplyingPlan()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGenerateEntityId() {
+    TerraformInfrastructureProvisioner infrastructureProvisioner;
+    String entityId;
+    state.setProvisionerId(PROVISIONER_ID);
+    doReturn(Environment.Builder.anEnvironment().uuid("envId").build()).when(executionContext).getEnv();
+    when(executionContext.renderExpression("branch")).thenReturn("renderedBranch");
+    when(executionContext.renderExpression("branch/branch")).thenReturn("renderedBranch/renderedBranch");
+
+    when(executionContext.renderExpression("path/path")).thenReturn("renderedPath/renderedPath");
+
+    infrastructureProvisioner = TerraformInfrastructureProvisioner.builder()
+                                    .appId(APP_ID)
+                                    .path("path/path")
+                                    .sourceRepoBranch("branch/branch")
+                                    .build();
+    entityId = state.generateEntityId(executionContext, "workspace", infrastructureProvisioner, true);
+    assertThat(entityId).isEqualTo(String.format("%s-%s-%s-%s", PROVISIONER_ID, "envId",
+        "renderedBranch/renderedBranch/renderedPath/renderedPath".hashCode(), "workspace"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("").sourceRepoBranch("branch").build();
+    entityId = state.generateEntityId(executionContext, "workspace", infrastructureProvisioner, true);
+    assertThat(entityId).isEqualTo(
+        String.format("%s-%s-%s-%s", PROVISIONER_ID, "envId", "renderedBranch".hashCode(), "workspace"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("path/path").sourceRepoBranch("").build();
+    entityId = state.generateEntityId(executionContext, "workspace", infrastructureProvisioner, true);
+    assertThat(entityId).isEqualTo(
+        String.format("%s-%s-%s-%s", PROVISIONER_ID, "envId", "/renderedPath/renderedPath".hashCode(), "workspace"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("").sourceRepoBranch("").build();
+    entityId = state.generateEntityId(executionContext, "workspace", infrastructureProvisioner, true);
+    assertThat(entityId).isEqualTo(String.format("%s-%s-%s", PROVISIONER_ID, "envId", "workspace"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("").sourceRepoBranch("").build();
+    entityId = state.generateEntityId(executionContext, "", infrastructureProvisioner, true);
+    assertThat(entityId).isEqualTo(String.format("%s-%s", PROVISIONER_ID, "envId"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("path/path").sourceRepoBranch("branch").build();
+    entityId = state.generateEntityId(executionContext, "workspace", infrastructureProvisioner, false);
+    assertThat(entityId).isEqualTo(String.format("%s-%s-%s", PROVISIONER_ID, "envId", "workspace"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("").sourceRepoBranch("branch").build();
+    entityId = state.generateEntityId(executionContext, "workspace", infrastructureProvisioner, false);
+    assertThat(entityId).isEqualTo(String.format("%s-%s-%s", PROVISIONER_ID, "envId", "workspace"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("path/path").sourceRepoBranch("").build();
+    entityId = state.generateEntityId(executionContext, "workspace", infrastructureProvisioner, false);
+    assertThat(entityId).isEqualTo(String.format("%s-%s-%s", PROVISIONER_ID, "envId", "workspace"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("").sourceRepoBranch("").build();
+    entityId = state.generateEntityId(executionContext, "workspace", infrastructureProvisioner, false);
+    assertThat(entityId).isEqualTo(String.format("%s-%s-%s", PROVISIONER_ID, "envId", "workspace"));
+
+    infrastructureProvisioner =
+        TerraformInfrastructureProvisioner.builder().appId(APP_ID).path("").sourceRepoBranch("").build();
+    entityId = state.generateEntityId(executionContext, "", infrastructureProvisioner, false);
+    assertThat(entityId).isEqualTo(String.format("%s-%s", PROVISIONER_ID, "envId"));
   }
 }

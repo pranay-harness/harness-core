@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(HarnessModule._980_COMMONS)
 public class EncryptedDataDetail {
   private EncryptedRecordData encryptedData;
   private EncryptionConfig encryptionConfig;

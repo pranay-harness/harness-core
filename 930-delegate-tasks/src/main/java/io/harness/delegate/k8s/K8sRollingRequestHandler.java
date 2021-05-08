@@ -59,7 +59,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -95,13 +94,10 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeployRequest.getTimeoutIntervalInMin());
 
-    List<String> manifestHelperFiles = isEmpty(k8sRollingDeployRequest.getValuesYamlList())
-        ? k8sRollingDeployRequest.getOpenshiftParamList()
-        : k8sRollingDeployRequest.getValuesYamlList();
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sRollingDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(
-            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(manifestHelperFiles), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            k8sRollingDeployRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         steadyStateTimeoutInMillis, k8sRollingDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();

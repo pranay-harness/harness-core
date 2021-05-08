@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliResponse;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.LogCallback;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
@@ -42,11 +41,11 @@ public interface TerraformBaseHelper {
       String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfigDTO configFileGitConfigDTO);
 
   Map<String, String> buildcommitIdToFetchedFilesMap(String accountId, String configFileIdentifier,
-      GitBaseRequest gitBaseRequestForConfigFile, List<GitFetchFilesConfig> varFilesgitFetchFilesConfigList);
-  void fetchRemoteTfVarFiles(TerraformTaskNGParameters taskParameters, LogCallback logCallback, String tfVarDirectory);
+      GitBaseRequest gitBaseRequestForConfigFile, List<TerraformVarFileInfo> varFileInfo);
 
-  String prepareTfScriptDirectory(String accountId, String workspace, String currentStateFileId,
-      LogCallback logCallback, GitStoreDelegateConfig confileFileGitStore, String workingDir);
+  String fetchConfigFileAndPrepareScriptDir(GitBaseRequest gitBaseRequestForConfigFile, String accountId,
+      String workspace, String currentStateFileId, GitStoreDelegateConfig confileFileGitStore, LogCallback logCallback,
+      String scriptPath, String workingDir);
 
   void fetchConfigFileAndCloneLocally(GitBaseRequest gitBaseRequestForConfigFile, LogCallback logCallback);
 
@@ -56,6 +55,6 @@ public interface TerraformBaseHelper {
   void copyConfigFilestoWorkingDirectory(
       LogCallback logCallback, GitBaseRequest gitBaseRequestForConfigFile, String baseDir, String workingDir);
 
-  String initializeScriptAndWorkDirectories(
-      TerraformTaskNGParameters taskParameters, GitBaseRequest gitBaseRequestForConfigFile, LogCallback logCallback);
+  List<String> checkoutRemoteVarFileAndConvertToVarFilePaths(List<TerraformVarFileInfo> varFileInfo, String scriptDir,
+      LogCallback logCallback, String accountId, String tfVarDirectory) throws IOException;
 }

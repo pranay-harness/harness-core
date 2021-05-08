@@ -4,11 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
-import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
@@ -39,7 +35,6 @@ import io.harness.supplier.ThrowingSupplier;
 import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -96,8 +91,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
         .workspace(ParameterFieldHelper.getParameterFieldValue(spec.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
             spec.getConfigFiles().getStore().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(helper.getInlineVarFiles(spec.getVarFiles()))
-        .remoteVarfiles(helper.getOrderedFetchFilesConfigForRemoteFiles(spec.getVarFiles(), ambiance))
+        .varFileInfos(helper.toTerraformVarFileInfo(spec.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
@@ -127,18 +121,8 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
     TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput(provisionerIdentifier, ambiance);
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
-            inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
-    if (EmptyPredicate.isNotEmpty(inheritOutput.getRemoteVarFiles())) {
-      List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-      int i = 1;
-      for (StoreConfig storeConfig : inheritOutput.getRemoteVarFiles()) {
-        varFilesConfig.add(
-            helper.getGitFetchFilesConfig(storeConfig, ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-        i++;
-      }
-      builder.remoteVarfiles(varFilesConfig);
-    }
-    builder.inlineVarFiles(inheritOutput.getInlineVarFiles())
+            inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+        .varFileInfos(helper.toDelegateTask(inheritOutput.getVarFileConfigs(), ambiance))
         .backendConfig(inheritOutput.getBackendConfig())
         .targets(inheritOutput.getTargets())
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
@@ -171,18 +155,8 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
     TerraformConfig terraformConfig = helper.getLastSuccessfulApplyConfig(parameters, ambiance);
     builder.workspace(terraformConfig.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
-            terraformConfig.getConfigFiles().toGitStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
-    if (EmptyPredicate.isNotEmpty(terraformConfig.getRemoteVarFiles())) {
-      List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-      int i = 1;
-      for (GitStoreConfigDTO storeConfig : terraformConfig.getRemoteVarFiles()) {
-        varFilesConfig.add(helper.getGitFetchFilesConfig(
-            storeConfig.toGitStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-        i++;
-      }
-      builder.remoteVarfiles(varFilesConfig);
-    }
-    builder.inlineVarFiles(terraformConfig.getInlineVarFiles())
+            terraformConfig.getConfigFiles().toGitStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
+        .varFileInfos(helper.toDelegateTask(terraformConfig.getVarFileConfigs(), ambiance))
         .backendConfig(terraformConfig.getBackendConfig())
         .targets(terraformConfig.getTargets())
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))

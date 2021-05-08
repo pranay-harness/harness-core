@@ -7,9 +7,12 @@ import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
+import static io.harness.helm.HelmConstants.CHARTS_YAML_KEY;
 import static io.harness.helm.HelmConstants.HELM_HOME_PATH_FLAG;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.REPO_NAME;
+import static io.harness.helm.HelmConstants.VALUES_YAML;
+import static io.harness.helm.HelmConstants.WORKING_DIR_BASE;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.lang.String.format;
@@ -21,6 +24,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.chartmuseum.ChartMuseumServer;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -43,18 +47,14 @@ import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -79,11 +79,6 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class HelmTaskHelper {
-  private static final String WORKING_DIR_BASE = "./repository/helm-values/";
-  private static final String VALUES_YAML = "values.yaml";
-  private static final String CHARTS_YAML_KEY = "Chart.yaml";
-  private static final String VERSION_KEY = "version:";
-  private static final String NAME_KEY = "name:";
   private static final long DEFAULT_TIMEOUT_IN_MILLIS = Duration.ofMinutes(DEFAULT_STEADY_STATE_TIMEOUT).toMillis();
 
   @Inject private EncryptionService encryptionService;
@@ -383,33 +378,7 @@ public class HelmTaskHelper {
    * @throws IOException
    */
   public HelmChartInfo getHelmChartInfoFromChartsYamlFile(String chartYamlPath) throws IOException {
-    String chartVersion = null;
-    String chartName = null;
-    boolean versionFound = false;
-    boolean nameFound = false;
-
-    try (BufferedReader br =
-             new BufferedReader(new InputStreamReader(new FileInputStream(chartYamlPath), StandardCharsets.UTF_8))) {
-      String line;
-
-      while ((line = br.readLine()) != null) {
-        if (!versionFound && line.startsWith(VERSION_KEY)) {
-          chartVersion = line.substring(VERSION_KEY.length() + 1);
-          versionFound = true;
-        }
-
-        if (!nameFound && line.startsWith(NAME_KEY)) {
-          chartName = line.substring(NAME_KEY.length() + 1);
-          nameFound = true;
-        }
-
-        if (versionFound && nameFound) {
-          break;
-        }
-      }
-    }
-
-    return HelmChartInfo.builder().version(chartVersion).name(chartName).build();
+    return helmTaskHelperBase.getHelmChartInfoFromChartsYamlFile(chartYamlPath);
   }
 
   public HelmChartInfo getHelmChartInfoFromChartsYamlFile(HelmInstallCommandRequest request) throws IOException {

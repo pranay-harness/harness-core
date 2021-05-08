@@ -2,6 +2,7 @@ package io.harness.ng.core.user.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USER_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -156,6 +157,9 @@ public class UserResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, userId), VIEW_USER_PERMISSION);
+
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)
@@ -174,6 +178,9 @@ public class UserResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam("searchTerm") String searchTerm, @BeanParam PageRequest pageRequest,
       ACLAggregateFilter aclAggregateFilter) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, null), VIEW_USER_PERMISSION);
+
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)

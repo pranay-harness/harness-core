@@ -1222,7 +1222,17 @@
               "type": "string"
             },
             "skipResourceVersioning": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -1721,9 +1731,6 @@
         },
         {
           "type": "object",
-          "required": [
-            "skipDryRun"
-          ],
           "properties": {
             "filePaths": {
               "type": "array",
@@ -1924,7 +1931,17 @@
               "type": "string"
             },
             "skipResourceVersioning": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -1967,12 +1984,19 @@
         },
         {
           "type": "object",
-          "required": [
-            "skipDryRun"
-          ],
           "properties": {
             "skipDryRun": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           }
         }
@@ -2090,7 +2114,17 @@
               "type": "string"
             },
             "skipResourceVersioning": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -2535,7 +2569,17 @@
               "type": "string"
             },
             "skipResourceVersioning": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldBoolean"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             },
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"

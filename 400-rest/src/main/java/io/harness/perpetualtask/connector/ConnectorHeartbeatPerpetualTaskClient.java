@@ -139,7 +139,7 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.CAPABILITY_VALIDATION.name())
-                  .parameters(new Object[] {executionCapabilities})
+                  .parameters(executionCapabilities.toArray())
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
         .build();

@@ -1,5 +1,6 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
@@ -175,6 +176,8 @@ public class K8BuildSetupUtils {
     Map<String, String> labels = resolveMapParameter(
         "annotations", "K8BuildInfra", "stageSetup", k8sDirectInfraYaml.getSpec().getLabels(), false);
 
+    Integer stageRunAsUser = resolveIntegerParameter(k8sDirectInfraYaml.getSpec().getRunAsUser(), null);
+
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
     ConnectorDetails k8sConnector = connectorUtils.getConnectorDetails(ngAccess, clusterName);
@@ -182,7 +185,7 @@ public class K8BuildSetupUtils {
     CIK8PodParams<CIK8ContainerParams> podParams =
         getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo, liteEngineTaskStepInfo.isUsePVC(),
             liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone(), workDir, taskIds,
-            logPrefix, stepLogKeys, ambiance, annotations, labels);
+            logPrefix, stepLogKeys, ambiance, annotations, labels, stageRunAsUser);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
     return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
@@ -200,7 +203,7 @@ public class K8BuildSetupUtils {
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, K8PodDetails k8PodDetails,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
       String workDir, Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance,
-      Map<String, String> annotations, Map<String, String> labels) {
+      Map<String, String> annotations, Map<String, String> labels, Integer stageRunAsUser) {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageRegistryConnectorDetails = null;
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
@@ -263,6 +266,7 @@ public class K8BuildSetupUtils {
         .pvcParamList(pvcParamsList)
         .initContainerParamsList(singletonList(setupAddOnContainerParams))
         .hostAliasParamsList(hostAliasParamsList)
+        .runAsUser(stageRunAsUser)
         .build();
   }
 

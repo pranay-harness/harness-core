@@ -13,9 +13,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope.ScopeKeys;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.utils.RetryUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -23,18 +26,30 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 @OwnedBy(PL)
+@Slf4j
 public class UserMembershipRepositoryCustomImpl implements UserMembershipRepositoryCustom {
   private final MongoTemplate mongoTemplate;
+  private final RetryPolicy<Object> updateRetryPolicy = RetryUtils.getRetryPolicy(
+      "[Retrying]: Failed updating UserMembership; attempt: {}", "[Failed]: Failed updating Invite; attempt: {}",
+      ImmutableList.of(OptimisticLockingFailureException.class, DuplicateKeyException.class), Duration.ofSeconds(1), 3,
+      log);
 
   @Override
   public List<UserMembership> findAll(Criteria criteria) {
@@ -58,6 +73,23 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
     List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(Collectors.toList());
     return PageableExecutionUtils.getPage(
         userIds, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), UserMembership.class));
+  }
+
+  @Override
+  public boolean upsert(String userId, Update update) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId).is(userId);
+    Query query = new Query(criteria);
+    return mongoTemplate.upsert(query, update, UserMembership.class).wasAcknowledged();
+  }
+
+  @Override
+  public UserMembership update(String userId, Update update) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId).is(userId);
+    Query query = new Query(criteria);
+    return Failsafe.with(updateRetryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), UserMembership.class));
   }
 
   @Override

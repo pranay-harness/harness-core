@@ -27,9 +27,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @OwnedBy(HarnessTeam.DX)
 public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClientFacilitatorService {
-  private final ConnectorService connectorService;
-  private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
-  private final YamlGitConfigService yamlGitConfigService;
+  private ConnectorService connectorService;
+  private ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
+  private YamlGitConfigService yamlGitConfigService;
 
   @Inject
   protected AbstractScmClientFacilitatorServiceImpl(ConnectorService connectorService,
@@ -64,7 +64,7 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
                              -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
                                  identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
                                  identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())));
-    return (ScmConnector) connectorResponseDTO.getConnector();
+    return (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
   }
 
   IdentifierRef getYamlGitConfigIdentifierRef(
