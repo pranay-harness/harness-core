@@ -53,6 +53,9 @@ public interface EntitySetupUsageClient {
       @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm);
 
+  /*
+   * This function is created for the rbac use case and thus it doesn't support git branches filter
+   */
   @POST(INTERNAL_ENTITY_REFERENCE_API + "/listAllReferredUsagesBatch")
   Call<ResponseDTO<EntityReferencesDTO>> listAllReferredUsagesBatch(
       @NotNull @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
