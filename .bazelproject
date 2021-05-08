@@ -64,6 +64,7 @@ directories:
   888-pms-client
   890-pms-contracts
   890-sm-core
+  900-git-sync-sdk
   910-delegate-service-driver
   910-delegate-task-grpc-service
   920-delegate-agent-beans
@@ -82,7 +83,6 @@ directories:
   940-resource-group-beans
   940-secret-manager-client
   945-ng-audit-client
-  949-git-sync-sdk
   946-access-control-decision
   946-access-control-aggregator
   947-access-control-core
@@ -90,7 +90,6 @@ directories:
   948-access-control-admin-client
   948-access-control-sdk
   949-access-control-commons
-  949-git-sync-sdk
   950-cg-ng-shared-orchestration-beans
   950-command-library-common
   950-common-entities

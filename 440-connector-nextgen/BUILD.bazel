@@ -5,11 +5,11 @@ load("//:macros.bzl", "run_analysis")
 shared_dependencies = [
     "//870-yaml-beans:module",
     "//890-sm-core:module",
+    "//900-git-sync-sdk:module",
     "//910-delegate-service-driver:module",
     "//930-ng-core-clients:module",
     "//948-access-control-sdk:module",
     "//955-delegate-beans:module",
-    "//949-git-sync-sdk:module",
     "//950-delegate-tasks-beans:module",
     "//950-ng-core:module",
     "//950-ng-project-n-orgs:module",
