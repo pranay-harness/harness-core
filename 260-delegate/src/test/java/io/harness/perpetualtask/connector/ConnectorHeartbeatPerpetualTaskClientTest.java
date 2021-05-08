@@ -20,16 +20,15 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
-import software.wings.service.intfc.security.NGSecretManagerService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +42,7 @@ import retrofit2.Response;
 public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
   @Inject private KryoSerializer kryoSerializer;
   @Mock private ConnectorResourceClient connectorResourceClient;
-  @Mock private NGSecretManagerService ngSecretManagerService;
+  @Mock private SecretManagerClientService ngSecretManagerService;
   @Mock private Call<ResponseDTO<ConnectorValidationParams>> call;
   @InjectMocks ConnectorHeartbeatPerpetualTaskClient connectorHeartbeatPerpetualTaskClient;
   private static final String accountIdentifier = "accountIdentifier";
@@ -57,8 +56,8 @@ public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
     MockitoAnnotations.initMocks(this);
     when(connectorResourceClient.getConnectorValidationParams(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(call);
-    when(ngSecretManagerService.get(anyString(), anyString(), anyString(), anyString(), eq(false)))
-        .thenReturn(Optional.empty());
+    when(ngSecretManagerService.getSecretManager(anyString(), anyString(), anyString(), anyString(), eq(false)))
+        .thenReturn(null);
     ScmValidationParams gitValidationParameters =
         ScmValidationParams.builder().gitConfigDTO(GitConfigDTO.builder().build()).build();
     when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(gitValidationParameters)));
