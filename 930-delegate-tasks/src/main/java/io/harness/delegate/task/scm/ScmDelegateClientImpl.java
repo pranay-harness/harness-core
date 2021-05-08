@@ -33,6 +33,7 @@ public class ScmDelegateClientImpl implements ScmDelegateClient {
 
   private ScmUnixManager getManager() {
     String OS = System.getProperty("os.name").toLowerCase();
+    log.info("Name of OS is {}", OS);
     try {
       if (OS.contains("mac")) {
         return new ScmMacOSManager();

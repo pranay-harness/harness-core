@@ -8,10 +8,7 @@ import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
-import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
-import io.harness.gitsync.scm.beans.ScmDeleteFileResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
-import io.harness.gitsync.scm.beans.ScmUpdateFileResponse;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
@@ -40,49 +37,19 @@ public class ScmManagerGitHelper implements ScmGitHelper {
         final CreateFileResponse createFileResponse = doScmCreateFile(yaml, gitBranchInfo, infoForPush);
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             createFileResponse.getStatus(), createFileResponse.getError());
-        return ScmCreateFileResponse.builder()
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-            .branch(infoForPush.getBranch())
-            .build();
+        return ScmGitUtils.createScmCreateFileResponse(yaml, infoForPush);
       case DELETE:
         final DeleteFileResponse deleteFileResponse = doScmDeleteFile(gitBranchInfo, infoForPush);
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             deleteFileResponse.getStatus(), deleteFileResponse.getError());
-        return ScmDeleteFileResponse.builder()
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .branch(infoForPush.getBranch())
-            .build();
+        return ScmGitUtils.createScmDeleteFileResponse(yaml, infoForPush);
       case RENAME:
         throw new NotImplementedException("Not implemented");
       case MODIFY:
         final UpdateFileResponse updateFileResponse = doScmUpdateFile(yaml, gitBranchInfo, infoForPush);
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             updateFileResponse.getStatus(), updateFileResponse.getError());
-        return ScmUpdateFileResponse.builder()
-            .folderPath(infoForPush.getFolderPath())
-            .filePath(infoForPush.getFilePath())
-            .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-            .oldObjectId(gitBranchInfo.getLastObjectId())
-            .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-            .pushToDefaultBranch(infoForPush.isDefault())
-            .accountIdentifier(infoForPush.getAccountId())
-            .orgIdentifier(infoForPush.getOrgIdentifier())
-            .projectIdentifier(infoForPush.getProjectIdentifier())
-            .branch(infoForPush.getBranch())
-            .build();
+        return ScmGitUtils.createScmUpdateFileResponse(yaml, infoForPush);
       default:
         throw new EnumConstantNotPresentException(changeType.getClass(), "Incorrect changeType");
     }

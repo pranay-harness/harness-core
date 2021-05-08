@@ -222,6 +222,10 @@ aeriform("//890-sm-core:module")
 
 aeriform("//890-sm-core:tests")
 
+aeriform("//900-git-sync-sdk:module")
+
+aeriform("//900-git-sync-sdk:tests")
+
 aeriform("//910-delegate-service-driver:module")
 
 aeriform("//910-delegate-task-grpc-service:module")
@@ -295,10 +299,6 @@ aeriform("//948-access-control-sdk:module")
 aeriform("//948-access-control-sdk:tests")
 
 aeriform("//949-access-control-commons:module")
-
-aeriform("//949-git-sync-sdk:module")
-
-aeriform("//949-git-sync-sdk:tests")
 
 aeriform("//950-cg-ng-shared-orchestration-beans:module")
 

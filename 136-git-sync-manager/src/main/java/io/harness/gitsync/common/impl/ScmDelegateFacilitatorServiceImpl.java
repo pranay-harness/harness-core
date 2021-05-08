@@ -108,7 +108,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     return DelegateTaskRequest.builder()
         .accountId(accountIdentifier)
         .taskParameters(taskParameters)
-        .taskType(taskType.toString())
+        .taskType(taskType.name())
         .executionTimeout(Duration.ofMinutes(2))
         .build();
   }

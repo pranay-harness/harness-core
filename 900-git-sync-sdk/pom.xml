@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>949-git-sync-sdk</artifactId>
+    <artifactId>900-git-sync-sdk</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
