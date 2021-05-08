@@ -1,5 +1,6 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.AzureEnvironmentType.AZURE;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureAppServiceConnectionStringType;
@@ -104,6 +106,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;

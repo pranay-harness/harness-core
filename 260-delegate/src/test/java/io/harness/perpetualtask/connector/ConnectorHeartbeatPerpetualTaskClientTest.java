@@ -4,12 +4,14 @@ import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 import static io.harness.NGCommonEntityConstants.CONNECTOR_IDENTIFIER_KEY;
 import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorResourceClient;
@@ -39,6 +41,7 @@ import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(DX)
 public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
   @Inject private KryoSerializer kryoSerializer;
   @Mock private ConnectorResourceClient connectorResourceClient;

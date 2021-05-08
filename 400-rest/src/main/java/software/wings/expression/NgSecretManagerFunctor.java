@@ -1,5 +1,6 @@
 package software.wings.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -9,6 +10,7 @@ import static io.harness.security.SimpleEncryption.CHARSET;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.encoding.EncodingUtils;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(CDP)
 @Value
 @Builder
 public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManagerFunctorInterface {

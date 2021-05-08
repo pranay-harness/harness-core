@@ -1,11 +1,13 @@
 package software.wings.service.impl.splunk;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by Pranjal on 08/31/2018
  */
+@OwnedBy(CV)
 @Singleton
 @Slf4j
 public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements SplunkAnalysisService {

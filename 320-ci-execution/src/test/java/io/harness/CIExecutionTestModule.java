@@ -1,7 +1,10 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.connector.ConnectorResourceClientModule;
@@ -31,6 +34,7 @@ import java.util.Set;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(CI)
 public class CIExecutionTestModule extends AbstractModule {
   @Provides
   @Singleton
