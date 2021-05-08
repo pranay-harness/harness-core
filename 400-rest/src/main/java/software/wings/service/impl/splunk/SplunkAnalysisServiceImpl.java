@@ -12,6 +12,7 @@ import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -24,7 +25,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.apm.MLServiceUtils;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.StateType;
@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements SplunkAnalysisService {
   @Inject private MLServiceUtils mlServiceUtils;
-  @Inject private NGSecretService ngSecretService;
+  @Inject private SecretManagerClientService ngSecretService;
   @Override
   public VerificationNodeDataSetupResponse getLogDataByHost(
       String accountId, SplunkSetupTestNodeData setupTestNodeData) {

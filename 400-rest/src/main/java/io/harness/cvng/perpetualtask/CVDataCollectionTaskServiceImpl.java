@@ -31,6 +31,7 @@ import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
@@ -38,7 +39,6 @@ import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
 import software.wings.service.intfc.cvng.CVNGDataCollectionDelegateService;
-import software.wings.service.intfc.security.NGSecretService;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
@@ -51,7 +51,7 @@ import org.jetbrains.annotations.NotNull;
 public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskService {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private NGSecretService ngSecretService;
+  @Inject private SecretManagerClientService ngSecretService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override

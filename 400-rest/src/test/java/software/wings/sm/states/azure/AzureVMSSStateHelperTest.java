@@ -78,7 +78,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -112,7 +111,6 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
   @Mock private LogService logService;
-  @Mock private NGSecretService ngSecretService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 

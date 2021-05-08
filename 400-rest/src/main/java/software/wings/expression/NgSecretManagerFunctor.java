@@ -20,13 +20,13 @@ import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.utils.IdentifierRefHelper;
 
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.lang.reflect.Field;
@@ -46,7 +46,7 @@ public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManage
   private final String orgId;
   private final String projectId;
   private final SecretManager secretManager;
-  private final NGSecretService ngSecretService;
+  private final SecretManagerClientService ngSecretService;
   private SecretManagerMode mode;
 
   @Builder.Default private Map<String, String> evaluatedSecrets = new HashMap<>();

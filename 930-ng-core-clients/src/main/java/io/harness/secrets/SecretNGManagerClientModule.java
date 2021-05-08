@@ -11,13 +11,11 @@ import io.harness.serializer.kryo.KryoConverterFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 
 public class SecretNGManagerClientModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
   private final String clientId;
-  public static final String SECRET_NG_MANAGER_CLIENT_SERVICE = "secretNGManagerClientService";
 
   public SecretNGManagerClientModule(
       ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
@@ -35,7 +33,6 @@ public class SecretNGManagerClientModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(SecretManagerClientService.class)
-        .annotatedWith(Names.named(SECRET_NG_MANAGER_CLIENT_SERVICE))
         .to(SecretNGManagerClientServiceImpl.class);
     bind(SecretNGManagerClient.class).toProvider(SecretNGManagerHttpClientFactory.class).in(Scopes.SINGLETON);
   }

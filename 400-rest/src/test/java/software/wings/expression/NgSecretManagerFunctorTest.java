@@ -21,11 +21,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FunctorException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.VaultConfig;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
@@ -37,7 +37,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 public class NgSecretManagerFunctorTest extends WingsBaseTest {
-  @Mock private NGSecretService ngSecretService;
+  @Mock private SecretManagerClientService ngSecretService;
   @Inject private SecretManager secretManager;
 
   private NgSecretManagerFunctor buildFunctor(int token) {

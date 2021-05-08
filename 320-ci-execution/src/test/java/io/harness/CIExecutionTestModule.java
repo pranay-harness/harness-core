@@ -9,7 +9,6 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.CiExecutionRegistrars;
@@ -85,8 +84,6 @@ public class CIExecutionTestModule extends AbstractModule {
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "CI"));
     install(new SecretNGManagerClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "CI"));
-    install(new SecretManagementClientModule(
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "NextGenManager"));
     install(new CILogServiceClientModule(
         LogServiceConfig.builder().baseUrl("http://localhost:8079").globalToken("token").build()));
     install(new TIServiceClientModule(

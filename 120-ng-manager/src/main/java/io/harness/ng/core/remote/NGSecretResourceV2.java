@@ -2,6 +2,7 @@ package io.harness.ng.core.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.secretmanagerclient.SecretManagementClientModule.SECRET_MANAGER_CLIENT_SERVICE;
 import static io.harness.secrets.SecretPermissions.SECRET_ACCESS_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_DELETE_PERMISSION;
 import static io.harness.secrets.SecretPermissions.SECRET_EDIT_PERMISSION;
@@ -35,6 +36,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -83,7 +85,7 @@ public class NGSecretResourceV2 {
   private static final String INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE = "includeSecretsFromEverySubScope";
   private final SecretCrudService ngSecretService;
   private final Validator validator;
-  private final SecretManagerClientService secretManagerClientService;
+  @Named(SECRET_MANAGER_CLIENT_SERVICE) private final SecretManagerClientService secretManagerClientService;
   private final AccessControlClient accessControlClient;
 
   @GET

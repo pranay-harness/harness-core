@@ -24,7 +24,6 @@ import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.security.NGSecretManagerService;
-import software.wings.service.intfc.security.NGSecretService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -44,7 +43,6 @@ import retrofit2.Response;
 public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
   @Inject private KryoSerializer kryoSerializer;
   @Mock private ConnectorResourceClient connectorResourceClient;
-  @Mock private NGSecretService ngSecretService;
   @Mock private NGSecretManagerService ngSecretManagerService;
   @Mock private Call<ResponseDTO<ConnectorValidationParams>> call;
   @InjectMocks ConnectorHeartbeatPerpetualTaskClient connectorHeartbeatPerpetualTaskClient;
