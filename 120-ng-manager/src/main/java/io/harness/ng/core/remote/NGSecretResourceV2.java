@@ -46,6 +46,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -85,7 +86,7 @@ public class NGSecretResourceV2 {
   private static final String INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE = "includeSecretsFromEverySubScope";
   private final SecretCrudService ngSecretService;
   private final Validator validator;
-  @Named(SECRET_MANAGER_CLIENT_SERVICE) private final SecretManagerClientService secretManagerClientService;
+  @Inject @Named(SECRET_MANAGER_CLIENT_SERVICE) private final SecretManagerClientService secretManagerClientService;
   private final AccessControlClient accessControlClient;
 
   @GET
@@ -284,6 +285,8 @@ public class NGSecretResourceV2 {
 
   @POST
   @Path("encryption-details")
+  @Consumes("application/x-kryo")
+  @Produces("application/x-kryo")
   @ApiOperation(hidden = true, value = "Get Encryption Details", nickname = "postEncryptionDetails")
   @InternalApi
   public ResponseDTO<List<EncryptedDataDetail>> getEncryptionDetails(
@@ -295,7 +298,11 @@ public class NGSecretResourceV2 {
     }
     for (Field field : decryptableEntity.getSecretReferenceFields()) {
       try {
+        field.setAccessible(true);
         SecretRefData secretRefData = (SecretRefData) field.get(decryptableEntity);
+        if (!Optional.ofNullable(secretRefData).isPresent()) {
+          continue;
+        }
         accessControlClient.checkForAccessOrThrow(ResourceScope.of(ngAccess.getAccountIdentifier(),
                                                       ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier()),
             Resource.of(SECRET_RESOURCE_TYPE, secretRefData.getIdentifier()), SECRET_ACCESS_PERMISSION);
