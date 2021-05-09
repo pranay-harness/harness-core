@@ -112,43 +112,44 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     return null;
   }
 
-  public void syncNow(String appId, InfrastructureMapping infraMapping, InstanceSyncFlowType instanceSyncFlowType) {
-    if (infraMapping == null) {
-      return;
-    }
-
-    String infraMappingId = infraMapping.getId();
-    try (AcquiredLock lock =
-             persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(180))) {
-      if (lock == null) {
-        log.warn("Couldn't acquire infra lock for infraMapping of appId [{}]", appId);
-        return;
-      }
-
-      try {
-        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
-        if (instanceHandler == null) {
-          log.warn("Instance handler null for infraMapping of appId [{}]", appId);
-          return;
-        }
-        log.info("Instance sync started for infraMapping");
-        instanceHandler.syncInstances(appId, , , infraMappingId, instanceSyncFlowType);
-        // TODO check if we require display name here
-        //        instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(),
-        //        infraMappingId,
-        //            infraMapping.getDisplayName(), System.currentTimeMillis());
-        log.info("Instance sync completed for infraMapping");
-      } catch (Exception ex) {
-        log.warn("Instance sync failed for infraMapping", ex);
-        String errorMsg = getErrorMsg(ex);
-
-        // TODO check if we require display name here
-        //        instanceService.handleSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(),
-        //        infraMappingId,
-        //            infraMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
-      }
-    }
-  }
+  //  public void syncNow(String appId, InfrastructureMapping infraMapping, InstanceSyncFlowType instanceSyncFlowType) {
+  //    if (infraMapping == null) {
+  //      return;
+  //    }
+  //
+  //    String infraMappingId = infraMapping.getId();
+  //    try (AcquiredLock lock =
+  //             persistentLocker.tryToAcquireLock(InfrastructureMapping.class, infraMappingId,
+  //             Duration.ofSeconds(180))) {
+  //      if (lock == null) {
+  //        log.warn("Couldn't acquire infra lock for infraMapping of appId [{}]", appId);
+  //        return;
+  //      }
+  //
+  //      try {
+  //        InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMapping);
+  //        if (instanceHandler == null) {
+  //          log.warn("Instance handler null for infraMapping of appId [{}]", appId);
+  //          return;
+  //        }
+  //        log.info("Instance sync started for infraMapping");
+  //        instanceHandler.syncInstances(appId, , , infraMappingId, instanceSyncFlowType);
+  //        // TODO check if we require display name here
+  //        //        instanceService.updateSyncSuccess(appId, infraMapping.getServiceId(), infraMapping.getEnvId(),
+  //        //        infraMappingId,
+  //        //            infraMapping.getDisplayName(), System.currentTimeMillis());
+  //        log.info("Instance sync completed for infraMapping");
+  //      } catch (Exception ex) {
+  //        log.warn("Instance sync failed for infraMapping", ex);
+  //        String errorMsg = getErrorMsg(ex);
+  //
+  //        // TODO check if we require display name here
+  //        //        instanceService.handleSyncFailure(appId, infraMapping.getServiceId(), infraMapping.getEnvId(),
+  //        //        infraMappingId,
+  //        //            infraMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
+  //      }
+  //    }
+  //  }
 
   // ------------------------- PRIVATE METHODS ---------------------------
 

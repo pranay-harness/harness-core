@@ -28,7 +28,6 @@ public class Instance {
   private String infrastructureMappingId;
   private HostInstanceKey hostInstanceKey;
   private ContainerInstanceKey containerInstanceKey;
-  private PcfInstanceKey pcfInstanceKey;
   private PodInstanceKey podInstanceKey;
 
   private String envId;
@@ -42,7 +41,6 @@ public class Instance {
   private String infraMappingType;
 
   private String connectorId;
-
   private String lastArtifactId;
   private String lastArtifactName;
   private String lastArtifactBuildNum;

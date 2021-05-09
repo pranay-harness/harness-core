@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>130-instance</artifactId>
+    <artifactId>121-instance</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

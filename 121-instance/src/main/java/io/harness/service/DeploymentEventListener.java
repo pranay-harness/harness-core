@@ -2,10 +2,7 @@ package io.harness.service;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
-import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -20,7 +17,6 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 
 import com.google.inject.Inject;
-import groovy.util.logging.Slf4j;
 import lombok.AllArgsConstructor;
 
 @OwnedBy(HarnessTeam.DX)
@@ -38,9 +34,9 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
     String planExecutionId = ambiance.getPlanExecutionId();
     // TODO get deployedAt from ambiance
 
-    createInfrastructureMappingIfNew(Ambiance ambiance);
+    createInfrastructureMappingIfNew(ambiance);
 
-    prepareDeploymentEvent(Ambiance ambiance);
+    prepareDeploymentEvent(ambiance);
   }
 
   // --------------------- PRIVATE METHODS ------------------------
@@ -73,18 +69,18 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
     String serviceId = serviceOutcome.getIdentifier();
     String releaseName = k8sRollingOutcome.getReleaseName();
 
-    serviceOutcome
+    //    serviceOutcome
 
-        infrastructureOutcome.getType();
+    //        infrastructureOutcome.getType();
 
     // Ask sahil to add field to determine which steps produce pods/deployment
     // Ask Sahil to maintain common constants file that provides infrastucture outcome type
     // use it to determine the type of infrastrucure mapping
 
-    K8sGcpInfrastructureOutcome,
-        K8sDirectInfrastructureOutcome
+    //    K8sGcpInfrastructureOutcome,
+    //        K8sDirectInfrastructureOutcome
 
-        return null;
+    return null;
   }
 
   private DeploymentEvent prepareDeploymentEvent(Ambiance ambiance) {
