@@ -478,6 +478,23 @@ bazel run //path/to/target:target
 bazel run //commons/go/lib/logs:go_default_test # an example
 ```
 
+## Running docker builds with bazel
+We have added flexibilities of building docker images with bazel. <br/>
+Docker rule reference: https://github.com/bazelbuild/rules_docker. <br/>
+To build docker images through bazel locally(i.e. access private images, push etc) we need to configure gcloud auth for docker. You can run these 
+commands to configure it locally:
+```
+gcloud components install docker-credential-gcr
+gcloud auth login
+gcloud auth configure-docker
+```
+
+#### Note:
+1. gcloud needs to installed in your system.
+2. You need to provide permission to gcloud sdk to access Google account, which is associated with your Harness Google cloud account.
+3. Please select `platform` project in GCP during the configuration.
+4. Once all configurations done then you should be able to pull images from gcr registry.
+5. All these previous steps are necessary to build docker images with bazel.
 
 ## Managing Build Configuration
 
