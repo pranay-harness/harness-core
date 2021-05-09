@@ -1,5 +1,7 @@
 package io.harness.service.stats.statscollector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.dto.Instance;
 import io.harness.helper.SnapshotTimeProvider;
 import io.harness.repository.instance.InstanceRepository;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class InstanceStatsCollectorImpl implements StatsCollector {
   private static final int SYNC_INTERVAL_MINUTES = 10;
   private static final long SYNC_INTERVAL = TimeUnit.MINUTES.toMinutes(SYNC_INTERVAL_MINUTES);

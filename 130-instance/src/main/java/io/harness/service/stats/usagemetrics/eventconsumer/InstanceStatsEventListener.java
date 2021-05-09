@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceStatsEventListener implements MessageListener {
   private static final String insert_prepared_statement_sql =
-      "INSERT INTO INSTANCE_STATS (REPORTEDAT, ACCOUNTID, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, INSTANCETYPE, INSTANCECOUNT, ARTIFACTID) VALUES (?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO INSTANCE_STATS (REPORTEDAT, ACCOUNTID, ORGID, PROJECID, SERVICEID, ENVID, CLOUDPROVIDERID, INSTANCETYPE, INSTANCECOUNT, ARTIFACTID) VALUES (?,?,?,?,?,?,?,?,?,?)";
   private static final Integer MAX_RETRY_COUNT = 5;
 
   private TimeScaleDBService timeScaleDBService;
@@ -125,14 +125,14 @@ public class InstanceStatsEventListener implements MessageListener {
           Map<String, String> dataMap = dataPointArray[currElementIdx].getDataMap();
           statement.setTimestamp(1, new Timestamp(eventInfo.getTimestamp()), utils.getDefaultCalendar());
           statement.setString(2, eventInfo.getAccountId());
-          // TODO handle Appid
-          //          statement.setString(3, dataMap.get(Constants.APPID));
-          statement.setString(4, dataMap.get(Constants.SERVICE_ID.getKey()));
-          statement.setString(5, dataMap.get(Constants.ENV_ID.getKey()));
-          statement.setString(6, dataMap.get(Constants.CLOUDPROVIDER_ID.getKey()));
-          statement.setString(7, dataMap.get(Constants.INSTANCE_TYPE.getKey()));
-          statement.setInt(8, Integer.parseInt(dataMap.get(Constants.INSTANCECOUNT.getKey())));
-          statement.setString(9, dataMap.get(Constants.ARTIFACT_ID.getKey()));
+          statement.setString(3, dataMap.get(Constants.ORG_ID.getKey()));
+          statement.setString(4, dataMap.get(Constants.PROJECT_ID.getKey()));
+          statement.setString(5, dataMap.get(Constants.SERVICE_ID.getKey()));
+          statement.setString(6, dataMap.get(Constants.ENV_ID.getKey()));
+          statement.setString(7, dataMap.get(Constants.CLOUDPROVIDER_ID.getKey()));
+          statement.setString(8, dataMap.get(Constants.INSTANCE_TYPE.getKey()));
+          statement.setInt(9, Integer.parseInt(dataMap.get(Constants.INSTANCECOUNT.getKey())));
+          statement.setString(10, dataMap.get(Constants.ARTIFACT_ID.getKey()));
           statement.addBatch();
         } catch (SQLException e) {
           // Ignore this exception for now, as this is the least expected to happen

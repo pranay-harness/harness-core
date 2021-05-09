@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.stream.Collectors.groupingBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.Instance;
 import io.harness.eventsframework.api.Producer;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublisher {
   private Producer eventProducer;
 
@@ -45,8 +48,8 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
       Instance instance = instanceList.get(0);
       Map<String, String> data = new HashMap<>();
       data.put(Constants.ACCOUNT_ID.getKey(), instance.getAccountId());
-      // TODO check replacement of Appid
-
+      data.put(Constants.ORG_ID.getKey(), instance.getOrgId());
+      data.put(Constants.PROJECT_ID.getKey(), instance.getProjectId());
       data.put(Constants.SERVICE_ID.getKey(), instance.getServiceId());
       data.put(Constants.ENV_ID.getKey(), instance.getEnvId());
       data.put(Constants.INFRAMAPPING_ID.getKey(), instance.getInfrastructureMappingId());

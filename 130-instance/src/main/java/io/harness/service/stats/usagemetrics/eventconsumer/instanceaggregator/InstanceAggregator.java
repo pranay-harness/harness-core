@@ -1,5 +1,7 @@
 package io.harness.service.stats.usagemetrics.eventconsumer.instanceaggregator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.timeseriesevent.TimeseriesBatchEventInfo;
 
 import java.sql.PreparedStatement;
@@ -9,6 +11,7 @@ import java.util.Map;
 import lombok.Getter;
 
 @Getter
+@OwnedBy(HarnessTeam.DX)
 public abstract class InstanceAggregator {
   private final TimeseriesBatchEventInfo eventInfo;
   private final String fetchChildDataPointsSQL;
