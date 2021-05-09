@@ -157,8 +157,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     String infrastructureMappingId = deploymentSummary.getInfrastructureMappingId();
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              InfrastructureMapping.class, infrastructureMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
-      //            log.info("Handling deployment event for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
-
+      log.info("Handling deployment event for infraMappingId [{}]", infrastructureMappingId);
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingRepository.get(deploymentSummary.getAccountId(), deploymentSummary.getOrgId(),
               deploymentSummary.getProjectId(), infrastructureMappingId);

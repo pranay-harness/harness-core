@@ -16,9 +16,9 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   @Builder
   public ContainerInfrastructureMapping(String id, String accountId, String orgId, String projectId,
       String infraMappingType, String connectorType, String connectorId, String envId, String deploymentType,
-      String serviceId, String infrastructureDefinitionId, String clusterName) {
+      String serviceId, String clusterName) {
     super(id, accountId, orgId, projectId, infraMappingType, connectorType, connectorId, envId, deploymentType,
-        serviceId, infrastructureDefinitionId);
+        serviceId);
     this.clusterName = clusterName;
   }
 }

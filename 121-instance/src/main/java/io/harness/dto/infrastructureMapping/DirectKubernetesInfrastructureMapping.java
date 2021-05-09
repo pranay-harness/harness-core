@@ -15,9 +15,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @Builder
   public DirectKubernetesInfrastructureMapping(String id, String accountId, String orgId, String projectId,
       String infraMappingType, String connectorType, String connectorId, String envId, String deploymentType,
-      String serviceId, String infrastructureDefinitionId, String clusterName, String namespace, String releaseName) {
+      String serviceId, String clusterName, String namespace, String releaseName) {
     super(id, accountId, orgId, projectId, infraMappingType, connectorType, connectorId, envId, deploymentType,
-        serviceId, infrastructureDefinitionId, clusterName);
+        serviceId, clusterName);
     this.namespace = namespace;
     this.releaseName = releaseName;
   }
