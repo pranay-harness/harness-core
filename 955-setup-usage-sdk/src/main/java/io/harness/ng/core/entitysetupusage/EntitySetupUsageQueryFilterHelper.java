@@ -75,14 +75,17 @@ public class EntitySetupUsageQueryFilterHelper {
 
   public Criteria createCriteriaForListAllReferredUsagesBatch(String accountIdentifier,
       List<String> referredByEntityFQNList, EntityType referredByEntityType, EntityType referredEntityType) {
-    return Criteria.where(EntitySetupUsageKeys.accountIdentifier)
-        .is(accountIdentifier)
-        .and(EntitySetupUsageKeys.referredByEntityFQN)
-        .in(referredByEntityFQNList)
-        .and(EntitySetupUsageKeys.referredByEntityType)
-        .is(referredByEntityType.getYamlName())
-        .and(EntitySetupUsageKeys.referredEntityType)
-        .is(referredEntityType.getYamlName());
+    Criteria criteria = Criteria.where(EntitySetupUsageKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(EntitySetupUsageKeys.referredByEntityFQN)
+                            .in(referredByEntityFQNList)
+                            .and(EntitySetupUsageKeys.referredByEntityType)
+                            .is(referredByEntityType.getYamlName())
+                            .and(EntitySetupUsageKeys.referredEntityType)
+                            .is(referredEntityType.getYamlName());
+    Criteria criteriaToGetDefaultEntity = createCriteriaForDefaultReferredByEntity();
+    criteria.andOperator(criteriaToGetDefaultEntity);
+    return criteria;
   }
 
   public Criteria createCriteriaToCheckWhetherThisEntityIsReferred(
@@ -147,5 +150,20 @@ public class EntitySetupUsageQueryFilterHelper {
       Criteria criteriaToGetDefaultEntity = createCriteriaForDefaultReferredByEntity();
       criteria.andOperator(criteriaToGetDefaultEntity);
     }
+  }
+
+  public Criteria createCriteriaForDeletingAllReferredByEntries(String accountIdentifier, String referredByEntityFQN,
+      EntityType referredByEntityType, EntityType referredEntityType) {
+    Criteria criteria = new Criteria();
+    criteria.and(EntitySetupUsageKeys.accountIdentifier).is(accountIdentifier);
+    criteria.and(EntitySetupUsageKeys.referredByEntityFQN).is(referredByEntityFQN);
+    if (referredEntityType != null) {
+      criteria.and(EntitySetupUsageKeys.referredEntityType).is(referredEntityType.getYamlName());
+    }
+    if (referredByEntityType != null) {
+      criteria.and(EntitySetupUsageKeys.referredByEntityType).is(referredByEntityType.getYamlName());
+    }
+    populateGitCriteriaForReferredByEntity(criteria);
+    return criteria;
   }
 }

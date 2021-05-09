@@ -26,6 +26,8 @@ public class ScmResponseStatusUtils {
           throw new ScmException(ErrorCode.SCM_CONFLICT_ERROR);
         case 422:
           throw new ScmException(ErrorCode.SCM_UNPROCESSABLE_ENTITY);
+        case 401:
+          throw new ScmException(ErrorCode.SCM_UNAUTHORIZED);
         default:
           if (!(statusCode == 200 || statusCode == 201 || statusCode == 0)) {
             log.error("Encountered new status code: [{}] from scm", statusCode);
