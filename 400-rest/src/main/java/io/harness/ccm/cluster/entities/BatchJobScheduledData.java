@@ -39,7 +39,6 @@ import org.mongodb.morphia.annotations.Id;
 @StoreIn("events")
 @OwnedBy(CE)
 @TargetModule(HarnessModule._490_CE_COMMONS)
-@StoreIn(DbAliases.CG_MANAGER)
 public final class BatchJobScheduledData
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
