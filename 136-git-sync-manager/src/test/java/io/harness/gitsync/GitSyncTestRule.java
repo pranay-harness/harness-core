@@ -24,6 +24,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
+import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -102,6 +103,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
             .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
             .toInstance(mock(NoOpProducer.class));
         bind(ExecutorService.class).toInstance(mock(ExecutorService.class));
+        bind(SourceCodeManagerService.class).toInstance(mock(SourceCodeManagerService.class));
       }
     });
 

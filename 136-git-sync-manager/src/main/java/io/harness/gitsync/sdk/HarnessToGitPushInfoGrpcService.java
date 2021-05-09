@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceImplBase;
@@ -47,8 +46,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
     final InfoForPush.Builder pushInfoBuilder = InfoForPush.newBuilder().setStatus(true);
     try {
       InfoForGitPush infoForPush =
-          harnessToGitHelperService.getInfoForPush(request.getYamlGitConfigId(), request.getBranch(),
-              request.getFilePath(), request.getAccountId(), entityDetailDTO.getEntityRef(), entityDetailDTO.getType());
+          harnessToGitHelperService.getInfoForPush(request, entityDetailDTO.getEntityRef(), entityDetailDTO.getType());
       final ByteString connector = ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getScmConnector()));
       pushInfoBuilder.setConnector(BytesValue.newBuilder().setValue(connector).build())
           .setFilePath(StringValue.newBuilder().setValue(infoForPush.getFilePath()).build())
@@ -66,15 +64,12 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
         pushInfoBuilder.setEncryptedDataDetails(BytesValue.of(encyptedDataDetails));
       }
     } catch (WingsException e) {
-      final ByteString exceptionBytes = ByteString.copyFrom(kryoSerializer.asBytes(e.getMessage()));
-      pushInfoBuilder.setException(BytesValue.newBuilder().setValue(exceptionBytes).build());
+      pushInfoBuilder.setException(StringValue.of(e.getMessage()));
       pushInfoBuilder.setStatus(false);
     } catch (Exception e) {
       log.error("Unknown exception occurred in harness to git grpc.", e);
       pushInfoBuilder.setStatus(false);
-      final ByteString exceptionBytes =
-          ByteString.copyFrom(kryoSerializer.asBytes(new InvalidRequestException("Unknown exception", e)));
-      pushInfoBuilder.setException(BytesValue.newBuilder().setValue(exceptionBytes).build());
+      pushInfoBuilder.setException(StringValue.of("Unknown error occurred"));
     }
     responseObserver.onNext(pushInfoBuilder.build());
     responseObserver.onCompleted();
