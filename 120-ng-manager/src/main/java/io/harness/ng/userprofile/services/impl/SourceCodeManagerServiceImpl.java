@@ -36,7 +36,15 @@ public class SourceCodeManagerServiceImpl implements SourceCodeManagerService {
   @Override
   public List<SourceCodeManagerDTO> get() {
     Optional<String> userIdentifier = getUserIdentifier();
+    return getInternal(userIdentifier);
+  }
 
+  @Override
+  public List<SourceCodeManagerDTO> get(String userIdentifier) {
+    return getInternal(Optional.of(userIdentifier));
+  }
+
+  private List<SourceCodeManagerDTO> getInternal(Optional<String> userIdentifier) {
     if (userIdentifier.isPresent()) {
       List<SourceCodeManagerDTO> sourceCodeManagerDTOS = new ArrayList<>();
       sourceCodeManagerRepository.findByUserIdentifier(userIdentifier.get())
