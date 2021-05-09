@@ -1,7 +1,9 @@
 package software.wings.beans.ce.depricated;
 
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCloudAccount", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "CECloudAccountKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class CECloudAccountOld implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

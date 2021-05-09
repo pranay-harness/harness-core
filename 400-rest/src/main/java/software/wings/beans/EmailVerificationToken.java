@@ -4,7 +4,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ng.DbAliases;
 
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
@@ -15,6 +17,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "EmailVerificationTokenKeys")
 @Entity(value = "emailVerificationTokens")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class EmailVerificationToken extends Base {
   @NotEmpty private String token;
   @NotEmpty private String userId;

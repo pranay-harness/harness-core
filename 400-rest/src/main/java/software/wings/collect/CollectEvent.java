@@ -1,6 +1,8 @@
 package software.wings.collect;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.ng.DbAliases;
 import io.harness.queue.Queuable;
 
 import software.wings.beans.artifact.Artifact;
@@ -13,6 +15,7 @@ import org.mongodb.morphia.annotations.Reference;
 
 @Entity(value = "collectorQueue2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class CollectEvent extends Queuable {
   @Reference(idOnly = true) private Artifact artifact;
 

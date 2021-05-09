@@ -3,8 +3,10 @@ package software.wings.beans.alert;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.alerts.AlertCategory;
@@ -34,6 +36,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "AlertNotificationRulekeys")
 @Entity(value = "alertNotificationRules", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class AlertNotificationRule extends Base implements AccountAccess {
   public static final String ALERT_CATEGORY = "alertCategory";
 

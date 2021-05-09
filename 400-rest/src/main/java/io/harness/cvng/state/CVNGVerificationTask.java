@@ -3,12 +3,14 @@ package io.harness.cvng.state;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -34,6 +36,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "cvngVerificationTasks", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @OwnedBy(CV)
+@StoreIn(DbAliases.CG_MANAGER)
 public class CVNGVerificationTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {

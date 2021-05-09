@@ -6,11 +6,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.LogKeyUtils;
 import io.harness.persistence.NameAccess;
@@ -48,6 +50,7 @@ import org.mongodb.morphia.annotations.Transient;
 @TargetModule(_871_CG_BEANS)
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

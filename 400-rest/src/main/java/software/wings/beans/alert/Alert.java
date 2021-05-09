@@ -2,6 +2,7 @@ package software.wings.beans.alert;
 
 import io.harness.alert.AlertData;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.iterator.PersistentRegularIterable;
@@ -10,6 +11,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -43,6 +45,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "alerts")
 @HarnessEntity(exportable = false)
 @TargetModule(HarnessModule._955_ALERT_BEANS)
+@StoreIn(DbAliases.CG_MANAGER)
 public class Alert
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

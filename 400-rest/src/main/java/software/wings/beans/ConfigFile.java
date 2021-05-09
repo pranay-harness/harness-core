@@ -3,8 +3,10 @@ package software.wings.beans;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 
@@ -47,6 +49,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "ConfigFileKeys")
 @Entity(value = "configFiles", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
 

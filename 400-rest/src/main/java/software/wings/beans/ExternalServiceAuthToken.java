@@ -4,6 +4,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.ng.DbAliases;
 
 import org.mongodb.morphia.annotations.Entity;
 
@@ -12,6 +14,7 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "externalServiceAuthTokens", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class ExternalServiceAuthToken extends Base {
   private long expireAt;
 

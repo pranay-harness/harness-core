@@ -2,7 +2,9 @@ package software.wings.search.framework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import lombok.Builder;
@@ -17,6 +19,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "elasticsearchPendingBulkMigrations", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "ElasticsearchBulkMigrationJobKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 @Slf4j
 public class ElasticsearchBulkMigrationJob implements PersistentEntity {
   @Id private String entityClass;

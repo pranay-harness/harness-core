@@ -1,9 +1,11 @@
 package io.harness.limits;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.limits.lib.Limit;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
@@ -24,6 +26,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "allowedLimits", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "ConfiguredLimitKeys")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CG_MANAGER)
 public class ConfiguredLimit<T extends Limit> implements PersistentEntity, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

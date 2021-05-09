@@ -5,9 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.approval.ServiceNowApprovalParams.validateTimeWindow;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.annotations.Id;
 @ToString(exclude = "scriptString")
 @Entity(value = "approvalPollingJob")
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 @Slf4j
 public class ApprovalPollingJobEntity implements PersistentRegularIterable, AccountAccess {
   String appId;

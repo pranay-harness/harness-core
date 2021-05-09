@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
@@ -12,6 +13,7 @@ import io.harness.execution.export.request.ExportExecutionsRequest.ExportExecuti
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "ExportExecutionsRequestKeys")
 @Entity(value = "exportExecutionsRequests", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CG_MANAGER)
 public class ExportExecutionsRequest
     implements PersistentRegularIterable, UuidAware, CreatedAtAware, CreatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

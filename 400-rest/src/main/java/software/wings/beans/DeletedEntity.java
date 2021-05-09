@@ -1,11 +1,13 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import lombok.AllArgsConstructor;
@@ -20,6 +22,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "deletedEntities", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "DeletedEntityKeys")
+@StoreIn(DbAliases.CG_MANAGER)
 public class DeletedEntity implements PersistentEntity, PersistentRegularIterable {
   @Id private String uuid;
   @FdUniqueIndex private String entityId;
