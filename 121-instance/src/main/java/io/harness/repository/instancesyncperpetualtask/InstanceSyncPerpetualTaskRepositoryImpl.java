@@ -1,7 +1,5 @@
 package io.harness.repository.instancesyncperpetualtask;
 
-import static io.harness.persistence.HQuery.excludeAuthority;
-
 import static java.util.Optional.ofNullable;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -26,7 +24,7 @@ public class InstanceSyncPerpetualTaskRepositoryImpl implements InstanceSyncPerp
         getByAccountIdAndInfrastructureMappingId(accountId, infrastructureMappingId);
     if (!infoOptional.isPresent()) {
       save(InstanceSyncPerpetualTaskInfo.builder()
-               .accountId(accountId)
+               .accountIdentifier(accountId)
                .infrastructureMappingId(infrastructureMappingId)
                .perpetualTaskIds(perpetualTaskIds)
                .build());
@@ -59,7 +57,7 @@ public class InstanceSyncPerpetualTaskRepositoryImpl implements InstanceSyncPerp
 
   private Query<InstanceSyncPerpetualTaskInfo> getInfoQuery(String accountId, String infrastructureMappingId) {
     return wingsPersistence.createQuery(InstanceSyncPerpetualTaskInfo.class)
-        .filter(InstanceSyncPerpetualTaskInfo.InstanceSyncPerpetualTaskInfoKeys.accountId, accountId)
+        .filter(InstanceSyncPerpetualTaskInfo.InstanceSyncPerpetualTaskInfoKeys.accountIdentifier, accountId)
         .filter(InstanceSyncPerpetualTaskInfo.InstanceSyncPerpetualTaskInfoKeys.infrastructureMappingId,
             infrastructureMappingId);
   }
