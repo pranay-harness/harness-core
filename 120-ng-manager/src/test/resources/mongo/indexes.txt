@@ -503,6 +503,10 @@ newRelicMetricRecords {"name": "serviceGuardIndex", "background": true} {"cvConf
 newRelicMetricRecords {"name": "stateExIdx", "background": true} {"stateExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
 newRelicMetricRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 newRelicMetricRecords {"name": "workflowExIdx", "background": true} {"workflowExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
+ngGcsFileMetadata {"name": "accountId_1", "background": true} {"accountId": 1}
+ngGcsFileMetadata {"name": "entityId_1", "background": true} {"entityId": 1}
+ngGcsFileMetadata {"name": "fileId_1", "background": true} {"fileId": 1}
+ngGcsFileMetadata {"name": "gcsFileId_1", "background": true} {"gcsFileId": 1}
 nodeExecutionEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 nodeExecutionEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notificationBatch {"name": "appId_1", "background": true} {"appId": 1}

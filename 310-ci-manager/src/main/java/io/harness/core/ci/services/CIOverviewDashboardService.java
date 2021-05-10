@@ -10,12 +10,6 @@ import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
 import java.util.List;
 
 public interface CIOverviewDashboardService {
-  long totalBuilds(String accountId, String orgId, String projectId, String startInterval, String endInterval);
-
-  long successfulBuilds(String accountId, String orgId, String projectId, String startInterval, String endInterval);
-
-  long failedBuilds(String accountId, String orgId, String projectId, String startInterval, String endInterval);
-
   BuildHealth getCountAndRate(long currentCount, long previousCount);
 
   DashboardBuildsHealthInfo getDashBoardBuildHealthInfoWithRate(String accountId, String orgId, String projectId,

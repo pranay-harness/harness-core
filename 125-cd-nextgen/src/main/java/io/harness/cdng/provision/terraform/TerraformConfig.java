@@ -54,8 +54,7 @@ public class TerraformConfig implements PersistentEntity, CreatedAtAware {
   long createdAt;
 
   GitStoreConfigDTO configFiles;
-  List<GitStoreConfigDTO> remoteVarFiles;
-  List<String> inlineVarFiles;
+  List<TerraformVarFileConfig> varFileConfigs;
   String backendConfig;
   Map<String, String> environmentVariables;
   String workspace;

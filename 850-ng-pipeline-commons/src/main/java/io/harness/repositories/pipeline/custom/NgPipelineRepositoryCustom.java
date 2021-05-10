@@ -1,5 +1,6 @@
 package io.harness.repositories.pipeline.custom;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 
 import com.mongodb.client.result.UpdateResult;
@@ -9,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@ToBeDeleted
+@Deprecated
 public interface NgPipelineRepositoryCustom {
   Page<NgPipelineEntity> findAll(Criteria criteria, Pageable pageable);
   NgPipelineEntity update(Criteria criteria, NgPipelineEntity ngPipelineEntity);

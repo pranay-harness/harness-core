@@ -1,10 +1,14 @@
 package software.wings.settings;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.Getter;
 
-/**
- * The Enum SettingVariableTypes.
- */
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public enum SettingVariableTypes {
   /**
    * Host connection attributes setting variable types.

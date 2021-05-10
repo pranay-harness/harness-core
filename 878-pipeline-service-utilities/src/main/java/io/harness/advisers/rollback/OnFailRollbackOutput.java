@@ -16,8 +16,4 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(HarnessTeam.CDC)
 public class OnFailRollbackOutput implements ExecutionSweepingOutput {
   String nextNodeId;
-  @Override
-  public String getType() {
-    return "onFailRollbackOutput";
-  }
 }

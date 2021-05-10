@@ -83,6 +83,7 @@ public class VerificationServiceModule extends AbstractModule {
   protected void configure() {
     install(FeatureFlagModule.getInstance());
     install(AlertModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
 
     bind(VerificationServiceConfiguration.class).toInstance(configuration);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
@@ -134,18 +135,6 @@ public class VerificationServiceModule extends AbstractModule {
         .toInstance(ThreadPool.create(1, 10, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("Alerts-creator-%d").setPriority(Thread.MIN_PRIORITY).build()));
 
-    bind(QueueController.class).toInstance(new QueueController() {
-      @Override
-      public boolean isPrimary() {
-        return true;
-      }
-
-      @Override
-      public boolean isNotPrimary() {
-        return false;
-      }
-    });
-
     if (configuration.getDataStorageMode() == null) {
       configuration.setDataStorageMode(DataStorageMode.MONGO);
     }
@@ -159,15 +148,6 @@ public class VerificationServiceModule extends AbstractModule {
         break;
       default:
         throw new WingsException("Invalid execution log data storage mode: " + configuration.getDataStorageMode());
-    }
-
-    try {
-      VersionInfoManager versionInfoManager = new VersionInfoManager(
-          IOUtils.toString(getClass().getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml"),
-              StandardCharsets.UTF_8));
-      bind(VersionInfoManager.class).toInstance(versionInfoManager);
-    } catch (IOException e) {
-      throw new RuntimeException("Could not load versionInfo.yaml", e);
     }
   }
 }

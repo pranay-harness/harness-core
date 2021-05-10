@@ -36,8 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilitatorServiceImpl {
-  private final SecretManagerClientService secretManagerClientService;
-  private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  private SecretManagerClientService secretManagerClientService;
+  private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Inject
   public ScmDelegateFacilitatorServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
@@ -108,7 +108,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     return DelegateTaskRequest.builder()
         .accountId(accountIdentifier)
         .taskParameters(taskParameters)
-        .taskType(taskType.toString())
+        .taskType(taskType.name())
         .executionTimeout(Duration.ofMinutes(2))
         .build();
   }

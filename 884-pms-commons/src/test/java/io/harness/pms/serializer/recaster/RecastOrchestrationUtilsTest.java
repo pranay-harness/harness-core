@@ -147,7 +147,7 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     String simpleJson = RecastOrchestrationUtils.toSimpleJson(protoAsAFieldClass);
 
     String expectedValue =
-        "{\"executionErrorInfo\": \"{\\n  \\\"message\\\": \\\"some-message\\\"\\n}\", \"failureTypeSet\": [\"APPLICATION_FAILURE\", \"AUTHORIZATION_FAILURE\"]}";
+        "{\"executionErrorInfo\": {\"message\": \"some-message\"}, \"failureTypeSet\": [\"APPLICATION_FAILURE\", \"AUTHORIZATION_FAILURE\"]}";
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
@@ -197,6 +197,7 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
 
     String expectedValue =
         "[{\"strVal\":\"string\",\"intVal\":1,\"longVal\":1242352345234,\"doubleVal\":1.2423532235254E7,\"listVal\":[\"a\",\"b\",\"c\"],\"mapVal\":{\"1\":1},\"pf\":\"value\"},{\"strVal\":\"string\",\"intVal\":2,\"longVal\":1242352345234,\"doubleVal\":1.2423532235254E7,\"listVal\":[\"a\",\"b\",\"c\"],\"mapVal\":{\"1\":2},\"pf\":\"value\"}]";
+
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
@@ -224,7 +225,8 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     String simpleJson = RecastOrchestrationUtils.toSimpleJson(list);
 
     String expectedValue =
-        "[{\"executionErrorInfo\":\"{\\n  \\\"message\\\": \\\"some-message\\\"\\n}\",\"failureTypeSet\":[\"APPLICATION_FAILURE\",\"AUTHORIZATION_FAILURE\"]},{\"executionErrorInfo\":\"{\\n  \\\"message\\\": \\\"some-message1\\\"\\n}\",\"failureTypeSet\":[\"AUTHENTICATION_FAILURE\",\"CONNECTIVITY_FAILURE\"]}]";
+        "[{\"executionErrorInfo\":{\"message\":\"some-message\"},\"failureTypeSet\":[\"APPLICATION_FAILURE\",\"AUTHORIZATION_FAILURE\"]},{\"executionErrorInfo\":{\"message\":\"some-message1\"},\"failureTypeSet\":[\"AUTHENTICATION_FAILURE\",\"CONNECTIVITY_FAILURE\"]}]";
+
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
@@ -243,7 +245,7 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     String simpleJson = RecastOrchestrationUtils.toSimpleJson(executionErrorInfoMap);
 
     String expectedValue =
-        "{\"0\": \"{\\n  \\\"message\\\": \\\"some-message\\\"\\n}\", \"1\": \"{\\n  \\\"message\\\": \\\"some-message1\\\"\\n}\", \"2\": \"{\\n  \\\"message\\\": \\\"some-message2\\\"\\n}\"}";
+        "{\"0\": {\"message\": \"some-message\"}, \"1\": {\"message\": \"some-message1\"}, \"2\": {\"message\": \"some-message2\"}}";
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }

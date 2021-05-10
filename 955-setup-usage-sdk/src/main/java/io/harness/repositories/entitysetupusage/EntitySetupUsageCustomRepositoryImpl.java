@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.DeleteResult;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -34,5 +35,18 @@ public class EntitySetupUsageCustomRepositoryImpl implements EntitySetupUsageCus
   public long countAll(Criteria criteria) {
     Query query = new Query(criteria);
     return mongoTemplate.count(query, EntitySetupUsage.class);
+  }
+
+  @Override
+  public Boolean exists(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.exists(query, EntitySetupUsage.class);
+  }
+
+  @Override
+  public long delete(Criteria criteria) {
+    Query query = new Query(criteria);
+    DeleteResult removeResult = mongoTemplate.remove(query, EntitySetupUsage.class);
+    return removeResult.getDeletedCount();
   }
 }

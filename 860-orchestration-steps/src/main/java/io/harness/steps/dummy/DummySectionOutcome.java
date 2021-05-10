@@ -18,9 +18,4 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("dummySectionOutcome")
 public class DummySectionOutcome implements Outcome {
   Map<String, String> map;
-
-  @Override
-  public String getType() {
-    return "dummySectionOutcome";
-  }
 }

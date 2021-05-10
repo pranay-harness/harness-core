@@ -16,4 +16,8 @@ public interface EntityReference extends NGAccess {
   String getBranch();
   String getRepoIdentifier();
   Boolean isDefault();
+
+  void setBranch(String branch);
+  void setRepoIdentifier(String repoIdentifier);
+  void setIsDefault(Boolean isDefault);
 }

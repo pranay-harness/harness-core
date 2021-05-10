@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.common;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.exception.UnsupportedOperationException;
 
 import com.github.rutledgepaulv.qbuilders.nodes.ComparisonNode;
@@ -7,6 +8,8 @@ import com.github.rutledgepaulv.qbuilders.visitors.MongoVisitor;
 import java.util.Set;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@Deprecated
+@ToBeDeleted
 public class ConstrainedMongoVisitor extends MongoVisitor {
   private final Set<String> annotatedFields;
 

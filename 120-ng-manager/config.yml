@@ -122,6 +122,10 @@ gitSyncServerConfig:
 
 shouldDeployWithGitSync: true
 
+fileServiceConfiguration:
+  fileStorageMode: MONGO
+  clusterName: ""
+
 eventsFramework:
   redis:
     sentinel: false

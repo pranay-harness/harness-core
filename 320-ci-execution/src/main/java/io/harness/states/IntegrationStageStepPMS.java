@@ -1,12 +1,12 @@
 package io.harness.states;
 
-import static io.harness.beans.steps.outcome.CIOutcomeNames.CI_STEP_ARTIFACT_OUTCOME;
 import static io.harness.beans.steps.outcome.CIOutcomeNames.INTEGRATION_STAGE_OUTCOME;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.VariablesSweepingOutput;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.beans.steps.outcome.CIStepArtifactOutcome;
 import io.harness.beans.steps.outcome.IntegrationStageOutcome;
@@ -16,7 +16,6 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.plancreator.beans.VariablesSweepingOutput;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
@@ -99,11 +98,10 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
                                    .filter(OptionalOutcome::isFound)
                                    .map(OptionalOutcome::getOutcome)
                                    .collect(Collectors.toList());
-
       if (isNotEmpty(outcomes)) {
         IntegrationStageOutcomeBuilder integrationStageOutcomeBuilder = IntegrationStageOutcome.builder();
         for (Outcome outcome : outcomes) {
-          if (CI_STEP_ARTIFACT_OUTCOME.equals(outcome.getType())) {
+          if (outcome instanceof CIStepArtifactOutcome) {
             CIStepArtifactOutcome ciStepArtifactOutcome = (CIStepArtifactOutcome) outcome;
 
             if (ciStepArtifactOutcome.getStepArtifacts() != null) {

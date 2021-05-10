@@ -4,6 +4,9 @@ import static io.harness.mongo.IndexManager.Mode.MANUAL;
 
 import static lombok.AccessLevel.NONE;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +31,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Value
 @Builder(toBuilder = true)
 @ToString(onlyExplicitlyIncluded = true)
+@OwnedBy(HarnessTeam.PL)
 public class MongoConfig {
   @Value
   public static class ReadPref {
@@ -56,6 +60,8 @@ public class MongoConfig {
   @JsonProperty(defaultValue = "600000") @Default @NotEmpty private int maxConnectionIdleTime = 600000;
 
   @JsonProperty(defaultValue = "300") @Default @NotEmpty private int connectionsPerHost = 300;
+
+  private MongoSSLConfig mongoSSLConfig = MongoSSLConfig.builder().build();
 
   private boolean transactionsEnabled;
 

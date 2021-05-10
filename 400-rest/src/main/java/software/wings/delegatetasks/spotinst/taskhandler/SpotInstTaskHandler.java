@@ -27,12 +27,12 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -58,6 +58,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import java.lang.reflect.Type;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -136,14 +137,14 @@ public abstract class SpotInstTaskHandler {
     ExecutionLogCallback waitLogCallback = getLogCallBack(parameters, waitCommandUnitName);
     waitLogCallback.saveExecutionLog(format("Waiting for Elastigroup: [%s] to reach steady state", elastiGroupId));
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(steadyStateTimeOut), () -> {
         while (true) {
           if (allInstancesHealthy(spotInstToken, spotInstAccountId, elastiGroupId, waitLogCallback, targetInstances)) {
             return true;
           }
           sleep(ofSeconds(20));
         }
-      }, steadyStateTimeOut, MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       String errorMessage =
           format("Timed out while waiting for steady state for Elastigroup: [%s]. Workflow execution: [%s]",

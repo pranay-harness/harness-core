@@ -36,6 +36,7 @@ public class ExecutionNode {
   NodeRunInfo nodeRunInfo;
   List<ExecutableResponse> executableResponses;
   List<UnitProgress> unitProgresses;
+  Document progressData;
   List<DelegateInfo> delegateInfoList;
   List<InterruptEffect> interruptHistories;
 }

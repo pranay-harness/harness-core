@@ -1,5 +1,10 @@
 package io.harness.ng.core.entitysetupusage.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
@@ -9,6 +14,7 @@ import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetail;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
+import io.harness.ng.core.entitysetupusage.helper.SetupUsageGitInfoPopulator;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,10 +24,12 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 @Singleton
+@OwnedBy(DX)
 @AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 public class EntitySetupUsageEventDTOMapper {
   EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
   SetupUsageDetailProtoToRestMapper setupUsageDetailProtoToRestMapper;
+  SetupUsageGitInfoPopulator setupUsageGitInfoPopulator;
 
   public EntitySetupUsageDTO toRestDTO(EntitySetupUsageCreateDTO setupUsageEventsDTO) {
     EntityDetail referredEntity =
@@ -77,7 +85,7 @@ public class EntitySetupUsageEventDTOMapper {
       });
     }
 
-    if (EmptyPredicate.isEmpty(setupUsages)) {
+    if (isEmpty(setupUsages)) {
       setupUsages.add(EntitySetupUsage.builder()
                           .accountIdentifier(setupUsageEventsDTO.getAccountIdentifier())
                           .referredByEntity(referredByEntity)
@@ -85,7 +93,39 @@ public class EntitySetupUsageEventDTOMapper {
                           .referredByEntityType(referredByEntity.getType().toString())
                           .build());
     }
-
+    setupUsageGitInfoPopulator.populateRepoAndBranchForSetupUsageEntities(setupUsages);
+    populateTheRepoAndBranchAtTopLevel(setupUsages);
     return setupUsages;
+  }
+
+  private void populateTheRepoAndBranchAtTopLevel(List<EntitySetupUsage> setupUsages) {
+    if (isEmpty(setupUsages)) {
+      return;
+    }
+    for (EntitySetupUsage setupUsage : setupUsages) {
+      EntityDetail referredByEntity = setupUsage.getReferredByEntity();
+      EntityReference referredByEntityRef = referredByEntity.getEntityRef();
+      setupUsage.setReferredByEntityBranch(referredByEntityRef.getBranch());
+      setupUsage.setReferredByEntityRepoIdentifier(referredByEntityRef.getRepoIdentifier());
+      if (referredByEntityRef.isDefault() == null) {
+        setupUsage.setReferredByEntityIsDefault(true);
+        referredByEntityRef.setIsDefault(true);
+      } else {
+        setupUsage.setReferredByEntityIsDefault(referredByEntityRef.isDefault());
+      }
+
+      EntityDetail referredEntity = setupUsage.getReferredEntity();
+      if (referredEntity != null) {
+        EntityReference referredEntityRef = referredEntity.getEntityRef();
+        setupUsage.setReferredEntityBranch(referredEntityRef.getBranch());
+        setupUsage.setReferredEntityRepoIdentifier(referredEntityRef.getRepoIdentifier());
+        if (referredEntityRef.isDefault() == null) {
+          setupUsage.setReferredEntityIsDefault(true);
+          referredEntityRef.setIsDefault(true);
+        } else {
+          setupUsage.setReferredEntityIsDefault(referredEntityRef.isDefault());
+        }
+      }
+    }
   }
 }

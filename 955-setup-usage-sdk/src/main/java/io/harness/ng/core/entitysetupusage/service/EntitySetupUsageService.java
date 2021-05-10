@@ -27,9 +27,6 @@ public interface EntitySetupUsageService {
   Boolean delete(String accountIdentifier, String referredEntityFQN, EntityType referredEntityType,
       String referredByEntityFQN, EntityType referredByEntityType);
 
-  Boolean deleteAllReferredByEntityRecords(
-      String accountIdentifier, String referredByEntityFQN, EntityType referredByEntityType);
-
   Boolean isEntityReferenced(String accountIdentifier, String referredEntityFQN, EntityType referredEntityType);
 
   // todo(abhinav): make delete and create a transactional operation
