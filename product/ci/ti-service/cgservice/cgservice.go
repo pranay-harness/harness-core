@@ -29,7 +29,7 @@ const (
 // queryHelper gets the tests that need to be run corresponding to the packages and classes
 func (cgs *CgService) queryHelper(targetBranch, repo string, pkgs, classes []string) ([]types.RunnableTest, error) {
 	if len(pkgs) != len(classes) {
-		return nil, fmt.Errorf("Length of pkgs: %d and length of classes: %d don't match", len(pkgs), len(classes))
+		return nil, fmt.Errorf("length of pkgs: %d and length of classes: %d don't match", len(pkgs), len(classes))
 	}
 	if len(pkgs) == 0 {
 		cgs.Log.Warnw("did not receive any pkg/classes to query DB")
