@@ -1,11 +1,20 @@
 package io.harness.ng.core.api.impl;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.ByteStreams;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.google.protobuf.StringValue;
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.exception.WingsException.SRE;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.ng.core.SecretManagementModule.SECRET_FILE_SERVICE;
+import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE;
+import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE;
+import static io.harness.remote.client.RestClientUtils.getResponse;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -36,16 +45,15 @@ import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.serializer.JsonUtils;
 import io.harness.stream.BoundedInputStream;
 import io.harness.utils.PageUtils;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.RequestBody;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.mongodb.core.query.Criteria;
+
 import software.wings.app.FileUploadLimit;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import java.io.InputStream;
 import java.util.EnumMap;
 import java.util.List;
@@ -53,20 +61,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
-import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
-import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
-import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.exception.WingsException.SRE;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.ng.core.SecretManagementModule.SECRET_FILE_SERVICE;
-import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE;
-import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE;
-import static io.harness.remote.client.RestClientUtils.getResponse;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.RequestBody;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @Singleton

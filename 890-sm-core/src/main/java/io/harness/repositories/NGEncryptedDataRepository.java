@@ -12,6 +12,8 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @OwnedBy(PL)
 @HarnessRepo
 public interface NGEncryptedDataRepository extends PagingAndSortingRepository<NGEncryptedData, String> {
-    Optional<NGEncryptedData> findNGEncryptedDataByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
-            String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+  Optional<NGEncryptedData> findNGEncryptedDataByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+  boolean deleteNGEncryptedDataByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

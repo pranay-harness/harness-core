@@ -28,7 +28,6 @@ public interface NGSecretManagerService {
     return false;
   }
 
-  // authToken ->
   SecretManagerConfig create(SecretManagerConfig secretManagerConfig);
 
   ConnectorValidationResult testConnection(
@@ -37,10 +36,8 @@ public interface NGSecretManagerService {
   List<SecretManagerConfig> list(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers);
 
-  //
   Optional<SecretManagerConfig> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean maskSecrets);
-
 
   SecretManagerConfig update(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretManagerConfigUpdateDTO updateDTO);

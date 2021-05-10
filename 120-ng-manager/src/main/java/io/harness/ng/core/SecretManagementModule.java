@@ -1,7 +1,7 @@
 package io.harness.ng.core;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.ng.core.api.NGSecretActivityService;
@@ -22,7 +22,8 @@ import io.harness.ng.core.api.impl.SecretCrudServiceImpl;
 import io.harness.ng.core.api.impl.SecretFileServiceImpl;
 import io.harness.ng.core.api.impl.SecretTextServiceImpl;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 @OwnedBy(PL)
 public class SecretManagementModule extends AbstractModule {

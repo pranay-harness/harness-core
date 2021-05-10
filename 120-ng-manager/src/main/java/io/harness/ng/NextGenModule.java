@@ -1,19 +1,17 @@
 package io.harness.ng;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-import io.dropwizard.jackson.Jackson;
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
+import static io.harness.lock.DistributedLockImplementation.MONGO;
+
+import static java.lang.Boolean.TRUE;
+
 import io.harness.AccessControlClientModule;
 import io.harness.Microservice;
 import io.harness.OrchestrationModule;
@@ -158,31 +156,35 @@ import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.mongodb.morphia.converters.TypeConverter;
-import org.springframework.core.convert.converter.Converter;
-import ru.vyarus.guice.validator.ValidationModule;
+
 import software.wings.security.ThreadLocalUserProvider;
 
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
-
-import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
-import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
-import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
-import static io.harness.lock.DistributedLockImplementation.MONGO;
-import static java.lang.Boolean.TRUE;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
+import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PL)

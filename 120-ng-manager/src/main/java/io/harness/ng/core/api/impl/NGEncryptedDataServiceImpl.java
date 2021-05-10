@@ -24,25 +24,25 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   @Override
   public NGEncryptedData create(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, EncryptedRecord encryptedRecord) {
-      NGEncryptedData ngEncryptedData = NGEncryptedData.builder()
-              .accountIdentifier(accountIdentifier)
-              .orgIdentifier(orgIdentifier)
-              .projectIdentifier(projectIdentifier)
-              .identifier(identifier)
-              .name(encryptedRecord.getName())
-              .secretManagerIdentifier(encryptedRecord.getKmsId())
-              .parameters(encryptedRecord.getParameters())
-              .path(encryptedRecord.getPath())
-              .encryptionKey(encryptedRecord.getEncryptionKey())
-              .encryptedValue(encryptedRecord.getEncryptedValue())
-              .encryptionType(encryptedRecord.getEncryptionType())
-              .backupEncryptionType(encryptedRecord.getBackupEncryptionType())
-              .backupEncryptionKey(encryptedRecord.getBackupEncryptionKey())
-              .backupEncryptedValue(encryptedRecord.getBackupEncryptedValue())
-              .backupKmsId(encryptedRecord.getBackupKmsId())
-              .base64Encoded(encryptedRecord.isBase64Encoded())
-              .additionalMetadata(encryptedRecord.getAdditionalMetadata())
-              .build();
+    NGEncryptedData ngEncryptedData = NGEncryptedData.builder()
+                                          .accountIdentifier(accountIdentifier)
+                                          .orgIdentifier(orgIdentifier)
+                                          .projectIdentifier(projectIdentifier)
+                                          .identifier(identifier)
+                                          .name(encryptedRecord.getName())
+                                          .secretManagerIdentifier(encryptedRecord.getKmsId())
+                                          .parameters(encryptedRecord.getParameters())
+                                          .path(encryptedRecord.getPath())
+                                          .encryptionKey(encryptedRecord.getEncryptionKey())
+                                          .encryptedValue(encryptedRecord.getEncryptedValue())
+                                          .encryptionType(encryptedRecord.getEncryptionType())
+                                          .backupEncryptionType(encryptedRecord.getBackupEncryptionType())
+                                          .backupEncryptionKey(encryptedRecord.getBackupEncryptionKey())
+                                          .backupEncryptedValue(encryptedRecord.getBackupEncryptedValue())
+                                          .backupKmsId(encryptedRecord.getBackupKmsId())
+                                          .base64Encoded(encryptedRecord.isBase64Encoded())
+                                          .additionalMetadata(encryptedRecord.getAdditionalMetadata())
+                                          .build();
     return encryptedDataRepository.save(ngEncryptedData);
   }
 
@@ -57,6 +57,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
   @Override
   public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    return encryptedDataRepository.delete();
+    return encryptedDataRepository
+        .deleteNGEncryptedDataByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+            accountIdentifier, orgIdentifier, projectIdentifier, identifier);
   }
 }
