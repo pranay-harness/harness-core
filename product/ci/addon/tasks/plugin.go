@@ -147,9 +147,9 @@ func (t *pluginTask) execute(ctx context.Context, retryCount int32) (*pb.Artifac
 		return nil, err
 	}
 
-	artifactProto, err := artifact.GetArtifactProtoFromFile(t.artifactFilePath)
-	if err != nil {
-		logPluginErr(t.log, "failed to retrieve artifacts from the plugin step", t.id, commands, retryCount, start, err)
+	artifactProto, artifactErr := artifact.GetArtifactProtoFromFile(t.artifactFilePath)
+	if artifactErr != nil {
+		logPluginErr(t.log, "failed to retrieve artifacts from the plugin step", t.id, commands, retryCount, start, artifactErr)
 	}
 
 	t.addonLogger.Infow(
