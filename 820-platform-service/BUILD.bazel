@@ -16,6 +16,7 @@ shared_dependencies = [
     "//930-delegate-tasks:module",
     "//940-ng-audit-service:module",
     "//940-notification-client:module",
+    "//940-primary-version-manager:module",
     "//950-ng-audit-commons:module",
     "//950-ng-project-n-orgs:module",
     "//955-filters-sdk:module",
