@@ -44,8 +44,9 @@ public abstract class InstanceHandler<T, O extends InfrastructureMapping>
 
     //
 
-    O infrastructureMapping = getDeploymentInfrastructureMapping(deploymentSummary.getAccountId(),
-        deploymentSummary.getOrgId(), deploymentSummary.getProjectId(), deploymentSummary.getInfrastructureMappingId());
+    O infrastructureMapping = getDeploymentInfrastructureMapping(deploymentSummary.getAccountIdentifier(),
+        deploymentSummary.getOrgIdentifier(), deploymentSummary.getProjectIdentifier(),
+        deploymentSummary.getInfrastructureMappingId());
 
     syncInstancesInternal(infrastructureMapping, deploymentToInstanceMap, deploymentSummary, rollbackInfo, null,
         InstanceSyncFlowType.NEW_DEPLOYMENT);

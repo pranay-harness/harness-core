@@ -158,8 +158,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
              InfrastructureMapping.class, infrastructureMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
       log.info("Handling deployment event for infraMappingId [{}]", infrastructureMappingId);
       InfrastructureMapping infrastructureMapping =
-          infrastructureMappingRepository.get(deploymentSummary.getAccountId(), deploymentSummary.getOrgId(),
-              deploymentSummary.getProjectId(), infrastructureMappingId);
+          infrastructureMappingRepository.get(deploymentSummary.getAccountIdentifier(),
+              deploymentSummary.getOrgIdentifier(), deploymentSummary.getProjectIdentifier(), infrastructureMappingId);
       notNullCheck("Infra mapping is null for the given id: " + infrastructureMappingId, infrastructureMapping);
 
       InfrastructureMappingType infrastructureMappingType =

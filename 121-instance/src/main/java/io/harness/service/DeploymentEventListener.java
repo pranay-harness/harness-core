@@ -34,6 +34,9 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
     String planExecutionId = ambiance.getPlanExecutionId();
     // TODO get deployedAt from ambiance
 
+    // end time stamp of event
+    //    event.getNodeExecutionProto().getEndTs();
+
     createInfrastructureMappingIfNew(ambiance);
 
     prepareDeploymentEvent(ambiance);
@@ -71,7 +74,7 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
 
     //    serviceOutcome
 
-    //        infrastructureOutcome.getType();
+    //            infrastructureOutcome.getType();
 
     // Ask sahil to add field to determine which steps produce pods/deployment
     // Ask Sahil to maintain common constants file that provides infrastucture outcome type
