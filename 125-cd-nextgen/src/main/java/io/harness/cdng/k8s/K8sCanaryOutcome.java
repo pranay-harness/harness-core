@@ -25,11 +25,6 @@ public class K8sCanaryOutcome implements Outcome, ExecutionSweepingOutput {
   boolean canaryWorkloadDeployed;
 
   @Override
-  public String getType() {
-    return "k8sCanaryOutcome";
-  }
-
-  @Override
   public String toViewJson() {
     return RecastOrchestrationUtils.toDocumentJson(K8sCanaryOutcome.builder()
                                                        .releaseName(releaseName)
