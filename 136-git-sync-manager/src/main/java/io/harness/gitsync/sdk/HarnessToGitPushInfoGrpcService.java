@@ -5,12 +5,14 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.WingsException;
+import io.harness.gitsync.BranchDetails;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceImplBase;
 import io.harness.gitsync.InfoForPush;
 import io.harness.gitsync.IsGitSyncEnabled;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.PushResponse;
+import io.harness.gitsync.RepoDetails;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.ng.core.EntityDetail;
@@ -79,6 +81,13 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
   public void isGitSyncEnabledForScope(EntityScopeInfo request, StreamObserver<IsGitSyncEnabled> responseObserver) {
     final Boolean gitSyncEnabled = harnessToGitHelperService.isGitSyncEnabled(request);
     responseObserver.onNext(IsGitSyncEnabled.newBuilder().setEnabled(gitSyncEnabled).build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void getDefaultBranch(RepoDetails request, StreamObserver<BranchDetails> responseObserver) {
+    final BranchDetails branchDetails = harnessToGitHelperService.getBranchDetails(request);
+    responseObserver.onNext(branchDetails);
     responseObserver.onCompleted();
   }
 }

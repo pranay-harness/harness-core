@@ -11,9 +11,9 @@ option java_multiple_files = true;
 
 service HarnessToGitPushInfoService {
   rpc pushFromHarness(PushInfo) returns (PushResponse);
-  // todo(abhinav): make rpc to get user profile connector when available.
   rpc getConnectorInfo(FileInfo) returns (InfoForPush);
   rpc isGitSyncEnabledForScope(io.harness.eventsframework.schemas.entity.EntityScopeInfo) returns (IsGitSyncEnabled);
+  rpc getDefaultBranch(RepoDetails) returns (BranchDetails);
 }
 
 message PushInfo {
@@ -65,4 +65,15 @@ message IsGitSyncEnabled {
 message UserPrincipal {
   google.protobuf.StringValue user_id = 1;
   google.protobuf.StringValue email = 2;
+}
+
+message RepoDetails {
+  string yaml_git_config_id = 1;
+  string account_id = 2;
+  google.protobuf.StringValue org_identifier = 3;
+  google.protobuf.StringValue project_identifier = 4;
+}
+
+message BranchDetails {
+  string default_branch = 1;
 }

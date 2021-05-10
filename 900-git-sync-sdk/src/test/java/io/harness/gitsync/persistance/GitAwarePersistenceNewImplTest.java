@@ -41,7 +41,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(DX)
 public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
-  @Mock io.harness.gitsync.persistance.EntityKeySource entityKeySource;
+  @Mock GitSyncSdkService gitSyncSdkService;
   @Mock Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
   @Mock SCMGitSyncHelper scmGitSyncHelper;
   @Mock io.harness.gitsync.persistance.GitSyncMsvcHelper gitSyncMsvcHelper;
@@ -73,7 +73,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
   public void setup() {
     initMocks(this);
     gitAwarePersistence = new io.harness.gitsync.persistance.GitAwarePersistenceNewImpl(
-        mongoTemplate, entityKeySource, gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper);
+        mongoTemplate, gitSyncSdkService, gitPersistenceHelperServiceMap, scmGitSyncHelper, gitSyncMsvcHelper);
     doNothing().when(gitSyncMsvcHelper).postPushInformationToGitMsvc(any(), any(), any());
   }
 
@@ -120,7 +120,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
                  .build())
         .when(scmGitSyncHelper)
         .pushToGit(any(), anyString(), any(), any());
-    doReturn(isGitSyncEnabled).when(entityKeySource).fetchKey(any());
+    doReturn(isGitSyncEnabled).when(gitSyncSdkService).isGitSyncEnabled(anyString(), anyString(), anyString());
     return gitAwarePersistence.save(sampleBean, sampleBean, ChangeType.ADD, SampleBean.class);
   }
 
