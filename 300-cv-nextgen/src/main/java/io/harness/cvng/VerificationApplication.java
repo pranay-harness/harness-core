@@ -97,7 +97,8 @@ import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CVNGStepRegistrar;
@@ -296,7 +297,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerClientConfig().getBaseUrl()));
     modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
-    modules.add(new SecretManagementClientModule(configuration.getManagerClientConfig(),
+    modules.add(new SecretNGManagerClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(configuration.getNgManagerServiceConfig().getNgManagerUrl()).build(),
         configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
