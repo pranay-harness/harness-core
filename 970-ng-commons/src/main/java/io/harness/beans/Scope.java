@@ -21,4 +21,12 @@ public class Scope {
   @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
+
+  public static Scope of(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return Scope.builder()
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .build();
+  }
 }
