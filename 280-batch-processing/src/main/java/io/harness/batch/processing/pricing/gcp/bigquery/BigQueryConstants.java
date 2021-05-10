@@ -8,7 +8,7 @@ public class BigQueryConstants {
   private BigQueryConstants() {}
 
   public static final String AWS_EC2_BILLING_QUERY =
-      "SELECT SUM(blendedcost) as cost, sum(effectivecost) as effectivecost, resourceid, servicecode, productfamily  "
+      "SELECT SUM(unblendedcost) as cost, sum(effectivecost) as effectivecost, resourceid, servicecode, productfamily  "
       + "FROM `%s` "
       + "WHERE resourceid IN "
       + "( '%s' )  AND "
@@ -19,7 +19,14 @@ public class BigQueryConstants {
       + " FROM  `%s`  "
       + "WHERE accountid = '%s' and starttime = %s ; ";
 
-  public static final String EKS_FARGATE_BILLING_QUERY = "SELECT SUM(blendedcost) as cost, resourceid, usagetype  "
+  public static final String AZURE_VM_BILLING_QUERY =
+      "SELECT SUM(cost) as cost, azureInstanceId, azureVMProviderId, azureMeterCategory "
+      + "FROM `%s` "
+      + "WHERE  azureVMProviderId IN ( '%s' )  AND "
+      + "startTime  >= '%s' AND startTime < '%s' AND cloudProvider = 'AZURE' "
+      + "GROUP BY  azureInstanceId, azureVMProviderId, azureMeterCategory; ";
+
+  public static final String EKS_FARGATE_BILLING_QUERY = "SELECT SUM(unblendedcost) as cost, resourceid, usagetype  "
       + "FROM `%s` "
       + "WHERE  "
       + " (%s) AND "
