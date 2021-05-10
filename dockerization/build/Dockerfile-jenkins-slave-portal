@@ -102,6 +102,9 @@ RUN cd /tmp \
     && cd / \
     && rm -rf /tmp/*
 
-RUN curl -fsSL https://get.docker.com/ | sh
+RUN curl -fsSL https://get.docker.com/ | sh \
+    && yum -y install epel-release \
+    && yum -y install python-pip \
+    && python --version
 
 ENTRYPOINT ["jenkins-slave"]
