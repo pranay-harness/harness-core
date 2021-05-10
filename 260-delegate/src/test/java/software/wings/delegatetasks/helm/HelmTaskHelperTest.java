@@ -936,6 +936,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThatThrownBy(() -> helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000))
         .isInstanceOf(HelmClientException.class)
         .hasMessage("[Timed out] Helm chart fetch versions command failed ");
+
+    verify(chartMuseumClient).stopChartMuseumServer(chartMuseumServer.getStartedProcess());
   }
 
   @Test

@@ -7,23 +7,26 @@ import static io.harness.gitsync.GitSyncSdkModule.SCM_ON_MANAGER;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
 import io.harness.gitsync.InfoForPush;
+import io.harness.gitsync.UserPrincipal;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.scm.beans.SCMNoOpResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
+import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.PrincipalType;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,12 +68,10 @@ public class SCMGitSyncHelper {
             .setFilePath(gitBranchInfo.getFilePath())
             .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
             .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
+            .setUserPrincipal(getUserPrincipal())
             .build());
     if (!pushInfo.getStatus()) {
-      if (pushInfo.getException().getValue() == null) {
-        throw new InvalidRequestException("Unknown exception occurred");
-      }
-      throw(WingsException) kryoSerializer.asObject(pushInfo.getException().getValue().toByteArray());
+      throw new InvalidRequestException(pushInfo.getException().getValue());
     }
     final ScmConnector scmConnector =
         (ScmConnector) kryoSerializer.asObject(pushInfo.getConnector().getValue().toByteArray());
@@ -94,5 +95,18 @@ public class SCMGitSyncHelper {
         .executeOnDelegate(pushInfo.getExecuteOnDelegate())
         .encryptedDataDetailList(encryptedDataDetailList)
         .build();
+  }
+
+  public UserPrincipal getUserPrincipal() {
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      io.harness.security.dto.UserPrincipal userPrincipal =
+          (io.harness.security.dto.UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
+      return UserPrincipal.newBuilder()
+          .setEmail(StringValue.of(userPrincipal.getEmail()))
+          .setUserId(StringValue.of(userPrincipal.getName()))
+          .build();
+    }
+    throw new InvalidRequestException("User not set for push event.");
   }
 }
