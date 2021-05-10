@@ -12,7 +12,6 @@ import io.harness.dto.DeploymentSummary;
 import io.harness.dto.deploymentinfo.RollbackInfo;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.DeploymentEvent;
-import io.harness.entity.InstanceSyncFlowType;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -190,7 +189,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
       InfrastructureMapping infrastructureMapping, DeploymentSummary deploymentSummary) {
     if (instanceSyncPerpetualTaskService.isInstanceSyncByPerpetualTaskEnabled(infrastructureMapping)) {
       log.info("Creating Perpetual tasks for new deployment for account: [{}] and infrastructure mapping [{}]",
-          infrastructureMapping.getAccountId(), infrastructureMapping.getId());
+          infrastructureMapping.getAccountIdentifier(), infrastructureMapping.getId());
       instanceSyncPerpetualTaskService.createPerpetualTasksForNewDeployment(infrastructureMapping, deploymentSummary);
     }
   }
@@ -239,13 +238,13 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
         log.info("Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
             infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.deletePerpetualTask(
-            infrastructureMapping.getAccountId(), infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
+            infrastructureMapping.getAccountIdentifier(), infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
       }
       if (!status.isSuccess()) {
         log.info("Sync Failure. Reset Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
             infrastructureMapping.getId(), perpetualTaskRecord.getUuid());
         instanceSyncPerpetualTaskService.resetPerpetualTask(
-            infrastructureMapping.getAccountId(), perpetualTaskRecord.getUuid());
+            infrastructureMapping.getAccountIdentifier(), perpetualTaskRecord.getUuid());
       }
     }
   }
