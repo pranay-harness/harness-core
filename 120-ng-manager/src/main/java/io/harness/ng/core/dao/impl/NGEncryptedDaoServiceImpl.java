@@ -1,9 +1,9 @@
-package io.harness.ng.core.api.impl;
+package io.harness.ng.core.dao.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.api.NGEncryptedDataDao;
+import io.harness.ng.core.dao.NGEncryptedDataDao;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.repositories.NGEncryptedDataRepository;
 import io.harness.security.encryption.EncryptedRecord;

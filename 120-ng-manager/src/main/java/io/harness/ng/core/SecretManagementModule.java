@@ -3,7 +3,6 @@ package io.harness.ng.core;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.api.NGEncryptedDataDao;
 import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.api.NGSecretFileService;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -11,7 +10,6 @@ import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.api.SecretModifyService;
-import io.harness.ng.core.api.impl.NGEncryptedDaoServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretActivityServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretFileServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
@@ -21,6 +19,8 @@ import io.harness.ng.core.api.impl.SSHSecretServiceImpl;
 import io.harness.ng.core.api.impl.SecretCrudServiceImpl;
 import io.harness.ng.core.api.impl.SecretFileServiceImpl;
 import io.harness.ng.core.api.impl.SecretTextServiceImpl;
+import io.harness.ng.core.dao.NGEncryptedDataDao;
+import io.harness.ng.core.dao.impl.NGEncryptedDaoServiceImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;

@@ -1,4 +1,4 @@
-package io.harness.ng.core.api;
+package io.harness.ng.core.dao;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
