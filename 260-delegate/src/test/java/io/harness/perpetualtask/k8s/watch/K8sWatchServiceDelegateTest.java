@@ -46,6 +46,7 @@ import org.junit.experimental.categories.Category;
 @Slf4j
 public class K8sWatchServiceDelegateTest extends DelegateTestBase {
   private static final String CLUSTER_ID = "cluster-id";
+  private static final String KUBE_UID = "kube-uid";
   private K8sWatchServiceDelegate k8sWatchServiceDelegate;
   private WatcherFactory watcherFactory;
 
@@ -133,7 +134,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
     String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
-    assertThat(K8sClusterHelper.isSeen(CLUSTER_ID)).isTrue();
+    assertThat(K8sClusterHelper.isSeen(CLUSTER_ID, KUBE_UID)).isTrue();
   }
 
   @Test

@@ -143,6 +143,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                     .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                         AbsoluteTimeoutParameters.builder().timeoutMillis(getTimeoutInMillis(stepElement)).build())))
                     .build())
+            .skipUnresolvedExpressionsCheck(stepElement.getStepSpecType().skipUnresolvedExpressionsCheck())
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }

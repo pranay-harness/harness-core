@@ -27,8 +27,10 @@ import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.BranchDetails;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.PushInfo;
+import io.harness.gitsync.RepoDetails;
 import io.harness.gitsync.UserPrincipal;
 import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
@@ -282,5 +284,15 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
                               .repoURL(yamlGitConfigDTO.getRepo())
                               .build();
     gitBranchService.save(gitBranch);
+  }
+
+  @Override
+  public BranchDetails getBranchDetails(RepoDetails repoDetails) {
+    final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(repoDetails.getProjectIdentifier().getValue(),
+        repoDetails.getOrgIdentifier().getValue(), repoDetails.getAccountId(), repoDetails.getYamlGitConfigId());
+    if (yamlGitConfigDTO != null) {
+      return BranchDetails.newBuilder().build();
+    }
+    return BranchDetails.newBuilder().setDefaultBranch(yamlGitConfigDTO.getBranch()).build();
   }
 }

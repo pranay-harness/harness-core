@@ -13,10 +13,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class EventServerFunctionalTest extends CategoryTest {
-  private static final String ALPN_JAR =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  private static String ALPN = "/home/jenkins/maven-repositories/0/";
-
   private static EventServerExecutor eventServerExecutor = new EventServerExecutor();
 
   @Test
@@ -24,7 +20,7 @@ public class EventServerFunctionalTest extends CategoryTest {
   @Category(FunctionalTests.class)
   public void shouldEnsureEventServer() throws Exception {
     assertThatCode(() -> {
-      eventServerExecutor.ensureEventServer(EventServerFunctionalTest.class, ALPN, ALPN_JAR);
+      eventServerExecutor.ensureEventServer(EventServerFunctionalTest.class);
     }).doesNotThrowAnyException();
   }
 }

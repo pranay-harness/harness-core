@@ -32,10 +32,19 @@ public class BitbucketServiceImpl implements BitbucketService {
     log.info("Sending status {} for sha {}", bodyObjectMap.get(STATE), sha);
 
     try {
-      Response<StatusCreationResponse> statusCreationResponseResponse =
-          getBitbucketClient(bitbucketConfig, encryptionDetails)
-              .createStatus(getHeaderWithCredentials(token, userName), owner, repo, sha, bodyObjectMap)
-              .execute();
+      Response<StatusCreationResponse> statusCreationResponseResponse;
+
+      if (!bitbucketConfig.getBitbucketUrl().contains("bitbucket.org/")) {
+        statusCreationResponseResponse =
+            getBitbucketClient(bitbucketConfig, encryptionDetails)
+                .createOnPremStatus(getHeaderWithCredentials(token, userName), sha, bodyObjectMap)
+                .execute();
+      } else {
+        statusCreationResponseResponse =
+            getBitbucketClient(bitbucketConfig, encryptionDetails)
+                .createStatus(getHeaderWithCredentials(token, userName), owner, repo, sha, bodyObjectMap)
+                .execute();
+      }
 
       return statusCreationResponseResponse.isSuccessful();
 

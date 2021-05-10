@@ -555,7 +555,7 @@ public class K8sStepHelper {
             .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
             .collect(Collectors.toList());
 
-    if (manifestOutcome.getType() == ManifestType.OpenshiftTemplate) {
+    if (ManifestType.OpenshiftTemplate.equals(manifestOutcome.getType())) {
       Collections.reverse(renderedValuesFileContents);
     }
 

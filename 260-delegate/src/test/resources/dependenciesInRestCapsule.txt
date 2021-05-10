@@ -340,10 +340,10 @@ io.gsonfire:gson-fire:jar:1.8.3
 io.harness.cv:data-collection-dsl:jar:0.21-RELEASE
 io.harness:ff-java-server-sdk:jar:0.0.3
 io.jsonwebtoken:jjwt:jar:0.9.1
-io.kubernetes:client-java-api:jar:8.0.2
-io.kubernetes:client-java-extended:jar:8.0.2
-io.kubernetes:client-java-proto:jar:8.0.2
-io.kubernetes:client-java:jar:8.0.2
+io.kubernetes:client-java-api:jar:9.0.2
+io.kubernetes:client-java-extended:jar:9.0.2
+io.kubernetes:client-java-proto:jar:9.0.2
+io.kubernetes:client-java:jar:9.0.2
 io.netty:netty-buffer:jar:4.1.52.Final
 io.netty:netty-codec-dns:jar:4.1.52.Final
 io.netty:netty-codec-http2:jar:4.1.52.Final

@@ -13,8 +13,8 @@ import static java.lang.System.out;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
-import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
+import io.harness.project.Alpn;
 import io.harness.resource.Project;
 import io.harness.threading.Poller;
 
@@ -39,13 +39,13 @@ public class CommandLibraryServiceExecutor {
   public static final String COMMAND_LIBRARY_SERVER_MODULE = "210-command-library-server";
   private boolean hasFailed;
 
-  public void ensureCommandLibraryService(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
+  public void ensureCommandLibraryService(Class clazz) throws IOException {
     if (!isHealthy()) {
-      executeLocalCommandLibraryService(clazz, alpnPath, alpnJarPath);
+      executeLocalCommandLibraryService(clazz);
     }
   }
 
-  private void executeLocalCommandLibraryService(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
+  private void executeLocalCommandLibraryService(Class clazz) throws IOException {
     if (hasFailed) {
       return;
     }
@@ -65,15 +65,8 @@ public class CommandLibraryServiceExecutor {
             rootDirectory.getPath(), COMMAND_LIBRARY_SERVER_MODULE, "target", "command-library-app-capsule.jar");
         final Path config =
             Paths.get(rootDirectory.getPath(), COMMAND_LIBRARY_SERVER_MODULE, "command-library-server-config.yml");
-        String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 
-        if (!new File(alpn).exists()) {
-          // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
-          alpn = alpnPath + alpnJarPath;
-          if (!new File(alpn).exists()) {
-            throw new GeneralException("Missing alpn file");
-          }
-        }
+        String alpn = Alpn.location();
 
         for (int i = 0; i < 10; i++) {
           log.info("****");

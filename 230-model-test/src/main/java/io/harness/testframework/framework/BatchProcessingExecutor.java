@@ -8,13 +8,13 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.filesystem.FileIo;
+import io.harness.project.Alpn;
 import io.harness.resource.Project;
 import io.harness.threading.Poller;
 
 import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -33,13 +33,13 @@ public class BatchProcessingExecutor {
   private boolean failedAlready;
   private Path livenessMarker;
 
-  public void ensureBatchProcessing(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
+  public void ensureBatchProcessing(Class<?> clazz) throws IOException {
     if (!isHealthy()) {
-      executeLocalBatchProcessing(clazz, alpnPath, alpnJarPath);
+      executeLocalBatchProcessing(clazz);
     }
   }
 
-  private void executeLocalBatchProcessing(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
+  private void executeLocalBatchProcessing(Class<?> clazz) throws IOException {
     if (failedAlready) {
       return;
     }
@@ -56,15 +56,7 @@ public class BatchProcessingExecutor {
         log.info("Execute the batch-processing from {}", directory);
         Path jar = Paths.get(directory.getPath(), "280-batch-processing", "target", "batch-processing-capsule.jar");
         Path config = Paths.get(directory.getPath(), "280-batch-processing", "batch-processing-config.yml");
-        String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
-
-        if (!new File(alpn).exists()) {
-          // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
-          alpn = alpnPath + alpnJarPath;
-          if (!new File(alpn).exists()) {
-            throw new FileNotFoundException("Missing alpn file");
-          }
-        }
+        String alpn = Alpn.location();
 
         createConfigFile(directory.getPath());
 
@@ -144,8 +136,6 @@ public class BatchProcessingExecutor {
   }
 
   public static void main(String[] args) throws IOException {
-    final String alpnJar = "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-    String alpn = "/home/jenkins/maven-repositories/0/";
-    new BatchProcessingExecutor().ensureBatchProcessing(BatchProcessingExecutor.class, alpn, alpnJar);
+    new BatchProcessingExecutor().ensureBatchProcessing(BatchProcessingExecutor.class);
   }
 }

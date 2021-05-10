@@ -68,7 +68,7 @@ import org.eclipse.jgit.errors.TransportException;
 @Singleton
 @Slf4j
 public class GitClientHelper {
-  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
+  private static final String GIT_URL_REGEX = "(http|https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
   private static final Integer OWNER_GROUP = 4;
   private static final Integer REPO_GROUP = 5;
