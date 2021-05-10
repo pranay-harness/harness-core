@@ -20,9 +20,7 @@ func TestCreateAndDeleteWebhookBitbucketServer(t *testing.T) {
 		Name:   "drone",
 		Target: "https://example.com",
 		Secret: "topsecret",
-		Events: &pb.HookEvents{
-			PullRequest: true,
-		},
+
 		SkipVerify: true,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_BitbucketServer{

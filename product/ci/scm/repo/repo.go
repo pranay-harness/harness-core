@@ -22,21 +22,11 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 	}
 
 	inputParams := scm.HookInput{
-		Name:   request.GetName(),
-		Target: request.GetTarget(),
-		Secret: request.GetSecret(),
-		Events: scm.HookEvents{
-			Branch:             request.GetEvents().GetBranch(),
-			Deployment:         request.GetEvents().GetDeployment(),
-			Issue:              request.GetEvents().GetIssue(),
-			IssueComment:       request.GetEvents().GetIssueComment(),
-			PullRequest:        request.GetEvents().GetPullRequest(),
-			PullRequestComment: request.GetEvents().GetPullRequestComment(),
-			Push:               request.GetEvents().GetPush(),
-			ReviewComment:      request.GetEvents().GetReviewComment(),
-			Tag:                request.GetEvents().GetTag(),
-		},
-		SkipVerify: request.SkipVerify,
+		Name:         request.GetName(),
+		Target:       request.GetTarget(),
+		Secret:       request.GetSecret(),
+		NativeEvents: request.GetNativeEvents(),
+		SkipVerify:   request.GetSkipVerify(),
 	}
 
 	hook, response, err := client.Repositories.CreateHook(ctx, request.GetSlug(), &inputParams)
@@ -49,12 +39,12 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 
 	out = &pb.CreateWebhookResponse{
 		Webhook: &pb.WebhookResponse{
-			Id:         hook.ID,
-			Name:       hook.Name,
-			Target:     hook.Target,
-			Events:     hook.Events,
-			Active:     hook.Active,
-			SkipVerify: hook.SkipVerify,
+			Id:           hook.ID,
+			Name:         hook.Name,
+			Target:       hook.Target,
+			NativeEvents: hook.Events,
+			Active:       hook.Active,
+			SkipVerify:   hook.SkipVerify,
 		},
 		Status: int32(response.Status),
 	}
@@ -104,12 +94,12 @@ func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap
 	var hooks []*pb.WebhookResponse
 	for _, h := range scmHooks {
 		webhookResponse := pb.WebhookResponse{
-			Id:         h.ID,
-			Name:       h.Name,
-			Target:     h.Target,
-			Events:     h.Events,
-			Active:     h.Active,
-			SkipVerify: h.SkipVerify,
+			Id:           h.ID,
+			Name:         h.Name,
+			Target:       h.Target,
+			NativeEvents: h.Events,
+			Active:       h.Active,
+			SkipVerify:   h.SkipVerify,
 		}
 		hooks = append(hooks, &webhookResponse)
 	}

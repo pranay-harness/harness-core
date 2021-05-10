@@ -16,14 +16,12 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.CreateWebhookRequest{
-		Slug:   "tphoney/scm-test",
-		Name:   "drone",
-		Target: "https://example.com",
-		Secret: "topsecret",
-		Events: &pb.HookEvents{
-			Branch: true,
-		},
-		SkipVerify: true,
+		Slug:         "tphoney/scm-test",
+		Name:         "drone",
+		Target:       "https://example.com",
+		Secret:       "topsecret",
+		NativeEvents: []string{"create", "delete"},
+		SkipVerify:   true,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
@@ -40,6 +38,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
+	assert.Equal(t, 2, len(got.Webhook.NativeEvents), "created a webhook with 2 events")
 
 	list := &pb.ListWebhooksRequest{
 		Slug: "tphoney/scm-test",
