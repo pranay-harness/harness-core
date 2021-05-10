@@ -2,6 +2,7 @@ package io.harness.pcf;
 
 import static io.harness.pcf.model.PcfConstants.BIN_BASH;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -114,7 +115,7 @@ public class CfCliDelegateResolver {
           })
           .execute();
     } catch (Exception ex) {
-      throw new ProcessExecutionException("Unable to execute bash command", ex);
+      throw new ProcessExecutionException(format("Unable to execute bash command: %s", cmd), ex);
     }
   }
 
