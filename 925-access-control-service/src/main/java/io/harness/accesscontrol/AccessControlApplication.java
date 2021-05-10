@@ -26,6 +26,7 @@ import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroup
 import io.harness.aggregator.AggregatorApplication;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ConstraintViolationExceptionMapper;
+import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -36,6 +37,7 @@ import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.request.RequestContextFilter;
+import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
@@ -122,10 +124,17 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerIterators(injector);
     registerManagedBeans(appConfig, environment, injector);
     registerAuthFilters(appConfig, environment, injector);
+    registerHealthCheck(environment, injector);
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("Next Gen Manager", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   public void registerIterators(Injector injector) {
@@ -188,6 +197,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       AccessControlConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isAuthEnabled()) {
       registerAccessControlAuthFilter(configuration, environment);
+      registerInternalApiAuthFilter(configuration, environment);
     }
   }
 
@@ -216,6 +226,13 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     serviceToSecretMapping.put(ACCESS_CONTROL_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(IDENTITY_SERVICE.getServiceId(), configuration.getIdentityServiceSecret());
     environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+  }
+
+  private void registerInternalApiAuthFilter(AccessControlConfiguration configuration, Environment environment) {
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getDefaultServiceSecret());
+    environment.jersey().register(
+        new InternalApiAuthFilter(getAuthFilterPredicate(InternalApi.class), null, serviceToSecretMapping));
   }
 
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
