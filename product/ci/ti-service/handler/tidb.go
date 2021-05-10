@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
 	"net/http"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
-	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
@@ -22,7 +22,7 @@ const (
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
 // based on the files provided.
-func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSelect(svc cgservice.CgService, db db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
@@ -60,7 +60,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 			"repo", repo, "source", source, "target", target, "sha", sha)
 
 		// Make call to Mongo DB to get the tests to run
-		selected, err := tidb.GetTestsToRun(ctx, req)
+		selected, err := svc.GetTestsToRun(ctx, req)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not select tests", "account_id", accountId,
@@ -128,7 +128,7 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 	}
 }
 
-func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleUploadCg(svc cgservice.CgService, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, shaParam)
 		if err != nil {
@@ -171,7 +171,7 @@ func HandleUploadCg(tidb tidb.TiDB, log *zap.SugaredLogger) http.HandlerFunc {
 		}
 		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)),
 			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch)
-		err = tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj)
+		err = svc.UploadPartialCg(r.Context(), cg, info, acc, org, proj)
 		if err != nil {
 			log.Errorw("failed to write callgraph to db", accountIDParam, acc, repoParam, info.Repo,
 				sourceBranchParam, info.Branch, zap.Error(err))

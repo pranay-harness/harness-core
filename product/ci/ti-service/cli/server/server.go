@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
 	"os"
 	"os/signal"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/eventsframework"
 	"github.com/wings-software/portal/product/ci/ti-service/handler"
 	"github.com/wings-software/portal/product/ci/ti-service/server"
-	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 
 	"github.com/joho/godotenv"
@@ -59,7 +59,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			"selection_stats_table", config.TimeScaleDb.SelectionTable,
 			"coverage_table", config.TimeScaleDb.CoverageTable,
 			"ssl_enabled", config.TimeScaleDb.EnableSSL,
-			"ssl_cert_path", config.TimeScaleDb.SSLCertPath,)
+			"ssl_cert_path", config.TimeScaleDb.SSLCertPath)
 		db, err = timescaledb.New(
 			config.TimeScaleDb.Username,
 			config.TimeScaleDb.Password,
@@ -80,7 +80,8 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	}
 
 	// Test intelligence DB
-	var tidb tidb.TiDB
+	var tidb *mongodb.MongoDb
+	var cgs cgservice.CgService
 	if config.MongoDb.DbName != "" && (config.MongoDb.Host != "" || config.MongoDb.ConnStr != "") {
 		// Create mongoDB connection
 		log.Infow("configuring TI service to use mongo DB",
@@ -97,6 +98,12 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		if err != nil {
 			log.Errorw("unable to connect to mongo DB")
 			return errors.New("unable to connect to mongo DB")
+		}
+
+		// Test intelligence DB
+		cgs = cgservice.CgService{
+			MongoDb: tidb,
+			Log:     log,
 		}
 
 		// Test intelligence is configured. Start up redis watcher for watching push events
@@ -119,7 +126,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			}
 			topic := fmt.Sprintf("%sstreams:webhook_request_payload_data", prefix)
 			log.Infow("registering webhook payload consumer with events framework", "topic", topic)
-			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db, config)
+			rdb.RegisterMerge(ctx, topic, cgs.MergePartialCg, db, config)
 			rdb.Run()
 			log.Infow("done registering webhook consumer")
 		} else {
@@ -135,7 +142,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	server := server.Server{
 		Acme:    config.Server.Acme,
 		Addr:    config.Server.Bind,
-		Handler: handler.Handler(db, tidb, config, log),
+		Handler: handler.Handler(db, config, cgs, log),
 	}
 
 	// trap the os signal to gracefully shutdown the

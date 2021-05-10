@@ -6,16 +6,15 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/go-chi/chi"
+	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
-	"github.com/wings-software/portal/product/ci/ti-service/tidb"
-
-	"github.com/go-chi/chi"
 )
 
 // Handler returns an http.Handler that exposes the
 // service resources.
-func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLogger) http.Handler {
+func Handler(db db.Db, config config.Config, service cgservice.CgService, log *zap.SugaredLogger) http.Handler {
 	r := chi.NewRouter()
 
 	// Token generation endpoints
@@ -53,9 +52,9 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 			sr.Use(AuthMiddleware(config))
 		}
 
-		sr.Post("/select", HandleSelect(tidb, db, config, log))
+		sr.Post("/select", HandleSelect(service, db, config, log))
 		sr.Get("/overview", HandleOverview(db, config, log))
-		sr.Post("/uploadcg", HandleUploadCg(tidb, log))
+		sr.Post("/uploadcg", HandleUploadCg(service, log))
 		return sr
 	}())
 
