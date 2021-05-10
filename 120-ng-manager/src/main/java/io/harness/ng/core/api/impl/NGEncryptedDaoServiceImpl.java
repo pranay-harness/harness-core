@@ -3,7 +3,7 @@ package io.harness.ng.core.api.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.api.NGEncryptedDataService;
+import io.harness.ng.core.api.NGEncryptedDataDao;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.repositories.NGEncryptedDataRepository;
 import io.harness.security.encryption.EncryptedRecord;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
-public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
+public class NGEncryptedDaoServiceImpl implements NGEncryptedDataDao {
   private final NGEncryptedDataRepository encryptedDataRepository;
 
   @Override

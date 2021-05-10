@@ -3,7 +3,7 @@ package io.harness.ng.core;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.api.NGEncryptedDataService;
+import io.harness.ng.core.api.NGEncryptedDataDao;
 import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.api.NGSecretFileService;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -11,7 +11,7 @@ import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.api.SecretModifyService;
-import io.harness.ng.core.api.impl.NGEncryptedDataServiceImpl;
+import io.harness.ng.core.api.impl.NGEncryptedDaoServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretActivityServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretFileServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
@@ -39,7 +39,7 @@ public class SecretManagementModule extends AbstractModule {
     bind(SecretModifyService.class).annotatedWith(Names.named(SSH_SECRET_SERVICE)).to(SSHSecretServiceImpl.class);
     bind(SecretModifyService.class).annotatedWith(Names.named(SECRET_TEXT_SERVICE)).to(SecretTextServiceImpl.class);
     bind(SecretModifyService.class).annotatedWith(Names.named(SECRET_FILE_SERVICE)).to(SecretFileServiceImpl.class);
-    bind(NGEncryptedDataService.class).to(NGEncryptedDataServiceImpl.class);
+    bind(NGEncryptedDataDao.class).to(NGEncryptedDaoServiceImpl.class);
     bind(SecretCrudService.class).to(SecretCrudServiceImpl.class);
     bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
     bind(NGSecretActivityService.class).to(NGSecretActivityServiceImpl.class);

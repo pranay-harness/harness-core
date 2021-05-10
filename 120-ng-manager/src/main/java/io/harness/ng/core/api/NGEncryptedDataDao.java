@@ -7,7 +7,7 @@ import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.security.encryption.EncryptedRecord;
 
 @OwnedBy(PL)
-public interface NGEncryptedDataService {
+public interface NGEncryptedDataDao {
   NGEncryptedData save(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
       EncryptedRecord encryptedRecord);
 
