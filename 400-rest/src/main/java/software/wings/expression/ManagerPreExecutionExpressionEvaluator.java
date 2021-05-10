@@ -9,6 +9,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.expression.ImageSecretFunctor;
 import io.harness.ff.FeatureFlagService;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.SimpleEncryption;
 
 import software.wings.expression.NgSecretManagerFunctor.NgSecretManagerFunctorBuilder;
@@ -16,7 +17,6 @@ import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Map;
@@ -33,7 +33,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
       ConfigService configService, ArtifactCollectionUtils artifactCollectionUtils,
       FeatureFlagService featureFlagService, ManagerDecryptionService managerDecryptionService,
       SecretManager secretManager, String accountId, String workflowExecutionId, int expressionFunctorToken,
-      NGSecretService ngSecretService, Map<String, String> taskSetupAbstractions) {
+      SecretManagerClientService ngSecretService, Map<String, String> taskSetupAbstractions) {
     String appId = taskSetupAbstractions == null ? null : taskSetupAbstractions.get(Cd1SetupFields.APP_ID_FIELD);
     String envId = taskSetupAbstractions == null ? null : taskSetupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD);
     String serviceTemplateId =

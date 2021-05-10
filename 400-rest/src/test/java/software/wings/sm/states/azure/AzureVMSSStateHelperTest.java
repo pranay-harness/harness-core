@@ -1,5 +1,6 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.AzureEnvironmentType.AZURE;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureAppServiceConnectionStringType;
@@ -78,7 +80,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -105,6 +106,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ActivityService activityService;
@@ -112,7 +114,6 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
   @Mock private LogService logService;
-  @Mock private NGSecretService ngSecretService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 
