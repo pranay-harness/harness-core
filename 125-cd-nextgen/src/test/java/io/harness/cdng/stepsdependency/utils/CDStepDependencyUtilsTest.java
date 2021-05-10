@@ -1,5 +1,6 @@
 package io.harness.cdng.stepsdependency.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -44,6 +46,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDC)
 public class CDStepDependencyUtilsTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -181,10 +184,5 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
   @JsonTypeName("cdDummyOutcome")
   public static class DummyOutcome implements Outcome {
     String name;
-
-    @Override
-    public String getType() {
-      return "cdDummyOutcome";
-    }
   }
 }

@@ -23,9 +23,4 @@ import org.springframework.data.annotation.TypeAlias;
 public class CodeBaseConnectorRefSweepingOutput implements ExecutionSweepingOutput {
   String codeBaseConnectorRef;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore String uuid;
-
-  @Override
-  public String getType() {
-    return CODE_BASE_CONNECTOR_REF;
-  }
 }

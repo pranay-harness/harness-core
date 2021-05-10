@@ -13,6 +13,8 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.dtos.GitFileContent;
+import io.harness.gitsync.common.dtos.RepoProviders;
+import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
@@ -20,10 +22,14 @@ import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
+import java.net.URL;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
+@Slf4j
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @OwnedBy(HarnessTeam.DX)
 public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClientFacilitatorService {
@@ -50,6 +56,27 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
     return listBranchesForRepoByConnector(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
         identifierRef.getProjectIdentifier(), identifierRef.getIdentifier(), yamlGitConfig.getRepo(), pageRequest,
         searchTerm);
+  }
+
+  @Override
+  public SaasGitDTO isSaasGit(ScmConnector scmConnector) {
+    try {
+      URL url = new URL(
+          (scmConnector.getUrl().startsWith("http")) ? (scmConnector.getUrl()) : ("http://" + scmConnector.getUrl()));
+      String host = (url.getHost().startsWith("www.")) ? (url.getHost()) : ("www." + url.getHost());
+      if (null != url.getHost()) {
+        for (RepoProviders repoProvider : RepoProviders.values()) {
+          if (StringUtils.containsIgnoreCase(host, repoProvider.name())) {
+            return SaasGitDTO.builder()
+                .isSaasGit(host.contains("www." + repoProvider.name().toLowerCase() + ".com"))
+                .build();
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.error("Failed to generate Git Provider Repository Url {}", scmConnector.getUrl(), e);
+    }
+    return SaasGitDTO.builder().isSaasGit(false).build();
   }
 
   ScmConnector getScmConnector(

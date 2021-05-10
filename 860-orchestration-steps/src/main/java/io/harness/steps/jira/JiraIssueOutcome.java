@@ -17,9 +17,4 @@ public class JiraIssueOutcome extends HashMap<String, Object> implements Outcome
   public JiraIssueOutcome(JiraIssueNG issue) {
     super(issue.getFields());
   }
-
-  @Override
-  public String getType() {
-    return "jiraIssueOutcome";
-  }
 }
