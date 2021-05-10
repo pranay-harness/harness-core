@@ -900,6 +900,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>959-file-service-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-continuous-features</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

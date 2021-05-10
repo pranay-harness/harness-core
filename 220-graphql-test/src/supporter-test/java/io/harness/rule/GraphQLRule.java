@@ -44,6 +44,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.version.VersionModule;
 
+import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
@@ -145,6 +146,8 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()

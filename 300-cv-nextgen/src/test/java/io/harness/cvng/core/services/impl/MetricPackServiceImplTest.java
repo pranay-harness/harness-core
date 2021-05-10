@@ -315,4 +315,25 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
     assertThat(metricPackThresholds).isNotEmpty();
     assertThat(metricPackThresholds).size().isEqualTo(2);
   }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateDefaultMetricPackAndThresholds_NewRelic() {
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.NEW_RELIC);
+    assertThat(metricPacks).isNotEmpty();
+
+    List<MetricPack> performancePacks =
+        metricPacks.stream()
+            .filter(metricPack -> metricPack.getIdentifier().equals(PERFORMANCE_PACK_IDENTIFIER))
+            .collect(Collectors.toList());
+    assertThat(performancePacks.size()).isEqualTo(1);
+
+    List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
+        accountId, orgIdentifier, projectIdentifier, performancePacks.get(0).getIdentifier(), DataSourceType.NEW_RELIC);
+
+    assertThat(metricPackThresholds).isNotEmpty();
+    assertThat(metricPackThresholds).size().isEqualTo(8);
+  }
 }

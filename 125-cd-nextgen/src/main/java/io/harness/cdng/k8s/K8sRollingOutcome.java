@@ -19,9 +19,4 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sRollingOutcome implements Outcome, ExecutionSweepingOutput {
   String releaseName;
   int releaseNumber;
-
-  @Override
-  public String getType() {
-    return "k8sRollingOutcome";
-  }
 }

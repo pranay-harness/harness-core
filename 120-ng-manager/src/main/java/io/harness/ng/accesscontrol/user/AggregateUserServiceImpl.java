@@ -46,7 +46,7 @@ public class AggregateUserServiceImpl implements AggregateUserService {
   @Override
   public PageResponse<UserAggregateDTO> getAggregatedUsers(Scope scope, String searchTerm, PageRequest pageRequest) {
     PageResponse<UserMetadataDTO> userPage =
-        ngUserService.listUsers(scope, pageRequest, UserFilter.builder().name(searchTerm).mail(searchTerm).build());
+        ngUserService.listUsers(scope, pageRequest, UserFilter.builder().searchTerm(searchTerm).build());
     Set<PrincipalDTO> principalDTOs =
         userPage.getContent()
             .stream()

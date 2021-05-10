@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.outcomes.LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
+import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SHUBHAM;
@@ -18,6 +19,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.steps.outcome.CIStepOutcome;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.sweepingoutputs.CodeBaseConnectorRefSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
@@ -39,6 +41,7 @@ import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -86,6 +89,7 @@ public class RunStepTest extends CIExecutionTestBase {
   private StepLogKeyDetails stepLogKeyDetails;
   private final String callbackId = UUID.randomUUID().toString();
   private Map<String, ResponseData> responseDataMap;
+  private CodeBaseConnectorRefSweepingOutput codeBaseConnectorRefSweepingOutput;
 
   @Before
   public void setUp() {
@@ -110,6 +114,8 @@ public class RunStepTest extends CIExecutionTestBase {
 
     containerPortDetails = ContainerPortDetails.builder().portDetails(portDetails).build();
     responseDataMap = new HashMap<>();
+    codeBaseConnectorRefSweepingOutput =
+        CodeBaseConnectorRefSweepingOutput.builder().codeBaseConnectorRef("codeBaseConnectorRef").build();
   }
 
   @After
@@ -132,9 +138,13 @@ public class RunStepTest extends CIExecutionTestBase {
     RefObject refObject1 = RefObjectUtils.getSweepingOutputRefObject(CALLBACK_IDS);
     RefObject refObject2 = RefObjectUtils.getSweepingOutputRefObject(LOG_KEYS);
     RefObject refObject3 = RefObjectUtils.getSweepingOutputRefObject(PORT_DETAILS);
+    RefObject refObject4 = RefObjectUtils.getSweepingOutputRefObject(CODE_BASE_CONNECTOR_REF);
+
     when(executionSweepingOutputResolver.resolve(eq(ambiance), eq(refObject1))).thenReturn(stepTaskDetails);
     when(executionSweepingOutputResolver.resolve(eq(ambiance), eq(refObject2))).thenReturn(stepLogKeyDetails);
     when(executionSweepingOutputResolver.resolve(eq(ambiance), eq(refObject3))).thenReturn(containerPortDetails);
+    when(executionSweepingOutputResolver.resolveOptional(eq(ambiance), eq(refObject4)))
+        .thenReturn(OptionalSweepingOutput.builder().found(true).output(codeBaseConnectorRefSweepingOutput).build());
     when(outcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(POD_DETAILS_OUTCOME)))
         .thenReturn(liteEnginePodDetailsOutcome);
     when(ciExecutionServiceConfig.isLocal()).thenReturn(false);

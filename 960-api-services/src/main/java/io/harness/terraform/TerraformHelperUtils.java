@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -75,15 +75,10 @@ public class TerraformHelperUtils {
     return tfStateFile.exists() ? tfStateFile : null;
   }
 
-  public List<String> createFileFromStringContent(List<String> varFilesListContent, String scriptDirectory)
-      throws IOException {
-    ArrayList<String> varFilesList = new ArrayList();
-
-    for (int i = 0; i < varFilesListContent.size(); i++) {
-      Path filePath = Files.createFile(Paths.get(scriptDirectory + "/varFile-" + i + ".tfvars"));
-      Files.write(filePath, varFilesListContent.get(i).getBytes());
-      varFilesList.add(filePath.toString());
-    }
-    return varFilesList;
+  public String createFileFromStringContent(String varFilesListContent, String scriptDirectory) throws IOException {
+    UUID uuid = UUID.randomUUID();
+    Path filePath = Files.createFile(Paths.get(scriptDirectory + "/varFile-" + uuid + ".tfvars"));
+    Files.write(filePath, varFilesListContent.getBytes());
+    return filePath.toString();
   }
 }

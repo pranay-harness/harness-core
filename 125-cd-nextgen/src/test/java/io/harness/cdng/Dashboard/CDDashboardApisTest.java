@@ -1,5 +1,6 @@
 package io.harness.cdng.Dashboard;
 
+import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +19,7 @@ import io.harness.cdng.Deployment.DeploymentInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfoList;
 import io.harness.cdng.Deployment.ExecutionDeployment;
+import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.Deployment.HealthDeploymentInfo;
@@ -377,6 +379,79 @@ public class CDDashboardApisTest {
         DashboardWorkloadDeployment.builder().workloadDeploymentInfoList(workloadDeploymentInfos).build();
 
     assertThat(expectedWorkloadDeployment).isEqualTo(dashboardWorkloadDeployment);
+  }
+
+  @Test
+  @Owner(developers = MEENAKSHI)
+  @Category(UnitTests.class)
+  public void testGetDeploymentsExecutionInfo() {
+    String prevStartInterval = "2021-04-23";
+    String prevEndInterval = "2021-04-27";
+    String startInterval = "2021-04-28";
+    String endInterval = "2021-05-02";
+
+    List<ExecutionDeployment> executionDeploymentList = new ArrayList<>();
+    List<ExecutionDeployment> prevExecutionDeploymentList = new ArrayList<>();
+    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+                                        .time("2021-04-23")
+                                        .deployments(DeploymentCount.builder().total(1).success(1).failure(0).build())
+                                        .build());
+    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+                                        .time("2021-04-24")
+                                        .deployments(DeploymentCount.builder().total(4).success(3).failure(0).build())
+                                        .build());
+    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+                                        .time("2021-04-25")
+                                        .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
+                                        .build());
+    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+                                        .time("2021-04-26")
+                                        .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
+                                        .build());
+    prevExecutionDeploymentList.add(ExecutionDeployment.builder()
+                                        .time("2021-04-27")
+                                        .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
+                                        .build());
+
+    executionDeploymentList.add(ExecutionDeployment.builder()
+                                    .time("2021-04-28")
+                                    .deployments(DeploymentCount.builder().total(2).success(1).failure(0).build())
+                                    .build());
+    executionDeploymentList.add(ExecutionDeployment.builder()
+                                    .time("2021-04-29")
+                                    .deployments(DeploymentCount.builder().total(0).success(0).failure(0).build())
+                                    .build());
+    executionDeploymentList.add(ExecutionDeployment.builder()
+                                    .time("2021-04-30")
+                                    .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
+                                    .build());
+    executionDeploymentList.add(ExecutionDeployment.builder()
+                                    .time("2021-05-01")
+                                    .deployments(DeploymentCount.builder().total(4).success(2).failure(1).build())
+                                    .build());
+    executionDeploymentList.add(ExecutionDeployment.builder()
+                                    .time("2021-05-02")
+                                    .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
+                                    .build());
+
+    ExecutionDeploymentInfo executionDeploymentInfo =
+        ExecutionDeploymentInfo.builder().executionDeploymentList(executionDeploymentList).build();
+    ExecutionDeploymentInfo prevExecutionDeploymentInfo =
+        ExecutionDeploymentInfo.builder().executionDeploymentList(prevExecutionDeploymentList).build();
+
+    doReturn(executionDeploymentInfo)
+        .when(cdOverviewDashboardServiceImpl)
+        .getExecutionDeploymentDashboard("acc", "org", "pro", startInterval, endInterval);
+    doReturn(prevExecutionDeploymentInfo)
+        .when(cdOverviewDashboardServiceImpl)
+        .getExecutionDeploymentDashboard("acc", "org", "pro", prevStartInterval, prevEndInterval);
+
+    ExecutionDeploymentDetailInfo deploymentsExecutionInfo =
+        cdOverviewDashboardServiceImpl.getDeploymentsExecutionInfo("acc", "org", "pro", startInterval, endInterval);
+
+    assertThat(deploymentsExecutionInfo.getExecutionDeploymentList()).isEqualTo(executionDeploymentList);
+    assertThat(deploymentsExecutionInfo.getTotalDeployments()).isEqualTo(10);
+    assertThat(deploymentsExecutionInfo.getFrequency()).isEqualTo(2.0);
   }
 
   @Test

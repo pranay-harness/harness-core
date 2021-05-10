@@ -62,7 +62,8 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
 
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      StepElementParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+      StepElementParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure,
+      boolean shouldOpenFetchFilesLogStream) {
     K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepParameters.getSpec();
     boolean isResourceName = io.harness.delegate.task.k8s.DeleteResourcesType.ResourceName
         == deleteStepParameters.getDeleteResources().getType();
@@ -85,6 +86,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
+            .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, request, ambiance, infrastructure);

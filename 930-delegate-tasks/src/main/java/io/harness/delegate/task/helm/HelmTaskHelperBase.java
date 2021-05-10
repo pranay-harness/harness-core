@@ -5,21 +5,30 @@ import static io.harness.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_UR
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.delegate.beans.connector.helm.HttpHelmAuthType.USER_PASSWORD;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GCS_HELM;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.S3_HELM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.helm.HelmConstants.ADD_COMMAND_FOR_REPOSITORY;
+import static io.harness.helm.HelmConstants.CHARTS_YAML_KEY;
 import static io.harness.helm.HelmConstants.HELM_HOME_PATH_FLAG;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.PASSWORD;
 import static io.harness.helm.HelmConstants.REPO_NAME;
 import static io.harness.helm.HelmConstants.REPO_URL;
 import static io.harness.helm.HelmConstants.USERNAME;
+import static io.harness.helm.HelmConstants.VALUES_YAML;
+import static io.harness.helm.HelmConstants.WORKING_DIR_BASE;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
+import static io.harness.logging.LogLevel.INFO;
+import static io.harness.logging.LogLevel.WARN;
+
+import static software.wings.beans.LogColor.White;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -27,6 +36,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.chartmuseum.ChartMuseumServer;
+import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -51,8 +61,13 @@ import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -68,6 +83,8 @@ import org.zeroturnaround.exec.ProcessResult;
 @OwnedBy(CDP)
 public class HelmTaskHelperBase {
   public static final String RESOURCE_DIR_BASE = "./repository/helm/resources/";
+  public static final String VERSION_KEY = "version:";
+  public static final String NAME_KEY = "name:";
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private NGChartMuseumService ngChartMuseumService;
@@ -297,16 +314,8 @@ public class HelmTaskHelperBase {
     HttpHelmStoreDelegateConfig storeDelegateConfig = (HttpHelmStoreDelegateConfig) manifest.getStoreDelegateConfig();
     HttpHelmConnectorDTO httpHelmConnector = storeDelegateConfig.getHttpHelmConnector();
 
-    String username = null;
-    char[] password = null;
-    if (httpHelmConnector.getAuth() != null && USER_PASSWORD == httpHelmConnector.getAuth().getAuthType()) {
-      HttpHelmUsernamePasswordDTO usernamePassword =
-          (HttpHelmUsernamePasswordDTO) httpHelmConnector.getAuth().getCredentials();
-      username = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
-          usernamePassword.getUsername(), usernamePassword.getUsernameRef());
-      password = usernamePassword.getPasswordRef().getDecryptedValue();
-    }
-
+    String username = getHttpHelmUsername(httpHelmConnector);
+    char[] password = getHttpHelmPassword(httpHelmConnector);
     addRepo(storeDelegateConfig.getRepoName(), storeDelegateConfig.getRepoDisplayName(),
         httpHelmConnector.getHelmRepoUrl(), username, password, destinationDirectory, manifest.getHelmVersion(),
         timeoutInMillis);
@@ -381,6 +390,31 @@ public class HelmTaskHelperBase {
             .replace(REPO_URL, repoUrl);
 
     return applyHelmHomePath(repoAddCommand, workingDirectory);
+  }
+
+  public void printHelmChartInfoWithVersionInExecutionLogs(String workingDirectory,
+      HelmChartManifestDelegateConfig manifestDelegateConfig, LogCallback executionLogCallback) {
+    if (isNotBlank(manifestDelegateConfig.getChartVersion())) {
+      printHelmChartInfoInExecutionLogs(manifestDelegateConfig, executionLogCallback);
+      return;
+    }
+
+    try {
+      HelmChartInfo helmChartInfo = getHelmChartInfoFromChartsYamlFile(
+          Paths.get(workingDirectory, manifestDelegateConfig.getChartName(), CHARTS_YAML_KEY).toString());
+
+      HelmChartManifestDelegateConfig helmChartManifestDelegateConfigWithChartVersion =
+          HelmChartManifestDelegateConfig.builder()
+              .storeDelegateConfig(manifestDelegateConfig.getStoreDelegateConfig())
+              .chartName(manifestDelegateConfig.getChartName())
+              .helmVersion(manifestDelegateConfig.getHelmVersion())
+              .chartVersion(helmChartInfo.getVersion())
+              .helmCommandFlag(manifestDelegateConfig.getHelmCommandFlag())
+              .build();
+      printHelmChartInfoInExecutionLogs(helmChartManifestDelegateConfigWithChartVersion, executionLogCallback);
+    } catch (Exception e) {
+      log.info("Unable to fetch chart version", e);
+    }
   }
 
   public void printHelmChartInfoInExecutionLogs(
@@ -464,5 +498,105 @@ public class HelmTaskHelperBase {
       return Paths.get(parentDir, chartName.substring(lastIndex + 1)).toString();
     }
     return Paths.get(parentDir, chartName).toString();
+  }
+
+  public String fetchValuesYamlFromChart(HelmChartManifestDelegateConfig helmChartManifestDelegateConfig,
+      long timeoutInMillis, LogCallback logCallback) throws Exception {
+    String workingDirectory = createNewDirectoryAtPath(Paths.get(WORKING_DIR_BASE).toString());
+    logCallback.saveExecutionLog(color("\nFetching values.yaml from helm chart repo", White, Bold));
+
+    try {
+      downloadHelmChartFiles(helmChartManifestDelegateConfig, workingDirectory, timeoutInMillis);
+      printHelmChartInfoWithVersionInExecutionLogs(workingDirectory, helmChartManifestDelegateConfig, logCallback);
+
+      String valuesFileContent =
+          readValuesYamlFromChartFiles(workingDirectory, helmChartManifestDelegateConfig.getChartName());
+      if (null == valuesFileContent) {
+        logCallback.saveExecutionLog("No values.yaml found", WARN);
+      } else {
+        logCallback.saveExecutionLog("\nSuccessfully fetched values.yaml", INFO);
+      }
+
+      return valuesFileContent;
+    } catch (Exception ex) {
+      String errorMsg = format("Failed to fetch values yaml from %s repo. ",
+          helmChartManifestDelegateConfig.getStoreDelegateConfig().getType());
+      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(ex), WARN);
+      return "";
+    } finally {
+      cleanup(workingDirectory);
+    }
+  }
+
+  private String readValuesYamlFromChartFiles(String workingDirectory, String chartName) throws Exception {
+    return new String(Files.readAllBytes(Paths.get(getChartDirectory(workingDirectory, chartName), VALUES_YAML)),
+        StandardCharsets.UTF_8);
+  }
+
+  private void downloadHelmChartFiles(HelmChartManifestDelegateConfig helmChartManifestDelegateConfig,
+      String destinationDirectory, long timeoutInMillis) throws Exception {
+    StoreDelegateConfig helmStoreDelegateConfig = helmChartManifestDelegateConfig.getStoreDelegateConfig();
+    initHelm(destinationDirectory, helmChartManifestDelegateConfig.getHelmVersion(), timeoutInMillis);
+
+    if (HTTP_HELM == helmStoreDelegateConfig.getType()) {
+      downloadChartFilesFromHttpRepo(helmChartManifestDelegateConfig, destinationDirectory, timeoutInMillis);
+    } else {
+      downloadChartFilesUsingChartMuseum(helmChartManifestDelegateConfig, destinationDirectory, timeoutInMillis);
+    }
+  }
+
+  public String getHttpHelmUsername(final HttpHelmConnectorDTO httpHelmConnectorDTO) {
+    if (httpHelmConnectorDTO.getAuth().getAuthType() == HttpHelmAuthType.ANONYMOUS) {
+      return null;
+    }
+
+    HttpHelmUsernamePasswordDTO creds = (HttpHelmUsernamePasswordDTO) httpHelmConnectorDTO.getAuth().getCredentials();
+    return FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+        creds.getUsername(), creds.getUsernameRef());
+  }
+
+  public char[] getHttpHelmPassword(final HttpHelmConnectorDTO httpHelmConnectorDTO) {
+    if (httpHelmConnectorDTO.getAuth().getAuthType() == HttpHelmAuthType.ANONYMOUS) {
+      return null;
+    }
+
+    HttpHelmUsernamePasswordDTO creds = (HttpHelmUsernamePasswordDTO) httpHelmConnectorDTO.getAuth().getCredentials();
+    return creds.getPasswordRef().getDecryptedValue();
+  }
+
+  /**
+   * Method to extract Helm Chart info like Chart version and Chart name from the downloaded Chart files.
+   * @param chartYamlPath - Path of the Chart.yaml file
+   * @return HelmChartInfo - This contains details about the Helm chart
+   * @throws IOException
+   */
+  public HelmChartInfo getHelmChartInfoFromChartsYamlFile(String chartYamlPath) throws IOException {
+    String chartVersion = null;
+    String chartName = null;
+    boolean versionFound = false;
+    boolean nameFound = false;
+
+    try (BufferedReader br =
+             new BufferedReader(new InputStreamReader(new FileInputStream(chartYamlPath), StandardCharsets.UTF_8))) {
+      String line;
+
+      while ((line = br.readLine()) != null) {
+        if (!versionFound && line.startsWith(VERSION_KEY)) {
+          chartVersion = line.substring(VERSION_KEY.length() + 1);
+          versionFound = true;
+        }
+
+        if (!nameFound && line.startsWith(NAME_KEY)) {
+          chartName = line.substring(NAME_KEY.length() + 1);
+          nameFound = true;
+        }
+
+        if (versionFound && nameFound) {
+          break;
+        }
+      }
+    }
+
+    return HelmChartInfo.builder().version(chartVersion).name(chartName).build();
   }
 }

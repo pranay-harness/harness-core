@@ -1,5 +1,8 @@
 package io.harness.beans.outcomes;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.pms.sdk.core.data.Outcome;
 
@@ -13,11 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("dependencyOutcome")
 @JsonTypeName("dependencyOutcome")
+@OwnedBy(CI)
 public class DependencyOutcome implements Outcome {
   List<ServiceDependency> serviceDependencyList;
-
-  @Override
-  public String getType() {
-    return "dependencyOutcome";
-  }
 }
