@@ -19,9 +19,4 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(HarnessTeam.CI)
 public class CIStepOutcome implements Outcome {
   Map<String, String> outputVariables;
-
-  @Override
-  public String getType() {
-    return CI_STEP_OUTCOME;
-  }
 }

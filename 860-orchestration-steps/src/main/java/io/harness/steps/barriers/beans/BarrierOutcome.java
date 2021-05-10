@@ -18,9 +18,4 @@ import org.springframework.data.annotation.TypeAlias;
 public class BarrierOutcome implements Outcome {
   String message;
   String identifier;
-
-  @Override
-  public String getType() {
-    return "barrierOutcome";
-  }
 }

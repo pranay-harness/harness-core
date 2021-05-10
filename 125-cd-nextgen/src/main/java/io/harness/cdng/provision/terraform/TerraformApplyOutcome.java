@@ -13,9 +13,4 @@ import lombok.Data;
 @Builder
 public class TerraformApplyOutcome implements Outcome {
   Map<String, Object> outputs;
-
-  @Override
-  public String getType() {
-    return "terraformApplyOutcome";
-  }
 }

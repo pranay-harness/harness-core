@@ -1,10 +1,12 @@
 package io.harness.executionplan.stepsdependency.resolvers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
@@ -31,6 +33,7 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDC)
 public class RefObjectStepDependencyResolverTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -76,10 +79,5 @@ public class RefObjectStepDependencyResolverTest extends CategoryTest {
   @JsonTypeName("Dummy2")
   public static class DummyOutcome implements Outcome {
     String name;
-
-    @Override
-    public String getType() {
-      return "Dummy2";
-    }
   }
 }
