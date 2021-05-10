@@ -398,7 +398,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
 
       logProxyConfiguration();
-      logCfCliConfiguration();
 
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
@@ -432,6 +431,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
       boolean ocInstalled = installOc(delegateConfiguration);
       boolean kustomizeInstalled = installKustomize(delegateConfiguration);
+
+      logCfCliConfiguration();
 
       long start = clock.millis();
       String descriptionFromConfigFile = isBlank(delegateDescription) ? "" : delegateDescription;
