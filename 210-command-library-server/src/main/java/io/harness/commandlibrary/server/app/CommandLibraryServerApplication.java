@@ -10,6 +10,7 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.server.resources.CommandStoreResource;
 import io.harness.commandlibrary.server.security.CommandLibraryServerAuthenticationFilter;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -29,6 +30,7 @@ import io.harness.serializer.CommonsRegistrars;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.CommandLibrarySharedModule;
@@ -198,6 +200,7 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CommandLibraryServer.morphiaRegistrars)
+            .add(PrimaryVersionManagerMorphiaRegistrar.class)
             .build();
       }
 
@@ -230,6 +233,8 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     registerAuthFilters(environment, injector);
 
     registerHealthChecks(environment, injector);
+
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
