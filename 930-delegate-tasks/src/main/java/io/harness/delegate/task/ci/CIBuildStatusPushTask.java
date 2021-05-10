@@ -150,6 +150,14 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
       return "https://" + domain + "/api/v3/";
     }
   }
+  private String getBitBucketApiURL(String url) {
+    if (url.contains("bitbucket.org/")) {
+      return BITBUCKET_API_URL;
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
+  }
 
   private boolean sendBuildStatusToBitbucket(CIBuildStatusPushParameters ciBuildStatusPushParameters) {
     Map<String, Object> bodyObjectMap = new HashMap<>();
@@ -160,8 +168,13 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
 
     String token = retrieveAuthToken(
         ciBuildStatusPushParameters.getGitSCMType(), ciBuildStatusPushParameters.getConnectorDetails());
+
+    BitbucketConnectorDTO gitConfigDTO =
+        (BitbucketConnectorDTO) ciBuildStatusPushParameters.getConnectorDetails().getConnectorConfig();
+
     if (isNotEmpty(token)) {
-      return bitbucketService.sendStatus(BitbucketConfig.builder().bitbucketUrl(BITBUCKET_API_URL).build(),
+      return bitbucketService.sendStatus(
+          BitbucketConfig.builder().bitbucketUrl(getBitBucketApiURL(gitConfigDTO.getUrl())).build(),
           ciBuildStatusPushParameters.getUserName(), token, null, ciBuildStatusPushParameters.getSha(),
           ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
     } else {
