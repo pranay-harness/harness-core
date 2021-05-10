@@ -1,5 +1,8 @@
 package io.harness.ngpipeline.artifact.bean;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngpipeline.pipeline.executions.beans.ArtifactSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary;
 
@@ -14,6 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @TypeAlias("dockerArtifactOutcome")
 @JsonTypeName("dockerArtifactOutcome")
+@OwnedBy(CDC)
 // TODO : Create a shared Module b/w pipline and CD/CI where these entities can go to and eventually We need to
 // deprecate that module 878-pms-coupling
 // @TargetModule(878-pms-coupling)
@@ -28,8 +32,8 @@ public class DockerArtifactOutcome implements ArtifactOutcome {
   String tagRegex;
   /** Identifier for artifact. */
   String identifier;
-  /** Type to identify whether primary and sidecars artifact. */
-  String artifactType;
+  /** Artifact type. */
+  String type;
   /** Whether this config corresponds to primary artifact.*/
   boolean primaryArtifact;
   /** domainName/imagePath:tag */
@@ -43,7 +47,7 @@ public class DockerArtifactOutcome implements ArtifactOutcome {
   }
 
   @Override
-  public String getType() {
-    return "dockerArtifactOutcome";
+  public String getArtifactType() {
+    return type;
   }
 }

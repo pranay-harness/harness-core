@@ -124,10 +124,6 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   public static class VerifyStepOutcome implements Outcome {
     int progressPercentage;
     String estimatedRemainingTime;
-    @Override
-    public String getType() {
-      return "verifyStepOutcome";
-    }
   }
 
   @Override

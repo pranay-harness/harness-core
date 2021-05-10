@@ -1,5 +1,8 @@
 package io.harness.ngpipeline.artifact.bean;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngpipeline.pipeline.executions.beans.ArtifactSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.EcrArtifactSummary;
 
@@ -14,6 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @TypeAlias("ecrArtifactOutcome")
 @JsonTypeName("ecrArtifactOutcome")
+@OwnedBy(CDC)
 // TODO : Create a shared Module b/w pipline and CD/CI where these entities can go to and eventually We need to
 // deprecate that module 878-pms-coupling
 // @TargetModule(878-pms-coupling)
@@ -30,8 +34,8 @@ public class EcrArtifactOutcome implements ArtifactOutcome {
   String region;
   /** Identifier for artifact. */
   String identifier;
-  /** Type to identify whether primary and sidecars artifact. */
-  String artifactType;
+  /** Artifact type. */
+  String type;
   /** Whether this config corresponds to primary artifact.*/
   boolean primaryArtifact;
   /** registryHostName/imagePath:tag */
@@ -45,7 +49,7 @@ public class EcrArtifactOutcome implements ArtifactOutcome {
   }
 
   @Override
-  public String getType() {
-    return "ecrArtifactOutcome";
+  public String getArtifactType() {
+    return type;
   }
 }

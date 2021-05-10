@@ -20,11 +20,6 @@ public class EnvironmentOutcome implements Outcome, ExecutionSweepingOutput {
   String name;
   String identifier;
   String description;
-  EnvironmentType environmentType;
+  EnvironmentType type;
   Map<String, String> tags;
-
-  @Override
-  public String getType() {
-    return "environmentOutcome";
-  }
 }
