@@ -1,6 +1,7 @@
 package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
@@ -13,12 +14,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.outcome.CIStepArtifactOutcome;
 import io.harness.beans.steps.outcome.CIStepOutcome;
 import io.harness.beans.steps.outcome.StepArtifacts;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
+import io.harness.beans.sweepingoutputs.CodeBaseConnectorRefSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.PluginCompatibleStepSerializer;
@@ -37,6 +40,7 @@ import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.logstreaming.LogStreamingHelper;
+import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -44,6 +48,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -57,6 +62,8 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.steps.executable.AsyncExecutableWithRbac;
 import io.harness.tasks.ResponseData;
+import io.harness.util.GithubApiFunctor;
+import io.harness.util.GithubApiTokenEvaluator;
 import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.inject.Inject;
@@ -104,6 +111,9 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     String stepParametersName = stepParameters.getName();
 
     CIStepInfo ciStepInfo = (CIStepInfo) stepParameters.getSpec();
+
+    resolveGitAppFunctor(ambiance, ciStepInfo);
+
     long timeoutInMillis = ciStepInfo.getDefaultTimeout();
     String stringTimeout = null;
 
@@ -126,6 +136,30 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         .addCallbackIds(liteEngineTaskId)
         .addAllLogKeys(CollectionUtils.emptyIfNull(singletonList(logKey)))
         .build();
+  }
+
+  private void resolveGitAppFunctor(Ambiance ambiance, CIStepInfo ciStepInfo) {
+    if (ciStepInfo.getNonYamlInfo().getStepInfoType() != CIStepInfoType.RUN) {
+      return;
+    }
+    String codeBaseConnectorRef = null;
+    OptionalSweepingOutput codeBaseConnectorRefOptionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(CODE_BASE_CONNECTOR_REF));
+    if (codeBaseConnectorRefOptionalSweepingOutput.isFound()) {
+      CodeBaseConnectorRefSweepingOutput codeBaseConnectorRefSweepingOutput =
+          (CodeBaseConnectorRefSweepingOutput) codeBaseConnectorRefOptionalSweepingOutput.getOutput();
+      codeBaseConnectorRef = codeBaseConnectorRefSweepingOutput.getCodeBaseConnectorRef();
+    }
+
+    GithubApiTokenEvaluator githubApiTokenEvaluator =
+        GithubApiTokenEvaluator.builder()
+            .githubApiFunctorConfig(GithubApiFunctor.Config.builder()
+                                        .codeBaseConnectorRef(codeBaseConnectorRef)
+                                        .fetchConnector(false)
+                                        .build())
+            .build();
+    githubApiTokenEvaluator.resolve(
+        ciStepInfo, AmbianceHelper.getNgAccess(ambiance), ambiance.getExpressionFunctorToken());
   }
 
   @Override

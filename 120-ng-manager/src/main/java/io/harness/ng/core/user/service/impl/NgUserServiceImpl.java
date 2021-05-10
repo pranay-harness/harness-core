@@ -131,11 +131,9 @@ public class NgUserServiceImpl implements NgUserService {
                                            .and(ScopeKeys.projectIdentifier)
                                            .is(scope.getProjectIdentifier()));
     if (userFilter != null) {
-      if (isNotBlank(userFilter.getName())) {
-        criteria.and(UserMembershipKeys.name).regex(userFilter.getName(), "i");
-      }
-      if (isNotBlank(userFilter.getMail())) {
-        criteria.and(UserMembershipKeys.emailId).regex(userFilter.getMail(), "i");
+      if (isNotBlank(userFilter.getSearchTerm())) {
+        criteria.orOperator(Criteria.where(UserMembershipKeys.name).regex(userFilter.getSearchTerm(), "i"),
+            Criteria.where(UserMembershipKeys.emailId).regex(userFilter.getSearchTerm(), "i"));
       }
       if (isNotEmpty(userFilter.getIdentifiers())) {
         criteria.and(UserMembershipKeys.userId).in(userFilter.getIdentifiers());

@@ -72,6 +72,8 @@ java_library(
         "@maven//:io_fabric8_kubernetes_model",
         "@maven//:io_fabric8_kubernetes_server_mock",
         "@maven//:io_fabric8_openshift_client",
+        "@maven//:io_github_resilience4j_resilience4j_core",
+        "@maven//:io_github_resilience4j_resilience4j_retry",
         "@maven//:io_kubernetes_client_java",
         "@maven//:io_kubernetes_client_java_api",
         "@maven//:io_kubernetes_client_java_extended",

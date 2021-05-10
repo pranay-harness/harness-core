@@ -14,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -30,7 +31,6 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 
 import com.google.inject.Inject;

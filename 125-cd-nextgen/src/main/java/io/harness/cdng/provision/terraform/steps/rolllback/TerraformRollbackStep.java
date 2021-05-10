@@ -1,17 +1,15 @@
 package io.harness.cdng.provision.terraform.steps.rolllback;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import static java.lang.String.format;
 
-import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.provision.terraform.TerraformConfig;
 import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigKeys;
 import io.harness.cdng.provision.terraform.TerraformStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.TaskSelector;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
@@ -45,11 +43,11 @@ import io.harness.supplier.ThrowingSupplier;
 import software.wings.beans.TaskType;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(HarnessTeam.CDP)
 public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformTaskNGResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.TERRAFORM_ROLLBACK.getYamlType()).build();
@@ -127,17 +125,8 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
               .workspace(rollbackConfig.getWorkspace())
               .configFile(terraformStepHelper.getGitFetchFilesConfig(
                   rollbackConfig.getConfigFiles().toGitStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-              .inlineVarFiles(rollbackConfig.getInlineVarFiles());
-      if (isNotEmpty(rollbackConfig.getRemoteVarFiles())) {
-        List<GitFetchFilesConfig> varFilesConfig = new ArrayList<>();
-        int i = 1;
-        for (GitStoreConfigDTO remoteVarFileConfig : rollbackConfig.getRemoteVarFiles()) {
-          varFilesConfig.add(terraformStepHelper.getGitFetchFilesConfig(
-              remoteVarFileConfig.toGitStoreConfig(), ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i)));
-          i++;
-        }
-        builder.remoteVarfiles(varFilesConfig);
-      }
+              .varFileInfos(terraformStepHelper.toDelegateTask(rollbackConfig.getVarFileConfigs(), ambiance));
+
       builder.backendConfig(rollbackConfig.getBackendConfig())
           .targets(rollbackConfig.getTargets())
           .environmentVariables(rollbackConfig.getEnvironmentVariables());

@@ -29,7 +29,6 @@ import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
-import io.harness.service.ScmClient;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -44,7 +43,6 @@ import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.DX)
 public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
-  @Mock ScmClient scmClient;
   @Mock SecretManagerClientService secretManagerClientService;
   @Mock ConnectorService connectorService;
   @Mock DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -67,10 +65,6 @@ public class ScmDelegateFacilitatorServiceImplTest extends GitSyncTestBase {
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
     when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(Collections.emptyList());
-    when(scmClient.getFileContent(any(), any())).thenReturn(FileContent.newBuilder().build());
-    //    when(delegateGrpcClientWrapper.executeSyncTask(any())).thenReturn(ScmGitRefTaskResponseData.builder()
-    //            .listBranchesResponse(listBranchesResponse)
-    //            .build());
     GithubConnectorDTO githubConnector =
         GithubConnectorDTO.builder().apiAccess(GithubApiAccessDTO.builder().build()).build();
     ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder().connectorConfig(githubConnector).build();

@@ -16,8 +16,6 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
-import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
-import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
 import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
 
@@ -27,6 +25,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliResponse;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.FileBucket;
@@ -72,6 +71,7 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -410,37 +410,41 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
   }
 
   public Map<String, String> buildcommitIdToFetchedFilesMap(String accountId, String configFileIdentifier,
-      GitBaseRequest gitBaseRequestForConfigFile, List<GitFetchFilesConfig> varFilesgitFetchFilesConfigList) {
+      GitBaseRequest gitBaseRequestForConfigFile, List<TerraformVarFileInfo> varFileInfo) {
     Map<String, String> commitIdForConfigFilesMap = new HashMap<>();
     // Config File
     commitIdForConfigFilesMap.put(configFileIdentifier, getLatestCommitSHAFromLocalRepo(gitBaseRequestForConfigFile));
     // Add remote var files
-    if (isNotEmpty(varFilesgitFetchFilesConfigList)) {
-      addVarFilescommitIdstoMap(accountId, varFilesgitFetchFilesConfigList, commitIdForConfigFilesMap);
+    if (isNotEmpty(varFileInfo)) {
+      addVarFilescommitIdstoMap(accountId, varFileInfo, commitIdForConfigFilesMap);
     }
     return commitIdForConfigFilesMap;
   }
 
-  private void addVarFilescommitIdstoMap(String accountId, List<GitFetchFilesConfig> varFilesgitFetchFilesConfigList,
-      Map<String, String> commitIdForConfigFilesMap) {
-    for (GitFetchFilesConfig config : varFilesgitFetchFilesConfigList) {
-      GitStoreDelegateConfig gitStoreDelegateConfig = config.getGitStoreDelegateConfig();
-      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+  private void addVarFilescommitIdstoMap(
+      String accountId, List<TerraformVarFileInfo> varFileInfo, Map<String, String> commitIdForConfigFilesMap) {
+    for (TerraformVarFileInfo varFile : varFileInfo) {
+      if (varFile instanceof RemoteTerraformVarFileInfo) {
+        GitFetchFilesConfig gitFetchFilesConfig = ((RemoteTerraformVarFileInfo) varFile).getGitFetchFilesConfig();
+        GitStoreDelegateConfig gitStoreDelegateConfig = gitFetchFilesConfig.getGitStoreDelegateConfig();
+        GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
 
-      SshSessionConfig sshSessionConfig = sshSessionConfigMapper.getSSHSessionConfig(
-          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+        SshSessionConfig sshSessionConfig = sshSessionConfigMapper.getSSHSessionConfig(
+            gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
 
-      GitBaseRequest gitBaseRequest =
-          GitBaseRequest.builder()
-              .branch(gitStoreDelegateConfig.getBranch())
-              .commitId(gitStoreDelegateConfig.getCommitId())
-              .repoUrl(gitConfigDTO.getUrl())
-              .connectorId(gitStoreDelegateConfig.getConnectorName())
-              .authRequest(ngGitService.getAuthRequest(
-                  (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO(), sshSessionConfig))
-              .accountId(accountId)
-              .build();
-      commitIdForConfigFilesMap.putIfAbsent(config.getIdentifier(), getLatestCommitSHAFromLocalRepo(gitBaseRequest));
+        GitBaseRequest gitBaseRequest =
+            GitBaseRequest.builder()
+                .branch(gitStoreDelegateConfig.getBranch())
+                .commitId(gitStoreDelegateConfig.getCommitId())
+                .repoUrl(gitConfigDTO.getUrl())
+                .connectorId(gitStoreDelegateConfig.getConnectorName())
+                .authRequest(ngGitService.getAuthRequest(
+                    (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO(), sshSessionConfig))
+                .accountId(accountId)
+                .build();
+        commitIdForConfigFilesMap.putIfAbsent(
+            gitFetchFilesConfig.getIdentifier(), getLatestCommitSHAFromLocalRepo(gitBaseRequest));
+      }
     }
   }
 
@@ -448,33 +452,16 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     return getLatestCommitSHA(new File(gitClientHelper.getRepoDirectory(gitBaseRequest)));
   }
 
-  public void fetchRemoteTfVarFiles(
-      TerraformTaskNGParameters taskParameters, LogCallback logCallback, String tfVarDirectory) {
-    for (GitFetchFilesConfig gitFetchFilesConfig : taskParameters.getRemoteVarfiles()) {
-      GitConfigDTO configDTO = (GitConfigDTO) gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO();
-      logCallback.saveExecutionLog(format("Fetching TfVar files from Git repository: [%s]", configDTO.getUrl()), INFO,
-          CommandExecutionStatus.RUNNING);
-      secretDecryptionService.decrypt(
-          configDTO.getGitAuth(), taskParameters.getConfigFile().getGitStoreDelegateConfig().getEncryptedDataDetails());
-      gitClient.downloadFiles(DownloadFilesRequest.builder()
-                                  .branch(gitFetchFilesConfig.getGitStoreDelegateConfig().getBranch())
-                                  .commitId(gitFetchFilesConfig.getGitStoreDelegateConfig().getCommitId())
-                                  .filePaths(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths())
-                                  .connectorId(gitFetchFilesConfig.getGitStoreDelegateConfig().getConnectorName())
-                                  .repoUrl(configDTO.getUrl())
-                                  .accountId(taskParameters.getAccountId())
-                                  .recursive(true)
-                                  .destinationDirectory(tfVarDirectory)
-                                  .build());
+  public String fetchConfigFileAndPrepareScriptDir(GitBaseRequest gitBaseRequestForConfigFile, String accountId,
+      String workspace, String currentStateFileId, GitStoreDelegateConfig confileFileGitStore, LogCallback logCallback,
+      String scriptPath, String baseDir) {
+    fetchConfigFileAndCloneLocally(gitBaseRequestForConfigFile, logCallback);
 
-      logCallback.saveExecutionLog(
-          format("TfVar Git directory: [%s]", tfVarDirectory), INFO, CommandExecutionStatus.RUNNING);
-    }
-  }
+    String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
 
-  public String prepareTfScriptDirectory(String accountId, String workspace, String currentStateFileId,
-      LogCallback logCallback, GitStoreDelegateConfig confileFileGitStore, String workingDir) {
-    String scriptDirectory = resolveScriptDirectory(workingDir, confileFileGitStore.getPaths().get(0));
+    copyConfigFilestoWorkingDirectory(logCallback, gitBaseRequestForConfigFile, baseDir, workingDir);
+
+    String scriptDirectory = resolveScriptDirectory(workingDir, scriptPath);
     log.info("Script Directory: " + scriptDirectory);
     logCallback.saveExecutionLog(
         format("Script Directory: [%s]", scriptDirectory), INFO, CommandExecutionStatus.RUNNING);
@@ -533,23 +520,49 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     }
   }
 
-  public String initializeScriptAndWorkDirectories(
-      TerraformTaskNGParameters taskParameters, GitBaseRequest gitBaseRequestForConfigFile, LogCallback logCallback) {
-    GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
+  public List<String> checkoutRemoteVarFileAndConvertToVarFilePaths(List<TerraformVarFileInfo> varFileInfo,
+      String scriptDir, LogCallback logCallback, String accountId, String tfVarDirectory) throws IOException {
+    if (EmptyPredicate.isNotEmpty(varFileInfo)) {
+      List<String> varFilePaths = new ArrayList<>();
+      for (TerraformVarFileInfo varFile : varFileInfo) {
+        if (varFile instanceof InlineTerraformVarFileInfo) {
+          varFilePaths.add(TerraformHelperUtils.createFileFromStringContent(
+              ((InlineTerraformVarFileInfo) varFile).getVarFileContent(), scriptDir));
+        } else if (varFile instanceof RemoteTerraformVarFileInfo) {
+          GitStoreDelegateConfig gitStoreDelegateConfig =
+              ((RemoteTerraformVarFileInfo) varFileInfo).getGitFetchFilesConfig().getGitStoreDelegateConfig();
+          GitConfigDTO gitConfigDTO = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+          if (EmptyPredicate.isNotEmpty(gitStoreDelegateConfig.getPaths())) {
+            logCallback.saveExecutionLog(
+                format("Fetching TfVar files from Git repository: [%s]", gitConfigDTO.getUrl()), INFO,
+                CommandExecutionStatus.RUNNING);
 
-    fetchConfigFileAndCloneLocally(gitBaseRequestForConfigFile, logCallback);
+            secretDecryptionService.decrypt(
+                gitConfigDTO.getGitAuth(), gitStoreDelegateConfig.getEncryptedDataDetails());
 
-    String baseDir = TF_WORKING_DIR + taskParameters.getEntityId();
-    String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
-    String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
+            gitClient.downloadFiles(DownloadFilesRequest.builder()
+                                        .branch(gitStoreDelegateConfig.getBranch())
+                                        .commitId(gitStoreDelegateConfig.getCommitId())
+                                        .filePaths(gitStoreDelegateConfig.getPaths())
+                                        .connectorId(gitStoreDelegateConfig.getConnectorName())
+                                        .repoUrl(gitConfigDTO.getUrl())
+                                        .accountId(accountId)
+                                        .recursive(true)
+                                        .destinationDirectory(tfVarDirectory)
+                                        .build());
 
-    if (isNotEmpty(taskParameters.getRemoteVarfiles())) {
-      fetchRemoteTfVarFiles(taskParameters, logCallback, tfVarDirectory);
+            // One remote file can have multiple different var file paths provided
+            // Combine them here and add to list.
+            for (String paths : gitStoreDelegateConfig.getPaths()) {
+              varFilePaths.add(Paths.get(tfVarDirectory + paths).toString());
+            }
+          }
+        }
+      }
+      logCallback.saveExecutionLog(
+          format("TfVar Git directory: [%s]", tfVarDirectory), INFO, CommandExecutionStatus.RUNNING);
+      return varFilePaths;
     }
-
-    copyConfigFilestoWorkingDirectory(logCallback, gitBaseRequestForConfigFile, baseDir, workingDir);
-
-    return prepareTfScriptDirectory(taskParameters.getAccountId(), taskParameters.getWorkspace(),
-        taskParameters.getCurrentStateFileId(), logCallback, confileFileGitStore, workingDir);
+    return Collections.emptyList();
   }
 }

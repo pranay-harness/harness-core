@@ -9,6 +9,8 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cistatus.service.GithubAppConfig;
 import io.harness.cistatus.service.GithubService;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class GithubApiClient implements GitApiClient {
   private final GithubService githubService;
   private final SecretDecryptionService secretDecryptionService;
@@ -105,7 +108,7 @@ public class GithubApiClient implements GitApiClient {
     return group;
   }
 
-  private String retrieveAuthToken(ConnectorDetails gitConnector) {
+  public String retrieveAuthToken(ConnectorDetails gitConnector) {
     GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
     if (gitConfigDTO.getApiAccess() == null || gitConfigDTO.getApiAccess().getType() == null) {
       throw new InvalidRequestException(

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -14,6 +15,8 @@ import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
@@ -42,6 +45,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.net.SocketException;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   @Inject private DelegateLogService logService;
   @Inject private TimeLimiter timeLimiter;
@@ -93,8 +98,8 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
 
     try {
       long timeoutMs = context.getTimeout() == null ? TimeUnit.MINUTES.toMillis(10) : context.getTimeout().longValue();
-      commandExecutionStatus = timeLimiter.callWithTimeout(
-          () -> commandUnit.execute(shellCommandExecutionContext), timeoutMs, TimeUnit.MILLISECONDS, true);
+      commandExecutionStatus = HTimeLimiter.callInterruptible(
+          timeLimiter, Duration.ofMillis(timeoutMs), () -> commandUnit.execute(shellCommandExecutionContext));
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),
           aLog()

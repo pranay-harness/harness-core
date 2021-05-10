@@ -1,12 +1,16 @@
 package io.harness.ng.cdOverview.resources;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.cdng.Deployment.DashboardWorkloadDeployment;
+import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.service.dashboard.CDOverviewDashboardService;
+import io.harness.ng.core.OrgIdentifier;
+import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -67,6 +71,21 @@ public class CDDashboardOverviewResource {
     LocalDate previousStartDate = startDate.minusDays(interval);
     return ResponseDTO.newResponse(cdOverviewDashboardService.getHealthDeploymentDashboard(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartDate.toString()));
+  }
+
+  @GET
+  @Path("/deploymentsInfo")
+  @ApiOperation(value = "Get deployments info", nickname = "getDeploymentsInfo")
+  public ResponseDTO<ExecutionDeploymentDetailInfo> getDeploymentExecutionInfo(
+      @NotNull @QueryParam("accountId") String accountIdentifier,
+      @NotNull @OrgIdentifier @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @ProjectIdentifier @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentsExecutionInfo(
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
   }
 
   @GET
