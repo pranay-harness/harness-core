@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.informer.SharedInformer;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.informer.cache.Store;
@@ -42,14 +43,15 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class K8sWatchServiceDelegate {
-  private static final Map<String, Class<?>> KNOWN_WORKLOAD_TYPES = ImmutableMap.<String, Class<?>>builder()
-                                                                        .put("Deployment", V1Deployment.class)
-                                                                        .put("ReplicaSet", V1ReplicaSet.class)
-                                                                        .put("DaemonSet", V1DaemonSet.class)
-                                                                        .put("StatefulSet", V1StatefulSet.class)
-                                                                        .put("Job", V1Job.class)
-                                                                        .put("CronJob", V1beta1CronJob.class)
-                                                                        .build();
+  private static final Map<String, Class<? extends KubernetesObject>> KNOWN_WORKLOAD_TYPES =
+      ImmutableMap.<String, Class<? extends KubernetesObject>>builder()
+          .put("Deployment", V1Deployment.class)
+          .put("ReplicaSet", V1ReplicaSet.class)
+          .put("DaemonSet", V1DaemonSet.class)
+          .put("StatefulSet", V1StatefulSet.class)
+          .put("Job", V1Job.class)
+          .put("CronJob", V1beta1CronJob.class)
+          .build();
 
   private final WatcherFactory watcherFactory;
   private final SharedInformerFactoryFactory sharedInformerFactoryFactory;
