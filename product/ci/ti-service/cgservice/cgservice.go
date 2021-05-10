@@ -22,8 +22,8 @@ type CgService struct {
 }
 
 const (
-	nodeColl  = "nodes"
-	relnsColl = "relations"
+	nodeColl  = db.NodeColl
+	relnsColl = db.NodeColl
 )
 
 // queryHelper gets the tests that need to be run corresponding to the packages and classes

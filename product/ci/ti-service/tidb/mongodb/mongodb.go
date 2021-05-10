@@ -54,11 +54,13 @@ type Node struct {
 	Proj    string  `json:"project" bson:"project"`
 	Org     string  `json:"organization" bson:"organization"`
 	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+
+	CollName string
 }
 
 const (
-	nodeColl  = "nodes"
-	relnsColl = "relations"
+	NodeColl  = "nodes"
+	RelnsColl = "relations"
 )
 
 // VCSInfo contains metadata corresponding to version control system details
@@ -166,10 +168,10 @@ func (mdb *MongoDb) Find(coll string, ctx context.Context, f bson.M, results int
 	switch coll {
 	// We can use reflection here but since we have only 2 classes currently, I did not wanted to
 	// add  extra complexity and overhead
-	case nodeColl:
+	case NodeColl:
 		res := (results).(*[]Node)
 		err = cur.All(ctx, res)
-	case relnsColl:
+	case RelnsColl:
 		res := (results).(*[]Relation)
 		err = cur.All(ctx, res)
 	default:
@@ -182,7 +184,7 @@ func (mdb *MongoDb) Find(coll string, ctx context.Context, f bson.M, results int
 // BulkWrite is wrapper over BulkWrite fn in mongo driver and logs time taken in the query
 func (mdb *MongoDb) BulkWrite(coll string, ctx context.Context, operations []mongo.WriteModel, b *options.BulkWriteOptions) (*mongo.BulkWriteResult, error) {
 	start := time.Now()
-	res, err := mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+	res, err := mdb.Database.Collection(RelnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
 	if err != nil {
 		return nil, err
 	}
