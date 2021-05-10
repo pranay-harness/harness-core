@@ -99,6 +99,7 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     SecretManagerConfigDTO secretManagerConfig =
         ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier, false);
+
     if (secretManagerConfig != null) {
       switch (connectorValidationParams.getConnectorType()) {
         case VAULT:
