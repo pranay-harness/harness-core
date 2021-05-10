@@ -182,6 +182,7 @@ import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -264,7 +265,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.github.zafarkhaja.semver.Version;
@@ -433,7 +433,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateTaskSelectorMapService taskSelectorMapService;
   @Inject private SettingsService settingsService;
   @Inject private LogStreamingServiceRestClient logStreamingServiceRestClient;
-  @Inject private NGSecretService ngSecretService;
+  @Inject private SecretManagerClientService ngSecretService;
   @Inject private DelegateCache delegateCache;
   @Inject private CapabilityService capabilityService;
   @Inject private DelegateInsightsService delegateInsightsService;
