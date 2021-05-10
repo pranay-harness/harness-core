@@ -52,6 +52,7 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
+import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.usergroups.UserGroupClientModule;
@@ -163,6 +164,7 @@ public class AccessControlModule extends AbstractModule {
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
     morphiaRegistrars.addBinding().toInstance(OutboxEventMorphiaRegistrar.class);
+    morphiaRegistrars.addBinding().toInstance(PrimaryVersionManagerMorphiaRegistrar.class);
     install(new TransactionOutboxModule());
     bind(OutboxEventHandler.class).to(AccessControlOutboxEventHandler.class);
     install(new ValidationModule(validatorFactory));
