@@ -1,10 +1,16 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.account.ProvisionStep;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
+import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
@@ -34,6 +40,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by peeyushaggarwal on 10/11/16.
  */
+@OwnedBy(PL)
+@TargetModule(_955_ACCOUNT_MGMT)
 public interface AccountService {
   @ValidationGroups(Create.class) Account save(@Valid Account account, boolean fromDataGen);
 
@@ -45,6 +53,8 @@ public interface AccountService {
   Account getByName(String companyName);
 
   Account get(String accountId);
+
+  AccountDetails getDetails(String accountId);
 
   List<Account> getAccounts(List<String> identifiers);
 
@@ -207,4 +217,8 @@ public interface AccountService {
   void ensureDataRetention(List<Class<? extends AccountDataRetentionEntity>> entityClasses);
 
   boolean updateAccountPreference(String accountId, String preferenceKey, Object value);
+
+  boolean enableHarnessUserGroupAccess(String accountId);
+
+  boolean disableHarnessUserGroupAccess(String accountId);
 }

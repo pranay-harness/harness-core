@@ -1,5 +1,8 @@
 package io.harness.cvng.beans.newrelic;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
@@ -16,6 +19,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@OwnedBy(CV)
 public class NewRelicApplicationFetchRequest extends DataCollectionRequest<NewRelicConnectorDTO> {
   public static final String DSL = StackdriverDashboardRequest.readDSL(
       "newrelic-applications.datacollection", NewRelicApplicationFetchRequest.class);

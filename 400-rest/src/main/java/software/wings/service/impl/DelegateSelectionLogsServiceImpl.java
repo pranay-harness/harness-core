@@ -9,9 +9,10 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.DelegateOwner;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
@@ -27,7 +28,6 @@ import io.harness.selection.log.DelegateSelectionLogMetadata;
 import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
 import io.harness.selection.log.ProfileScopingRulesMetadata;
 import io.harness.service.intfc.DelegateCache;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -60,7 +60,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
-@BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
+@BreakDependencyOn("io.harness.beans.Cd1SetupFields")
 @BreakDependencyOn("software.wings.beans.Application")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.Service")
@@ -271,7 +271,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public void logOwnerRuleNotMatched(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateOwner owner) {
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, DelegateEntityOwner owner) {
     if (batch == null || owner == null) {
       return;
     }
@@ -282,7 +282,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
     batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
-                     .message("Not matched owner entityType " + owner.getEntityType() + ", id " + owner.getEntityId())
+                     .message("No matching owner: " + owner.getIdentifier())
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(TARGETED_OWNER_NOT_MATCHED_GROUP_ID)
                      .build());

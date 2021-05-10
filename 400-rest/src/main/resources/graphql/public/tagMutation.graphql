@@ -23,6 +23,7 @@ enum TagEntityType {
   ENVIRONMENT
   WORKFLOW
   PIPELINE
+  PROVISIONER
 }
 
 input DetachTagInput {
@@ -50,4 +51,5 @@ type TagLink {
   value: String
   entityId: String
   entityType: TagEntityType
+  appId: String
 }

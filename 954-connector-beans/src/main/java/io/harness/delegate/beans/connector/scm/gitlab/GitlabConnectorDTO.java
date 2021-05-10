@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.connector.scm.gitlab;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -29,6 +31,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitlabConnector")
+@OwnedBy(HarnessTeam.DX)
 public class GitlabConnectorDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;
   @NotNull @NotBlank String url;
@@ -37,11 +40,12 @@ public class GitlabConnectorDTO extends ConnectorConfigDTO implements ScmConnect
   Set<String> delegateSelectors;
   @Builder
   public GitlabConnectorDTO(GitConnectionType connectionType, String url, GitlabAuthenticationDTO authentication,
-      GitlabApiAccessDTO apiAccess) {
+      GitlabApiAccessDTO apiAccess, Set<String> delegateSelectors) {
     this.connectionType = connectionType;
     this.url = url;
     this.authentication = authentication;
     this.apiAccess = apiAccess;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override

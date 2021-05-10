@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.application;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -20,12 +22,14 @@ import software.wings.graphql.schema.type.aggregation.application.QLApplicationT
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ApplicationStatsDataFetcher
     extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLApplicationFilter, QLApplicationAggregation,
@@ -34,7 +38,8 @@ public class ApplicationStatsDataFetcher
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLApplicationFilter> filters,
-      List<QLApplicationAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLApplicationAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = Application.class;
     final List<String> groupByEntityList = new ArrayList<>();
     if (isNotEmpty(groupByList)) {

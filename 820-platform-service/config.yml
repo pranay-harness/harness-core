@@ -3,27 +3,16 @@ xxxxxxxx
     - type: http
       port: 9005
       maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: https
+      port: 9095
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
   rootPath: /api
-#    - type: https
-#      port: 7090
-#      keyStorePath: keystore.jks
-#      keyStorePassword: password
-#      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-#      certAlias: localhost
-#      validateCerts: false
-#      maxRequestHeaderSize: 100KiB
-
-#  adminConnectors:
-#    - type: https
-#      port: 7091
-#      keyStorePath: keystore.jks
-#      keyStorePassword: password
-#      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-#      certAlias: localhost
-#      validateCerts: false
-#  requestLog:
-#    appenders: []
-#  maxThreads: 1024
+  maxThreads: 1024
 
 allowedOrigins:
   - https://localhost:8181
@@ -39,6 +28,7 @@ logging:
     org.glassfish.jersey: INFO
     allbegray.slack: WARN
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+    io.harness.mongo.iterator.MongoPersistenceIterator: ERROR
   appenders:
     - type: console
       threshold: TRACE
@@ -62,9 +52,17 @@ managerClientConfig:
   readTimeOutSeconds: 15
 
 rbacServiceConfig:
-  baseUrl: http://localhost:7457/api/
+  baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
+
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 notificationServiceConfig:
   mongo:
@@ -88,10 +86,9 @@ notificationServiceConfig:
   seedDataConfiguration:
     shouldOverrideAllPredefinedTemplates: true
 
-  grpcClient:
+  delegateServiceGrpcConfig:
     target: localhost:9880
     authority: localhost
-
 
 auditServiceConfig:
   mongo:
@@ -102,5 +99,58 @@ auditServiceConfig:
     connectionsPerHost: 300
     indexManagerMode: AUTO
     aliasDBName: ng-audits
+    transactionsEnabled: false
 
   enableAuditService: true
+
+resourceGroupServiceConfig:
+  enableResourceGroup: true
+  resourceClients:
+    ng-manager:
+      baseUrl: http://localhost:7457/
+      secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+    pipeline-service:
+      baseUrl: http://localhost:12001/api/
+      secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+    manager:
+      baseUrl: http://localhost:3457/api/
+      secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
+  accessControlAdminClient:
+    accessControlServiceConfig:
+      baseUrl: http://localhost:9006/api/
+      connectTimeOutSeconds: 15
+      readTimeOutSeconds: 15
+    accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  mongo:
+    uri: mongodb://localhost:27017/resourcegroup
+    connectTimeout: 30000
+    serverSelectionTimeout: 90000
+    maxConnectionIdleTime: 600000
+    connectionsPerHost: 300
+    indexManagerMode: AUTO
+    aliasDBName: resourcegroup
+  enableAudit: false
+  auditClientConfig:
+    baseUrl: http://localhost:9005/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+
+  distributedLockImplementation: ${DISTRIBUTED_LOCK_IMPLEMENTATION:-MONGO}

@@ -3,12 +3,14 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -23,13 +25,11 @@ import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.tasks.ProgressData;
 import io.harness.timeout.TimeoutDetails;
 
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -52,6 +52,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "nodeExecutions", noClassnameStored = true)
 @Document("nodeExecutions")
 @TypeAlias("nodeExecution")
+@StoreIn(DbAliases.PMS)
 public final class NodeExecution implements PersistentEntity, UuidAware {
   // Immutable
   @Id @org.mongodb.morphia.annotations.Id String uuid;
@@ -96,9 +97,9 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   List<StepOutcomeRef> outcomeRefs;
 
-  Map<String, List<ProgressData>> progressDataMap;
-
   @Singular List<UnitProgress> unitProgresses;
+
+  org.bson.Document progressData;
 
   AdviserResponse adviserResponse;
   // Timeouts for advisers
@@ -122,6 +123,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   @UtilityClass
   public static class NodeExecutionKeys {
+    public static final String id = "_id";
     public static final String planExecutionId = NodeExecutionKeys.ambiance + "."
         + "planExecutionId";
 
@@ -185,6 +187,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .name("parentId_status_idx")
                  .field(NodeExecutionKeys.parentId)
                  .field(NodeExecutionKeys.status)
+                 .field(NodeExecutionKeys.oldRetry)
                  .build())
         .build();
   }

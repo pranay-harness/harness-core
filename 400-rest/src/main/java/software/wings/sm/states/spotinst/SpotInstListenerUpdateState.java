@@ -128,9 +128,12 @@ public class SpotInstListenerUpdateState extends State {
 
     DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
         TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
-        spotInstCommandRequest, env.getEnvironmentType(), awsAmiInfrastructureMapping.getServiceId());
+        spotInstCommandRequest, env.getEnvironmentType(), awsAmiInfrastructureMapping.getServiceId(),
+        isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(task);
+    appendDelegateTaskDetails(context, task);
+
     return ExecutionResponse.builder()
         .stateExecutionData(stateExecutionData)
         .correlationIds(Arrays.asList(activity.getUuid()))
@@ -228,4 +231,9 @@ public class SpotInstListenerUpdateState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
 }

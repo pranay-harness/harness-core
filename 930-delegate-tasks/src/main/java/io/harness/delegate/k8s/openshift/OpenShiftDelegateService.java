@@ -1,10 +1,12 @@
 package io.harness.delegate.k8s.openshift;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
@@ -28,6 +30,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class OpenShiftDelegateService {

@@ -12,22 +12,22 @@ func ConvertIssueCommentHook(h *scm.IssueCommentHook) (*pb.IssueCommentHook, err
 		return nil, nil
 	}
 
-	repo, err := convertRepo(h.Repo)
+	repo, err := convertRepo(&h.Repo)
 	if err != nil {
 		return nil, err
 	}
 
-	sender, err := convertUser(h.Sender)
+	sender, err := convertUser(&h.Sender)
 	if err != nil {
 		return nil, err
 	}
 
-	issue, err := convertIssue(h.Issue)
+	issue, err := convertIssue(&h.Issue)
 	if err != nil {
 		return nil, err
 	}
 
-	comment, err := convertComment(h.Comment)
+	comment, err := convertComment(&h.Comment)
 	if err != nil {
 		return nil, err
 	}
@@ -42,18 +42,18 @@ func ConvertIssueCommentHook(h *scm.IssueCommentHook) (*pb.IssueCommentHook, err
 }
 
 // convertComment converts scm.comment to protobuf object
-func convertComment(c scm.Comment) (*pb.Comment, error) {
-	user, err := convertUser(c.Author)
+func convertComment(c *scm.Comment) (*pb.Comment, error) {
+	user, err := convertUser(&c.Author)
 	if err != nil {
 		return nil, err
 	}
 
-	createTs, err := ptypes.TimestampProto(c.Created)
+	createTS, err := ptypes.TimestampProto(c.Created)
 	if err != nil {
 		return nil, err
 	}
 
-	updateTs, err := ptypes.TimestampProto(c.Updated)
+	updateTS, err := ptypes.TimestampProto(c.Updated)
 	if err != nil {
 		return nil, err
 	}
@@ -62,37 +62,36 @@ func convertComment(c scm.Comment) (*pb.Comment, error) {
 		Id:      int32(c.ID),
 		Body:    c.Body,
 		User:    user,
-		Created: createTs,
-		Updated: updateTs,
+		Created: createTS,
+		Updated: updateTS,
 	}, nil
 }
 
 // convertIssue converts scm.issue to protobuf object
-func convertIssue(i scm.Issue) (*pb.Issue, error) {
-	user, err := convertUser(i.Author)
+func convertIssue(i *scm.Issue) (*pb.Issue, error) {
+	user, err := convertUser(&i.Author)
 	if err != nil {
 		return nil, err
 	}
 
-	createTs, err := ptypes.TimestampProto(i.Created)
+	createTS, err := ptypes.TimestampProto(i.Created)
 	if err != nil {
 		return nil, err
 	}
 
-	updateTs, err := ptypes.TimestampProto(i.Updated)
+	updateTS, err := ptypes.TimestampProto(i.Updated)
 	if err != nil {
 		return nil, err
 	}
 
-	pr, err := convertPR(i.PullRequest)
+	pr, err := convertPR(&i.PullRequest)
 	if err != nil {
 		return nil, err
 	}
 
 	var labels []string
-	for _, l := range i.Labels {
-		labels = append(labels, l)
-	}
+
+	labels = append(labels, i.Labels...)
 
 	return &pb.Issue{
 		Number:  int32(i.Number),
@@ -103,8 +102,8 @@ func convertIssue(i scm.Issue) (*pb.Issue, error) {
 		Closed:  i.Closed,
 		Locked:  i.Locked,
 		User:    user,
-		Created: createTs,
-		Updated: updateTs,
+		Created: createTS,
+		Updated: updateTS,
 		Pr:      pr,
 	}, nil
 }

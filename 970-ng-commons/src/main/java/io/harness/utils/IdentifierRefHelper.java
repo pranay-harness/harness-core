@@ -1,5 +1,7 @@
 package io.harness.utils;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.IdentifierRef.IdentifierRefBuilder;
 import io.harness.data.structure.EmptyPredicate;
@@ -11,6 +13,7 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.PIPELINE)
 public class IdentifierRefHelper {
   public final String IDENTIFIER_REF_DELIMITER = "\\."; // check if this is the correct delimiter
 
@@ -42,7 +45,7 @@ public class IdentifierRefHelper {
     }
 
     if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
-      throw new InvalidRequestException("Empty secret ref cannot be given");
+      throw new InvalidRequestException("Empty identifier ref cannot be given");
     }
     String[] identifierConfigStringSplit = scopedIdentifierConfig.split(IDENTIFIER_REF_DELIMITER);
 
@@ -64,6 +67,27 @@ public class IdentifierRefHelper {
         return identifierRefBuilder.orgIdentifier(orgIdentifier).build();
       }
       return identifierRefBuilder.build();
+    } else {
+      throw new InvalidRequestException("Invalid Identifier Reference.");
+    }
+  }
+
+  public IdentifierRef getIdentifierRef(Scope scope, String identifier, String accountId, String orgIdentifier,
+      String projectIdentifier, Map<String, String> metadata) {
+    IdentifierRefBuilder identifierRefBuilder =
+        IdentifierRef.builder().accountIdentifier(accountId).identifier(identifier).scope(scope);
+
+    if (EmptyPredicate.isNotEmpty(metadata)) {
+      identifierRefBuilder.metadata(metadata);
+    }
+    if (scope == Scope.ACCOUNT) {
+      return identifierRefBuilder.build();
+    }
+    if (scope == Scope.ORG) {
+      return identifierRefBuilder.orgIdentifier(orgIdentifier).build();
+    }
+    if (scope == Scope.PROJECT) {
+      return identifierRefBuilder.orgIdentifier(orgIdentifier).projectIdentifier(projectIdentifier).build();
     } else {
       throw new InvalidRequestException("Invalid Identifier Reference.");
     }

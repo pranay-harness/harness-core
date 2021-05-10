@@ -1,5 +1,9 @@
 package io.harness.repositories.orchestrationEventLog;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.sdk.core.events.OrchestrationEventLog;
 import io.harness.pms.sdk.core.events.OrchestrationEventLog.OrchestrationEventLogKeys;
 
@@ -17,6 +21,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(HarnessTeam.PIPELINE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class OrchestrationEventLogRepositoryCustomImpl implements OrchestrationEventLogRepositoryCustom {
   private final MongoTemplate mongoTemplate;
@@ -30,13 +36,6 @@ public class OrchestrationEventLogRepositoryCustomImpl implements OrchestrationE
   }
 
   @Override
-  public List<OrchestrationEventLog> findUnprocessedEvents(String planExecutionId) {
-    Criteria criteria = Criteria.where("planExecutionId").is(planExecutionId);
-    Query query = new Query(criteria).with(Sort.by(Sort.Order.asc("createdAt")));
-    return mongoTemplate.find(query, OrchestrationEventLog.class);
-  }
-
-  @Override
   public void updateTtlForProcessedEvents(List<OrchestrationEventLog> eventLogs) {
     List<String> ids = eventLogs.stream().map(OrchestrationEventLog::getId).collect(Collectors.toList());
     Criteria criteria = Criteria.where(OrchestrationEventLogKeys.id).in(ids);
@@ -44,7 +43,7 @@ public class OrchestrationEventLogRepositoryCustomImpl implements OrchestrationE
     // Setting a ttl of 10 minutes so that we if there is a race condition between multiple replicas while updating,
     // then graph should not be in inconsistent state
     update.set(
-        OrchestrationEventLogKeys.validUntil, Date.from(OffsetDateTime.now().plus(Duration.ofMinutes(10)).toInstant()));
+        OrchestrationEventLogKeys.validUntil, Date.from(OffsetDateTime.now().plus(Duration.ofDays(10)).toInstant()));
     mongoTemplate.updateMulti(new Query(criteria), update, OrchestrationEventLog.class);
   }
 

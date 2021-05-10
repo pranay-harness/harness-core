@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
@@ -27,6 +29,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CI)
 public class PluginSettingUtilsTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = ALEKSANDAR)
@@ -41,6 +44,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_TARGET", "repo/wings/software/module/1.0.0-SNAPSHOT");
     expected.put("PLUGIN_SOURCE", "target/libmodule.jar");
+    expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
 
     Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToArtifactoryStepInfo, "identifier", 100);
@@ -73,6 +77,8 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
+    expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
+    expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
@@ -103,6 +109,8 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
+    expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
+    expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
@@ -129,6 +137,8 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
+    expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
+    expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier", 100);
     assertThat(actual).isEqualTo(expected);
   }
@@ -368,6 +378,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_BUCKET", "bucket");
     expected.put("PLUGIN_SOURCE", "sources");
     expected.put("PLUGIN_TARGET", "target");
+    expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
 
     Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier", 100);
@@ -378,15 +389,15 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetUploadToGCSStepInfoEnvVariables() {
-    UploadToGCSStepInfo uploadToS3StepInfo =
-        UploadToGCSStepInfo.builder()
-            .bucket(ParameterField.createValueField("bucket"))
-            .sourcePath(ParameterField.createValueField("/step-exec/workspace/pom.xml"))
-            .target(ParameterField.createValueField("dir/pom.xml"))
-            .build();
+    UploadToGCSStepInfo uploadToS3StepInfo = UploadToGCSStepInfo.builder()
+                                                 .bucket(ParameterField.createValueField("bucket"))
+                                                 .sourcePath(ParameterField.createValueField("pom.xml"))
+                                                 .target(ParameterField.createValueField("dir/pom.xml"))
+                                                 .build();
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_SOURCE", "/step-exec/workspace/pom.xml");
+    expected.put("PLUGIN_SOURCE", "pom.xml");
     expected.put("PLUGIN_TARGET", "bucket/dir/pom.xml");
+    expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
 
     Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier", 100);

@@ -1,7 +1,10 @@
 package io.harness.pms.sdk.core.interrupt;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.govern.Switch.noop;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse.ResponseCase;
@@ -12,6 +15,7 @@ import io.harness.pms.interrupts.InterruptEvent;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.executables.Abortable;
+import io.harness.pms.sdk.core.steps.executables.Failable;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.queue.QueueConsumer;
@@ -21,6 +25,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PIPELINE)
 public class InterruptEventListener extends QueueListener<InterruptEvent> {
   @Inject private PMSInterruptService pmsInterruptService;
   @Inject private StepRegistry stepRegistry;
@@ -38,10 +43,30 @@ public class InterruptEventListener extends QueueListener<InterruptEvent> {
         case ABORT:
           handleAbort(event);
           break;
+        case CUSTOM_FAILURE:
+          handleFailure(event);
+          break;
         default:
           log.warn("No Handling present for Interrupt Event of type : {}", interruptType);
           noop();
       }
+    }
+  }
+
+  private void handleFailure(InterruptEvent event) {
+    try {
+      NodeExecutionProto nodeExecutionProto = event.getNodeExecution();
+      StepType stepType = event.getNodeExecution().getNode().getStepType();
+      Step<?> step = stepRegistry.obtain(stepType);
+      if (step instanceof Failable) {
+        StepParameters stepParameters = RecastOrchestrationUtils.fromDocumentJson(
+            nodeExecutionProto.getResolvedStepParameters(), StepParameters.class);
+        ((Failable) step).handleFailureInterrupt(nodeExecutionProto.getAmbiance(), stepParameters, event.getMetadata());
+      }
+      pmsInterruptService.handleFailure(event.getNotifyId());
+    } catch (Exception ex) {
+      throw new InvalidRequestException("Handling failure at sdk failed with exception - " + ex.getMessage()
+          + " with interrupt event - " + event.toString());
     }
   }
 

@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.infraDefinition;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)

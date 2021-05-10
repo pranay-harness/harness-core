@@ -1,6 +1,8 @@
 package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogType;
 import io.harness.cvng.beans.cvnglog.TraceableType;
@@ -42,6 +44,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "cvngLogs", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @SuperBuilder
+@OwnedBy(HarnessTeam.CV)
 public final class CVNGLog implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -97,7 +100,7 @@ public final class CVNGLog implements PersistentEntity, UuidAware, AccountAccess
     cvngLogDTO.setAccountId(accountId);
     cvngLogDTO.setTraceableId(traceableId);
     cvngLogDTO.setTraceableType(traceableType);
-    cvngLogDTO.setStartTime(startTime);
-    cvngLogDTO.setEndTime(endTime);
+    cvngLogDTO.setStartTime(startTime.toEpochMilli());
+    cvngLogDTO.setEndTime(endTime.toEpochMilli());
   }
 }

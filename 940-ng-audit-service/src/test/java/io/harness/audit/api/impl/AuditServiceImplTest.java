@@ -22,19 +22,22 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.Action;
 import io.harness.audit.api.AuditService;
+import io.harness.audit.api.AuditYamlService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.beans.Environment;
 import io.harness.audit.beans.Principal;
 import io.harness.audit.beans.PrincipalType;
+import io.harness.audit.beans.ResourceDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import io.harness.audit.repositories.AuditRepository;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
-import io.harness.ng.core.Resource;
 import io.harness.rule.Owner;
-import io.harness.scope.ResourceScope;
 
 import com.mongodb.BasicDBList;
+import java.time.Instant;
 import java.util.List;
 import org.bson.Document;
 import org.junit.Before;
@@ -44,19 +47,27 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
 public class AuditServiceImplTest extends CategoryTest {
   private AuditRepository auditRepository;
+  private AuditYamlService auditYamlService;
   private AuditFilterPropertiesValidator auditFilterPropertiesValidator;
   private AuditService auditService;
+  private TransactionTemplate transactionTemplate;
+
   private final PageRequest samplePageRequest = PageRequest.builder().pageIndex(0).pageSize(50).build();
 
   @Before
   public void setup() {
     auditRepository = mock(AuditRepository.class);
+    auditYamlService = mock(AuditYamlService.class);
     auditFilterPropertiesValidator = mock(AuditFilterPropertiesValidator.class);
-    auditService = spy(new AuditServiceImpl(auditRepository, auditFilterPropertiesValidator));
+    transactionTemplate = mock(TransactionTemplate.class);
+
+    auditService = spy(
+        new AuditServiceImpl(auditRepository, auditYamlService, auditFilterPropertiesValidator, transactionTemplate));
     doNothing().when(auditFilterPropertiesValidator).validate(any(), any());
   }
 
@@ -87,7 +98,7 @@ public class AuditServiceImplTest extends CategoryTest {
     AuditFilterPropertiesDTO correctFilter =
         AuditFilterPropertiesDTO.builder()
             .scopes(singletonList(
-                ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build()))
+                ResourceScopeDTO.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build()))
             .build();
     Page<AuditEvent> auditEvents = auditService.list(accountIdentifier, samplePageRequest, correctFilter);
     verify(auditRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
@@ -120,7 +131,7 @@ public class AuditServiceImplTest extends CategoryTest {
     when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
     AuditFilterPropertiesDTO correctFilter =
         AuditFilterPropertiesDTO.builder()
-            .resources(singletonList(Resource.builder().identifier(identifier).type(resourceType).build()))
+            .resources(singletonList(ResourceDTO.builder().identifier(identifier).type(resourceType).build()))
             .build();
     Page<AuditEvent> auditEvents = auditService.list(accountIdentifier, samplePageRequest, correctFilter);
     verify(auditRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
@@ -198,12 +209,12 @@ public class AuditServiceImplTest extends CategoryTest {
     assertNotNull(startTimeDocument);
     Document startTimestampDocument = (Document) startTimeDocument.get(AuditEventKeys.timestamp);
     assertNotNull(startTimestampDocument);
-    assertEquals(17L, startTimestampDocument.get("$gte"));
+    assertEquals(Instant.ofEpochMilli(17L), startTimestampDocument.get("$gte"));
 
     Document endTimeDocument = (Document) andList.get(2);
     assertNotNull(endTimeDocument);
     Document endTimestampDocument = (Document) endTimeDocument.get(AuditEventKeys.timestamp);
-    assertEquals(18L, endTimestampDocument.get("$lte"));
+    assertEquals(Instant.ofEpochMilli(18L), endTimestampDocument.get("$lte"));
   }
 
   @Test
@@ -216,11 +227,12 @@ public class AuditServiceImplTest extends CategoryTest {
     String environmentIdentifier = randomAlphabetic(10);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
-    AuditFilterPropertiesDTO correctFilter = AuditFilterPropertiesDTO.builder()
-                                                 .modules(singletonList(ModuleType.CD))
-                                                 .actions(singletonList(action))
-                                                 .environmentIdentifiers(singletonList(environmentIdentifier))
-                                                 .build();
+    AuditFilterPropertiesDTO correctFilter =
+        AuditFilterPropertiesDTO.builder()
+            .modules(singletonList(ModuleType.CD))
+            .actions(singletonList(action))
+            .environments(singletonList(Environment.builder().identifier(environmentIdentifier).build()))
+            .build();
     Page<AuditEvent> auditEvents = auditService.list(accountIdentifier, samplePageRequest, correctFilter);
     verify(auditRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
     Criteria criteria = criteriaArgumentCaptor.getValue();
@@ -248,13 +260,12 @@ public class AuditServiceImplTest extends CategoryTest {
     assertEquals(1, actionList.size());
     assertEquals(action, actionList.get(0));
 
-    Document environmentIdentifierDocument = (Document) andList.get(3);
+    Document environmentDocument = (Document) andList.get(3);
+    BasicDBList environmentList = (BasicDBList) environmentDocument.get("$or");
+    assertEquals(1, environmentList.size());
+    Document environmentIdentifierDocument = (Document) environmentList.get(0);
     assertNotNull(environmentIdentifierDocument);
-    Document environmentIdentifierValueDocument =
-        (Document) environmentIdentifierDocument.get(AuditEventKeys.environmentIdentifier);
-    assertNotNull(environmentIdentifierValueDocument);
-    List<String> environmentIdentifierValueList = (List<String>) environmentIdentifierValueDocument.get("$in");
-    assertEquals(1, environmentIdentifierValueList.size());
-    assertEquals(environmentIdentifier, environmentIdentifierValueList.get(0));
+    assertEquals(
+        environmentIdentifier, environmentIdentifierDocument.getString(AuditEventKeys.ENVIRONMENT_IDENTIFIER_KEY));
   }
 }

@@ -34,6 +34,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -41,6 +42,7 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.deployment.InstanceDetails;
@@ -54,7 +56,6 @@ import io.harness.logging.Misc;
 import io.harness.pcf.PcfFileTypeChecker;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
@@ -182,6 +183,8 @@ public class PcfStateHelper {
         .tags(ListUtils.emptyIfNull(taskCreationData.getTagList()))
         .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, taskCreationData.getServiceTemplateId())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, taskCreationData.getServiceId())
+        .selectionLogsTrackingEnabled(taskCreationData.isSelectionLogsTrackingEnabled())
+        .description(taskCreationData.getTaskDescription())
         .build();
   }
 
@@ -243,8 +246,8 @@ public class PcfStateHelper {
                          .build());
   }
 
-  public ExecutionResponse queueDelegateTaskForRouteUpdate(
-      PcfRouteUpdateQueueRequestData queueRequestData, SetupSweepingOutputPcf setupSweepingOutputPcf) {
+  public ExecutionResponse queueDelegateTaskForRouteUpdate(PcfRouteUpdateQueueRequestData queueRequestData,
+      SetupSweepingOutputPcf setupSweepingOutputPcf, String stateExecutionInstanceId, boolean selectionLogsEnabled) {
     Integer timeoutIntervalInMinutes = queueRequestData.getTimeoutIntervalInMinutes() == null
         ? Integer.valueOf(DEFAULT_PCF_TASK_TIMEOUT_MIN)
         : queueRequestData.getTimeoutIntervalInMinutes();
@@ -288,16 +291,32 @@ public class PcfStateHelper {
                             .environmentType(queueRequestData.getEnvironmentType())
                             .serviceId(pcfInfrastructureMapping.getServiceId())
                             .parameters(new Object[] {pcfCommandRequest, queueRequestData.getEncryptedDataDetails()})
+                            .selectionLogsTrackingEnabled(selectionLogsEnabled)
+                            .taskDescription("PCF Route update task execution")
                             .timeout(timeoutIntervalInMinutes)
                             .build());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(delegateTask, stateExecutionInstanceId);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(queueRequestData.getActivityId()))
         .stateExecutionData(stateExecutionData)
         .async(true)
         .build();
+  }
+
+  private void appendDelegateTaskDetails(DelegateTask delegateTask, String stateExecutionInstanceId) {
+    if (isBlank(delegateTask.getUuid())) {
+      delegateTask.setUuid(generateUuid());
+    }
+
+    stateExecutionService.appendDelegateTaskDetails(stateExecutionInstanceId,
+        DelegateTaskDetails.builder()
+            .delegateTaskId(delegateTask.getUuid())
+            .taskDescription(delegateTask.calcDescription())
+            .setupAbstractions(delegateTask.getSetupAbstractions())
+            .build());
   }
 
   String getSpaceFromSetupContext(SetupSweepingOutputPcf setupSweepingOutputPcf) {
@@ -643,8 +662,8 @@ public class PcfStateHelper {
     return false;
   }
 
-  public DelegateTask createGitFetchFileAsyncTask(
-      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
+  public DelegateTask createGitFetchFileAsyncTask(ExecutionContext context,
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId, boolean selectionLogsEnabled) {
     Application app = context.getApp();
     Environment env = ((ExecutionContextImpl) context).getEnv();
     notNullCheck("Environment is null", env, USER);
@@ -665,6 +684,8 @@ public class PcfStateHelper {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(selectionLogsEnabled)
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.ScopeHelper.getScope;
 
 import static io.fabric8.utils.Strings.nullIfEmpty;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -17,8 +18,6 @@ import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO.GitSyncFolderConfig
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 
 @OwnedBy(DX)
@@ -27,7 +26,8 @@ public class YamlGitConfigMapper {
     return YamlGitConfig.builder()
         .accountId(yamlGitConfigDTO.getAccountIdentifier())
         .orgIdentifier(nullIfEmpty(yamlGitConfigDTO.getOrganizationIdentifier()))
-        .uuid(nullIfEmpty(yamlGitConfigDTO.getIdentifier()))
+        .identifier(nullIfEmpty(yamlGitConfigDTO.getIdentifier()))
+        .name(yamlGitConfigDTO.getName())
         .projectIdentifier(nullIfEmpty(yamlGitConfigDTO.getProjectIdentifier()))
         .branch(yamlGitConfigDTO.getBranch())
         .repo(yamlGitConfigDTO.getRepo())
@@ -41,10 +41,13 @@ public class YamlGitConfigMapper {
   }
 
   public static final YamlGitConfigDTO toYamlGitConfigDTO(YamlGitConfig yamlGitConfig) {
+    final boolean executeOnDelegate =
+        yamlGitConfig != null && yamlGitConfig.getExecuteOnDelegate() != null && yamlGitConfig.getExecuteOnDelegate();
     return YamlGitConfigDTO.builder()
         .accountIdentifier(yamlGitConfig.getAccountId())
         .organizationIdentifier(nullIfEmpty(yamlGitConfig.getOrgIdentifier()))
-        .identifier(nullIfEmpty(yamlGitConfig.getUuid()))
+        .identifier(nullIfEmpty(yamlGitConfig.getIdentifier()))
+        .name(yamlGitConfig.getName())
         .projectIdentifier(nullIfEmpty(yamlGitConfig.getProjectIdentifier()))
         .branch(yamlGitConfig.getBranch())
         .repo(yamlGitConfig.getRepo())
@@ -53,6 +56,7 @@ public class YamlGitConfigMapper {
         .rootFolders(yamlGitConfig.getRootFolders())
         .defaultRootFolder(yamlGitConfig.getDefaultRootFolder())
         .gitConnectorType(yamlGitConfig.getGitConnectorType())
+        .executeOnDelegate(executeOnDelegate)
         .build();
   }
 
@@ -69,6 +73,7 @@ public class YamlGitConfigMapper {
         .gitConnectorRef(gitSyncConfigDTO.getGitConnectorRef())
         .branch(gitSyncConfigDTO.getBranch())
         .repo(gitSyncConfigDTO.getRepo())
+        .name(gitSyncConfigDTO.getName())
         .identifier(gitSyncConfigDTO.getIdentifier())
         .gitConnectorType(gitSyncConfigDTO.getGitConnectorType())
         .build();
@@ -78,7 +83,7 @@ public class YamlGitConfigMapper {
     if (isEmpty(gitSyncFolderConfigDTOS)) {
       return null;
     }
-    return gitSyncFolderConfigDTOS.stream().map(YamlGitConfigMapper::getRootFolders).collect(Collectors.toList());
+    return gitSyncFolderConfigDTOS.stream().map(YamlGitConfigMapper::getRootFolders).collect(toList());
   }
 
   private static YamlGitConfigDTO.RootFolder getDefaultRootFolder(
@@ -86,22 +91,26 @@ public class YamlGitConfigMapper {
     if (isEmpty(gitSyncFolderConfigDTOS)) {
       return null;
     }
-    Optional<GitSyncFolderConfigDTO> gitSyncFolderDTO =
-        gitSyncFolderConfigDTOS.stream().filter(GitSyncFolderConfigDTO::getIsDefault).findFirst();
-    return gitSyncFolderDTO.map(YamlGitConfigMapper::getRootFolders).orElse(null);
+    List<GitSyncFolderConfigDTO> gitSyncFolderDTOList =
+        gitSyncFolderConfigDTOS.stream().filter(GitSyncFolderConfigDTO::getIsDefault).collect(toList());
+    if (gitSyncFolderDTOList.size() > 1) {
+      throw new InvalidRequestException("The repo config cannot have more than one default root folders");
+    }
+    if (isEmpty(gitSyncFolderDTOList)) {
+      return null;
+    }
+    GitSyncFolderConfigDTO gitSyncFolderDTO = gitSyncFolderDTOList.get(0);
+    return getRootFolders(gitSyncFolderDTO);
   }
 
   private static YamlGitConfigDTO.RootFolder getRootFolders(GitSyncFolderConfigDTO gitSyncFolderConfigDTO) {
-    return YamlGitConfigDTO.RootFolder.builder()
-        .enabled(gitSyncFolderConfigDTO.getEnabled())
-        .identifier(gitSyncFolderConfigDTO.getIdentifier())
-        .rootFolder(gitSyncFolderConfigDTO.getRootFolder())
-        .build();
+    return YamlGitConfigDTO.RootFolder.builder().rootFolder(gitSyncFolderConfigDTO.getRootFolder()).build();
   }
 
   public static final GitSyncConfigDTO toSetupGitSyncDTO(YamlGitConfigDTO yamlGitConfig) {
     return GitSyncConfigDTO.builder()
         .identifier(yamlGitConfig.getIdentifier())
+        .name(yamlGitConfig.getName())
         .orgIdentifier(yamlGitConfig.getOrganizationIdentifier())
         .projectIdentifier(yamlGitConfig.getProjectIdentifier())
         .gitConnectorRef(yamlGitConfig.getGitConnectorRef())
@@ -120,17 +129,14 @@ public class YamlGitConfigMapper {
     }
     return rootFolders.stream()
         .map(rootFolder -> {
-          GitSyncFolderConfigDTOBuilder gitSyncFolderDTOBuilder = GitSyncFolderConfigDTO.builder()
-                                                                      .enabled(rootFolder.isEnabled())
-                                                                      .identifier(rootFolder.getIdentifier())
-                                                                      .isDefault(false)
-                                                                      .rootFolder(rootFolder.getRootFolder());
+          GitSyncFolderConfigDTOBuilder gitSyncFolderDTOBuilder =
+              GitSyncFolderConfigDTO.builder().isDefault(false).rootFolder(rootFolder.getRootFolder());
           if (rootFolder.equals(defaultRootFolder)) {
             gitSyncFolderDTOBuilder.isDefault(true);
           }
           return gitSyncFolderDTOBuilder.build();
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @SneakyThrows

@@ -32,9 +32,13 @@ public interface VaultSysAuthRestClient {
    * The JSON response will be returned as a String. The caller of this API need to '/secret/options/version' field in
    * the JSON document to extract the secret engine version.
    */
-  @GET(BASE_VAULT_URL) Call<SysMountsResponse> getAllMounts(@Header("X-Vault-Token") String header);
+  @GET(BASE_VAULT_URL)
+  Call<SysMountsResponse> getAllMounts(
+      @Header("X-Vault-Token") String header, @Header("X-Vault-Namespace") String namespace);
 
-  @POST(APPROLE_LOGIN_URL) Call<VaultAppRoleLoginResponse> appRoleLogin(@Body VaultAppRoleLoginRequest request);
+  @POST(APPROLE_LOGIN_URL)
+  Call<VaultAppRoleLoginResponse> appRoleLogin(
+      @Header("X-Vault-Namespace") String namespace, @Body VaultAppRoleLoginRequest request);
 
   @GET(CONFIG_CA_URL)
   Call<SSHVaultAuthResponse> fetchAuthPublicKey(
@@ -45,5 +49,6 @@ public interface VaultSysAuthRestClient {
       @Path(value = "role-name") String roleName, @Header("X-Vault-Token") String header,
       @Body SignedSSHVaultRequest request);
 
-  @POST(TOKEN_RENEW_URL) Call<Object> renewToken(@Header("X-Vault-Token") String header);
+  @POST(TOKEN_RENEW_URL)
+  Call<Object> renewToken(@Header("X-Vault-Token") String header, @Header("X-Vault-Namespace") String namespace);
 }

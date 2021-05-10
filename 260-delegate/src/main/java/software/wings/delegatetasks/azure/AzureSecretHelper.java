@@ -29,6 +29,10 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.settings.SettingValue;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
@@ -146,5 +150,16 @@ public class AzureSecretHelper {
     appServiceSetting.setEncryptedRecord(encryptedRecord);
     appServiceSetting.setValue(EMPTY);
     appServiceSetting.setAccountId(accountId);
+  }
+
+  public ArtifactStreamAttributes decryptArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
+    if (artifactStreamAttributes == null) {
+      return null;
+    }
+    SettingValue settingValue = artifactStreamAttributes.getServerSetting().getValue();
+    List<EncryptedDataDetail> artifactServerEncryptedDataDetails =
+        artifactStreamAttributes.getArtifactServerEncryptedDataDetails();
+    secretDecryptionService.decrypt((EncryptableSetting) settingValue, artifactServerEncryptedDataDetails);
+    return artifactStreamAttributes;
   }
 }

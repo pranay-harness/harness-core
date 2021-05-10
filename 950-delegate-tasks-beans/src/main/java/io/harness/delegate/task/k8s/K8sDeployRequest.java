@@ -1,14 +1,24 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper.populateDelegateSelectorCapability;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GIT;
 import static io.harness.delegate.task.k8s.ManifestType.HELM_CHART;
+import static io.harness.delegate.task.k8s.ManifestType.KUSTOMIZE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.awsconnector.AwsCapabilityHelper;
 import io.harness.delegate.beans.connector.gcp.GcpCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
+import io.harness.delegate.beans.connector.scm.GitCapabilityHelper;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
@@ -20,6 +30,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(CDP)
 public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDemander {
   K8sTaskType getTaskType();
   String getCommandName();
@@ -41,7 +52,31 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
           ((DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig).getKubernetesClusterConfigDTO(), maskingEvaluator));
     }
 
+    if (k8sInfraDelegateConfig instanceof GcpK8sInfraDelegateConfig) {
+      capabilities.addAll(GcpCapabilityHelper.fetchRequiredExecutionCapabilities(
+          ((GcpK8sInfraDelegateConfig) k8sInfraDelegateConfig).getGcpConnectorDTO(), maskingEvaluator));
+    }
+
     if (getManifestDelegateConfig() != null) {
+      if (KUSTOMIZE == getManifestDelegateConfig().getManifestType()) {
+        KustomizeManifestDelegateConfig kustomizeManifestConfig =
+            (KustomizeManifestDelegateConfig) getManifestDelegateConfig();
+        if (isNotEmpty(kustomizeManifestConfig.getPluginPath())) {
+          capabilities.add(
+              KustomizeCapability.builder().pluginRootDir(kustomizeManifestConfig.getPluginPath()).build());
+        }
+      }
+
+      if (GIT == getManifestDelegateConfig().getStoreDelegateConfig().getType()) {
+        GitStoreDelegateConfig gitStoreDelegateConfig =
+            (GitStoreDelegateConfig) getManifestDelegateConfig().getStoreDelegateConfig();
+        capabilities.addAll(GitCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator,
+            ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO()),
+            gitStoreDelegateConfig.getEncryptedDataDetails(), gitStoreDelegateConfig.getSshKeySpecDTO()));
+        capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+            gitStoreDelegateConfig.getEncryptedDataDetails(), maskingEvaluator));
+      }
+
       if (HELM_CHART == getManifestDelegateConfig().getManifestType()) {
         HelmChartManifestDelegateConfig helManifestConfig =
             (HelmChartManifestDelegateConfig) getManifestDelegateConfig();
@@ -56,6 +91,10 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
                 (HttpHelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
             capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
                 httpHelmStoreConfig.getHttpHelmConnector().getHelmRepoUrl(), maskingEvaluator));
+            capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+                httpHelmStoreConfig.getEncryptedDataDetails(), maskingEvaluator));
+            populateDelegateSelectorCapability(
+                capabilities, httpHelmStoreConfig.getHttpHelmConnector().getDelegateSelectors());
             break;
 
           case S3_HELM:
@@ -63,6 +102,8 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
                 (S3HelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
             capabilities.addAll(AwsCapabilityHelper.fetchRequiredExecutionCapabilities(
                 s3HelmStoreConfig.getAwsConnector(), maskingEvaluator));
+            capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+                s3HelmStoreConfig.getEncryptedDataDetails(), maskingEvaluator));
             break;
 
           case GCS_HELM:
@@ -70,6 +111,8 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
                 (GcsHelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
             capabilities.addAll(GcpCapabilityHelper.fetchRequiredExecutionCapabilities(
                 gcsHelmStoreDelegateConfig.getGcpConnector(), maskingEvaluator));
+            capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+                gcsHelmStoreDelegateConfig.getEncryptedDataDetails(), maskingEvaluator));
             break;
 
           default:

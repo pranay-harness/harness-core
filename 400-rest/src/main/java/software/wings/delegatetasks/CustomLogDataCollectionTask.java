@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
@@ -11,6 +12,7 @@ import static software.wings.common.VerificationConstants.NON_HOST_PREVIOUS_ANAL
 import static software.wings.common.VerificationConstants.URL_BODY_APPENDER;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -61,6 +63,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  */
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CV)
 public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private RequestExecutor requestExecutor;
@@ -146,10 +149,27 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
       this.dataCollectionInfo = dataCollectionInfo;
       this.logCollectionMinute = is24X7Task() ? (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getEndTime())
                                               : dataCollectionInfo.getStartMinute();
-      this.collectionStartTime = is24X7Task() ? dataCollectionInfo.getStartTime()
-                                              : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
+      this.collectionStartTime = getCollectionStartTime();
       this.taskResult = taskResult;
-      this.lastEndTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
+      this.lastEndTime = isPerMinuteWorkflowState() && !is24X7Task()
+          ? TimeUnit.MINUTES.toMillis(dataCollectionInfo.getStartMinute())
+          : Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
+    }
+
+    private long getCollectionStartTime() {
+      if (is24X7Task()) {
+        return dataCollectionInfo.getStartTime();
+      }
+
+      if (isPerMinuteWorkflowState()) {
+        return TimeUnit.MINUTES.toMillis(dataCollectionInfo.getStartMinute());
+      }
+
+      return Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
+    }
+
+    private boolean isPerMinuteWorkflowState() {
+      return dataCollectionInfo.getStateType().equals(StateType.DATA_DOG_LOG);
     }
 
     private Map<String, String> fetchAdditionalHeaders(CustomLogDataCollectionInfo dataCollectionInfo) {
@@ -253,10 +273,10 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
       if (is24X7Task()) {
         return dataCollectionInfo.getEndTime();
       }
-
-      long possibleEndTime = !firstDataCollectionCompleted
-          ? startTime + TimeUnit.MINUTES.toMillis(1)
-          : startTime + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionFrequency());
+      if (!firstDataCollectionCompleted) {
+        return startTime + TimeUnit.MINUTES.toMillis(1);
+      }
+      long possibleEndTime = startTime + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionFrequency());
       return Math.min(
           possibleEndTime, collectionStartTime + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
     }
@@ -347,8 +367,9 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
         try {
           final long startTime = lastEndTime;
           final long endTime = getEndTime(startTime);
-
-          logCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(endTime - collectionStartTime) - 1);
+          if (!is24X7Task() && !isPerMinuteWorkflowState()) {
+            logCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(endTime - collectionStartTime) - 1);
+          }
 
           for (Map.Entry<String, Map<String, ResponseMapper>> logDataInfo :
               dataCollectionInfo.getLogResponseDefinition().entrySet()) {
@@ -390,16 +411,21 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             }
 
             int i = 0;
-
+            Set<Integer> collectionMinuteSet = new HashSet<>();
+            collectionMinuteSet.add(logCollectionMinute);
             for (LogElement logObject : logs) {
               long timestamp = logObject.getTimeStamp();
 
-              if (logObject.getTimeStamp() != 0) {
+              if (logObject.getTimeStamp() != 0 && !is24X7Task() && !isPerMinuteWorkflowState()) {
                 int collectionMin =
                     (int) ((Timestamp.minuteBoundary(timestamp) - collectionStartTime) / TimeUnit.MINUTES.toMillis(1));
                 logObject.setLogCollectionMinute(collectionMin);
+                if (collectionMin >= 0) {
+                  collectionMinuteSet.add(collectionMin);
+                }
               } else {
                 logObject.setLogCollectionMinute(logCollectionMinute);
+                collectionMinuteSet.add(logCollectionMinute);
               }
 
               logObject.setClusterLabel(String.valueOf(i++));
@@ -418,7 +444,13 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
             }
             filteredLogs.forEach(logObject -> allHosts.add(logObject.getHost()));
             for (String host : allHosts) {
-              addHeartbeat(host, dataCollectionInfo, logCollectionMinute, filteredLogs);
+              if (isNotEmpty(collectionMinuteSet)) {
+                for (Integer heartBeatMinute : collectionMinuteSet) {
+                  addHeartbeat(host, dataCollectionInfo, heartBeatMinute, filteredLogs);
+                }
+              } else {
+                addHeartbeat(host, dataCollectionInfo, logCollectionMinute, filteredLogs);
+              }
             }
 
             if (!dataCollectionInfo.isShouldDoHostBasedFiltering()) {
@@ -440,7 +472,8 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
           }
 
           lastEndTime = endTime;
-          if (is24X7Task() || logCollectionMinute >= dataCollectionInfo.getCollectionTime() - 1) {
+          if (is24X7Task() || isPerMinuteWorkflowState()
+              || logCollectionMinute >= dataCollectionInfo.getCollectionTime() - 1) {
             // We are done with all data collection, so setting task status to success and quitting.
             log.info(
                 "Completed Log collection task. So setting task status to success and quitting. StateExecutionId {}",

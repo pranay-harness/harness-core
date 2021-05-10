@@ -66,8 +66,8 @@ public class AbstractSnippetChecker {
     if (isEmpty(snippetsIndex)) {
       return;
     }
-    YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
+    YamlSchemaGenerator yamlSchemaGenerator = new YamlSchemaGenerator(
+        new JacksonClassHelper(objectMapper), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
     final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     final Class tagsEnum = getTagsEnum(reflections);
     for (Pair<String, Pair<EntityType, ClassLoader>> snippet : snippetsIndex) {

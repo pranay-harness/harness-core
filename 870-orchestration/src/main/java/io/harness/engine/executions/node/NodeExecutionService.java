@@ -37,12 +37,8 @@ public interface NodeExecutionService {
 
   NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops);
 
-  NodeExecution updateStatusWithOps(
-      @NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<Update> ops);
-
-  default NodeExecution updateStatus(@NonNull String nodeExecutionId, @NonNull Status targetStatus) {
-    return updateStatusWithOps(nodeExecutionId, targetStatus, null);
-  }
+  NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<Update> ops,
+      EnumSet<Status> overrideStatusSet);
 
   NodeExecution save(NodeExecution nodeExecution);
 
@@ -70,4 +66,6 @@ public interface NodeExecutionService {
       String planExecutionId, String parentId, EnumSet<Status> flowingStatuses, boolean includeParent);
 
   List<NodeExecution> fetchNodeExecutionsByStatusAndIdIn(String planExecutionId, Status status, List<String> targetIds);
+
+  List<NodeExecution> fetchNodeExecutionsByParentId(String nodeExecutionId, boolean oldRetry);
 }

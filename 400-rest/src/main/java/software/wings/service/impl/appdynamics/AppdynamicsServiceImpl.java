@@ -1,5 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -9,6 +10,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.NO_STATE_EXECUTION_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
@@ -18,6 +22,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -32,7 +37,6 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.common.base.Preconditions;
@@ -51,12 +55,14 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(CV)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
   @Inject private MLServiceUtils mlServiceUtils;
-  @Inject private NGSecretService ngSecretService;
+  @Inject private SecretManagerClientService ngSecretService;
   @Override
   public List<NewRelicApplication> getApplications(final String settingId) {
     return this.getApplications(settingId, null, null);

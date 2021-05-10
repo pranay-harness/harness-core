@@ -1,5 +1,7 @@
 package io.harness.batch.processing.schedule;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -33,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@OwnedBy(HarnessTeam.CE)
 public class BatchJobRunner {
   @Autowired private JobLauncher jobLauncher;
   @Autowired private BatchJobIntervalService batchJobIntervalService;
@@ -84,12 +87,6 @@ public class BatchJobRunner {
     if (batchJobType == BatchJobType.RERUN_JOB) {
       endAt = Instant.now().minus(15, ChronoUnit.HOURS);
     }
-    // delaying billing batch job by 2 days so that cur data is presennt
-    if (ImmutableSet.of("R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q", "DVExhMPMScy6RpRNKwyvZQ")
-            .contains(accountId)
-        && batchJobType == BatchJobType.INSTANCE_BILLING) {
-      endAt = Instant.now().minus(40, ChronoUnit.HOURS);
-    }
     BatchJobScheduleTimeProvider batchJobScheduleTimeProvider =
         new BatchJobScheduleTimeProvider(startAt, endAt, duration, chronoUnit);
     Instant startInstant = startAt;
@@ -97,7 +94,8 @@ public class BatchJobRunner {
     while (batchJobScheduleTimeProvider.hasNext()) {
       Instant endInstant = batchJobScheduleTimeProvider.next();
       if (null != endInstant && checkDependentJobFinished(accountId, startInstant, dependentBatchJobs)
-          && checkOutOfClusterDependentJobs(accountId, startInstant, endInstant, batchJobType)) {
+          && checkOutOfClusterDependentJobs(accountId, startInstant, endInstant, batchJobType)
+          && checkClusterToBigQueryJobCompleted(accountId, batchJobType)) {
         if (runningMode) {
           JobParameters params =
               new JobParametersBuilder()
@@ -172,6 +170,23 @@ public class BatchJobRunner {
       }
     }
     return true;
+  }
+
+  boolean checkClusterToBigQueryJobCompleted(String accountId, BatchJobType batchJobType) {
+    if (batchJobType != BatchJobType.DATA_CHECK_BIGQUERY_TIMESCALE) {
+      return true;
+    }
+    Instant instant = batchJobScheduledDataService.fetchLastDependentBatchJobCreatedTime(
+        accountId, BatchJobType.CLUSTER_DATA_TO_BIG_QUERY);
+    if (instant != null) {
+      Long timeDifference = Duration.between(instant, Instant.now()).toMinutes();
+      if (timeDifference >= 30) {
+        log.info("It has been greater than 30 mins since CLUSTER_DATA_TO_BIG_QUERY ran");
+        return true;
+      }
+    }
+    log.warn("CLUSTER_DATA_TO_BIG_QUERY hasn't ran yet");
+    return false;
   }
 
   boolean checkOutOfClusterDependentJobs(String accountId, Instant startAt, Instant endAt, BatchJobType batchJobType) {

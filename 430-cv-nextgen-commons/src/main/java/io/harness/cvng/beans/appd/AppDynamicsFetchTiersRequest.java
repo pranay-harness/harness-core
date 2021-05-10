@@ -1,9 +1,11 @@
 package io.harness.cvng.beans.appd;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequestType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
@@ -11,6 +13,7 @@ import lombok.experimental.SuperBuilder;
 @JsonTypeName("APPDYNAMICS_FETCH_TIERS")
 @Data
 @SuperBuilder
+@OwnedBy(CV)
 public class AppDynamicsFetchTiersRequest extends AppDynamicsDataCollectionRequest {
   public static final String DSL = AppDynamicsDataCollectionRequest.readDSL(
       "appd-fetch-tiers.datacollection", AppDynamicsDataCollectionRequest.class);
@@ -27,7 +30,7 @@ public class AppDynamicsFetchTiersRequest extends AppDynamicsDataCollectionReque
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    Map<String, Object> envVariables = new HashMap<>();
+    Map<String, Object> envVariables = AppDynamicsUtils.getCommonEnvVariables(getConnectorConfigDTO());
     envVariables.put("appName", appName);
     return envVariables;
   }

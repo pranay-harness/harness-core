@@ -6,10 +6,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handlers.AddExecutableResponseEventHandler;
+import io.harness.event.handlers.AdviserEventResponseHandler;
+import io.harness.event.handlers.ErrorEventResponseHandler;
+import io.harness.event.handlers.FacilitateResponseRequestHandler;
 import io.harness.event.handlers.HandleStepResponseEventHandler;
-import io.harness.event.handlers.QueueNodeExecutionEventHandler;
+import io.harness.event.handlers.ResumeNodeExecutionResponseEventHandler;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.rule.Owner;
 
@@ -23,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class SdkNodeExecutionEventHandlerFactoryTest extends OrchestrationTestBase {
   @Mock Injector injector;
 
@@ -42,16 +48,24 @@ public class SdkNodeExecutionEventHandlerFactoryTest extends OrchestrationTestBa
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetHandler() {
-    Mockito.when(injector.getInstance(QueueNodeExecutionEventHandler.class)).thenReturn(null);
     Mockito.when(injector.getInstance(AddExecutableResponseEventHandler.class)).thenReturn(null);
-
-    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.QUEUE_NODE);
-    verify(injector).getInstance(QueueNodeExecutionEventHandler.class);
 
     sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE);
     verify(injector).getInstance(AddExecutableResponseEventHandler.class);
 
     sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.HANDLE_STEP_RESPONSE);
     verify(injector).getInstance(HandleStepResponseEventHandler.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.RESUME_NODE_EXECUTION);
+    verify(injector).getInstance(ResumeNodeExecutionResponseEventHandler.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.HANDLE_EVENT_ERROR);
+    verify(injector).getInstance(ErrorEventResponseHandler.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.HANDLE_ADVISER_RESPONSE);
+    verify(injector).getInstance(AdviserEventResponseHandler.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.HANDLE_FACILITATE_RESPONSE);
+    verify(injector).getInstance(FacilitateResponseRequestHandler.class);
   }
 }

@@ -1,10 +1,12 @@
 package io.harness.ccm.billing.dao;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.billing.entities.TransferJobRunState.PENDING;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun.CloudBillingTransferRunKeys;
@@ -19,6 +21,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CE)
 public class CloudBillingTransferRunDaoTest extends WingsBaseTest {
   @Inject CloudBillingTransferRunDao cloudBillingTransferRunDao;
   private String accountId = "ACCOUNT_ID";

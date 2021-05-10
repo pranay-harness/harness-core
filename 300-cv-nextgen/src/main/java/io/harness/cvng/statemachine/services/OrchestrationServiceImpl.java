@@ -2,7 +2,10 @@ package io.harness.cvng.statemachine.services;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.metrics.beans.CVNGMetricAnalysisContext;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
@@ -10,6 +13,7 @@ import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrches
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
@@ -29,6 +33,9 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private HPersistence hPersistence;
   @Inject private AnalysisStateMachineService stateMachineService;
 
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private MetricService metricService;
+
   @Override
   public void queueAnalysis(String verificationTaskId, Instant startTime, Instant endTime) {
     log.info("Queuing analysis for verificationTaskId: {}, startTime: {}, endTime: {}", verificationTaskId, startTime,
@@ -44,9 +51,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         hPersistence.createQuery(AnalysisOrchestrator.class)
             .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId);
 
+    String accountId = verificationTaskService.get(verificationTaskId).getAccountId();
+
     UpdateOperations<AnalysisOrchestrator> updateOperations =
         hPersistence.createUpdateOperations(AnalysisOrchestrator.class)
             .setOnInsert(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
+            .setOnInsert(AnalysisOrchestratorKeys.accountId, accountId)
             .setOnInsert(AnalysisOrchestratorKeys.status, AnalysisStatus.CREATED)
             .addToSet(AnalysisOrchestratorKeys.analysisStateMachineQueue, Arrays.asList(stateMachine));
 
@@ -75,6 +85,26 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   }
 
   @Override
+  public void recordMetrics() {
+    log.info("Recording Orchestrator Metrics");
+    List<AnalysisOrchestrator> orchestrators =
+        hPersistence.createQuery(AnalysisOrchestrator.class, excludeAuthority)
+            .field(AnalysisOrchestratorKeys.status)
+            .notIn(Arrays.asList(AnalysisStatus.COMPLETED, AnalysisStatus.SUCCESS))
+            .asList();
+    if (isNotEmpty(orchestrators)) {
+      orchestrators.stream()
+          .filter(orchestrator -> orchestrator.getAnalysisStateMachineQueue().size() > 5)
+          .forEach(orchestrator -> {
+            try (CVNGMetricAnalysisContext context =
+                     new CVNGMetricAnalysisContext(orchestrator.getAccountId(), orchestrator.getVerificationTaskId())) {
+              metricService.recordMetric("orchestrator_queue_size", orchestrator.getAnalysisStateMachineQueue().size());
+            }
+          });
+    }
+  }
+
+  @Override
   public void orchestrate(AnalysisOrchestrator orchestrator) {
     Preconditions.checkNotNull(orchestrator, "orchestrator cannot be null when trying to orchestrate");
     try {
@@ -83,11 +113,10 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       // TODO: these errors needs to go to execution log so that we can connect it with the right context and show them
       // in the UI.
       // TODO: setup alert
-      log.error("Failed to orchestrate: {}", orchestrator, e);
+      log.error("Failed to orchestrate: {}", orchestrator.getVerificationTaskId(), e);
       throw e;
     }
   }
-
   private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
     if (orchestrator == null) {
       String errMsg = "No orchestrator available to execute currently.";
@@ -109,6 +138,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     }
 
     AnalysisStatus stateMachineStatus = null;
+
     switch (currentlyExecutingStateMachine.getStatus()) {
       case CREATED:
       case SUCCESS:

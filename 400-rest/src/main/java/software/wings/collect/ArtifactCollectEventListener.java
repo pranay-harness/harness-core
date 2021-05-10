@@ -13,6 +13,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
@@ -23,7 +24,6 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.AwsConfig;

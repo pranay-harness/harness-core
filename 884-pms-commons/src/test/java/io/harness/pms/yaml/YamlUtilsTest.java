@@ -1,11 +1,13 @@
 package io.harness.pms.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -17,6 +19,7 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PIPELINE)
 public class YamlUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
@@ -82,7 +85,7 @@ public class YamlUtilsTest extends CategoryTest {
     assertThat(stageFQN).isEqualTo("pipeline.stages.qaStage");
     // Stage1 Service Node
     YamlNode serviceNode = stage1Node.getField("spec").getNode().getField("service").getNode();
-    assertThat(YamlUtils.getFullyQualifiedName(serviceNode)).isEqualTo("pipeline.stages.qaStage.service");
+    assertThat(YamlUtils.getFullyQualifiedName(serviceNode)).isEqualTo("pipeline.stages.qaStage.spec.service");
 
     // image Path qualified Name
     YamlNode imagePath = serviceNode.getField("serviceDefinition")
@@ -98,18 +101,18 @@ public class YamlUtilsTest extends CategoryTest {
                              .getField("imagePath")
                              .getNode();
     assertThat(YamlUtils.getFullyQualifiedName(imagePath))
-        .isEqualTo("pipeline.stages.qaStage.service.artifacts.primary.imagePath");
+        .isEqualTo("pipeline.stages.qaStage.spec.service.serviceDefinition.spec.artifacts.primary.spec.imagePath");
 
     // infrastructure qualified name
     YamlNode infraNode = stage1Node.getField("spec").getNode().getField("infrastructure").getNode();
-    assertThat(YamlUtils.getFullyQualifiedName(infraNode)).isEqualTo("pipeline.stages.qaStage.infrastructure");
+    assertThat(YamlUtils.getFullyQualifiedName(infraNode)).isEqualTo("pipeline.stages.qaStage.spec.infrastructure");
 
     // step qualified name
     YamlNode stepsNode =
         stage1Node.getField("spec").getNode().getField("execution").getNode().getField("steps").getNode();
     YamlNode step1Node = stepsNode.asArray().get(0).getField("step").getNode();
     assertThat(YamlUtils.getFullyQualifiedName(step1Node))
-        .isEqualTo("pipeline.stages.qaStage.execution.steps.rolloutDeployment");
+        .isEqualTo("pipeline.stages.qaStage.spec.execution.steps.rolloutDeployment");
   }
 
   @Test
@@ -173,7 +176,7 @@ public class YamlUtilsTest extends CategoryTest {
     assertThat(stageFQN).isEqualTo("qaStage");
     // Stage1 Service Node
     YamlNode serviceNode = stage1Node.getField("spec").getNode().getField("service").getNode();
-    assertThat(YamlUtils.getQualifiedNameTillGivenField(serviceNode, "stage")).isEqualTo("qaStage.service");
+    assertThat(YamlUtils.getQualifiedNameTillGivenField(serviceNode, "stage")).isEqualTo("qaStage.spec.service");
 
     // image Path qualified Name
     YamlNode imagePath = serviceNode.getField("serviceDefinition")
@@ -189,7 +192,7 @@ public class YamlUtilsTest extends CategoryTest {
                              .getField("imagePath")
                              .getNode();
     assertThat(YamlUtils.getQualifiedNameTillGivenField(imagePath, "service"))
-        .isEqualTo("service.artifacts.primary.imagePath");
+        .isEqualTo("service.serviceDefinition.spec.artifacts.primary.spec.imagePath");
 
     // infrastructure qualified name
     YamlNode infraNode = stage1Node.getField("spec").getNode().getField("infrastructure").getNode();

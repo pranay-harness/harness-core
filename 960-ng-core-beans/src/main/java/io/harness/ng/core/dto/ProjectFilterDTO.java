@@ -6,6 +6,7 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.List;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProjectFilterDTO {
   String searchTerm;
-  String orgIdentifier;
+  Set<String> orgIdentifiers;
   Boolean hasModule;
   ModuleType moduleType;
   List<String> identifiers;

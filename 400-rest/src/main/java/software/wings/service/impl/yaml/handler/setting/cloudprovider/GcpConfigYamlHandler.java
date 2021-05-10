@@ -1,11 +1,15 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -16,14 +20,13 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
   @Override
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
-
     Yaml yaml = Yaml.builder()
                     .harnessApiVersion(getHarnessApiVersion())
                     .type(gcpConfig.getType())
                     .serviceAccountKeyFileContent(getEncryptedYamlRef(
                         gcpConfig.getAccountId(), gcpConfig.getEncryptedServiceAccountKeyFileContent()))
-                    .useDelegate(gcpConfig.isUseDelegate())
-                    .delegateSelector(gcpConfig.getDelegateSelector())
+                    .useDelegateSelectors(gcpConfig.isUseDelegateSelectors())
+                    .delegateSelectors(gcpConfig.getDelegateSelectors())
                     .skipValidation(gcpConfig.isSkipValidation())
                     .build();
     toYaml(yaml, settingAttribute, appId);
@@ -36,12 +39,21 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
+    List<String> delegagateSelectors;
+    boolean isUseDelegateSelectors;
+    if (isNotEmpty(yaml.getDelegateSelector()) && isEmpty(yaml.getDelegateSelectors())) {
+      delegagateSelectors = Collections.singletonList(yaml.getDelegateSelector());
+      isUseDelegateSelectors = yaml.isUseDelegate();
+    } else {
+      delegagateSelectors = yaml.getDelegateSelectors();
+      isUseDelegateSelectors = yaml.isUseDelegateSelectors();
+    }
 
     GcpConfig config = GcpConfig.builder()
                            .accountId(accountId)
                            .encryptedServiceAccountKeyFileContent(yaml.getServiceAccountKeyFileContent())
-                           .useDelegate(yaml.isUseDelegate())
-                           .delegateSelector(yaml.getDelegateSelector())
+                           .useDelegateSelectors(isUseDelegateSelectors)
+                           .delegateSelectors(delegagateSelectors)
                            .skipValidation(yaml.isSkipValidation())
                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);

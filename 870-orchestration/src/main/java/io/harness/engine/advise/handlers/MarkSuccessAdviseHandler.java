@@ -1,34 +1,39 @@
 package io.harness.engine.advise.handlers;
 
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.engine.OrchestrationEngine;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.advise.AdviserResponseHandler;
-import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.interrupts.InterruptManager;
+import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserIssuer;
 import io.harness.pms.contracts.advisers.AdviserResponse;
-import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
-import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.advisers.IssuedBy;
+import io.harness.pms.contracts.interrupts.InterruptType;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class MarkSuccessAdviseHandler implements AdviserResponseHandler {
-  @Inject private PlanExecutionService planExecutionService;
-  @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private OrchestrationEngine engine;
+  @Inject private InterruptManager interruptManager;
 
   @Override
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
-    MarkSuccessAdvise markSuccessAdvise = adviserResponse.getMarkSuccessAdvise();
-    nodeExecutionService.updateStatus(nodeExecution.getUuid(), Status.SUCCEEDED);
-    if (EmptyPredicate.isNotEmpty(markSuccessAdvise.getNextNodeId())) {
-      PlanNodeProto nextNode = Preconditions.checkNotNull(planExecutionService.fetchExecutionNode(
-          nodeExecution.getAmbiance().getPlanExecutionId(), markSuccessAdvise.getNextNodeId()));
-      engine.triggerExecution(nodeExecution.getAmbiance(), nextNode);
-    } else {
-      engine.endNodeExecution(nodeExecution.getUuid(), Status.SUCCEEDED, adviserResponse);
-    }
+    InterruptPackage interruptPackage =
+        InterruptPackage.builder()
+            .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
+            .nodeExecutionId(nodeExecution.getUuid())
+            .interruptType(InterruptType.MARK_SUCCESS)
+            .interruptConfig(
+                InterruptConfig.newBuilder()
+                    .setIssuedBy(IssuedBy.newBuilder()
+                                     .setAdviserIssuer(
+                                         AdviserIssuer.newBuilder().setAdviserType(AdviseType.MARK_SUCCESS).build())
+                                     .build())
+                    .build())
+            .build();
+    interruptManager.register(interruptPackage);
   }
 }

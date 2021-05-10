@@ -50,6 +50,82 @@ index bdfe753b01..2bef85919d 100644
         google.golang.org/api v0.24.0
 ```
 
+## Building the SCM binary setting version and build commit ID
+
+To ensure we know what build the binary is using and what proto file was used. We include a version number and the short commit ID. These are included in stdout when the binary starts.
+
+```BASH
+go build -ldflags "-X 'main.Version=$VERSION' -X 'main.BuildCommitID=$(git rev-parse --short HEAD)'"
+```
+
+giving ...
+
+```BASH
+{"level":"info","ts":"2021-04-16T09:20:43.261+0100","caller":"scm/main.go:53","msg":"Starting CI GRPC scm server","application_name":"CI-scm","deployable":"ci-scm","deployment":"","environment":"dev","version":"1.1.0","buildCommitID":"1f51565c5a","port":8091,"unixSocket":""}
+```
+
+## Running acceptance tests
+
+To run the unit tests
+
+```BASH
+go test -count=1 -v ./...
+```
+
+### Github
+
+uses `https://github.com/tphoney/scm-test`, **remove the test_branch branch. Remove the pr that is using the patch1 branch**
+
+```BASH
+GITHUB_ACCESS_TOKEN=963408579168567c07ff8bfd2a5455e5307f74d4 go test -count=1 -v ./...
+```
+
+### Bitbucket cloud
+
+uses `https://bitbucket.org/tphoney/scm-test`, **remove the branch test_branch**
+
+```BASH
+BITBUCKET_CLOUD_TOKEN=JWhLv8FqXHs7mEP32hbR go test -count=1 -v ./...
+```
+
+### Gitlab
+
+uses `https://gitlab.com/tphoney/test_repo`, **remove the branch test_branch**
+
+```BASH
+GITLAB_ACCESS_TOKEN=-uABtgnSCDpuemgkSwgY go test -count=1 -v ./...
+```
+
+## Running SCM binary with a unix socket and using the test client
+
+How to build the scm binary and use a unix socket then run an example test client.
+
+```BASH
+# build the scm binary
+bazelisk build //product/ci/scm/...
+# where it is located
+ls -al $(bazelisk info bazel-bin)/product/ci/scm/*stripped/scm
+INFO: Invocation ID: 69ecbe65-f101-469e-a5b9-4d39f25a426b
+-r-xr-xr-x 1 tp tp 13149393 Apr 12 11:38 /home/tp/.cache/bazel/_bazel_tp/529a9f5eb5d3c3de90f20271ededd500/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin/product/ci/scm/linux_amd64_stripped/scm
+# run the scm binary using a unix socket, remove the socket first
+rm /tmp/bla
+$(bazelisk info bazel-bin)/product/ci/scm/*stripped/scm --unix=/tmp/bla
+ ls -al /tmp/bla
+srwxr-xr-x 1 tp tp 0 Apr 12 11:46 /tmp/bla
+
+
+# build the test unix_socket_client
+bazelisk build //product/ci/scm/test/unix_socket_client/...
+# where it is located
+ls -al $(bazelisk info bazel-bin)/product/ci/scm/test/unix_socket_client/*stripped/unix_socket_client
+INFO: Invocation ID: 1a900e85-523f-4bf0-b0bd-37ce9ed6aa55
+-r-xr-xr-x 1 tp tp 10119187 Apr 12 11:38 /home/tp/.cache/bazel/_bazel_tp/529a9f5eb5d3c3de90f20271ededd500/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin/product/ci/scm/test/unix_socket_client/linux_amd64_stripped/unix_socket_client
+# run the test unix_socket_client
+$(bazelisk info bazel-bin)/product/ci/scm/test/unix_socket_client/*stripped/unix_socket_client
+INFO: Invocation ID: 1b31454f-5079-4f3b-9a52-9c132013e6c1
+content: content:"# scm-test\ntest repo for source control operations\n" path:"README.md" blob_id:"81e158a64f10351f15a17e9c3888f06101855eca" %
+```
+
 ## Example requests
 
 I tested using grpc calls using `https://github.com/uw-labs/bloomrpc`
@@ -62,69 +138,6 @@ I tested using grpc calls using `https://github.com/uw-labs/bloomrpc`
   "slug": "tphoney/scm-test",
   "path": "README.md",
   "branch": "main",
-  "provider": {
-    "github": {
-      "access_token": "963408579168567c07ff8bfd2a5455e5307f74d4"
-    }
-  }
-}
-// create
-{
-  "slug": "tphoney/scm-test",
-  "path": "newfile",
-  "data": "data1",
-  "message": "message1",
-  "branch": "main",
-  "signature": {
-    "name": "tp honey",
-    "email": "tp@harness.io"
-  },
-  "provider": {
-    "github": {
-      "access_token": "963408579168567c07ff8bfd2a5455e5307f74d4"
-    }
-  }
-}
-// find
-{
-  "slug": "tphoney/scm-test",
-  "path": "newfile",
-  "branch": "main",
-  "provider": {
-    "github": {
-      "access_token": "963408579168567c07ff8bfd2a5455e5307f74d4"
-    }
-  }
-}
-// update
-{
-  "slug": "tphoney/scm-test",
-  "path": "newfile",
-  "data": "data2",
-  "message": "message2",
-  "branch": "main",
-  "sha": "0abc8f194801d3d07af700bae67026ed2695ec59",
-  "signature": {
-    "name": "tp honey",
-    "email": "tp@harness.io"
-  },
-  "provider": {
-    "github": {
-      "access_token": "963408579168567c07ff8bfd2a5455e5307f74d4"
-    }
-  }
-}
-// pushFile - with create
-{
-  "slug": "tphoney/scm-test",
-  "path": "upsert",
-  "data": "data2",
-  "message": "message2",
-  "branch": "main",
-  "signature": {
-    "name": "tp honey",
-    "email": "tp@harness.io"
-  },
   "provider": {
     "github": {
       "access_token": "963408579168567c07ff8bfd2a5455e5307f74d4"

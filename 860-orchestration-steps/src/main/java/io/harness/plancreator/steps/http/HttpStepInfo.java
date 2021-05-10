@@ -1,14 +1,15 @@
 package io.harness.plancreator.steps.http;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.http.HttpBaseStepInfo;
@@ -39,10 +40,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.HTTP)
 @SimpleVisitorHelper(helperClass = HttpStepInfoVisitorHelper.class)
 @TypeAlias("httpStepInfo")
-public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visitable, WithRollbackInfo {
-  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
-  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String identifier;
-
+@OwnedBy(PIPELINE)
+public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visitable {
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
@@ -52,12 +51,9 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
 
   @Builder(builderMethodName = "infoBuilder")
   public HttpStepInfo(ParameterField<String> url, ParameterField<String> method, ParameterField<String> requestBody,
-      ParameterField<String> assertion, String name, String identifier, String metadata,
-      List<NGVariable> outputVariables, List<HttpHeaderConfig> headers,
-      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+      ParameterField<String> assertion, String metadata, List<NGVariable> outputVariables,
+      List<HttpHeaderConfig> headers, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
     super(url, method, requestBody, assertion);
-    this.name = name;
-    this.identifier = identifier;
     this.metadata = metadata;
     this.outputVariables = outputVariables;
     this.headers = headers;
@@ -87,7 +83,7 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
   }
 
   @Override
-  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+  public SpecParameters getSpecParameters() {
     return HttpStepParameters.infoBuilder()
         .assertion(getAssertion())
         .headers(headers.stream().collect(Collectors.toMap(HttpHeaderConfig::getKey, HttpHeaderConfig::getValue)))
@@ -96,13 +92,7 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
         .requestBody(getRequestBody())
         .delegateSelectors(ParameterField.createValueField(
             CollectionUtils.emptyIfNull(delegateSelectors != null ? delegateSelectors.getValue() : null)))
-        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
-        .timeout(baseStepParameterInfo.getTimeout())
         .url(getUrl())
-        .name(baseStepParameterInfo.getName())
-        .identifier(baseStepParameterInfo.getIdentifier())
-        .skipCondition(baseStepParameterInfo.getSkipCondition())
-        .description(baseStepParameterInfo.getSkipCondition())
         .build();
   }
 }

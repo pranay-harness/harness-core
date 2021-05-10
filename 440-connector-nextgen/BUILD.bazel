@@ -1,13 +1,14 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//870-yaml-beans:module",
     "//890-sm-core:module",
+    "//900-git-sync-sdk:module",
     "//910-delegate-service-driver:module",
     "//930-ng-core-clients:module",
+    "//948-access-control-sdk:module",
     "//955-delegate-beans:module",
     "//950-delegate-tasks-beans:module",
     "//950-ng-core:module",
@@ -69,6 +70,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

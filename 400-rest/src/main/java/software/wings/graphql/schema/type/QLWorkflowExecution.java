@@ -35,4 +35,5 @@ public class QLWorkflowExecution implements QLExecution {
   private String notes;
   private String appId;
   private List<QLDeploymentTag> tags;
+  private String failureDetails;
 }

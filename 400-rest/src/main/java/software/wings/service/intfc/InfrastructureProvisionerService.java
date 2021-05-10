@@ -1,5 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -12,7 +17,7 @@ import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.NameValuePair;
-import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
@@ -28,6 +33,8 @@ import javax.ws.rs.core.StreamingOutput;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface InfrastructureProvisionerService extends OwnedByApplication {
   PageResponse<InfrastructureProvisioner> list(PageRequest<InfrastructureProvisioner> pageRequest);
 
@@ -53,7 +60,7 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   Map<String, Object> resolveProperties(Map<String, Object> contextMap, List<BlueprintProperty> properties,
       Optional<ManagerExecutionLogCallback> executionLogCallbackOptional, Optional<String> region,
-      boolean infraRefactor, String infraProvisionerTypeKey);
+      String infraProvisionerTypeKey);
 
   void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context, Map<String, Object> outputs);
 
@@ -71,7 +78,7 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   List<String> getTerraformTargets(String appId, String accountId, String provisionerId);
 
-  boolean isTemplatizedProvisioner(TerraformInfrastructureProvisioner infrastructureProvisioner);
+  boolean isTemplatizedProvisioner(TerraGroupProvisioners infrastructureProvisioner);
 
   StreamingOutput downloadTerraformState(String provisionerId, String envId);
 
@@ -81,7 +88,8 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
 
   Map<String, String> extractUnresolvedTextVariables(List<NameValuePair> variables);
 
-  Map<String, EncryptedDataDetail> extractEncryptedTextVariables(List<NameValuePair> variables, String appId);
+  Map<String, EncryptedDataDetail> extractEncryptedTextVariables(
+      List<NameValuePair> variables, String appId, String workflowExecutionId);
 
   String getEntityId(String provisionerId, String envId);
 

@@ -18,6 +18,7 @@ import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.connector.types.Connector;
 import software.wings.graphql.datafetcher.connector.types.ConnectorFactory;
+import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorInput;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload;
 import software.wings.graphql.schema.mutation.connector.payload.QLUpdateConnectorPayload.QLUpdateConnectorPayloadBuilder;
@@ -40,6 +41,7 @@ public class UpdateConnectorDataFetcher
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private ConnectorsController connectorsController;
   @Inject private SecretManager secretManager;
+  @Inject private UsageScopeController usageScopeController;
 
   public UpdateConnectorDataFetcher() {
     super(QLUpdateConnectorInput.class, QLUpdateConnectorPayload.class);
@@ -69,8 +71,8 @@ public class UpdateConnectorDataFetcher
     QLUpdateConnectorPayloadBuilder builder =
         QLUpdateConnectorPayload.builder().clientMutationId(input.getClientMutationId());
 
-    Connector connector =
-        ConnectorFactory.getConnector(input.getConnectorType(), connectorsController, secretManager, settingsService);
+    Connector connector = ConnectorFactory.getConnector(
+        input.getConnectorType(), connectorsController, secretManager, settingsService, usageScopeController);
     connector.checkInputExists(input);
     connector.checkSecrets(input, settingAttribute);
     connector.updateSettingAttribute(settingAttribute, input);

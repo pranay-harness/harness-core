@@ -6,18 +6,25 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.GeneralException;
+import io.harness.exception.HttpResponseException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.network.SafeHttpCall;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -52,7 +59,35 @@ public class JiraClient {
   }
 
   /**
-   * Get an issue by issue key.
+   * Get all statuses. Optionally filter by projectKey and issueType
+   *
+   * @return the list of projects
+   */
+  public List<JiraStatusNG> getStatuses(String projectKey, String issueType) {
+    if (StringUtils.isBlank(projectKey)) {
+      return getStatuses();
+    }
+
+    List<JiraIssueTypeNG> issueTypes = getProjectStatuses(projectKey);
+    if (EmptyPredicate.isEmpty(issueTypes)) {
+      return Collections.emptyList();
+    }
+    if (StringUtils.isNotBlank(issueType)) {
+      issueTypes = issueTypes.stream().filter(it -> it.getName().equals(issueType)).collect(Collectors.toList());
+      if (EmptyPredicate.isEmpty(issueTypes)) {
+        return Collections.emptyList();
+      }
+    }
+
+    // Collect all the statuses from all issue types and deduplicate based on status name.
+    return issueTypes.stream()
+        .flatMap(it -> it.getStatuses().stream())
+        .collect(Collectors.collectingAndThen(
+            Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(JiraStatusNG::getName))), ArrayList::new));
+  }
+
+  /**
+   * Get an issue by issue key. If issue key is invalid, null is returned.
    *
    * There is special handling for these fields:
    * - project: returns 3 field - "Project Key", "Project Name", "__project" (whole object for internal use)
@@ -69,7 +104,22 @@ public class JiraClient {
    * @return the issue with the given key
    */
   public JiraIssueNG getIssue(@NotBlank String issueKey) {
-    return executeCall(restClient.getIssue(issueKey, "names,schema"), "fetching issue");
+    return getIssue(issueKey, false);
+  }
+
+  private JiraIssueNG getIssue(@NotBlank String issueKey, boolean throwOnInvalidKey) {
+    try {
+      JiraIssueNG issue = executeCall(restClient.getIssue(issueKey, "names,schema"), "fetching issue");
+      if (issue != null) {
+        issue.updateJiraBaseUrl(config.getJiraUrl());
+      }
+      return issue;
+    } catch (HttpResponseException ex) {
+      if (!throwOnInvalidKey && ex.getStatusCode() == 404) {
+        return null;
+      }
+      throw ex;
+    }
   }
 
   /**
@@ -91,7 +141,7 @@ public class JiraClient {
    * @param issueType   the issue type - can be null if not known
    * @param expand      the expand query parameter - if null a default value of `projects.issuetypes.fields` is used
    * @param fetchStatus should also fetch status
-   * @return the issue create meta
+   * @return the issue create metadata
    */
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(
       String projectKey, String issueType, String expand, boolean fetchStatus) {
@@ -99,7 +149,7 @@ public class JiraClient {
         executeCall(restClient.getIssueCreateMetadata(EmptyPredicate.isEmpty(projectKey) ? null : projectKey,
                         EmptyPredicate.isEmpty(issueType) ? null : issueType,
                         EmptyPredicate.isEmpty(expand) ? "projects.issuetypes.fields" : expand),
-            "fetching create meta");
+            "fetching create metadata");
 
     if (fetchStatus) {
       if (EmptyPredicate.isEmpty(projectKey)) {
@@ -120,6 +170,25 @@ public class JiraClient {
     }
 
     return createMetadata;
+  }
+
+  /**
+   * Get the issue update metadata information - schema information for the issue with the given key.
+   *
+   * There is special handling for these fields:
+   * - project, issue type and status are not part of the fields
+   * - timetracking: returned as 2 string fields - "Original Estimate", "Remaining Estimate"
+   * - Fields treated as OPTION type fields:
+   *   - resolution
+   *   - component
+   *   - priority
+   *   - version
+   *
+   * @param issueKey  the key of the issue
+   * @return the issue update metadata
+   */
+  public JiraIssueUpdateMetadataNG getIssueUpdateMetadata(@NotBlank String issueKey) {
+    return executeCall(restClient.getIssueUpdateMetadata(issueKey), "fetching update metadata");
   }
 
   private List<JiraStatusNG> getStatuses() {
@@ -154,8 +223,8 @@ public class JiraClient {
    */
   public JiraIssueNG createIssue(
       @NotBlank String projectKey, @NotBlank String issueTypeName, Map<String, String> fields) {
-    JiraIssueCreateMetadataNG createMetaResponse = getIssueCreateMetadata(projectKey, issueTypeName, null, false);
-    JiraProjectNG project = createMetaResponse.getProjects().get(projectKey);
+    JiraIssueCreateMetadataNG createMetadata = getIssueCreateMetadata(projectKey, issueTypeName, null, false);
+    JiraProjectNG project = createMetadata.getProjects().get(projectKey);
     if (project == null) {
       throw new InvalidRequestException(String.format("Invalid project: %s", projectKey));
     }
@@ -168,7 +237,55 @@ public class JiraClient {
 
     JiraCreateIssueRequestNG createIssueRequest = new JiraCreateIssueRequestNG(project, issueType, fields);
     JiraIssueNG issue = executeCall(restClient.createIssue(createIssueRequest), "creating issue");
-    return getIssue(issue.getKey());
+    return getIssue(issue.getKey(), true);
+  }
+
+  /**
+   * Update an issue with the given key.
+   *
+   * There is special handling for these fields:
+   * - status is not part of the fields sent to jira - in case status needs to updated, pass transition arguments
+   * - timetracking: sent as { originalEstimate: [originalEstimate], remainingEstimate: [remainingEstimate] }
+   * - OPTION type fields are sent as { id: [optionId], name: [optionName], value: [optionValue] } - null fields are
+   *   ignored
+   * - Fields treated as OPTION type fields:
+   *   - resolution
+   *   - component
+   *   - priority
+   *   - version
+   *
+   * @param issueKey           the key of the issue to be updated
+   * @param transitionToStatus the status to transition to
+   * @param transitionName     the transition name to choose in case multiple transitions have same to status
+   * @param fields             the issue fields - list/array type are represented as comma separated strings - if an
+   *                           array element has comma itself, it should be wrapped in quotes
+   * @return the updated issue
+   */
+  public JiraIssueNG updateIssue(
+      @NotBlank String issueKey, String transitionToStatus, String transitionName, Map<String, String> fields) {
+    JiraIssueUpdateMetadataNG updateMetadata = getIssueUpdateMetadata(issueKey);
+    String transitionId = findIssueTransition(issueKey, transitionToStatus, transitionName);
+    JiraUpdateIssueRequestNG updateIssueRequest = new JiraUpdateIssueRequestNG(updateMetadata, transitionId, fields);
+    executeCall(restClient.updateIssue(issueKey, updateIssueRequest), "updating issue");
+    return getIssue(issueKey, true);
+  }
+
+  private String findIssueTransition(@NotBlank String issueKey, String transitionToStatus, String transitionName) {
+    if (EmptyPredicate.isEmpty(transitionName)) {
+      return null;
+    }
+
+    JiraIssueTransitionsNG transitions =
+        executeCall(restClient.getIssueTransitions(issueKey), "fetching issue transitions");
+    boolean checkTransitionName = EmptyPredicate.isNotEmpty(transitionName);
+    return transitions.getTransitions()
+        .stream()
+        .filter(t
+            -> t.getTo().getName().equals(transitionToStatus)
+                && (!checkTransitionName || t.getName().equals(transitionName)))
+        .findFirst()
+        .map(JiraIssueTransitionNG::getId)
+        .orElse(null);
   }
 
   private <T> T executeCall(Call<T> call, String action) {

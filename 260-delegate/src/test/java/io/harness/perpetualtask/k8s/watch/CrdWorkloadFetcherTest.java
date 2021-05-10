@@ -10,6 +10,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -31,8 +33,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CE)
 public class CrdWorkloadFetcherTest extends CategoryTest {
   private CrdWorkloadFetcher crdWorkloadFetcher;
+
+  private static final Integer REPLICAS = 1;
 
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(new WireMockConfiguration().notifier(new ConsoleNotifier(true)));
@@ -99,7 +104,8 @@ public class CrdWorkloadFetcherTest extends CategoryTest {
                 .withUid("6105c171-44f7-4254-86ad-26badd9ba7fe")
                 .addToLabels("key1", "val1")
                 .addToLabels("key2", "val2")
-                .build()));
+                .build(),
+            REPLICAS));
   }
 
   @Test
@@ -146,7 +152,8 @@ public class CrdWorkloadFetcherTest extends CategoryTest {
                 .withUid("6105c171-44f7-4254-86ad-26badd9ba7fe")
                 .addToLabels("key1", "val1")
                 .addToLabels("key2", "val2")
-                .build()));
+                .build(),
+            REPLICAS));
   }
 
   @Test
@@ -188,6 +195,7 @@ public class CrdWorkloadFetcherTest extends CategoryTest {
                 .withNamespace("harness")
                 .withName("event-service-foobar")
                 .withUid("6105c171-44f7-4254-86ad-26badd9ba7fe")
-                .build()));
+                .build(),
+            REPLICAS));
   }
 }

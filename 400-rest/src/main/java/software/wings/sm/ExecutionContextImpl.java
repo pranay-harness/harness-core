@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.RUNNING;
@@ -32,9 +33,11 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.join;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
@@ -50,7 +53,6 @@ import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.security.SimpleEncryption;
 import io.harness.serializer.KryoSerializer;
 
@@ -169,6 +171,7 @@ import org.mongodb.morphia.Key;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(_870_CG_ORCHESTRATION)
 public class ExecutionContextImpl implements DeploymentExecutionContext {
   public static final String PHASE_PARAM = "PHASE_PARAM";
   private static final SecureRandom random = new SecureRandom();

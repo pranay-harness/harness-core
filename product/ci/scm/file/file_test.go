@@ -78,8 +78,9 @@ func TestFindFileNegativePath(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	got, err := FindFile(context.Background(), in, log.Sugar())
 
-	assert.NotNil(t, err, "error thrown")
-	assert.Nil(t, got, "Nothing returned")
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, int32(404), got.Status, "Nothing returned")
+	assert.Equal(t, "Not Found", got.Error, "Not found")
 }
 func TestCreateFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -94,9 +95,7 @@ func TestCreateFile(t *testing.T) {
 		Slug:    "tphoney/scm-test",
 		Path:    "jello",
 		Message: "message",
-		Type: &pb.FileModifyRequest_Branch{
-			Branch: "main",
-		},
+		Branch:  "main",
 		Content: "data",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
@@ -121,6 +120,46 @@ func TestCreateFile(t *testing.T) {
 	assert.Equal(t, got.Status, int32(201), "status matches")
 }
 
+func TestCreateFileConflict(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(409)
+		content, _ := ioutil.ReadFile("testdata/FileCreateNoMatch.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+
+	in := &pb.FileModifyRequest{
+		Slug:    "tphoney/scm-test",
+		Path:    "jello",
+		Message: "message",
+		Branch:  "main",
+		Content: "data",
+		BlobId:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
+		Signature: &pb.Signature{
+			Name:  "tp honey",
+			Email: "tp@harness.io",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := CreateFile(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, got.Status, int32(409), "status matches")
+	assert.Equal(t, got.Error, "newfile does not match ", "error matches")
+}
+
 func TestUpdateFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -134,11 +173,9 @@ func TestUpdateFile(t *testing.T) {
 		Slug:    "tphoney/scm-test",
 		Path:    "jello",
 		Message: "message",
-		Type: &pb.FileModifyRequest_Branch{
-			Branch: "main",
-		},
+		Branch:  "main",
 		Content: "data",
-		Sha:     "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
+		BlobId:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
 			Email: "tp@harness.io",
@@ -160,6 +197,46 @@ func TestUpdateFile(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, got.Status, int32(200), "status matches")
+}
+
+func TestUpdateFileNoMatch(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(409)
+		content, _ := ioutil.ReadFile("testdata/FileUpdateNoMatch.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+
+	in := &pb.FileModifyRequest{
+		Slug:    "tphoney/scm-test",
+		Path:    "jello",
+		Message: "message",
+		Branch:  "main",
+		Content: "data",
+		BlobId:  "4ea5e4dd2666245c95ea7d4cd353182ea19934b3",
+		Signature: &pb.Signature{
+			Name:  "tp honey",
+			Email: "tp@harness.io",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := UpdateFile(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, got.Status, int32(409), "status matches")
+	assert.Equal(t, got.Error, "newfile does not match ff9b1a04-7828-4288-8135-b331a38e9fac", "error matches")
 }
 
 func TestDeleteFile(t *testing.T) {
@@ -211,9 +288,7 @@ func TestPushNewFile(t *testing.T) {
 		Slug:    "tphoney/scm-test",
 		Path:    "jello",
 		Message: "message",
-		Type: &pb.FileModifyRequest_Branch{
-			Branch: "main",
-		},
+		Branch:  "main",
 		Content: "data",
 		Signature: &pb.Signature{
 			Name:  "tp honey",
@@ -238,7 +313,82 @@ func TestPushNewFile(t *testing.T) {
 	assert.Equal(t, got.Status, int32(200), "status matches")
 }
 
-func TestBatchFindFileGithubRealRequest(t *testing.T) {
+func TestFindFilesInBranch(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		content, _ := ioutil.ReadFile("testdata/FileList.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+	in := &pb.FindFilesInBranchRequest{
+		Slug:   "tphoney/scm-test",
+		Branch: "main",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := FindFilesInBranch(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, 26, len(got.File), "26 files")
+	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
+}
+
+func TestFindFilesInCommit(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		content, _ := ioutil.ReadFile("testdata/FileList.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+	in := &pb.FindFilesInCommitRequest{
+		Slug: "tphoney/scm-test",
+		Ref:  "9a9b31a127e7ed3ee781b6268ae3f9fb7e4525bb",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := FindFilesInCommit(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.Equal(t, 26, len(got.File), "26 files")
+	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
+}
+
+func TestBatchFindFile(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/repos/tphoney/scm-test/contents/README.md" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			content, _ := ioutil.ReadFile("testdata/FileFindSource.json")
+			fmt.Fprint(w, string(content))
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(404)
+		}
+	}))
+	defer ts.Close()
+
 	in1 := &pb.GetFileRequest{
 		Slug: "tphoney/scm-test",
 		Path: "README.md",
@@ -253,59 +403,35 @@ func TestBatchFindFileGithubRealRequest(t *testing.T) {
 					},
 				},
 			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	in2 := &pb.GetFileRequest{
+		Slug: "tphoney/scm-test",
+		Path: "NOTHING",
+		Type: &pb.GetFileRequest_Branch{
+			Branch: "main",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
 		},
 	}
 
 	in := &pb.GetBatchFileRequest{
-		FindRequest: []*pb.GetFileRequest{in1},
+		FindRequest: []*pb.GetFileRequest{in1, in2},
 	}
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	got, err := BatchFindFile(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
 	assert.Contains(t, got.FileContents[0].Content, "test repo for source control operations")
-}
-
-func TestFindFilesInBranchGithubRealRequest(t *testing.T) {
-	in := &pb.FindFilesInBranchRequest{
-		Slug:   "tphoney/scm-test",
-		Branch: "main",
-		Provider: &pb.Provider{
-			Hook: &pb.Provider_Github{
-				Github: &pb.GithubProvider{
-					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
-					},
-				},
-			},
-		},
-	}
-
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	got, err := FindFilesInBranch(context.Background(), in, log.Sugar())
-
-	assert.Nil(t, err, "no errors")
-	assert.GreaterOrEqual(t, len(got.File), 1, "more than one file changed")
-}
-
-func TestFindFilesInCommitGithubRealRequest(t *testing.T) {
-	in := &pb.FindFilesInCommitRequest{
-		Slug: "tphoney/scm-test",
-		Ref:  "9a9b31a127e7ed3ee781b6268ae3f9fb7e4525bb",
-		Provider: &pb.Provider{
-			Hook: &pb.Provider_Github{
-				Github: &pb.GithubProvider{
-					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
-					},
-				},
-			},
-		},
-	}
-
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	got, err := FindFilesInCommit(context.Background(), in, log.Sugar())
-
-	assert.Nil(t, err, "no errors")
-	assert.GreaterOrEqual(t, len(got.File), 1, "more than one file changed")
+	assert.Equal(t, "", got.FileContents[1].Content, "missing file has no content")
 }

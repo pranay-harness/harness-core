@@ -1,11 +1,15 @@
 package io.harness.ccm.setup;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.ce.CECluster;
 
 import com.google.inject.Inject;
 
+@OwnedBy(CE)
 public class CEClusterDao {
   private final HPersistence hPersistence;
 

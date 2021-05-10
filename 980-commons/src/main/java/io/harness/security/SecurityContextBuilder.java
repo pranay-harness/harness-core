@@ -24,6 +24,7 @@ public class SecurityContextBuilder {
   public static final String PRINCIPAL_NAME = "name";
   public static final String ACCOUNT_ID = "accountId";
   public static final String EMAIL = "email";
+  public static final String USERNAME = "username";
 
   public Principal getPrincipalFromClaims(Map<String, Claim> claimMap) {
     Principal principal = null;

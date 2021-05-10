@@ -17,6 +17,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.AzureSecretHelper;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 
@@ -55,6 +56,9 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
         azureTaskExecutionRequest.getAzureConfigDTO(), azureTaskExecutionRequest.getAzureConfigEncryptionDetails());
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient();
 
+    ArtifactStreamAttributes artifactStreamAttributes = azureTaskExecutionRequest.getArtifactStreamAttributes();
+    artifactStreamAttributes = azureSecretHelper.decryptArtifactStreamAttributes(artifactStreamAttributes);
+
     AzureAppServiceTaskParameters azureAppServiceTaskParameters =
         (AzureAppServiceTaskParameters) azureTaskExecutionRequest.getAzureTaskParameters();
     azureSecretHelper.decryptAzureAppServiceTaskParameters(azureAppServiceTaskParameters);
@@ -62,8 +66,8 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
     AbstractAzureAppServiceTaskHandler azureAppServiceTask =
         azureAppServiceTaskFactory.getAzureAppServiceTask(azureAppServiceTaskParameters.getCommandType().name());
 
-    AzureTaskExecutionResponse azureTaskExecutionResponse =
-        azureAppServiceTask.executeTask(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
+    AzureTaskExecutionResponse azureTaskExecutionResponse = azureAppServiceTask.executeTask(
+        azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient, artifactStreamAttributes);
 
     azureSecretHelper.encryptAzureTaskResponseParams(azureTaskExecutionResponse.getAzureTaskResponse(),
         azureAppServiceTaskParameters.getAccountId(), azureAppServiceTaskParameters.getCommandType());

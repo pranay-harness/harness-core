@@ -1,6 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_binary(
     name = "module",
@@ -30,6 +29,6 @@ java_binary(
     ],
 )
 
-checkstyle()
-
-pmd()
+run_analysis(
+    run_sonar = False,
+)

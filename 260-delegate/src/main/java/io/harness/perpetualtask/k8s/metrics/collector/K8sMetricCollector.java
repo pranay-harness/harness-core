@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.RECOMMENDER_VERSION;
@@ -9,6 +10,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
@@ -47,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
+@OwnedBy(CE)
 public class K8sMetricCollector {
   private static final TemporalAmount AGGREGATION_WINDOW = Duration.ofMinutes(20);
 
@@ -210,6 +213,7 @@ public class K8sMetricCollector {
               .setClusterId(clusterDetails.getClusterId())
               .setKubeSystemUid(clusterDetails.getKubeSystemUid())
               .setName(e.getKey().getNamespace() + "/" + e.getKey().getName())
+              .setNamespace(e.getKey().getNamespace())
               .setPodUid(e.getKey().getUid())
               .setTimestamp(aggregates.getAggregateTimestamp())
               .setWindow(aggregates.getAggregateWindow())

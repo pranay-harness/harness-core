@@ -6,10 +6,11 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
-import io.harness.steps.approval.step.jira.JiraApprovalStepParameters;
+import io.harness.steps.approval.step.jira.JiraApprovalSpecParameters;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapperDTO;
 
 import javax.validation.constraints.NotNull;
@@ -32,25 +33,21 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("jiraApprovalInstances")
 public class JiraApprovalInstance extends ApprovalInstance {
   @NotEmpty String connectorRef;
-  @NotEmpty String projectKey;
-  @NotEmpty String issueId;
+  @NotEmpty String issueKey;
   @NotNull CriteriaSpecWrapperDTO approvalCriteria;
   @NotNull CriteriaSpecWrapperDTO rejectionCriteria;
 
-  public static JiraApprovalInstance fromStepParameters(Ambiance ambiance, JiraApprovalStepParameters stepParameters) {
+  public static JiraApprovalInstance fromStepParameters(Ambiance ambiance, StepElementParameters stepParameters) {
     if (stepParameters == null) {
       return null;
     }
 
-    String issueId = (String) stepParameters.getIssueId().fetchFinalValue();
-    String projectKey = (String) stepParameters.getProjectKey().fetchFinalValue();
-    String connectorRef = (String) stepParameters.getConnectorRef().fetchFinalValue();
+    JiraApprovalSpecParameters specParameters = (JiraApprovalSpecParameters) stepParameters.getSpec();
+    String issueKey = specParameters.getIssueKey().getValue();
+    String connectorRef = specParameters.getConnectorRef().getValue();
 
-    if (isBlank(issueId)) {
-      throw new InvalidRequestException("Issue Id can't be empty");
-    }
-    if (isBlank(projectKey)) {
-      throw new InvalidRequestException("projectKey can't be empty");
+    if (isBlank(issueKey)) {
+      throw new InvalidRequestException("issueKey can't be empty");
     }
     if (isBlank(connectorRef)) {
       throw new InvalidRequestException("connectorRef can't be empty");
@@ -58,11 +55,10 @@ public class JiraApprovalInstance extends ApprovalInstance {
 
     JiraApprovalInstance instance =
         JiraApprovalInstance.builder()
-            .projectKey(projectKey)
             .connectorRef(connectorRef)
-            .issueId(issueId)
-            .approvalCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(stepParameters.getApprovalCriteria()))
-            .rejectionCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(stepParameters.getRejectionCriteria()))
+            .issueKey(issueKey)
+            .approvalCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getApprovalCriteria()))
+            .rejectionCriteria(CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getRejectionCriteria()))
             .build();
     instance.updateFromStepParameters(ambiance, stepParameters);
     return instance;

@@ -1,0 +1,25 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "run_analysis")
+
+HarnessTeam = "CE"
+
+java_library(
+    name = "module",
+    srcs = glob([
+        "src/generated/**/*.java",
+        "src/main/**/*.java",
+    ]),
+    tags = [
+        "aeriform",
+        "manual",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@maven//:org_jooq_jooq",
+    ],
+)
+
+run_analysis(
+    run_checkstyle = False,
+)

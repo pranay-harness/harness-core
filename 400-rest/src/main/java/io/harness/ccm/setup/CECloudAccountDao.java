@@ -1,5 +1,8 @@
 package io.harness.ccm.setup;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.ce.CECloudAccount;
@@ -12,6 +15,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
+@OwnedBy(CE)
 public class CECloudAccountDao {
   private final HPersistence hPersistence;
 

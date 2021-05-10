@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountService;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
@@ -91,7 +90,8 @@ public class GcpBillingAccountResourceTest extends CategoryTest {
     RESOURCES.client()
         .target(format("/billing-accounts/%s/?accountId=%s", billingAccountId, accountId))
         .request()
-        .put(entity(gcpBillingAccount, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Budget>>() {});
+        .put(entity(gcpBillingAccount, MediaType.APPLICATION_JSON),
+            new GenericType<RestResponse<GcpBillingAccount>>() {});
     verify(gcpBillingAccountService).update(eq(billingAccountId), isA(GcpBillingAccount.class));
   }
 

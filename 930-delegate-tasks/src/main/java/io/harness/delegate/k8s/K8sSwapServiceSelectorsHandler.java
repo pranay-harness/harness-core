@@ -1,7 +1,9 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sCommandUnitConstants.SwapServiceSelectors;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -18,6 +20,7 @@ import io.harness.logging.LogCallback;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(CDP)
 public class K8sSwapServiceSelectorsHandler extends K8sRequestHandler {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;

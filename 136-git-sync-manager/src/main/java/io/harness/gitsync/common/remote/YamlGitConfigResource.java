@@ -8,6 +8,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
+import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 
 import com.google.inject.Inject;
@@ -36,6 +37,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(DX)
 public class YamlGitConfigResource {
   private final YamlGitConfigService yamlGitConfigService;
+  private final HarnessToGitHelperService harnessToGitHelperService;
 
   @POST
   @ApiOperation(value = "Create a Git Sync", nickname = "postGitSync")

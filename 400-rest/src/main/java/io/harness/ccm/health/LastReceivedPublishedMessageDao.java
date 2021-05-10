@@ -1,8 +1,10 @@
 package io.harness.ccm.health;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
 import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage.LastReceivedPublishedMessageKeys;
 import io.harness.ccm.commons.entities.LatestClusterInfo;
@@ -18,6 +20,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
+@OwnedBy(CE)
 public class LastReceivedPublishedMessageDao {
   private final HPersistence hPersistence;
 

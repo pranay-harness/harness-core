@@ -28,11 +28,16 @@ type Db interface {
 		stageId, stepId string, selected types.SelectTestsResp) error
 
 	// GetSelectionOverview retrieves an overview of the selected tests for the corresponding build.
-	GetSelectionOverview(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	GetSelectionOverview(ctx context.Context, table, evalTable, accountID, orgId, projectId, pipelineId,
 		buildId string) (types.SelectionOverview, error)
 
 	//  WriteDiffFiles writes modified files for the build. This information is required
 	//  while merging partial call graph.
 	WriteDiffFiles(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
-		buildId, stageId, stepId string, files []types.File) error
+		buildId, stageId, stepId string, diff types.DiffInfo) error
+
+	// GetDiffFiles gets the list of modified files corresponding to a list of commits
+	// accountID. This is required while merging a partial call graph corresponding to a
+	// push request to remove deleted files from the master call graph.
+	GetDiffFiles(ctx context.Context, table, accountID string, sha []string) (types.DiffInfo, error)
 }

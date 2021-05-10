@@ -98,6 +98,7 @@ public class NGSecretServiceImpl implements NGSecretService {
             encryptedData.getAccountId(), encryptedData.getName(), secretValue, secretManagerConfig);
         break;
       case GCP_KMS:
+      case KMS:
       case LOCAL:
         encryptedRecord = kmsRegistry.getKmsEncryptor(secretManagerConfig)
                               .encryptSecret(encryptedData.getAccountId(), secretValue, secretManagerConfig);
@@ -307,6 +308,7 @@ public class NGSecretServiceImpl implements NGSecretService {
           switch (secretManagerConfigOptional.get().getEncryptionType()) {
             case LOCAL:
             case GCP_KMS:
+            case KMS:
               fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
               break;
             default:
@@ -328,6 +330,7 @@ public class NGSecretServiceImpl implements NGSecretService {
         return;
       case LOCAL:
       case GCP_KMS:
+      case KMS:
         return;
       default:
         throw new UnsupportedOperationException(

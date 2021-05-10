@@ -12,6 +12,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SET
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
@@ -19,7 +20,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.AmiServiceSetupElement;
@@ -186,9 +186,12 @@ public class AwsAmiSwitchRoutesState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, context.fetchRequiredEnvironment().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Aws Ami switch routes task execution")
             .build();
     delegateService.queueTask(delegateTask);
 
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(executionData)
@@ -235,5 +238,10 @@ public class AwsAmiSwitchRoutesState extends State {
     Activity activity = activityBuilder.build();
     activity.setAppId(app.getUuid());
     return activityService.save(activity);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

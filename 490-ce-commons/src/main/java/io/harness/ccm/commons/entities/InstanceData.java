@@ -74,6 +74,13 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
                  .field(InstanceDataKeys.instanceId)
                  .field(InstanceDataKeys.instanceState)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_instanceType_activeInstanceIterator_usageStartTime")
+                 .field(InstanceDataKeys.accountId)
+                 .field(InstanceDataKeys.instanceType)
+                 .field(InstanceDataKeys.activeInstanceIterator)
+                 .field(InstanceDataKeys.usageStartTime)
+                 .build())
         .build();
   }
 
@@ -98,6 +105,7 @@ public class InstanceData implements PersistentEntity, UuidAware, CreatedAtAware
   Map<String, String> metaData;
   Instant usageStartTime;
   Instant usageStopTime;
+  Instant activeInstanceIterator;
   InstanceState instanceState;
 
   long createdAt;

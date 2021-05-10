@@ -1,20 +1,29 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType.INHERIT_FROM_DELEGATE;
+import static io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType.MANUAL_CREDENTIALS;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.task.gcp.helpers.GkeClusterHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
@@ -28,10 +37,12 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Singleton
+@OwnedBy(CDP)
 public class ContainerDeploymentDelegateBaseHelper {
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private GkeClusterHelper gkeClusterHelper;
 
   @NotNull
   public List<Pod> getExistingPodsByLabels(KubernetesConfig kubernetesConfig, Map<String, String> labels) {
@@ -81,9 +92,23 @@ public class ContainerDeploymentDelegateBaseHelper {
       return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(
           ((DirectK8sInfraDelegateConfig) clusterConfigDTO).getKubernetesClusterConfigDTO(),
           clusterConfigDTO.getNamespace());
+    } else if (clusterConfigDTO instanceof GcpK8sInfraDelegateConfig) {
+      GcpK8sInfraDelegateConfig gcpK8sInfraDelegateConfig = (GcpK8sInfraDelegateConfig) clusterConfigDTO;
+      GcpConnectorCredentialDTO gcpCredentials = gcpK8sInfraDelegateConfig.getGcpConnectorDTO().getCredential();
+      return gkeClusterHelper.getCluster(getGcpServiceAccountKeyFileContent(gcpCredentials),
+          gcpCredentials.getGcpCredentialType() == INHERIT_FROM_DELEGATE, gcpK8sInfraDelegateConfig.getCluster(),
+          gcpK8sInfraDelegateConfig.getNamespace());
     } else {
       throw new InvalidRequestException("Unhandled K8sInfraDelegateConfig " + clusterConfigDTO.getClass());
     }
+  }
+
+  private char[] getGcpServiceAccountKeyFileContent(GcpConnectorCredentialDTO gcpCredentials) {
+    if (gcpCredentials.getGcpCredentialType() == MANUAL_CREDENTIALS) {
+      GcpManualDetailsDTO gcpCredentialSpecDTO = (GcpManualDetailsDTO) gcpCredentials.getConfig();
+      return gcpCredentialSpecDTO.getSecretKeyRef().getDecryptedValue();
+    }
+    return null;
   }
 
   public String getKubeconfigFileContent(K8sInfraDelegateConfig k8sInfraDelegateConfig) {
@@ -94,15 +119,29 @@ public class ContainerDeploymentDelegateBaseHelper {
   public void decryptK8sInfraDelegateConfig(K8sInfraDelegateConfig k8sInfraDelegateConfig) {
     if (k8sInfraDelegateConfig instanceof DirectK8sInfraDelegateConfig) {
       DirectK8sInfraDelegateConfig directK8sInfraDelegateConfig = (DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig;
+      decryptK8sClusterConfig(directK8sInfraDelegateConfig.getKubernetesClusterConfigDTO(),
+          directK8sInfraDelegateConfig.getEncryptionDataDetails());
+    } else if (k8sInfraDelegateConfig instanceof GcpK8sInfraDelegateConfig) {
+      GcpK8sInfraDelegateConfig k8sGcpInfraDelegateConfig = (GcpK8sInfraDelegateConfig) k8sInfraDelegateConfig;
+      decryptGcpClusterConfig(
+          k8sGcpInfraDelegateConfig.getGcpConnectorDTO(), k8sGcpInfraDelegateConfig.getEncryptionDataDetails());
+    }
+  }
 
-      KubernetesClusterConfigDTO clusterConfigDTO = directK8sInfraDelegateConfig.getKubernetesClusterConfigDTO();
-      if (clusterConfigDTO.getCredential().getKubernetesCredentialType()
-          == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-        KubernetesClusterDetailsDTO clusterDetailsDTO =
-            (KubernetesClusterDetailsDTO) clusterConfigDTO.getCredential().getConfig();
-        KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
-        secretDecryptionService.decrypt(authCredentialDTO, directK8sInfraDelegateConfig.getEncryptionDataDetails());
-      }
+  public void decryptK8sClusterConfig(
+      KubernetesClusterConfigDTO clusterConfigDTO, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (clusterConfigDTO.getCredential().getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
+      KubernetesClusterDetailsDTO clusterDetailsDTO =
+          (KubernetesClusterDetailsDTO) clusterConfigDTO.getCredential().getConfig();
+      KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
+      secretDecryptionService.decrypt(authCredentialDTO, encryptedDataDetails);
+    }
+  }
+
+  public void decryptGcpClusterConfig(GcpConnectorDTO gcpConnectorDTO, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (gcpConnectorDTO.getCredential().getGcpCredentialType() == MANUAL_CREDENTIALS) {
+      GcpManualDetailsDTO gcpCredentialSpecDTO = (GcpManualDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
+      secretDecryptionService.decrypt(gcpCredentialSpecDTO, encryptedDataDetails);
     }
   }
 }

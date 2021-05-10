@@ -1,10 +1,13 @@
 package io.harness.registrars;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.states.BuildStatusStep;
 import io.harness.states.BuildStep;
 import io.harness.states.CIPipelineSetupStep;
+import io.harness.states.CISpecStep;
 import io.harness.states.CleanupStep;
 import io.harness.states.DockerStep;
 import io.harness.states.ECRStep;
@@ -28,6 +31,7 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class ExecutionRegistrar {
   public Map<StepType, Class<? extends Step>> getEngineSteps() {
     Map<StepType, Class<? extends Step>> engineSteps = new HashMap<>();
@@ -52,6 +56,7 @@ public class ExecutionRegistrar {
     engineSteps.put(UploadToArtifactoryStep.STEP_TYPE, UploadToArtifactoryStep.class);
     engineSteps.put(RunTestsStep.STEP_TYPE, RunTestsStep.class);
     engineSteps.put(IntegrationStageStepPMS.STEP_TYPE, IntegrationStageStepPMS.class);
+    engineSteps.put(CISpecStep.STEP_TYPE, CISpecStep.class);
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;
   }

@@ -1,10 +1,13 @@
 package io.harness.ccm.billing.bigquery;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.CE_GCP_CREDENTIALS_PATH;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getImpersonatedCredentials;
 
 import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.ValidationResult;
 
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class BigQueryServiceImpl implements BigQueryService {
   @Override
   public BigQuery get() {

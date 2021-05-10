@@ -4,7 +4,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_NUMBER;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
 import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
-import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
@@ -50,7 +49,6 @@ import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfoType;
-import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
@@ -190,15 +188,16 @@ public class CIExecutionPlanTestHelper {
   private static final String COMMIT_LINK = "foo/bar";
   private static final String COMMIT = "e9a0d31c5ac677ec1e06fb3ab69cd1d2cc62a74a";
 
-  private static final String MOUNT_PATH = "/step-exec";
-  private static final String VOLUME_NAME = "step-exec";
-  private static final String WORK_DIR = "/step-exec/workspace";
+  private static final String MOUNT_PATH = "/harness";
+  private static final String VOLUME_NAME = "harness";
+  private static final String WORK_DIR = "/harness";
 
   public static final String GIT_CONNECTOR = "git-connector";
   private static final String CLONE_STEP_ID = "step-1";
   private static final String GIT_PLUGIN_DEPTH_ENV = "PLUGIN_DEPTH";
   private static final Integer GIT_STEP_LIMIT_MEM = 200;
   private static final Integer GIT_STEP_LIMIT_CPU = 200;
+  private static final String GIT_CLONE_IMAGE = "drone/git";
 
   private final ImageDetails imageDetails = ImageDetails.builder().name("maven").tag("3.6.3-jdk-8").build();
 
@@ -308,24 +307,9 @@ public class CIExecutionPlanTestHelper {
         .build();
   }
 
-  public BuildEnvSetupStepInfo getBuildEnvSetupStepInfoOnFirstPod() {
-    return BuildEnvSetupStepInfo.builder()
-        .identifier(ENV_SETUP_NAME)
-        .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
-        .branchName("master")
-        .gitConnectorIdentifier("testGitConnector")
-        .build();
-  }
-  public BuildEnvSetupStepInfo getBuildEnvSetupStepInfoOnOtherPods() {
-    return BuildEnvSetupStepInfo.builder()
-        .identifier(ENV_SETUP_NAME)
-        .buildJobEnvInfo(getCIBuildJobEnvInfoOnOtherPods())
-        .build();
-  }
-
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnFirstPod() {
     return K8BuildJobEnvInfo.builder()
-        .workDir("workspace")
+        .workDir("/harness")
         .podsSetupInfo(getCIPodsSetupInfoOnFirstPod())
         .stepConnectorRefs(emptyMap())
         .build();
@@ -333,7 +317,7 @@ public class CIExecutionPlanTestHelper {
 
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnOtherPods() {
     return K8BuildJobEnvInfo.builder()
-        .workDir("workspace")
+        .workDir("/harness")
         .podsSetupInfo(getCIPodsSetupInfoOnOtherPods())
         .stepConnectorRefs(emptyMap())
         .build();
@@ -361,6 +345,7 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     volumeToMountPath.put("shared-0", "share/");
+    volumeToMountPath.put("addon", "/addon");
     pods.add(PodSetupInfo.builder()
                  .name("")
                  .pvcParamsList(Arrays.asList(PVCParams.builder()
@@ -371,8 +356,15 @@ public class CIExecutionPlanTestHelper {
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                                   .build(),
                      PVCParams.builder()
-                         .volumeName("step-exec")
-                         .claimName("pod-step-exec")
+                         .volumeName("addon")
+                         .claimName("pod-addon")
+                         .isPresent(false)
+                         .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                         .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                         .build(),
+                     PVCParams.builder()
+                         .volumeName("harness")
+                         .claimName("pod-harness")
                          .isPresent(false)
                          .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                          .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
@@ -399,6 +391,7 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     volumeToMountPath.put("shared-0", "share/");
+    volumeToMountPath.put("addon", "/addon");
     Integer index = 1;
     pods.add(PodSetupInfo.builder()
                  .name("")
@@ -410,8 +403,15 @@ public class CIExecutionPlanTestHelper {
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                                   .build(),
                      PVCParams.builder()
-                         .volumeName("step-exec")
-                         .claimName("pod-2-step-exec")
+                         .volumeName("addon")
+                         .claimName("pod-2-addon")
+                         .isPresent(true)
+                         .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                         .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                         .build(),
+                     PVCParams.builder()
+                         .volumeName("harness")
+                         .claimName("pod-2-harness")
                          .isPresent(true)
                          .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                          .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
@@ -993,7 +993,7 @@ public class CIExecutionPlanTestHelper {
   public IntegrationStage getIntegrationStage() {
     return IntegrationStage.builder()
         .identifier("intStageIdentifier")
-        .workingDirectory("workspace")
+        .workingDirectory("/harness")
         .execution(getExecutionElement())
         .infrastructure(getInfrastructure())
         .customVariables(getCustomVariables())

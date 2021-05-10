@@ -1,5 +1,6 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.InfrastructureType.AWS_ECS;
@@ -9,6 +10,7 @@ import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 
 import static java.util.Objects.isNull;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -45,6 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class ClusterRecordServiceImpl implements ClusterRecordService {
   @Inject private ClusterRecordDao clusterRecordDao;
   @Inject private AppService appService;

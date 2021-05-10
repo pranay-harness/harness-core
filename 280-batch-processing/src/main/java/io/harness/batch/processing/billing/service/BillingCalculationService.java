@@ -4,6 +4,8 @@ import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.PricingSource;
@@ -18,14 +20,18 @@ import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Service
 @Slf4j
 public class BillingCalculationService {
   private final InstancePricingStrategyContext instancePricingStrategyContext;
+
+  private final AtomicInteger atomicTripper = new AtomicInteger(0);
 
   @Autowired
   public BillingCalculationService(InstancePricingStrategyContext instancePricingStrategyContext) {
@@ -201,13 +207,21 @@ public class BillingCalculationService {
         storageIdleCost = BigDecimal.valueOf(billingDataForResource.getStorageBillingAmount().doubleValue()
             * (storageRequest - storageUsage) / storageResource.getCapacity());
       } else if (storageResource.getCapacity() == 0) {
-        log.warn(
-            "storageResource.getCapacity() == 0 for InstanceData; AccountId: {}, InstanceId:{}\nPlease check and remove this line",
+        // this is an edge case will rarely happen,
+        // 0 occurence between 25th March'21 to 1st April'21 (7 days) across all accounts.
+        log.warn("storageResource.getCapacity() == 0 for InstanceData; AccountId: {}, InstanceId:{}",
             instanceData.getAccountId(), instanceData.getInstanceId());
       } else {
-        log.warn("inconsistent PV storage value data; Usage:{}, Request:{}, InstanceData:{}",
-            utilizationData.getAvgStorageUsageValue(), utilizationData.getAvgStorageRequestValue(),
-            instanceData.toString());
+        // using atomicTripper to reduce the verbosity
+        if (atomicTripper.getAndIncrement() % 1000 == 0) {
+          // Usage:45053.375, Request:256000.0, storageResource=StorageResource(capacity=65536.0),
+          // instanceId=7b89e3c2-e1bb-4ed8-8bf1-4461977eb239, The PV configuration applied says 64GB of Capacity
+          // But from Pod stats client we see that the request is 250 GB ( = 256000.0 / 1024.0) This
+          // inconsistency is unknown. "But is very frequent" in NFS and some non-GCP based PV's
+          log.warn("THIS IS HARMLESS, Inconsistent PV storage value data; Usage:{}, Request:{}, InstanceData:{}",
+              utilizationData.getAvgStorageUsageValue(), utilizationData.getAvgStorageRequestValue(),
+              instanceData.toString());
+        }
       }
     }
 

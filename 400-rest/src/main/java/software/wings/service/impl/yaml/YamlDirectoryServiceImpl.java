@@ -2325,6 +2325,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, verificationProvidersFolder, SettingVariableTypes.DYNA_TRACE, directoryPath.clone());
     doVerificationProviderType(
         accountId, verificationProvidersFolder, SettingVariableTypes.PROMETHEUS, directoryPath.clone());
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, SettingVariableTypes.APM_VERIFICATION, directoryPath.clone());
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, SettingVariableTypes.DATA_DOG, directoryPath.clone());
+    doVerificationProviderType(
+        accountId, verificationProvidersFolder, SettingVariableTypes.BUG_SNAG, directoryPath.clone());
     sort(verificationProvidersFolder.getChildren(), new DirectoryComparator());
     return verificationProvidersFolder;
   }

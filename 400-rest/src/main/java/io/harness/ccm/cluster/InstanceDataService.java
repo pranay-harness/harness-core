@@ -1,9 +1,13 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.entities.InstanceData;
 
 import java.util.List;
 
+@OwnedBy(CE)
 public interface InstanceDataService {
   InstanceData get(String instanceId);
   List<InstanceData> fetchInstanceDataForGivenInstances(List<String> instanceIds);

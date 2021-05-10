@@ -7,8 +7,8 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;

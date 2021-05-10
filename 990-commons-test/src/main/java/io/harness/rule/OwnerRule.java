@@ -73,6 +73,7 @@ public class OwnerRule implements TestRule {
   public static final String AGORODETKI = "alexandr.gorodetki";
   public static final String ALEXEI = "alexei.stirbul";
   public static final String AMAN = "aman.singh";
+  public static final String ANJAN = "anjan.balgovind";
   public static final String ANKIT = "ankit.singhal";
   public static final String ANKUSH = "ankush.shaw";
   public static final String ANSHUL = "anshul";
@@ -148,6 +149,7 @@ public class OwnerRule implements TestRule {
   public static final String VUK = "vuk.skobalj";
   public static final String XIN = "xin.shao";
   public static final String YOGESH = "yogesh.chauhan";
+  public static final String ZHUO = "zhuo.yin";
   public static final String VARDAN_BANSAL = "vardan.bansal";
   public static final String NANDAN = "nandan.chandrashekar";
   public static final String RIHAZ = "rihaz.zahir";
@@ -177,6 +179,7 @@ public class OwnerRule implements TestRule {
   public static final String AKASH_NAGARAJAN = "akash.nagarajan";
   public static final String KANHAIYA = "kanhaiya.rathi";
   public static final String ABHINAV_MITTAL = "abhinav.mittal";
+  public static final String SHASHANK = "shashank.singh";
 
   @Deprecated public static final String UNKNOWN = "unknown";
 
@@ -194,6 +197,7 @@ public class OwnerRule implements TestRule {
           .put(AKRITI, defaultUserInfo(AKRITI).slack("U01JCQAS84S").team(PL).build())
           .put(ALEXEI, defaultUserInfo(ALEXEI).slack("U012VS112EN").team(CDC).build())
           .put(AMAN, defaultUserInfo(AMAN).slack("UDJG47CHF").team(PL).build())
+          .put(ANJAN, defaultUserInfo(ANJAN).slack("UCUMEJ0FK").team(CV).build())
           .put(ANKIT, defaultUserInfo(ANKIT).slack("UF76W0NN5").team(PL).build())
           .put(ANKUSH, defaultUserInfo(ANKUSH).slack("U016VE8EP7X").team(PL).build())
           .put(ANSHUL, defaultUserInfo(ANSHUL).slack("UASUA3E65").team(CDP).build())
@@ -274,6 +278,7 @@ public class OwnerRule implements TestRule {
           .put(VUK, defaultUserInfo(VUK).slack("U0115RT3EQL").team(DEL).build())
           .put(XIN, defaultUserInfo(XIN).slack("U01R3KSP3M1").team(DEL).build())
           .put(YOGESH, defaultUserInfo(YOGESH).slack("UJVLUUXAT").team(CDP).build())
+          .put(ZHUO, defaultUserInfo(ZHUO).slack("U01QCSY8518").team(GTM).build())
           .put(VARDAN_BANSAL, defaultUserInfo(VARDAN_BANSAL).slack("UH8NYAAUU").team(DX).build())
           .put(NANDAN, defaultUserInfo(NANDAN).slack("UKMS5KCBS").team(CV).build())
           .put(RIHAZ, defaultUserInfo(RIHAZ).slack("USUP66518").team(CDP).build())
@@ -300,6 +305,7 @@ public class OwnerRule implements TestRule {
           .put(AKASH_NAGARAJAN, defaultUserInfo(AKASH_NAGARAJAN).slack("U01GDEF032R").team(DX).build())
           .put(PIYUSH, defaultUserInfo(PIYUSH).slack("U01G9QYDMAA").team(PL).build())
           .put(ABHINAV_MITTAL, defaultUserInfo(ABHINAV_MITTAL).slack("U01Q893534N").team(CDC).build())
+          .put(SHASHANK, defaultUserInfo(SHASHANK).slack("U01S8B29PFD").team(PL).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));

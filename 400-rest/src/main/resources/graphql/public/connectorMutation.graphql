@@ -55,6 +55,7 @@ input GitConnectorInput {
   sshSettingId: String
   generateWebhookUrl: Boolean
   customCommitDetails: CustomCommitDetailsInput
+  usageScope: UsageScopeInput
 }
 
 input UpdateGitConnectorInput {
@@ -66,6 +67,7 @@ input UpdateGitConnectorInput {
   sshSettingId: String
   generateWebhookUrl: Boolean
   customCommitDetails: CustomCommitDetailsInput
+  usageScope: UsageScopeInput
 }
 
 input CustomCommitDetailsInput {

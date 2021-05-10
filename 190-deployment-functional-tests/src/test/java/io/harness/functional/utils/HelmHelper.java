@@ -52,6 +52,7 @@ public class HelmHelper {
       + "${HELM_CLI} ${PURGE_ACTION} ${RELEASE_NAME} ${OPTS}";
   private static final String HELM3_CLIENT_TOOLS_PATH = "client-tools/helm/v3.1.2/helm";
   private static final String CLEANUP_WORKFLOW_PREFIX = "Cleanup ";
+  private static final String JENKINS_WORKSPACE = "cd-deployment-functional-tests";
 
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WorkflowService workflowService;
@@ -208,7 +209,8 @@ public class HelmHelper {
   }
 
   private String getHelm3ClientToolsPath() {
-    File relativeToCurrentLocation = new File("../" + HELM3_CLIENT_TOOLS_PATH);
+    File relativeToCurrentLocation =
+        new File("/home/jenkins/workspace/" + JENKINS_WORKSPACE + "/" + HELM3_CLIENT_TOOLS_PATH);
     // Checks for path on jenkins
     if (relativeToCurrentLocation.exists()) {
       return relativeToCurrentLocation.getAbsolutePath();

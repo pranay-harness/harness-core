@@ -1,5 +1,7 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.util.Collections.emptyList;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -7,12 +9,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
 import org.junit.Before;
@@ -20,6 +24,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
   @Mock protected K8sStepHelper k8sStepHelper;
 
@@ -42,11 +47,13 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
     doReturn(true).when(k8sStepHelper).getSkipResourceVersioning(manifestOutcome);
   }
 
-  protected <T extends K8sDeployRequest> T executeTask(K8sStepParameters stepParameters, Class<T> requestType) {
-    getK8sStepExecutor().executeK8sTask(manifestOutcome, ambiance, stepParameters, emptyList(), infrastructureOutcome);
+  protected <T extends K8sDeployRequest> T executeTask(
+      StepElementParameters stepElementParameters, Class<T> requestType) {
+    getK8sStepExecutor().executeK8sTask(
+        manifestOutcome, ambiance, stepElementParameters, emptyList(), infrastructureOutcome, true);
     ArgumentCaptor<T> requestCaptor = ArgumentCaptor.forClass(requestType);
     verify(k8sStepHelper, times(1))
-        .queueK8sTask(eq(stepParameters), requestCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), requestCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
     return requestCaptor.getValue();
   }
 

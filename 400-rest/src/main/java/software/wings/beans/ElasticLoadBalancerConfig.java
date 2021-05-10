@@ -1,16 +1,20 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.LoadBalancerConfig;
-import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.jersey.JsonViews;
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingVariableTypes;
@@ -39,6 +43,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(CDP)
+@TargetModule(_871_CG_BEANS)
 public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements EncryptableSetting {
   @Attributes(title = "Region", required = true)
   @DefaultValue(AWS_DEFAULT_REGION)

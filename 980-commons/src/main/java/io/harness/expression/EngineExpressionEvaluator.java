@@ -1,9 +1,8 @@
 package io.harness.expression;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.data.structure.EmptyPredicate;
@@ -11,15 +10,19 @@ import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnresolvedExpressionsException;
+import io.harness.expression.functors.DateTimeFunctor;
 import io.harness.text.StringReplacer;
 import io.harness.text.resolver.ExpressionResolver;
 
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -35,7 +38,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.impl.NoOpLog;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class EngineExpressionEvaluator {
   public static final String EXPR_START = "<+";
@@ -73,6 +76,7 @@ public class EngineExpressionEvaluator {
     addToContext("regex", new RegexFunctor());
     addToContext("json", new JsonFunctor());
     addToContext("xml", new XmlFunctor());
+    addToContext("datetime", new DateTimeFunctor());
   }
 
   protected final boolean isInitialized() {
@@ -138,7 +142,7 @@ public class EngineExpressionEvaluator {
    */
   @NotEmpty
   protected List<String> fetchPrefixes() {
-    return Collections.singletonList("");
+    return ImmutableList.of("datetime", "");
   }
 
   /**
@@ -148,8 +152,8 @@ public class EngineExpressionEvaluator {
    * @param o the object to resolve
    * @return the resolved object (this can be the same object or a new one)
    */
-  public Object resolve(Object o) {
-    return ExpressionEvaluatorUtils.updateExpressions(o, new ResolveFunctorImpl(this));
+  public Object resolve(Object o, boolean skipUnresolvedExpressionsCheck) {
+    return ExpressionEvaluatorUtils.updateExpressions(o, new ResolveFunctorImpl(this, skipUnresolvedExpressionsCheck));
   }
 
   public PartialEvaluateResult partialResolve(Object o) {
@@ -159,19 +163,33 @@ public class EngineExpressionEvaluator {
   }
 
   public String renderExpression(String expression) {
-    return renderExpression(expression, null);
+    return renderExpression(expression, false);
+  }
+
+  public String renderExpression(String expression, boolean skipUnresolvedExpressionsCheck) {
+    return renderExpression(expression, null, skipUnresolvedExpressionsCheck);
   }
 
   public String renderExpression(String expression, Map<String, Object> ctx) {
+    return renderExpression(expression, ctx, false);
+  }
+
+  public String renderExpression(String expression, Map<String, Object> ctx, boolean skipUnresolvedExpressionsCheck) {
     if (!hasVariables(expression)) {
       return expression;
     }
-    return renderExpressionInternal(expression, prepareContext(ctx), MAX_DEPTH);
+    return renderExpressionInternal(expression, prepareContext(ctx), skipUnresolvedExpressionsCheck, MAX_DEPTH);
   }
 
-  public String renderExpressionInternal(@NotNull String expression, @NotNull EngineJexlContext ctx, int depth) {
+  public String renderExpressionInternal(
+      @NotNull String expression, @NotNull EngineJexlContext ctx, boolean skipUnresolvedExpressionsCheck, int depth) {
     checkDepth(depth, expression);
-    return runStringReplacer(expression, new RenderExpressionResolver(this, ctx, depth));
+    RenderExpressionResolver resolver = new RenderExpressionResolver(this, ctx, depth);
+    String finalExpression = runStringReplacer(expression, resolver);
+    if (!skipUnresolvedExpressionsCheck && EmptyPredicate.isNotEmpty(resolver.getUnresolvedExpressions())) {
+      throw new UnresolvedExpressionsException(new ArrayList<>(resolver.getUnresolvedExpressions()));
+    }
+    return finalExpression;
   }
 
   public Object evaluateExpression(String expression) {
@@ -188,12 +206,10 @@ public class EngineExpressionEvaluator {
 
   private Object evaluateExpressionInternal(@NotNull String expression, @NotNull EngineJexlContext ctx, int depth) {
     checkDepth(depth, expression);
-    String finalExpression = runStringReplacer(expression, new EvaluateExpressionResolver(this, ctx, depth));
-    if (hasVariables(finalExpression)) {
-      if (isNotSingleExpression(finalExpression)) {
-        finalExpression = createExpression(finalExpression);
-      }
-      throw new UnresolvedExpressionsException(finalExpression, findVariables(finalExpression));
+    EvaluateExpressionResolver resolver = new EvaluateExpressionResolver(this, ctx, depth);
+    String finalExpression = runStringReplacer(expression, resolver);
+    if (EmptyPredicate.isNotEmpty(resolver.getUnresolvedExpressions())) {
+      throw new UnresolvedExpressionsException(new ArrayList<>(resolver.getUnresolvedExpressions()));
     }
     return evaluateInternal(finalExpression, ctx);
   }
@@ -228,7 +244,7 @@ public class EngineExpressionEvaluator {
               .replace(finalExpression);
       return PartialEvaluateResult.createPartialResult(finalExpression, partialCtx);
     } else {
-      return PartialEvaluateResult.createCompleteResult(renderExpressionInternal(expression, ctx, depth));
+      return PartialEvaluateResult.createCompleteResult(renderExpressionInternal(expression, ctx, false, depth));
     }
   }
 
@@ -310,11 +326,7 @@ public class EngineExpressionEvaluator {
    * substitutions and prefixes. This variant is non-recursive.
    */
   public Object evaluateExpressionBlock(@NotNull String expressionBlock, @NotNull EngineJexlContext ctx, int depth) {
-    if (depth <= 0) {
-      throw new CriticalExpressionEvaluationException(
-          "Infinite loop or too deep indirection in expression interpretation", expressionBlock);
-    }
-
+    checkDepth(depth, expressionBlock);
     if (EmptyPredicate.isEmpty(expressionBlock)) {
       return expressionBlock;
     }
@@ -324,8 +336,9 @@ public class EngineExpressionEvaluator {
       return evaluateExpressionInternal(expressionBlock, ctx, depth - 1);
     }
 
-    // If object is another expression, evaluate it recursively.
     Object object = evaluatePrefixCombinations(expressionBlock, ctx, depth);
+
+    // If object is another expression, evaluate it recursively.
     if (object instanceof String && hasVariables((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
@@ -337,6 +350,7 @@ public class EngineExpressionEvaluator {
       }
     }
 
+    observed(expressionBlock, object);
     return object;
   }
 
@@ -530,6 +544,7 @@ public class EngineExpressionEvaluator {
     private final EngineExpressionEvaluator engineExpressionEvaluator;
     private final EngineJexlContext ctx;
     private final int depth;
+    @Getter private final Set<String> unresolvedExpressions = new HashSet<>();
 
     RenderExpressionResolver(EngineExpressionEvaluator engineExpressionEvaluator, EngineJexlContext ctx, int depth) {
       this.engineExpressionEvaluator = engineExpressionEvaluator;
@@ -542,14 +557,14 @@ public class EngineExpressionEvaluator {
       try {
         Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth);
         if (value == null) {
-          return createExpression(expression);
+          String finalExpression = createExpression(expression);
+          unresolvedExpressions.add(finalExpression);
+          return finalExpression;
         }
-
-        // TODO(gpahal): On order to make render strict - we should throw an error if value is a string and contains
-        // expressions
         return String.valueOf(value);
       } catch (UnresolvedExpressionsException ex) {
-        return ex.fetchFinalExpression();
+        unresolvedExpressions.addAll(ex.fetchExpressions());
+        return createExpression(expression);
       }
     }
   }
@@ -561,6 +576,7 @@ public class EngineExpressionEvaluator {
     private final String prefix;
     private final String suffix;
     private int varIndex;
+    @Getter private final Set<String> unresolvedExpressions = new HashSet<>();
 
     EvaluateExpressionResolver(EngineExpressionEvaluator engineExpressionEvaluator, EngineJexlContext ctx, int depth) {
       this.engineExpressionEvaluator = engineExpressionEvaluator;
@@ -572,14 +588,21 @@ public class EngineExpressionEvaluator {
 
     @Override
     public String resolve(String expression) {
-      Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth - 1);
-      if (value == null) {
+      try {
+        Object value = engineExpressionEvaluator.evaluateExpressionBlock(expression, ctx, depth - 1);
+        if (value == null) {
+          String finalExpression = createExpression(expression);
+          unresolvedExpressions.add(finalExpression);
+          return finalExpression;
+        }
+
+        String name = prefix + ++varIndex + suffix;
+        ctx.set(name, value);
+        return name;
+      } catch (UnresolvedExpressionsException ex) {
+        unresolvedExpressions.addAll(ex.fetchExpressions());
         return createExpression(expression);
       }
-
-      String name = prefix + ++varIndex + suffix;
-      ctx.set(name, value);
-      return name;
     }
   }
 
@@ -635,16 +658,19 @@ public class EngineExpressionEvaluator {
     }
   }
 
+  @Getter
   public static class ResolveFunctorImpl implements ExpressionResolveFunctor {
     private final EngineExpressionEvaluator expressionEvaluator;
+    private final boolean skipUnresolvedExpressionsCheck;
 
-    public ResolveFunctorImpl(EngineExpressionEvaluator expressionEvaluator) {
+    public ResolveFunctorImpl(EngineExpressionEvaluator expressionEvaluator, boolean skipUnresolvedExpressionsCheck) {
       this.expressionEvaluator = expressionEvaluator;
+      this.skipUnresolvedExpressionsCheck = skipUnresolvedExpressionsCheck;
     }
 
     @Override
     public String processString(String expression) {
-      return expressionEvaluator.renderExpression(expression);
+      return expressionEvaluator.renderExpression(expression, skipUnresolvedExpressionsCheck);
     }
   }
 

@@ -1,5 +1,9 @@
 package io.harness.ccm.setup.config;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Singleton
+@OwnedBy(CE)
 public class CESetUpConfig {
   private String awsAccountId;
   private String awsAccessKey;

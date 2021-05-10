@@ -1,17 +1,26 @@
 package io.harness.ci.plan.creator;
 
+import static io.harness.git.GitClientHelper.getGitRepo;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
 import io.harness.ci.plan.creator.execution.CIStageModuleInfo;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
@@ -19,6 +28,7 @@ import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.states.LiteEngineTaskStep;
+import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
@@ -32,21 +42,27 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider {
   @Inject OutcomeService outcomeService;
-
+  @Inject private ConnectorUtils connectorUtils;
   @Override
   public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
     String branch = null;
     String tag = null;
+    String repoName = null;
 
-    if (!isLiteEngineNodeAndCompleted(nodeExecutionProto.getNode())) {
+    if (!isLiteEngineNode(nodeExecutionProto.getNode())) {
       return null;
     }
 
+    Ambiance ambiance = nodeExecutionProto.getAmbiance();
+    BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
     try {
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo = RecastOrchestrationUtils.fromDocumentJson(
-          nodeExecutionProto.getResolvedStepParameters(), LiteEngineTaskStepInfo.class);
+      StepElementParameters stepElementParameters = RecastOrchestrationUtils.fromDocumentJson(
+          nodeExecutionProto.getResolvedStepParameters(), StepElementParameters.class);
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+
       if (liteEngineTaskStepInfo == null) {
         return null;
       }
@@ -54,6 +70,18 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       ParameterField<Build> buildParameterField = null;
       if (liteEngineTaskStepInfo.getCiCodebase() != null) {
         buildParameterField = liteEngineTaskStepInfo.getCiCodebase().getBuild();
+
+        if (liteEngineTaskStepInfo.getCiCodebase().getRepoName() != null) {
+          repoName = liteEngineTaskStepInfo.getCiCodebase().getRepoName();
+        } else if (liteEngineTaskStepInfo.getCiCodebase().getConnectorRef() != null) {
+          try {
+            ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(
+                baseNGAccess, liteEngineTaskStepInfo.getCiCodebase().getConnectorRef());
+            repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
+          } catch (Exception exception) {
+            log.warn("Failed to retrieve repo");
+          }
+        }
       }
 
       Build build = RunTimeInputHandler.resolveBuild(buildParameterField);
@@ -76,6 +104,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     return CIPipelineModuleInfo.builder()
         .branch(branch)
         .tag(tag)
+        .repoName(repoName)
         .ciExecutionInfoDTO(CIModuleInfoMapper.getCIBuildResponseDTO(executionSource))
         .build();
   }
@@ -98,7 +127,19 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     return null;
   }
 
-  private boolean isLiteEngineNodeAndCompleted(PlanNodeProto node) {
+  private boolean isLiteEngineNode(PlanNodeProto node) {
     return Objects.equals(node.getStepType().getType(), LiteEngineTaskStep.STEP_TYPE.getType());
+  }
+
+  private BaseNGAccess retrieveBaseNGAccess(Ambiance ambiance) {
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+    String accountId = AmbianceUtils.getAccountId(ambiance);
+
+    return BaseNGAccess.builder()
+        .accountIdentifier(accountId)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .build();
   }
 }

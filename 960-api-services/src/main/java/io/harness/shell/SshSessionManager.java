@@ -1,5 +1,7 @@
 package io.harness.shell;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNKNOWN_EXECUTOR_TYPE_ERROR;
 import static io.harness.shell.AccessType.KEY_SUDO_APP_USER;
@@ -9,6 +11,8 @@ import static io.harness.shell.ExecutorType.KEY_AUTH;
 import static io.harness.shell.ExecutorType.PASSWORD_AUTH;
 import static io.harness.shell.SshHelperUtils.normalizeError;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
 
@@ -23,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class SshSessionManager {
   private static ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
   private static ConcurrentMap<String, List<Session>> simplexSessions = new ConcurrentHashMap<>();
@@ -134,13 +140,6 @@ public class SshSessionManager {
 
   public static Session getSimplexSession(SshSessionConfig config, LogCallback logCallback) {
     Session session = getSession(config, logCallback);
-    try {
-      testSession(config, session);
-    } catch (Exception exception) {
-      log.error("Session connection test failed. Reopen new session", exception);
-      session = getSession(config, logCallback);
-    }
-
     updateSimplexSessionMap(config, session);
     return session;
   }

@@ -1,13 +1,14 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationKryoRegister;
-import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
-import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
-import io.harness.serializer.kryo.PmsCommonsKryoRegistrar;
+import io.harness.serializer.morphia.CgNgSharedOrchestrationBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.CgOrchestrationMorphiaRegistrar;
-import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
-import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
+import io.harness.serializer.morphia.SweepingOutputConverter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -17,34 +18,28 @@ import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(CDC)
 public class CgOrchestrationRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
-          .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
-          .add(PmsSdkCoreKryoRegistrar.class)
-          .add(PmsCommonsKryoRegistrar.class)
           .add(CgOrchestrationKryoRegister.class)
-          .add(DelegateServiceBeansKryoRegistrar.class)
-          .add(CommonEntitiesKryoRegistrar.class)
+          .add(CgOrchestrationBeansKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
-          .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .addAll(OrchestrationDelayRegistrars.morphiaRegistrars)
+          .add(CgNgSharedOrchestrationBeansMorphiaRegistrar.class)
           .add(CgOrchestrationMorphiaRegistrar.class)
-          .add(PmsSdkCoreMorphiaRegistrar.class)
-          .add(PmsCommonsMorphiaRegistrar.class)
-          .add(CommonEntitiesMorphiaRegister.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
-      ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+      ImmutableSet.<Class<? extends TypeConverter>>builder().add(SweepingOutputConverter.class).build();
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of();
 }

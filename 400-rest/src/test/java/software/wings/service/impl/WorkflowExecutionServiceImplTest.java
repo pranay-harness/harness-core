@@ -1,10 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
+import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -37,6 +40,7 @@ import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDat
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -65,10 +69,12 @@ import static software.wings.utils.WingsTestConstants.FREEZE_WINDOW_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.STATE_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.VARIABLE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
@@ -93,12 +99,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
+import io.harness.beans.shared.ResourceConstraint;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
@@ -109,13 +120,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 import io.harness.shell.AccessType;
 import io.harness.state.inspection.StateInspection;
 import io.harness.state.inspection.StateInspectionService;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.threading.Poller;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
@@ -159,6 +168,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.User;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -178,6 +188,7 @@ import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.infra.InfrastructureDefinition;
@@ -186,6 +197,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.resources.stats.model.TimeRange;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
@@ -245,8 +257,10 @@ import org.mockito.Mock;
  *
  * @author Rishi
  */
+@OwnedBy(CDC)
 @Listeners({OrchestrationNotifyEventListener.class, ExecutionEventListener.class})
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
@@ -424,7 +438,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -602,7 +616,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Pipeline executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrProperty("displayName")
@@ -685,7 +699,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String appId = app.getUuid();
 
     final WorkflowExecution triggerWorkflow = triggerWorkflow(appId, env, "workflow1");
-    WorkflowExecution execution = workflowExecutionService.getExecutionDetails(appId, triggerWorkflow.getUuid(), true);
+    WorkflowExecution execution =
+        workflowExecutionService.getExecutionDetails(appId, triggerWorkflow.getUuid(), true, false);
     GraphNode node0 = execution.getExecutionNode();
     final GraphNode executionDetailsForNode =
         workflowExecutionService.getExecutionDetailsForNode(appId, execution.getUuid(), node0.getId());
@@ -749,7 +764,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrProperty("releaseNo")
@@ -965,7 +980,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(executionId).isNotNull();
 
     pollFor(ofSeconds(3), ofMillis(100), () -> {
-      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      final WorkflowExecution pull =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       return pull.getStatus() == ExecutionStatus.RUNNING;
     });
 
@@ -979,11 +995,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
     pollFor(ofSeconds(15), ofMillis(100), () -> {
-      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      final WorkflowExecution pull =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       return pull.getStatus() == ExecutionStatus.PAUSED && pull.getExecutionNode().getGroup() != null;
     });
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
 
     List<GraphNode> wait1List = execution.getExecutionNode()
                                     .getGroup()
@@ -1019,7 +1036,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     callback.await(ofSeconds(15));
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -1155,7 +1172,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(executionId).isNotNull();
 
     pollFor(ofSeconds(5), ofMillis(100), () -> {
-      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      final WorkflowExecution pull =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       return pull.getStatus() == ExecutionStatus.RUNNING;
     });
 
@@ -1169,11 +1187,12 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
     pollFor(ofSeconds(15), ofMillis(100), () -> {
-      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      final WorkflowExecution pull =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       return pull.getStatus() == ExecutionStatus.ABORTED;
     });
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
 
     assertThat(execution)
         .isNotNull()
@@ -1260,7 +1279,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     List<GraphNode> installNodes = getNodes(executionId);
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -1311,7 +1330,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await(ofSeconds(15));
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -1356,7 +1375,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   private List<GraphNode> getNodes(String executionId) {
     Poller.pollFor(ofSeconds(10), ofMillis(100), () -> {
-      WorkflowExecution execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+      WorkflowExecution execution =
+          workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
       if (execution.getExecutionNode() == null) {
         return false;
       }
@@ -1371,7 +1391,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
           n -> n.getStatus() != null && n.getStatus().equals(WAITING.name()));
     });
 
-    return installNodes(workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true));
+    return installNodes(workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false));
   }
 
   /**
@@ -1422,7 +1442,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     List<GraphNode> installNodes = getNodes(executionId);
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -1471,7 +1491,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     callback.await(ofSeconds(15));
 
-    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -1624,7 +1644,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
@@ -1679,7 +1699,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     log.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
     assertThat(execution)
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
@@ -2588,26 +2608,36 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                                   .build();
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
     when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any())).thenReturn(null);
-    WorkflowExecution workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .pipelineExecutionId(PIPELINE_EXECUTION_ID)
+                                              .build();
+    WorkflowExecution pipelineExecution = WorkflowExecution.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .uuid(PIPELINE_EXECUTION_ID)
+                                              .status(RUNNING)
+                                              .build();
+    wingsPersistence.save(pipelineExecution);
     Map<String, Object> map1 = new HashMap<>();
     map1.put("artifactId", "myartifact");
     map1.put("buildNo", "1.0");
-    List<Artifact> artifacts =
-        ((WorkflowExecutionServiceImpl) workflowExecutionService)
-            .collectArtifacts(workflowExecution,
-                singletonList(ArtifactVariable.builder()
-                                  .entityType(SERVICE)
-                                  .entityId("SERVICE_ID_1")
-                                  .name("art_parameterized")
-                                  .artifactStreamMetadata(ArtifactStreamMetadata.builder()
-                                                              .artifactStreamId(ARTIFACT_STREAM_ID)
-                                                              .runtimeValues(map1)
-                                                              .build())
-                                  .build()),
-                APP_ID);
+    List<Artifact> artifacts = workflowExecutionService.collectArtifacts(workflowExecution,
+        singletonList(
+            ArtifactVariable.builder()
+                .entityType(SERVICE)
+                .entityId("SERVICE_ID_1")
+                .name("art_parameterized")
+                .artifactStreamMetadata(
+                    ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
+                .build()),
+        APP_ID);
     assertThat(artifacts).isEmpty();
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(workflowExecution.getMessage()).contains("Error collecting build for artifact source art_parameterized");
+    pipelineExecution = workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_EXECUTION_ID);
+    assertThat(pipelineExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   @Test
@@ -2917,5 +2947,293 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.populateRollbackArtifacts(workflowExecution, infraMappingList, stdParams);
     assertThat(stdParams.getRollbackArtifactIds()).isNotNull().isEmpty();
     assertThat(workflowExecution.getRollbackArtifacts()).isNotNull().isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnCorrectRollbackArtifactForDuplicateInfraMappingIds() {
+    List<String> infraMappingList = Collections.singletonList(INFRA_MAPPING_ID);
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .status(SUCCESS)
+            .workflowId(WORKFLOW_ID)
+            .uuid(WORKFLOW_EXECUTION_ID)
+            .infraMappingIds(infraMappingList)
+            .artifacts(Collections.singletonList(anArtifact().withUuid(ARTIFACT_ID).build()))
+            .build();
+    wingsPersistence.save(workflowExecution);
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    workflowExecutionService.populateRollbackArtifacts(
+        workflowExecution, asList(INFRA_MAPPING_ID, INFRA_MAPPING_ID), stdParams);
+    assertThat(stdParams.getRollbackArtifactIds()).containsExactly(ARTIFACT_ID);
+    assertThat(workflowExecution.getRollbackArtifacts()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnTrueIfParameterizedArtifactPresentInExecution() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   Collections.singletonList(artifact), Collections.singletonList(artifactVariable)))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnTrueIfNoParameterizedArtifactVariablePresent() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    ArtifactVariable artifactVariable = ArtifactVariable.builder().build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   Collections.singletonList(artifact), Collections.singletonList(artifactVariable)))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnFalseIfParameterizedArtifactNotPresentInExecution() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID + 2).build();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   Collections.singletonList(artifact), Collections.singletonList(artifactVariable)))
+        .isFalse();
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnTrueIfMultipleParameterizedArtifactPresentInExecution() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Artifact artifact2 = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID + 2).build();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
+    ArtifactVariable artifactVariable2 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID + 2).build())
+            .build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   asList(artifact, artifact2), asList(artifactVariable, artifactVariable2)))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnFalseIfMultipleParameterizedArtifactAbsentInExecution() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
+    ArtifactVariable artifactVariable2 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID + 2).build())
+            .build();
+    ArtifactVariable artifactVariable3 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID + 3).build())
+            .build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   Collections.singletonList(artifact), asList(artifactVariable, artifactVariable2, artifactVariable3)))
+        .isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdatePipelineWithArtifactsCollected() {
+    StateMachine stateMachine = aStateMachine().build();
+    ExecutionEventAdvisor executionEventAdvisor = new CanaryWorkflowExecutionAdvisor();
+    WorkflowExecutionUpdate workflowExecutionUpdate = new WorkflowExecutionUpdate();
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    wingsPersistence.save(WorkflowExecution.builder()
+                              .accountId(ACCOUNT_ID)
+                              .appId(app.getUuid())
+                              .status(PREPARING)
+                              .message("Starting artifact collection")
+                              .uuid(WORKFLOW_EXECUTION_ID)
+                              .pipelineExecutionId(PIPELINE_EXECUTION_ID)
+                              .build());
+    Artifact artifact2 = Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID + 2).build();
+    List<Artifact> artifacts = new ArrayList<>();
+    artifacts.add(artifact2);
+    wingsPersistence.save(WorkflowExecution.builder()
+                              .accountId(ACCOUNT_ID)
+                              .appId(app.getUuid())
+                              .status(PREPARING)
+                              .message("Starting artifact collection")
+                              .uuid(PIPELINE_EXECUTION_ID)
+                              .artifacts(artifacts)
+                              .executionArgs(ExecutionArgs.builder().artifacts(artifacts).build())
+                              .build());
+    Graph graph = constructGraph();
+    Workflow workflow =
+        aWorkflow()
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("artifactId", "myartifact");
+    map1.put("buildNo", "1.0");
+    executionArgs.setArtifactVariables(asList(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId("SERVICE_ID_1")
+            .name("art_parameterized")
+            .artifactStreamMetadata(
+                ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
+            .build()));
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .jobname("releases")
+                                                  .groupId("mygroup")
+                                                  .artifactPaths(asList("${artifactId}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any()))
+        .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.0").build());
+    Map<String, String> map = new HashMap<>();
+    map.put("buildNo", "1.0");
+    Artifact artifact = Artifact.Builder.anArtifact().withMetadata(map).withUuid(ARTIFACT_ID).build();
+    when(artifactCollectionUtils.getArtifact(any(), any())).thenReturn(artifact);
+    when(artifactService.create(artifact, nexusArtifactStream, false)).thenReturn(artifact);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), WORKFLOW_EXECUTION_ID);
+    try {
+      workflowExecutionService.collectArtifactsAndStartExecution(workflowExecution, stateMachine, executionEventAdvisor,
+          workflowExecutionUpdate, stdParams, app, workflow, null, executionArgs, null);
+    } catch (Exception e) {
+      log.info(e.getMessage());
+    }
+    workflowExecution = wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), PIPELINE_EXECUTION_ID);
+
+    assertThat(workflowExecution.getArtifacts()).containsExactlyInAnyOrder(artifact, artifact2);
+    assertThat(workflowExecution.getExecutionArgs().getArtifacts()).containsExactlyInAnyOrder(artifact, artifact2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldMergeArtifactVariableList() {
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    ArtifactVariable artifactVariable2 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID + 2)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    ArtifactVariable artifactVariable3 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID + 2)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(app.getUuid())
+            .uuid(PIPELINE_EXECUTION_ID)
+            .executionArgs(
+                ExecutionArgs.builder().artifactVariables(asList(artifactVariable, artifactVariable2)).build())
+            .build();
+    List<ArtifactVariable> artifactVariables = workflowExecutionService.getMergedArtifactVariableList(
+        workflowExecution, asList(artifactVariable, artifactVariable3));
+    assertThat(artifactVariables).contains(artifactVariable, artifactVariable3);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldAddArtifactVariableToWorkflowElement() {
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    ArtifactVariable artifactVariable2 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID + 2)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    ArtifactVariable artifactVariable3 = ArtifactVariable.builder().build();
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    List<ArtifactVariable> artifactVariables = new ArrayList<>();
+    artifactVariables.add(artifactVariable2);
+    workflowStandardParams.setWorkflowElement(WorkflowElement.builder().artifactVariables(artifactVariables).build());
+    workflowExecutionService.addParameterizedArtifactVariableToContext(
+        asList(artifactVariable, artifactVariable3), workflowStandardParams);
+    assertThat(workflowStandardParams.getWorkflowElement().getArtifactVariables())
+        .containsExactlyInAnyOrder(artifactVariable, artifactVariable2);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testWorkflowAuthorizationWithWebhookTriggerAuthorizationFfOn() throws InterruptedException {
+    String appId = app.getUuid();
+    when(featureFlagService.isEnabled(eq(WEBHOOK_TRIGGER_AUTHORIZATION), anyString())).thenReturn(true);
+    User user = anUser().build();
+    UserThreadLocal.set(user);
+
+    Workflow workflow = createExecutableWorkflow(appId, env, "workflow1");
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(singletonList(
+        Artifact.Builder.anArtifact().withAccountId(ACCOUNT_ID).withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
+
+    WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
+    WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(appId, env.getUuid(),
+        workflow.getUuid(), null, executionArgs, callback,
+        Trigger.builder().uuid(TRIGGER_ID).condition(new WebHookTriggerCondition()).build());
+    callback.await(ofSeconds(15));
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    log.debug("Workflow executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId, true, false);
+    assertThat(execution)
+        .isNotNull()
+        .hasFieldOrProperty("releaseNo")
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+
+    verify(deploymentAuthHandler).authorizeWorkflowExecution(anyString(), anyString());
+    verify(authService).checkIfUserAllowedToDeployWorkflowToEnv(anyString(), anyString());
   }
 }

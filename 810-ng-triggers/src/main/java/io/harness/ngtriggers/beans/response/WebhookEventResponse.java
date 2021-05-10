@@ -1,10 +1,15 @@
 package io.harness.ngtriggers.beans.response;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(PIPELINE)
 public class WebhookEventResponse {
   public enum FinalStatus {
     SCM_SERVICE_CONNECTION_FAILED,
@@ -12,12 +17,15 @@ public class WebhookEventResponse {
     NO_MATCHING_TRIGGER_FOR_REPO,
     NO_MATCHING_TRIGGER_FOR_EVENT_ACTION,
     NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS,
+    NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS,
     NO_MATCHING_TRIGGER_FOR_HEADER_CONDITIONS,
     INVALID_RUNTIME_INPUT_YAML,
     TARGET_DID_NOT_EXECUTE,
     TARGET_EXECUTION_REQUESTED,
     NO_ENABLED_CUSTOM_TRIGGER_FOUND_FOR_PROJECT,
+    NO_ENABLED_CUSTOM_TRIGGER_FOUND_FOR_ACCOUNT,
     NO_ENABLED_TRIGGER_FOR_PROJECT,
+    NO_ENABLED_TRIGGER_FOR_ACCOUNT,
     NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE,
     FAILED_TO_FETCH_PR_DETAILS,
     EXCEPTION_WHILE_PROCESSING,

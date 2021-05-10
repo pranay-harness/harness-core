@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SecretManagerCapabilities.CAN_BE_DEFAULT_SM;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
@@ -8,6 +9,7 @@ import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
 import static io.harness.security.encryption.SecretManagerType.VAULT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -30,6 +32,7 @@ import lombok.experimental.SuperBuilder;
  * Created by rsingh on 11/02/17.
  */
 
+@OwnedBy(PL)
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -90,6 +93,7 @@ public class VaultConfig extends BaseVaultConfig {
                                           .secretEngineVersion(getSecretEngineVersion())
                                           .renewalIntervalMinutes(getRenewalInterval())
                                           .vaultUrl(getVaultUrl())
+                                          .namespace(getNamespace())
                                           .build();
     SecretManagerConfigMapper.updateNGSecretManagerMetadata(getNgMetadata(), ngVaultConfigDTO);
     if (!maskSecrets) {

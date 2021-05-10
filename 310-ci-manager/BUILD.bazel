@@ -1,16 +1,18 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
+
+HarnessTeam = "CI"
 
 shared_dependencies = [
     "//320-ci-execution:module",
     "//330-ci-beans:module",
+    "//870-cg-orchestration:module",
+    "//940-primary-version-manager:module",
     "//950-common-entities:module",
     "//955-delegate-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
-    "//400-rest:module",
     "//product/ci/engine/proto:ciengine_java_proto",
     "//product/ci/scm/proto:ciscm_java_proto",
     "@jira_client//jar",
@@ -126,7 +128,6 @@ shared_dependencies = [
     "@maven//:com_microsoft_azure_azure_client_runtime",
     "@maven//:com_microsoft_azure_azure_keyvault",
     "@maven//:com_microsoft_azure_azure_keyvault_core",
-    "@maven//:com_microsoft_azure_azure_keyvault_cryptography",
     "@maven//:com_microsoft_azure_azure_keyvault_webkey",
     "@maven//:com_microsoft_azure_azure_mgmt_appservice",
     "@maven//:com_microsoft_azure_azure_mgmt_batch",
@@ -157,7 +158,7 @@ shared_dependencies = [
     "@maven//:com_nimbusds_lang_tag",
     "@maven//:com_nimbusds_nimbus_jose_jwt",
     "@maven//:com_nimbusds_oauth2_oidc_sdk",
-    "@maven//:com_novemberain_quartz_mongodb",
+    "@maven//:com_novemberain_quartz_mongodb_harness_mongo_ssl",
     "@maven//:com_papertrail_profiler",
     "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:com_squareup_okhttp3_logging_interceptor",
@@ -423,6 +424,7 @@ java_binary(
     data = ["//:resource"],
     main_class = "io.harness.app.CIManagerApplication",
     resources = [
+        "//310-ci-manager/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
@@ -455,6 +457,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

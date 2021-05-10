@@ -34,6 +34,7 @@ mongo:
   connectionsPerHost: ${MONGO_CONNECTIONS_PER_HOST:-300}
   indexManagerMode: ${MONGO_INDEX_MANAGER_MODE:-AUTO}
   transactionsEnabled: false
+  aliasDBName:  pms-harness
 
 grpcServerConfig:
   connectors:
@@ -47,8 +48,8 @@ grpcClientConfigs:
   cd:
     target: ${NG_MANAGER_TARGET:-localhost:12101}
     authority: ${NG_MANAGER_AUTHORITY:-localhost}
-  cv:
-    target: ${CV_MANAGER_TARGET:-localhost:12201}
+  cvng:
+    target: ${CV_MANAGER_TARGET:-localhost:12401}
     authority: ${CV_MANAGER_AUTHORITY:-localhost}
   ci:
     target: ${CI_MANAGER_TARGET:-localhost:12301}
@@ -89,6 +90,10 @@ eventsFramework:
     useScriptCache: true
     userName: ${EVENTS_FRAMEWORK_REDIS_USERNAME:-""}
     password: ${EVENTS_FRAMEWORK_REDIS_PASSWORD:-""}
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
 
 managerClientConfig:
   baseUrl: ${MANAGER_BASE_URL:-http://localhost:3457/api/}
@@ -122,9 +127,54 @@ jwtIdentityServiceSecret: ${JWT_IDENTITY_SERVICE_SECRET:-HVSKUYqD4e5Rxu12hFDdCJK
 allowedOrigins:
   - "*"
 
-pipelineServiceBaseUrl: ${PIPELINE_SERVICE_BASE_URL:-https://localhost:8181/#}
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
-scmConnectionConfig:
-  url: ${SCM_SERVICE_URI:-localhost:8091}
+pipelineServiceBaseUrl: ${PIPELINE_SERVICE_BASE_URL:-https://localhost:8181/#}
+pmsApiBaseUrl: http://localhost:12001/api/
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+
+iteratorsConfig:
+  approvalInstanceIteratorConfig:
+    enabled: true
+    targetIntervalInSeconds: 60
+
+orchestrationStepConfig:
+  ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
+
+shouldDeployWithGitSync: false
+
+gitSdkConfiguration:
+  gitSdkGrpcServerConfig:
+    connectors:
+      - port: 14001
+        secure: true
+        keyFilePath: key.pem
+        certFilePath: cert.pem
+      - port: 14002
+  gitManagerGrpcClientConfig:
+    target: localhost:13001
+    authority: localhost
+  scmConnectionConfig:
+    url: localhost:8091
+
+enableDashboardTimescale: false
 
 enableAuth: ${AUTH_ENABLED:-false}
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF

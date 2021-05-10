@@ -32,6 +32,8 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
@@ -47,6 +49,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CI)
 public class BuildEnvironmentUtils {
   private static final String REPO_SCM = "git";
 

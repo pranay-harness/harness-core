@@ -7,11 +7,11 @@ import static java.util.Collections.singletonList;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;

@@ -12,10 +12,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @OwnedBy(CDC)
 @Data
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = JiraProjectBasicDeserializer.class)
@@ -23,8 +25,6 @@ public class JiraProjectBasicNG {
   @NotNull String id;
   @NotNull String key;
   @NotNull String name;
-
-  public JiraProjectBasicNG() {}
 
   public JiraProjectBasicNG(JsonNode node) {
     this.id = JsonNodeUtils.mustGetString(node, "id");

@@ -3,6 +3,7 @@ package io.harness.steps.approval.step.jira.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.jira.JiraIssueKeyNG;
 import io.harness.steps.approval.step.beans.ApprovalInstanceDetailsDTO;
 
 import io.swagger.annotations.ApiModel;
@@ -20,8 +21,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ApiModel("JiraApprovalInstanceDetails")
 public class JiraApprovalInstanceDetailsDTO implements ApprovalInstanceDetailsDTO {
   @NotEmpty String connectorRef;
-  @NotEmpty String projectKey;
-  @NotEmpty String issueId;
-  @NotNull CriteriaSpecDTO approvalCriteria;
-  @NotNull CriteriaSpecDTO rejectionCriteria;
+  @NotNull JiraIssueKeyNG issue;
+  @NotNull CriteriaSpecWrapperDTO approvalCriteria;
+  @NotNull CriteriaSpecWrapperDTO rejectionCriteria;
 }

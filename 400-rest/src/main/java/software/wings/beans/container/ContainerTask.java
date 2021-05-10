@@ -1,8 +1,11 @@
 package software.wings.beans.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -26,6 +29,7 @@ import org.mongodb.morphia.annotations.Entity;
 /**
  * Created by anubhaw on 2/6/17.
  */
+@OwnedBy(CDP)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "deploymentType")
 @Entity("containerTasks")

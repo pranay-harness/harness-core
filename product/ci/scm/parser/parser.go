@@ -48,9 +48,9 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 
 	switch event := webhook.(type) {
 	case *scm.PullRequestHook:
-		pr, err := converter.ConvertPRHook(event)
-		if err != nil {
-			return nil, err
+		pr, prHookErr := converter.ConvertPRHook(event)
+		if prHookErr != nil {
+			return nil, prHookErr
 		}
 		log.Infow("Successfully parsed pr webhook", "elapsed_time_ms", utils.TimeSince(start))
 		return &pb.ParseWebhookResponse{
@@ -59,9 +59,9 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 			},
 		}, nil
 	case *scm.PushHook:
-		push, err := converter.ConvertPushHook(event)
-		if err != nil {
-			return nil, err
+		push, pushHookErr := converter.ConvertPushHook(event)
+		if pushHookErr != nil {
+			return nil, pushHookErr
 		}
 		log.Infow("Successfully parsed push webhook", "elapsed_time_ms", utils.TimeSince(start))
 		return &pb.ParseWebhookResponse{
@@ -70,9 +70,9 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 			},
 		}, nil
 	case *scm.IssueCommentHook:
-		comment, err := converter.ConvertIssueCommentHook(event)
-		if err != nil {
-			return nil, err
+		comment, issueCommentHookErr := converter.ConvertIssueCommentHook(event)
+		if issueCommentHookErr != nil {
+			return nil, issueCommentHookErr
 		}
 		log.Infow("Successfully parsed issue comment", "elapsed_time_ms", utils.TimeSince(start))
 		return &pb.ParseWebhookResponse{
@@ -98,7 +98,7 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 // parseWebhookRequest parses incoming request and convert it to scm.Webhook
 func parseWebhookRequest(in *pb.ParseWebhookRequest) (scm.Webhook, error) {
 	body := strings.NewReader(in.GetBody())
-	r, err := http.NewRequest(defaultMethod, defaultPath, body)
+	r, err := http.NewRequestWithContext(context.Background(), defaultMethod, defaultPath, body)
 	if err != nil {
 		return nil, err
 	}

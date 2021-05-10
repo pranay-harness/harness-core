@@ -1,5 +1,6 @@
 package io.harness.pms.triggers.webhook.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
@@ -8,11 +9,14 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
+import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
@@ -22,19 +26,19 @@ import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.pms.triggers.webhook.helpers.TriggerWebhookConfirmationHelper;
 import io.harness.pms.triggers.webhook.helpers.TriggerWebhookExecutionHelper;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
-import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
+import io.harness.repositories.spring.TriggerEventHistoryRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @Slf4j
+@OwnedBy(PIPELINE)
 public class TriggerWebhookExecutionServiceImpl
     implements io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService,
                MongoPersistenceIterator.Handler<TriggerWebhookEvent> {
@@ -81,14 +85,15 @@ public class TriggerWebhookExecutionServiceImpl
       if (event.isSubscriptionConfirmation()) {
         result = ngTriggerWebhookConfirmationHelper.handleTriggerWebhookConfirmationEvent(event);
       } else {
-        result = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
+        result = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(
+            TriggerMappingRequestData.builder().triggerWebhookEvent(event).webhookDTO(null).build());
       }
 
       List<WebhookEventResponse> responseList = result.getResponses();
 
       // Remove any null values if present in list
       if (isNotEmpty(responseList)) {
-        responseList = responseList.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        responseList = responseList.stream().filter(Objects::nonNull).collect(toList());
       }
 
       if (discardEmptyOrInvalidPayloadEvents(responseList)) {

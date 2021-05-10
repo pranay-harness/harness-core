@@ -1,5 +1,6 @@
 package io.harness.userGroup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 
@@ -27,6 +28,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
@@ -39,6 +41,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.WORKFLO
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.GraphQLTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
@@ -78,6 +81,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
+@OwnedBy(PL)
 @Slf4j
 public class UserGroupPermissionTest extends GraphQLTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -130,7 +134,7 @@ public class UserGroupPermissionTest extends GraphQLTest {
         CE_VIEWER, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
         MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
         MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
-        MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS);
+        MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS, MANAGE_SSH_AND_WINRM);
     return new HashSet<>(permissionTypeList);
   }
 
@@ -152,7 +156,7 @@ VIEW_AUDITS,
 MANAGE_TAGS, ADMINISTER_CE,
   VIEW_CE, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
         MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
-        MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_API_KEYS
+        MANAGE_SECRET_MANAGERS, MANAGE_SSH_AND_WINRM, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_API_KEYS
         , MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
         MANAGE_PIPELINE_GOVERNANCE_STANDARDS
 ]

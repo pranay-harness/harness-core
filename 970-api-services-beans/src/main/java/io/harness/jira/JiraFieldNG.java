@@ -20,13 +20,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @OwnedBy(CDC)
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -36,7 +34,11 @@ public class JiraFieldNG {
   boolean required;
   boolean isCustom;
   @NotNull JiraFieldSchemaNG schema;
-  @NotNull List<JiraFieldAllowedValueNG> allowedValues = new ArrayList<>();
+  @Builder.Default @NotNull List<JiraFieldAllowedValueNG> allowedValues = new ArrayList<>();
+
+  public JiraFieldNG() {
+    this.allowedValues = new ArrayList<>();
+  }
 
   private JiraFieldNG(String key, JsonNode node) {
     this.key = JsonNodeUtils.getString(node, "key", key);
@@ -44,6 +46,7 @@ public class JiraFieldNG {
     this.required = JsonNodeUtils.getBoolean(node, "required", false);
     this.isCustom = this.key.startsWith("customfield_");
     this.schema = new JiraFieldSchemaNG(node.get("schema"));
+    this.allowedValues = new ArrayList<>();
     addAllowedValues(node.get("allowedValues"));
   }
 

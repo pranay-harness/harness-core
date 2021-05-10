@@ -2,6 +2,8 @@ package io.harness.cdng.artifact.steps;
 
 import static io.harness.cdng.service.steps.ServiceStep.SERVICE_STEP_COMMAND_UNIT;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
@@ -23,11 +25,11 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.KryoSerializer;
@@ -46,6 +48,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 @Slf4j
 public class ArtifactStep {
@@ -136,7 +139,7 @@ public class ArtifactStep {
   }
 
   public List<ArtifactConfig> getArtifactOverrideSetsApplicable(
-      ServiceConfig serviceConfig, NGManagerLogCallback ngManagerLogCallback) {
+      ServiceConfig serviceConfig, NGLogCallback ngManagerLogCallback) {
     List<ArtifactConfig> artifacts = new LinkedList<>();
     if (serviceConfig.getStageOverrides() != null
         && !ParameterField.isNull(serviceConfig.getStageOverrides().getUseArtifactOverrideSets())) {
@@ -176,7 +179,7 @@ public class ArtifactStep {
   }
 
   public List<ArtifactStepParameters> getArtifactsWithCorrespondingOverrides(
-      ServiceConfig serviceConfig, NGManagerLogCallback ngManagerLogCallback) {
+      ServiceConfig serviceConfig, NGLogCallback ngManagerLogCallback) {
     Map<String, ArtifactStepParametersBuilder> artifactsMap = new HashMap<>();
     ArtifactListConfig artifacts = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
     if (artifacts != null) {

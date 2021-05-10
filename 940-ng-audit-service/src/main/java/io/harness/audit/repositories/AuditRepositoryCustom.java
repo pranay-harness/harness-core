@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.entities.AuditEvent;
 
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -13,4 +14,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface AuditRepositoryCustom {
   Page<AuditEvent> findAll(Criteria criteria, Pageable pageable);
   AuditEvent get(Criteria criteria);
+  void delete(Criteria criteria);
+  List<String> fetchDistinctAccountIdentifiers();
 }

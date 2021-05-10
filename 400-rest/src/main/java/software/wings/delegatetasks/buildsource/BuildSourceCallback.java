@@ -18,7 +18,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.beans.Account;
 import software.wings.beans.alert.AlertType;
@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j
-public class BuildSourceCallback implements NotifyCallback {
+public class BuildSourceCallback implements OldNotifyCallback {
   private String accountId;
   private String artifactStreamId;
   private String permitId;

@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -11,6 +12,7 @@ import static software.wings.graphql.datafetcher.instance.Constants.INSTANCE_STA
 import static software.wings.graphql.datafetcher.instance.Constants.PARTIAL_AGGREGATION_INTERVAL;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.timeseries.processor.utils.DateUtils;
 import io.harness.exception.WingsException;
@@ -55,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
  * from TimeScaleDB.
  * @author rktummala on 06/27/19
  */
+@OwnedBy(DX)
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)

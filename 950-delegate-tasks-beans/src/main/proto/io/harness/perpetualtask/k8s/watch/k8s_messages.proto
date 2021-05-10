@@ -27,6 +27,7 @@ message Owner {
   string kind = 2;
   string name = 3;
   map<string, string> labels = 4;
+  int64 replicas = 5;
 }
 
 message Volume {
@@ -238,4 +239,9 @@ message K8sWorkloadSpec {
 
   repeated ContainerSpec container_specs = 8;
   repeated ContainerSpec init_container_specs = 9;
+
+  int64 replicas = 10;
+  string uid = 11;
+
+  int32 version = 12;
 }

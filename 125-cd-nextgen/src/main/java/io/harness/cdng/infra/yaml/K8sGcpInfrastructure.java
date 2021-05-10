@@ -2,18 +2,22 @@ package io.harness.cdng.infra.yaml;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sGcpInfraMapping;
 import io.harness.cdng.visitor.YamlTypes;
-import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8sGcpInfrastructureVisitorHelper;
-import io.harness.common.SwaggerConstants;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
@@ -22,10 +26,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_GCP)
-@SimpleVisitorHelper(helperClass = K8sGcpInfrastructureVisitorHelper.class)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("k8sGcpInfrastructure")
 @OwnedBy(HarnessTeam.CDP)
-public class K8sGcpInfrastructure implements Infrastructure, Visitable {
+public class K8sGcpInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
@@ -34,7 +38,7 @@ public class K8sGcpInfrastructure implements Infrastructure, Visitable {
   @Override
   public InfraMapping getInfraMapping() {
     return K8sGcpInfraMapping.builder()
-        .k8sConnector(connectorRef.getValue())
+        .gcpConnector(connectorRef.getValue())
         .namespace(namespace.getValue())
         .cluster(cluster.getValue())
         .build();
@@ -67,5 +71,12 @@ public class K8sGcpInfrastructure implements Infrastructure, Visitable {
       resultantInfra = resultantInfra.withReleaseName(config.getReleaseName());
     }
     return resultantInfra;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

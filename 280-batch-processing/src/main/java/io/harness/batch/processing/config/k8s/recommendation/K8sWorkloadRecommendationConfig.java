@@ -2,11 +2,13 @@ package io.harness.batch.processing.config.k8s.recommendation;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
+import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.reader.CloseableIteratorItemReader;
-import io.harness.batch.processing.reader.EventReaderFactory;
+import io.harness.batch.processing.reader.PublishedMessageBatchedReader;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
+import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -28,7 +30,6 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.support.PassThroughItemProcessor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,12 +40,12 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class K8sWorkloadRecommendationConfig {
   private static final int BATCH_SIZE = 1000;
 
-  private final EventReaderFactory eventReaderFactory;
+  private final PublishedMessageDao publishedMessageDao;
   private final StepBuilderFactory stepBuilderFactory;
 
   public K8sWorkloadRecommendationConfig(
-      @Qualifier("mongoEventReader") EventReaderFactory eventReaderFactory, StepBuilderFactory stepBuilderFactory) {
-    this.eventReaderFactory = eventReaderFactory;
+      PublishedMessageDao publishedMessageDao, StepBuilderFactory stepBuilderFactory) {
+    this.publishedMessageDao = publishedMessageDao;
     this.stepBuilderFactory = stepBuilderFactory;
   }
 
@@ -52,7 +53,8 @@ public class K8sWorkloadRecommendationConfig {
   @StepScope
   public ItemReader<PublishedMessage> workloadSpecReader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_WORKLOAD_SPEC, startDate, endDate);
+    return new PublishedMessageBatchedReader(
+        accountId, EventTypeConstants.K8S_WORKLOAD_SPEC, startDate, endDate, null, publishedMessageDao);
   }
 
   @Bean
@@ -76,7 +78,8 @@ public class K8sWorkloadRecommendationConfig {
   @StepScope
   public ItemReader<PublishedMessage> containerStateReader(@Value("#{jobParameters[accountId]}") String accountId,
       @Value("#{jobParameters[startDate]}") Long startDate, @Value("#{jobParameters[endDate]}") Long endDate) {
-    return eventReaderFactory.getEventReader(accountId, EventTypeConstants.K8S_CONTAINER_STATE, startDate, endDate);
+    return new PublishedMessageBatchedReader(
+        accountId, EventTypeConstants.K8S_CONTAINER_STATE, startDate, endDate, null, publishedMessageDao);
   }
 
   @Bean
@@ -125,11 +128,11 @@ public class K8sWorkloadRecommendationConfig {
   @StepScope
   public ComputedRecommendationWriter computedRecommendationWriter(WorkloadRecommendationDao workloadRecommendationDao,
       WorkloadCostService workloadCostService, WorkloadRepository workloadRepository,
-      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher,
+      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher, K8sRecommendationDAO k8sRecommendationDAO,
       @Value("#{jobParameters[startDate]}") Long startDateMillis) {
     Instant jobStartDate = Instant.ofEpochMilli(startDateMillis);
-    return new ComputedRecommendationWriter(
-        workloadRecommendationDao, workloadCostService, workloadRepository, k8sLabelServiceInfoFetcher, jobStartDate);
+    return new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService, workloadRepository,
+        k8sLabelServiceInfoFetcher, k8sRecommendationDAO, jobStartDate);
   }
 
   @Bean

@@ -1,5 +1,7 @@
 package io.harness.executionplan;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.executionplan.core.ExecutionPlanCreatorRegistry;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.GenericStepPlanCreator;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CIExecutionPlanCreatorRegistrar {
   @Inject private ExecutionPlanCreatorRegistry executionPlanCreatorRegistry;
   @Inject private GenericStepPlanCreator genericStepPlanCreator;

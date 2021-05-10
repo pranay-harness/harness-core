@@ -230,26 +230,26 @@ public class ScimUserServiceImpl implements ScimUserService {
     if ("displayName".equals(patchOperation.getPath())) {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       updateOperation.set(UserKeys.name, patchOperation.getValue(String.class));
-      wingsPersistence.update(user, updateOperation);
+      userService.updateUser(user, updateOperation);
     }
     if (patchOperation.getValue(ScimMultiValuedObject.class) != null
         && patchOperation.getValue(ScimMultiValuedObject.class).getDisplayName() != null) {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       updateOperation.set(UserKeys.name, patchOperation.getValue(String.class));
-      wingsPersistence.update(user, updateOperation);
+      userService.updateUser(user, updateOperation);
     }
     if ("active".equals(patchOperation.getPath())) {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       if (patchOperation.getValue(Boolean.class) != null) {
         updateOperation.set(UserKeys.disabled, !(patchOperation.getValue(Boolean.class)));
       }
-      wingsPersistence.update(user, updateOperation);
+      userService.updateUser(user, updateOperation);
     }
     if (patchOperation.getValue(ScimUserValuedObject.class) != null) {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       updateOperation.set(UserKeys.disabled, !(patchOperation.getValue(ScimUserValuedObject.class)).isActive());
       removeUserFromAllScimGroups(accountId, userId);
-      wingsPersistence.update(user, updateOperation);
+      userService.updateUser(user, updateOperation);
     } else {
       // Not supporting any other updates as of now.
       log.error("SCIM: Unexpected patch operation received: accountId: {}, userId: {}, patchOperation: {}", accountId,
@@ -326,7 +326,7 @@ public class ScimUserServiceImpl implements ScimUserService {
       }
       if (userUpdate) {
         updateOperations.set(UserKeys.imported, true);
-        wingsPersistence.update(user, updateOperations);
+        userService.updateUser(user, updateOperations);
       }
       return Response.status(Status.OK).entity(getUser(user.getUuid(), accountId)).build();
     }

@@ -1,9 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ff.FeatureFlagService;
 import io.harness.lock.PersistentLocker;
 import io.harness.queue.QueueConsumer;
@@ -23,6 +25,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 @Slf4j
 public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
   @Inject private WingsPersistence wingsPersistence;
@@ -32,7 +35,7 @@ public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowExecutionUpdate executionUpdate;
+  @Inject private software.wings.service.impl.WorkflowExecutionUpdate executionUpdate;
 
   @Inject
   public ExecutionEventListener(QueueConsumer<ExecutionEvent> queueConsumer) {

@@ -1,8 +1,9 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "test_targets_list")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+HarnessTeam = "CV"
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -12,14 +13,18 @@ shared_dependencies = [
     "//430-cv-nextgen-commons:module",
     "//440-connector-nextgen:module",
     "//876-orchestration-beans:module",
-    "//940-feature-flag:module",
+    "//879-pms-sdk:module",
+    "//950-wait-engine:module",
     "//940-notification-client:module",
+    "//940-primary-version-manager:module",
     "//940-secret-manager-client:module",
-    "//950-events-api:module",
+    "//953-events-api:module",
     "//954-connector-beans:module",
+    "//960-continuous-features:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//980-commons:module",
+    "//860-orchestration-steps:module",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_fasterxml_jackson_core_jackson_core",
     "@maven//:com_fasterxml_jackson_core_jackson_databind",
@@ -64,10 +69,14 @@ shared_dependencies = [
     "@maven//:io_swagger_swagger_jaxrs",
     "@maven//:io_swagger_swagger_jersey2_jaxrs",
     "@maven//:io_swagger_swagger_models",
+    "@maven//:io_opencensus_opencensus_api",
+    "@maven//:io_opencensus_opencensus_impl",
+    "@maven//:io_opencensus_opencensus_exporter_stats_stackdriver",
     "@maven//:javax_annotation_javax_annotation_api",
     "@maven//:javax_validation_validation_api",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_apache_logging_log4j_log4j_api",
     "@maven//:org_glassfish_jersey_bundles_repackaged_jersey_guava",
     "@maven//:org_glassfish_jersey_containers_jersey_container_servlet",
     "@maven//:org_glassfish_jersey_containers_jersey_container_servlet_core",
@@ -118,8 +127,9 @@ java_library(
         "//:lombok",
         "//430-cv-nextgen-commons:module",
         "//876-orchestration-beans:module",
-        "//940-feature-flag:module",
         "//940-notification-client:module",
+        "//940-primary-version-manager:module",
+        "//960-continuous-features:module",
         "//960-notification-beans:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
@@ -134,6 +144,7 @@ java_library(
         "@maven//:io_specto_hoverfly_java",
         "@maven//:junit_junit",
         "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_logging_log4j_log4j_api",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_mongo_java_driver",
@@ -145,6 +156,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

@@ -9,9 +9,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.client.DelegateSelectionLogHttpClient;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
-import io.harness.delegatelog.client.DelegateSelectionLogHttpClient;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
@@ -33,6 +35,7 @@ import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class DelegateInfoHelperTest extends OrchestrationVisualizationTestBase {
   @Mock DelegateSelectionLogHttpClient delegateSelectionLogHttpClient;
   @InjectMocks DelegateInfoHelper delegateInfoHelper;

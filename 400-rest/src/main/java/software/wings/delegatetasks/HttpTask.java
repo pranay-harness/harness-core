@@ -1,6 +1,9 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -20,6 +23,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
+
+@OwnedBy(CDC)
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class HttpTask extends AbstractDelegateRunnableTask {
@@ -52,6 +57,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
         .httpUrl(httpInternalResponse.getHttpUrl())
         .httpResponseCode(httpInternalResponse.getHttpResponseCode())
         .httpResponseBody(httpInternalResponse.getHttpResponseBody())
+        .timedOut(httpInternalResponse.isTimedOut())
         .build();
   }
 

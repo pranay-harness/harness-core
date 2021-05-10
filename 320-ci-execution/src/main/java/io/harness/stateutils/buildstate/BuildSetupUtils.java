@@ -2,6 +2,8 @@ package io.harness.stateutils.buildstate;
 
 import static io.harness.govern.Switch.unhandled;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class BuildSetupUtils {
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
 

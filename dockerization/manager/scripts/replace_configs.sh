@@ -4,6 +4,14 @@ CONFIG_FILE=/opt/harness/config.yml
 NEWRELIC_FILE=/opt/harness/newrelic.yml
 REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
+replace_key_value () {
+  CONFIG_KEY="$1";
+  CONFIG_VALUE="$2";
+  if [[ "" != "$CONFIG_VALUE" ]]; then
+    yq write -i $CONFIG_FILE $CONFIG_KEY $CONFIG_VALUE
+  fi
+}
+
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
 
@@ -68,6 +76,18 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_SSL_CONFIG" ]]; then
+  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoSSLEnabled "$MONGO_SSL_CONFIG"
+fi
+
+if [[ "" != "$MONGO_SSL_CA_TRUST_STORE_PATH" ]]; then
+  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoTrustStorePath "$MONGO_SSL_CA_TRUST_STORE_PATH"
+fi
+
+if [[ "" != "$MONGO_SSL_CA_TRUST_STORE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoTrustStorePassword "$MONGO_SSL_CA_TRUST_STORE_PASSWORD"
+fi
+
 if [[ "" != "$MONGO_CONNECT_TIMEOUT" ]]; then
   yq write -i $CONFIG_FILE mongo.connectTimeout $MONGO_CONNECT_TIMEOUT
 fi
@@ -101,6 +121,56 @@ fi
 if [[ "" != "$CF_CLIENT_API_KEY" ]]; then
   yq write -i $CONFIG_FILE cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 fi
+
+if [[ "" != "$CF_CLIENT_CONFIG_URL" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
+fi
+
+if [[ "" != "$CF_CLIENT_EVENT_URL" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
+fi
+
+if [[ "" != "$CF_CLIENT_ANALYTICS_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.analyticsEnabled "$CF_CLIENT_ANALYTICS_ENABLED"
+fi
+
+if [[ "" != "$CF_CLIENT_CONNECTION_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.connectionTimeout "$CF_CLIENT_CONNECTION_TIMEOUT"
+fi
+
+if [[ "" != "$CF_CLIENT_READ_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
+fi
+
+if [[ "" != "$CF_MIGRATION_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.enabled "$CF_MIGRATION_ENABLED"
+fi
+
+if [[ "" != "$CF_MIGRATION_ADMIN_URL" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.adminUrl "$CF_MIGRATION_ADMIN_URL"
+fi
+
+if [[ "" != "$CF_MIGRATION_API_KEY" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.apiKey "$CF_MIGRATION_API_KEY"
+fi
+
+if [[ "" != "$CF_MIGRATION_ACCOUNT" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.account "$CF_MIGRATION_ACCOUNT"
+fi
+
+if [[ "" != "$CF_MIGRATION_ORG" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.org "$CF_MIGRATION_ORG"
+fi
+
+if [[ "" != "$CF_MIGRATION_PROJECT" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.project "$CF_MIGRATION_PROJECT"
+fi
+
+if [[ "" != "$CF_MIGRATION_ENVIRONMENT" ]]; then
+  yq write -i $CONFIG_FILE cfMigrationConfig.environment "$CF_MIGRATION_ENVIRONMENT"
+fi
+
+
 
 if [[ "" != "$ELASTICSEARCH_URI" ]]; then
   yq write -i $CONFIG_FILE elasticsearch.uri "$ELASTICSEARCH_URI"
@@ -367,6 +437,10 @@ fi
 
 if [[ "" != "$CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE clusterName "$CLUSTER_NAME"
+fi
+
+if [[ "" != "$DEPLOYMENT_CLUSTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
 fi
 
 if [[ "" != "$BACKGROUND_SCHEDULER_CLUSTERED" ]]; then
@@ -736,22 +810,6 @@ if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
 fi
 
-if [[ "" != "$EVENTS_FRAMEWORK_REDIS_URL" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.redisUrl "$EVENTS_FRAMEWORK_REDIS_URL"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_ENV_NAMESPACE" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.envNamespace "$EVENTS_FRAMEWORK_ENV_NAMESPACE"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_USE_SENTINEL" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.sentinel "$EVENTS_FRAMEWORK_USE_SENTINEL"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.masterName "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME"
-fi
-
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
@@ -761,13 +819,15 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   done
 fi
 
-if [[ "" != "$EVENTS_FRAMEWORK_REDIS_USERNAME" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.userName "$EVENTS_FRAMEWORK_REDIS_USERNAME"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
-fi
+replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
+replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
+replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
+replace_key_value eventsFramework.redis.masterName $EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME
+replace_key_value eventsFramework.redis.userName $EVENTS_FRAMEWORK_REDIS_USERNAME
+replace_key_value eventsFramework.redis.password $EVENTS_FRAMEWORK_REDIS_PASSWORD
+replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDIS_SSL_ENABLED
+replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
+replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"

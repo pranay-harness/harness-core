@@ -29,6 +29,7 @@ import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotD
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
@@ -139,9 +140,11 @@ public class AzureWebAppSyncTaskHandlerTest extends CategoryTest {
                                                           .resourceGroupName(RESOURCE_GROUP)
                                                           .appServiceType(APP_SERVICE_TYPE)
                                                           .build();
+    ArtifactStreamAttributes artifactStreamAttributes = buildArtifactStreamAttributes(true);
 
     doThrow(Exception.class).when(azureWebClient).listWebAppsByResourceGroupName(any());
-    listWebAppNamesTaskHandler.executeTask(parameters, getAzureConfig(), mockLogStreamingTaskClient);
+    listWebAppNamesTaskHandler.executeTask(
+        parameters, getAzureConfig(), mockLogStreamingTaskClient, artifactStreamAttributes);
   }
 
   @Test
@@ -174,5 +177,9 @@ public class AzureWebAppSyncTaskHandlerTest extends CategoryTest {
 
   private AzureConfig getAzureConfig() {
     return AzureConfig.builder().clientId("clientId").key("key".toCharArray()).tenantId("tenantId").build();
+  }
+
+  private ArtifactStreamAttributes buildArtifactStreamAttributes(boolean isDockerArtifactType) {
+    return isDockerArtifactType ? null : ArtifactStreamAttributes.builder().build();
   }
 }

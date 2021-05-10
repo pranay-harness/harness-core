@@ -1,14 +1,21 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import static software.wings.beans.command.Command.Builder.aCommand;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
+import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -55,7 +62,9 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "commands")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "CommandKeys")
-public class Command extends Base implements CommandUnit {
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+public class Command extends Base implements CommandUnit, NestedAnnotationResolver {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -91,7 +100,7 @@ public class Command extends Base implements CommandUnit {
 
   @SchemaIgnore private Long version;
 
-  @SchemaIgnore private List<CommandUnit> commandUnits = Lists.newArrayList();
+  @Expression(ALLOW_SECRETS) @SchemaIgnore private List<CommandUnit> commandUnits = Lists.newArrayList();
 
   @SchemaIgnore private CommandType commandType = CommandType.OTHER;
 

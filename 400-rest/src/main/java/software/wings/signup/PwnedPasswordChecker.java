@@ -1,9 +1,11 @@
 package software.wings.signup;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.network.Http;
 
@@ -21,6 +23,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
+@TargetModule(_950_NG_SIGNUP)
 public class PwnedPasswordChecker {
   private OkHttpClient httpClient;
   private static final String BASE_API_URL = "https://api.pwnedpasswords.com/range/";

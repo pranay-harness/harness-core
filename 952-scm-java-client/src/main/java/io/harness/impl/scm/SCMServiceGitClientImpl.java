@@ -4,16 +4,26 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitFileDetails;
+import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
-import io.harness.product.ci.scm.proto.FileModifyRequest;
-import io.harness.product.ci.scm.proto.Provider;
+import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
+import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
+import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
+import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
+import io.harness.product.ci.scm.proto.IsLatestFileResponse;
+import io.harness.product.ci.scm.proto.ListBranchesResponse;
+import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
-import io.harness.product.ci.scm.proto.Signature;
+import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.service.ScmClient;
+import io.harness.service.ScmServiceClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,24 +34,76 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(DX)
 public class SCMServiceGitClientImpl implements ScmClient {
   SCMGrpc.SCMBlockingStub scmBlockingStub;
-  ScmGitProviderMapper scmGitProviderMapper;
-  ScmGitProviderHelper scmGitProviderHelper;
+  ScmServiceClient scmServiceClient;
 
   @Override
   public CreateFileResponse createFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
-    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
-    String slug = scmGitProviderHelper.getSlug(scmConnector);
-    // todo @deepak: To run the request please add username and email in the signature
-    FileModifyRequest fileModifyRequest = FileModifyRequest.newBuilder()
-                                              .setBranch(gitFileDetails.getBranch())
-                                              .setSlug(slug)
-                                              .setPath(gitFileDetails.getFilePath())
-                                              .setBranch(gitFileDetails.getBranch())
-                                              .setContent(gitFileDetails.getFileContent())
-                                              .setMessage(gitFileDetails.getCommitMessage())
-                                              .setProvider(gitProvider)
-                                              .setSignature(Signature.newBuilder().build())
-                                              .build();
-    return scmBlockingStub.createFile(fileModifyRequest);
+    return scmServiceClient.createFile(scmConnector, gitFileDetails, scmBlockingStub);
+  }
+
+  @Override
+  public UpdateFileResponse updateFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
+    return scmServiceClient.updateFile(scmConnector, gitFileDetails, scmBlockingStub);
+  }
+
+  @Override
+  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
+    return scmServiceClient.deleteFile(scmConnector, gitFilePathDetails, scmBlockingStub);
+  }
+
+  @Override
+  public FileContent getFileContent(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
+    return scmServiceClient.getFileContent(scmConnector, gitFilePathDetails, scmBlockingStub);
+  }
+
+  @Override
+  public FileContent getLatestFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
+    return scmServiceClient.getLatestFile(scmConnector, gitFilePathDetails, scmBlockingStub);
+  }
+
+  @Override
+  public IsLatestFileResponse isLatestFile(
+      ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails, FileContent fileContent) {
+    return scmServiceClient.isLatestFile(scmConnector, gitFilePathDetails, fileContent, scmBlockingStub);
+  }
+
+  @Override
+  public FileContent pushFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
+    return scmServiceClient.pushFile(scmConnector, gitFileDetails, scmBlockingStub);
+  }
+
+  @Override
+  public FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branch) {
+    return scmServiceClient.findFilesInBranch(scmConnector, branch, scmBlockingStub);
+  }
+
+  @Override
+  public FindFilesInCommitResponse findFilesInCommit(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
+    return scmServiceClient.findFilesInCommit(scmConnector, gitFilePathDetails, scmBlockingStub);
+  }
+
+  @Override
+  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch) {
+    return scmServiceClient.getLatestCommit(scmConnector, branch, scmBlockingStub);
+  }
+
+  @Override
+  public ListBranchesResponse listBranches(ScmConnector scmConnector) {
+    return scmServiceClient.listBranches(scmConnector, scmBlockingStub);
+  }
+
+  @Override
+  public ListCommitsResponse listCommits(ScmConnector scmConnector, String branch) {
+    return scmServiceClient.listCommits(scmConnector, branch, scmBlockingStub);
+  }
+
+  @Override
+  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branch) {
+    return scmServiceClient.listFiles(connector, foldersList, branch, scmBlockingStub);
+  }
+
+  @Override
+  public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
+    scmServiceClient.createNewBranch(scmConnector, branch, defaultBranchName, scmBlockingStub);
   }
 }

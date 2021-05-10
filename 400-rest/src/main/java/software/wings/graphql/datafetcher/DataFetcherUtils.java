@@ -8,12 +8,12 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
-import io.harness.timescaledb.DBUtils;
-import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -42,10 +42,6 @@ import com.google.inject.Singleton;
 import graphql.GraphQLContext;
 import graphql.schema.DataFetchingEnvironment;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -70,14 +66,9 @@ public class DataFetcherUtils {
   public static final String NEGATIVE_OFFSET_ARG_MSG = "Offset argument accepts only non negative values";
   public static final String EXCEPTION_MSG_DELIMITER = ";; ";
 
-  private static final String queryTemplate =
-      "SELECT * FROM BILLING_DATA_HOURLY WHERE accountid = '%s' AND clusterid IS NOT NULL LIMIT 1";
-  private static final String queryTemplateDaily =
-      "SELECT * FROM BILLING_DATA WHERE accountid = '%s' AND clusterid IS NOT NULL LIMIT 1";
-
-  @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private MainConfiguration configuration;
   @Inject protected FeatureFlagService featureFlagService;
+  @Inject private CEMetadataRecordDao metadataRecordDao;
 
   private final LoadingCache<String, Boolean> isClusterDataPresentCache =
       Caffeine.newBuilder().expireAfterAccess(15, TimeUnit.SECONDS).build(this::isAnyClusterDataPresent);
@@ -94,37 +85,19 @@ public class DataFetcherUtils {
   }
 
   public boolean isAnyClusterDataPresent(String accountId) {
-    String clusterQuery = String.format(queryTemplate, accountId);
-    String clusterDailyQuery = String.format(queryTemplateDaily, accountId);
-    boolean isPresent = getCount(clusterQuery, accountId) != 0 || getCount(clusterDailyQuery, accountId) != 0;
-    log.info("Clusterdata for accountId:{} is present {}", accountId, isPresent);
-    return isPresent;
+    CEMetadataRecord ceMetadataRecord = metadataRecordDao.getByAccountId(accountId);
+    boolean isClusterDataPresent = false;
+    if (ceMetadataRecord != null) {
+      if (ceMetadataRecord.getClusterDataConfigured() != null) {
+        isClusterDataPresent = ceMetadataRecord.getClusterDataConfigured();
+      }
+    }
+    return isClusterDataPresent;
   }
 
   public boolean isSampleClusterDataPresent() {
     String sampleAccountId = configuration.getCeSetUpConfig().getSampleAccountId();
     return isNotEmpty(sampleAccountId) && isAnyClusterDataPresent(sampleAccountId);
-  }
-
-  private Integer getCount(String query, String accountId) {
-    int count = 0;
-    if (timeScaleDBService.isValid()) {
-      ResultSet resultSet = null;
-      try (Connection connection = timeScaleDBService.getDBConnection();
-           Statement statement = connection.createStatement()) {
-        resultSet = statement.executeQuery(query);
-        while (resultSet != null && resultSet.next()) {
-          count = 1;
-        }
-      } catch (SQLException e) {
-        log.warn("Failed to execute query in DataFetcherUtils, query=[{}], accountId=[{}], {}", query, accountId, e);
-      } finally {
-        DBUtils.close(resultSet);
-      }
-    } else {
-      throw new InvalidRequestException("Cannot process request in DataFetcherUtils");
-    }
-    return count;
   }
 
   @NotNull

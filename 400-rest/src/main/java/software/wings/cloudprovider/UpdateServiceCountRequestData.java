@@ -1,5 +1,8 @@
 package software.wings.cloudprovider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -10,6 +13,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
+@OwnedBy(CDP)
 @Data
 @Builder
 public class UpdateServiceCountRequestData {

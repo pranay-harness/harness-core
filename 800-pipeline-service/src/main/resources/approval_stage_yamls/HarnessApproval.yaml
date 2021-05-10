@@ -2,8 +2,8 @@ spec:
   execution:
     steps:
       - step:
-          name: "Harness Approval"
-          identifier: harnessApproval
+          name: "Approval"
+          identifier: approval
           type: HarnessApproval
           timeout: 1d
           spec:

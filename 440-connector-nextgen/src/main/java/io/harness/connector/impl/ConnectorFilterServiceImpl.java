@@ -1,5 +1,6 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.Scope.ACCOUNT;
@@ -14,6 +15,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
@@ -26,11 +28,10 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.mapper.TagMapper;
+import io.harness.ng.core.utils.URLDecoderUtility;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.StringUtils;
 
+@OwnedBy(DX)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -57,7 +59,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     if (isNotBlank(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     }
-    String searchTerm = getDecodedSearchTerm(encodedSearchTerm);
+    String searchTerm = URLDecoderUtility.getDecodedString(encodedSearchTerm);
     Criteria criteria = new Criteria();
     criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
     if (includeAllConnectorsAccessibleAtScope != null && includeAllConnectorsAccessibleAtScope) {
@@ -80,18 +82,6 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       populateConnectorFiltersInTheCriteria(criteria, (ConnectorFilterPropertiesDTO) filterProperties, searchTerm);
     }
     return criteria;
-  }
-
-  private String getDecodedSearchTerm(String encodedSearchTerm) {
-    String decodedString = null;
-    if (isNotBlank(encodedSearchTerm)) {
-      try {
-        decodedString = java.net.URLDecoder.decode(encodedSearchTerm, StandardCharsets.UTF_8.name());
-      } catch (UnsupportedEncodingException e) {
-        log.info("Encountered exception while decoding {}", encodedSearchTerm);
-      }
-    }
-    return decodedString;
   }
 
   private void applySearchFilter(Criteria criteria, String searchTerm) {

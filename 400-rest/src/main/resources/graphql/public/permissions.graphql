@@ -16,6 +16,8 @@ enum Actions {
   EXECUTE
   EXECUTE_WORKFLOW
   EXECUTE_PIPELINE
+  # Beta: This action will be used to govern workflow rollback
+  ROLLBACK_WORKFLOW
 }
 
 input AccountPermissionInput {
@@ -55,4 +57,5 @@ enum AccountPermissionType {
   MANAGE_API_KEYS
   CREATE_CUSTOM_DASHBOARDS
   MANAGE_CUSTOM_DASHBOARDS
+  MANAGE_SSH_AND_WINRM
 }

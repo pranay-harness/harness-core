@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.budget;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
@@ -20,7 +23,8 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetTrendStatsDataFetcher
     extends AbstractObjectDataFetcher<QLBudgetTrendStats, QLBudgetQueryParameters> {
   public static final String BUDGET_DOES_NOT_EXIST_MSG = "Budget does not exist";

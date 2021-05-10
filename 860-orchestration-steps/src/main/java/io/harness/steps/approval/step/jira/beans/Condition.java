@@ -1,18 +1,21 @@
 package io.harness.steps.approval.step.jira.beans;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 public class Condition {
-  @NotEmpty String key;
+  @NotNull String key;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> value;
-  @NotNull Operator op;
+  @NotNull Operator operator;
 }

@@ -9,10 +9,10 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.rest.RestResponse;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
-import io.harness.steps.resourcerestraint.service.RestraintService;
 
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.security.PermissionAttribute.ResourceType;

@@ -266,12 +266,13 @@ public class InstanceBillingDataTaskletTest extends CategoryTest {
             .clusterId(CLUSTER_ID)
             .clusterName(CLUSTER_NAME)
             .usageStartTime(Instant.ofEpochMilli(START_TIME_MILLIS - ChronoUnit.DAYS.getDuration().toMillis()))
+            .activeInstanceIterator(Instant.ofEpochMilli(START_TIME_MILLIS + ChronoUnit.DAYS.getDuration().toMillis()))
             .totalResource(Resource.builder().cpuUnits(CPU_UNIT_REQUEST).memoryMb(MEMORY_MB_REQUEST).build())
             .limitResource(Resource.builder().cpuUnits(CPU_UNIT_LIMIT).memoryMb(MEMORY_MB_LIMIT).build())
             .harnessServiceInfo(getHarnessServiceInfo())
             .build();
 
-    when(instanceDataDao.getInstanceDataLists(any(), anyInt(), any(), any(), any()))
+    when(instanceDataDao.getInstanceDataListsOfTypes(any(), anyInt(), any(), any(), any()))
         .thenReturn(Arrays.asList(instanceData));
 
     RepeatStatus repeatStatus = instanceBillingDataTasklet.execute(null, chunkContext);

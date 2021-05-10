@@ -11,13 +11,13 @@ import static java.util.Collections.singletonList;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.arm.ARMPreExistingTemplate;
@@ -88,6 +88,8 @@ public class ARMRollbackState extends ARMProvisionState {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("ARM rollback task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(AZURE_ARM_TASK.name())
@@ -96,6 +98,7 @@ public class ARMRollbackState extends ARMProvisionState {
                       .build())
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
@@ -233,5 +236,10 @@ public class ARMRollbackState extends ARMProvisionState {
   @SchemaIgnore
   public GitFileConfig getParametersGitFileConfig() {
     return super.getParametersGitFileConfig();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

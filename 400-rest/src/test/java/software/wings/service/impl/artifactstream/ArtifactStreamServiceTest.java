@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ENHANCED_GCR_CONNECTIVITY_CHECK;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -42,6 +43,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_VERSION;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,10 +53,14 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -101,7 +107,9 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
+import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -129,13 +137,17 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.NotFoundException;
 import org.jetbrains.annotations.NotNull;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.Query;
 
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@OwnedBy(CDC)
 public class ArtifactStreamServiceTest extends WingsBaseTest {
   private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   private static final String ANOTHER_SETTING_ID = "ANOTHER_SETTING_ID";
@@ -164,6 +176,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AlertService alertService;
   @Mock private Subject<ArtifactStreamServiceObserver> subject;
+  @Mock private AuditServiceHelper auditServiceHelper;
 
   @Before
   public void setUp() {
@@ -4271,5 +4284,24 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Nexus 2.x does not support docker artifact type");
     verify(appService).getAccountIdByAppId(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldPruneByService() {
+    WingsPersistence wingsPersistence = mock(WingsPersistence.class);
+    Query<ArtifactStream> query = mock(Query.class);
+    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
+    ArtifactStream stream = DockerArtifactStream.builder().appId(APP_ID).uuid(UUID).build();
+    stream.setSyncFromGit(false);
+    when(query.asList()).thenReturn(Collections.singletonList(stream));
+    Reflect.on(artifactStreamService).set("wingsPersistence", wingsPersistence);
+    artifactStreamService.pruneByService(APP_ID, SERVICE_ID);
+    verify(alertService, times(1)).deleteByArtifactStream(APP_ID, UUID);
+    verify(auditServiceHelper, times(1)).reportDeleteForAuditing(anyString(), any());
+    verify(artifactStreamServiceBindingService, times(1)).deleteByArtifactStream(UUID, false);
+    verify(wingsPersistence).delete(ArtifactStream.class, APP_ID, UUID);
   }
 }

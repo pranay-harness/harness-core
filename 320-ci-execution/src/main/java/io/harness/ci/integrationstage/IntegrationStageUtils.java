@@ -1,5 +1,9 @@
 package io.harness.ci.integrationstage;
 
+import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
@@ -7,6 +11,7 @@ import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.k8s.model.ImageDetails;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
@@ -26,9 +31,11 @@ import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import java.io.IOException;
+import java.util.Arrays;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CI)
 public class IntegrationStageUtils {
   public IntegrationStageConfig getIntegrationStageConfig(StageElementConfig stageElementConfig) {
     if (stageElementConfig.getType().equals("CI")) {
@@ -94,6 +101,22 @@ public class IntegrationStageUtils {
     }
 
     return null;
+  }
+
+  public ImageDetails getImageInfo(String image) {
+    String tag = "";
+    String name = image;
+
+    if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
+      String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
+      if (subTokens.length > 1) {
+        tag = subTokens[subTokens.length - 1];
+        String[] nameparts = Arrays.copyOf(subTokens, subTokens.length - 1);
+        name = String.join(IMAGE_PATH_SPLIT_REGEX, nameparts);
+      }
+    }
+
+    return ImageDetails.builder().name(name).tag(tag).build();
   }
 
   private CustomExecutionSource buildCustomExecutionSource(

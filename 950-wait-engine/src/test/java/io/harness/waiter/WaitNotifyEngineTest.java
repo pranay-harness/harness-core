@@ -315,7 +315,7 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
     assertThat(persistence.get(NotifyResponse.class, notificationId)).isNull();
   }
 
-  public static class TestNotifyCallback implements NotifyCallback {
+  public static class TestNotifyCallback implements OldNotifyCallback {
     @Override
     public void notify(Map<String, ResponseData> response) {
       callCount.incrementAndGet();

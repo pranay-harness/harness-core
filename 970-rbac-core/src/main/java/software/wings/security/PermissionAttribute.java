@@ -314,6 +314,10 @@ public class PermissionAttribute {
      */
     EXECUTE_PIPELINE,
     /**
+     * Execute Workflow Rollback
+     */
+    EXECUTE_WORKFLOW_ROLLBACK,
+    /**
      * default action.
      */
     DEFAULT
@@ -456,6 +460,11 @@ public class PermissionAttribute {
      * Manage Secret Managers
      */
     MANAGE_SECRET_MANAGERS,
+
+    /**
+     * Manage SSH and WinRM Connection
+     */
+    MANAGE_SSH_AND_WINRM,
 
     /**
      * Manage Authentication Settings

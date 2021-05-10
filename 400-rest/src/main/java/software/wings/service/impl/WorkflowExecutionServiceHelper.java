@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.ExecutionStatus.ERROR;
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
@@ -16,7 +18,9 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
@@ -39,11 +43,15 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachine;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -52,16 +60,23 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDC)
 @Singleton
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceHelper {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
@@ -69,6 +84,8 @@ public class WorkflowExecutionServiceHelper {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private PipelineService pipelineService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private StateExecutionService stateExecutionService;
 
   public WorkflowVariablesMetadata fetchWorkflowVariables(
       String appId, ExecutionArgs executionArgs, String workflowExecutionId) {
@@ -474,5 +491,79 @@ public class WorkflowExecutionServiceHelper {
                 workflowService.getResolvedInfraDefinitionIdFromPhase(phase, workflowVariables)))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
+  }
+
+  public String fetchFailureDetails(String appId, String workflowExecutionId) {
+    Map<String, StringJoiner> executionDetails = new LinkedHashMap<>();
+    HashSet<String> parentInstances = new HashSet<>();
+    StringJoiner failureMessage = new StringJoiner(", ");
+
+    List<StateExecutionInstance> allExecutionInstances = fetchAllFailedExecutionInstances(appId, workflowExecutionId);
+
+    prepareFailedPhases(allExecutionInstances, parentInstances, executionDetails);
+    prepareFailedSteps(appId, workflowExecutionId, allExecutionInstances, parentInstances, executionDetails);
+
+    if (isNotEmpty(executionDetails)) {
+      executionDetails.forEach((id, message) -> failureMessage.add(message.toString()));
+    }
+
+    return failureMessage.toString();
+  }
+
+  private void prepareFailedSteps(String appId, String workflowExecutionId,
+      List<StateExecutionInstance> allExecutionInstances, HashSet<String> parentInstances,
+      Map<String, StringJoiner> executionDetails) {
+    for (StateExecutionInstance stateExecutionInstance : allExecutionInstances) {
+      String failureDetails = "";
+      if (!parentInstances.contains(stateExecutionInstance.getUuid())) {
+        String errorMessage =
+            stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName()).getErrorMsg();
+        if (isNotEmpty(errorMessage)) {
+          failureDetails = String.format("%s failed - %s ", stateExecutionInstance.getDisplayName(), errorMessage);
+        } else {
+          failureDetails = String.format("%s failed", stateExecutionInstance.getDisplayName());
+        }
+      }
+      StateExecutionInstance phaseExecution = stateExecutionService.fetchCurrentPhaseStateExecutionInstance(
+          appId, workflowExecutionId, stateExecutionInstance.getUuid());
+      StateExecutionInstance phaseStepExecution = stateExecutionService.fetchCurrentPhaseStepStateExecutionInstance(
+          appId, workflowExecutionId, stateExecutionInstance.getUuid());
+      if (phaseExecution != null && isNotEmpty(failureDetails)
+          && executionDetails.get(phaseExecution.getUuid()) != null) {
+        executionDetails.get(phaseExecution.getUuid()).add(failureDetails);
+      } else if (phaseStepExecution != null && isNotEmpty(failureDetails)) {
+        executionDetails.put(stateExecutionInstance.getUuid(),
+            new StringJoiner("").add(
+                String.format("%s failed: [%s]", phaseStepExecution.getDisplayName(), failureDetails)));
+      }
+    }
+  }
+
+  private void prepareFailedPhases(List<StateExecutionInstance> allExecutionInstances, HashSet<String> parentInstances,
+      Map<String, StringJoiner> executionDetails) {
+    for (StateExecutionInstance stateExecutionInstance : allExecutionInstances) {
+      if (stateExecutionInstance.getStateType().equals("PHASE")) {
+        executionDetails.put(stateExecutionInstance.getUuid(),
+            new StringJoiner(", ", String.format("%s failed: [", stateExecutionInstance.getDisplayName()), "]"));
+      }
+      parentInstances.add(stateExecutionInstance.getParentInstanceId());
+    }
+  }
+
+  private List<StateExecutionInstance> fetchAllFailedExecutionInstances(String appId, String workflowExecutionId) {
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .filter(StateExecutionInstanceKeys.appId, appId)
+                                              .filter(StateExecutionInstanceKeys.executionUuid, workflowExecutionId)
+                                              .field(StateExecutionInstanceKeys.status)
+                                              .in(EnumSet.of(FAILED, ERROR))
+                                              .order(Sort.ascending(StateExecutionInstanceKeys.endTs));
+
+    return query.project(StateExecutionInstanceKeys.uuid, true)
+        .project(StateExecutionInstanceKeys.stateType, true)
+        .project(StateExecutionInstanceKeys.displayName, true)
+        .project(StateExecutionInstanceKeys.parentInstanceId, true)
+        .project(StateExecutionInstanceKeys.stateName, true)
+        .project(StateExecutionInstanceKeys.stateExecutionMap, true)
+        .asList();
   }
 }

@@ -71,7 +71,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -144,6 +146,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -170,6 +173,7 @@ import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
 public class PcfSetupStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   public static final String MANIFEST_YAML_CONTENT = "  applications:\n"
@@ -206,6 +210,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
@@ -346,7 +351,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     FieldUtils.writeField(pcfSetupState, "secretManager", secretManager, true);
     FieldUtils.writeField(pcfSetupState, "olderActiveVersionCountToKeep", 3, true);
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
@@ -373,6 +378,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     doReturn("artifact-name").when(pcfSetupState).artifactFileNameForSource(any(), any());
     doReturn("artifact-path").when(pcfSetupState).artifactPathForSource(any(), any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test

@@ -15,8 +15,6 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.interrupts.statusupdate.PausedStepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.engine.resume.EngineResumeAllCallback;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -29,6 +27,7 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.util.EnumSet;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -37,7 +36,6 @@ public class PauseAllInterruptHandler implements InterruptHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private PausedStepStatusUpdate pausedStepStatusUpdate;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
@@ -52,6 +50,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
     }
 
     PlanExecution planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
+    // TODO (prashant) : Evaluate this
     planExecutionService.updateStatus(planExecution.getUuid(), Status.PAUSING);
 
     interrupt.setState(PROCESSING);
@@ -83,14 +82,9 @@ public class PauseAllInterruptHandler implements InterruptHandler {
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(interrupt.getType())
                 .interruptConfig(interrupt.getInterruptConfig())
-                .build()));
+                .build()),
+        EnumSet.noneOf(Status.class));
 
-    pausedStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                                  .planExecutionId(interrupt.getPlanExecutionId())
-                                                  .nodeExecutionId(nodeExecutionId)
-                                                  .interruptId(interrupt.getUuid())
-                                                  .status(Status.PAUSED)
-                                                  .build());
     waitNotifyEngine.waitForAllOn(
         publisherName, EngineResumeAllCallback.builder().nodeExecutionId(nodeExecutionId).build(), interrupt.getUuid());
     return interrupt;

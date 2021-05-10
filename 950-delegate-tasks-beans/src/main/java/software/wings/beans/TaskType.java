@@ -1,9 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskGroup;
 
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public enum TaskType {
   BATCH_CAPABILITY_CHECK(TaskGroup.BATCH_CAPABILITY_CHECK),
@@ -230,6 +234,7 @@ public enum TaskType {
   TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM),
   TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK(TaskGroup.TERRAFORM),
   TERRAFORM_FETCH_TARGETS_TASK(TaskGroup.TERRAFORM),
+  TERRAGRUNT_PROVISION_TASK(TaskGroup.TERRAGRUNT),
   KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(TaskGroup.K8S),
   ECS_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER),
   AWS_ECR_TASK(TaskGroup.AWS),
@@ -264,6 +269,7 @@ public enum TaskType {
   SERVICENOW_VALIDATION(TaskGroup.SERVICENOW),
   HELM_REPO_CONFIG_VALIDATION(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
   HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK),
+  HELM_VALUES_FETCH_NG(TaskGroup.HELM_VALUES_FETCH_TASK, "Helm Values Fetch Task"),
   SLACK(TaskGroup.SLACK),
   CI_BUILD(TaskGroup.CI),
   CI_LE_STATUS(TaskGroup.CI),
@@ -300,7 +306,10 @@ public enum TaskType {
   NG_AWS_CODE_COMMIT_TASK(TaskGroup.AWS),
   HTTP_HELM_CONNECTIVITY_TASK(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
   NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG),
-  TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG);
+  TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG, "Terraform Task"),
+  SCM_PUSH_TASK(TaskGroup.GIT, "SCM Push Task"),
+  SCM_GIT_REF_TASK(TaskGroup.GIT, "SCM Git Ref Task"),
+  SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;

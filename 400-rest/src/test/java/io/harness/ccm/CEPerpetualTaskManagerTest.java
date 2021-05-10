@@ -1,5 +1,6 @@
 package io.harness.ccm;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.perpetualtask.PerpetualTaskType.K8S_WATCH;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -49,6 +51,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CE)
 public class CEPerpetualTaskManagerTest extends CategoryTest {
   private String clusterRecordId = "clusterId";
   private String clusterName = "clusterName";

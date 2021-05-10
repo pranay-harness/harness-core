@@ -21,6 +21,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -34,7 +35,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.CommandStateExecutionData;
@@ -216,6 +216,8 @@ public class EcsServiceSetup extends State {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -330,7 +332,7 @@ public class EcsServiceSetup extends State {
                                          .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
-        request, ecsSetUpDataBag, activityId, delegateService);
+        request, ecsSetUpDataBag, activityId, delegateService, isSelectionLogsTrackingForTasksEnabled());
     appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
@@ -544,5 +546,10 @@ public class EcsServiceSetup extends State {
     this.targetPort = stateExecutionData.getTargetPort();
     this.useLoadBalancer = stateExecutionData.isUseLoadBalancer();
     this.resizeStrategy = stateExecutionData.getResizeStrategy();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

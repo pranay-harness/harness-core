@@ -1,6 +1,9 @@
 package io.harness.limits.checker.rate;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 
 import java.util.List;
@@ -12,6 +15,7 @@ import org.mongodb.morphia.annotations.Id;
 /**
  * This collections tracks the usage for rate limiting purposes.
  */
+@OwnedBy(PL)
 @Value
 @Entity(value = "usageBuckets", noClassnameStored = true)
 @HarnessEntity(exportable = false)

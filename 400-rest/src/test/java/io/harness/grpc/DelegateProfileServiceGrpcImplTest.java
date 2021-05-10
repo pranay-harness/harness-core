@@ -19,10 +19,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.MockableTestMixin;
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
@@ -32,8 +41,11 @@ import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
 import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.DelegateServiceDriverException;
+import io.harness.owner.OrgIdentifier;
+import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.User;
@@ -42,6 +54,7 @@ import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.UserService;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import io.grpc.Channel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -64,6 +77,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@BreakDependencyOn("software.wings.WingsBaseTest")
+@BreakDependencyOn("software.wings.beans.User")
+@BreakDependencyOn("software.wings.service.intfc.UserService")
 public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements MockableTestMixin {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
@@ -80,6 +98,8 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
 
   private DelegateProfileService delegateProfileService;
 
+  @Inject KryoSerializer kryoSerializer;
+
   @Before
   public void setUp() throws Exception {
     Logger mockClientLogger = mock(Logger.class);
@@ -92,13 +112,14 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
 
     DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub =
         DelegateProfileServiceGrpc.newBlockingStub(channel);
-    delegateProfileServiceGrpcClient = new DelegateProfileServiceGrpcClient(delegateProfileServiceBlockingStub);
+    delegateProfileServiceGrpcClient =
+        new DelegateProfileServiceGrpcClient(delegateProfileServiceBlockingStub, kryoSerializer);
 
     delegateProfileService = mock(DelegateProfileService.class);
     UserService userService = mock(UserService.class);
     when(userService.getUserFromCacheOrDB(anyString())).thenReturn(new User());
     DelegateProfileServiceGrpcImpl delegateProfileServiceGrpcImpl =
-        new DelegateProfileServiceGrpcImpl(delegateProfileService, userService);
+        new DelegateProfileServiceGrpcImpl(delegateProfileService, userService, kryoSerializer);
 
     Server server = InProcessServerBuilder.forName(serverName)
                         .directExecutor()
@@ -113,28 +134,54 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
   @Category(UnitTests.class)
   public void testListProfiles() {
     String accountId = generateUuid();
-    DelegateProfile delegateProfile = DelegateProfile.builder().accountId(accountId).description("description").build();
+    DelegateProfile delegateProfile = DelegateProfile.builder()
+                                          .accountId(accountId)
+                                          .description("description")
+                                          .owner(DelegateEntityOwner.builder().identifier("orgId/projectId").build())
+                                          .build();
 
     PageResponse<DelegateProfile> pageResponse = new PageResponse<>();
     pageResponse.add(delegateProfile);
+    pageResponse.setTotal(1L);
+    pageResponse.setLimit("0");
+    pageResponse.setOffset("0");
 
-    when(delegateProfileService.list(any()))
+    ArgumentCaptor<PageRequest> argumentCaptor = ArgumentCaptor.forClass(PageRequest.class);
+    when(delegateProfileService.list(argumentCaptor.capture()))
         .thenThrow(new RuntimeException())
-        .thenReturn(null)
         .thenReturn(pageResponse);
 
     // Test exception
     PageRequestGrpc pageRequestGrpc = PageRequestGrpc.newBuilder().setOffset("0").build();
-    assertThatThrownBy(()
-                           -> delegateProfileServiceGrpcClient.listProfiles(
-                               AccountId.newBuilder().setId(accountId).build(), pageRequestGrpc))
+    assertThatThrownBy(
+        ()
+            -> delegateProfileServiceGrpcClient.listProfiles(AccountId.newBuilder().setId(accountId).build(),
+                pageRequestGrpc, true, OrgIdentifier.newBuilder().setId("orgId").build(),
+                ProjectIdentifier.newBuilder().setId("projectId").build()))
         .isInstanceOf(DelegateServiceDriverException.class)
         .hasMessage("Unexpected error occurred while listing profiles.");
 
-    DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc =
-        delegateProfileServiceGrpcClient.listProfiles(AccountId.newBuilder().setId(accountId).build(), pageRequestGrpc);
+    DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc = delegateProfileServiceGrpcClient.listProfiles(
+        AccountId.newBuilder().setId(accountId).build(), pageRequestGrpc, true,
+        OrgIdentifier.newBuilder().setId("orgId").build(), ProjectIdentifier.newBuilder().setId("projectId").build());
 
     assertThat(delegateProfilePageResponseGrpc).isNotNull();
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getNg()).isFalse();
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getCreatedAt()).isEqualTo(0);
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getLastUpdatedAt()).isEqualTo(0);
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getOrgIdentifier().getId()).isEqualTo("orgId");
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getProjectIdentifier().getId()).isEqualTo("projectId");
+
+    PageRequest pageRequest = argumentCaptor.getValue();
+    assertThat(pageRequest.getFilters().size()).isEqualTo(3);
+    assertThat(pageRequest.getFilters().stream().anyMatch(
+                   filter -> DelegateProfileKeys.accountId.equals(((SearchFilter) filter).getFieldName())))
+        .isTrue();
+    assertThat(pageRequest.getFilters().stream().anyMatch(
+                   filter -> DelegateProfileKeys.ng.equals(((SearchFilter) filter).getFieldName())))
+        .isTrue();
+    assertThat(pageRequest.getFilters().stream().anyMatch(filter -> "".equals(((SearchFilter) filter).getFieldName())))
+        .isTrue();
   }
 
   @Test
@@ -250,6 +297,9 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
                                                               .setDescription(SCOPING_RULE_DESCRIPTION)
                                                               .putAllScopingEntities(grpcScopingEntities)
                                                               .build()))
+            .setNg(true)
+            .setOrgIdentifier(OrgIdentifier.newBuilder().setId("orgId").build())
+            .setProjectIdentifier(ProjectIdentifier.newBuilder().setId("projectId").build())
             .build();
 
     Map<String, Set<String>> scopingEntities = new HashMap<>();
@@ -273,7 +323,8 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
                                           .scopingRules(Collections.singletonList(scopingRule))
                                           .build();
 
-    when(delegateProfileService.add(any(DelegateProfile.class)))
+    ArgumentCaptor<DelegateProfile> argumentCaptor = ArgumentCaptor.forClass(DelegateProfile.class);
+    when(delegateProfileService.add(argumentCaptor.capture()))
         .thenThrow(new RuntimeException())
         .thenReturn(delegateProfile);
 
@@ -284,6 +335,14 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
 
     // Test profile added
     DelegateProfileGrpc savedDelegateProfileGrpc = delegateProfileServiceGrpcClient.addProfile(delegateProfileGrpc);
+
+    DelegateProfile capturedProfile = argumentCaptor.getValue();
+    assertThat(capturedProfile.isNg()).isTrue();
+    assertThat(capturedProfile.getOwner())
+        .isEqualTo(DelegateEntityOwner.builder()
+                       .identifier(delegateProfileGrpc.getOrgIdentifier().getId() + "/"
+                           + delegateProfileGrpc.getProjectIdentifier().getId())
+                       .build());
 
     // Covers convert method also
     assertThat(savedDelegateProfileGrpc).isNotNull();

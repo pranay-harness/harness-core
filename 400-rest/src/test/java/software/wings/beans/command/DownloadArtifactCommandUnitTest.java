@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.artifact.ArtifactFileMetadata.builder;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -30,6 +31,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidRequestException;
@@ -84,7 +88,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 @RunWith(JUnitParamsRunner.class)
+@TargetModule(HarnessModule._950_COMMAND_LIBRARY_COMMON)
 public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private static final String JENKINS_ARTIFACT_URL_1 =
       "http://localhost:8089/job/scheduler-svn/75/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar";
@@ -684,22 +690,24 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getNexus2MavenData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources\" -o \"DESTINATION_DIR_PATH/todolist-7.0-sources.war\"\n"},
+            "curl --fail -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources\" -o \"DESTINATION_DIR_PATH/todolist-7.0-sources.war\"\n"},
         {ScriptType.POWERSHELL,
             "$Headers = @{\n"
                 + "    Authorization = \"Basic YWRtaW46ZHVtbXkxMjMh\"\n"
                 + "}\n"
                 + " [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
+                + " $ProgressPreference = 'SilentlyContinue'\n"
                 + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0-sources.war\""}};
   }
 
   private Object[][] getNexus2MavenDataAnon() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"
-                + "curl --fail --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -o \"DESTINATION_DIR_PATH/todolist-7.0.tar\"\n"},
+            "curl --fail -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"
+                + "curl --fail -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -o \"DESTINATION_DIR_PATH/todolist-7.0.tar\"\n"},
         {ScriptType.POWERSHELL,
             "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
+                + " $ProgressPreference = 'SilentlyContinue'\n"
                 + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.war\"\n"
                 + " Invoke-WebRequest -Uri \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -OutFile \"DESTINATION_DIR_PATH\\todolist-7.0.tar\""}};
   }
@@ -707,10 +715,10 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getJenkinsData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \""
-                + JENKINS_ARTIFACT_URL_1 + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_1 + "\"\n"
-                + "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \""
-                + JENKINS_ARTIFACT_URL_2 + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_2 + "\"\n"},
+            "curl --fail -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"" + JENKINS_ARTIFACT_URL_1
+                + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_1 + "\"\n"
+                + "curl --fail -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"" + JENKINS_ARTIFACT_URL_2
+                + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_2 + "\"\n"},
         {ScriptType.POWERSHELL,
             "$webClient = New-Object System.Net.WebClient \n"
                 + "$webClient.Headers[[System.Net.HttpRequestHeader]::Authorization] = \"Basic YWRtaW46ZHVtbXkxMjMh\";\n"
@@ -725,13 +733,14 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getBambooData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -o \"DESTINATION_DIR_PATH/todolist.tar\"\n"
-                + "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -o \"DESTINATION_DIR_PATH/todolist.war\"\n"},
+            "curl --fail -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -o \"DESTINATION_DIR_PATH/todolist.tar\"\n"
+                + "curl --fail -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -o \"DESTINATION_DIR_PATH/todolist.war\"\n"},
         {ScriptType.POWERSHELL,
             "$Headers = @{\n"
                 + "    Authorization = \"Basic YWRtaW46YWRtaW4=\"\n"
                 + "}\n"
                 + " [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
+                + " $ProgressPreference = 'SilentlyContinue'\n"
                 + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist.tar\"\n"
                 + " Invoke-WebRequest -Uri \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -Headers $Headers -OutFile \"DESTINATION_DIR_PATH\\todolist.war\""}};
   }
@@ -739,8 +748,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getS3Data() {
     return new Object[][] {
         {amazonS3Context,
-            " Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/ARTIFACT_PATH\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\ARTIFACT_FILE_NAME\" -Force)"},
+            " $ProgressPreference = 'SilentlyContinue'\n Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/ARTIFACT_PATH\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\ARTIFACT_FILE_NAME\" -Force)"},
         {amazonS3ContextFolder,
-            " Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/test1/test2/todolist%20main.zip\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\test1/test2/todolist main.zip\" -Force)"}};
+            " $ProgressPreference = 'SilentlyContinue'\n Invoke-WebRequest -Uri \"https://BUCKET_NAME.s3-us-west-1.amazonaws.com/test1/test2/todolist%20main.zip\" -Headers $Headers -OutFile (New-Item -Path \"DESTINATION_DIR_PATH\\test1/test2/todolist main.zip\" -Force)"}};
   }
 }

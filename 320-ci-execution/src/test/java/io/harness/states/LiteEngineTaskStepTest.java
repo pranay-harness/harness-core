@@ -9,6 +9,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
@@ -24,6 +26,7 @@ import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -38,12 +41,14 @@ import io.harness.yaml.core.StepElement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CI)
 public class LiteEngineTaskStepTest extends CIExecutionTestBase {
   @Mock private BuildSetupUtils buildSetupUtils;
   @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
@@ -53,6 +58,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
   private Ambiance ambiance;
   private LiteEngineTaskStepInfo liteEngineTaskStepInfo;
+  private StepElementParameters stepElementParameters;
 
   @Before
   public void setUp() {
@@ -83,6 +89,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                             .build()))
                     .build())
             .build();
+    stepElementParameters = StepElementParameters.builder().name("name").spec(liteEngineTaskStepInfo).build();
   }
 
   @Test
@@ -102,6 +109,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
     //    assertThat(taskType.getType()).isEqualTo("CI_BUILD");
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -115,10 +123,11 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
     StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -133,10 +142,11 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
     StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
@@ -164,10 +174,11 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
     StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
+  @SneakyThrows
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
@@ -193,7 +204,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
     StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, liteEngineTaskStepInfo, () -> executionResponse);
+        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 }

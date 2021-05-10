@@ -2,67 +2,41 @@ package io.harness.cdng.creator.filters;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceYaml;
-import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.filters.GenericStageFilterJsonCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter.CdFilterBuilder;
-import io.harness.pms.filter.creation.FilterCreationResponse;
-import io.harness.pms.filter.creation.FilterCreationResponse.FilterCreationResponseBuilder;
+import io.harness.pms.pipeline.filter.PipelineFilter;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
-import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorHelper;
-import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
-import io.harness.walktree.beans.LevelNode;
-import io.harness.walktree.visitor.SimpleVisitorFactory;
-import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 
-import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
-public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
-  @Inject private SimpleVisitorFactory simpleVisitorFactory;
-
+@OwnedBy(HarnessTeam.CDC)
+public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCreator {
   @Override
-  public Class<StageElementConfig> getFieldClass() {
-    return StageElementConfig.class;
+  public Set<String> getSupportedStageTypes() {
+    return Collections.singleton("Deployment");
   }
 
   @Override
-  public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("stage", Collections.singleton("Deployment"));
-  }
-
-  @Override
-  public FilterCreationResponse handleNode(FilterCreationContext filterCreationContext, StageElementConfig yamlField) {
-    FilterCreationResponseBuilder creationResponse = FilterCreationResponse.builder();
-
-    YamlField variablesField =
-        filterCreationContext.getCurrentField().getNode().getField(YAMLFieldNameConstants.VARIABLES);
-    if (variablesField != null) {
-      FilterCreatorHelper.checkIfVariableNamesAreValid(variablesField);
-    }
-
+  public PipelineFilter getFilter(FilterCreationContext filterCreationContext, StageElementConfig yamlField) {
     CdFilterBuilder cdFilter = CdFilter.builder();
     DeploymentStageConfig deploymentStageConfig = (DeploymentStageConfig) yamlField.getStageType();
-    Set<EntityDetailProtoDTO> referredEntities = getReferences(filterCreationContext.getSetupMetadata().getAccountId(),
-        filterCreationContext.getSetupMetadata().getOrgId(), filterCreationContext.getSetupMetadata().getProjectId(),
-        deploymentStageConfig, yamlField.getIdentifier());
-    creationResponse.referredEntities(new ArrayList<>(referredEntities));
-
-    if (deploymentStageConfig.getExecution() == null) {
-      throw new InvalidRequestException("Execution section missing from Deployment Stage");
-    }
 
     ServiceYaml service = deploymentStageConfig.getServiceConfig().getService();
     if (service == null
@@ -98,20 +72,27 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
         && isNotEmpty(infrastructure.getInfrastructureDefinition().getType())) {
       cdFilter.infrastructureType(infrastructure.getInfrastructureDefinition().getType());
     }
-
-    creationResponse.pipelineFilter(cdFilter.build());
-    return creationResponse.build();
+    return cdFilter.build();
   }
 
-  private Set<EntityDetailProtoDTO> getReferences(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, DeploymentStageConfig deploymentStageConfig, String stageIdentifier) {
-    List<LevelNode> levelNodes = new LinkedList<>();
-    levelNodes.add(LevelNode.builder().qualifierName(YAMLFieldNameConstants.PIPELINE).build());
-    levelNodes.add(LevelNode.builder().qualifierName(YAMLFieldNameConstants.STAGES).build());
-    levelNodes.add(LevelNode.builder().qualifierName(stageIdentifier).build());
-    EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
-        accountIdentifier, orgIdentifier, projectIdentifier, levelNodes);
-    visitor.walkElementTree(deploymentStageConfig);
-    return visitor.getEntityReferenceSet();
+  @Override
+  @NotNull
+  protected Map<String, YamlField> getDependencies(YamlField stageField) {
+    // Add dependency for rollback steps
+    Map<String, YamlField> dependencies = new HashMap<>(super.getDependencies(stageField));
+    YamlField executionField =
+        stageField.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
+    YamlField rollbackStepsField = executionField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
+    if (rollbackStepsField != null && rollbackStepsField.getNode().asArray().size() != 0) {
+      addRollbackDependencies(dependencies, rollbackStepsField);
+    }
+    return dependencies;
+  }
+
+  private void addRollbackDependencies(Map<String, YamlField> dependencies, YamlField rollbackStepsField) {
+    List<YamlField> stepYamlFields = PlanCreatorUtils.getStepYamlFields(rollbackStepsField.getNode().asArray());
+    for (YamlField stepYamlField : stepYamlFields) {
+      dependencies.put(stepYamlField.getNode().getUuid(), stepYamlField);
+    }
   }
 }

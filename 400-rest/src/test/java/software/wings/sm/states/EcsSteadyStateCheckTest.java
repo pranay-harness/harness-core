@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.context.ContextElementType.INSTANCE;
 import static io.harness.context.ContextElementType.STANDARD;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -28,6 +30,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -36,6 +39,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -44,6 +51,7 @@ import io.harness.container.ContainerInfo;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
@@ -65,6 +73,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -81,6 +90,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @Mock private AppService mockAppService;
   @Mock private SecretManager mockSecretManager;
@@ -89,6 +101,8 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
   @Mock private DelegateService mockDelegateService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private ContainerDeploymentManagerHelper mockContainerDeploymentManagerHelper;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private EcsSteadyStateCheck check = new EcsSteadyStateCheck("stateName");
 
@@ -105,6 +119,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     doReturn(mockPhaseElement).when(mockContext).getContextElement(any(), anyString());
     doReturn(mockParams).when(mockContext).getContextElement(eq(STANDARD));
     doReturn(null).when(mockContext).getContextElement(eq(INSTANCE));
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
     doReturn(app).when(mockAppService).get(anyString());
     doReturn(app).when(mockContext).getApp();
@@ -119,6 +134,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
             .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
             .withDeploymentType("ECS")
             .build();
+    doReturn(false).when(featureFlagService).isEnabled(TIMEOUT_FAILURE_SUPPORT, app.getAccountId());
     doReturn(containerInfrastructureMapping).when(mockInfrastructureMappingService).get(anyString(), anyString());
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);
@@ -139,6 +155,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     assertThat(APP_ID).isEqualTo(params.getAppId());
     assertThat(ACCOUNT_ID).isEqualTo(params.getAccountId());
     assertThat(ACTIVITY_ID).isEqualTo(params.getActivityId());
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test(expected = InvalidRequestException.class)

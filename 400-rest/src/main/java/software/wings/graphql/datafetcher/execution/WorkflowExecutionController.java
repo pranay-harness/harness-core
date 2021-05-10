@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
@@ -158,6 +159,12 @@ public class WorkflowExecutionController {
                               .collect(Collectors.toList());
     }
 
+    String failureDetails = null;
+    if (workflowExecution.getStatus() == ExecutionStatus.FAILED) {
+      failureDetails =
+          workflowExecutionService.fetchFailureDetails(workflowExecution.getAppId(), workflowExecution.getUuid());
+    }
+
     builder.id(workflowExecution.getUuid())
         .workflowId(workflowExecution.getWorkflowId())
         .appId(workflowExecution.getAppId())
@@ -168,6 +175,7 @@ public class WorkflowExecutionController {
         .cause(cause)
         .notes(workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getNotes())
         .tags(tags)
+        .failureDetails(failureDetails)
         .artifacts(artifacts)
         .rollbackArtifacts(rollbackArtifacts);
   }

@@ -1,5 +1,6 @@
 package io.harness.ccm;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
@@ -9,6 +10,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Objects.isNull;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -40,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(CE)
 public class CEPerpetualTaskManager {
   private ClusterRecordService clusterRecordService;
   private PerpetualTaskService perpetualTaskService;

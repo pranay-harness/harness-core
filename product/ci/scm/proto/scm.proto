@@ -215,8 +215,8 @@ message BitbucketCloudProvider {
 }
 
 message BitbucketServerProvider {
-  string access_token = 1;
-  string personal_token = 2;
+  string username = 1;
+  string personal_access_token = 2;
 }
 
 message CodecommitProvider {
@@ -236,6 +236,14 @@ message Provider {
   string endpoint = 7;
   bool skipVerify = 8;
   bool debug = 9;
+}
+
+message PageResponse {
+  int32 next = 1;
+}
+
+message PageRequest {
+  int32 page = 1;
 }
 
 message GetFileRequest {
@@ -271,26 +279,27 @@ message DeleteFileRequest {
 
 message DeleteFileResponse {
   int32 status = 1;
+  string error = 2;
 }
 
 message CreateFileResponse {
   int32 status = 1;
+  string error = 2;
 }
 
 message UpdateFileResponse {
   int32 status = 1;
+  string error = 2;
 }
 
 message FileModifyRequest {
   string slug = 1;
   string path = 2;
-  oneof type {
-    string branch = 3;
-    string ref = 4;
-  }
-  string content = 5;
-  string message = 6;
-  string sha = 7;  // only needed for the UpdateFile service. Not pushfile
+  string branch = 3;
+  string content = 4;
+  string message = 5;
+  string commit_id = 6;
+  string blob_id = 7;
   Signature signature = 8;
   Provider provider = 9;
 }
@@ -298,8 +307,10 @@ message FileModifyRequest {
 message FileContent {
   string content = 1;
   int32 status = 2;
-  string object_id = 3;
-  string path = 4;
+  string path = 3;
+  string commit_id = 4;
+  string blob_id = 5;
+  string error = 6;
 }
 
 message FileBatchContentResponse {
@@ -309,21 +320,42 @@ message FileBatchContentResponse {
 message FindFilesInBranchRequest {
   string slug = 1;
   string branch = 2;
-  Provider provider = 3;
+  string path = 3;
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message FindFilesInBranchResponse {
+  repeated FileChange file = 1;
+  PageResponse pagination = 2;
 }
 
 message FindFilesInCommitRequest {
   string slug = 1;
   string ref = 2;
-  Provider provider = 3;
+  string path = 3;
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message FindFilesInCommitResponse {
+  repeated FileChange file = 1;
+  PageResponse pagination = 2;
+}
+
+enum ContentType {
+  UNKNOWN_CONTENT = 0;
+  FILE = 1;
+  DIRECTORY = 2;
+  SYMLINK = 3;
+  GITLINK = 4;
 }
 
 message FileChange {
   string path = 1;
-  bool added = 2;
-  bool renamed = 3;
-  bool deleted = 4;
-  string object_id = 5;
+  ContentType content_type = 2;
+  string commit_id = 3;
+  string blob_id = 4;
 }
 
 message IsLatestFileRequest {
@@ -333,7 +365,8 @@ message IsLatestFileRequest {
     string branch = 3;
     string ref = 4;
   }
-  string object_id = 6;
+  string commit_id = 5;
+  string blob_id = 6;
   Provider provider = 7;
 }
 
@@ -341,12 +374,47 @@ message IsLatestFileResponse {
   bool latest = 1;
 }
 
-message FindFilesInBranchResponse {
-  repeated FileChange file = 1;
+message CreatePRRequest {
+  string slug = 1;
+  string title = 2;
+  string body = 3;
+  string source = 4;
+  string target = 5;
+  Provider provider = 6;
 }
 
-message FindFilesInCommitResponse {
-  repeated FileChange file = 1;
+message CreatePRResponse {
+  int32 status = 1;
+}
+
+message FindFilesInPRRequest {
+  string slug = 1;
+  int32 number = 2;
+  PageRequest pagination = 3;
+  Provider provider = 4;
+}
+
+message PRFile {
+  string path = 1;
+  bool added = 2;
+  bool renamed = 3;
+  bool deleted = 4;
+}
+
+message FindFilesInPRResponse {
+  repeated PRFile files = 1;
+  PageResponse pagination = 2;
+}
+
+message CreateBranchRequest {
+  string slug = 1;
+  string name = 2;
+  string commit_id = 3;
+  Provider provider = 4;
+}
+
+message CreateBranchResponse {
+  int32 status = 1;
 }
 
 message GetLatestCommitRequest {
@@ -361,11 +429,13 @@ message GetLatestCommitResponse {
 
 message ListBranchesRequest {
   string slug = 1;
-  Provider provider = 2;
+  PageRequest pagination = 2;
+  Provider provider = 3;
 }
 
 message ListBranchesResponse {
   repeated string branches = 1;
+  PageResponse pagination = 2;
 }
 
 message ListCommitsRequest {
@@ -374,11 +444,75 @@ message ListCommitsRequest {
     string branch = 2;
     string ref = 3;
   }
-  Provider provider = 4;
+  PageRequest pagination = 4;
+  Provider provider = 5;
 }
 
 message ListCommitsResponse {
   repeated string commit_ids = 1;
+  PageResponse pagination = 2;
+}
+
+message HookEvents {
+  bool branch = 1;
+  bool deployment = 2;
+  bool issue = 3;
+  bool issueComment = 4;
+  bool pullRequest = 5;
+  bool pullRequestComment = 6;
+  bool push = 7;
+  bool reviewComment = 8;
+  bool tag = 9;
+}
+
+message CreateWebhookRequest {
+  string slug = 1;
+  string name = 2;
+  string target = 3;
+  string secret = 4;
+  HookEvents events = 5;
+  bool skipVerify = 6;
+  Provider provider = 7;
+}
+
+message CreateWebhookResponse {
+  string id = 1;
+  string name = 2;
+  string target = 3;
+  repeated string events = 4;
+  bool active = 5;
+  bool skipVerify = 6;
+  int32 status = 7;
+}
+
+message DeleteWebhookRequest {
+  string slug = 1;
+  string id = 2;
+  Provider provider = 3;
+}
+
+message DeleteWebhookResponse {
+  int32 status = 1;
+}
+
+message ListWebhooksRequest {
+  string slug = 1;
+  PageRequest pagination = 2;
+  Provider provider = 3;
+}
+
+message WebhookResponse {
+  string id = 1;
+  string name = 2;
+  string target = 3;
+  repeated string events = 4;
+  bool active = 5;
+  bool skipVerify = 6;
+}
+
+message ListWebhooksResponse {
+  repeated WebhookResponse webhooks = 1;
+  PageResponse pagination = 2;
 }
 
 service SCM {
@@ -390,6 +524,8 @@ service SCM {
   rpc GetBatchFile(GetBatchFileRequest) returns (FileBatchContentResponse);
   rpc GetLatestFile(GetLatestFileRequest) returns (FileContent);
   rpc IsLatestFile(IsLatestFileRequest) returns (IsLatestFileResponse);
+  rpc FindFilesInBranch(FindFilesInBranchRequest) returns (FindFilesInBranchResponse);
+  rpc FindFilesInCommit(FindFilesInCommitRequest) returns (FindFilesInCommitResponse);
   rpc PushFile(FileModifyRequest) returns (FileContent);
   // helpers
   rpc CreateFile(FileModifyRequest) returns (CreateFileResponse);
@@ -397,9 +533,15 @@ service SCM {
   rpc UpdateFile(FileModifyRequest) returns (UpdateFileResponse);
 
   // Git functions. branch and commits
-  rpc FindFilesInBranch(FindFilesInBranchRequest) returns (FindFilesInBranchResponse);
-  rpc FindFilesInCommit(FindFilesInCommitRequest) returns (FindFilesInCommitResponse);
+  rpc CreatePR(CreatePRRequest) returns (CreatePRResponse);
+  rpc FindFilesInPR(FindFilesInPRRequest) returns (FindFilesInPRResponse);
+  rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse);
   rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);
   rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
   rpc ListCommits(ListCommitsRequest) returns (ListCommitsResponse);
+
+  // repo functions from go-scm
+  rpc CreateWebhook(CreateWebhookRequest) returns (CreateWebhookResponse);
+  rpc DeleteWebhook(DeleteWebhookRequest) returns (DeleteWebhookResponse);
+  rpc ListWebhooks(ListWebhooksRequest) returns (ListWebhooksResponse);
 }

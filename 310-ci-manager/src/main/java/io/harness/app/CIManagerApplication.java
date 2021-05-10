@@ -1,19 +1,22 @@
 package io.harness.app;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ci.app.InspectCommand;
 import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
-import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.ExecutionPlanModule;
@@ -26,21 +29,18 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
-import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -51,30 +51,26 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
-import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
-import software.wings.security.ThreadLocalUserProvider;
-
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -117,6 +113,7 @@ import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+@OwnedBy(CI)
 public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   public static final Store HARNESS_STORE = Store.builder().name("harness").build();
@@ -178,6 +175,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CiExecutionRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -226,7 +224,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new AbstractMongoModule() {
       @Override
       public UserProvider userProvider() {
-        return new ThreadLocalUserProvider();
+        return new NoopUserProvider();
       }
     });
 
@@ -235,24 +233,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new CIManagerServiceModule(configuration));
     modules.add(YamlSdkModule.getInstance());
     modules.add(ExecutionPlanModule.getInstance());
-
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
-
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
 
     Injector injector = Guice.createInjector(modules);
@@ -263,7 +243,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerHealthCheck(environment, injector);
     registerAuthFilters(configuration, environment);
     registerExecutionPlanCreators(injector);
-    registerQueueListeners(injector, configuration);
     registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
     registerYamlSdk(injector);
@@ -277,6 +256,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   public void initialize(Bootstrap<CIManagerConfiguration> bootstrap) {
     initializeLogging();
     log.info("bootstrapping ...");
+    bootstrap.addCommand(new InspectCommand<>(this));
 
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -326,13 +306,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .executionSummaryModuleInfoProviderClass(CIModuleInfoProvider.class)
-        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(remote))
         .build();
   }
 
   private void scheduleJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
@@ -344,18 +325,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
-  }
-
-  private void registerQueueListeners(Injector injector, CIManagerConfiguration configuration) {
-    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
-    if (configuration.getShouldConfigureWithPMS()) {
-      queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
-    }
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
@@ -391,7 +360,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-        ORCHESTRATION, payload -> publisher.send(singletonList(ORCHESTRATION), payload));
+        NG_ORCHESTRATION, payload -> publisher.send(singletonList(NG_ORCHESTRATION), payload));
   }
 
   private void registerExecutionPlanCreators(Injector injector) {

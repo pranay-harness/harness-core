@@ -11,7 +11,6 @@ import static io.harness.gitsync.common.YamlProcessingLogContext.GIT_CONNECTOR_I
 import static io.harness.gitsync.common.YamlProcessingLogContext.REPO_NAME;
 import static io.harness.gitsync.common.YamlProcessingLogContext.WEBHOOK_TOKEN;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static software.wings.beans.yaml.GitCommandRequest.gitRequestTimeout;
 
@@ -22,6 +21,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.delegate.beans.TaskData;
@@ -39,7 +39,6 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
-import io.harness.gitsync.core.callback.GitCommandCallback;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlGitService;
@@ -51,6 +50,7 @@ import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.utils.IdentifierRefHelper;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.TaskType;
@@ -98,10 +98,10 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   private Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO yamlGitConfig) {
     if (yamlGitConfig != null) {
-      String branchName = yamlGitConfig.getBranch();
-      String gitConnectorIdentifier = yamlGitConfig.getGitConnectorRef();
-      String repoName = yamlGitConfig.getRepo();
-      return yamlGitConfigService.getGitConnector(yamlGitConfig, gitConnectorIdentifier, repoName, branchName);
+      IdentifierRef identifierRef =
+          IdentifierRefHelper.getIdentifierRef(yamlGitConfig.getGitConnectorRef(), yamlGitConfig.getAccountIdentifier(),
+              yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier());
+      return yamlGitConfigService.getGitConnector(yamlGitConfig, identifierRef.getIdentifier());
     }
     return Optional.empty();
   }
@@ -200,10 +200,10 @@ public class YamlGitServiceImpl implements YamlGitService {
     // TODO (abhinav) : Adopt this to use delegate 2.0 . Meanwhile replacing taskId with some dummy string
     // String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
     String taskId = generateUuid();
-    waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
-        new GitCommandCallback(accountId, yamlChangeSet.getUuid(), DIFF, yamlGitConfig.getGitConnectorRef(),
-            yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
-        taskId);
+    //    waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
+    //        new GitCommandCallback(accountId, yamlChangeSet.getUuid(), DIFF, yamlGitConfig.getGitConnectorRef(),
+    //            yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
+    //        taskId);
 
     log.info(
         GIT_YAML_LOG_PREFIX + "Successfully queued git->harness changeset for processing with delegate taskId=[{}]",

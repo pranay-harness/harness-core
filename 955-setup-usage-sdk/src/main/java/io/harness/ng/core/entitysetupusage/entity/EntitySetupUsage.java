@@ -10,6 +10,7 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.EntityDetail.EntityDetailKeys;
 import io.harness.ng.core.NGAccountAccess;
+import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetail;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -56,8 +57,12 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
                  .name("EntitySetupUsage_unique_index")
                  .field(EntitySetupUsageKeys.referredByEntityType)
                  .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.referredByEntityRepoIdentifier)
+                 .field(EntitySetupUsageKeys.referredByEntityBranch)
                  .field(EntitySetupUsageKeys.referredEntityType)
                  .field(EntitySetupUsageKeys.referredEntityFQN)
+                 .field(EntitySetupUsageKeys.referredEntityRepoIdentifier)
+                 .field(EntitySetupUsageKeys.referredEntityBranch)
                  .field(EntitySetupUsageKeys.accountIdentifier)
                  .unique(true)
                  .build())
@@ -68,11 +73,20 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   @FdIndex @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
   @NotNull EntityDetail referredByEntity;
+  SetupUsageDetail detail;
+
   @FdIndex @NotBlank String referredEntityFQN;
   @NotBlank String referredEntityType;
+  String referredEntityRepoIdentifier;
+  String referredEntityBranch;
+  Boolean referredEntityIsDefault;
+
   @FdIndex @NotBlank String referredByEntityFQN;
   @NotBlank String referredByEntityType;
-  // todo @deepak: Add the support for activity
+  String referredByEntityRepoIdentifier;
+  String referredByEntityBranch;
+  Boolean referredByEntityIsDefault;
+
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;

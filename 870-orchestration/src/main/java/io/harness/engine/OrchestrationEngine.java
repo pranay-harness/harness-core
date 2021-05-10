@@ -1,36 +1,32 @@
 package io.harness.engine;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
 
-import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationPublisherName;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.interrupts.InterruptCheck;
+import io.harness.engine.facilitation.RunPreFacilitationChecker;
+import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
-import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.resume.EngineWaitResumeCallback;
-import io.harness.engine.run.NodeRunCheck;
-import io.harness.engine.skip.SkipCheck;
-import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.ExceptionUtils;
+import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
@@ -40,38 +36,24 @@ import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.execution.failure.FailureType;
-import io.harness.pms.contracts.execution.run.NodeRunInfo;
-import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.contracts.steps.io.StepOutcomeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
-import io.harness.pms.execution.utils.AdviseTypeUtils;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
-import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
-import io.harness.pms.sdk.core.registries.ResolverRegistry;
-import io.harness.pms.sdk.core.resolver.Resolver;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
-import io.harness.pms.sdk.core.steps.io.StepOutcomeMapper;
-import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
@@ -88,16 +70,15 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -107,44 +88,37 @@ import lombok.extern.slf4j.Slf4j;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 @Slf4j
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationEngine {
+  @Inject private Injector injector;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject private ResolverRegistry resolverRegistry;
   @Inject private TimeoutRegistry timeoutRegistry;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
-  @Inject private InterruptService interruptService;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
-  @Inject private OrchestrationModuleConfig config;
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
-  @Inject private PmsOutcomeService pmsOutcomeService;
-  @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
+  @Inject private InterruptService interruptService;
+  @Inject private InvocationHelper invocationHelper;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     facilitateAndStartStep(nodeExecution.getAmbiance(), nodeExecution);
   }
 
-  public void startNodeExecution(Ambiance ambiance) {
-    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    facilitateAndStartStep(ambiance, nodeExecution);
-  }
-
   public void triggerExecution(Ambiance ambiance, PlanNodeProto node) {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
-      previousNodeExecution = nodeExecutionService.update(
-          AmbianceUtils.obtainCurrentRuntimeId(ambiance), ops -> ops.set(NodeExecutionKeys.nextId, uuid));
+      previousNodeExecution = nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
+          ops -> ops.set(NodeExecutionKeys.nextId, uuid).set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     }
     Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
     NodeExecution nodeExecution =
@@ -156,7 +130,6 @@ public class OrchestrationEngine {
             .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
-            .progressDataMap(new LinkedHashMap<>())
             .unitProgresses(new ArrayList<>())
             .build();
     nodeExecutionService.save(nodeExecution);
@@ -173,58 +146,23 @@ public class OrchestrationEngine {
   // Start to Facilitators
   private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
-      log.info("Checking Interrupts before Node Start");
-      InterruptCheck check = interruptService.checkAndHandleInterruptsBeforeNodeStart(
-          ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+      ExecutionCheck check = performPreFacilitationChecks(nodeExecution);
       if (!check.isProceed()) {
-        log.info("Suspending Execution. Reason : {}", check.getReason());
+        log.info("Not Proceeding with  Execution. Reason : {}", check.getReason());
         return;
       }
-
-      log.info("Checking If Node should be Run with When Condition.");
-      String whenCondition = nodeExecution.getNode().getWhenCondition();
-      if (EmptyPredicate.isNotEmpty(whenCondition)) {
-        NodeRunCheck nodeRunCheck =
-            OrchestrationUtils.shouldRunExecution(ambiance, whenCondition, engineExpressionService);
-        if (nodeRunCheck.isSuccessful()) {
-          nodeExecution = updateRunInfoAttribute(nodeExecution.getUuid(), nodeRunCheck);
-        } else {
-          failNodeExecution(nodeExecution.getUuid(), nodeRunCheck.getErrorMessage());
-          return;
-        }
-        if (!nodeRunCheck.getEvaluatedWhenCondition()) {
-          skipNodeExecution(nodeExecution.getUuid(), nodeRunCheck);
-          return;
-        }
-      }
-
-      log.info("Checking If Node should be Skipped");
-      String skipCondition = nodeExecution.getNode().getSkipCondition();
-      if (EmptyPredicate.isNotEmpty(skipCondition)) {
-        SkipCheck skipCheck =
-            OrchestrationUtils.shouldSkipNodeExecution(ambiance, skipCondition, engineExpressionService);
-        if (skipCheck.isSuccessful()) {
-          nodeExecution = updateSkipInfoAttribute(nodeExecution.getUuid(), skipCheck);
-        } else {
-          failNodeExecution(nodeExecution.getUuid(), skipCheck.getErrorMessage());
-          return;
-        }
-        if (skipCheck.getEvaluatedSkipCondition()) {
-          skipNodeExecution(nodeExecution.getUuid(), skipCheck);
-          return;
-        }
-      }
-
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
-
       PlanNodeProto node = nodeExecution.getNode();
       String stepParameters = node.getStepParameters();
+      boolean skipUnresolvedExpressionsCheck = node.getSkipUnresolvedExpressionsCheck();
       Object resolvedStepParameters = stepParameters == null
           ? null
-          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(stepParameters));
+          : pmsEngineExpressionService.resolve(
+              ambiance, NodeExecutionUtils.extractObject(stepParameters), skipUnresolvedExpressionsCheck);
       Object resolvedStepInputs = node.getStepInputs() == null
           ? null
-          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()));
+          : pmsEngineExpressionService.resolve(
+              ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()), skipUnresolvedExpressionsCheck);
 
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
@@ -244,44 +182,28 @@ public class OrchestrationEngine {
     }
   }
 
-  private NodeExecution updateSkipInfoAttribute(String nodeExecutionId, SkipCheck skipCheck) {
-    return nodeExecutionService.update(nodeExecutionId, ops -> {
-      setUnset(ops, NodeExecutionKeys.skipInfo,
-          SkipInfo.newBuilder()
-              .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
-              .setSkipCondition(skipCheck.getSkipCondition())
-              .build());
-    });
-  }
-
-  private NodeExecution updateRunInfoAttribute(String nodeExecutionId, NodeRunCheck nodeRunCheck) {
-    return nodeExecutionService.update(nodeExecutionId, ops -> {
-      setUnset(ops, NodeExecutionKeys.nodeRunInfo,
-          NodeRunInfo.newBuilder()
-              .setEvaluatedCondition(nodeRunCheck.getEvaluatedWhenCondition())
-              .setWhenCondition(nodeRunCheck.getWhenCondition())
-              .build());
-    });
+  private ExecutionCheck performPreFacilitationChecks(NodeExecution nodeExecution) {
+    RunPreFacilitationChecker rChecker = injector.getInstance(RunPreFacilitationChecker.class);
+    SkipPreFacilitationChecker sChecker = injector.getInstance(SkipPreFacilitationChecker.class);
+    rChecker.setNextChecker(sChecker);
+    return rChecker.check(nodeExecution);
   }
 
   public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution = nodeExecutionService.update(
+        nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
     Ambiance ambiance = nodeExecution.getAmbiance();
-    PlanNodeProto node = nodeExecution.getNode();
-    StepInputPackage inputPackage = engineObtainmentHelper.obtainInputPackage(ambiance, node.getRebObjectsList());
     if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
       // Update Status
       Preconditions.checkNotNull(
           nodeExecutionService.updateStatusWithOps(AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.TIMED_WAITING,
-              ops -> ops.set(NodeExecutionKeys.initialWaitDuration, facilitatorResponse.getInitialWait())));
+              ops
+              -> ops.set(NodeExecutionKeys.initialWaitDuration, facilitatorResponse.getInitialWait()),
+              EnumSet.noneOf(Status.class)));
       String resumeId =
           delayEventHelper.delay(facilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
       waitNotifyEngine.waitForAllOn(publisherName,
-          EngineWaitResumeCallback.builder()
-              .ambiance(ambiance)
-              .facilitatorResponse(facilitatorResponse)
-              .inputPackage(inputPackage)
-              .build(),
+          EngineWaitResumeCallback.builder().ambiance(ambiance).facilitatorResponse(facilitatorResponse).build(),
           resumeId);
       return;
     }
@@ -289,8 +211,15 @@ public class OrchestrationEngine {
   }
 
   public void invokeExecutable(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
+    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    if (!check.isProceed()) {
+      log.info("Not Proceeding with Execution : {}", check.getReason());
+      return;
+    }
+
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
-    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse);
+    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
 
     StartNodeExecutionEventData startNodeExecutionEventData = StartNodeExecutionEventData.builder()
                                                                   .facilitatorResponse(facilitatorResponse)
@@ -333,107 +262,76 @@ public class OrchestrationEngine {
     return timeoutInstanceIds;
   }
 
-  private NodeExecution prepareNodeExecutionForInvocation(
-      Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
+  private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
-          ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
           ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
-          setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
-        }));
+          if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
+            setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
+          }
+        }, EnumSet.noneOf(Status.class)));
   }
 
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    List<StepOutcomeRef> outcomeRefs =
-        handleOutcomes(ambiance, stepResponse.getStepOutcomesList(), stepResponse.getGraphOutcomesList());
+    try {
+      handleStepResponseInternal(nodeExecution, stepResponse);
+    } catch (Exception ex) {
+      handleError(nodeExecution.getAmbiance(), ex);
+    }
+  }
 
-    NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
-      setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
-      setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
-      setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
-    });
-    concludeNodeExecution(updatedNodeExecution, stepResponse.getStatus());
+  public void concludeNodeExecution(NodeExecution nodeExecution, Status status, EnumSet<Status> overrideStatusSet) {
+    NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status,
+        ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()), overrideStatusSet);
+    if (updatedNodeExecution == null) {
+      log.warn(
+          "Cannot conclude node execution. Status update failed From :{}, To:{}", nodeExecution.getStatus(), status);
+      return;
+    }
+    PlanNodeProto node = nodeExecution.getNode();
+    if (isEmpty(node.getAdviserObtainmentsList())) {
+      endTransition(nodeExecution);
+      return;
+    }
+    queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
-    PlanNodeProto node = nodeExecution.getNode();
+    concludeNodeExecution(nodeExecution, status, EnumSet.noneOf(Status.class));
+  }
 
-    if (isEmpty(node.getAdviserObtainmentsList())) {
-      endNodeExecution(nodeExecution, status, nodeExecution.getAdviserResponse());
-      return;
-    }
-
-    NodeExecutionEvent adviseEvent =
-        NodeExecutionEvent.builder()
-            .eventType(NodeExecutionEventType.ADVISE)
-            .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-            .eventData(
-                AdviseNodeExecutionEventData.builder().toStatus(status).fromStatus(nodeExecution.getStatus()).build())
-            .build();
+  public void queueAdvisingEvent(NodeExecution nodeExecution, Status fromStatus) {
+    NodeExecutionEvent adviseEvent = NodeExecutionEvent.builder()
+                                         .eventType(NodeExecutionEventType.ADVISE)
+                                         .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                         .eventData(AdviseNodeExecutionEventData.builder()
+                                                        .toStatus(nodeExecution.getStatus())
+                                                        .fromStatus(fromStatus)
+                                                        .build())
+                                         .build();
 
     nodeExecutionEventQueuePublisher.send(adviseEvent);
     waitNotifyEngine.waitForAllOn(publisherName,
-        EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).status(status).build(),
-        adviseEvent.getNotifyId());
+        EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), adviseEvent.getNotifyId());
   }
 
-  public void endNodeExecution(String nodeExecutionId, Status status, AdviserResponse adviserResponse) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    endNodeExecution(nodeExecution, status, adviserResponse);
-  }
-
-  private void endNodeExecution(NodeExecution nodeExecution, Status status, AdviserResponse adviserResponse) {
+  private void handleStepResponseInternal(
+      @NonNull NodeExecution nodeExecution, @NonNull StepResponseProto stepResponse) {
+    PlanNodeProto node = nodeExecution.getNode();
+    if (isEmpty(node.getAdviserObtainmentsList())) {
+      endNodeExecutionHelper.endNodeExecutionWithNoAdvisers(nodeExecution, stepResponse);
+      return;
+    }
     NodeExecution updatedNodeExecution =
-        nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status, ops -> {
-          setUnset(ops, NodeExecutionKeys.adviserResponse, adviserResponse);
-          setUnset(ops, NodeExecutionKeys.endTs, System.currentTimeMillis());
-        });
-    endTransition(updatedNodeExecution, adviserResponse);
+        endNodeExecutionHelper.handleStepResponsePreAdviser(nodeExecution, stepResponse);
+    queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private List<StepOutcomeRef> handleOutcomes(
-      Ambiance ambiance, List<StepOutcomeProto> stepOutcomeProtos, List<StepOutcomeProto> graphOutcomesList) {
-    List<StepOutcomeRef> outcomeRefs = new ArrayList<>();
-    if (isEmpty(stepOutcomeProtos)) {
-      return outcomeRefs;
-    }
-
-    if (config.isWithPMS() || config.isPipelineService()) {
-      stepOutcomeProtos.forEach(proto -> {
-        if (isNotEmpty(proto.getOutcome())) {
-          String instanceId =
-              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), false);
-          outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
-        }
-      });
-      graphOutcomesList.forEach(proto -> {
-        if (isNotEmpty(proto.getOutcome())) {
-          String instanceId =
-              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), true);
-          outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
-        }
-      });
-    } else {
-      Map<String, StepOutcome> stepOutcomes = new HashMap<>();
-      stepOutcomeProtos.forEach(
-          proto -> stepOutcomes.put(proto.getName(), StepOutcomeMapper.fromStepOutcomeProto(proto)));
-      stepOutcomes.forEach((name, stepOutcome) -> {
-        Outcome outcome = stepOutcome.getOutcome();
-        if (outcome != null) {
-          Resolver resolver = resolverRegistry.obtain(Outcome.REF_TYPE);
-          String instanceId = resolver.consume(ambiance, name, outcome, stepOutcome.getGroup());
-          outcomeRefs.add(StepOutcomeRef.newBuilder().setName(name).setInstanceId(instanceId).build());
-        }
-      });
-    }
-    return outcomeRefs;
-  }
-
-  public void endTransition(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
+  public void endTransition(NodeExecution nodeExecution) {
+    nodeExecutionService.update(
+        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     if (isNotEmpty(nodeExecution.getNotifyId())) {
       PlanNodeProto planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
@@ -443,7 +341,7 @@ public class OrchestrationEngine {
                                                 .identifier(planNode.getIdentifier())
                                                 .group(planNode.getGroup())
                                                 .status(nodeExecution.getStatus())
-                                                .adviserResponse(adviserResponse)
+                                                .adviserResponse(nodeExecution.getAdviserResponse())
                                                 .build();
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
@@ -454,7 +352,7 @@ public class OrchestrationEngine {
 
   private void concludePlanExecution(NodeExecution nodeExecution) {
     Ambiance ambiance = nodeExecution.getAmbiance();
-    Status status = calculateEndStatus(ambiance.getPlanExecutionId());
+    Status status = planExecutionService.calculateStatus(ambiance.getPlanExecutionId());
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
     eventEmitter.emitEvent(OrchestrationEvent.builder()
@@ -469,17 +367,6 @@ public class OrchestrationEngine {
                                .build());
   }
 
-  // TODO (prashant) => Improve this with more clarity.
-  private Status calculateEndStatus(String planExecutionId) {
-    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
-  }
-
-  private void handleAdvise(@NotNull NodeExecution nodeExecution, @NotNull AdviserResponse adviserResponse) {
-    AdviserResponseHandler adviserResponseHandler = adviseHandlerFactory.obtainHandler(adviserResponse.getType());
-    adviserResponseHandler.handleAdvise(nodeExecution, adviserResponse);
-  }
-
   public void resume(String nodeExecutionId, Map<String, ByteString> response, boolean asyncError) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
@@ -490,19 +377,14 @@ public class OrchestrationEngine {
         return;
       }
 
-      PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
       if (nodeExecution.getStatus() != RUNNING) {
-        nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatus(nodeExecutionId, RUNNING));
+        nodeExecution = Preconditions.checkNotNull(
+            nodeExecutionService.updateStatusWithOps(nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class)));
       }
 
-      Map<String, byte[]> byteResponseMap = new HashMap<>();
-      if (isNotEmpty(response)) {
-        response.forEach((k, v) -> byteResponseMap.put(k, v.toByteArray()));
-      }
       ResumeNodeExecutionEventData data = ResumeNodeExecutionEventData.builder()
                                               .asyncError(asyncError)
-                                              .nodes(planExecution.getPlan().getNodes())
-                                              .response(byteResponseMap)
+                                              .response(invocationHelper.buildResponseMap(nodeExecution, response))
                                               .build();
       NodeExecutionEvent resumeEvent = NodeExecutionEvent.builder()
                                            .eventType(NodeExecutionEventType.RESUME)
@@ -510,7 +392,6 @@ public class OrchestrationEngine {
                                            .eventData(data)
                                            .build();
       nodeExecutionEventQueuePublisher.send(resumeEvent);
-      // Do something with the waitId
     } catch (Exception exception) {
       handleError(ambiance, exception);
     }
@@ -526,62 +407,22 @@ public class OrchestrationEngine {
                                   .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(exception))
                                   .build())
               .build();
-      handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), response);
+      NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+      handleStepResponseInternal(nodeExecution, response);
     } catch (RuntimeException ex) {
       log.error("Error when trying to obtain the advice ", ex);
     }
   }
 
-  private void skipNodeExecution(String nodeExecutionId, NodeRunCheck nodeRunCheck) {
-    log.info(String.format("Skipping node: %s", nodeExecutionId));
-    StepResponseProto response =
-        StepResponseProto.newBuilder()
-            .setStatus(Status.SKIPPED)
-            .setNodeRunInfo(NodeRunInfo.newBuilder()
-                                .setWhenCondition(nodeRunCheck.getWhenCondition())
-                                .setEvaluatedCondition(nodeRunCheck.getEvaluatedWhenCondition())
-                                .build())
-            .build();
-    handleStepResponse(nodeExecutionId, response);
-  }
-
-  private void skipNodeExecution(String nodeExecutionId, SkipCheck skipCheck) {
-    log.info(String.format("Skipping node: %s", nodeExecutionId));
-    StepResponseProto response = StepResponseProto.newBuilder()
-                                     .setStatus(Status.SKIPPED)
-                                     .setSkipInfo(SkipInfo.newBuilder()
-                                                      .setSkipCondition(skipCheck.getSkipCondition())
-                                                      .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
-                                                      .build())
-                                     .build();
-    handleStepResponse(nodeExecutionId, response);
-  }
-
-  private void failNodeExecution(String nodeExecutionId, String errorMessage) {
-    StepResponseProto stepResponseProto = StepResponseProto.newBuilder()
-                                              .setStatus(FAILED)
-                                              .setFailureInfo(FailureInfo.newBuilder()
-                                                                  .setErrorMessage(errorMessage)
-                                                                  .addFailureTypes(FailureType.SKIPPING_FAILURE)
-                                                                  .build())
-                                              .build();
-    handleStepResponse(nodeExecutionId, stepResponseProto);
-  }
-
-  public void handleAdvise(String nodeExecutionId, Status status, AdviserResponse adviserResponse) {
+  public void handleAdvise(String nodeExecutionId, AdviserResponse adviserResponse) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     if (adviserResponse.getType() == AdviseType.UNKNOWN) {
-      nodeExecutionService.update(nodeExecutionId, ops -> ops.set(NodeExecutionKeys.adviserResponse, adviserResponse));
-      endNodeExecution(nodeExecutionId, status, null);
+      endNodeExecutionHelper.endNodeForNullAdvise(nodeExecution);
       return;
     }
-
-    NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecutionId, status, ops -> {
-      ops.set(NodeExecutionKeys.adviserResponse, adviserResponse);
-      if (AdviseTypeUtils.isWaitingAdviseType(adviserResponse.getType())
-          || AdviseTypeUtils.isTerminalAdviseTypes(adviserResponse.getType())) {
-        ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
-      }
-    });
-    handleAdvise(updatedNodeExecution, adviserResponse);
+    NodeExecution updatedNodeExecution = nodeExecutionService.update(
+        nodeExecutionId, ops -> ops.set(NodeExecutionKeys.adviserResponse, adviserResponse));
+    AdviserResponseHandler adviserResponseHandler = adviseHandlerFactory.obtainHandler(adviserResponse.getType());
+    adviserResponseHandler.handleAdvise(nodeExecution, adviserResponse);
   }
 }

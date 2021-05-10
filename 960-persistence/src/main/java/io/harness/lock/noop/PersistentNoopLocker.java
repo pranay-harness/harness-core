@@ -1,11 +1,15 @@
 package io.harness.lock.noop;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 
 import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
 
+@OwnedBy(PL)
 public class PersistentNoopLocker implements PersistentLocker, Managed {
   @Override
   public AcquiredLock acquireLock(String name, Duration timeout) {

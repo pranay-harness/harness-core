@@ -49,7 +49,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
 public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess {
-  @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id @EntityIdentifier private String uuid;
+  @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
+  @NotEmpty @EntityIdentifier private String identifier;
+  @NotEmpty private String name;
   @Trimmed @NotEmpty private String accountId;
   private String projectIdentifier;
   private String orgIdentifier;
@@ -61,7 +63,7 @@ public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAwar
   List<YamlGitConfigDTO.RootFolder> rootFolders;
   YamlGitConfigDTO.RootFolder defaultRootFolder;
   @NotNull private ConnectorType gitConnectorType;
-
+  Boolean executeOnDelegate;
   @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;

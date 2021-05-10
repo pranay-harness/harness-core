@@ -11,8 +11,8 @@ import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
@@ -29,19 +29,19 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
   }
 
   @Override
-  public SweepingOutput resolve(Ambiance ambiance, RefObject refObject) {
+  public ExecutionSweepingOutput resolve(Ambiance ambiance, RefObject refObject) {
     SweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolve(
         SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-    return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), SweepingOutput.class);
+    return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class);
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, SweepingOutput value, int levelsToKeep) {
+  public String consumeInternal(Ambiance ambiance, String name, ExecutionSweepingOutput value, int levelsToKeep) {
     return null;
   }
 
   @Override
-  public String consume(Ambiance ambiance, String name, SweepingOutput value, String groupName) {
+  public String consume(Ambiance ambiance, String name, ExecutionSweepingOutput value, String groupName) {
     SweepingOutputConsumeBlobResponse sweepingOutputConsumeBlobResponse =
         sweepingOutputServiceBlockingStub.consume(SweepingOutputConsumeBlobRequest.newBuilder()
                                                       .setAmbiance(ambiance)
@@ -57,7 +57,7 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
     OptionalSweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolveOptional(
         SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return OptionalSweepingOutput.builder()
-        .output(RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), SweepingOutput.class))
+        .output(RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))
         .found(resolve.getFound())
         .build();
   }

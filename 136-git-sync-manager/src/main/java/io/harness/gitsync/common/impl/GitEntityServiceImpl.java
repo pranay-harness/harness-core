@@ -1,7 +1,6 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.encryption.ScopeHelper.getScope;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -15,7 +14,8 @@ import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.GitFileLocation.GitFileLocationKeys;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
-import io.harness.gitsync.common.dtos.GitSyncProductDTO;
+import io.harness.gitsync.common.dtos.GitSyncRepoFilesDTO;
+import io.harness.gitsync.common.dtos.GitSyncRepoFilesListDTO;
 import io.harness.gitsync.common.dtos.RepoProviders;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.ng.beans.PageResponse;
@@ -48,19 +48,47 @@ public class GitEntityServiceImpl implements GitEntityService {
   private final GitFileLocationRepository gitFileLocationRepository;
 
   @Override
-  public GitSyncProductDTO list(String projectId, String orgId, String accountId, ModuleType moduleType, int size) {
-    final List<EntityType> entityTypes = getEntityTypesFromModuleType(moduleType);
-    final Scope scope = getScope(accountId, orgId, projectId);
-    final List<GitSyncEntityListDTO> gitSyncEntityListDTOs =
-        entityTypes.stream()
-            .map(entityType -> {
-              final List<GitSyncEntityDTO> gitSyncEntityDTOs =
-                  listByType(projectId, orgId, accountId, entityType, 0, size);
-              final Long totalCount = countByType(projectId, orgId, accountId, scope, entityType);
-              return buildGitSyncEntityListDTO(entityType, totalCount, gitSyncEntityDTOs);
-            })
-            .collect(Collectors.toList());
-    return GitSyncProductDTO.builder().gitSyncEntityListDTOList(gitSyncEntityListDTOs).moduleType(moduleType).build();
+  public GitSyncRepoFilesListDTO listSummary(String projectIdentifier, String organizationIdentifier,
+      String accountIdentifier, ModuleType moduleType, String searchTerm, List<String> gitSyncConfigIdentifierList,
+      List<EntityType> entityTypeList, int size) {
+    List<GitSyncRepoFilesDTO> gitSyncRepoFilesDTOList =
+        gitFileLocationRepository
+            .getByProjectIdAndOrganizationIdAndAccountIdAndGitSyncConfigIdentifierListAndEntityTypeList(
+                projectIdentifier, organizationIdentifier, accountIdentifier, gitSyncConfigIdentifierList,
+                entityTypeList, searchTerm, size);
+    return GitSyncRepoFilesListDTO.builder()
+        .moduleType(moduleType)
+        .gitSyncRepoFilesList(gitSyncRepoFilesDTOList)
+        .build();
+  }
+
+  @Override
+  public PageResponse<GitSyncEntityListDTO> getPageByType(String projectIdentifier, String organizationIdentifier,
+      String accountIdentifier, String gitSyncConfigIdentifier, String branch, EntityType entityType, int page,
+      int size) {
+    final Page<GitFileLocation> gitFileLocationsPage = gitSyncEntityDTOPageByType(projectIdentifier,
+        organizationIdentifier, accountIdentifier, gitSyncConfigIdentifier, branch, entityType, page, size);
+    final List<GitSyncEntityDTO> gitSyncEntityDTOList = buildEntityDtoFromPage(gitFileLocationsPage);
+    final GitSyncEntityListDTO gitSyncEntityListDTO =
+        buildGitSyncEntityListDTO(entityType, (long) gitSyncEntityDTOList.size(), gitSyncEntityDTOList);
+    return getNGPageResponse(gitFileLocationsPage, Collections.singletonList(gitSyncEntityListDTO));
+  }
+
+  @Override
+  public List<GitSyncEntityListDTO> listSummaryByRepoAndBranch(String projectIdentifier, String organizationIdentifier,
+      String accountIdentifier, ModuleType moduleType, String searchTerm, String gitSyncConfigIdentifier, String branch,
+      List<EntityType> entityTypeList, int size) {
+    return gitFileLocationRepository
+        .getByProjectIdAndOrganizationIdAndAccountIdAndGitSyncConfigIdentifierAndEntityTypeListAndBranch(
+            projectIdentifier, organizationIdentifier, accountIdentifier, gitSyncConfigIdentifier, branch,
+            entityTypeList, searchTerm, size);
+  }
+
+  @Override
+  public List<GitFileLocation> getDefaultEntities(
+      String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId) {
+    return gitFileLocationRepository.findByAccountIdAndOrganizationIdAndProjectIdAndGitSyncConfigIdAndIsDefault(
+        accountIdentifier, organizationIdentifier, projectIdentifier, yamlGitConfigId, true);
   }
 
   private GitSyncEntityListDTO buildGitSyncEntityListDTO(
@@ -72,30 +100,36 @@ public class GitEntityServiceImpl implements GitEntityService {
         .build();
   }
 
-  private Page<GitFileLocation> getGitFileLocationsForEntityType(
-      String projectId, String orgId, String accountId, Scope scope, Pageable pageable, EntityType entityType) {
-    final Criteria criteria = getCriteriaWithScopeMatchAndEntityType(projectId, orgId, accountId, scope, entityType);
+  private Page<GitFileLocation> getGitFileLocationsForEntityType(String projectIdentifier,
+      String organizationIdentifier, String accountIdentifier, Pageable pageable, String gitSyncConfigIdentifier,
+      String branch, EntityType entityType) {
+    final Criteria criteria = getCriteriaWithScopeMatchAndEntityType(
+        projectIdentifier, organizationIdentifier, accountIdentifier, gitSyncConfigIdentifier, branch, entityType);
     return gitFileLocationRepository.getGitFileLocation(criteria, pageable);
   }
 
   @NotNull
-  private Criteria getCriteriaWithScopeMatchAndEntityType(
-      String projectId, String orgId, String accountId, Scope scope, EntityType entityTypes) {
-    return getCriteriaWithScopeMatch(projectId, orgId, accountId, scope)
+  private Criteria getCriteriaWithScopeMatchAndEntityType(String projectIdentifier, String organizationIdentifier,
+      String accountIdentifier, String gitSyncConfigIdentifier, String branch, EntityType entityType) {
+    return getCriteriaWithScopeMatch(
+        projectIdentifier, organizationIdentifier, accountIdentifier, gitSyncConfigIdentifier, branch)
         .and(GitFileLocationKeys.entityType)
-        .is(entityTypes.getYamlName());
+        .is(entityType.name());
   }
 
   @NotNull
-  private Criteria getCriteriaWithScopeMatch(String projectId, String orgId, String accountId, Scope scope) {
+  private Criteria getCriteriaWithScopeMatch(String projectIdentifier, String organizationIdentifier,
+      String accountIdentifier, String gitSyncConfigIdentifier, String branch) {
     return Criteria.where(GitFileLocationKeys.accountId)
-        .is(accountId)
+        .is(accountIdentifier)
         .and(GitFileLocationKeys.projectId)
-        .is(projectId)
+        .is(projectIdentifier)
         .and(GitFileLocationKeys.organizationId)
-        .is(orgId)
-        .and(GitFileLocationKeys.scope)
-        .is(scope);
+        .is(organizationIdentifier)
+        .and(GitFileLocationKeys.gitSyncConfigId)
+        .is(gitSyncConfigIdentifier)
+        .and(GitFileLocationKeys.branch)
+        .is(branch);
   }
 
   private GitSyncEntityDTO buildGitSyncEntityDTO(GitFileLocation entity) {
@@ -107,8 +141,8 @@ public class GitEntityServiceImpl implements GitEntityService {
         .gitConnectorId(entity.getGitConnectorId())
         .repo(getDisplayRepositoryUrl(entity.getRepo()))
         .repoProviderType(getGitProvider(entity.getRepo()))
-        .filePath(entity.getEntityGitPath())
-        .yamlGitConfigId(entity.getYamlGitConfigId())
+        .folderPath(entity.getFolderPath())
+        .entityGitPath(entity.getEntityGitPath())
         .accountId(entity.getAccountId())
         .build();
   }
@@ -144,40 +178,22 @@ public class GitEntityServiceImpl implements GitEntityService {
     return repositoryUrl;
   }
 
-  @Override
-  public PageResponse<GitSyncEntityListDTO> getPageByType(
-      String projectId, String orgId, String accountId, EntityType entityType, int page, int size) {
-    final Scope scope = getScope(accountId, orgId, projectId);
-    final Page<GitFileLocation> gitFileLocationsPage =
-        gitSyncEntityDTOPageByType(projectId, orgId, accountId, entityType, page, size);
-    final List<GitSyncEntityDTO> gitSyncEntityDTOList = buildEntityDtoFromPage(gitFileLocationsPage);
-    final Long totalCount = countByType(projectId, orgId, accountId, scope, entityType);
-    final GitSyncEntityListDTO gitSyncEntityListDTO =
-        buildGitSyncEntityListDTO(entityType, totalCount, gitSyncEntityDTOList);
-    return getNGPageResponse(gitFileLocationsPage, Collections.singletonList(gitSyncEntityListDTO));
-  }
-
   private List<GitSyncEntityDTO> buildEntityDtoFromPage(Page<GitFileLocation> gitFileLocationsPage) {
     return gitFileLocationsPage.get().map(this::buildGitSyncEntityDTO).collect(Collectors.toList());
   }
 
-  private List<GitSyncEntityDTO> listByType(
-      String projectId, String orgId, String accountId, EntityType entityType, int page, int size) {
-    final Page<GitFileLocation> gitFileLocationPage =
-        gitSyncEntityDTOPageByType(projectId, orgId, accountId, entityType, page, size);
-    return buildEntityDtoFromPage(gitFileLocationPage);
-  }
-
-  private long countByType(String projectId, String orgId, String accountId, Scope scope, EntityType entityType) {
+  private long countByType(String projectIdentifier, String organizationIdentifier, String accountIdentifier,
+      Scope scope, EntityType entityType) {
     return gitFileLocationRepository.countByProjectIdAndOrganizationIdAndAccountIdAndScopeAndEntityType(
-        projectId, orgId, accountId, scope, entityType.getYamlName());
+        projectIdentifier, organizationIdentifier, accountIdentifier, scope, entityType.getYamlName());
   }
 
-  private Page<GitFileLocation> gitSyncEntityDTOPageByType(
-      String projectId, String orgId, String accountId, EntityType entityType, int page, int size) {
-    Scope scope = getScope(accountId, orgId, projectId);
+  private Page<GitFileLocation> gitSyncEntityDTOPageByType(String projectIdentifier, String organizationIdentifier,
+      String accountIdentifier, String gitSyncConfigIdentifier, String branch, EntityType entityType, int page,
+      int size) {
     final Pageable pageable = getPageRequest(page, size, Collections.singletonList("DESC"));
-    return getGitFileLocationsForEntityType(projectId, orgId, accountId, scope, pageable, entityType);
+    return getGitFileLocationsForEntityType(projectIdentifier, organizationIdentifier, accountIdentifier, pageable,
+        gitSyncConfigIdentifier, branch, entityType);
   }
 
   @NotNull
@@ -186,21 +202,30 @@ public class GitEntityServiceImpl implements GitEntityService {
     return new ArrayList<>(EntityType.getEntityTypes(moduleType));
   }
 
+  private List<GitSyncEntityDTO> buildEntityDTOListFromFileLocation(
+      List<GitFileLocation> gitFileLocationList, EntityType entityType) {
+    List<GitSyncEntityDTO> gitSyncEntityDTOList = new ArrayList<>();
+    for (GitFileLocation gitFileLocation : gitFileLocationList) {
+      gitSyncEntityDTOList.add(buildGitSyncEntityDTO(gitFileLocation));
+    }
+    return gitSyncEntityDTOList;
+  }
+
   @Override
-  public GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType) {
+  public GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType, String branch) {
     final Optional<GitFileLocation> gitFileLocation =
-        gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountId(
-            entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier());
+        gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountIdAndBranch(
+            entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier(), branch);
     return gitFileLocation.map(this::buildGitSyncEntityDTO).orElse(null);
   }
 
   @Override
-  public boolean save(
-      String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String filePath, String commitId) {
+  public boolean save(String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String folderPath,
+      String filePath, String commitId, String branchName) {
     final Optional<GitFileLocation> gitFileLocation =
-        gitFileLocationRepository.findByEntityGitPathAndYamlGitConfigIdAndAccountId(
+        gitFileLocationRepository.findByEntityGitPathAndGitSyncConfigIdAndAccountId(
             filePath, yamlGitConfig.getIdentifier(), accountId);
-
+    // todo(abhinav): changeisDefault to value which comes when
     final GitFileLocation fileLocation = GitFileLocation.builder()
                                              .accountId(accountId)
                                              .entityIdentifier(entityDetail.getEntityRef().getIdentifier())
@@ -208,15 +233,17 @@ public class GitEntityServiceImpl implements GitEntityService {
                                              .entityName(entityDetail.getName())
                                              .organizationId(entityDetail.getEntityRef().getOrgIdentifier())
                                              .projectId(entityDetail.getEntityRef().getProjectIdentifier())
-                                             .yamlGitConfigId(yamlGitConfig.getIdentifier())
+                                             .folderPath(folderPath)
                                              .entityGitPath(filePath)
-                                             .branch(yamlGitConfig.getBranch())
+                                             .branch(branchName)
                                              .repo(yamlGitConfig.getRepo())
                                              .gitConnectorId(yamlGitConfig.getGitConnectorRef())
                                              .scope(yamlGitConfig.getScope())
                                              .entityIdentifierFQN(entityDetail.getEntityRef().getFullyQualifiedName())
                                              .entityReference(entityDetail.getEntityRef())
                                              .lastCommitId(commitId)
+                                             .gitSyncConfigId(yamlGitConfig.getIdentifier())
+                                             .isDefault(branchName.equals(yamlGitConfig.getBranch()))
                                              .build();
     gitFileLocation.ifPresent(location -> fileLocation.setUuid(location.getUuid()));
     gitFileLocationRepository.save(fileLocation);

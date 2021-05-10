@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
@@ -34,9 +36,7 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.CVVerificationJobConstants;
@@ -73,6 +73,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class ActivityServiceImpl implements ActivityService {
   private static final int RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE = 5;
   @Inject private WebhookService webhookService;
@@ -81,8 +82,6 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private VerificationJobService verificationJobService;
   @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
-  @Inject private CVConfigService cvConfigService;
-  @Inject private VerificationManagerService verificationManagerService;
   @Inject private CD10ActivitySourceService cd10ActivitySourceService;
   @Inject private AlertRuleService alertRuleService;
 
@@ -106,8 +105,8 @@ public class ActivityServiceImpl implements ActivityService {
         webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
     return register(accountId, activityDTO);
   }
-
-  private String register(String accountId, ActivityDTO activityDTO) {
+  @Override
+  public String register(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
     Activity activity = getActivityFromDTO(activityDTO);
     activity.validate();
@@ -309,6 +308,7 @@ public class ActivityServiceImpl implements ActivityService {
         getDeploymentVerificationJobInstanceSummary(get(activityId));
     return ActivityStatusDTO.builder()
         .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
+        .remainingTimeMs(deploymentVerificationJobInstanceSummary.getRemainingTimeMs())
         .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())
         .activityId(activityId)
         .status(deploymentVerificationJobInstanceSummary.getStatus())
@@ -594,8 +594,8 @@ public class ActivityServiceImpl implements ActivityService {
             activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
         return null;
       }
-      verificationJobs.addAll(
-          verificationJobService.getHealthVerificationJobs(activity.getAccountId(), activity.getOrgIdentifier(),
+      verificationJobs.add(
+          verificationJobService.getResolvedHealthVerificationJob(activity.getAccountId(), activity.getOrgIdentifier(),
               activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier()));
     } else {
       activity.getVerificationJobRuntimeDetails().forEach(jobDetail -> {

@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -16,6 +17,7 @@ import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
@@ -42,6 +44,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
@@ -55,6 +58,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.WORKFLO
 import static org.elasticsearch.common.util.set.Sets.newHashSet;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -100,6 +104,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
@@ -179,6 +184,8 @@ public class UserGroupPermissionsController {
         return MANAGE_CONFIG_AS_CODE;
       case MANAGE_SECRETS:
         return MANAGE_SECRETS;
+      case MANAGE_SSH_AND_WINRM:
+        return MANAGE_SSH_AND_WINRM;
       case MANAGE_SECRET_MANAGERS:
         return MANAGE_SECRET_MANAGERS;
       case MANAGE_AUTHENTICATION_SETTINGS:
@@ -223,6 +230,8 @@ public class UserGroupPermissionsController {
         return EXECUTE_WORKFLOW;
       case EXECUTE_PIPELINE:
         return EXECUTE_PIPELINE;
+      case ROLLBACK_WORKFLOW:
+        return EXECUTE_WORKFLOW_ROLLBACK;
       default:
         log.error("Invalid Action {} given by the user", action.toString());
     }
@@ -340,6 +349,9 @@ public class UserGroupPermissionsController {
     if (actionsList.contains(QLActions.EXECUTE)) {
       actionsList.add(QLActions.EXECUTE_WORKFLOW);
       actionsList.add(QLActions.EXECUTE_PIPELINE);
+      actionsList.add(QLActions.ROLLBACK_WORKFLOW);
+    } else if (actionsList.contains(QLActions.EXECUTE_WORKFLOW)) {
+      actionsList.add(QLActions.ROLLBACK_WORKFLOW);
     }
   }
 
@@ -493,6 +505,8 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_CLOUD_PROVIDERS;
       case MANAGE_SECRETS:
         return QLAccountPermissionType.MANAGE_SECRETS;
+      case MANAGE_SSH_AND_WINRM:
+        return QLAccountPermissionType.MANAGE_SSH_AND_WINRM;
       case MANAGE_API_KEYS:
         return QLAccountPermissionType.MANAGE_API_KEYS;
       case MANAGE_CUSTOM_DASHBOARDS:
@@ -522,6 +536,8 @@ public class UserGroupPermissionsController {
         return QLActions.EXECUTE_PIPELINE;
       case EXECUTE_WORKFLOW:
         return QLActions.EXECUTE_WORKFLOW;
+      case EXECUTE_WORKFLOW_ROLLBACK:
+        return QLActions.ROLLBACK_WORKFLOW;
       default:
         log.error("Invalid Action {} given by the user", action.toString());
     }

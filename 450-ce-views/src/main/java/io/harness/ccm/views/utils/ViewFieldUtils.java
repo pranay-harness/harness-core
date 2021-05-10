@@ -1,10 +1,14 @@
 package io.harness.ccm.views.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.graphql.QLCEViewField;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 
+@OwnedBy(CE)
 public class ViewFieldUtils {
   public static List<QLCEViewField> getAwsFields() {
     return ImmutableList.of(QLCEViewField.builder().fieldId("awsServicecode").fieldName("Service").build(),
@@ -19,17 +23,29 @@ public class ViewFieldUtils {
   }
   public static List<QLCEViewField> getAzureFields() {
     return ImmutableList.of(
-        QLCEViewField.builder().fieldId("azureSubscriptionGuid").fieldName("Subscription Id").build(),
+        QLCEViewField.builder().fieldId("azureSubscriptionGuid").fieldName("Subscription id").build(),
         QLCEViewField.builder().fieldId("azureMeterName").fieldName("Meter").build(),
         QLCEViewField.builder().fieldId("azureMeterCategory").fieldName("Meter category").build(),
         QLCEViewField.builder().fieldId("azureMeterSubcategory").fieldName("Meter subcategory").build(),
         QLCEViewField.builder().fieldId("azureMeterId").fieldName("Resource guid").build(),
         QLCEViewField.builder().fieldId("azureResourceGroup").fieldName("Resource group name").build(),
         QLCEViewField.builder().fieldId("azureResourceType").fieldName("Resource type").build(),
-        QLCEViewField.builder().fieldId("azureInstanceId").fieldName("Resource").build(),
+        QLCEViewField.builder().fieldId("azureResource").fieldName("Resource").build(),
         QLCEViewField.builder().fieldId("azureServiceName").fieldName("Service name").build(),
-        QLCEViewField.builder().fieldId("azureServiceTier").fieldName("Service tier").build());
+        QLCEViewField.builder().fieldId("azureServiceTier").fieldName("Service tier").build(),
+        QLCEViewField.builder().fieldId("azureInstanceId").fieldName("Instance id").build());
   }
+
+  public static List<QLCEViewField> getVariableAzureFields() {
+    return ImmutableList.of(
+        QLCEViewField.builder().fieldId("azureSubscriptionName").fieldName("Subscription name").build(),
+        QLCEViewField.builder().fieldId("azurePublisherName").fieldName("Publisher name").build(),
+        QLCEViewField.builder().fieldId("azurePublisherType").fieldName("Publisher type").build(),
+        QLCEViewField.builder().fieldId("azureReservationId").fieldName("Reservation id").build(),
+        QLCEViewField.builder().fieldId("azureReservationName").fieldName("Reservation name").build(),
+        QLCEViewField.builder().fieldId("azureFrequency").fieldName("Frequency").build());
+  }
+
   public static List<QLCEViewField> getClusterFields() {
     return ImmutableList.of(QLCEViewField.builder().fieldId("clusterName").fieldName("Cluster Name").build(),
         QLCEViewField.builder().fieldId("namespace").fieldName("Namespace").build(),

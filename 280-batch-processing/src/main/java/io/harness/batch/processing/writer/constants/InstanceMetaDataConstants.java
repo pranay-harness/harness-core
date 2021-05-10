@@ -1,5 +1,9 @@
 package io.harness.batch.processing.writer.constants;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CE)
 public class InstanceMetaDataConstants {
   public static final String ZONE = "zone";
   public static final String REGION = "region";
@@ -14,6 +18,7 @@ public class InstanceMetaDataConstants {
   public static final String COMPUTE_TYPE = "compute_type";
   public static final String CLUSTER_TYPE = "cluster_type";
   public static final String CLOUD_PROVIDER = "cloud_provider";
+  public static final String WORKLOAD_ID = "workload_id";
   public static final String WORKLOAD_NAME = "workload_name";
   public static final String WORKLOAD_TYPE = "workload_type";
   public static final String INSTANCE_FAMILY = "instance_family";
@@ -35,6 +40,16 @@ public class InstanceMetaDataConstants {
   public static final String STORAGE_CLASS = "storage_class";
   public static final String POD_CAPACITY = "pod_capacity";
   public static final String SLOW_ACCOUNT = "SFByhonVQvGJX0SbY82rjA";
+  public static final String AZURE_SUBSCRIPTION_ID = "vm_subscription_id";
+  public static final String AZURE_RESOURCEGROUP_NAME = "vm_resource_group_name";
+  public static final int VM_INDEX = 2;
+  public static final String VM_INDEX_VALUE = "virtualMachines";
+  public static final int VMSS_INDEX = 4;
+  public static final String VMSS_INDEX_VALUE = "virtualMachineScaleSets";
+  public static final int SUBSCRIPTION_INDEX = 3;
+  public static final String SUBSCRIPTION_INDEX_VALUE = "subscriptions";
+  public static final int RESOURCE_GROUP_INDEX = 5;
+  public static final String RESOURCE_GROUP_INDEX_VALUE = "resourceGroups";
 
   private InstanceMetaDataConstants() {}
 }

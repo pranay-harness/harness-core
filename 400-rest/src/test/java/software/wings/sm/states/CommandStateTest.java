@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
@@ -71,6 +72,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.EmbeddedUser;
@@ -89,7 +95,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.shell.ScriptType;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.WingsBaseTest;
@@ -181,9 +186,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-/**
- * Created by peeyushaggarwal on 6/10/16.
- */
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CommandStateTest extends WingsBaseTest {
   /**
    * The constant RUNTIME_PATH.
@@ -1360,13 +1365,19 @@ public class CommandStateTest extends WingsBaseTest {
   private void testRenderCommandString(
       CommandState commandState, CommandStateExecutionData commandStateExecutionData, Command command) {
     Artifact artifact = null;
-    commandState.renderCommandString(command, context, commandStateExecutionData, artifact);
+    commandState.renderCommandString(command, context, commandStateExecutionData, artifact, 0);
     verify(context, times(2))
-        .renderExpression(
-            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+        .renderExpression("${var1}",
+            StateExecutionContext.builder()
+                .stateExecutionData(commandStateExecutionData)
+                .adoptDelegateDecryption(true)
+                .build());
     verify(context, times(1))
-        .renderExpression(
-            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+        .renderExpression("${var2}",
+            StateExecutionContext.builder()
+                .stateExecutionData(commandStateExecutionData)
+                .adoptDelegateDecryption(true)
+                .build());
   }
 
   @Test
@@ -1498,13 +1509,19 @@ public class CommandStateTest extends WingsBaseTest {
 
   private void testRenderCommandStringWithoutArtifact(
       CommandState commandState, CommandStateExecutionData commandStateExecutionData, Command command) {
-    commandState.renderCommandString(command, context, commandStateExecutionData);
+    commandState.renderCommandString(command, context, commandStateExecutionData, 0);
     verify(context, times(2))
-        .renderExpression(
-            "${var1}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+        .renderExpression("${var1}",
+            StateExecutionContext.builder()
+                .adoptDelegateDecryption(true)
+                .stateExecutionData(commandStateExecutionData)
+                .build());
     verify(context, times(1))
-        .renderExpression(
-            "${var2}", StateExecutionContext.builder().stateExecutionData(commandStateExecutionData).build());
+        .renderExpression("${var2}",
+            StateExecutionContext.builder()
+                .adoptDelegateDecryption(true)
+                .stateExecutionData(commandStateExecutionData)
+                .build());
   }
 
   @Test
@@ -1548,11 +1565,12 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = HINGER)
   @Category(UnitTests.class)
-  public void executeServiceCommandFromServiceWithWinRmConnection() {
+  public void executeServiceCommandFromServiceWithWinRmConnectionWithDelegateSelector() {
     commandState.setHost(HOST_NAME);
     commandState.setSshKeyRef("ssh_key_ref");
     commandState.setConnectionAttributes("WINRM_CONNECTION_ATTRIBUTES");
     commandState.setConnectionType(CommandState.ConnectionType.WINRM);
+    commandState.setDelegateSelectors(Arrays.asList("testDelegate"));
     SettingAttribute settingAttribute = new SettingAttribute();
     settingAttribute.setValue(WinRmConnectionAttributes.builder().build());
 
@@ -1578,8 +1596,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context).getStateExecutionData();
-
-    verify(context, times(6)).renderExpression(anyString());
+    verify(context, times(7)).renderExpression(anyString());
 
     verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(2)).get(anyString());
@@ -2290,13 +2307,28 @@ public class CommandStateTest extends WingsBaseTest {
     when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
     when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
 
-    when(templateService.get("TEMPLATE_ID", null))
-        .thenReturn(
-            Template.builder()
-                .templateObject(
-                    SshCommandTemplate.builder().commandUnits(Arrays.asList(commandWithTemplateReference)).build())
-                .build());
+    Map<String, Variable> variableMap = new HashMap<>();
+    Variable variable = aVariable().value("var1Value").name("var1").build();
 
+    List<ReferencedTemplate> referencedTemplateList = new ArrayList<>();
+    referencedTemplateList.add(
+        ReferencedTemplate.builder()
+            .templateReference(TemplateReference.builder().templateVersion(2L).templateUuid("NESTED_TEMP_UUID").build())
+            .variableMapping(variableMap)
+            .build());
+
+    variableMap.put("var1", variable);
+
+    when(templateService.get("TEMPLATE_ID", null))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder()
+                                            .commandUnits(Arrays.asList(commandWithTemplateReference))
+                                            .referencedTemplateList(referencedTemplateList)
+                                            .build())
+                        .variables(Arrays.asList(variable))
+                        .build());
+
+    commandState.setTemplateVariables(Arrays.asList(variable));
     ExecutionResponse executionResponse = commandState.execute(context);
 
     when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());

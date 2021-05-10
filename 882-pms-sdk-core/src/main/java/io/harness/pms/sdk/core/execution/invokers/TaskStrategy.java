@@ -1,9 +1,10 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.execution.Status.NO_OP;
 import static io.harness.pms.contracts.execution.Status.SKIPPED;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
+import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -11,44 +12,40 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.SkipTaskExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
+import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest.RequestCase;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.data.StringOutcome;
-import io.harness.pms.sdk.core.execution.ErrorDataException;
-import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.ProgressableStrategy;
 import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.tasks.ErrorResponseData;
-import io.harness.tasks.ResponseData;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.Map;
-import java.util.function.Supplier;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@OwnedBy(CDC)
-public class TaskStrategy implements ExecuteStrategy {
-  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
+@OwnedBy(PIPELINE)
+public class TaskStrategy extends ProgressableStrategy {
+  @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
+  @Inject private StrategyHelper strategyHelper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
+    TaskExecutable taskExecutable = extractStep(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
     TaskRequest task = taskExecutable.obtainTask(ambiance,
-        pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
+        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(ambiance, nodeExecution, task);
   }
 
@@ -56,39 +53,29 @@ public class TaskStrategy implements ExecuteStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
-    TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
-    StepResponse stepResponse =
-        taskExecutable.handleTaskResult(ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-            buildResponseDataSupplier(resumePackage.getResponseDataMap()));
-    pmsNodeExecutionService.handleStepResponse(
+    TaskExecutable taskExecutable = extractStep(nodeExecution);
+    StepResponse stepResponse = null;
+    try {
+      stepResponse = taskExecutable.handleTaskResult(ambiance,
+          sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
+          buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+    } catch (Exception e) {
+      stepResponse = strategyHelper.handleException(e);
+    }
+    sdkNodeExecutionService.handleStepResponse(
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
-  }
-
-  private Supplier buildResponseDataSupplier(Map<String, ResponseData> responseDataMap) {
-    return () -> {
-      ResponseData data = responseDataMap.values().iterator().next();
-      if (data instanceof ErrorResponseData) {
-        throw new ErrorDataException((ErrorResponseData) data);
-      }
-      return data;
-    };
-  }
-
-  private TaskExecutable extractTaskExecutable(NodeExecutionProto nodeExecution) {
-    PlanNodeProto node = nodeExecution.getNode();
-    return (TaskExecutable) stepRegistry.obtain(node.getStepType());
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, TaskRequest taskRequest) {
     if (RequestCase.SKIPTASKREQUEST == taskRequest.getRequestCase()) {
-      pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), NO_OP,
+      sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), NO_OP,
           ExecutableResponse.newBuilder()
               .setSkipTask(SkipTaskExecutableResponse.newBuilder()
                                .setMessage(taskRequest.getSkipTaskRequest().getMessage())
                                .build())
               .build(),
           Collections.emptyList());
-      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
           StepResponseMapper.toStepResponseProto(
               StepResponse.builder()
                   .status(SKIPPED)
@@ -102,21 +89,30 @@ public class TaskStrategy implements ExecuteStrategy {
       return;
     }
 
-    String taskId = Preconditions.checkNotNull(
-        pmsNodeExecutionService.queueTask(nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskRequest));
-
-    // Update Execution Node Instance state to TASK_WAITING
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), TASK_WAITING,
+    ExecutableResponse executableResponse =
         ExecutableResponse.newBuilder()
             .setTask(
                 TaskExecutableResponse.newBuilder()
-                    .setTaskId(taskId)
                     .setTaskCategory(taskRequest.getTaskCategory())
                     .addAllLogKeys(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
                     .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
                     .setTaskName(taskRequest.getDelegateTaskRequest().getTaskName())
                     .build())
-            .build(),
-        Collections.emptyList());
+            .build();
+
+    QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
+                                            .setNodeExecutionId(nodeExecution.getUuid())
+                                            .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
+                                            .setTaskRequest(taskRequest)
+                                            .setExecutableResponse(executableResponse)
+                                            .setStatus(TASK_WAITING)
+                                            .build();
+    sdkNodeExecutionService.queueTaskRequest(queueTaskRequest);
+  }
+
+  @Override
+  public TaskExecutable extractStep(NodeExecutionProto nodeExecution) {
+    PlanNodeProto node = nodeExecution.getNode();
+    return (TaskExecutable) stepRegistry.obtain(node.getStepType());
   }
 }

@@ -1,5 +1,7 @@
 package io.harness.ci.creator.variables;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
@@ -15,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIStageVariableCreator extends ChildrenVariableCreator {
   @Override
   public LinkedHashMap<String, VariableCreationResponse> createVariablesForChildrenNodes(

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -50,6 +51,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -116,6 +118,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -144,6 +147,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
 public class CloudFormationStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   public static final String ENV_ID_CF = "abcdefgh";
@@ -175,6 +179,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks
   private CloudFormationCreateStackState cloudFormationCreateStackState = new CloudFormationCreateStackState("name");
@@ -335,7 +340,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     FieldUtils.writeField(
         cloudFormationDeleteStackState, "templateExpressionProcessor", templateExpressionProcessor, true);
 
-    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
+    when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
@@ -355,6 +360,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test

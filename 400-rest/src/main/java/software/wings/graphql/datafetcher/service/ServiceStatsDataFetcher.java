@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -20,12 +22,14 @@ import software.wings.graphql.schema.type.aggregation.service.QLServiceTagType;
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLServiceFilter,
     QLServiceAggregation, QLNoOpSortCriteria, QLServiceTagType, QLServiceTagAggregation, QLServiceEntityAggregation> {
@@ -33,7 +37,8 @@ public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLServiceFilter> filters,
-      List<QLServiceAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLServiceAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = Service.class;
     final List<String> groupByEntityList = new ArrayList<>();
     if (isNotEmpty(groupByList)) {
@@ -61,6 +66,8 @@ public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QL
         return "appId";
       case ArtifactType:
         return "artifactType";
+      case DeploymentType:
+        return "deploymentType";
       default:
         log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);

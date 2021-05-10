@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "module",
@@ -9,9 +8,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//950-events-api:module",
-        "//950-events-api/src/main/proto:950_events_api_java_proto",
-        "//950-events-api/src/main/proto:950_events_api_proto",
+        "//953-events-api:module",
         "//960-ng-core-beans:module",
         "//970-ng-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
@@ -42,6 +39,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

@@ -12,8 +12,8 @@ import java.util.Date;
 import java.util.List;
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.Data;
 import lombok.Setter;
-import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
 import org.mongodb.morphia.annotations.Entity;
@@ -22,7 +22,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Value
+@Data
 @Builder
 @FieldNameConstants(innerTypeName = "TriggerWebhookEventsKeys")
 @Entity(value = "triggerWebhookEvents", noClassnameStored = true)

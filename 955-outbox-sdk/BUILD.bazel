@@ -1,8 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 load("//:macros.bzl", "sources")
 
 sources()
@@ -21,6 +19,8 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_google_code_gson_gson",
         "@maven//:com_google_inject_guice",
+        "@maven//:io_github_resilience4j_resilience4j_core",
+        "@maven//:io_github_resilience4j_resilience4j_retry",
         "@maven//:org_slf4j_slf4j_api",
     ],
 )
@@ -53,14 +53,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
-
-pmd()
+run_analysis()

@@ -1,8 +1,13 @@
 package software.wings.graphql.datafetcher.infraDefinition;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.graphql.utils.nameservice.NameService.infrastructureDefinition;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 
@@ -28,6 +33,8 @@ import java.util.List;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class InfrastructureDefinitionConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLInfrastructureDefinitionFilter, QLNoOpSortCriteria,
         QLInfrastructureDefinitionConnection> {

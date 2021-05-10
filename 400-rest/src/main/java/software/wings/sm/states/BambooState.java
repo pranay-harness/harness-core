@@ -14,6 +14,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.sm.StateType.BAMBOO;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -21,7 +22,6 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.BambooExecutionData;

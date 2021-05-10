@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "abstract-module",
@@ -16,7 +15,6 @@ java_library(
 
 java_library(
     name = "module",
-    testonly = True,
     srcs = glob(["src/main/**/*.java"]),
     resource_jars = [
         ":abstract-module",
@@ -35,6 +33,7 @@ java_library(
         "@maven//:commons_codec_commons_codec",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_slf4j_slf4j_api",
     ],
@@ -53,6 +52,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

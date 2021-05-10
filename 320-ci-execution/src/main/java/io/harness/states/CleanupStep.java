@@ -1,7 +1,9 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
@@ -29,11 +31,11 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
+import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -41,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  * This is not used currently because clean up is implemented via event handler
  */
 
+@OwnedBy(CI)
 @Slf4j
 public class CleanupStep implements TaskExecutable<CleanupStepInfo, K8sTaskExecutionResponse> {
   public static final StepType STEP_TYPE = CleanupStepInfo.STEP_TYPE;
@@ -97,8 +100,8 @@ public class CleanupStep implements TaskExecutable<CleanupStepInfo, K8sTaskExecu
   }
 
   @Override
-  public StepResponse handleTaskResult(
-      Ambiance ambiance, CleanupStepInfo stepParameters, Supplier<K8sTaskExecutionResponse> responseSupplier) {
+  public StepResponse handleTaskResult(Ambiance ambiance, CleanupStepInfo stepParameters,
+      ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier) throws Exception {
     K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       log.info("Cleanup of K8 pod, secret is successful for pod name {} ", stepParameters.getPodName());

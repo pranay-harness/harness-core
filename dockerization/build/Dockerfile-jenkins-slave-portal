@@ -48,6 +48,11 @@ RUN curl -O https://releases.hashicorp.com/terraform/0.12.11/terraform_0.12.11_l
     && chmod 755 terraform \
     && mv terraform /usr/local/bin
 
+#Install terragrunt BT-310
+ARG TERRAGRUNT_VERSION=v0.28.18
+ADD https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 /usr/local/bin/terragrunt
+RUN chmod +x /usr/local/bin/terragrunt
+
 RUN wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo \
     && yum install -y cf-cli
 
@@ -63,6 +68,11 @@ ARG KUBECTL_VERSION=v1.13.2
 ARG PLATFORM=linux
 RUN curl  -s -L -o kubectl https://app.harness.io/storage/harness-download/kubernetes-release/release/${KUBECTL_VERSION}/bin/${PLATFORM}/amd64/kubectl \
     && chmod +x kubectl && mv kubectl /usr/bin
+
+#Install helm BT-310
+ARG HELM_VERSION=2.17.0
+RUN wget -q https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm \
+    && chmod +x /usr/local/bin/helm
 
 ENV JAVA_HOME /etc/alternatives/java_sdk_1.8.0_openjdk
 
@@ -91,5 +101,13 @@ RUN cd /tmp \
     && unused_deps --version \
     && cd / \
     && rm -rf /tmp/*
+
+RUN curl -fsSL https://get.docker.com/ | sh \
+    && yum -y install epel-release \
+    && yum -y install python-pip \
+    && python --version
+
+ENV python /usr/bin/python
+ENV PATH ${PATH}:/usr/bin/python
 
 ENTRYPOINT ["jenkins-slave"]

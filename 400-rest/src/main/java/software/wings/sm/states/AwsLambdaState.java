@@ -21,6 +21,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -33,7 +34,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.annotation.EncryptableSetting;
@@ -382,6 +382,8 @@ public class AwsLambdaState extends State {
               .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
               .tags(isNotEmpty(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag())
                                                                   : null)
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("Aws Lambda task execution")
               .data(TaskData.builder()
                         .async(true)
                         .taskType(AWS_LAMBDA_TASK.name())
@@ -390,6 +392,7 @@ public class AwsLambdaState extends State {
                         .build())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
+      appendDelegateTaskDetails(context, delegateTask);
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(activity.getUuid()))
@@ -576,5 +579,10 @@ public class AwsLambdaState extends State {
 
   public void setAliases(List<String> aliases) {
     this.aliases = aliases;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

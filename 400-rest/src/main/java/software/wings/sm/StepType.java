@@ -111,7 +111,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 
 import software.wings.api.DeploymentType;
@@ -235,6 +237,9 @@ import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
+import software.wings.sm.states.provision.TerragruntApplyState;
+import software.wings.sm.states.provision.TerragruntDestroyState;
+import software.wings.sm.states.provision.TerragruntRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
@@ -257,6 +262,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
 public enum StepType {
   // Important: Do not change the order of StepTypes in the enum.
   // The order of StepTypes dictates the order in which Step Types are shown under each Category.
@@ -560,6 +566,20 @@ public enum StepType {
       Lists.newArrayList(
           DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
       asList(PhaseType.ROLLBACK)),
+  TERRAGRUNT_PROVISION(TerragruntApplyState.class, WorkflowServiceHelper.TERRAGRUNT_PROVISION,
+      asList(INFRASTRUCTURE_PROVISIONER), asList(PhaseStepType.values()), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK)),
+  TERRAGRUNT_DESTROY(TerragruntDestroyState.class, WorkflowServiceHelper.TERRAGRUNT_DESTROY,
+      asList(INFRASTRUCTURE_PROVISIONER),
+      asList(POST_DEPLOYMENT, WRAP_UP, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
+          DeploymentType.KUBERNETES, DeploymentType.CUSTOM),
+      asList(PhaseType.NON_ROLLBACK)),
+  TERRAGRUNT_ROLLBACK(TerragruntRollbackState.class, WorkflowServiceHelper.TERRAGRUNT_ROLLBACK,
+      asList(INFRASTRUCTURE_PROVISIONER), singletonList(PRE_DEPLOYMENT),
+      Lists.newArrayList(
+          DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
+      asList(PhaseType.ROLLBACK)),
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISION_SHELL_SCRIPT, asList(INFRASTRUCTURE_PROVISIONER),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK)),
@@ -673,7 +693,7 @@ public enum StepType {
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlValidator.class),
   HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), true),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
       asList(UTILITY), asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
@@ -781,6 +801,10 @@ public enum StepType {
 
   public Class<? extends StepCompletionYamlValidator> getYamlValidatorClass() {
     return yamlValidatorClass;
+  }
+
+  public boolean supportsTimeoutFailure() {
+    return supportsTimeoutFailure;
   }
 
   public boolean matchesDeploymentType(DeploymentType deploymentType) {

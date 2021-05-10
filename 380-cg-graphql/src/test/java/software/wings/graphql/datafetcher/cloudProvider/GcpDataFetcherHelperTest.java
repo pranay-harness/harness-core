@@ -16,6 +16,7 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLGcpCloudProviderIn
 import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProviderInput;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,13 +43,16 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void toSettingAttributeReturnValue() {
-    QLGcpCloudProviderInput input = QLGcpCloudProviderInput.builder()
-                                        .name(RequestField.ofNullable(NAME))
-                                        .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
-                                        .skipValidation(RequestField.ofNullable(false))
-                                        .delegateSelector(RequestField.ofNullable(DELEGATE_SELECTOR))
-                                        .useDelegate(RequestField.ofNull())
-                                        .build();
+    QLGcpCloudProviderInput input =
+        QLGcpCloudProviderInput.builder()
+            .name(RequestField.ofNullable(NAME))
+            .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
+            .skipValidation(RequestField.ofNullable(false))
+            .delegateSelectors(RequestField.ofNullable(Collections.singletonList(DELEGATE_SELECTOR)))
+            .useDelegateSelectors(RequestField.ofNull())
+            .delegateSelector(RequestField.ofNull())
+            .useDelegate(RequestField.ofNull())
+            .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
 
@@ -57,9 +61,9 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     assertThat(setting.getValue()).isInstanceOf(GcpConfig.class);
     GcpConfig config = (GcpConfig) setting.getValue();
     assertThat(config.getEncryptedServiceAccountKeyFileContent()).isEqualTo(KEY);
-    assertThat(config.getDelegateSelector()).isEqualTo(DELEGATE_SELECTOR);
+    assertThat(config.getDelegateSelectors()).isEqualTo(Collections.singletonList(DELEGATE_SELECTOR));
     assertThat(config.isSkipValidation()).isFalse();
-    assertThat(config.isUseDelegate()).isFalse();
+    assertThat(config.isUseDelegateSelectors()).isFalse();
   }
 
   @Test
@@ -70,6 +74,8 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
                                         .name(RequestField.ofNull())
                                         .serviceAccountKeySecretId(RequestField.ofNull())
                                         .skipValidation(RequestField.ofNull())
+                                        .delegateSelectors(RequestField.ofNull())
+                                        .useDelegateSelectors(RequestField.ofNull())
                                         .delegateSelector(RequestField.ofNull())
                                         .useDelegate(RequestField.ofNull())
                                         .build();
@@ -83,13 +89,16 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
   @Owner(developers = IGOR)
   @Category(UnitTests.class)
   public void updateSettingAttributePerformance() {
-    QLUpdateGcpCloudProviderInput input = QLUpdateGcpCloudProviderInput.builder()
-                                              .name(RequestField.ofNullable(NAME))
-                                              .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
-                                              .skipValidation(RequestField.ofNullable(true))
-                                              .delegateSelector(RequestField.ofNullable(DELEGATE_SELECTOR))
-                                              .useDelegate(RequestField.ofNullable(true))
-                                              .build();
+    QLUpdateGcpCloudProviderInput input =
+        QLUpdateGcpCloudProviderInput.builder()
+            .name(RequestField.ofNullable(NAME))
+            .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
+            .skipValidation(RequestField.ofNullable(true))
+            .delegateSelectors(RequestField.ofNullable(Collections.singletonList(DELEGATE_SELECTOR)))
+            .useDelegateSelectors(RequestField.ofNullable(true))
+            .delegateSelector(RequestField.ofNull())
+            .useDelegate(RequestField.ofNull())
+            .build();
 
     SettingAttribute setting =
         SettingAttribute.Builder.aSettingAttribute().withValue(GcpConfig.builder().build()).build();
@@ -100,8 +109,8 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     assertThat(setting.getValue()).isInstanceOf(GcpConfig.class);
     GcpConfig config = (GcpConfig) setting.getValue();
     assertThat(config.getEncryptedServiceAccountKeyFileContent()).isEqualTo(KEY);
-    assertThat(config.getDelegateSelector()).isEqualTo(DELEGATE_SELECTOR);
-    assertThat(config.isUseDelegate()).isTrue();
+    assertThat(config.getDelegateSelectors()).isEqualTo(Collections.singletonList(DELEGATE_SELECTOR));
+    assertThat(config.isUseDelegateSelectors()).isTrue();
     assertThat(config.isSkipValidation()).isTrue();
   }
 
@@ -113,6 +122,8 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
                                               .name(RequestField.ofNull())
                                               .serviceAccountKeySecretId(RequestField.ofNull())
                                               .skipValidation(RequestField.ofNull())
+                                              .delegateSelectors(RequestField.ofNull())
+                                              .useDelegateSelectors(RequestField.ofNull())
                                               .delegateSelector(RequestField.ofNull())
                                               .useDelegate(RequestField.ofNull())
                                               .build();

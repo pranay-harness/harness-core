@@ -1,7 +1,12 @@
 package io.harness.ccm.health;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.Getter;
 
+@OwnedBy(CE)
 public enum CEError {
   NO_CLUSTERS_TRACKED_BY_HARNESS_CE("No ECS cluster tracked by Harness for this AWS cloud provider %s."),
 
@@ -21,7 +26,9 @@ public enum CEError {
 
   K8S_PERMISSIONS_MISSING("This service account does not have all the permissions to collect data."),
 
-  METRICS_SERVER_NOT_FOUND("Metrics server is not installed in this Kubernetes Cluster %s."),
+  NODES_IS_FORBIDDEN("Nodes is forbidden, cannot list nodes"),
+
+  METRICS_SERVER_NOT_FOUND("Metrics server is not installed in this Kubernetes Cluster %s. 404 page not found"),
 
   AWS_ECS_CLUSTER_NOT_FOUND("The ECS cluster %s received error code ClusterNotFoundException from Amazon ECS service."),
 

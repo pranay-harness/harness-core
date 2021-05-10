@@ -2,22 +2,22 @@ package io.harness.batch.processing.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 
-import software.wings.beans.SettingAttribute;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-import software.wings.settings.SettingVariableTypes;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
@@ -26,15 +26,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@OwnedBy(HarnessTeam.CE)
 @Service
 @Slf4j
 public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataService {
   private final CloudToHarnessMappingService cloudToHarnessMappingService;
   private final BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   private final BigQueryHelperService bigQueryHelperService;
+  private final CEMetadataRecordDao ceMetadataRecordDao;
+  private final CloudBillingHelper cloudBillingHelper;
 
   private LoadingCache<String, String> awsBillingMetaDataCache =
       Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAwsBillingMetaData);
+
+  private LoadingCache<String, String> azureBillingMetaDataCache =
+      Caffeine.newBuilder().expireAfterWrite(4, TimeUnit.HOURS).build(this::getAzureBillingMetaData);
 
   private LoadingCache<CacheKey, Boolean> pipelineJobStatusCache =
       Caffeine.newBuilder()
@@ -50,15 +56,23 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
   @Autowired
   public CustomBillingMetaDataServiceImpl(CloudToHarnessMappingService cloudToHarnessMappingService,
-      BillingDataPipelineRecordDao billingDataPipelineRecordDao, BigQueryHelperService bigQueryHelperService) {
+      BillingDataPipelineRecordDao billingDataPipelineRecordDao, BigQueryHelperService bigQueryHelperService,
+      CEMetadataRecordDao ceMetadataRecordDao, CloudBillingHelper cloudBillingHelper) {
     this.cloudToHarnessMappingService = cloudToHarnessMappingService;
     this.billingDataPipelineRecordDao = billingDataPipelineRecordDao;
     this.bigQueryHelperService = bigQueryHelperService;
+    this.ceMetadataRecordDao = ceMetadataRecordDao;
+    this.cloudBillingHelper = cloudBillingHelper;
   }
 
   @Override
   public String getAwsDataSetId(String accountId) {
     return awsBillingMetaDataCache.get(accountId);
+  }
+
+  @Override
+  public String getAzureDataSetId(String accountId) {
+    return azureBillingMetaDataCache.get(accountId);
   }
 
   @Override
@@ -69,7 +83,9 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
 
   private Boolean getPipelineJobStatus(String accountId, Instant startTime, Instant endTime) {
     String awsDataSetId = getAwsDataSetId(accountId);
-    if (awsDataSetId != null) {
+    // For 4 days before date always return true; If CUR data is not present it will use public api
+    Instant bufferTime = Instant.now().minus(4, ChronoUnit.DAYS);
+    if (awsDataSetId != null && startTime.isAfter(bufferTime)) {
       Instant startAt = endTime.minus(1, ChronoUnit.HOURS);
       Map<String, VMInstanceBillingData> awsEC2BillingData =
           bigQueryHelperService.getAwsBillingData(startAt, endTime, awsDataSetId);
@@ -79,21 +95,19 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
 
   private String getAwsBillingMetaData(String accountId) {
-    if (!ImmutableSet
-             .of("zEaak-FLS425IEO7OLzMUg", "ng2HGKFpStaPsVqGr3B3gA", "R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q",
-                 "DVExhMPMScy6RpRNKwyvZQ")
-             .contains(accountId)) {
-      return null;
+    CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
+        && ceMetadataRecord.getAwsDataPresent()) {
+      return cloudBillingHelper.getDataSetId(accountId);
     }
-    List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS);
-    log.info("Setting att size {}", settingAttributes.size());
-    if (!settingAttributes.isEmpty()) {
-      SettingAttribute settingAttribute = settingAttributes.get(0);
-      BillingDataPipelineRecord billingDataPipelineRecord =
-          billingDataPipelineRecordDao.getBySettingId(accountId, settingAttribute.getUuid());
-      log.info("BDPR {}", billingDataPipelineRecord);
-      return billingDataPipelineRecord.getDataSetId();
+    return null;
+  }
+
+  private String getAzureBillingMetaData(String accountId) {
+    CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAzureDataPresent()
+        && ceMetadataRecord.getAzureDataPresent()) {
+      return cloudBillingHelper.getDataSetId(accountId);
     }
     return null;
   }

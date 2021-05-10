@@ -9,6 +9,9 @@ import static io.harness.batch.processing.ccm.BatchJobBucket.OUT_OF_CLUSTER;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +20,7 @@ import lombok.Getter;
 import org.springframework.batch.core.Job;
 
 @Getter
+@OwnedBy(HarnessTeam.CE)
 public enum BatchJobType {
   BILLING_DATA_PIPELINE(50, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   SYNC_BILLING_REPORT_S3(100, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
@@ -40,6 +44,7 @@ public enum BatchJobType {
   CLUSTER_DATA_TO_BIG_QUERY(1000, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), IN_CLUSTER_BILLING),
   ANOMALY_DETECTION_K8S(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
   ANOMALY_DETECTION_CLOUD(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
+  DATA_CHECK_BIGQUERY_TIMESCALE(1000, 1, ChronoUnit.DAYS, singletonList(CLUSTER_DATA_TO_BIG_QUERY), IN_CLUSTER_BILLING),
   RERUN_JOB(1500, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER_BILLING);
 
   // Specifies order in which the jobs are to be run

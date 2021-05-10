@@ -9,6 +9,7 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
 import io.harness.pms.contracts.advisers.MarkSuccessAdvise.Builder;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
@@ -38,11 +39,13 @@ public class OnMarkSuccessAdviser implements Adviser {
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
     OnMarkSuccessAdviserParameters adviserParameters = extractParameters(advisingEvent);
+    boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesValueList())) {
-      return !Collections.disjoint(adviserParameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
+      return canAdvise
+          && !Collections.disjoint(adviserParameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
-    return true;
+    return canAdvise;
   }
 
   @NotNull

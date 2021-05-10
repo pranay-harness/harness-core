@@ -1,5 +1,8 @@
 package io.harness.ccm.cluster;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 
 import software.wings.beans.InfrastructureMapping;
@@ -8,6 +11,7 @@ import software.wings.infra.InfrastructureDefinition;
 
 import java.util.List;
 
+@OwnedBy(CE)
 public interface ClusterRecordService {
   ClusterRecord upsert(ClusterRecord cluster);
   ClusterRecord get(String clusterId);

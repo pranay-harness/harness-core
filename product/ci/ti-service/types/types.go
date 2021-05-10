@@ -121,8 +121,10 @@ type SelectTestsResp struct {
 }
 
 type SelectTestsReq struct {
-	Files    []File   `json:"files"`
-	TiConfig TiConfig `json:"ti_config"`
+	Files        []File   `json:"files"`
+	TargetBranch string   `json:"target_branch"`
+	Repo         string   `json:"repo"`
+	TiConfig     TiConfig `json:"ti_config"`
 }
 
 type SelectionDetails struct {
@@ -154,4 +156,16 @@ type TiConfig struct {
 	Config struct {
 		Ignore []string `json:"ignore"`
 	}
+}
+
+type DiffInfo struct {
+	Sha   string
+	Files []File
+}
+
+type MergePartialCgRequest struct {
+	AccountId    string
+	Repo         string
+	TargetBranch string
+	Diff         DiffInfo
 }

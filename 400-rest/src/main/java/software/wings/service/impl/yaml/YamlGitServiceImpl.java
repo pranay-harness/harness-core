@@ -53,6 +53,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import io.harness.alert.AlertData;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -75,7 +76,6 @@ import io.harness.persistence.HIterator;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.Account;
@@ -1290,7 +1290,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     // After MultiGit support gitCommit record would have list of yamlGitConfigs.
 
     FindOptions findOptions = new FindOptions();
-    findOptions.modifier("$hint", "gitCommitAccountIdYamlConfigIdsStatusLastUpdatedIdx");
+    findOptions.modifier("$hint", "gitCommitAccountIdStatusYgcLastUpdatedIdx");
 
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
                               .filter(GitCommitKeys.accountId, accountId)
@@ -1303,13 +1303,16 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     // This is to handle the old git commit records which doesn't have yamlGitConfigId
     if (gitCommit == null) {
+      FindOptions findOptions_1 = new FindOptions();
+      findOptions_1.modifier("$hint", "gitCommitAccountIdStatusYgLastUpdatedIdx");
+
       gitCommit = wingsPersistence.createQuery(GitCommit.class)
                       .filter(GitCommitKeys.accountId, accountId)
                       .filter(GitCommitKeys.yamlGitConfigId, yamlGitConfigIds.get(0))
                       .field(GitCommitKeys.status)
                       .in(getProcessedGitCommitStatusList(accountId))
                       .order("-lastUpdatedAt")
-                      .get();
+                      .get(findOptions_1);
     }
 
     return gitCommit;

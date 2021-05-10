@@ -1,0 +1,14 @@
+subject: "Approval Required for ${pipelineName} in ${projectName}."
+body: "
+<html>
+<h4>This is a notification that the <a href=\"${pipelineExecutionLink}\">${pipelineName}</a> is waiting for your approval.</h4>
+<p>Approval message:* ${approvalMessage}
+<p>Pipeline execution summary:</p>
+<p>Started At: ${startedAt}</p>
+<p>Triggered By: ${triggeredBy}</p>
+<p>Finished Stage(s): ${finishedStages}</p>
+<p>Running Stage(s): ${runningStages}</p>
+<p>Upcoming Stage(s): ${upcomingStages}</p>
+<p>Time remaining for approval: ${timeRemainingForApproval}</p>
+</html>
+"

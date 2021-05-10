@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.azure.arm.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.model.AzureConstants.ARM_DEPLOYMENT_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -8,6 +9,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.context.ARMDeploymentSteadyStateContext;
@@ -17,7 +19,6 @@ import io.harness.azure.model.AzureARMRGTemplateExportOptions;
 import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
-import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AzureARMDeploymentService {
   @Inject private AzureManagementClient azureManagementClient;
   @Inject private ARMDeploymentSteadyStateChecker deploymentSteadyStateChecker;
@@ -112,7 +114,7 @@ public class AzureARMDeploymentService {
     deploymentSteadyStateChecker.waitUntilCompleteWithTimeout(
         steadyStateContext, azureManagementClient, getARMDeploymentSteadyStateLogCallback(context));
 
-    return getARMDeploymentOutputs(context.getLogStreamingTaskClient(), steadyStateContext);
+    return getARMDeploymentOutputs(context, steadyStateContext);
   }
 
   public String deployAtSubscriptionScope(DeploymentSubscriptionContext context) {
@@ -159,7 +161,7 @@ public class AzureARMDeploymentService {
     deploymentSteadyStateChecker.waitUntilCompleteWithTimeout(
         steadyStateContext, azureManagementClient, getARMDeploymentSteadyStateLogCallback(context));
 
-    return getARMDeploymentOutputs(context.getLogStreamingTaskClient(), steadyStateContext);
+    return getARMDeploymentOutputs(context, steadyStateContext);
   }
 
   public String deployAtManagementGroupScope(DeploymentManagementGroupContext context) {
@@ -206,7 +208,7 @@ public class AzureARMDeploymentService {
 
     deploymentSteadyStateChecker.waitUntilCompleteWithTimeout(
         steadyStateContext, azureManagementClient, getARMDeploymentSteadyStateLogCallback(context));
-    return getARMDeploymentOutputs(context.getLogStreamingTaskClient(), steadyStateContext);
+    return getARMDeploymentOutputs(context, steadyStateContext);
   }
 
   public String deployAtTenantScope(DeploymentTenantContext context) {
@@ -250,7 +252,7 @@ public class AzureARMDeploymentService {
 
     deploymentSteadyStateChecker.waitUntilCompleteWithTimeout(
         steadyStateContext, azureManagementClient, getARMDeploymentSteadyStateLogCallback(context));
-    return getARMDeploymentOutputs(context.getLogStreamingTaskClient(), steadyStateContext);
+    return getARMDeploymentOutputs(context, steadyStateContext);
   }
 
   private String getValidationErrorMsg(ErrorResponse errorResponse) {
@@ -275,20 +277,27 @@ public class AzureARMDeploymentService {
   }
 
   private String getARMDeploymentOutputs(
-      ILogStreamingTaskClient logStreamingTaskClient, ARMDeploymentSteadyStateContext steadyStateContext) {
+      DeploymentContext context, ARMDeploymentSteadyStateContext steadyStateContext) {
+    LogCallback outPutLogCallback = getARMDeploymentOutputsLogCallback(context);
     String armDeploymentOutputs = azureManagementClient.getARMDeploymentOutputs(steadyStateContext);
-    LogCallback outPutLogCallback = logStreamingTaskClient.obtainLogCallback(AzureConstants.ARM_DEPLOYMENT_OUTPUTS);
     String prettifyJson = JsonUtils.prettifyJsonString(armDeploymentOutputs);
     outPutLogCallback.saveExecutionLog(
         prettifyJson.equalsIgnoreCase("null") ? "{}" : prettifyJson, LogLevel.INFO, SUCCESS);
     return armDeploymentOutputs;
   }
 
+  private LogCallback getARMDeploymentOutputsLogCallback(DeploymentContext context) {
+    context.setRunningCommandUnit(AzureConstants.ARM_DEPLOYMENT_OUTPUTS);
+    return context.getLogStreamingTaskClient().obtainLogCallback(AzureConstants.ARM_DEPLOYMENT_OUTPUTS);
+  }
+
   private LogCallback getARMDeploymentLogCallback(DeploymentContext context) {
+    context.setRunningCommandUnit(AzureConstants.EXECUTE_ARM_DEPLOYMENT);
     return context.getLogStreamingTaskClient().obtainLogCallback(AzureConstants.EXECUTE_ARM_DEPLOYMENT);
   }
 
   private LogCallback getARMDeploymentSteadyStateLogCallback(DeploymentContext context) {
+    context.setRunningCommandUnit(AzureConstants.ARM_DEPLOYMENT_STEADY_STATE);
     return context.getLogStreamingTaskClient().obtainLogCallback(AzureConstants.ARM_DEPLOYMENT_STEADY_STATE);
   }
 }

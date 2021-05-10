@@ -5,6 +5,7 @@ import (
 	"github.com/wings-software/portal/product/ci/scm/git"
 	"github.com/wings-software/portal/product/ci/scm/parser"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
+	"github.com/wings-software/portal/product/ci/scm/repo"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -51,7 +52,7 @@ func (h *handler) GetLatestFile(ctx context.Context, in *pb.GetLatestFileRequest
 		},
 		Provider: in.Provider,
 	}
-	log.Infow("GetLatestFile using FindFile", "slug", in.Slug, "path", in.Path, "branch", in.Branch)
+	log.Infow("GetLatestFile using FindFile", "slug", in.GetSlug(), "path", in.GetPath(), "branch", in.GetBranch())
 	return file.FindFile(ctx, findFileIn, log)
 }
 
@@ -59,9 +60,9 @@ func (h *handler) GetLatestFile(ctx context.Context, in *pb.GetLatestFileRequest
 func (h *handler) IsLatestFile(ctx context.Context, in *pb.IsLatestFileRequest) (*pb.IsLatestFileResponse, error) {
 	log := h.log
 	findFileIn := &pb.GetFileRequest{
-		Slug:     in.Slug,
-		Path:     in.Path,
-		Provider: in.Provider,
+		Slug:     in.GetSlug(),
+		Path:     in.GetPath(),
+		Provider: in.GetProvider(),
 	}
 	if in.GetBranch() != "" {
 		findFileIn.Type = &pb.GetFileRequest_Branch{
@@ -79,7 +80,14 @@ func (h *handler) IsLatestFile(ctx context.Context, in *pb.IsLatestFileRequest) 
 		log.Errorw("IsLatestFile failure", "slug ", in.GetSlug(), "path", in.GetPath(), "ref", in.GetRef(), "branch", in.GetBranch(), zap.Error(err))
 		return nil, err
 	}
-	match := response.ObjectId == in.ObjectId
+	var match bool
+	// github uses blob id for update check, others use commit id
+	switch findFileIn.GetProvider().Hook.(type) {
+	case *pb.Provider_Github:
+		match = in.GetBlobId() == response.GetBlobId()
+	default:
+		match = in.GetBlobId() == response.GetCommitId()
+	}
 	out := &pb.IsLatestFileResponse{
 		Latest: match,
 	}
@@ -111,6 +119,21 @@ func (h *handler) FindFilesInCommit(ctx context.Context, in *pb.FindFilesInCommi
 	return file.FindFilesInCommit(ctx, in, h.log)
 }
 
+// CreatePR creates a PR given a source branch and target branch.
+func (h *handler) CreatePR(ctx context.Context, in *pb.CreatePRRequest) (*pb.CreatePRResponse, error) {
+	return git.CreatePR(ctx, in, h.log)
+}
+
+// FindFilesInPR lists the files in a PR.
+func (h *handler) FindFilesInPR(ctx context.Context, in *pb.FindFilesInPRRequest) (*pb.FindFilesInPRResponse, error) {
+	return git.FindFilesInPR(ctx, in, h.log)
+}
+
+// CreateBranch creates a Branch given a branch name and commit_id.
+func (h *handler) CreateBranch(ctx context.Context, in *pb.CreateBranchRequest) (*pb.CreateBranchResponse, error) {
+	return git.CreateBranch(ctx, in, h.log)
+}
+
 // GetLatestCommit returns the latest commit_id for a branch.
 func (h *handler) GetLatestCommit(ctx context.Context, in *pb.GetLatestCommitRequest) (*pb.GetLatestCommitResponse, error) {
 	return git.GetLatestCommit(ctx, in, h.log)
@@ -124,4 +147,19 @@ func (h *handler) ListBranches(ctx context.Context, in *pb.ListBranchesRequest) 
 // ListCommits is used to return a list of commit ids given a ref or branch.
 func (h *handler) ListCommits(ctx context.Context, in *pb.ListCommitsRequest) (*pb.ListCommitsResponse, error) {
 	return git.ListCommits(ctx, in, h.log)
+}
+
+// CreateWebhook is used to add a webhook to a repo.
+func (h *handler) CreateWebhook(ctx context.Context, in *pb.CreateWebhookRequest) (*pb.CreateWebhookResponse, error) {
+	return repo.CreateWebhook(ctx, in, h.log)
+}
+
+// DeleteWebhook is used to add a webhook to a repo.
+func (h *handler) DeleteWebhook(ctx context.Context, in *pb.DeleteWebhookRequest) (*pb.DeleteWebhookResponse, error) {
+	return repo.DeleteWebhook(ctx, in, h.log)
+}
+
+// ListWebhooks is used to list all webhooks associated with a repo.
+func (h *handler) ListWebhooks(ctx context.Context, in *pb.ListWebhooksRequest) (*pb.ListWebhooksResponse, error) {
+	return repo.ListWebhooks(ctx, in, h.log)
 }

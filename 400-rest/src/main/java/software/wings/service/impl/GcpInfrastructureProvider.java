@@ -77,7 +77,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   private void checkValidSettingAttribute(SettingAttribute computeProviderSetting) {
     if (computeProviderSetting.getValue() instanceof GcpConfig
-        && ((GcpConfig) computeProviderSetting.getValue()).isUseDelegate()) {
+        && ((GcpConfig) computeProviderSetting.getValue()).isUseDelegateSelectors()) {
       throw new InvalidRequestException(
           "Infrastructure Definition Using a GCP Cloud Provider Inheriting from Delegate is not yet supported", USER);
     }

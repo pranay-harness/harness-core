@@ -8,7 +8,7 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -94,7 +94,7 @@ public class CIDelegateTaskSampleResource {
         delegateCallbackToken.getToken());
   }
 
-  public static class SampleNotifyCallback implements NotifyCallback {
+  public static class SampleNotifyCallback implements OldNotifyCallback {
     @Override
     public void notify(Map<String, ResponseData> response) {
       log.info("received response = [{}]", response);

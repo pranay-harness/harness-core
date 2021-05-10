@@ -8,7 +8,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
@@ -73,6 +75,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
                                           CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -304,6 +307,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   private Long nextIteration;
   private List<NameValuePair> tags;
   private String message;
+  @Transient private String failureDetails;
 
   @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

@@ -1,11 +1,13 @@
 package io.harness.openshift;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.openshift.OpenShiftConstants.COMMAND_TIMEOUT;
 import static io.harness.openshift.OpenShiftConstants.OC_BINARY_PATH;
 import static io.harness.openshift.OpenShiftConstants.PROCESS_COMMAND;
 import static io.harness.openshift.OpenShiftConstants.TEMPLATE_FILE_PATH;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
 import io.harness.exception.InvalidRequestException;
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDP)
 public class OpenShiftClientImpl implements OpenShiftClient {
   @Inject CliHelper cliHelper;
 

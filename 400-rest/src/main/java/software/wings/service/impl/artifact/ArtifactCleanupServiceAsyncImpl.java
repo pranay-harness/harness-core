@@ -7,12 +7,12 @@ import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.SettingAttribute;

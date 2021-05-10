@@ -1,5 +1,9 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.advisers.RollbackCustomStepParameters;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
@@ -36,6 +40,7 @@ import io.harness.cdng.k8s.K8sScaleStepInfo;
 import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitLabStore;
@@ -68,7 +73,10 @@ import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
+import io.harness.cdng.provision.terraform.TerraformApplyStepInfo;
+import io.harness.cdng.provision.terraform.TerraformPlanStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
+import io.harness.cdng.service.beans.NativeHelmServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceConfigOutcome;
 import io.harness.cdng.service.beans.ServiceDefinition;
@@ -90,6 +98,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
 
+@OwnedBy(CDC)
 public class NGKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -186,5 +195,10 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(OpenshiftParamManifestOutcome.class, 12537);
     kryo.register(S3StoreConfig.class, 12538);
     kryo.register(GcsStoreConfig.class, 12539);
+    kryo.register(RollbackCustomStepParameters.class, 12540);
+    kryo.register(TerraformApplyStepInfo.class, 12541);
+    kryo.register(NativeHelmServiceSpec.class, 12542);
+    kryo.register(TerraformPlanStepInfo.class, 12543);
+    kryo.register(HelmValuesFetchResponsePassThroughData.class, 12544);
   }
 }

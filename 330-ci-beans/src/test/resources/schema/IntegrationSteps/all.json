@@ -68,6 +68,12 @@
                 }
               ]
             },
+            "optimize": {
+              "type": "boolean"
+            },
+            "remoteCacheImage": {
+              "type": "string"
+            },
             "repo": {
               "type": "string"
             },
@@ -151,7 +157,13 @@
                 }
               ]
             },
+            "optimize": {
+              "type": "boolean"
+            },
             "region": {
+              "type": "string"
+            },
+            "remoteCacheImage": {
               "type": "string"
             },
             "resources": {
@@ -234,7 +246,13 @@
                 }
               ]
             },
+            "optimize": {
+              "type": "boolean"
+            },
             "projectID": {
+              "type": "string"
+            },
+            "remoteCacheImage": {
               "type": "string"
             },
             "resources": {
@@ -427,6 +445,9 @@
             "image": {
               "type": "string"
             },
+            "privileged": {
+              "type": "boolean"
+            },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
             },
@@ -576,6 +597,9 @@
                 }
               ]
             },
+            "privileged": {
+              "type": "boolean"
+            },
             "reports": {
               "$ref": "#/definitions/UnitTestReport"
             },
@@ -631,6 +655,9 @@
             },
             "preCommand": {
               "type": "string"
+            },
+            "privileged": {
+              "type": "boolean"
             },
             "reports": {
               "$ref": "#/definitions/UnitTestReport"

@@ -9,6 +9,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -17,7 +18,6 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;

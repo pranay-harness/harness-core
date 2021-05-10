@@ -1,5 +1,7 @@
 package io.harness.util;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Builder
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CINgSecretManagerFunctor implements ExpressionFunctor {
   private long expressionFunctorToken;
   private SecretUtils secretUtils;

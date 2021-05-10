@@ -3,11 +3,12 @@ package io.harness.event.handlers;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.executions.node.PmsNodeExecutionServiceImpl;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
@@ -20,11 +21,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class HandleStepResponseEventHandlerTest extends OrchestrationTestBase {
-  @Mock PmsNodeExecutionServiceImpl pmsNodeExecutionService;
-
+  @Mock OrchestrationEngine engine;
   @InjectMocks HandleStepResponseEventHandler handleStepResponseEventHandler;
 
   @Before
@@ -33,8 +35,8 @@ public class HandleStepResponseEventHandlerTest extends OrchestrationTestBase {
   }
 
   @After
-  public void verifyInteractions() {
-    verifyNoMoreInteractions(pmsNodeExecutionService);
+  public void verifyMocks() {
+    Mockito.verifyNoMoreInteractions(engine);
   }
 
   @Test
@@ -48,8 +50,7 @@ public class HandleStepResponseEventHandlerTest extends OrchestrationTestBase {
                 SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(handleStepResponseRequest).build())
             .sdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
             .build());
-    verify(pmsNodeExecutionService)
-        .handleStepResponse(
-            handleStepResponseRequest.getNodeExecutionId(), handleStepResponseRequest.getStepResponse());
+    verify(engine).handleStepResponse(
+        handleStepResponseRequest.getNodeExecutionId(), handleStepResponseRequest.getStepResponse());
   }
 }

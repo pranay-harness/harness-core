@@ -6,6 +6,7 @@ import static io.harness.cache.CacheBackend.REDIS;
 import static javax.cache.Caching.getCachingProvider;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ServersModule;
 import io.harness.hazelcast.HazelcastModule;
 import io.harness.redis.RedissonKryoCodec;
@@ -203,23 +204,23 @@ public class CacheModule extends AbstractModule implements ServersModule {
     bind(CacheKeyGenerator.class).to(DefaultCacheKeyGenerator.class);
     bind(new TypeLiteral<CacheContextSource<MethodInvocation>>() {}).to(CacheLookupUtil.class);
 
-    CachePutInterceptor cachePutInterceptor = new CachePutInterceptor();
-    requestInjection(cachePutInterceptor);
+    ProviderMethodInterceptor cachePutInterceptor =
+        new ProviderMethodInterceptor(getProvider(CachePutInterceptor.class));
     bindInterceptor(Matchers.annotatedWith(CachePut.class), Matchers.any(), cachePutInterceptor);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(CachePut.class), cachePutInterceptor);
 
-    CacheResultInterceptor cacheResultInterceptor = new CacheResultInterceptor();
-    requestInjection(cacheResultInterceptor);
+    ProviderMethodInterceptor cacheResultInterceptor =
+        new ProviderMethodInterceptor(getProvider(CacheResultInterceptor.class));
     bindInterceptor(Matchers.annotatedWith(CacheResult.class), Matchers.any(), cacheResultInterceptor);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(CacheResult.class), cacheResultInterceptor);
 
-    CacheRemoveEntryInterceptor cacheRemoveEntryInterceptor = new CacheRemoveEntryInterceptor();
-    requestInjection(cacheRemoveEntryInterceptor);
+    ProviderMethodInterceptor cacheRemoveEntryInterceptor =
+        new ProviderMethodInterceptor(getProvider(CacheRemoveEntryInterceptor.class));
     bindInterceptor(Matchers.annotatedWith(CacheRemove.class), Matchers.any(), cacheRemoveEntryInterceptor);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(CacheRemove.class), cacheRemoveEntryInterceptor);
 
-    CacheRemoveAllInterceptor cacheRemoveAllInterceptor = new CacheRemoveAllInterceptor();
-    requestInjection(cacheRemoveAllInterceptor);
+    ProviderMethodInterceptor cacheRemoveAllInterceptor =
+        new ProviderMethodInterceptor(getProvider(CacheRemoveAllInterceptor.class));
     bindInterceptor(Matchers.annotatedWith(CacheRemoveAll.class), Matchers.any(), cacheRemoveAllInterceptor);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(CacheRemoveAll.class), cacheRemoveAllInterceptor);
   }
@@ -231,5 +232,37 @@ public class CacheModule extends AbstractModule implements ServersModule {
         cacheManager.close();
       }
     });
+  }
+
+  @Provides
+  @Singleton
+  public CachePutInterceptor getCachePutInterceptor(Injector injector) {
+    CachePutInterceptor cachePutInterceptor = new CachePutInterceptor();
+    injector.injectMembers(cachePutInterceptor);
+    return cachePutInterceptor;
+  }
+
+  @Provides
+  @Singleton
+  public CacheResultInterceptor getCacheResultInterceptor(Injector injector) {
+    CacheResultInterceptor cacheResultInterceptor = new CacheResultInterceptor();
+    injector.injectMembers(cacheResultInterceptor);
+    return cacheResultInterceptor;
+  }
+
+  @Provides
+  @Singleton
+  public CacheRemoveEntryInterceptor getCacheRemoveEntryInterceptor(Injector injector) {
+    CacheRemoveEntryInterceptor cacheRemoveEntryInterceptor = new CacheRemoveEntryInterceptor();
+    injector.injectMembers(cacheRemoveEntryInterceptor);
+    return cacheRemoveEntryInterceptor;
+  }
+
+  @Provides
+  @Singleton
+  public CacheRemoveAllInterceptor getCacheRemoveAllInterceptor(Injector injector) {
+    CacheRemoveAllInterceptor cacheRemoveAllInterceptor = new CacheRemoveAllInterceptor();
+    injector.injectMembers(cacheRemoveAllInterceptor);
+    return cacheRemoveAllInterceptor;
   }
 }

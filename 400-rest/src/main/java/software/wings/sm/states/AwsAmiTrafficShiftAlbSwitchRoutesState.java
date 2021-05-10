@@ -17,6 +17,7 @@ import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
@@ -25,7 +26,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -176,8 +176,11 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, awsAmiTrafficShiftAlbData.getEnv().getUuid())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, awsAmiTrafficShiftAlbData.getEnv().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("AWS AMI Traffic shift ALB switch routes task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return executionData;
   }
@@ -271,5 +274,10 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
         .executionStatus(ExecutionStatus.SUCCESS)
         .correlationId(activity.getUuid())
         .build();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

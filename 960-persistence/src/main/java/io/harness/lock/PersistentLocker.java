@@ -1,5 +1,9 @@
 package io.harness.lock;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.time.Duration;
 
 /**
@@ -7,6 +11,7 @@ import java.time.Duration;
  *
  * @author Rishi
  */
+@OwnedBy(PL)
 public interface PersistentLocker {
   /**
    * Acquire lock.

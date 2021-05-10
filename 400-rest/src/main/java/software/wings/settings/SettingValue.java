@@ -1,5 +1,10 @@
 package software.wings.settings;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 
 import software.wings.security.UsageRestrictions;
@@ -17,8 +22,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
+@OwnedBy(CDP)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
+@FieldNameConstants(innerTypeName = "SettingValueKeys")
+@TargetModule(_871_CG_BEANS)
 public abstract class SettingValue implements ExecutionCapabilityDemander {
   @Getter @Setter String type;
   @JsonIgnore @SchemaIgnore private boolean isCertValidationRequired;

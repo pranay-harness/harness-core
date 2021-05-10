@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -22,5 +23,5 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "AuthenticationInfoKeys")
 public class AuthenticationInfo {
   @NotNull @Valid Principal principal;
-  List<KeyValuePair> labels;
+  @Size(max = 10) List<KeyValuePair> labels;
 }

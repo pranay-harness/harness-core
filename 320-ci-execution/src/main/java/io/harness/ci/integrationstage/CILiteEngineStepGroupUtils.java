@@ -2,9 +2,7 @@ package io.harness.ci.integrationstage;
 
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment;
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment.CI_MANAGER;
-import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
-import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
@@ -12,6 +10,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
@@ -45,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CILiteEngineStepGroupUtils {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
   private static final String BUILD_NUMBER = "buildnumber";
@@ -197,21 +198,19 @@ public class CILiteEngineStepGroupUtils {
   }
 
   private ExecutionWrapperConfig getGitCloneStep(CIExecutionArgs ciExecutionArgs) {
-    Integer cloneDepth = GIT_CLONE_DEPTH;
+    Map<String, String> settings = new HashMap<>();
     if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.MANUAL) {
-      cloneDepth = GIT_CLONE_MANUAL_DEPTH;
+      settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, GIT_CLONE_MANUAL_DEPTH.toString());
     }
 
-    Map<String, String> settings = new HashMap<>();
-    settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, cloneDepth.toString());
-    PluginStepInfo step =
-        PluginStepInfo.builder()
-            .identifier(GIT_CLONE_STEP_ID)
-            .image(ParameterField.createValueField(GIT_CLONE_IMAGE))
-            .connectorRef(ParameterField.createValueField(ciExecutionServiceConfig.getDefaultInternalImageConnector()))
-            .name(GIT_CLONE_STEP_NAME)
-            .settings(ParameterField.createValueField(settings))
-            .build();
+    PluginStepInfo step = PluginStepInfo.builder()
+                              .identifier(GIT_CLONE_STEP_ID)
+                              .image(ParameterField.createValueField(
+                                  ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getImage()))
+                              .name(GIT_CLONE_STEP_NAME)
+                              .settings(ParameterField.createValueField(settings))
+                              .entrypoint(ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getEntrypoint())
+                              .build();
 
     String uuid = generateUuid();
     StepElementConfig stepElementConfig = StepElementConfig.builder()

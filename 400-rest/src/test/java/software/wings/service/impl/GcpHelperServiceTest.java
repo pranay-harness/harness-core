@@ -37,14 +37,14 @@ public class GcpHelperServiceTest extends WingsBaseTest {
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(()
                         -> gcpHelperService.getGoogleCredential(
-                            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate()))
+                            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
         .withMessageContaining("Empty service key");
 
     gcpConfig.setServiceAccountKeyFileContent(new char[] {});
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(()
                         -> gcpHelperService.getGoogleCredential(
-                            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate()))
+                            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
         .withMessageContaining("Empty service key");
   }
 
@@ -57,7 +57,8 @@ public class GcpHelperServiceTest extends WingsBaseTest {
     when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
              gcpConfig.getServiceAccountKeyFileContent()))
         .thenReturn(new GoogleCredential());
-    gcpHelperService.getGoogleCredential(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+    gcpHelperService.getGoogleCredential(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     verify(gcpCredentialsHelperService, only())
         .getGoogleCredentialWithProxyConfiguredHttpTransport(gcpConfig.getServiceAccountKeyFileContent());
     System.clearProperty("http.proxyHost");
@@ -71,7 +72,8 @@ public class GcpHelperServiceTest extends WingsBaseTest {
     when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
              gcpConfig.getServiceAccountKeyFileContent()))
         .thenReturn(new GoogleCredential());
-    gcpHelperService.getGoogleCredential(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+    gcpHelperService.getGoogleCredential(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     verify(gcpCredentialsHelperService, only())
         .getGoogleCredentialWithDefaultHttpTransport(gcpConfig.getServiceAccountKeyFileContent());
   }

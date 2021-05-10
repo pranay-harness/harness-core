@@ -16,8 +16,21 @@ go_library(
 
 go_test(
     name = "go_default_test",
-    srcs = ["file_test.go"],
-    data = glob(["testdata/**"]),
+    srcs = [
+        "bitbucket_cloud_test.go",
+        "file_test.go",
+        "github_test.go",
+        "gitlab_test.go",
+    ],
+    data = [
+        "testdata/FileCreateNoMatch.json",
+        "testdata/FileCreateSource.json",
+        "testdata/FileErrorSource.json",
+        "testdata/FileFindSource.json",
+        "testdata/FileList.json",
+        "testdata/FileUpdateNoMatch.json",
+        "testdata/FileUpdateSource.json",
+    ],
     embed = [":go_default_library"],
     deps = [
         "//commons/go/lib/logs:go_default_library",

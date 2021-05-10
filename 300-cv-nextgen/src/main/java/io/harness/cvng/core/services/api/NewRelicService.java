@@ -11,5 +11,5 @@ public interface NewRelicService extends MonitoringSourceImportStatusCreator {
   List<NewRelicApplication> getNewRelicApplications(String accountId, String connectorIdentifier, String orgIdentifier,
       String projectIdentifier, String filter, String tracingId);
   MetricPackValidationResponse validateData(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, String appName, String appId, List<MetricPackDTO> metricPacks);
+      String projectIdentifier, String appName, String appId, List<MetricPackDTO> metricPacks, String tracingId);
 }

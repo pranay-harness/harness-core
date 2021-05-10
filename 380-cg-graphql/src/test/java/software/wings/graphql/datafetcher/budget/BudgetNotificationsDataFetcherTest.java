@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.budget;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
@@ -11,6 +12,9 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.ApplicationBudgetScope;
@@ -46,6 +50,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock BudgetService budgetService;
@@ -98,7 +104,7 @@ public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTestB
     when(timeScaleDBService.isValid()).thenReturn(false);
     assertThatThrownBy(()
                            -> budgetNotificationsDataFetcher.fetch(accountId, null, Collections.emptyList(),
-                               Collections.emptyList(), Collections.emptyList()))
+                               Collections.emptyList(), Collections.emptyList(), null))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -111,7 +117,7 @@ public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTestB
     timeFilters.add(makeStartTimeFilter(currentTime - 86400000L));
     timeFilters.add(makeEndTimeFilter(currentTime));
     QLBudgetNotificationsData data = (QLBudgetNotificationsData) budgetNotificationsDataFetcher.fetch(
-        accountId, null, timeFilters, Collections.emptyList(), Collections.emptyList());
+        accountId, null, timeFilters, Collections.emptyList(), Collections.emptyList(), null);
     assertThat(data).isNotNull();
     assertThat(data.getData().getCount()).isEqualTo(100L);
   }

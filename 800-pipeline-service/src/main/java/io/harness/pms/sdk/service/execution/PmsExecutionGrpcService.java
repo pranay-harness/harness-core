@@ -3,6 +3,7 @@ package io.harness.pms.sdk.service.execution;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ExecutionErrorInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
@@ -11,7 +12,6 @@ import io.harness.pms.contracts.service.ExecutionSummaryResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceImplBase;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -68,11 +68,11 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         String key = String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey());
         if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
           Collection<Object> values = (Collection<Object>) entry.getValue();
-          for (Object value : values) {
-            update.addToSet(key, value);
-          }
+          update.addToSet(key).each(values);
         } else {
-          update.set(key, entry.getValue());
+          if (entry.getValue() != null) {
+            update.set(key, entry.getValue());
+          }
         }
       }
     }
@@ -111,11 +111,11 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         String key = String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey());
         if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
           Collection<Object> values = (Collection<Object>) entry.getValue();
-          for (Object value : values) {
-            update.addToSet(key, value);
-          }
+          update.addToSet(key).each(values);
         } else {
-          update.set(key, entry.getValue());
+          if (entry.getValue() != null) {
+            update.set(key, entry.getValue());
+          }
         }
       }
     }
@@ -124,6 +124,9 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
           PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".startTs",
           nodeExecution.getStartTs());
+      update.set(
+          PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".nodeRunInfo",
+          nodeExecution.getNodeRunInfo());
       if (ExecutionStatus.isTerminal(status)) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
             nodeExecution.getEndTs());
@@ -137,9 +140,6 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         update.set(
             PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".skipInfo",
             nodeExecution.getSkipInfo());
-        update.set(
-            PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".nodeRunInfo",
-            nodeExecution.getNodeRunInfo());
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
             nodeExecution.getEndTs());
       }

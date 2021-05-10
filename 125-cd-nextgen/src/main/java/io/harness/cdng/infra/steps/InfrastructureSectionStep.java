@@ -1,12 +1,12 @@
 package io.harness.cdng.infra.steps;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
-import static io.harness.pms.yaml.YAMLFieldNameConstants.ENVIRONMENT;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.cdng.environment.EnvironmentMapper;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
@@ -48,7 +48,8 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
       Ambiance ambiance, InfraSectionStepParameters stepParameters, StepInputPackage inputPackage) {
     log.info("Starting execution for InfraSection Step [{}]", stepParameters);
     EnvironmentOutcome environmentOutcome = processEnvironment(ambiance, stepParameters);
-    executionSweepingOutputResolver.consume(ambiance, ENVIRONMENT, environmentOutcome, StepOutcomeGroup.STAGE.name());
+    executionSweepingOutputResolver.consume(
+        ambiance, OutcomeExpressionConstants.ENVIRONMENT, environmentOutcome, StepOutcomeGroup.STAGE.name());
 
     return ChildExecutableResponse.newBuilder().setChildNodeId(stepParameters.getChildNodeID()).build();
   }

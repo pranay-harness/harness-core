@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.CVConstants.RUNTIME_PARAM_STRING;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATION_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
@@ -8,6 +9,8 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -55,13 +58,25 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Entity(value = "verificationJobs")
 @HarnessEntity(exportable = true)
 @SuperBuilder
+@OwnedBy(HarnessTeam.CV)
 // Also the serialization of duration is in millis.
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  private static final String RUNTIME_PARAMS_VALUE_KEY = "value";
+  private static final String RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY = "isRuntimeParam";
+  public static final String SERVICE_IDENTIFIER_VALUE_KEY =
+      String.format("%s.%s", VerificationJobKeys.serviceIdentifier, RUNTIME_PARAMS_VALUE_KEY);
+  public static final String SERVICE_IDENTIFIER_IS_RUNTIME_PARAM_KEY =
+      String.format("%s.%s", VerificationJobKeys.serviceIdentifier, RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY);
+  public static final String ENV_IDENTIFIER_VALUE_KEY =
+      String.format("%s.%s", VerificationJobKeys.envIdentifier, RUNTIME_PARAMS_VALUE_KEY);
+  public static final String ENV_IDENTIFIER_IS_RUNTIME_PARAM_KEY =
+      String.format("%s.%s", VerificationJobKeys.envIdentifier, RUNTIME_PARAMS_IS_RUNTIME_PARAM_KEY);
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("unique_query_idx")
+                 .unique(true)
                  .field(VerificationJobKeys.accountId)
                  .field(VerificationJobKeys.orgIdentifier)
                  .field(VerificationJobKeys.projectIdentifier)
@@ -87,6 +102,7 @@ public abstract class VerificationJob
   @NotNull private RuntimeParameter envIdentifier;
   @Deprecated private List<DataSourceType> dataSources;
   private List<String> monitoringSources;
+  private boolean allMonitoringSourcesEnabled;
 
   private RuntimeParameter duration;
   private boolean isDefaultJob;
@@ -104,13 +120,19 @@ public abstract class VerificationJob
     Preconditions.checkNotNull(orgIdentifier, generateErrorMessageFromParam(VerificationJobKeys.orgIdentifier));
     Preconditions.checkNotNull(envIdentifier, generateErrorMessageFromParam(VerificationJobKeys.envIdentifier));
     Preconditions.checkNotNull(duration, generateErrorMessageFromParam(VerificationJobKeys.duration));
-    Preconditions.checkNotNull(monitoringSources, generateErrorMessageFromParam(VerificationJobKeys.monitoringSources));
     // Preconditions.checkNotNull(activitySourceIdentifier,
     // generateErrorMessageFromParam(VerificationJobKeys.activitySourceIdentifier));
-    Preconditions.checkArgument(!monitoringSources.isEmpty(), "Monitoring Sources can not be empty");
     if (!duration.isRuntimeParam()) {
       Preconditions.checkArgument(getDuration().toMinutes() >= 5,
           "Minimum allowed duration is 5 mins. Current value(mins): %s", getDuration().toMinutes());
+    }
+    if (isAllMonitoringSourcesEnabled()) {
+      Preconditions.checkArgument(monitoringSources == null || monitoringSources.size() == 0,
+          "Monitoring Sources should be null or empty if allMonitoringSources is enabled");
+    } else {
+      Preconditions.checkNotNull(
+          monitoringSources, generateErrorMessageFromParam(VerificationJobKeys.monitoringSources));
+      Preconditions.checkArgument(!monitoringSources.isEmpty(), "Monitoring Sources can not be empty");
     }
     Preconditions.checkNotNull(type, generateErrorMessageFromParam(VerificationJobKeys.type));
     this.validateParams();
@@ -138,6 +160,7 @@ public abstract class VerificationJob
     verificationJobDTO.setActivitySourceIdentifier(activitySourceIdentifier);
     verificationJobDTO.setMonitoringSources(monitoringSources);
     verificationJobDTO.setVerificationJobUrl(getVerificationJobUrl());
+    verificationJobDTO.setAllMonitoringSourcesEnabled(this.allMonitoringSourcesEnabled);
   }
 
   public abstract void fromDTO(VerificationJobDTO verificationJobDTO);
@@ -158,6 +181,7 @@ public abstract class VerificationJob
     this.setActivitySourceIdentifier(verificationJobDTO.getActivitySourceIdentifier());
     this.setType(verificationJobDTO.getType());
     this.setDefaultJob(verificationJobDTO.isDefaultJob());
+    this.setAllMonitoringSourcesEnabled(verificationJobDTO.isAllMonitoringSourcesEnabled());
   }
 
   protected List<TimeRange> getTimeRangesForDuration(Instant startTime) {
@@ -240,13 +264,19 @@ public abstract class VerificationJob
       runtimeParameters.keySet().forEach(key -> {
         switch (key) {
           case SERVICE_IDENTIFIER_KEY:
-            this.setServiceIdentifier(runtimeParameters.get(key), false);
+            if (serviceIdentifier.isRuntimeParam()) {
+              this.setServiceIdentifier(runtimeParameters.get(key), false);
+            }
             break;
           case ENV_IDENTIFIER_KEY:
-            this.setEnvIdentifier(runtimeParameters.get(key), false);
+            if (envIdentifier.isRuntimeParam()) {
+              this.setEnvIdentifier(runtimeParameters.get(key), false);
+            }
             break;
           case DURATION_KEY:
-            this.setDuration(runtimeParameters.get(key), false);
+            if (duration.isRuntimeParam()) {
+              this.setDuration(runtimeParameters.get(key), false);
+            }
             break;
           default:
             break;
@@ -306,7 +336,7 @@ public abstract class VerificationJob
     public void setCommonOperations(UpdateOperations<T> updateOperations, D dto) {
       updateOperations.set(VerificationJobKeys.jobName, dto.getJobName())
           .set(VerificationJobKeys.envIdentifier,
-              this.getRunTimeParameter(dto.getEnvIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
+              getRunTimeParameter(dto.getEnvIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
           .set(VerificationJobKeys.serviceIdentifier,
               getRunTimeParameter(dto.getServiceIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
           .set(VerificationJobKeys.duration,
@@ -316,9 +346,22 @@ public abstract class VerificationJob
           .set(VerificationJobKeys.isDefaultJob, dto.isDefaultJob())
           .set(VerificationJobKeys.activitySourceIdentifier, dto.getActivitySourceIdentifier());
     }
+  }
 
-    public RuntimeParameter getRunTimeParameter(String value, boolean isRuntimeParam) {
-      return value == null ? null : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(value).build();
-    }
+  public static RuntimeParameter getRunTimeParameter(String value, boolean isRuntimeParam) {
+    return value == null ? null : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(value).build();
+  }
+
+  public static void setDefaultJobCommonParameters(
+      VerificationJob verificationJob, String accountId, String orgIdentifier, String projectIdentifier) {
+    verificationJob.setAccountId(accountId);
+    verificationJob.setOrgIdentifier(orgIdentifier);
+    verificationJob.setProjectIdentifier(projectIdentifier);
+    verificationJob.setAllMonitoringSourcesEnabled(true);
+    verificationJob.setServiceIdentifier(getRunTimeParameter(RUNTIME_PARAM_STRING, true));
+    verificationJob.setEnvIdentifier(getRunTimeParameter(RUNTIME_PARAM_STRING, true));
+    verificationJob.setDuration(RUNTIME_PARAM_STRING, true);
+    verificationJob.setType(verificationJob.getType());
+    verificationJob.setDefaultJob(true);
   }
 }

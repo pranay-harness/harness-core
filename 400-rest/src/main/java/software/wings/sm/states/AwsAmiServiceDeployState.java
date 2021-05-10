@@ -27,8 +27,10 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -39,9 +41,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.AmiServiceSetupElement;
@@ -347,7 +347,7 @@ public class AwsAmiServiceDeployState extends State {
             .context(context)
             .build();
 
-    createAndQueueResizeTask(amiResizeTaskRequestData);
+    createAndQueueResizeTask(amiResizeTaskRequestData, context);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -357,7 +357,7 @@ public class AwsAmiServiceDeployState extends State {
         .build();
   }
 
-  protected void createAndQueueResizeTask(AmiResizeTaskRequestData amiResizeTaskRequestData) {
+  protected void createAndQueueResizeTask(AmiResizeTaskRequestData amiResizeTaskRequestData, ExecutionContext context) {
     String accountId = amiResizeTaskRequestData.getAccountId();
     String appId = amiResizeTaskRequestData.getAppId();
     String envId = amiResizeTaskRequestData.getEnvId();
@@ -405,8 +405,11 @@ public class AwsAmiServiceDeployState extends State {
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, amiResizeTaskRequestData.getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("AWS AMI service deploy task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
   }
 
   @VisibleForTesting
@@ -707,5 +710,10 @@ public class AwsAmiServiceDeployState extends State {
 
   public void setCommandName(String commandName) {
     this.commandName = commandName;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

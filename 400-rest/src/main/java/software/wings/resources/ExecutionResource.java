@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -15,6 +16,9 @@ import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYM
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -88,10 +92,12 @@ import javax.ws.rs.QueryParam;
 /**
  * The Class ExecutionResource.
  */
+@OwnedBy(CDC)
 @Api("executions")
 @Path("/executions")
 @Scope(ResourceType.APPLICATION)
 @Produces("application/json")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ExecutionResource {
   @Inject private AppService appService;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -173,7 +179,7 @@ public class ExecutionResource {
     pageRequest.setLimit(Integer.toString(Integer.parseInt(pageRequest.getLimit()) + 1));
 
     PageResponse<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
+        workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false, true);
 
     int offset = Integer.parseInt(pageRequest.getOffset());
     int limit = Integer.parseInt(pageRequest.getLimit()) - 1;
@@ -203,7 +209,7 @@ public class ExecutionResource {
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
     final WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false);
+        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, false, true);
     workflowExecution.setStateMachine(null);
     authService.authorizeAppAccess(
         workflowExecution.getAccountId(), workflowExecution.getAppId(), UserThreadLocal.get(), Action.READ);

@@ -69,5 +69,8 @@ public class VaultConnectorDTO extends ConnectorConfigDTO {
       throw new InvalidRequestException(
           String.format("Invalid value for renewal interval: %s", renewalIntervalMinutes), INVALID_REQUEST, USER);
     }
+    if (isReadOnly && isDefault) {
+      throw new InvalidRequestException("Read only secret manager cannot be set as default", INVALID_REQUEST, USER);
+    }
   }
 }

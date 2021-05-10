@@ -30,6 +30,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -45,6 +50,8 @@ import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
+import io.harness.delegate.beans.K8sConfigDetails;
+import io.harness.delegate.beans.K8sPermissionType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
@@ -63,7 +70,6 @@ import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.WingsBaseTest;
@@ -103,6 +109,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String APP_ID = "APP_ID";
@@ -277,7 +285,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     DelegateBuilder delegateBuilder = Delegate.builder();
 
-    when(delegateProfileService.fetchPrimaryProfile(ACCOUNT_ID))
+    when(delegateProfileService.fetchCgPrimaryProfile(ACCOUNT_ID))
         .thenReturn(DelegateProfile.builder().uuid(TEST_DELEGATE_PROFILE_ID).build());
     delegateService.add(delegateBuilder.uuid(delegateId).accountId(ACCOUNT_ID).build());
     assertThat(delegateService.obtainDelegateName("accountId", delegateId, true)).isEqualTo(delegateId);
@@ -901,12 +909,16 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = NICOLAS)
   @Category(UnitTests.class)
   public void testUpsertDelegateGroup_noExistingGroup() {
-    DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID);
+    K8sConfigDetails k8sConfigDetails =
+        K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.NAMESPACE_ADMIN).namespace("namespace").build();
+    DelegateGroup returnedDelegateGroup =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, k8sConfigDetails);
 
     assertThat(returnedDelegateGroup).isNotNull();
     assertThat(returnedDelegateGroup.getUuid()).isNotEmpty();
     assertThat(returnedDelegateGroup.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(returnedDelegateGroup.getName()).isEqualTo(TEST_DELEGATE_GROUP_NAME);
+    assertThat(returnedDelegateGroup.getK8sConfigDetails()).isEqualTo(k8sConfigDetails);
   }
 
   @Test
@@ -915,13 +927,17 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void testAddDelegateToGroup_existingGroup() {
     DelegateGroup delegateGroup = setUpDefaultDelegateGroupForTests();
 
-    DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID);
+    K8sConfigDetails k8sConfigDetails =
+        K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build();
+    DelegateGroup returnedDelegateGroup =
+        delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID, k8sConfigDetails);
 
     assertThat(returnedDelegateGroup).isNotNull();
     assertThat(returnedDelegateGroup.getUuid()).isNotEmpty();
     assertThat(returnedDelegateGroup.getUuid()).isEqualTo(delegateGroup.getUuid());
     assertThat(returnedDelegateGroup.getAccountId()).isEqualTo(delegateGroup.getAccountId());
     assertThat(returnedDelegateGroup.getName()).isEqualTo(delegateGroup.getName());
+    assertThat(returnedDelegateGroup.getK8sConfigDetails()).isEqualTo(k8sConfigDetails);
   }
 
   private List<String> setUpDelegatesForInitializationTest() {

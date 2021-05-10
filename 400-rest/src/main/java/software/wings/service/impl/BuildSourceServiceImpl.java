@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_SERVICE;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
@@ -18,11 +20,14 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -38,18 +43,15 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.GcbTaskParams;
-import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
-import software.wings.helpers.ext.gcb.GcbService;
 import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.ArtifactStreamHelper;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -81,11 +83,10 @@ import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created by anubhaw on 8/18/16.
- */
 @ValidateOnExecution
 @Singleton
+@TargetModule(_420_DELEGATE_SERVICE)
+@OwnedBy(CDC)
 @Slf4j
 public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private Map<Class<? extends SettingValue>, Class<? extends BuildService>> buildServiceMap;
@@ -95,16 +96,13 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private SecretManager secretManager;
-  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private AppService appService;
   @Inject private GcsService gcsService;
   @Inject private CustomBuildSourceService customBuildSourceService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
-  @Inject private GcbService gcbService;
   @Inject private DelegateServiceImpl delegateService;
 
   @Override
@@ -130,7 +128,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return getBuildService(settingAttribute, appId, GCS.name()).getProjectId(gcpConfig);
     }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -198,16 +196,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue value = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && value instanceof NexusConfig && ((NexusConfig) value).getVersion().equals("3.x")
-        && repositoryFormat.equals("maven")) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getArtifactPathsUsingPrivateApis(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
-    } else {
-      return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
-                                 .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
-    }
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
+                               .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
   }
 
   @Override
@@ -377,13 +367,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && settingValue instanceof NexusConfig && ((NexusConfig) settingValue).getVersion().equals("3.x")
-        && repositoryFormat.equals("maven")) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getGroupIdsUsingPrivateApis(repoType, repositoryFormat, settingValue, encryptedDataDetails));
-    }
     return Sets.newTreeSet(getBuildService(settingAttribute, appId)
                                .getGroupIds(repoType, repositoryFormat, settingValue, encryptedDataDetails));
   }
@@ -433,7 +416,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SyncTaskContextBuilder syncTaskContextBuilder =
         SyncTaskContext.builder()
             .accountId(settingAttribute.getAccountId())
-            .appId(appId)
+            .appId(isBlank(appId) || appId.equals(GLOBAL_APP_ID) ? SCOPE_WILDCARD : appId)
             .timeout(settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())
                         || settingAttribute.getValue().getType().equals(SettingVariableTypes.BAMBOO.name())
                     ? 120 * 1000
@@ -467,7 +450,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
     SyncTaskContextBuilder syncTaskContextBuilder =
-        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).appId(appId).timeout(120 * 1000);
+        SyncTaskContext.builder()
+            .accountId(settingAttribute.getAccountId())
+            .appId(isBlank(appId) || appId.equals(GLOBAL_APP_ID) ? SCOPE_WILDCARD : appId)
+            .timeout(120 * 1000);
     SyncTaskContext syncTaskContext = areDelegateSelectorsRequired(settingAttribute)
         ? appendDelegateSelector(settingAttribute, syncTaskContextBuilder)
         : syncTaskContextBuilder.build();
@@ -631,7 +617,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return getBuildService(settingAttribute).getProjectId(gcpConfig);
     }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -669,16 +655,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && settingValue instanceof NexusConfig && ((NexusConfig) settingValue).getVersion().equals("3.x")
-        && (repositoryFormat.equals("npm") || repositoryFormat.equals("nuget"))) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getGroupIdsUsingPrivateApis(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
-    } else {
-      return Sets.newTreeSet(getBuildService(settingAttribute, appId)
-                                 .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
-    }
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId)
+                               .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
   }
 
   @Override
@@ -757,7 +735,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {
     if (settingsService.isSettingValueGcp(settingAttribute)) {
-      return ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+      return ((GcpConfig) settingAttribute.getValue()).isUseDelegateSelectors();
     }
     return settingsService.hasDelegateSelectorProperty(settingAttribute);
   }

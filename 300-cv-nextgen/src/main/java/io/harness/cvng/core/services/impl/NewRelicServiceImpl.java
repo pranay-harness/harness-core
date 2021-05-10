@@ -63,7 +63,7 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public MetricPackValidationResponse validateData(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, String appName, String appId, List<MetricPackDTO> metricPacks) {
+      String projectIdentifier, String appName, String appId, List<MetricPackDTO> metricPacks, String tracingId) {
     try {
       DataCollectionRequest request = NewRelicMetricPackValidationRequest.builder()
                                           .type(DataCollectionRequestType.NEWRELIC_VALIDATION_REQUEST)
@@ -76,7 +76,7 @@ public class NewRelicServiceImpl implements NewRelicService {
                                                       .connectorIdentifier(connectorIdentifier)
                                                       .accountId(accountId)
                                                       .orgIdentifier(orgIdentifier)
-                                                      .tracingId("")
+                                                      .tracingId(tracingId)
                                                       .projectIdentifier(projectIdentifier)
                                                       .build();
 
@@ -88,6 +88,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       MetricPackValidationResponse validationResponse = MetricPackValidationResponse.builder()
                                                             .overallStatus(ThirdPartyApiResponseStatus.SUCCESS)
                                                             .metricValidationResponses(metricValidationResponseList)
+                                                            .metricPackName("Performance")
                                                             .build();
       validationResponse.updateStatus();
       return validationResponse;

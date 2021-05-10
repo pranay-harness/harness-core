@@ -29,7 +29,7 @@ public class ManifestConfigWrapper implements Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("manifest", manifest);
+    children.add(manifest.getIdentifier(), manifest);
     return children;
   }
 }

@@ -9,8 +9,12 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.context.GlobalContextData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
@@ -30,12 +34,15 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import okhttp3.ConnectionPool;
+import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -92,7 +99,8 @@ public abstract class AbstractHttpClientFactory {
     if (this.kryoConverterFactory != null) {
       retrofitBuilder.addConverterFactory(kryoConverterFactory);
     }
-    retrofitBuilder.client(getUnsafeOkHttpClient(baseUrl, this.clientMode));
+    retrofitBuilder.client(getUnsafeOkHttpClient(
+        baseUrl, this.clientMode, Boolean.TRUE.equals(this.serviceHttpClientConfig.getEnableHttpLogging())));
     if (this.enableCircuitBreaker) {
       retrofitBuilder.addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()));
     }
@@ -117,29 +125,56 @@ public abstract class AbstractHttpClientFactory {
     return objMapper;
   }
 
-  protected OkHttpClient getUnsafeOkHttpClient(String baseUrl, ClientMode clientMode) {
+  protected OkHttpClient getUnsafeOkHttpClient(String baseUrl, ClientMode clientMode, boolean addHttpLogging) {
     try {
-      return Http
-          .getUnsafeOkHttpClientBuilder(baseUrl, serviceHttpClientConfig.getConnectTimeOutSeconds(),
-              serviceHttpClientConfig.getReadTimeOutSeconds())
-          .connectionPool(new ConnectionPool())
-          .retryOnConnectionFailure(true)
-          .addInterceptor(getAuthorizationInterceptor(clientMode))
-          .addInterceptor(getCorrelationIdInterceptor())
-          .addInterceptor(getRequestContextInterceptor())
-          .addInterceptor(chain -> {
-            Request original = chain.request();
+      OkHttpClient.Builder builder =
+          Http.getUnsafeOkHttpClientBuilder(baseUrl, serviceHttpClientConfig.getConnectTimeOutSeconds(),
+                  serviceHttpClientConfig.getReadTimeOutSeconds())
+              .connectionPool(new ConnectionPool())
+              .retryOnConnectionFailure(true)
+              .addInterceptor(getAuthorizationInterceptor(clientMode))
+              .addInterceptor(getCorrelationIdInterceptor())
+              .addInterceptor(getGitContextInterceptor())
+              .addInterceptor(getRequestContextInterceptor());
+      if (addHttpLogging) {
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        builder.addInterceptor(loggingInterceptor);
+      }
+      builder.addInterceptor(chain -> {
+        Request original = chain.request();
 
-            // Request customization: add connection close headers
-            Request.Builder requestBuilder = original.newBuilder().header("Connection", "close");
+        // Request customization: add connection close headers
+        Request.Builder requestBuilder = original.newBuilder().header("Connection", "close");
 
-            Request request = requestBuilder.build();
-            return chain.proceed(request);
-          })
-          .build();
+        Request request = requestBuilder.build();
+        return chain.proceed(request);
+      });
+      return builder.build();
     } catch (Exception e) {
       throw new GeneralException(String.format("error while creating okhttp client for %s service", clientId), e);
     }
+  }
+
+  @NotNull
+  protected Interceptor getGitContextInterceptor() {
+    return chain -> {
+      Request request = chain.request();
+      GlobalContextData globalContextData = GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
+
+      if (globalContextData != null) {
+        final GitEntityInfo gitBranchInfo =
+            ((GitSyncBranchContext) Objects.requireNonNull(globalContextData)).getGitBranchInfo();
+        HttpUrl url = request.url()
+                          .newBuilder()
+                          .addQueryParameter("repoIdentifier", gitBranchInfo.getYamlGitConfigId())
+                          .addQueryParameter("branch", gitBranchInfo.getBranch())
+                          .build();
+        return chain.proceed(request.newBuilder().url(url).build());
+      } else {
+        return chain.proceed(request);
+      }
+    };
   }
 
   @NotNull

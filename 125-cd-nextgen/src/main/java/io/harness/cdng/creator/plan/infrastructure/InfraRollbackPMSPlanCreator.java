@@ -1,19 +1,20 @@
 package io.harness.cdng.creator.plan.infrastructure;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.cdng.creator.plan.rollback.ExecutionRollbackPMSPlanCreator;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.creator.plan.rollback.ExecutionStepsRollbackPMSPlanCreator;
 import io.harness.cdng.creator.plan.rollback.StepGroupsRollbackPMSPlanCreator;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.cdng.visitor.YamlTypes;
-import io.harness.plancreator.beans.PlanCreationConstants;
+import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -23,8 +24,9 @@ import io.harness.pms.yaml.YamlField;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(CDC)
 public class InfraRollbackPMSPlanCreator {
-  public static final String INFRA_ROLLBACK_NODE_ID_PREFIX = "infraRollback";
+  public static final String INFRA_ROLLBACK_NODE_ID_SUFFIX = "_infraRollback";
 
   public static PlanCreationResponse createInfraRollbackPlan(YamlField infraField) {
     if (!isDynamicallyProvisioned(infraField)) {
@@ -45,18 +47,18 @@ public class InfraRollbackPMSPlanCreator {
     if (isNotEmpty(stepGroupsRollbackPlan.getNodes())) {
       stepParametersBuilder.childNode(
           RollbackNode.builder()
-              .nodeId(stepsField.getNode().getUuid() + PlanCreationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_PREFIX)
+              .nodeId(stepsField.getNode().getUuid() + OrchestrationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_SUFFIX)
               .shouldAlwaysRun(true)
               .build());
     }
 
     YamlField rollbackStepsField = provisionerField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
     PlanCreationResponse executionRollbackPlan =
-        ExecutionRollbackPMSPlanCreator.createExecutionRollbackPlanNode(rollbackStepsField);
+        ExecutionStepsRollbackPMSPlanCreator.createExecutionStepsRollbackPlanNode(rollbackStepsField);
     if (isNotEmpty(executionRollbackPlan.getNodes())) {
       stepParametersBuilder.childNode(
           RollbackNode.builder()
-              .nodeId(rollbackStepsField.getNode().getUuid() + PlanCreationConstants.ROLLBACK_STEPS_NODE_ID_PREFIX)
+              .nodeId(rollbackStepsField.getNode().getUuid() + OrchestrationConstants.ROLLBACK_STEPS_NODE_ID_SUFFIX)
               .shouldAlwaysRun(true)
               .build());
     }
@@ -67,9 +69,9 @@ public class InfraRollbackPMSPlanCreator {
 
     PlanNode infraRollbackNode =
         PlanNode.builder()
-            .uuid(infraField.getNode().getUuid() + INFRA_ROLLBACK_NODE_ID_PREFIX)
-            .name(PlanCreationConstants.INFRA_ROLLBACK_NODE_NAME)
-            .identifier(PlanCreationConstants.INFRA_ROLLBACK_NODE_IDENTIFIER)
+            .uuid(infraField.getNode().getUuid() + INFRA_ROLLBACK_NODE_ID_SUFFIX)
+            .name(OrchestrationConstants.INFRA_ROLLBACK_NODE_NAME)
+            .identifier(OrchestrationConstants.INFRA_ROLLBACK_NODE_IDENTIFIER)
             .stepType(RollbackOptionalChildChainStep.STEP_TYPE)
             .stepParameters(stepParametersBuilder.build())
             .facilitatorObtainment(
@@ -77,8 +79,6 @@ public class InfraRollbackPMSPlanCreator {
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
                     .build())
             .skipExpressionChain(true)
-            // TODO: change this to not skip node
-            .skipGraphType(SkipType.SKIP_NODE)
             .build();
 
     PlanCreationResponse finalResponse =

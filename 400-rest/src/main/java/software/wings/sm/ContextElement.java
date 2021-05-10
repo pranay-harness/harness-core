@@ -1,8 +1,10 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 
 import java.util.Map;
@@ -11,6 +13,7 @@ import java.util.Map;
  * Interface for all RepeatElements.
  */
 @OwnedBy(CDC)
+@TargetModule(_871_CG_BEANS)
 public interface ContextElement {
   String WORKFLOW = "workflow";
   String DEPLOYMENT_URL = "deploymentUrl";

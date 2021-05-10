@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.CIBeansModule;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -84,6 +85,7 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
+        bind(CIExecutionServiceConfig.class).toInstance(CIExecutionServiceConfig.builder().build());
       }
 
       @Provides

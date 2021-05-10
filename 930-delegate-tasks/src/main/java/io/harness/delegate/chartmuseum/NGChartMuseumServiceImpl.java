@@ -1,7 +1,10 @@
 package io.harness.delegate.chartmuseum;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.chartmuseum.ChartMuseumClientHelper;
 import io.harness.chartmuseum.ChartMuseumServer;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
@@ -16,6 +19,7 @@ import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import com.google.inject.Inject;
 
+@OwnedBy(CDP)
 public class NGChartMuseumServiceImpl implements NGChartMuseumService {
   @Inject private ChartMuseumClientHelper clientHelper;
 

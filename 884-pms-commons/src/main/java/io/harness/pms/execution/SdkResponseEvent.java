@@ -20,7 +20,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@OwnedBy(HarnessTeam.CDC)
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -29,13 +28,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("SdkResponseEvent")
 @HarnessEntity(exportable = false)
 @TypeAlias("SdkResponseEvent")
+@OwnedBy(HarnessTeam.PIPELINE)
 public class SdkResponseEvent extends Queuable {
   SdkResponseEventType sdkResponseEventType;
   SdkResponseEventRequest sdkResponseEventRequest;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = new HashMap<>();
-    logContext.put(SdkResponseEventKeys.sdkResponseEventRequest, sdkResponseEventType.name());
     return new AutoLogContext(logContext, OVERRIDE_NESTS);
   }
 }

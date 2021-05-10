@@ -1,6 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import com.google.inject.Inject;
@@ -15,6 +17,7 @@ import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimList;
 import io.kubernetes.client.util.CallGeneratorParams;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class PVCFetcher {

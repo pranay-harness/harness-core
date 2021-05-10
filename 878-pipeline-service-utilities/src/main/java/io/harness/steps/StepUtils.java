@@ -1,5 +1,6 @@
 package io.harness.steps;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -7,7 +8,10 @@ import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.Capability;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskLogAbstractions;
@@ -20,23 +24,21 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
@@ -54,6 +56,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.MapUtils;
 
+@OwnedBy(PIPELINE)
 public class StepUtils {
   private StepUtils() {}
 
@@ -81,57 +84,6 @@ public class StepUtils {
     return responseBuilder.build();
   }
 
-  public static RollbackOutcome getFailedChildRollbackOutcome(
-      Map<String, ResponseData> responseDataMap, OutcomeService outcomeService) {
-    for (ResponseData responseData : responseDataMap.values()) {
-      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
-      Status executionStatus = responseNotifyData.getStatus();
-      if (!StatusUtils.positiveStatuses().contains(executionStatus)
-          || StatusUtils.brokeStatuses().contains(executionStatus)) {
-        if (responseNotifyData.getStepOutcomeRefs() == null) {
-          return null;
-        }
-
-        for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
-          Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
-          if (outcome instanceof RollbackOutcome) {
-            RollbackOutcome rollbackOutcome = (RollbackOutcome) outcome;
-            if (rollbackOutcome.getRollbackInfo() == null) {
-              return null;
-            }
-            return rollbackOutcome;
-          }
-        }
-      }
-    }
-    return null;
-  }
-
-  public static StepResponse createStepResponseFromChildWithChildOutcomes(
-      Map<String, ResponseData> responseDataMap, OutcomeService outcomeService) {
-    StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
-    for (ResponseData responseData : responseDataMap.values()) {
-      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
-      Status executionStatus = responseNotifyData.getStatus();
-      if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
-        responseBuilder.status(executionStatus);
-      }
-      if (StatusUtils.brokeStatuses().contains(executionStatus)) {
-        responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
-        for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
-          Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
-          responseBuilder.stepOutcome(StepOutcome.builder().name(stepOutcomeRef.getName()).outcome(outcome).build());
-        }
-      }
-    }
-    return responseBuilder.build();
-  }
-
-  public static Task prepareDelegateTaskInput(String accountId, TaskData taskData,
-      Map<String, String> setupAbstractions, LinkedHashMap<String, String> logAbstractions) {
-    return createHDelegateTask(accountId, taskData, setupAbstractions, logAbstractions);
-  }
-
   public static Task prepareDelegateTaskInput(
       String accountId, TaskData taskData, Map<String, String> setupAbstractions) {
     return createHDelegateTask(accountId, taskData, setupAbstractions, new LinkedHashMap<>());
@@ -148,28 +100,27 @@ public class StepUtils {
   }
 
   @Nonnull
-  public static LinkedHashMap<String, String> generateStageLogAbstractions(Ambiance ambiance) {
+  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance, String lastGroup) {
     LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
     logAbstractions.put("accountId", ambiance.getSetupAbstractionsMap().getOrDefault("accountId", ""));
     logAbstractions.put("orgId", ambiance.getSetupAbstractionsMap().getOrDefault("orgIdentifier", ""));
     logAbstractions.put("projectId", ambiance.getSetupAbstractionsMap().getOrDefault("projectIdentifier", ""));
-    logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
-    ambiance.getLevelsList()
-        .stream()
-        .filter(level -> level.getGroup().equals("STAGE"))
-        .findFirst()
-        .ifPresent(stageLevel -> logAbstractions.put("stageId", stageLevel.getIdentifier()));
+    logAbstractions.put("pipelineId", ambiance.getMetadata().getPipelineIdentifier());
+    logAbstractions.put("runSequence", String.valueOf(ambiance.getMetadata().getRunSequence()));
+    for (int i = 0; i < ambiance.getLevelsList().size(); i++) {
+      Level currentLevel = ambiance.getLevelsList().get(i);
+      String retrySuffix = currentLevel.getRetryIndex() > 0 ? String.format("_%s", currentLevel.getRetryIndex()) : "";
+      logAbstractions.put("level" + i, currentLevel.getIdentifier() + retrySuffix);
+      if (lastGroup != null && lastGroup.equals(currentLevel.getGroup())) {
+        break;
+      }
+    }
     return logAbstractions;
   }
 
   @Nonnull
   public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
-    LinkedHashMap<String, String> logAbstractions = generateStageLogAbstractions(ambiance);
-    Level currentLevel = AmbianceUtils.obtainCurrentLevel(ambiance);
-    if (currentLevel != null) {
-      logAbstractions.put("stepRuntimeId", currentLevel.getRuntimeId());
-    }
-    return logAbstractions;
+    return generateLogAbstractions(ambiance, null);
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
@@ -181,6 +132,12 @@ public class StepUtils {
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<TaskSelector> selectors) {
     return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
         Collections.emptyList(), true, null, selectors);
+  }
+
+  public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
+      KryoSerializer kryoSerializer, String taskName, List<TaskSelector> selectors) {
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
+        Collections.emptyList(), true, taskName, selectors);
   }
 
   public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
@@ -226,7 +183,7 @@ public class StepUtils {
                     .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters) == null
                             ? new byte[] {}
                             : kryoSerializer.asDeflatedBytes(taskParameters)))
-                    .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
+                    .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() / 1000).build())
                     .setExpressionFunctorToken(ambiance.getExpressionFunctorToken())
                     .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
                     .setParked(taskData.isParked())
@@ -295,5 +252,49 @@ public class StepUtils {
             .findFirst();
 
     return optionalLevel.isPresent();
+  }
+
+  public static long getTimeoutMillis(ParameterField<String> timeout, String defaultTimeout) {
+    String timeoutString;
+    if (ParameterField.isNull(timeout) || EmptyPredicate.isEmpty(timeout.getValue())) {
+      timeoutString = defaultTimeout;
+    } else {
+      timeoutString = timeout.getValue();
+    }
+    return NGTimeConversionHelper.convertTimeStringToMilliseconds(timeoutString);
+  }
+
+  public static List<TaskSelector> getTaskSelectors(ParameterField<List<String>> delegateSelectors) {
+    List<TaskSelector> taskSelectors = new ArrayList<>();
+    if (!ParameterField.isNull(delegateSelectors)) {
+      List<String> delegateSelectorsList = delegateSelectors.getValue();
+      if (delegateSelectorsList != null) {
+        taskSelectors = delegateSelectorsList.stream()
+                            .map(delegateSelector -> TaskSelector.newBuilder().setSelector(delegateSelector).build())
+                            .collect(toList());
+      }
+    }
+    return taskSelectors;
+  }
+
+  public static Status getStepStatus(CommandExecutionStatus commandExecutionStatus) {
+    if (commandExecutionStatus == null) {
+      return null;
+    }
+    switch (commandExecutionStatus) {
+      case SUCCESS:
+        return Status.SUCCEEDED;
+      case QUEUED:
+        return Status.QUEUED;
+      case SKIPPED:
+        return Status.SKIPPED;
+      case FAILURE:
+        return Status.FAILED;
+      case RUNNING:
+        return Status.RUNNING;
+      default:
+        throw new InvalidRequestException(
+            "Unhandled type CommandExecutionStatus: " + commandExecutionStatus, WingsException.USER);
+    }
   }
 }

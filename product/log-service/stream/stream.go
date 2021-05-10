@@ -32,6 +32,9 @@ type Stream interface {
 
 	// CopyTo copies the contents of the stream to the writer
 	CopyTo(ctx context.Context, key string, rc io.WriteCloser) error
+
+	// Exists checks whether the key is present in the stream or not.
+	Exists(ctx context.Context, key string) error
 }
 
 // Line represents a line in the logs.

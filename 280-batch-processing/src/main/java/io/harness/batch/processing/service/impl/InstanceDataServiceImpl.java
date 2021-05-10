@@ -3,12 +3,10 @@ package io.harness.batch.processing.service.impl;
 import io.harness.batch.processing.billing.timeseries.data.InstanceLifecycleInfo;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.CacheUtils;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 
 import software.wings.dl.WingsPersistence;
 
@@ -54,21 +52,6 @@ public class InstanceDataServiceImpl extends CacheUtils implements InstanceDataS
   }
 
   @Override
-  public boolean updateInstanceState(InstanceData instanceData, Instant instant, InstanceState instanceState) {
-    String instantField = null;
-    if (InstanceState.RUNNING == instanceState) {
-      instantField = InstanceDataKeys.usageStartTime;
-    } else if (InstanceState.STOPPED == instanceState) {
-      instantField = InstanceDataKeys.usageStopTime;
-    }
-
-    if (null != instantField) {
-      return instanceDataDao.updateInstanceState(instanceData, instant, instantField, instanceState);
-    }
-    return false;
-  }
-
-  @Override
   public InstanceData fetchActiveInstanceData(
       String accountId, String clusterId, String instanceId, List<InstanceState> instanceState) {
     return instanceDataDao.fetchActiveInstanceData(accountId, clusterId, instanceId, instanceState);
@@ -107,12 +90,6 @@ public class InstanceDataServiceImpl extends CacheUtils implements InstanceDataS
     List<InstanceState> instanceStates =
         new ArrayList<>(Arrays.asList(InstanceState.INITIALIZING, InstanceState.RUNNING));
     return instanceDataDao.fetchClusterActiveInstanceIds(accountId, clusterId, instanceStates, startTime);
-  }
-
-  @Override
-  public InstanceData getActiveInstance(
-      String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider) {
-    return instanceDataDao.getActiveInstance(accountId, startTime, endTime, cloudProvider);
   }
 
   @Override

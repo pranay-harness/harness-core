@@ -16,31 +16,38 @@ const (
 	port            = 8091
 )
 
-var scmServer = grpc.NewSCMServer
+var (
+	scmServer     = grpc.NewSCMServer
+	Version       = "0.0.0"
+	BuildCommitID = "NA"
+)
 
-var args struct {
-	Verbose bool `arg:"--verbose" help:"enable verbose logging mode"`
-	Port    uint `arg:"--port" help:"port for running GRPC server"`
+type args struct {
+	Verbose    bool   `arg:"--verbose" help:"enable verbose logging mode"`
+	Port       uint   `arg:"--port" help:"port for running GRPC server"`
+	UnixSocket string `arg:"--unix" help:"the unix socket to run on"`
 
 	Deployment            string `arg:"env:DEPLOYMENT" help:"name of the deployment"`
 	DeploymentEnvironment string `arg:"env:DEPLOYMENT_ENVIRONMENT" help:"environment of the deployment"`
 }
 
-func parseArgs() {
-	// set defaults here
-	args.DeploymentEnvironment = "prod"
-	args.Port = port
-	args.Verbose = false
-
-	arg.MustParse(&args)
+func (args) Version() string {
+	return Version
 }
 
-func init() {
-	//TODO: perform any initialization
+func parseArgs(a *args) {
+	// set defaults here
+	a.DeploymentEnvironment = "prod"
+	a.Port = port
+	a.Verbose = false
+	a.UnixSocket = ""
+
+	arg.MustParse(a)
 }
 
 func main() {
-	parseArgs()
+	var args args
+	parseArgs(&args)
 
 	// build initial log
 	logBuilder := logs.NewBuilder().Verbose(args.Verbose).WithDeployment(args.Deployment).
@@ -48,12 +55,11 @@ func main() {
 			"application_name", applicationName)
 	logger := logBuilder.MustBuild().Sugar()
 
-	logger.Infow("Starting CI scm server", "port", args.Port)
-	s, err := scmServer(args.Port, logger)
+	logger.Infow("Starting CI GRPC scm server", "version", Version, "buildCommitID", BuildCommitID, "port", args.Port, "unixSocket", args.UnixSocket)
+	s, err := scmServer(args.Port, args.UnixSocket, logger)
 	if err != nil {
-		logger.Fatalw("error while running CI scm server", "port", args.Port, zap.Error(err))
+		logger.Fatalw("error while running CI GRPC scm server", "port", args.Port, "unixSocket", args.UnixSocket, zap.Error(err))
 	}
-
 	// Wait for stop signal and shutdown the server upon receiving it in a separate goroutine
 	go s.Stop()
 	s.Start()

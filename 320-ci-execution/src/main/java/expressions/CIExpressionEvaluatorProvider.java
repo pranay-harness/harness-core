@@ -1,5 +1,7 @@
 package expressions;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.EngineExpressionEvaluator;
@@ -8,6 +10,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIExpressionEvaluatorProvider implements ExpressionEvaluatorProvider {
   @Override
   public EngineExpressionEvaluator get(VariableResolverTracker variableResolverTracker, Ambiance ambiance,

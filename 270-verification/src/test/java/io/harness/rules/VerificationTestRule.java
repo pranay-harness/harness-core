@@ -1,5 +1,7 @@
 package io.harness.rules;
 
+import static io.harness.lock.DistributedLockImplementation.NOOP;
+
 import io.harness.VerificationIntegrationBase;
 import io.harness.VerificationTestModule;
 import io.harness.app.VerificationQueueModule;
@@ -7,8 +9,11 @@ import io.harness.app.VerificationServiceConfiguration;
 import io.harness.app.VerificationServiceModule;
 import io.harness.app.VerificationServiceSchedulerModule;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.govern.ProviderModule;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.VerificationRegistrars;
 import io.harness.serializer.morphia.VerificationMorphiaRegistrar;
@@ -21,6 +26,9 @@ import software.wings.rules.WingsRule;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.dropwizard.Configuration;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -57,6 +65,26 @@ public class VerificationTestRule extends WingsRule {
     modules.add(new VerificationServiceModule((VerificationServiceConfiguration) configuration));
     modules.add(new VerificationTestModule());
     modules.add(new VerificationServiceSchedulerModule((VerificationServiceConfiguration) configuration));
+    modules.add(new ProviderModule() {
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisLockConfig() {
+        return RedisConfig.builder().build();
+      }
+
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return NOOP;
+      }
+
+      @Provides
+      @Singleton
+      MongoConfig mongoConfig() {
+        return MongoConfig.builder().build();
+      }
+    });
     return modules;
   }
 

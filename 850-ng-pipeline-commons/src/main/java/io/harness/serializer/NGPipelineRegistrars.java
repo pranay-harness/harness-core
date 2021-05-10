@@ -1,5 +1,8 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGPipelineKryoRegistrar;
 import io.harness.serializer.morphia.NGPipelineMorphiaRegistrar;
@@ -10,6 +13,7 @@ import lombok.experimental.UtilityClass;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(PL)
 public class NGPipelineRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
@@ -17,7 +21,7 @@ public class NGPipelineRegistrars {
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(ProjectAndOrgRegistrars.kryoRegistrars)
           .addAll(NGCoreClientRegistrars.kryoRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
+          .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .addAll(CommonEntitiesRegistrars.kryoRegistrars)
@@ -30,7 +34,7 @@ public class NGPipelineRegistrars {
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(ProjectAndOrgRegistrars.morphiaRegistrars)
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
+          .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
           .add(NGPipelineMorphiaRegistrar.class)

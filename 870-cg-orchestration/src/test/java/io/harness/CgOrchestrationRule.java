@@ -2,6 +2,8 @@ package io.harness;
 
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventListener;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -17,6 +19,7 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CgOrchestrationRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -29,6 +32,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -51,7 +55,9 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(HarnessTeam.CDC)
 @Slf4j
 public class CgOrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -91,6 +97,14 @@ public class CgOrchestrationRule implements MethodRule, InjectorRuleMixin, Mongo
             .addAll(CgOrchestrationRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(CgOrchestrationRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -121,6 +135,7 @@ public class CgOrchestrationRule implements MethodRule, InjectorRuleMixin, Mongo
     modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(CgOrchestrationModule.getInstance());
 
     return modules;

@@ -1,7 +1,9 @@
 package io.harness.ccm.cluster.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.cluster.entities.ClusterRecord.ClusterRecordKeys;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -21,6 +23,7 @@ import org.mongodb.morphia.query.Query;
 @JsonTypeName("DIRECT_KUBERNETES")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "DirectKubernetesClusterKeys")
+@OwnedBy(CE)
 public class DirectKubernetesCluster implements Cluster, KubernetesCluster {
   private String cloudProviderId;
   private String clusterName;

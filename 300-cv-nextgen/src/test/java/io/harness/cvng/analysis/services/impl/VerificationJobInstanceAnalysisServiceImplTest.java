@@ -535,7 +535,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
   @Category(UnitTests.class)
   public void testGetCanaryDeploymentAdditionalInfo_withImprovisedCanaryAndAdditionalPreDeploymentHost() {
     CanaryVerificationJobDTO canaryVerificationJobDTO = createCanaryVerificationJobDTO();
-    canaryVerificationJobDTO.setTrafficSplitPercentage(60);
+    canaryVerificationJobDTO.setTrafficSplitPercentage("40");
     verificationJobService.upsert(accountId, canaryVerificationJobDTO);
     VerificationJob verificationJob =
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);

@@ -1,13 +1,20 @@
 package io.harness.delegate.chartmuseum;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.chartmuseum.ChartMuseumClientHelper;
+import io.harness.chartmuseum.ChartMuseumServer;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
@@ -18,6 +25,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
@@ -28,7 +36,9 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.zeroturnaround.exec.StartedProcess;
 
+@OwnedBy(CDP)
 public class NGChartMuseumServiceImplTest extends CategoryTest {
   @Mock private ChartMuseumClientHelper clientHelper;
   @InjectMocks private NGChartMuseumServiceImpl ngChartMuseumService;
@@ -113,5 +123,34 @@ public class NGChartMuseumServiceImplTest extends CategoryTest {
 
     ngChartMuseumService.startChartMuseumServer(gcsHelmStoreDelegateConfig, "resources");
     verify(clientHelper, times(1)).startGCSChartMuseumServer(bucketName, folderPath, serviceAccountKey, resourcesDir);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testStartChartmuseumServerUnsuportedStoreType() {
+    GitStoreDelegateConfig gitStoreDelegateConfig = GitStoreDelegateConfig.builder().build();
+
+    assertThatThrownBy(() -> ngChartMuseumService.startChartMuseumServer(gitStoreDelegateConfig, "resoources"))
+        .isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testStopChartMuseumServer() {
+    StartedProcess startedProcess = mock(StartedProcess.class);
+    ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().startedProcess(startedProcess).build();
+
+    ngChartMuseumService.stopChartMuseumServer(chartMuseumServer);
+    verify(clientHelper).stopChartMuseumServer(startedProcess);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testStopChartMuseumServerNull() {
+    ngChartMuseumService.stopChartMuseumServer(null);
+    verify(clientHelper, never()).stopChartMuseumServer(any(StartedProcess.class));
   }
 }

@@ -14,12 +14,14 @@ import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(PL)
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SERVICE")
+@TypeAlias("ServicePrincipal")
 public class ServicePrincipal extends Principal {
   public ServicePrincipal(String name) {
     this.type = SERVICE;

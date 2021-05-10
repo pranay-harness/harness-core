@@ -176,6 +176,15 @@ func (r *Redis) Tail(ctx context.Context, key string) (<-chan *stream.Line, <-ch
 	return handler, err
 }
 
+// Exists checks whether the key exists in the stream
+func (r *Redis) Exists(ctx context.Context, key string) error {
+	exists := r.Client.Exists(key)
+	if exists.Err() != nil || exists.Val() == 0 {
+		return stream.ErrNotFound
+	}
+	return nil
+}
+
 // CopyTo copies the contents from the redis stream to the writer
 func (r *Redis) CopyTo(ctx context.Context, key string, wc io.WriteCloser) error {
 	defer wc.Close()

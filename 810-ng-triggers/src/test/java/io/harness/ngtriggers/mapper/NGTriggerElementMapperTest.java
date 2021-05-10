@@ -1,5 +1,7 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.ngtriggers.beans.source.NGTriggerType.NEW_ARTIFACT;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.SCHEDULED;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
@@ -13,6 +15,7 @@ import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
@@ -24,13 +27,13 @@ import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
-import io.harness.ngtriggers.beans.entity.metadata.CustomWebhookInlineAuthToken;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
-import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
+import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.rule.Owner;
+import io.harness.webhook.WebhookConfigProvider;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -53,10 +56,12 @@ import org.mockito.MockitoAnnotations;
 public class NGTriggerElementMapperTest extends CategoryTest {
   private String ngTriggerYaml;
   private String ngCustomTriggerYaml;
+  private String ngTriggerCustomYamlNoAuth;
   private String ngTriggerGitConnYaml;
   private String ngTriggerCronYaml;
 
   @Mock private TriggerEventHistoryRepository triggerEventHistoryRepository;
+  @Mock private WebhookConfigProvider webhookConfigProvider;
   @InjectMocks @Inject private NGTriggerElementMapper ngTriggerElementMapper;
 
   @Before
@@ -75,6 +80,15 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     String fileNameForCronPayloadTrigger = "ng-trigger-cron.yaml";
     ngTriggerCronYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(fileNameForCronPayloadTrigger)), StandardCharsets.UTF_8);
+    ngTriggerCustomYamlNoAuth = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-custom-trigger-no-auth.yaml")), StandardCharsets.UTF_8);
+
+    doReturn("https://app.harness.io/pipeline/api")
+        .doReturn("https://app.harness.io/pipeline/api/")
+        .doReturn("https://app.harness.io/pipeline/api/#")
+        .doReturn(null)
+        .when(webhookConfigProvider)
+        .getPmsApiBaseUrl();
   }
 
   @Test
@@ -95,6 +109,7 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     assertThat(webhookTriggerConfigSpec.getEvent()).isEqualTo(PULL_REQUEST);
     assertThat(webhookTriggerConfigSpec.getActions()).containsExactlyInAnyOrder(OPENED, CLOSED);
     assertThat(webhookTriggerConfigSpec.getPathFilters()).containsExactlyInAnyOrder("path1", "path2");
+    assertThat(webhookTriggerConfigSpec.getJexlCondition()).isEqualTo("true");
     assertThat(webhookTriggerConfigSpec.getPayloadConditions()).isNotNull();
     assertThat(webhookTriggerConfigSpec.getPayloadConditions().size()).isEqualTo(3);
 
@@ -120,6 +135,13 @@ public class NGTriggerElementMapperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testToTriggerConfigForCustomPayloadTrigger() {
     NGTriggerConfig trigger = ngTriggerElementMapper.toTriggerConfig(ngCustomTriggerYaml);
+    assertCustomTrigger(trigger);
+
+    trigger = ngTriggerElementMapper.toTriggerConfig(ngTriggerCustomYamlNoAuth);
+    assertCustomTrigger(trigger);
+  }
+
+  private void assertCustomTrigger(NGTriggerConfig trigger) {
     assertThat(trigger).isNotNull();
     assertThat(trigger.getIdentifier()).isEqualTo("customPayload");
     assertThat(trigger.getSource().getType()).isEqualTo(WEBHOOK);
@@ -146,10 +168,6 @@ public class NGTriggerElementMapperTest extends CategoryTest {
                                           .collect(Collectors.toSet());
 
     assertThat(payloadConditionSet).containsOnly("<+eventPayload.project.team>:in:cd, ci");
-    assertThat(customWebhookTriggerSpec.getAuthToken()).isNotNull();
-    assertThat(customWebhookTriggerSpec.getAuthToken().getType().equals("inline"));
-    assertThat(customWebhookTriggerSpec.getAuthToken().getSpec()).isNotNull();
-    assertThat(customWebhookTriggerSpec.getAuthToken().getSpec()).isInstanceOfAny(CustomWebhookInlineAuthToken.class);
   }
 
   /**
@@ -210,6 +228,10 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     NGTriggerEntity ngTriggerEntity =
         ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerCronYaml).getNgTriggerEntity();
     assertThat(ngTriggerEntity.getNextIterations()).isNotEmpty();
+    // all elements snap to the nearest minute -- in other words,  now is not an element.
+    for (long nextIteration : ngTriggerEntity.getNextIterations()) {
+      assertThat(nextIteration % 60000).isEqualTo(0);
+    }
   }
 
   @Test
@@ -320,7 +342,42 @@ public class NGTriggerElementMapperTest extends CategoryTest {
         ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookDetails().getWebhookSourceRepo())
         .isEqualTo(ngTriggerEntity.getMetadata().getWebhook().getType());
-    assertThat(ngTriggerDetailsResponseDTO.getWebhookDetails().getWebhookSecret())
-        .isEqualTo("secrettoken"); // Entity stores the base64 version of token
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testGetWebhookUrl() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngCustomTriggerYaml).getNgTriggerEntity();
+    NGTriggerDetailsResponseDTO ngTriggerDetailsResponseDTO =
+        ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
+    // baseUrl: "https://app.harness.io/pipeline/api"
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
+        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+
+    // baseUrl: "https://app.harness.io/pipeline/api/"
+    ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerGitConnYaml).getNgTriggerEntity();
+    ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
+        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+
+    // baseUrl: "https://app.harness.io/pipeline/api/#"
+    ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
+        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+
+    // baseUrl: null
+    ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
+
+    ngTriggerEntity.setType(SCHEDULED);
+    ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
+
+    ngTriggerEntity.setType(NEW_ARTIFACT);
+    ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false);
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
   }
 }

@@ -15,10 +15,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 @JsonSubTypes(value =
     {
-      @JsonSubTypes.Type(value = JexlCriteriaSpec.class, name = "Jexl")
-      , @JsonSubTypes.Type(value = KeyValuesCriteriaSpec.class, name = "KeyValues")
+      @JsonSubTypes.Type(value = JexlCriteriaSpec.class, name = CriteriaSpecTypeConstants.JEXL)
+      , @JsonSubTypes.Type(value = KeyValuesCriteriaSpec.class, name = CriteriaSpecTypeConstants.KEY_VALUES)
     })
-
 public interface CriteriaSpec {
   @JsonIgnore CriteriaSpecType getType();
   @JsonIgnore CriteriaSpecDTO toCriteriaSpecDTO();

@@ -1,12 +1,16 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.jira.JiraAction.CHECK_APPROVAL;
 import static io.harness.jira.JiraAction.FETCH_ISSUE;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.service.ApprovalUtils.checkApproval;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -17,7 +21,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCreateMetaResponse;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.api.ApprovalStateExecutionData;
@@ -44,6 +47,7 @@ import org.mongodb.morphia.annotations.Transient;
  * All Jira apis should be accessed via this object.
  */
 @Singleton
+@OwnedBy(CDC)
 @Slf4j
 public class JiraHelperService {
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
@@ -80,7 +84,7 @@ public class JiraHelperService {
 
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID_KEY)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
                                     .data(TaskData.builder()
                                               .async(false)
                                               .taskType(TaskType.JIRA.name())

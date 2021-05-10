@@ -9,22 +9,28 @@ import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfig;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
+import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
+import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.tasks.DecryptGitApiAccessHelper;
+import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.utils.CryptoUtils;
 
@@ -34,9 +40,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,22 +57,30 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final ConnectorService connectorService;
   private final DecryptGitApiAccessHelper decryptScmApiAccess;
   private final Producer gitSyncConfigEventProducer;
+  private final ExecutorService executorService;
+  private final GitBranchService gitBranchService;
+  private final GitSyncConnectorHelper gitSyncConnectorHelper;
 
   @Inject
   public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
       @Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptScmApiAccess,
-      @Named(EventsFrameworkConstants.GIT_CONFIG_STREAM) Producer gitSyncConfigEventProducer) {
+      @Named(EventsFrameworkConstants.GIT_CONFIG_STREAM) Producer gitSyncConfigEventProducer,
+      ExecutorService executorService, GitBranchService gitBranchService,
+      GitSyncConnectorHelper gitSyncConnectorHelper) {
     this.yamlGitConfigRepository = yamlGitConfigRepository;
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitSyncConfigEventProducer = gitSyncConfigEventProducer;
+    this.executorService = executorService;
+    this.gitBranchService = gitBranchService;
+    this.gitSyncConnectorHelper = gitSyncConnectorHelper;
   }
 
   @Override
   public YamlGitConfigDTO get(String projectIdentifier, String orgIdentifier, String accountId, String identifier) {
     Optional<YamlGitConfig> yamlGitConfig =
-        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndUuid(
+        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
             accountId, orgIdentifier, projectIdentifier, identifier);
     return yamlGitConfig.map(YamlGitConfigMapper::toYamlGitConfigDTO)
         .orElseThrow(()
@@ -80,7 +97,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   private Optional<YamlGitConfig> getYamlGitConfigEntity(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    return yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndUuid(
+    return yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
         accountId, orgIdentifier, projectIdentifier, identifier);
   }
 
@@ -105,7 +122,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   @Override
   public YamlGitConfigDTO updateDefault(
-      String projectIdentifier, String orgIdentifier, String accountId, String identifier, String folderIdentifier) {
+      String projectIdentifier, String orgIdentifier, String accountId, String identifier, String folderPath) {
     Optional<YamlGitConfig> yamlGitConfigOptional =
         getYamlGitConfigEntity(accountId, orgIdentifier, projectIdentifier, identifier);
     if (!yamlGitConfigOptional.isPresent()) {
@@ -116,12 +133,12 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     List<YamlGitConfigDTO.RootFolder> rootFolders = yamlGitConfig.getRootFolders();
     YamlGitConfigDTO.RootFolder newDefaultRootFolder = null;
     for (YamlGitConfigDTO.RootFolder folder : rootFolders) {
-      if (folder.getIdentifier().equals(folderIdentifier)) {
+      if (folder.getRootFolder().equals(folderPath)) {
         newDefaultRootFolder = folder;
       }
     }
     if (newDefaultRootFolder == null) {
-      throw new InvalidRequestException("No folder exists with the identifier " + folderIdentifier);
+      throw new InvalidRequestException("No folder exists with the path " + folderPath);
     }
     yamlGitConfig.setDefaultRootFolder(newDefaultRootFolder);
     YamlGitConfig updatedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfig);
@@ -157,7 +174,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private YamlGitConfigDTO updateInternal(YamlGitConfigDTO gitSyncConfigDTO) {
     validateTheGitConfigInput(gitSyncConfigDTO);
     Optional<YamlGitConfig> existingYamlGitConfigDTO =
-        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndUuid(
+        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
             gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier(),
             gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getIdentifier());
     if (!existingYamlGitConfigDTO.isPresent()) {
@@ -165,12 +182,23 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
           gitSyncConfigDTO.getOrganizationIdentifier(), gitSyncConfigDTO.getProjectIdentifier(),
           gitSyncConfigDTO.getIdentifier()));
     }
+    validateThatImmutableValuesAreNotChanged(gitSyncConfigDTO, existingYamlGitConfigDTO.get());
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, gitSyncConfigDTO.getAccountIdentifier());
     yamlGitConfigToBeSaved.setWebhookToken(existingYamlGitConfigDTO.get().getWebhookToken());
     yamlGitConfigToBeSaved.setUuid(existingYamlGitConfigDTO.get().getUuid());
     yamlGitConfigToBeSaved.setVersion(existingYamlGitConfigDTO.get().getVersion());
     YamlGitConfig yamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
     return YamlGitConfigMapper.toYamlGitConfigDTO(yamlGitConfig);
+  }
+
+  private void validateThatImmutableValuesAreNotChanged(
+      YamlGitConfigDTO gitSyncConfigDTO, YamlGitConfig existingYamlGitConfigDTO) {
+    if (!gitSyncConfigDTO.getRepo().equals(existingYamlGitConfigDTO.getRepo())) {
+      throw new InvalidRequestException("The repo url of an git config cannot be changed");
+    }
+    if (!gitSyncConfigDTO.getBranch().equals(existingYamlGitConfigDTO.getBranch())) {
+      throw new InvalidRequestException("The default branch of an git config cannot be changed");
+    }
   }
 
   private String getYamlGitConfigNotFoundMessage(
@@ -180,18 +208,10 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
-  public Optional<ConnectorInfoDTO> getGitConnector(
-      YamlGitConfigDTO ygs, String gitConnectorId, String repoName, String branchName) {
+  public Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO ygs, String gitConnectorId) {
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(
         ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier(), gitConnectorId);
-
-    if (connectorDTO.isPresent()) {
-      ConnectorInfoDTO connectorInfo = connectorDTO.get().getConnector();
-      if (connectorInfo.getConnectorType() == ConnectorType.GIT) {
-        return connectorDTO.map(connectorResponse -> connectorResponse.getConnector());
-      }
-    }
-    return Optional.empty();
+    return connectorDTO.map(ConnectorResponseDTO::getConnector);
   }
 
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs, String accountId, boolean performFullSync) {
@@ -211,7 +231,12 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
           gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
     }
     sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
-        yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getUuid(), "Save");
+        yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
+    executorService.submit(
+        ()
+            -> gitBranchService.createBranches(accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
+                gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getGitConnectorRef(),
+                gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getIdentifier()));
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
   }
 
@@ -236,17 +261,72 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private void validateTheGitConfigInput(YamlGitConfigDTO ygs) {
     ensureFolderEndsWithDelimiter(ygs);
     validateFolderFollowsHarnessParadigm(ygs);
+    validateFolderPathIsUnique(ygs);
+    validateFoldersAreIndependant(ygs);
+    validateAPIAccessFieldPresence(ygs);
+  }
+
+  private void validateAPIAccessFieldPresence(YamlGitConfigDTO ygs) {
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(ygs.getGitConnectorRef(),
+        ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier());
+    Optional<ConnectorInfoDTO> gitConnectorOptional = getGitConnector(ygs, identifierRef.getIdentifier());
+    if (gitConnectorOptional.isPresent()) {
+      ConnectorConfigDTO connectorConfig = gitConnectorOptional.get().getConnectorConfig();
+      if (connectorConfig instanceof ScmConnector) {
+        gitSyncConnectorHelper.validateTheAPIAccessPresence((ScmConnector) connectorConfig);
+      } else {
+        throw new InvalidRequestException(
+            String.format("The connector reference %s is not a git connector", ygs.getGitConnectorRef()));
+      }
+    } else {
+      throw new InvalidRequestException(
+          String.format("No connector found for the connector reference %s", ygs.getGitConnectorRef()));
+    }
+  }
+
+  /**
+   * Checks that one folder should not be contained within other
+   * for eg portal/.harness, portal/.harness/ci/.harness is an
+   * invalid folder pair.
+   *
+   */
+  private void validateFoldersAreIndependant(YamlGitConfigDTO ygs) {
+    final List<YamlGitConfigDTO.RootFolder> rootFolders = ygs.getRootFolders();
+    for (int i = 0; i < rootFolders.size(); i++) {
+      for (int j = 0; j < rootFolders.size() && j != i; j++) {
+        String firstFolder = rootFolders.get(i).getRootFolder();
+        String secondFolder = rootFolders.get(j).getRootFolder();
+        if (firstFolder.startsWith(secondFolder)) {
+          throw new InvalidRequestException(
+              String.format("The folder %s is already contained in %s", firstFolder, secondFolder));
+        }
+      }
+    }
+  }
+
+  private void validateFolderPathIsUnique(YamlGitConfigDTO ygs) {
+    if (ygs.getRootFolders() == null) {
+      return;
+    }
+    Set<String> folderPaths = new HashSet();
+    for (YamlGitConfigDTO.RootFolder folder : ygs.getRootFolders()) {
+      if (folderPaths.contains(folder.getRootFolder())) {
+        throw new DuplicateFieldException(
+            String.format("A folder with name %s already exists in the list", folder.getRootFolder()));
+      }
+      folderPaths.add(folder.getRootFolder());
+    }
   }
 
   private void ensureFolderEndsWithDelimiter(YamlGitConfigDTO ygs) {
     if (ygs.getRootFolders() == null) {
       return;
     }
-    ygs.getRootFolders().forEach(folder -> {
-      if (!folder.getRootFolder().endsWith(PATH_DELIMITER)) {
-        folder.getRootFolder().concat(PATH_DELIMITER);
-      }
-    });
+    final Optional<YamlGitConfigDTO.RootFolder> rootFolder =
+        ygs.getRootFolders().stream().filter(config -> !config.getRootFolder().endsWith(PATH_DELIMITER)).findFirst();
+    if (rootFolder.isPresent()) {
+      throw new InvalidRequestException("The folder should end with /");
+    }
   }
 
   private void validateFolderFollowsHarnessParadigm(YamlGitConfigDTO ygs) {
@@ -257,30 +337,24 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         ygs.getRootFolders()
             .stream()
             .filter(
-                config -> config.getRootFolder().endsWith(PATH_DELIMITER + HARNESS_FOLDER_EXTENSION + PATH_DELIMITER))
+                config -> !config.getRootFolder().endsWith(PATH_DELIMITER + HARNESS_FOLDER_EXTENSION + PATH_DELIMITER))
             .findFirst();
     if (rootFolder.isPresent()) {
-      throw new InvalidRequestException("Incorrect root folder configuration.");
+      throw new InvalidRequestException("The folder should end with .harness/");
     }
   }
 
   @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     Scope scope = getScope(accountId, orgIdentifier, projectIdentifier);
-    boolean deleted = yamlGitConfigRepository.removeByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeAndUuid(
-                          accountId, orgIdentifier, projectIdentifier, scope, identifier)
+    boolean deleted =
+        yamlGitConfigRepository.deleteByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeAndIdentifier(
+            accountId, orgIdentifier, projectIdentifier, scope, identifier)
         != 0;
     if (deleted) {
       sendEventForConfigChange(accountId, orgIdentifier, projectIdentifier, identifier, "delete");
     }
     return deleted;
-  }
-
-  @Override
-  public YamlGitConfigDTO get(String uuid, String accountId) {
-    final Optional<YamlGitConfig> yamlGitConfig = yamlGitConfigRepository.findByUuidAndAccountId(uuid, accountId);
-    return yamlGitConfig.map(YamlGitConfigMapper::toYamlGitConfigDTO)
-        .orElseThrow(() -> new InvalidRequestException("Incorrect id for git sync config"));
   }
 
   @Override

@@ -49,7 +49,7 @@ public class WorkflowYAMLHelper {
   public String getWorkflowVariableValueBean(String accountId, String envId, String appId, String entityType,
       String variableValue, boolean skipEmpty, Variable variable) {
     if (entityType == null || (skipEmpty && isEmpty(variableValue))
-        || (matchesVariablePattern(variableValue) && (!isEmptyCustomExpression(variableValue)))) {
+        || (matchesVariablePattern(variableValue) && (!isEmptyCustomExpression(variableValue))) || variable == null) {
       return variableValue;
     }
 

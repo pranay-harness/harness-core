@@ -1,5 +1,8 @@
 package io.harness.repositories.inputset;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetFilterHelper;
 
@@ -25,6 +28,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCustom {
   private final MongoTemplate mongoTemplate;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);
@@ -49,6 +53,13 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed deleting Input Set; attempt: {}", "[Failed]: Failed deleting Input Set; attempt: {}");
     return Failsafe.with(retryPolicy).get(() -> mongoTemplate.updateFirst(query, update, InputSetEntity.class));
+  }
+
+  @Override
+  public UpdateResult deleteAllInputSetsWhenPipelineDeleted(Query query, Update update) {
+    RetryPolicy<Object> retryPolicy = getRetryPolicy(
+        "[Retrying]: Failed deleting Input Set; attempt: {}", "[Failed]: Failed deleting Input Set; attempt: {}");
+    return Failsafe.with(retryPolicy).get(() -> mongoTemplate.updateMulti(query, update, InputSetEntity.class));
   }
 
   @Override

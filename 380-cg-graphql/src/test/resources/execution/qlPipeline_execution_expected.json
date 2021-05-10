@@ -42,5 +42,6 @@
       "name" : "mypipeline",
       "value" : "Pipeline - z8uZsbTwRr6s8VzJQJa8aQ"
     }
-  ]
+  ],
+  "failureDetails":"failureDetails"
 }

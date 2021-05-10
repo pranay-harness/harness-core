@@ -1,7 +1,10 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType.PUSH;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
@@ -25,29 +28,38 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapper {
   private final WebhookEventPayloadParser webhookEventPayloadParser;
   private final TriggerFilterStore triggerFilterHelper;
   private final WebhookEventPublisher webhookEventPublisher;
 
-  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerWebhookEvent triggerWebhookEvent) {
-    String projectFqn = getProjectFqn(triggerWebhookEvent);
+  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerMappingRequestData mappingRequestData) {
+    TriggerWebhookEvent triggerWebhookEvent = mappingRequestData.getTriggerWebhookEvent();
 
     // 1. Parse Payload
-    ParsePayloadResponse parsePayloadResponse = convertWebhookResponse(triggerWebhookEvent);
-    if (parsePayloadResponse.isExceptionOccured()) {
-      return WebhookEventMappingResponse.builder()
-          .webhookEventResponse(WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
-          .build();
-    }
+    WebhookPayloadData webhookPayloadData = null;
+    if (mappingRequestData.getWebhookDTO() == null) {
+      ParsePayloadResponse parsePayloadResponse = convertWebhookResponse(triggerWebhookEvent);
+      if (parsePayloadResponse.isExceptionOccured()) {
+        return WebhookEventMappingResponse.builder()
+            .webhookEventResponse(WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
+            .build();
+      }
 
-    WebhookPayloadData webhookPayloadData = parsePayloadResponse.getWebhookPayloadData();
+      webhookPayloadData = parsePayloadResponse.getWebhookPayloadData();
+    } else {
+      webhookPayloadData = webhookEventPayloadParser.convertWebhookResponse(
+          mappingRequestData.getWebhookDTO().getParsedResponse(), triggerWebhookEvent);
+    }
 
     publishPushEvent(webhookPayloadData);
 
     // Generate list of all filters to be applied
-    FilterRequestData filterRequestData =
-        FilterRequestData.builder().projectFqn(projectFqn).webhookPayloadData(webhookPayloadData).build();
+    FilterRequestData filterRequestData = FilterRequestData.builder()
+                                              .accountId(webhookPayloadData.getOriginalEvent().getAccountId())
+                                              .webhookPayloadData(webhookPayloadData)
+                                              .build();
     List<TriggerFilter> triggerFilters =
         triggerFilterHelper.getWebhookTriggerFilters(filterRequestData.getWebhookPayloadData());
 
@@ -67,6 +79,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
         }
       }
     } catch (Exception e) {
+      log.error("Exception while evaluating Triggers: ", e);
       return triggerFilterInAction.getWebhookResponseForException(filterRequestData, e);
     }
 

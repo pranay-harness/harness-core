@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "maven_deps",
@@ -10,6 +9,7 @@ java_library(
         "//940-resource-group-beans:module",
         "//940-secret-manager-client:module",
         "//954-connector-beans:module",
+        "//955-account-mgmt:module",
         "//955-setup-usage-sdk:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
@@ -44,6 +44,4 @@ java_library(
     ],
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

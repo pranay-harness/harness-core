@@ -1,9 +1,9 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.number;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
@@ -11,7 +11,7 @@ import io.harness.yaml.YamlSchemaTypes;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(CDP)
 @Data
 @JsonTypeName("Percentage")
 public class PercentageInstanceSelection implements InstanceSelectionBase {

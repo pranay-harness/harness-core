@@ -10,6 +10,7 @@ message TriggerPayload {
   string jsonPayload = 1;
   ParsedPayload parsedPayload = 2;
   Type type = 3;
+  map<string, string> headers = 4;
 }
 
 message ParsedPayload {
@@ -22,4 +23,5 @@ message ParsedPayload {
 enum Type {
   CUSTOM = 0;
   GIT = 1;
+  SCHEDULED = 2;
 }

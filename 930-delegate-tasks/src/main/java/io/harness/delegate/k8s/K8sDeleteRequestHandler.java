@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getResourcesInStringFormat;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
@@ -20,6 +21,7 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -51,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(CDP)
 @NoArgsConstructor
 @Slf4j
 public class K8sDeleteRequestHandler extends K8sRequestHandler {
@@ -103,12 +106,13 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse executeDeleteUsingFiles(K8sDeleteRequest k8sDeleteRequest,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
-      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) {
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeleteRequest.getTimeoutIntervalInMin());
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sDeleteRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles, true, commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            k8sDeleteRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         steadyStateTimeoutInMillis, k8sDeleteRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(null);
@@ -119,8 +123,15 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
       return getGenericFailureResponse(null);
     }
 
-    success = k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
-    if (!success) {
+    try {
+      success = k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
+      if (!success) {
+        return getGenericFailureResponse(null);
+      }
+    } catch (Exception ex) {
+      log.error("Exception:", ex);
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR);
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return getGenericFailureResponse(null);
     }
 

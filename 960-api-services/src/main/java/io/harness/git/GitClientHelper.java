@@ -1,5 +1,6 @@
 package io.harness.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.eraro.ErrorCode.FAILED_TO_ACQUIRE_NON_PERSISTENT_LOCK;
 import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.ADMIN_SRE;
@@ -10,6 +11,7 @@ import static io.harness.git.Constants.GIT_DEFAULT_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_REPO_BASE_DIR;
 import static io.harness.git.Constants.GIT_TERRAFORM_LOG_PREFIX;
+import static io.harness.git.Constants.GIT_TERRAGRUNT_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_TRIGGER_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 import static io.harness.git.Constants.REPOSITORY;
@@ -27,6 +29,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Hex.encodeHexString;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GitClientException;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.NonPersistentLockException;
@@ -61,10 +64,11 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.TransportException;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class GitClientHelper {
-  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
+  private static final String GIT_URL_REGEX = "(http|https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
   private static final Integer OWNER_GROUP = 4;
   private static final Integer REPO_GROUP = 5;
@@ -143,6 +147,9 @@ public class GitClientHelper {
 
       case TERRAFORM:
         return GIT_TERRAFORM_LOG_PREFIX;
+
+      case TERRAGRUNT:
+        return GIT_TERRAGRUNT_LOG_PREFIX;
 
       case TRIGGER:
         return GIT_TRIGGER_LOG_PREFIX;

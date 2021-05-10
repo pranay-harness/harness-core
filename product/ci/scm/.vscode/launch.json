@@ -2,11 +2,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "CI-E SCM service",
+            "name": "CI-E GRPC SCM service",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
+          },
+
+          {
+            "name": "CI-E unix socket SCM service",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": ["--unix", "/tmp/bla"]
           },
     ]
 }

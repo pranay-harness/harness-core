@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "maven_deps",
@@ -93,7 +92,7 @@ java_library(
         "@maven//:com_mchange_c3p0",
         "@maven//:com_mchange_mchange_commons_java",
         "@maven//:com_nimbusds_nimbus_jose_jwt",
-        "@maven//:com_novemberain_quartz_mongodb",
+        "@maven//:com_novemberain_quartz_mongodb_harness_mongo_ssl",
         "@maven//:com_papertrail_profiler",
         "@maven//:com_smoketurner_dropwizard_swagger",
         "@maven//:com_squareup_okhttp3_okhttp",
@@ -308,6 +307,4 @@ java_binary(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

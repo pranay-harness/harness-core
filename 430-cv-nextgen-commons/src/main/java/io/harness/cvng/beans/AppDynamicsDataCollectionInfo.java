@@ -4,7 +4,6 @@ import io.harness.cvng.beans.appd.AppDynamicsUtils;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,7 +20,7 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
   private MetricPackDTO metricPack;
   @Override
   public Map<String, Object> getDslEnvVariables(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
-    Map<String, Object> dslEnvVariables = new HashMap<>();
+    Map<String, Object> dslEnvVariables = AppDynamicsUtils.getCommonEnvVariables(appDynamicsConnectorDTO);
     dslEnvVariables.put("applicationName", getApplicationName());
     dslEnvVariables.put("tierName", getTierName());
     final List<String> metricPaths = getMetricPack()
@@ -42,9 +41,7 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
 
   @Override
   public Map<String, String> collectionHeaders(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
-    Map<String, String> headers = new HashMap<>();
-    headers.put("Authorization", AppDynamicsUtils.getAuthorizationHeader(appDynamicsConnectorDTO));
-    return headers;
+    return AppDynamicsUtils.collectionHeaders(appDynamicsConnectorDTO);
   }
 
   @Override

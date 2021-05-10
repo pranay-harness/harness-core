@@ -2,6 +2,10 @@ package io.harness.capability;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.iterator.PersistentFibonacciIterable;
 import io.harness.mongo.index.FdIndex;
@@ -24,6 +28,8 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @FieldNameConstants(innerTypeName = "CapabilityTaskSelectionDetailsKeys")
 @Entity(value = "capabilityTaskSelectionDetails", noClassnameStored = true)
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class CapabilityTaskSelectionDetails implements PersistentEntity, PersistentFibonacciIterable {
   @Id private String uuid;
   @FdIndex private String accountId;

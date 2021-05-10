@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ARTIFACT_STREAM_DELEGATE_TIMEOUT;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
@@ -27,6 +28,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.expression.SecretFunctor.Mode.CASCADING;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.service.impl.ArtifactoryBuildServiceImpl.MANUAL_PULL_ARTIFACTORY_LIMIT;
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
 import static java.lang.String.format;
@@ -35,8 +37,10 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.artifact.ArtifactUtilities;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.FeatureName;
@@ -55,7 +59,6 @@ import io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
 import io.harness.network.Http;
 import io.harness.persistence.HIterator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.app.MainConfiguration;
@@ -122,6 +125,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
@@ -145,9 +149,11 @@ public class ArtifactCollectionUtils {
 
   public long getDelegateQueueTimeout(String accountId) {
     long timeout = DELEGATE_QUEUE_TIMEOUT;
-    if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)
-        || DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+    if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)) {
       timeout = Duration.ofSeconds(15).toMillis();
+    }
+    if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+      timeout = Duration.ofSeconds(45).toMillis();
     }
     return System.currentTimeMillis() + timeout;
   }
@@ -319,7 +325,7 @@ public class ArtifactCollectionUtils {
             .artifactStreamAttributes(artifactStreamAttributes)
             .artifactStreamType(artifactStream.getArtifactStreamType())
             .buildSourceRequestType(requestType)
-            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType, isCollection))
             .isCollection(isCollection);
 
     if (isCollection) {
@@ -651,10 +657,11 @@ public class ArtifactCollectionUtils {
     }
   }
 
-  public static int getLimit(String artifactStreamType, BuildSourceRequestType requestType) {
-    return ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS == requestType
-        ? ARTIFACT_RETENTION_SIZE
-        : -1;
+  public static int getLimit(String artifactStreamType, BuildSourceRequestType requestType, boolean isCollection) {
+    if (ARTIFACTORY.name().equals(artifactStreamType) && BuildSourceRequestType.GET_BUILDS == requestType) {
+      return isCollection ? ARTIFACT_RETENTION_SIZE : MANUAL_PULL_ARTIFACTORY_LIMIT;
+    }
+    return -1;
   }
 
   public BuildSourceParameters getBuildSourceParameters(ArtifactStream artifactStream,
@@ -667,10 +674,6 @@ public class ArtifactCollectionUtils {
     String appId = artifactStream.fetchAppId();
     boolean multiArtifact = multiArtifactEnabled(settingAttribute.getAccountId());
     ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, multiArtifact);
-
-    if (featureFlagService.isEnabled(FeatureName.SUPPORT_NEXUS_GROUP_REPOS, settingAttribute.getAccountId())) {
-      artifactStreamAttributes.setSupportForNexusGroupReposEnabled(true);
-    }
 
     BuildSourceRequestType requestType =
         getBuildSourceRequestType(artifactStream, multiArtifact, artifactStreamAttributes);
@@ -687,7 +690,7 @@ public class ArtifactCollectionUtils {
             .settingValue(settingValue)
             .encryptedDataDetails(encryptedDataDetails)
             .buildSourceRequestType(requestType)
-            .limit(getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .limit(getLimit(artifactStream.getArtifactStreamType(), requestType, isCollection))
             .isCollection(isCollection)
             .shouldFetchSecretFromCache(failedCronAttempts < 2 || failedCronAttempts % 5 != 0);
 
@@ -984,7 +987,7 @@ public class ArtifactCollectionUtils {
             .artifactStreamAttributes(artifactStreamAttributes)
             .artifactStreamType(artifactStream.getArtifactStreamType())
             .buildSourceRequestType(requestType)
-            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType))
+            .limit(ArtifactCollectionUtils.getLimit(artifactStream.getArtifactStreamType(), requestType, true))
             .isCollection(true);
 
     buildSourceParametersBuilder.savedBuildDetailsKeys(getArtifactsKeys(artifactStream, artifactStreamAttributes));

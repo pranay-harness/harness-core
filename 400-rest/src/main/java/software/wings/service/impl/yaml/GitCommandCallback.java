@@ -23,7 +23,7 @@ import io.harness.git.model.ChangeType;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.tasks.ResponseData;
-import io.harness.waiter.NotifyCallback;
+import io.harness.waiter.OldNotifyCallback;
 
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
@@ -66,7 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
-public class GitCommandCallback implements NotifyCallback {
+public class GitCommandCallback implements OldNotifyCallback {
   private String accountId;
   private String changeSetId;
   private GitCommandType gitCommandType;

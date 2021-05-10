@@ -26,9 +26,4 @@ public class K8sGcpInfrastructureOutcome implements InfrastructureOutcome {
   public String getKind() {
     return InfrastructureKind.KUBERNETES_GCP;
   }
-
-  @Override
-  public String getType() {
-    return InfrastructureKind.KUBERNETES_GCP;
-  }
 }

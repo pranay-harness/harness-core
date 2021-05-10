@@ -1,11 +1,15 @@
 package io.harness.ccm.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.TruncExpression;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
@@ -17,6 +21,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class CloudBillingGroupByTest extends CategoryTest {
   private CloudBillingGroupBy cloudBillingGroupBy;
   private CloudBillingGroupBy cloudBillingEntityGroupBy;

@@ -10,6 +10,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import io.harness.OrchestrationVisualizationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.internal.EdgeListInternal;
@@ -54,9 +56,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Spy;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-/**
- * Test class for {@link OrchestrationGraphGenerationHandler}
- */
+@OwnedBy(HarnessTeam.PIPELINE)
 public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestBase {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private SpringMongoStore mongoStore;

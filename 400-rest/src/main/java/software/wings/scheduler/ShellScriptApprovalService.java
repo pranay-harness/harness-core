@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static software.wings.scheduler.approval.ApprovalPollingHandler.PUMP_INTERVAL;
 import static software.wings.scheduler.approval.ApprovalPollingHandler.TARGET_INTERVAL;
 
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -10,7 +11,6 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.shell.ScriptType;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.api.ApprovalStateExecutionData;

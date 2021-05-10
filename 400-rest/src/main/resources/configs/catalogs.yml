@@ -152,6 +152,8 @@ FAILURE_TYPE:
       value: VERIFICATION_FAILURE
     - name: Application Error
       value: APPLICATION_ERROR
+    - name: Timeout Error
+      value: TIMEOUT_ERROR
 
 EXECUTION_SCOPE:
     - name: Workflow
@@ -405,7 +407,7 @@ TASK_TYPES:
       value: CONNECTIVITY_VALIDATION
     - name: Container
       value: CONTAINER
-    - name: Continuous Efficiency
+    - name: Cloud Cost Management
       value: CE
     - name: Continuous Integration
       value: CI

@@ -1,6 +1,8 @@
 package io.harness.cvng.verificationjob.resources;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.beans.PageResponse;
@@ -18,6 +20,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
@@ -40,6 +43,7 @@ import retrofit2.http.Body;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@OwnedBy(HarnessTeam.CV)
 public class VerificationJobResource {
   @Inject private VerificationJobService verificationJobService;
 
@@ -129,5 +133,19 @@ public class VerificationJobResource {
       @QueryParam("accountId") @NotNull @Valid final String accountId,
       @QueryParam("verificationJobUrl") @NotNull String webhookUrl) {
     return new RestResponse<>(verificationJobService.getDTOByUrl(accountId, webhookUrl));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/eligible-cdng-verification-jobs")
+  @ApiOperation(value = "lists all verification jobs for CDNG config screen", nickname = "eligibleCDNGVerificationJobs")
+  public ResponseDTO<List<VerificationJobDTO>> listEligibleVerificationJobs(
+      @NotNull @QueryParam("accountId") @Valid final String accountId,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("serviceIdentifier") String serviceIdentifier, @QueryParam("envIdentifier") String envIdentifier) {
+    return ResponseDTO.newResponse(verificationJobService.eligibleCDNGVerificationJobs(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier));
   }
 }

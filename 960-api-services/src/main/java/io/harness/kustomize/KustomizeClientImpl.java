@@ -1,5 +1,6 @@
 package io.harness.kustomize;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_BINARY_PATH;
 import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_BUILD_COMMAND;
 import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_BUILD_COMMAND_WITH_PLUGINS;
@@ -7,6 +8,7 @@ import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_COMMAND_TIMEOUT;
 import static io.harness.kustomize.KustomizeConstants.KUSTOMIZE_DIR_PATH;
 import static io.harness.kustomize.KustomizeConstants.XDG_CONFIG_HOME;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
 import io.harness.logging.LogCallback;
@@ -19,6 +21,7 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Slf4j
 @Singleton
 public class KustomizeClientImpl implements KustomizeClient {

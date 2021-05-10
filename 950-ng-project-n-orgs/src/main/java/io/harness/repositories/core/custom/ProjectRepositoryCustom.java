@@ -8,6 +8,8 @@ import io.harness.ng.core.entities.Project;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -23,4 +25,6 @@ public interface ProjectRepositoryCustom {
   List<Project> findAll(Criteria criteria);
 
   Project restore(String accountIdentifier, String orgIdentifier, String identifier);
+
+  <T> AggregationResults<T> aggregate(Aggregation aggregation, Class<T> classToFillResultIn);
 }

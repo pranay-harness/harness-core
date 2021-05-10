@@ -5,6 +5,7 @@ import static io.harness.azure.model.AzureConstants.ASSIGN_JSON_FILE_NAME;
 import static io.harness.azure.model.AzureConstants.BLUEPRINT_JSON_FILE_NAME;
 import static io.harness.azure.model.AzureConstants.UNIX_SEPARATOR;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -22,6 +23,7 @@ import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConstants;
 import io.harness.azure.model.AzureDeploymentMode;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.algorithm.HashGenerator;
@@ -37,9 +39,9 @@ import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
 import io.harness.delegate.task.azure.arm.response.AzureBlueprintDeploymentResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ARMStateExecutionData;
@@ -100,6 +102,7 @@ public class ARMProvisionState extends State {
   @Inject protected DelegateService delegateService;
   @Inject private ActivityService activityService;
   @Inject protected AzureVMSSStateHelper azureVMSSStateHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public ARMProvisionState(String name) {
     super(name, StateType.ARM_CREATE_RESOURCE.name());
@@ -163,17 +166,19 @@ public class ARMProvisionState extends State {
       ExecutionContext context, Activity activity, Map<String, GitFetchFilesConfig> filesConfigMap) {
     ARMStateExecutionDataBuilder builder = ARMStateExecutionData.builder();
     builder.taskType(GIT_FETCH_FILES_TASK);
-    GitFetchFilesTaskParams taskParams = GitFetchFilesTaskParams.builder()
-                                             .activityId(activity.getUuid())
-                                             .accountId(context.getAccountId())
-                                             .appId(context.getAppId())
-                                             .executionLogName(AzureConstants.FETCH_FILES)
-                                             .isFinalState(true)
-                                             .appManifestKind(K8S_MANIFEST)
-                                             .gitFetchFilesConfigMap(filesConfigMap)
-                                             .containerServiceParams(null)
-                                             .isBindTaskFeatureSet(false)
-                                             .build();
+    GitFetchFilesTaskParams taskParams =
+        GitFetchFilesTaskParams.builder()
+            .activityId(activity.getUuid())
+            .accountId(context.getAccountId())
+            .appId(context.getAppId())
+            .executionLogName(AzureConstants.FETCH_FILES)
+            .isFinalState(true)
+            .appManifestKind(K8S_MANIFEST)
+            .gitFetchFilesConfigMap(filesConfigMap)
+            .containerServiceParams(null)
+            .isBindTaskFeatureSet(false)
+            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, context.getAccountId()))
+            .build();
 
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -182,6 +187,8 @@ public class ARMProvisionState extends State {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Fetch remote files from git")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(GIT_FETCH_FILES_TASK.name())
@@ -190,6 +197,7 @@ public class ARMProvisionState extends State {
                       .build())
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
@@ -314,6 +322,8 @@ public class ARMProvisionState extends State {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("ARM task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(AZURE_ARM_TASK.name())
@@ -331,6 +341,7 @@ public class ARMProvisionState extends State {
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
@@ -477,5 +488,10 @@ public class ARMProvisionState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     // No implementation done yet for this method
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

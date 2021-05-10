@@ -7,7 +7,7 @@ proto_library(
     strip_import_prefix = "",
     visibility = ["//visibility:public"],
     deps = [
-        "//970-ng-commons/src/main/proto:970_ng_commons_proto",
+        "//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:970_ng_commons_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",

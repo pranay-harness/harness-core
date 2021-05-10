@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -7,12 +8,18 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.MetricPackDTO;
+import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.client.NextGenService;
@@ -20,6 +27,8 @@ import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.AppdynamicsImportStatus;
+import io.harness.cvng.core.beans.OnboardingRequestDTO;
+import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -27,8 +36,11 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,20 +54,26 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(CV)
 public class AppDynamicsServiceTest extends CvNextGenTestBase {
   @Inject AppDynamicsService appDynamicsService;
   @Inject OnboardingService onboardingService;
+  @Inject private MetricPackService metricPackService;
   @Mock VerificationManagerClient verificationManagerClient;
   @Mock NextGenService nextGenService;
   @Mock VerificationManagerService verificationManagerService;
   @Mock private RequestExecutor requestExecutor;
   private String accountId;
   private String connectorIdentifier;
+  private String orgIdentifier;
+  private String projectIdentifier;
 
   @Before
   public void setup() throws IllegalAccessException {
     accountId = generateUuid();
     connectorIdentifier = generateUuid();
+    projectIdentifier = generateUuid();
+    orgIdentifier = generateUuid();
     FieldUtils.writeField(appDynamicsService, "verificationManagerClient", verificationManagerClient, true);
     FieldUtils.writeField(appDynamicsService, "onboardingService", onboardingService, true);
     FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
@@ -143,5 +161,64 @@ public class AppDynamicsServiceTest extends CvNextGenTestBase {
             AppDynamicsTier.builder().name("tier-21").id(21).build(),
             AppDynamicsTier.builder().name("tier-22").id(22).build(),
             AppDynamicsTier.builder().name("tier-23").id(23).build()));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetMetricPackData() throws IOException, IllegalAccessException {
+    final List<MetricPackDTO> metricPacks =
+        metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier);
+    assertThat(metricPacks).isNotEmpty();
+
+    String textLoad = Resources.toString(
+        AppDynamicsServiceTest.class.getResource("/timeseries/appd_metric_data_validation.json"), Charsets.UTF_8);
+    JsonUtils.asObject(textLoad, OnboardingResponseDTO.class);
+
+    OnboardingService mockOnboardingService = mock(OnboardingService.class);
+    FieldUtils.writeField(appDynamicsService, "onboardingService", mockOnboardingService, true);
+    when(mockOnboardingService.getOnboardingResponse(anyString(), any(OnboardingRequestDTO.class)))
+        .thenReturn(JsonUtils.asObject(textLoad, OnboardingResponseDTO.class));
+
+    Set<AppdynamicsValidationResponse> metricPackData = appDynamicsService.getMetricPackData(accountId, generateUuid(),
+        orgIdentifier, projectIdentifier, generateUuid(), generateUuid(), generateUuid(), metricPacks);
+
+    // verify errors pack
+    AppdynamicsValidationResponse errorValidationResponse =
+        metricPackData.stream()
+            .filter(validationResponse -> validationResponse.getMetricPackName().equals("Errors"))
+            .findFirst()
+            .orElse(null);
+    assertThat(errorValidationResponse).isNotNull();
+    assertThat(errorValidationResponse.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.NO_DATA);
+    List<AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse> metricValueValidationResponses =
+        errorValidationResponse.getValues();
+    assertThat(metricValueValidationResponses.size()).isEqualTo(1);
+    assertThat(metricValueValidationResponses.get(0))
+        .isEqualTo(AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse.builder()
+                       .metricName("Number of Errors")
+                       .apiResponseStatus(ThirdPartyApiResponseStatus.NO_DATA)
+                       .build());
+
+    // verify performance pack
+    AppdynamicsValidationResponse performanceValidationResponse =
+        metricPackData.stream()
+            .filter(validationResponse -> validationResponse.getMetricPackName().equals("Performance"))
+            .findFirst()
+            .orElse(null);
+    assertThat(performanceValidationResponse).isNotNull();
+    assertThat(performanceValidationResponse.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.NO_DATA);
+    metricValueValidationResponses = performanceValidationResponse.getValues();
+    assertThat(metricValueValidationResponses.size()).isEqualTo(4);
+
+    metricValueValidationResponses.forEach(metricValueValidationResponse -> {
+      if (metricValueValidationResponse.getMetricName().equals("Stall Count")) {
+        assertThat(metricValueValidationResponse.getApiResponseStatus()).isEqualTo(ThirdPartyApiResponseStatus.NO_DATA);
+        assertThat(metricValueValidationResponse.getValue()).isEqualTo(0.0);
+      } else {
+        assertThat(metricValueValidationResponse.getApiResponseStatus()).isEqualTo(ThirdPartyApiResponseStatus.SUCCESS);
+        assertThat(metricValueValidationResponse.getValue()).isGreaterThan(0.0);
+      }
+    });
   }
 }

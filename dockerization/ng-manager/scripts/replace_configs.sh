@@ -15,6 +15,7 @@ yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServer.connectors[0]
 yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE gitSyncServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -121,44 +122,8 @@ if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
 fi
 
-if [[ "" != "$SMTP_HOST" ]]; then
-  yq write -i $CONFIG_FILE smtp.host "$SMTP_HOST"
-fi
-
-if [[ "" != "$SMTP_USERNAME" ]]; then
-  yq write -i $CONFIG_FILE smtp.username "$SMTP_USERNAME"
-fi
-
-if [[ "" != "$SMTP_PASSWORD" ]]; then
-  yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
-fi
-
 if [[ "" != "$JWT_AUTH_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.jwtAuthSecret "$JWT_AUTH_SECRET"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_REDIS_URL" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.redisUrl "$EVENTS_FRAMEWORK_REDIS_URL"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_ENV_NAMESPACE" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.envNamespace "$EVENTS_FRAMEWORK_ENV_NAMESPACE"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_USE_SENTINEL" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.sentinel "$EVENTS_FRAMEWORK_USE_SENTINEL"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.masterName "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_REDIS_USERNAME" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.userName "$EVENTS_FRAMEWORK_REDIS_USERNAME"
-fi
-
-if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
-  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
@@ -174,6 +139,7 @@ if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
+
 if [[ "" != "$SHOULD_CONFIGURE_WITH_PMS" ]]; then
   yq write -i $CONFIG_FILE shouldConfigureWithPMS $SHOULD_CONFIGURE_WITH_PMS
 fi
@@ -185,6 +151,24 @@ fi
 if [[ "" != "$PMS_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
 fi
+
+
+if [[ "" != "$NG_MANAGER_TARGET" ]]; then
+ yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.target $NG_MANAGER_TARGET
+fi
+
+if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.authority $NG_MANAGER_AUTHORITY
+fi
+
+if [[ "" != "$NG_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.target $NG_MANAGER_TARGET
+fi
+
+if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.gitManagerGrpcClientConfig.authority $NG_MANAGER_AUTHORITY
+fi
+
 
 if [[ "" != "$HARNESS_IMAGE_USER_NAME" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImageUseName $HARNESS_IMAGE_USER_NAME
@@ -198,6 +182,10 @@ if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
 fi
 
+if [[ "" != "$SCM_SERVICE_URI" ]]; then
+  yq write -i $CONFIG_FILE gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URI"
+fi
+
 if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASEURL"
 fi
@@ -205,6 +193,47 @@ fi
 if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
 fi
+
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
+fi
+
+if [[ "" != "$TIMESCALE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbPassword "$TIMESCALE_PASSWORD"
+fi
+
+if [[ "" != "$TIMESCALE_URI" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbUrl "$TIMESCALE_URI"
+fi
+
+if [[ "" != "$TIMESCALEDB_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.timescaledbUsername "$TIMESCALEDB_USERNAME"
+fi
+
+if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
+  yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
+fi
+
+if [[ "" != "$FILE_STORAGE_MODE" ]]; then
+  yq write -i $CONFIG_FILE fileServiceConfiguration.fileStorageMode "$FILE_STORAGE_MODE"
+fi
+
+if [[ "" != "$FILE_STORAGE_CLUSTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE fileServiceConfiguration.clusterName "$FILE_STORAGE_CLUSTER_NAME"
+fi
+
+replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
+replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
+replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
+replace_key_value eventsFramework.redis.masterName $EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME
+replace_key_value eventsFramework.redis.userName $EVENTS_FRAMEWORK_REDIS_USERNAME
+replace_key_value eventsFramework.redis.password $EVENTS_FRAMEWORK_REDIS_PASSWORD
+replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDIS_SSL_ENABLED
+replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
+replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 
 replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
 
@@ -214,41 +243,32 @@ replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
 
 replace_key_value ceAwsSetupConfig.templateURL $CE_AWS_TEMPLATE_URL
 
-replace_key_value baseUrls.ngManager $NG_MANAGER_API_URL
+replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 
-replace_key_value baseUrls.ui $MANAGER_UI_URL
+replace_key_value accessControlClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
 
-replace_key_value baseUrls.ngUi $NG_MANAGER_UI_URL
+replace_key_value accessControlClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
 
 replace_key_value accessControlAdminClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
 
 replace_key_value accessControlAdminClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
 
-replace_key_value resourceGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+replace_key_value outboxPollConfig.initialDelayInSeconds "$OUTBOX_POLL_INITIAL_DELAY"
 
-replace_key_value resourceGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
+replace_key_value outboxPollConfig.pollingIntervalInSeconds "$OUTBOX_POLL_INTERVAL"
 
-replace_key_value resourceGroupConfig.pipeline-service.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
+replace_key_value outboxPollConfig.maximumRetryAttemptsForAnEvent "$OUTBOX_MAX_RETRY_ATTEMPTS"
 
-replace_key_value resourceGroupConfig.pipeline-service.secret "$PIPELINE_SERVICE_SECRET"
+replace_key_value notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
 
-replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
+replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
 
-replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
+replace_key_value accessControlAdminClient.mockAccessControlService "${MOCK_ACCESS_CONTROL_SERVICE:-true}"
 
-replace_key_value outboxIteratorConfig.threadPoolSize "$OUTBOX_ITERATOR_THREAD_POOL_SIZE"
+replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
 
-replace_key_value outboxIteratorConfig.intervalInSeconds "$OUTBOX_ITERATOR_INTERVAL"
+replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GROUP_BASE_URL"
 
-replace_key_value outboxIteratorConfig.targetIntervalInSeconds "$OUTBOX_ITERATOR_TARGET_INTERVAL"
+replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
 
-replace_key_value outboxIteratorConfig.acceptableNoAlertDelayInSeconds "$OUTBOX_ITERATOR_NO_ALERT_DELAY"
-
-replace_key_value outboxIteratorConfig.maximumOutboxEventHandlingAttempts "$OUTBOX_ITERATOR_MAX_ATTEMPTS"
-
-if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
-else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
-fi
+replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"

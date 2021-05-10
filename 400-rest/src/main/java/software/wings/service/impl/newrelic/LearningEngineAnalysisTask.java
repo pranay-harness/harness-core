@@ -1,6 +1,11 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -42,6 +47,8 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "learningEngineAnalysisTask", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(CV)
+@TargetModule(HarnessModule._270_VERIFICATION)
 public class LearningEngineAnalysisTask extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -56,6 +63,17 @@ public class LearningEngineAnalysisTask extends Base implements AccountAccess {
                  .field(LearningEngineAnalysisTaskKeys.version)
                  .descSortField(CREATED_AT_KEY)
                  .build(),
+            SortCompoundMongoIndex.builder()
+                .name("taskFetchPriorityIdx")
+                .field(LearningEngineAnalysisTaskKeys.state_execution_id)
+                .field(LearningEngineAnalysisTaskKeys.priority)
+                .field(LearningEngineAnalysisTaskKeys.executionStatus)
+                .field(LearningEngineAnalysisTaskKeys.ml_analysis_type)
+                .field(LearningEngineAnalysisTaskKeys.cluster_level)
+                .field(LearningEngineAnalysisTaskKeys.group_name)
+                .field(LearningEngineAnalysisTaskKeys.version)
+                .descSortField(CREATED_AT_KEY)
+                .build(),
             SortCompoundMongoIndex.builder()
                 .name("cv_config_status_index")
                 .field(LearningEngineAnalysisTaskKeys.cvConfigId)
@@ -120,7 +138,7 @@ public class LearningEngineAnalysisTask extends Base implements AccountAccess {
   private String tag = "default";
   private int service_guard_backoff_count;
   private Double alertThreshold;
-  private String accountId;
+  @FdIndex private String accountId;
   @JsonProperty("new_node_traffic_split_percentage") private Integer newInstanceTrafficSplitPercentage;
 
   @Builder.Default private int priority = 1;

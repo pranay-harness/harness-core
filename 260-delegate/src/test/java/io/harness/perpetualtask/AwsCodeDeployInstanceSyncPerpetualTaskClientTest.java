@@ -26,11 +26,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
 import io.harness.rule.Owner;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;

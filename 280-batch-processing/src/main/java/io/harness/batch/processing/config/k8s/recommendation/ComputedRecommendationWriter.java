@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.Duration.between;
 import static java.util.Collections.emptyMap;
@@ -18,6 +19,8 @@ import io.harness.batch.processing.config.k8s.recommendation.estimators.Resource
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.histogram.Histogram;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
@@ -27,6 +30,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialHistog
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
+import com.cronutils.utils.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import io.kubernetes.client.custom.Quantity;
 import java.math.BigDecimal;
@@ -38,9 +42,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.batch.item.ItemWriter;
 
 @Slf4j
@@ -56,16 +60,19 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
   private final WorkloadCostService workloadCostService;
   private final WorkloadRepository workloadRepository;
   private final K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
+  private final K8sRecommendationDAO k8sRecommendationDAO;
 
   private final Instant jobStartDate;
 
   ComputedRecommendationWriter(WorkloadRecommendationDao workloadRecommendationDao,
       WorkloadCostService workloadCostService, WorkloadRepository workloadRepository,
-      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher, Instant jobStartDate) {
+      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher, K8sRecommendationDAO k8sRecommendationDAO,
+      Instant jobStartDate) {
     this.workloadRecommendationDao = workloadRecommendationDao;
     this.workloadCostService = workloadCostService;
     this.workloadRepository = workloadRepository;
     this.k8sLabelServiceInfoFetcher = k8sLabelServiceInfoFetcher;
+    this.k8sRecommendationDAO = k8sRecommendationDAO;
     this.jobStartDate = jobStartDate;
   }
 
@@ -192,21 +199,43 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
       recommendation.setNumDays(minNumDays == Integer.MAX_VALUE ? 0 : minNumDays);
       Instant startInclusive = jobStartDate.minus(Duration.ofDays(7));
       Cost lastDayCost = workloadCostService.getLastAvailableDayCost(workloadId, startInclusive);
+      BigDecimal monthlyCost = null;
+      BigDecimal monthlySavings = null;
       if (lastDayCost != null) {
         recommendation.setLastDayCost(lastDayCost);
 
-        BigDecimal monthlySavings = estimateMonthlySavings(containerRecommendations, lastDayCost);
+        monthlySavings = estimateMonthlySavings(containerRecommendations, lastDayCost);
         recommendation.setEstimatedSavings(monthlySavings);
 
         recommendation.setLastDayCostAvailable(true);
+
+        monthlyCost = BigDecimal.ZERO.add(lastDayCost.getCpu())
+                          .add(lastDayCost.getMemory())
+                          .multiply(BigDecimal.valueOf(30))
+                          .setScale(2, BigDecimal.ROUND_HALF_EVEN);
       } else {
         recommendation.setLastDayCostAvailable(false);
         log.info("Unable to get lastDayCost for workload {}", workloadId);
       }
       recommendation.setTtl(Instant.now().plus(RECOMMENDATION_TTL));
       recommendation.setDirty(false);
-      workloadRecommendationDao.save(recommendation);
+
+      final String uuid = workloadRecommendationDao.save(recommendation);
+      Preconditions.checkNotNullNorEmpty(uuid, "unexpected, uuid can't be null or empty");
+
+      // decision whether to show the recommendation in the Recommendation Overview List page or not.
+      boolean shouldShowRecommendation = checkIfRecommendationIsValid(recommendation);
+
+      k8sRecommendationDAO.insertIntoCeRecommendation(uuid, workloadId,
+          ofNullable(monthlyCost).map(BigDecimal::doubleValue).orElse(null),
+          ofNullable(monthlySavings).map(BigDecimal::doubleValue).orElse(null), shouldShowRecommendation,
+          firstNonNull(recommendation.getLastReceivedUtilDataAt(), Instant.EPOCH));
     }
+  }
+
+  private boolean checkIfRecommendationIsValid(@NotNull K8sWorkloadRecommendation recommendation) {
+    return recommendation.isValidRecommendation() && recommendation.isLastDayCostAvailable()
+        && recommendation.getNumDays() >= 1;
   }
 
   private static Map<String, String> extendedResourcesMap(Map<String, String> resourceMap) {

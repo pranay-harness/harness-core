@@ -1,5 +1,7 @@
 package io.harness.serializer.kryo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
@@ -9,11 +11,6 @@ import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskPara
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
 import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
-import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
-import io.harness.redesign.states.email.EmailStepParameters;
-import io.harness.redesign.states.http.BasicHttpStepParameters;
-import io.harness.redesign.states.http.chain.BasicHttpChainStepParameters;
-import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.api.ARMStateExecutionData;
@@ -143,6 +140,10 @@ import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionDat
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
+import software.wings.api.terragrunt.TerragruntApplyMarkerParam;
+import software.wings.api.terragrunt.TerragruntExecutionData;
+import software.wings.api.terragrunt.TerragruntOutputVariables;
+import software.wings.api.terragrunt.TerragruntProvisionInheritPlanElement;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Account;
@@ -153,6 +154,7 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApprovalDetails.Action;
+import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
@@ -186,7 +188,6 @@ import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
-import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitValidationParameters;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphGroup;
@@ -251,6 +252,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamSummary;
+import software.wings.beans.artifact.ArtifactSummary;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -315,8 +317,10 @@ import software.wings.beans.container.Label;
 import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
+import software.wings.beans.delegation.CommandParameters;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.delegation.TerragruntProvisionParameters;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
@@ -382,6 +386,9 @@ import software.wings.beans.yaml.GitPullResult;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.YamlType;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
+import software.wings.collect.ArtifactCollectionCallback;
+import software.wings.delegatetasks.buildsource.BuildSourceCallback;
+import software.wings.delegatetasks.buildsource.BuildSourceCleanupCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
@@ -461,7 +468,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
@@ -540,6 +546,7 @@ import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.service.impl.WorkflowTree;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
+import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
@@ -703,6 +710,7 @@ import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.service.impl.email.EmailNotificationCallBack;
 import software.wings.service.impl.instana.InstanaAnalyzeMetricRequest;
 import software.wings.service.impl.instana.InstanaAnalyzeMetrics;
 import software.wings.service.impl.instana.InstanaDataCollectionInfo;
@@ -741,6 +749,8 @@ import software.wings.service.impl.stackdriver.StackDriverSetupTestNodeData;
 import software.wings.service.impl.stackdriver.StackdriverGcpConfigTaskParams;
 import software.wings.service.impl.stackdriver.StackdriverLogGcpConfigTaskParams;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.impl.trigger.TriggerCallback;
+import software.wings.service.impl.yaml.GitCommandCallback;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
@@ -754,15 +764,20 @@ import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptEffect;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResumeAllCallback;
 import software.wings.sm.ExecutionStatusData;
+import software.wings.sm.ExecutionWaitCallback;
+import software.wings.sm.ExecutionWaitRetryCallback;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
+import software.wings.sm.PipelineContinueWithInputsCallback;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.ResourceConstraintStatusData;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachineResumeCallback;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.StepExecutionSummary;
@@ -834,8 +849,11 @@ import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
+import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
+@Deprecated
+@OwnedBy(HarnessTeam.PL)
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -1014,8 +1032,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogYaml.class, 5468);
     kryo.register(DatadogConfig.class, 5467);
     kryo.register(ShellScriptParameters.class, 5186);
-    kryo.register(TerraformProvisionParameters.TerraformCommand.class, 5524);
-    kryo.register(TerraformProvisionParameters.TerraformCommandUnit.class, 5525);
     kryo.register(TerraformProvisionParameters.class, 5342);
     kryo.register(DockerConfig.class, 5010);
     kryo.register(DynaTraceConfig.class, 5237);
@@ -1032,7 +1048,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GitConfig.class, 5191);
     kryo.register(GitFetchFilesConfig.class, 5616);
     kryo.register(GitFetchFilesTaskParams.class, 5575);
-    kryo.register(GitFileConfig.class, 5472);
     kryo.register(Graph.class, 5060);
     kryo.register(GraphGroup.class, 5063);
     kryo.register(GraphLink.class, 5062);
@@ -1508,7 +1523,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotinstDeployExecutionSummary.class, 7242);
     kryo.register(AppManifestKind.class, 7243);
     kryo.register(SpotinstAllPhaseRollbackData.class, 7245);
-    kryo.register(HelmChartInfo.class, 7246);
     kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
     kryo.register(CCMConfig.class, 7248);
     kryo.register(StackDriverMetricDefinition.class, 7249);
@@ -1608,7 +1622,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackdriverLogGcpConfigTaskParams.class, 7360);
     kryo.register(StackdriverGcpConfigTaskParams.class, 7361);
     kryo.register(HarnessImportedTemplateDetails.class, 7373);
-    kryo.register(BasicHttpStepParameters.class, 7374);
     kryo.register(ImportedTemplateMetadata.class, 7375);
     kryo.register(CopiedTemplateMetadata.class, 7376);
     kryo.register(CustomSecretsManagerConfig.class, 7378);
@@ -1617,7 +1630,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(Criteria.class, 7382);
     kryo.register(ConditionalOperator.class, 7383);
     kryo.register(ContainerSyncResponse.class, 7384);
-    kryo.register(BasicHttpChainStepParameters.class, 7385);
     kryo.register(ScriptType.class, 7386);
     kryo.register(AwsLambdaDetailsMetricsResponse.class, 7388);
     kryo.register(ServiceNowApprovalParams.class, 7389);
@@ -1683,8 +1695,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
     kryo.register(GitConfig.UrlType.class, 7460);
-    kryo.register(EmailStepParameters.class, 7461);
-    kryo.register(WaitStepParameters.class, 7463);
     kryo.register(GcbArtifactObjects.class, 7464);
     kryo.register(CeLicenseInfo.class, 7465);
     kryo.register(CeLicenseType.class, 7466);
@@ -1721,7 +1731,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TrialSignupOptions.Products.class, 8094);
     kryo.register(AzureTaskExecutionRequest.class, 8095);
 
-    kryo.register(HttpResponseCodeSwitchAdviserParameters.class, 8096);
     kryo.register(TfVarGitSource.class, 8097);
     kryo.register(HelmSubCommand.class, 8076);
     kryo.register(HelmCommandFlagConfig.class, 8077);
@@ -1752,5 +1761,29 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ARMPreExistingTemplate.class, 8122);
     kryo.register(ARMStateExecutionData.class, 8123);
     kryo.register(AccountPreferences.class, 8124);
+    kryo.register(TerragruntProvisionParameters.TerragruntCommand.class, 8502);
+    kryo.register(TerragruntProvisionParameters.TerragruntCommandUnit.class, 8503);
+    kryo.register(TerragruntProvisionParameters.class, 8504);
+    kryo.register(TerragruntProvisionInheritPlanElement.class, 8505);
+    kryo.register(TerragruntApplyMarkerParam.class, 8506);
+    kryo.register(TerragruntExecutionData.class, 8507);
+    kryo.register(TerragruntOutputVariables.class, 8508);
+    kryo.register(ApiException.class, 8125);
+    kryo.register(ArtifactStreamMetadata.class, 8126);
+    kryo.register(ArtifactSummary.class, 8127);
+    kryo.register(CommandParameters.class, 8509);
+
+    kryo.register(StateMachineResumeCallback.class, 40001);
+    kryo.register(BuildSourceCleanupCallback.class, 40002);
+    kryo.register(ExecutionResumeAllCallback.class, 40003);
+    kryo.register(TriggerCallback.class, 40004);
+    kryo.register(PipelineContinueWithInputsCallback.class, 40005);
+    kryo.register(GitCommandCallback.class, 40006);
+    kryo.register(ExecutionWaitRetryCallback.class, 40007);
+    kryo.register(DataCollectionCallback.class, 40008);
+    kryo.register(EmailNotificationCallBack.class, 40009);
+    kryo.register(BuildSourceCallback.class, 40010);
+    kryo.register(ArtifactCollectionCallback.class, 40011);
+    kryo.register(ExecutionWaitCallback.class, 40012);
   }
 }

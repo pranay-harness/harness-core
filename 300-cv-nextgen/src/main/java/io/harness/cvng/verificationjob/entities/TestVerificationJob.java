@@ -1,12 +1,18 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.CVConstants.DEFAULT_TEST_JOB_ID;
+import static io.harness.cvng.CVConstants.DEFAULT_TEST_JOB_NAME;
+import static io.harness.cvng.CVConstants.RUNTIME_PARAM_STRING;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.verificationjob.CVVerificationJobConstants;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 
 import com.google.common.base.Preconditions;
@@ -26,6 +32,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
+@OwnedBy(HarnessTeam.CV)
 public class TestVerificationJob extends VerificationJob {
   private RuntimeParameter sensitivity;
   private String baselineVerificationJobInstanceId;
@@ -38,7 +45,7 @@ public class TestVerificationJob extends VerificationJob {
     if (sensitivity.isRuntimeParam()) {
       return null;
     }
-    return Sensitivity.valueOf(sensitivity.getValue());
+    return Sensitivity.getEnum(sensitivity.getValue());
   }
 
   public void setSensitivity(String sensitivity, boolean isRuntimeParam) {
@@ -56,7 +63,8 @@ public class TestVerificationJob extends VerificationJob {
   public VerificationJobDTO getVerificationJobDTO() {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     populateCommonFields(testVerificationJobDTO);
-    testVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
+    testVerificationJobDTO.setSensitivity(
+        sensitivity.isRuntimeParam() ? CVVerificationJobConstants.RUNTIME_STRING : getSensitivity().name());
     if (baselineVerificationJobInstanceId == null) {
       testVerificationJobDTO.setBaselineVerificationJobInstanceId("LAST");
     } else {
@@ -129,5 +137,16 @@ public class TestVerificationJob extends VerificationJob {
       updateOperations.set(
           TestVerificationJobKeys.baselineVerificationJobInstanceId, dto.getBaselineVerificationJobInstanceId());
     }
+  }
+
+  public static TestVerificationJob createDefaultJob(String accountId, String orgIdentifier, String projectIdentifier) {
+    TestVerificationJob verificationJob =
+        TestVerificationJob.builder()
+            .jobName(DEFAULT_TEST_JOB_NAME)
+            .identifier(DEFAULT_TEST_JOB_ID)
+            .sensitivity(VerificationJob.getRunTimeParameter(RUNTIME_PARAM_STRING, true))
+            .build();
+    VerificationJob.setDefaultJobCommonParameters(verificationJob, accountId, orgIdentifier, projectIdentifier);
+    return verificationJob;
   }
 }

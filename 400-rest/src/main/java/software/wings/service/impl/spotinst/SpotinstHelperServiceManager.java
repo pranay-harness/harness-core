@@ -8,12 +8,14 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.spotinst.model.SpotInstConstants.defaultSyncSpotinstTimeoutMin;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -31,7 +33,6 @@ import io.harness.delegate.task.spotinst.response.SpotInstTaskResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
-import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
@@ -93,18 +94,18 @@ public class SpotinstHelperServiceManager {
                                          .spotinstEncryptionDetails(spotinstEncryptionDetails)
                                          .spotInstTaskParameters(parameters)
                                          .build();
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
-            .tags(tagList)
-            .data(TaskData.builder()
-                      .async(false)
-                      .taskType(TaskType.SPOTINST_COMMAND_TASK.name())
-                      .parameters(new Object[] {request})
-                      .timeout(TimeUnit.MINUTES.toMillis(defaultSyncSpotinstTimeoutMin))
-                      .build())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD,
+                                        isNotEmpty(appId) && !appId.equals(GLOBAL_APP_ID) ? appId : SCOPE_WILDCARD)
+                                    .tags(tagList)
+                                    .data(TaskData.builder()
+                                              .async(false)
+                                              .taskType(TaskType.SPOTINST_COMMAND_TASK.name())
+                                              .parameters(new Object[] {request})
+                                              .timeout(TimeUnit.MINUTES.toMillis(defaultSyncSpotinstTimeoutMin))
+                                              .build())
+                                    .build();
     try {
       DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {

@@ -12,7 +12,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -31,6 +33,7 @@ import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Singleton
 @Slf4j
 public class PasswordBasedAuthHandler implements AuthHandler {
@@ -73,9 +76,17 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     }
     String accountId = user == null ? null : user.getDefaultAccountId();
     String uuid = user == null ? null : user.getUuid();
+
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       log.info("Authenticating via Username Password");
-      if (!user.isEmailVerified()) {
+
+      Account defaultAccount = accountId != null ? getAccount(accountId) : null;
+
+      // Check for a verified email if a default account doesn't exist OR if the default account is a CG account
+      // Accounts made from NG signup are allowed to access the application without email verification
+      boolean checkForVerifiedEmail = defaultAccount == null || !defaultAccount.isCreatedFromNG();
+
+      if (checkForVerifiedEmail && !user.isEmailVerified()) {
         throw new WingsException(EMAIL_NOT_VERIFIED, USER);
       }
 
@@ -156,5 +167,9 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
   protected User getUser(String email) {
     return userService.getUserByEmail(email);
+  }
+
+  protected Account getAccount(String accountId) {
+    return accountService.getFromCacheWithFallback(accountId);
   }
 }

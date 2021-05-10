@@ -2,6 +2,10 @@ package io.harness.grpc;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.AccountId;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
@@ -24,7 +28,11 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.exception.DelegateServiceDriverException;
+import io.harness.owner.OrgIdentifier;
+import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
+import io.harness.serializer.KryoSerializer;
+import io.harness.virtualstack.VirtualStackUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,18 +43,32 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateProfileServiceGrpcClient {
-  private final DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub;
+  private DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub;
+  private KryoSerializer kryoSerializer;
 
   @Inject
-  public DelegateProfileServiceGrpcClient(DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub) {
+  public DelegateProfileServiceGrpcClient(
+      DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub, KryoSerializer kryoSerializer) {
     this.delegateProfileServiceBlockingStub = delegateProfileServiceBlockingStub;
+    this.kryoSerializer = kryoSerializer;
   }
-
-  public DelegateProfilePageResponseGrpc listProfiles(AccountId accountId, PageRequestGrpc pageRequest) {
+  public DelegateProfilePageResponseGrpc listProfiles(AccountId accountId, PageRequestGrpc pageRequest, boolean isNg,
+      OrgIdentifier orgIdentifier, ProjectIdentifier projectIdentifier) {
     try {
-      ListProfilesResponse listProfilesResponse = delegateProfileServiceBlockingStub.listProfiles(
-          ListProfilesRequest.newBuilder().setAccountId(accountId).setPageRequest(pageRequest).build());
+      ListProfilesRequest.Builder builder =
+          ListProfilesRequest.newBuilder().setAccountId(accountId).setPageRequest(pageRequest).setNg(isNg);
+
+      if (projectIdentifier != null && isNotBlank(projectIdentifier.getId())) {
+        builder.setProjectId(projectIdentifier);
+      }
+
+      if (orgIdentifier != null && isNotBlank(orgIdentifier.getId())) {
+        builder.setOrgId(orgIdentifier);
+      }
+
+      ListProfilesResponse listProfilesResponse = delegateProfileServiceBlockingStub.listProfiles(builder.build());
 
       return listProfilesResponse.getResponse();
     } catch (StatusRuntimeException ex) {
@@ -73,7 +95,10 @@ public class DelegateProfileServiceGrpcClient {
     try {
       validateScopingRules(delegateProfileGrpc.getScopingRulesList());
       AddProfileResponse addProfileResponse = delegateProfileServiceBlockingStub.addProfile(
-          AddProfileRequest.newBuilder().setProfile(delegateProfileGrpc).build());
+          AddProfileRequest.newBuilder()
+              .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+              .setProfile(delegateProfileGrpc)
+              .build());
 
       return addProfileResponse.getProfile();
     } catch (StatusRuntimeException ex) {
@@ -85,7 +110,10 @@ public class DelegateProfileServiceGrpcClient {
     try {
       validateScopingRules(delegateProfileGrpc.getScopingRulesList());
       UpdateProfileResponse updateProfileResponse = delegateProfileServiceBlockingStub.updateProfile(
-          UpdateProfileRequest.newBuilder().setProfile(delegateProfileGrpc).build());
+          UpdateProfileRequest.newBuilder()
+              .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+              .setProfile(delegateProfileGrpc)
+              .build());
 
       if (!updateProfileResponse.hasProfile()) {
         return null;
@@ -100,7 +128,11 @@ public class DelegateProfileServiceGrpcClient {
   public void deleteProfile(AccountId accountId, ProfileId profileId) {
     try {
       delegateProfileServiceBlockingStub.deleteProfile(
-          DeleteProfileRequest.newBuilder().setAccountId(accountId).setProfileId(profileId).build());
+          DeleteProfileRequest.newBuilder()
+              .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+              .setAccountId(accountId)
+              .setProfileId(profileId)
+              .build());
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException("Unexpected error occurred while deleting profile.", ex);
     }
@@ -114,11 +146,13 @@ public class DelegateProfileServiceGrpcClient {
       }
 
       UpdateProfileSelectorsResponse updateProfileSelectorsResponse =
-          delegateProfileServiceBlockingStub.updateProfileSelectors(UpdateProfileSelectorsRequest.newBuilder()
-                                                                        .setAccountId(accountId)
-                                                                        .setProfileId(profileId)
-                                                                        .addAllSelectors(selectors)
-                                                                        .build());
+          delegateProfileServiceBlockingStub.updateProfileSelectors(
+              UpdateProfileSelectorsRequest.newBuilder()
+                  .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+                  .setAccountId(accountId)
+                  .setProfileId(profileId)
+                  .addAllSelectors(selectors)
+                  .build());
 
       if (!updateProfileSelectorsResponse.hasProfile()) {
         return null;

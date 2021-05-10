@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.RecasterTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.exceptions.MapKeyContainsDotException;
 import io.harness.exceptions.RecasterException;
 import io.harness.rule.Owner;
 
@@ -59,6 +60,20 @@ public class RecastComplexValuesTest extends RecasterTestBase {
   private static class DummyEnum {
     private List<Type> types;
     private enum Type { SUPER_DUMMY }
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithSimpleMap() {
+    final Map<String, String> map = new HashMap<>();
+    map.put("key.param", "value");
+
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    assertThatThrownBy(() -> recast.toDocument(map))
+        .isInstanceOf(MapKeyContainsDotException.class)
+        .hasMessageContaining("Map key should not contain dots inside");
   }
 
   @Test

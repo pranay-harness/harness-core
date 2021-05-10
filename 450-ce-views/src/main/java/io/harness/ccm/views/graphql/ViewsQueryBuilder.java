@@ -1,9 +1,11 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY_UN_NESTED;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_VALUE_UN_NESTED;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
 import io.harness.ccm.views.entities.ViewCondition;
 import io.harness.ccm.views.entities.ViewCustomField;
@@ -41,6 +43,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CE)
 public class ViewsQueryBuilder {
   public static final String K8S_NODE = "K8S_NODE";
   public static final String K8S_POD = "K8S_POD";
@@ -116,6 +119,22 @@ public class ViewsQueryBuilder {
     }
 
     log.info("Query for view {}", selectQuery.toString());
+    return selectQuery;
+  }
+
+  // Query to get columns of a bq table
+  public SelectQuery getInformationSchemaQueryForColumns(String informationSchemaView, String table) {
+    SelectQuery selectQuery = new SelectQuery();
+    selectQuery.addCustomFromTable(informationSchemaView);
+
+    // Adding group by column
+    selectQuery.addCustomColumns(new CustomSql("column_name"));
+    selectQuery.addCustomGroupings(new CustomSql("column_name"));
+
+    // Adding table name filter
+    selectQuery.addCondition(BinaryCondition.equalTo(new CustomSql("table_name"), table));
+
+    log.info("Information schema query for table {}", selectQuery.toString());
     return selectQuery;
   }
 
@@ -282,7 +301,7 @@ public class ViewsQueryBuilder {
 
     labelKeysList.addAll(collectLabelKeysList(rules, filters));
     if (isLabelsPresent || evaluateLabelsPresent(rules, filters)) {
-      decorateQueryWithLabelsMetadata(query, true, labelKeysList);
+      decorateQueryWithLabelsMetadata(query, true, labelKeysList, getIsLabelsKeyFilterQuery(filters));
     }
 
     if (!rules.isEmpty()) {
@@ -346,10 +365,21 @@ public class ViewsQueryBuilder {
     return ViewsQueryMetadata.builder().query(query).fields(fields).build();
   }
 
+  private boolean getIsLabelsKeyFilterQuery(List<QLCEViewFilter> filters) {
+    for (QLCEViewFilter filter : filters) {
+      QLCEViewFieldInput viewFieldInput = filter.getField();
+      if (viewFieldInput.getFieldId().equals(LABEL_KEY.getFieldName())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private void decorateQueryWithLabelsMetadata(
-      SelectQuery selectQuery, boolean isLabelsPresent, List<String> labelKeyList) {
+      SelectQuery selectQuery, boolean isLabelsPresent, List<String> labelKeyList, boolean isLabelsKeyFilterQuery) {
     if (isLabelsPresent) {
-      if (labelKeyList.isEmpty() || (labelKeyList.size() == 1 && labelKeyList.get(0).equals(""))) {
+      if (isLabelsKeyFilterQuery || labelKeyList.isEmpty()
+          || (labelKeyList.size() == 1 && labelKeyList.get(0).equals(""))) {
         selectQuery.addCustomJoin(leftJoinLabels);
       } else {
         selectQuery.addCustomJoin(String.format(leftJoinSelectiveLabels, processLabelKeyList(labelKeyList)));

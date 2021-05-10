@@ -270,7 +270,6 @@ public class CIK8PodSpecBuilderTestHelper {
         .withNamespace(namespace)
         .endMetadata()
         .withNewSpec()
-        .withInitContainers(gitCloneCtrBuilder().build())
         .withContainers(basicContainerBuilder().build())
         .withRestartPolicy(CIConstants.RESTART_POLICY)
         .withActiveDeadlineSeconds(CIConstants.POD_MAX_TTL_SECS)
@@ -285,10 +284,8 @@ public class CIK8PodSpecBuilderTestHelper {
         .withNamespace(namespace)
         .endMetadata()
         .withNewSpec()
-        .withInitContainers(gitCloneCtrBuilder().build())
         .withContainers(basicContainerBuilder().build())
         .withRestartPolicy(CIConstants.RESTART_POLICY)
-        .withVolumes(new Volume())
         .withActiveDeadlineSeconds(CIConstants.POD_MAX_TTL_SECS)
         .endSpec()
         .build();

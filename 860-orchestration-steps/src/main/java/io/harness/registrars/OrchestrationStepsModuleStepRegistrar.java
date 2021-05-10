@@ -1,6 +1,6 @@
 package io.harness.registrars;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
@@ -9,15 +9,18 @@ import io.harness.steps.approval.stage.ApprovalStageStep;
 import io.harness.steps.approval.step.harness.HarnessApprovalStep;
 import io.harness.steps.approval.step.jira.JiraApprovalStep;
 import io.harness.steps.barriers.BarrierStep;
+import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.common.pipeline.PipelineSetupStep;
 import io.harness.steps.http.HttpStep;
+import io.harness.steps.jira.create.JiraCreateStep;
+import io.harness.steps.jira.update.JiraUpdateStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class OrchestrationStepsModuleStepRegistrar {
   public Map<StepType, Class<? extends Step>> getEngineSteps() {
@@ -30,8 +33,13 @@ public class OrchestrationStepsModuleStepRegistrar {
     engineSteps.put(ApprovalStageStep.STEP_TYPE, ApprovalStageStep.class);
     engineSteps.put(HarnessApprovalStep.STEP_TYPE, HarnessApprovalStep.class);
     engineSteps.put(JiraApprovalStep.STEP_TYPE, JiraApprovalStep.class);
+    engineSteps.put(JiraCreateStep.STEP_TYPE, JiraCreateStep.class);
+    engineSteps.put(JiraUpdateStep.STEP_TYPE, JiraUpdateStep.class);
 
     engineSteps.put(HttpStep.STEP_TYPE, HttpStep.class);
+
+    // Feature Flag
+    engineSteps.put(FlagConfigurationStep.STEP_TYPE, FlagConfigurationStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
 

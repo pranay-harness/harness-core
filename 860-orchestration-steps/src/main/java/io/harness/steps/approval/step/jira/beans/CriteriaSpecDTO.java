@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 
 @OwnedBy(CDC)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = JexlCriteriaSpecDTO.class, name = "Jexl")
-  , @JsonSubTypes.Type(value = KeyValuesCriteriaSpecDTO.class, name = "KeyValues")
+  @JsonSubTypes.Type(value = JexlCriteriaSpecDTO.class, name = CriteriaSpecTypeConstants.JEXL)
+  , @JsonSubTypes.Type(value = KeyValuesCriteriaSpecDTO.class, name = CriteriaSpecTypeConstants.KEY_VALUES)
 })
 public interface CriteriaSpecDTO {}

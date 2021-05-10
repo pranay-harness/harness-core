@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_binary(
     name = "module",
@@ -30,10 +29,13 @@ java_binary(
         "//879-pms-sdk:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
+        "//900-git-sync-sdk:module",
         "//930-ng-core-clients:module",
         "//940-notification-client:module",
         "//940-feature-flag:module",
-        "//950-events-api:module",
+        "//940-primary-version-manager:module",
+        "//948-access-control-sdk:module",
+        "//953-events-api:module",
         "//950-ng-project-n-orgs:module",
         "//950-timeout-engine:module",
         "//955-alert-beans:module",
@@ -99,11 +101,13 @@ java_library(
         "//879-pms-sdk:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
+        "//900-git-sync-sdk:module",
         "//930-ng-core-clients:module",
         "//940-notification-client:module",
-        "//950-events-api:module",
+        "//940-primary-version-manager:module",
         "//950-ng-project-n-orgs:module",
         "//950-timeout-engine:module",
+        "//953-events-api:module",
         "//955-filters-sdk:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
@@ -120,6 +124,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

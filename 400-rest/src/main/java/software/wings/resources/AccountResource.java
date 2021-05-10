@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -12,9 +14,12 @@ import static software.wings.utils.Utils.urlDecode;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import io.harness.account.ProvisionStep;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
+import io.harness.datahandler.models.AccountDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
@@ -40,6 +45,7 @@ import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.ServiceInstanceUsageCheckerJob;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.LicenseUtils;
 import software.wings.service.impl.analysis.CVEnabledService;
@@ -88,6 +94,8 @@ import retrofit2.http.Body;
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
 @Singleton
+@OwnedBy(PL)
+@TargetModule(_955_ACCOUNT_MGMT)
 public class AccountResource {
   private final AccountService accountService;
   private final UserService userService;
@@ -392,6 +400,13 @@ public class AccountResource {
     return new RestResponse<>(accountService.get(accountId));
   }
 
+  @GET
+  @Path("{accountId}/details")
+  @AuthRule(permissionType = LOGGED_IN)
+  public RestResponse<AccountDetails> getAccountDetails(@PathParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(accountService.getDetails(accountId));
+  }
+
   // Fetches account info from DB & not from local manager cache to avoid inconsistencies in UI when account is updated
   @GET
   @Path("{accountId}/latest")
@@ -488,5 +503,35 @@ public class AccountResource {
       }
       return response;
     }
+  }
+
+  @PUT
+  @Path("{accountId}/enableHarnessUserGroupAccess")
+  public RestResponse<Boolean> enableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.enableHarnessUserGroupAccess(accountId));
+  }
+
+  @PUT
+  @Path("{accountId}/disableHarnessUserGroupAccess")
+  public RestResponse<Boolean> disableHarnessUserGroupAccess(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.disableHarnessUserGroupAccess(accountId));
+  }
+
+  // TODO: EndPoint to be deleted once UI is created for AccessRequest
+  @PUT
+  @Path("{accountId}/enableHarnessUserGroupAccessWorkflow/{enableAccountId}")
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Boolean> enableHarnessUserGroupAccessWorkflow(
+      @PathParam("accountId") String accountId, @PathParam("enableAccountId") String enableAccountId) {
+    return new RestResponse<>(accountService.enableHarnessUserGroupAccess(enableAccountId));
+  }
+
+  // TODO: EndPoint to be deleted once UI is created for AccessRequest
+  @PUT
+  @Path("{accountId}/disableHarnessUserGroupAccessWorkflow/{disableAccountId}")
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Boolean> disableHarnessUserGroupAccessWorkflow(
+      @PathParam("accountId") String accountId, @PathParam("disableAccountId") String disableAccountId) {
+    return new RestResponse<>(accountService.disableHarnessUserGroupAccess(disableAccountId));
   }
 }

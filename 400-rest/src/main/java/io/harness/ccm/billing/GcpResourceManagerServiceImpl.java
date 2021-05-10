@@ -1,8 +1,11 @@
 package io.harness.ccm.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.CE_GCP_CREDENTIALS_PATH;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.toGoogleCredential;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CE)
 public class GcpResourceManagerServiceImpl implements GcpResourceManagerService {
   private static CloudResourceManager createCloudResourceManagerService() throws GeneralSecurityException, IOException {
     ServiceAccountCredentials serviceAccountCredentials = getCredentials(CE_GCP_CREDENTIALS_PATH);

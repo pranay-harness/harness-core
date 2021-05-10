@@ -19,6 +19,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.LOAD_BA
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -29,7 +30,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -145,8 +145,11 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, awsAmiTrafficShiftAlbData.getEnv().getUuid())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, awsAmiTrafficShiftAlbData.getEnv().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("AWS AMI service traffic shift ALB setup task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
   }
 
   private Activity createActivity(ExecutionContext context, AwsAmiTrafficShiftAlbData awsAmiTrafficShiftAlbData) {
@@ -336,5 +339,10 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
     String asgNamePrefix = isEmpty(autoScalingGroupName) ? AsgConvention.getAsgNamePrefix(appName, serviceName, envName)
                                                          : context.renderExpression(autoScalingGroupName);
     return normalizeExpression(asgNamePrefix);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

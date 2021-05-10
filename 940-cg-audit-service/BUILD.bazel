@@ -1,0 +1,31 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "run_analysis")
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//980-commons:module",
+    ],
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+    ],
+)
+
+run_analysis(
+    run_checkstyle = False,
+    run_pmd = False,
+)

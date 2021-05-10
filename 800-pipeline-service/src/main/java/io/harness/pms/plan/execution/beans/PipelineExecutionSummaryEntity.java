@@ -1,11 +1,16 @@
 package io.harness.pms.plan.execution.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.ChangeDataCapture;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -40,6 +45,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -48,6 +54,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("planExecutionsSummary")
 @TypeAlias("planExecutionsSummary")
 @HarnessEntity(exportable = true)
+@ChangeDataCapture(table = "pipeline_execution_summary_ci", dataStore = "pms-harness", fields = {},
+    handler = "PipelineExecutionSummaryEntity")
+@ChangeDataCapture(table = "pipeline_execution_summary_cd", dataStore = "pms-harness", fields = {},
+    handler = "PipelineExecutionSummaryEntityCD")
+@ChangeDataCapture(table = "service_infra_info", dataStore = "pms-harness", fields = {},
+    handler = "PipelineExecutionSummaryEntityServiceAndInfra")
+@StoreIn(DbAliases.PMS)
 public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
@@ -59,6 +72,8 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @NotEmpty String pipelineIdentifier;
   @NotEmpty @FdUniqueIndex String planExecutionId;
   @NotEmpty String name;
+
+  @Builder.Default Boolean pipelineDeleted = Boolean.FALSE;
 
   Status internalStatus;
   ExecutionStatus status;
@@ -99,6 +114,13 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .field(PlanExecutionSummaryKeys.orgIdentifier)
                  .field(PlanExecutionSummaryKeys.projectIdentifier)
                  .field(PlanExecutionSummaryKeys.planExecutionId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_pipelineId")
+                 .field(PlanExecutionSummaryKeys.accountId)
+                 .field(PlanExecutionSummaryKeys.orgIdentifier)
+                 .field(PlanExecutionSummaryKeys.projectIdentifier)
+                 .field(PlanExecutionSummaryKeys.pipelineIdentifier)
                  .build())
         .build();
   }

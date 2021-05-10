@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
@@ -10,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Repository;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -49,20 +51,20 @@ import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class GitWebhookTriggerRepoFilter implements TriggerFilter {
   // TODO: This should come from scm parsing service
   private static final String AWS_CODECOMMIT_URL_PATTERN = "https://git-codecommit.%s.amazonaws.com/v1/repos/%s";
   private final NGTriggerService ngTriggerService;
-  private final GitProviderDataObtainmentManager gitProviderDataObtainmentManager;
+  private final GitProviderDataObtainmentManager additionalDataObtainmentManager;
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
-    WebhookEventMappingResponseBuilder mappingResponseBuilder = WebhookEventMappingResponse.builder();
+    WebhookEventMappingResponseBuilder mappingResponseBuilder = initWebhookEventMappingResponse(filterRequestData);
 
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
     TriggerWebhookEvent originalEvent = webhookPayloadData.getOriginalEvent();
@@ -86,8 +88,8 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
     }
 
     if (isEmpty(eligibleTriggers)) {
-      String msg = format("No trigger found for repoUrl: %s for Project %s",
-          webhookPayloadData.getRepository().getLink(), filterRequestData.getProjectFqn());
+      String msg = format("No trigger found for repoUrl: %s for Account %s",
+          webhookPayloadData.getRepository().getLink(), filterRequestData.getAccountId());
       log.info(msg);
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(
@@ -95,14 +97,13 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
           .build();
     } else {
       // fetches additional information
-      gitProviderDataObtainmentManager.acquireProviderData(filterRequestData);
+      additionalDataObtainmentManager.acquireProviderData(filterRequestData);
       addDetails(mappingResponseBuilder, filterRequestData, eligibleTriggers);
     }
 
     return mappingResponseBuilder.build();
   }
 
-  @NotNull
   private HashSet<String> getUrls(Repository repository, String sourceRepoType) {
     if (AWS_CODECOMMIT.name().equals(sourceRepoType)) {
       String[] arnTokens = repository.getId().split(":");

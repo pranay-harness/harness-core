@@ -33,8 +33,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
     // Decrypt gcpConfig
     encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
-    return gkeClusterHelper.createCluster(
-        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate(), locationClusterName, namespace, params);
+    return gkeClusterHelper.createCluster(gcpConfig.getServiceAccountKeyFileContent(),
+        gcpConfig.isUseDelegateSelectors(), locationClusterName, namespace, params);
   }
 
   private GcpConfig validateAndGetCredentials(SettingAttribute computeProviderSetting) {
@@ -57,8 +57,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       String locationClusterName, String namespace, boolean isInstanceSync) {
     // Decrypt gcpConfig
     encryptionService.decrypt(gcpConfig, encryptedDataDetails, isInstanceSync);
-    return gkeClusterHelper.getCluster(
-        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate(), locationClusterName, namespace);
+    return gkeClusterHelper.getCluster(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors(),
+        locationClusterName, namespace);
   }
 
   @Override
@@ -67,6 +67,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
     // Decrypt gcpConfig
     encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
-    return gkeClusterHelper.listClusters(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+    return gkeClusterHelper.listClusters(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
   }
 }

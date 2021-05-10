@@ -3,12 +3,16 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.authentication.OauthProviderType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -17,8 +21,11 @@ import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Data
-@EqualsAndHashCode(callSuper = false)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode(callSuper = true)
+@JsonTypeName("OAUTH")
 public class OauthSettings extends SSOSettings {
   @NotBlank private String accountId;
   private String filter;
@@ -36,6 +43,11 @@ public class OauthSettings extends SSOSettings {
       this.displayName = displayName;
     }
     this.allowedProviders = allowedProviders;
+  }
+
+  @Override
+  public SSOType getType() {
+    return SSOType.OAUTH;
   }
 
   @Override

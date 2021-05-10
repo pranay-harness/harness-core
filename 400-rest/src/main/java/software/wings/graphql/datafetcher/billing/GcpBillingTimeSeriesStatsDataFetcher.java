@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingTimeSeriesStatsDTO;
@@ -16,6 +19,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +28,8 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class GcpBillingTimeSeriesStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate,
     CloudBillingFilter, CloudBillingGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;
@@ -33,7 +38,8 @@ public class GcpBillingTimeSeriesStatsDataFetcher extends AbstractStatsDataFetch
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected GcpBillingTimeSeriesStatsDTO fetch(String accountId, CloudBillingAggregate aggregateFunction,
-      List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBys, List<QLBillingSortCriteria> sort) {
+      List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBys, List<QLBillingSortCriteria> sort,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     accountChecker.checkIsCeEnabled(accountId);
     return gcpBillingService.getGcpBillingTimeSeriesStats(
         Optional.ofNullable(aggregateFunction).orElse(CloudBillingAggregate.builder().build()).toFunctionCall(),

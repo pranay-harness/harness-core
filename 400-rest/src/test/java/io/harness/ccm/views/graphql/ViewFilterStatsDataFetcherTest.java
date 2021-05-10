@@ -1,11 +1,15 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
@@ -25,6 +29,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class ViewFilterStatsDataFetcherTest extends CategoryTest {
   public static final String UNIFIED_TABLE = "unifiedTable";
   public static final String ACCOUNT_ID = "accountId";

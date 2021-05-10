@@ -2,7 +2,6 @@ package io.harness.batch.processing.service.intfc;
 
 import io.harness.batch.processing.billing.timeseries.data.InstanceLifecycleInfo;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.entities.InstanceData;
 
@@ -12,8 +11,6 @@ import java.util.Set;
 
 public interface InstanceDataService {
   boolean create(InstanceData instanceData);
-
-  boolean updateInstanceState(InstanceData instanceData, Instant instant, InstanceState instanceState);
 
   InstanceData fetchActiveInstanceData(
       String accountId, String clusterId, String instanceId, List<InstanceState> instanceState);
@@ -32,8 +29,6 @@ public interface InstanceDataService {
   List<InstanceData> fetchClusterActiveInstanceData(String accountId, String clusterId, Instant startTime);
 
   Set<String> fetchClusterActiveInstanceIds(String accountId, String clusterId, Instant startTime);
-
-  InstanceData getActiveInstance(String accountId, Instant startTime, Instant endTime, CloudProvider cloudProvider);
 
   List<InstanceLifecycleInfo> fetchInstanceDataForGivenInstances(Set<String> instanceIds);
 }

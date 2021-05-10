@@ -1,8 +1,9 @@
 package io.harness.resourcegroup.model;
 
-import static io.harness.ng.DbAliases.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
@@ -11,9 +12,11 @@ import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -33,13 +36,14 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ResourceGroupKeys")
 @Document("resourceGroup")
 @Entity("resourceGroup")
 @TypeAlias("resourceGroup")
-@StoreIn(NG_MANAGER)
+@StoreIn(DbAliases.RESOURCEGROUP)
 public class ResourceGroup implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -84,7 +88,7 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Version Long version;
 
-  @FdIndex private long nextIteration;
+  @FdIndex private Long nextIteration;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -96,6 +100,7 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
     return this.nextIteration;
   }
 
+  @JsonIgnore
   @Override
   public String getUuid() {
     return this.id;

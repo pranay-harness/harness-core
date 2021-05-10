@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD_FARGATE;
@@ -8,6 +9,7 @@ import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.commons.beans.InstanceType;
@@ -51,7 +53,8 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class NodeAndPodDetailsDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLBillingDataFilter,
         QLCCMGroupBy, QLBillingSortCriteria> {
@@ -70,6 +73,7 @@ public class NodeAndPodDetailsDataFetcher
   private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
   private static final String NODE_POOL_NAME = "node_pool_name";
+  public static final String CLOUD_PROVIDER_INSTANCE_ID = "cloud_provider_instance_id";
   private static final String K8S_POD_CAPACITY = "pod_capacity";
   private static final String DEFAULT_STRING_VALUE = "-";
   private static final InstanceData DEFAULT_INSTANCE_DATA = InstanceData.builder().metaData(new HashMap<>()).build();
@@ -425,6 +429,7 @@ public class NodeAndPodDetailsDataFetcher
           .clusterName(costDataEntry.getClusterName())
           .clusterId(costDataEntry.getClusterId())
           .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, DEFAULT_STRING_VALUE))
+          .cloudProviderInstanceId(entry.getMetaData().getOrDefault(CLOUD_PROVIDER_INSTANCE_ID, DEFAULT_STRING_VALUE))
           .podCapacity(entry.getMetaData().getOrDefault(K8S_POD_CAPACITY, DEFAULT_STRING_VALUE))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())

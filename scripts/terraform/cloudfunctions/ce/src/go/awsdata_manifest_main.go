@@ -165,7 +165,7 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	msgDataString := string(msgDataJson)
 
 	triggerTime := time.Now().UTC()
-	triggerTime = triggerTime.Add(10 * time.Minute) // after 10 mins
+	triggerTime = triggerTime.Add(20 * time.Minute) // after 10 mins
 	schedule := fmt.Sprintf("%d %d %d %d *", triggerTime.Minute(), triggerTime.Hour(), triggerTime.Day(), int(triggerTime.Month()))
 
 	topic := fmt.Sprintf("projects/%s/topics/ce-awsdata-scheduler", projectId)

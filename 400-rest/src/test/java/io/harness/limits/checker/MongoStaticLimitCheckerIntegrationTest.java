@@ -1,9 +1,11 @@
 package io.harness.limits.checker;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.Counter;
@@ -28,6 +30,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class MongoStaticLimitCheckerIntegrationTest extends IntegrationTestBase {
   @Inject private WingsPersistence persistence;
 

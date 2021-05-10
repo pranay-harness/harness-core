@@ -3,11 +3,13 @@ package io.harness.security;
 import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.assertj.core.api.Fail.fail;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -26,11 +28,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class NextGenAuthenticationFilterTest extends CategoryTest {
   public static final String BASE_URL = "https://abc.com";
   public static final String API = "/api/feature-flags";
   public static final String GET_CALL = "GET";
   public static final String EMAIL = "hello@hello.hello";
+  public static final String USERNAME = "hello";
   public static final String ACCOUNT_ID = "some_random_account_id";
   public static final String AUTHORIZATION = "Authorization";
   private NextGenAuthenticationFilter nextGenAuthenticationFilter;
@@ -57,7 +61,7 @@ public class NextGenAuthenticationFilterTest extends CategoryTest {
     containerRequest.header(AUTHORIZATION,
         BEARER.getServiceId() + StringUtils.SPACE
             + serviceTokenGenerator.getServiceTokenWithDuration(
-                BEARER_SECRET, Duration.ofHours(4), new UserPrincipal(userId, EMAIL, ACCOUNT_ID)));
+                BEARER_SECRET, Duration.ofHours(4), new UserPrincipal(userId, EMAIL, USERNAME, ACCOUNT_ID)));
     nextGenAuthenticationFilter.filter(containerRequest);
 
     Assertions.assertThat(SecurityContextBuilder.getPrincipal()).isNotNull();
@@ -81,7 +85,7 @@ public class NextGenAuthenticationFilterTest extends CategoryTest {
     containerRequest.header("X-Source-Principal",
         NG_MANAGER.getServiceId() + StringUtils.SPACE
             + serviceTokenGenerator.getServiceTokenWithDuration(
-                SERVICE_SECRET, Duration.ofHours(4), new UserPrincipal(userId, EMAIL, ACCOUNT_ID)));
+                SERVICE_SECRET, Duration.ofHours(4), new UserPrincipal(userId, EMAIL, USERNAME, ACCOUNT_ID)));
 
     nextGenAuthenticationFilter.filter(containerRequest);
 
@@ -125,7 +129,7 @@ public class NextGenAuthenticationFilterTest extends CategoryTest {
     containerRequest.header("X-Source-Principal",
         NG_MANAGER.getServiceId() + StringUtils.SPACE
             + serviceTokenGenerator.getServiceTokenWithDuration(
-                "some_random_secret", Duration.ofHours(4), new UserPrincipal("userId", EMAIL, ACCOUNT_ID)));
+                "some_random_secret", Duration.ofHours(4), new UserPrincipal("userId", EMAIL, USERNAME, ACCOUNT_ID)));
 
     try {
       nextGenAuthenticationFilter.filter(containerRequest);

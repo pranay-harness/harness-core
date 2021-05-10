@@ -1,6 +1,9 @@
 package io.harness.pms.notification.orchestration.handlers;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.notification.PipelineEventType;
+import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.utils.StatusUtils;
@@ -13,6 +16,7 @@ import com.google.inject.Inject;
 import java.util.Objects;
 import java.util.Optional;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class StageStatusUpdateNotificationEventHandler implements AsyncOrchestrationEventHandler {
   @Inject NotificationHelper notificationHelper;
 
@@ -27,7 +31,10 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncOrchestra
       return;
     }
     if (Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.STAGES.name())
-        || Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.PIPELINE.name())) {
+        || Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.PIPELINE.name())
+        || Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.EXECUTION.name())
+        || Objects.equals(nodeExecutionProto.getNode().getGroup(), StepOutcomeGroup.STEP_GROUP.name())
+        || nodeExecutionProto.getNode().getIdentifier().endsWith(OrchestrationConstants.ROLLBACK_NODE_NAME)) {
       return;
     }
     if (!Objects.equals(nodeExecutionProto.getNode().getSkipType(), SkipType.SKIP_NODE)

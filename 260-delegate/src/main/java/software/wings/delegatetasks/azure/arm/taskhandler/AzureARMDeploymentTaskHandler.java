@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.azure.arm.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.model.AzureConstants.DEPLOYMENT_NAME_PATTERN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.AzureARMPreDeploymentDataBuilder;
@@ -8,6 +9,7 @@ import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.build
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.ARMScopeType;
@@ -36,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
   @Inject private AzureARMDeploymentService azureARMDeploymentService;
   private static final Random rand = new Random();
@@ -66,9 +69,9 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
         builder()
             .resourceGroup(deploymentParameters.getResourceGroupName())
             .subscriptionId(deploymentParameters.getSubscriptionId());
+    DeploymentResourceGroupContext context =
+        toDeploymentResourceGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient);
     try {
-      DeploymentResourceGroupContext context =
-          toDeploymentResourceGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient);
       if (!deploymentParameters.isRollback()) {
         azureARMDeploymentService.validateTemplate(context);
         String existingResourceGroupTemplate = azureARMDeploymentService.exportExistingResourceGroupTemplate(context);
@@ -79,9 +82,11 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
           .outputs(outPuts)
           .preDeploymentData(preDeploymentDataBuilder.build())
           .build();
-    } catch (Exception exception) {
+    } catch (Exception ex) {
+      printDefaultFailureMsgForARMDeploymentUnits(
+          ex, context.getLogStreamingTaskClient(), context.getRunningCommandUnit());
       return AzureARMDeploymentResponse.builder()
-          .errorMsg(exception.getMessage())
+          .errorMsg(ex.getMessage())
           .preDeploymentData(preDeploymentDataBuilder.build())
           .build();
     }
@@ -113,9 +118,16 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
 
   private AzureARMDeploymentResponse deployAtSubscriptionScope(AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
-    String outputs = azureARMDeploymentService.deployAtSubscriptionScope(
-        toDeploymentSubscriptionContext(deploymentParameters, azureConfig, logStreamingTaskClient));
-    return populateDeploymentResponse(outputs);
+    DeploymentSubscriptionContext context =
+        toDeploymentSubscriptionContext(deploymentParameters, azureConfig, logStreamingTaskClient);
+    try {
+      String outputs = azureARMDeploymentService.deployAtSubscriptionScope(context);
+      return populateDeploymentResponse(outputs);
+    } catch (Exception ex) {
+      printDefaultFailureMsgForARMDeploymentUnits(
+          ex, context.getLogStreamingTaskClient(), context.getRunningCommandUnit());
+      throw ex;
+    }
   }
 
   private DeploymentSubscriptionContext toDeploymentSubscriptionContext(
@@ -136,9 +148,16 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
 
   private AzureARMDeploymentResponse deployAtManagementGroupScope(AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
-    String outputs = azureARMDeploymentService.deployAtManagementGroupScope(
-        toDeploymentManagementGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient));
-    return populateDeploymentResponse(outputs);
+    DeploymentManagementGroupContext context =
+        toDeploymentManagementGroupContext(deploymentParameters, azureConfig, logStreamingTaskClient);
+    try {
+      String outputs = azureARMDeploymentService.deployAtManagementGroupScope(context);
+      return populateDeploymentResponse(outputs);
+    } catch (Exception ex) {
+      printDefaultFailureMsgForARMDeploymentUnits(
+          ex, context.getLogStreamingTaskClient(), context.getRunningCommandUnit());
+      throw ex;
+    }
   }
 
   private DeploymentManagementGroupContext toDeploymentManagementGroupContext(
@@ -159,9 +178,16 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
 
   private AzureARMDeploymentResponse deployAtTenantScope(AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient, AzureARMDeploymentParameters deploymentParameters) {
-    String outputs = azureARMDeploymentService.deployAtTenantScope(
-        toDeploymentTenantContext(deploymentParameters, azureConfig, logStreamingTaskClient));
-    return populateDeploymentResponse(outputs);
+    DeploymentTenantContext context =
+        toDeploymentTenantContext(deploymentParameters, azureConfig, logStreamingTaskClient);
+    try {
+      String outputs = azureARMDeploymentService.deployAtTenantScope(context);
+      return populateDeploymentResponse(outputs);
+    } catch (Exception ex) {
+      printDefaultFailureMsgForARMDeploymentUnits(
+          ex, context.getLogStreamingTaskClient(), context.getRunningCommandUnit());
+      throw ex;
+    }
   }
 
   private DeploymentTenantContext toDeploymentTenantContext(AzureARMDeploymentParameters deploymentParameters,

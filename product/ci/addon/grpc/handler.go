@@ -7,6 +7,7 @@ import (
 	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	pb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/addon/tasks"
+	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/logutil"
 	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
@@ -54,6 +55,9 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 	}
 	defer rl.Writer.Close()
 
+	lc := external.LogCloser()
+	lc.Add(rl)
+
 	h.log.Infow("Executing step", "arg", in)
 
 	switch x := in.GetStep().GetStep().(type) {
@@ -72,8 +76,9 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 		}
 		return response, err
 	case *enginepb.UnitStep_Plugin:
-		numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		artifact, numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
+			Artifact:   artifact,
 			NumRetries: numRetries,
 		}
 		return response, err

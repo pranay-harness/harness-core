@@ -1,11 +1,9 @@
 package io.harness.stateutils.buildstate.providers;
 
-import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_NAME;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
-import static io.harness.common.CIExecutionConstants.GRPC_SERVICE_PORT_PREFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
@@ -14,32 +12,24 @@ import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABL
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
-import static io.harness.common.CIExecutionConstants.INPUT_ARG_PREFIX;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_ARGS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_CPU;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_MEM;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_NAME;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_IMAGE_NAME;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_JFROG_PATH;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_JFROG_VARIABLE;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PATH;
-import static io.harness.common.CIExecutionConstants.LITE_ENGINE_VOLUME;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_ARGS;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.SH_COMMAND;
-import static io.harness.common.CIExecutionConstants.STAGE_ARG_COMMAND;
-import static io.harness.common.CIExecutionConstants.TMP_PATH;
-import static io.harness.common.CIExecutionConstants.TMP_PATH_ARG_PREFIX;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
-import io.harness.k8s.model.ImageDetails;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
@@ -50,13 +40,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Provides container parameters for internally used containers
  */
 
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class InternalContainerParamsProvider {
   @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
 
@@ -69,13 +59,10 @@ public class InternalContainerParamsProvider {
         .name(SETUP_ADDON_CONTAINER_NAME)
         .envVars(envVars)
         .containerType(CIContainerType.ADD_ON)
-        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
-                                       .imageDetails(ImageDetails.builder()
-                                                         .name(ADDON_IMAGE_NAME)
-                                                         .tag(ciExecutionServiceConfig.getAddonImageTag())
-                                                         .build())
-                                       .imageConnectorDetails(containerImageConnectorDetails)
-                                       .build())
+        .imageDetailsWithConnector(
+            ImageDetailsWithConnector.builder()
+                .imageDetails(IntegrationStageUtils.getImageInfo(ciExecutionServiceConfig.getAddonImage()))
+                .build())
         .containerSecrets(ContainerSecrets.builder().build())
         .volumeToMountPath(volumeToMountPath)
         .commands(SH_COMMAND)
@@ -84,21 +71,10 @@ public class InternalContainerParamsProvider {
   }
 
   public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
-      Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails,
-      String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest, Integer stageMemoryRequest,
-      List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars, Map<String, String> tiEnvVars,
-      Map<String, String> volumeToMountPath, String workDirPath, String logPrefix, Ambiance ambiance) {
-    Map<String, String> map = new HashMap<>();
-    map.putAll(volumeToMountPath);
-    map.put(LITE_ENGINE_VOLUME, LITE_ENGINE_PATH);
-    String arg = String.format("%s %s %s %s %s %s", LITE_ENGINE_ARGS, STAGE_ARG_COMMAND, INPUT_ARG_PREFIX,
-        serializedLiteEngineTaskStepInfo, TMP_PATH_ARG_PREFIX, TMP_PATH);
-    if (serviceGrpcPortList != null && serviceGrpcPortList.size() > 0) {
-      arg += String.format(" %s %s", GRPC_SERVICE_PORT_PREFIX, StringUtils.join(serviceGrpcPortList, " "));
-    }
-
-    List<String> args = new ArrayList<>(Collections.singletonList(arg));
-    // TODO: set connector & image secret
+      Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails, String serviceToken,
+      Integer stageCpuRequest, Integer stageMemoryRequest, List<Integer> serviceGrpcPortList,
+      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath,
+      String workDirPath, String logPrefix, Ambiance ambiance) {
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
@@ -106,16 +82,12 @@ public class InternalContainerParamsProvider {
             getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, tiEnvVars, workDirPath, logPrefix, ambiance))
         .containerType(CIContainerType.LITE_ENGINE)
         .containerSecrets(ContainerSecrets.builder().connectorDetailsMap(publishArtifactConnectors).build())
-        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
-                                       .imageDetails(ImageDetails.builder()
-                                                         .name(LITE_ENGINE_IMAGE_NAME)
-                                                         .tag(ciExecutionServiceConfig.getLiteEngineImageTag())
-                                                         .build())
-                                       .imageConnectorDetails(containerImageConnectorDetails)
-                                       .build())
-        .volumeToMountPath(map)
-        .commands(SH_COMMAND)
-        .args(args)
+        .imageDetailsWithConnector(
+            ImageDetailsWithConnector.builder()
+                .imageDetails(IntegrationStageUtils.getImageInfo(ciExecutionServiceConfig.getLiteEngineImage()))
+                .imageConnectorDetails(containerImageConnectorDetails)
+                .build())
+        .volumeToMountPath(volumeToMountPath)
         .workingDir(workDirPath)
         .build();
   }
@@ -142,7 +114,6 @@ public class InternalContainerParamsProvider {
     envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceToken);
     envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, ciExecutionServiceConfig.getDelegateServiceEndpointVariableValue());
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
-    envVars.put(LITE_ENGINE_JFROG_VARIABLE, LITE_ENGINE_JFROG_PATH);
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     envVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
     envVars.put(HARNESS_ORG_ID_VARIABLE, orgID);

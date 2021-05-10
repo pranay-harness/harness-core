@@ -1,5 +1,9 @@
 package io.harness.common;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CI)
 public class BuildEnvironmentConstants {
   public static final String DRONE_BUILD_NUMBER = "DRONE_BUILD_NUMBER";
 

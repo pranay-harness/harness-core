@@ -1,5 +1,7 @@
 package io.harness.grpc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(HarnessModule._920_DELEGATE_AGENT_BEANS)
 public class DelegateServiceGrpcAgentClient {
   private final DelegateServiceBlockingStub delegateServiceBlockingStub;
 

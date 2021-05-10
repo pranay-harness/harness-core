@@ -12,7 +12,6 @@ import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
@@ -68,6 +67,12 @@ public final class SweepingOutputInstance implements PersistentEntity, UuidAcces
                  .field(SweepingOutputInstanceKeys.name)
                  .field(SweepingOutputInstanceKeys.stateExecutionId)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("pipelineStateExecution")
+                 .field(SweepingOutputInstanceKeys.appId)
+                 .field(SweepingOutputInstanceKeys.pipelineExecutionId)
+                 .field(SweepingOutputInstanceKeys.stateExecutionId)
+                 .build())
         .add(SortCompoundMongoIndex.builder()
                  .name("workflowExecutionIdsNamePrefix")
                  .field(SweepingOutputInstanceKeys.appId)
@@ -82,23 +87,32 @@ public final class SweepingOutputInstance implements PersistentEntity, UuidAcces
                  .field(SweepingOutputInstanceKeys.name)
                  .descSortField(SweepingOutputInstanceKeys.createdAt)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("pipelineExecutionIdNamePrefix")
+                 .field(SweepingOutputInstanceKeys.appId)
+                 .field(SweepingOutputInstanceKeys.pipelineExecutionId)
+                 .field(SweepingOutputInstanceKeys.createdAt)
+                 .field(SweepingOutputInstanceKeys.name)
+                 .build())
         .build();
   }
 
-  @Id private final String uuid;
-  private final String appId;
-  private final String pipelineExecutionId;
-  @Singular private final List<String> workflowExecutionIds;
-  private final String phaseExecutionId;
-  private final String stateExecutionId;
-  @NonFinal @Setter private long createdAt;
+  @Id String uuid;
+  String appId;
+  String pipelineExecutionId;
+  @Singular List<String> workflowExecutionIds;
+  String phaseExecutionId;
+  String stateExecutionId;
+  @NonFinal @Setter long createdAt;
 
-  @NotNull @Trimmed private final String name;
+  @NotNull @Trimmed String name;
 
-  @Getter private final SweepingOutput value;
-  @Deprecated @Getter private final byte[] output;
+  @Getter @NonFinal @Setter SweepingOutput value;
+  @Deprecated @Getter byte[] output;
+
+  @Getter @NonFinal @Setter byte[] valueOutput;
 
   public enum Scope { PIPELINE, WORKFLOW, PHASE, STATE }
 
-  @FdTtlIndex private final Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 }

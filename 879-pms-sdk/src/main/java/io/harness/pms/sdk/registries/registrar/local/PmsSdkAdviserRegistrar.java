@@ -10,9 +10,7 @@ import io.harness.pms.sdk.core.adviser.fail.OnFailAdviser;
 import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviser;
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviser;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
-import io.harness.pms.sdk.core.adviser.nextstep.NextStepAdviser;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviser;
-import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
 
 import java.util.HashMap;
@@ -28,13 +26,11 @@ public class PmsSdkAdviserRegistrar {
 
     engineAdvisers.put(IgnoreAdviser.ADVISER_TYPE, IgnoreAdviser.class);
     engineAdvisers.put(OnSuccessAdviser.ADVISER_TYPE, OnSuccessAdviser.class);
-    engineAdvisers.put(NextStepAdviser.ADVISER_TYPE, NextStepAdviser.class);
     engineAdvisers.put(OnFailAdviser.ADVISER_TYPE, OnFailAdviser.class);
     engineAdvisers.put(ManualInterventionAdviser.ADVISER_TYPE, ManualInterventionAdviser.class);
     engineAdvisers.put(OnAbortAdviser.ADVISER_TYPE, OnAbortAdviser.class);
     engineAdvisers.put(OnMarkSuccessAdviser.ADVISER_TYPE, OnMarkSuccessAdviser.class);
     engineAdvisers.put(RetryAdviser.ADVISER_TYPE, RetryAdviser.class);
-    engineAdvisers.put(RollbackCustomAdviser.ADVISER_TYPE, RollbackCustomAdviser.class);
 
     return engineAdvisers;
   }

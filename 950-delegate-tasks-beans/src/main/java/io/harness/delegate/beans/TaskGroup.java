@@ -1,8 +1,12 @@
 package io.harness.delegate.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
+@OwnedBy(DEL)
 @TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public enum TaskGroup {
   // *** NOTE: If you add an item to this list then also add an entry in catalogs.yml in the TASK_TYPES section. ***
@@ -49,6 +53,7 @@ public enum TaskGroup {
   LOG,
   CLOUD_FORMATION,
   TERRAFORM,
+  TERRAGRUNT,
   AWS,
   LDAP,
   K8S,

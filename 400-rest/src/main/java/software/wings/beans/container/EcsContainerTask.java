@@ -1,5 +1,6 @@
 package software.wings.beans.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -10,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -60,6 +62,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * Created by anubhaw on 2/6/17.
  */
+@OwnedBy(CDP)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ECS")
 @EqualsAndHashCode(callSuper = true)

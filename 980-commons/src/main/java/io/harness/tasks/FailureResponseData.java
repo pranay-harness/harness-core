@@ -3,6 +3,7 @@ package io.harness.tasks;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.FailureType;
+import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
 import lombok.Builder;
@@ -14,5 +15,6 @@ import lombok.Value;
 public class FailureResponseData implements ErrorResponseData {
   String errorMessage;
   EnumSet<FailureType> failureTypes;
+  WingsException exception;
   // TODO : Add more fields here for better handling
 }

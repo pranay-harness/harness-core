@@ -1,10 +1,13 @@
 package io.harness.cvng.state;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.state.CVNGVerificationTask.Status;
 import io.harness.rule.Owner;
@@ -16,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CV)
 public class CVNGVerificationTaskServiceImplTest extends WingsBaseTest {
   @Inject private CVNGVerificationTaskService cvngVerificationTaskService;
   private String accountId;
@@ -34,6 +38,23 @@ public class CVNGVerificationTaskServiceImplTest extends WingsBaseTest {
     cvngVerificationTaskService.markDone(cvngVerificationTaskId);
     CVNGVerificationTask updated = cvngVerificationTaskService.get(cvngVerificationTaskId);
     assertThat(updated.getStatus()).isEqualTo(Status.DONE);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetVerificationTaskByActivityId_activityPresent() {
+    cvngVerificationTaskService.create(create());
+    CVNGVerificationTask task = cvngVerificationTaskService.getByActivityId(activityId);
+    assertThat(task).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetVerificationTaskByActivityId_activityNotPresent() {
+    CVNGVerificationTask task = cvngVerificationTaskService.getByActivityId(activityId);
+    assertThat(task).isNull();
   }
 
   private CVNGVerificationTask create() {

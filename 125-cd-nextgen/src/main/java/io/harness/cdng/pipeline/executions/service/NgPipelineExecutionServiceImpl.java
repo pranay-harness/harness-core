@@ -7,15 +7,13 @@ import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper.StageIndex;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail.PipelineExecutionDetailBuilder;
-import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
 import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptPackage;
@@ -25,7 +23,6 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.interrupts.Interrupt;
-import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
@@ -40,9 +37,7 @@ import io.harness.pms.contracts.advisers.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
-import io.harness.service.GraphGenerationService;
 import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
@@ -53,12 +48,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
   private static final TriggeredBy EMBEDDED_USER = TriggeredBy.newBuilder()
@@ -69,7 +63,6 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
 
   @Inject private PipelineExecutionRepository pipelineExecutionRepository;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private GraphGenerationService graphGenerationService;
   @Inject private PipelineExecutionHelper pipelineExecutionHelper;
   @Inject private NGPipelineService ngPipelineService;
   @Inject private OrchestrationService orchestrationService;
@@ -161,31 +154,6 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     pipelineExecutionHelper.addStageSpecificDetailsToPipelineExecution(
         pipelineExecutionSummary, ngPipeline, stageIdentifierToPlanNodeId);
     return pipelineExecutionRepository.save(pipelineExecutionSummary);
-  }
-
-  @Override
-  public PipelineExecutionDetail getPipelineExecutionDetail(@Nonnull String planExecutionId, String stageIdentifier) {
-    PipelineExecutionDetailBuilder pipelineExecutionDetailBuilder = PipelineExecutionDetail.builder();
-
-    if (isNotEmpty(stageIdentifier)) {
-      OrchestrationGraphDTO orchestrationGraph =
-          graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
-      @NonNull ExecutionGraph executionGraph = ExecutionGraphMapper.toExecutionGraph(orchestrationGraph);
-      pipelineExecutionDetailBuilder.stageGraph(executionGraph);
-
-      if (ExecutionStatus.BROKE_STATUSES.contains(orchestrationGraph.getStatus())) {
-        OrchestrationGraphDTO rollbackOrchestrationGraph =
-            graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(
-                stageIdentifier + "Rollback", planExecutionId);
-        ExecutionGraph rollbackExecutionGraph = ExecutionGraphMapper.toExecutionGraph(rollbackOrchestrationGraph);
-        pipelineExecutionDetailBuilder.stageRollbackGraph(rollbackExecutionGraph);
-      }
-    }
-
-    return pipelineExecutionDetailBuilder
-        .pipelineExecution(ExecutionToDtoMapper.writeExecutionDto(
-            pipelineExecutionRepository.findByPlanExecutionId(planExecutionId).get()))
-        .build();
   }
 
   @Override

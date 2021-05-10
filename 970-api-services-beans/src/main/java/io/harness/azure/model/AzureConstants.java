@@ -247,4 +247,6 @@ public interface AzureConstants {
 
   // Azure Cloud Error codes
   String ROLE_ASSIGNMENT_EXISTS_CLOUD_ERROR_CODE = "RoleAssignmentExists";
+
+  String ARTIFACT_PATH_PREFIX = "artifact/";
 }

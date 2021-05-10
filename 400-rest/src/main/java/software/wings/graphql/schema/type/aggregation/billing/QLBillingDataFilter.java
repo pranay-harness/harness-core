@@ -1,6 +1,9 @@
 package software.wings.graphql.schema.type.aggregation.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -19,7 +22,8 @@ import lombok.Value;
 @Value
 @Builder
 @ToString
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter application;
   private QLIdFilter service;
@@ -32,6 +36,7 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter instanceName;
   private QLIdFilter namespace;
   private QLIdFilter workloadName;
+  private QLIdFilter workloadType;
   private QLIdFilter cloudProvider;
   private QLIdFilter nodeInstanceId;
   private QLIdFilter podInstanceId;
@@ -89,6 +94,9 @@ public class QLBillingDataFilter implements EntityFilter {
     }
     if (filter.getWorkloadName() != null) {
       filterTypes.add(QLBillingDataFilterType.WorkloadName);
+    }
+    if (filter.getWorkloadType() != null) {
+      filterTypes.add(QLBillingDataFilterType.WorkloadType);
     }
     if (filter.getTag() != null) {
       filterTypes.add(QLBillingDataFilterType.Tag);
@@ -155,6 +163,8 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getNamespace();
       case WorkloadName:
         return filter.getWorkloadName();
+      case WorkloadType:
+        return filter.getWorkloadType();
       case Tag:
         return filter.getTag();
       case CloudProvider:

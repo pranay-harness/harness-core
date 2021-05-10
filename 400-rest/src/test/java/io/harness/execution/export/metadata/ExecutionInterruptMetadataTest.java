@@ -8,8 +8,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.beans.ExecutionInterruptType;
 import io.harness.category.element.UnitTests;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 
 import software.wings.beans.StateExecutionInterrupt;

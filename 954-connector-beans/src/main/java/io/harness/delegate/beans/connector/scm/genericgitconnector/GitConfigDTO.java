@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.connector.scm.genericgitconnector;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -28,6 +30,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(HarnessTeam.DX)
 public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
   @NotNull @JsonProperty("type") GitAuthType gitAuthType;
   @NotNull @JsonProperty("connectionType") GitConnectionType gitConnectionType;
@@ -46,13 +49,14 @@ public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, De
 
   @Builder
   public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitSyncConfig gitSyncConfig,
-      GitConnectionType gitConnectionType, String url, String branchName) {
+      GitConnectionType gitConnectionType, String url, String branchName, Set<String> delegateSelectors) {
     this.gitAuthType = gitAuthType;
     this.gitAuth = gitAuth;
     this.gitSyncConfig = gitSyncConfig;
     this.gitConnectionType = gitConnectionType;
     this.url = url;
     this.branchName = branchName;
+    this.delegateSelectors = delegateSelectors;
   }
 
   @Override

@@ -1,5 +1,6 @@
 package io.harness.lock;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.GEORGE;
 
 import static java.time.Duration.ofMillis;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.PersistenceTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
@@ -37,6 +39,7 @@ import org.slf4j.Logger;
 /**
  * The Class PersistentLockerTest.
  */
+@OwnedBy(PL)
 public class MongoPersistentLockerTest extends PersistenceTestBase {
   @Mock private DistributedLockSvc distributedLockSvc;
 

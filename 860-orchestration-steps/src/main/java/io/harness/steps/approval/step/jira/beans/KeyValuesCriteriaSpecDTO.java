@@ -25,11 +25,15 @@ public class KeyValuesCriteriaSpecDTO implements CriteriaSpecDTO {
   @NotNull List<ConditionDTO> conditions;
 
   public static KeyValuesCriteriaSpecDTO fromKeyValueCriteria(KeyValuesCriteriaSpec keyValuesCriteriaSpec) {
-    boolean matchCondition = (Boolean) keyValuesCriteriaSpec.getMatchAnyCondition().fetchFinalValue();
-    List<Condition> conditions = keyValuesCriteriaSpec.getConditions();
+    boolean matchCondition = false;
+    Object matchConditionValue = keyValuesCriteriaSpec.getMatchAnyCondition().fetchFinalValue();
+    if (matchConditionValue != null) {
+      matchCondition = (boolean) matchConditionValue;
+    }
 
+    List<Condition> conditions = keyValuesCriteriaSpec.getConditions();
     if (isEmpty(conditions)) {
-      throw new InvalidRequestException("At least 1 condition is required");
+      throw new InvalidRequestException("At least 1 condition is required in KeyValues criteria");
     }
 
     List<ConditionDTO> conditionDTOS = new ArrayList<>();

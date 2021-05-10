@@ -5,4 +5,7 @@ go_library(
     srcs = ["def.go"],
     importpath = "github.com/wings-software/portal/product/ci/engine/output",
     visibility = ["//visibility:public"],
+    deps = [
+        "//product/ci/engine/proto:go_default_library",
+    ],
 )

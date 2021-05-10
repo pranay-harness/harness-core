@@ -1,5 +1,6 @@
 package io.harness.ng;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -19,13 +20,16 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
+import io.harness.git.model.ChangeType;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -104,6 +108,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         return ((VaultConnectorDTO) connector.getConnectorConfig()).isDefault();
       case GCP_KMS:
         return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isDefault();
+      case AWS_KMS:
+        return ((AwsKmsConnectorDTO) connector.getConnectorConfig()).isDefault();
       case LOCAL:
         return ((LocalConnectorDTO) connector.getConnectorConfig()).isDefault();
       default:
@@ -142,6 +148,15 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
     SecretManagerConfigUpdateDTO dto =
         SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connectorConfigDTO);
+    Optional<ConnectorResponseDTO> currentConfigOfSecretManager = get(accountIdentifier,
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+    boolean alreadyDefaultSM = false;
+    if (currentConfigOfSecretManager.isPresent()) {
+      alreadyDefaultSM = isDefaultSecretManager(currentConfigOfSecretManager.get().getConnector());
+    } else {
+      throw new InvalidRequestException(
+          String.format("Secret Manager with identifier %s not found.", connectorInfo.getIdentifier()));
+    }
 
     SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(), dto);
@@ -150,11 +165,31 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       if (isDefaultSecretManager(connector.getConnectorInfo())) {
         clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
+      } else if (alreadyDefaultSM) {
+        setHarnessSecretManagerAsDefault(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+            connector.getConnectorInfo().getProjectIdentifier());
       }
       return defaultConnectorService.update(connector, accountIdentifier);
     }
     throw new SecretManagementException(
         SECRET_MANAGEMENT_ERROR, "Error occurred while updating secret manager in 71 rest.", SRE);
+  }
+
+  private void setHarnessSecretManagerAsDefault(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = Criteria.where(ConnectorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ConnectorKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ConnectorKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(ConnectorKeys.deleted)
+                            .ne(Boolean.TRUE)
+                            .and(ConnectorKeys.identifier)
+                            .is(HARNESS_SECRET_MANAGER_IDENTIFIER);
+
+    Update update = new Update().set(VaultConnectorKeys.isDefault, Boolean.TRUE);
+    connectorRepository.update(criteria, update, ChangeType.NONE, projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override

@@ -1,12 +1,14 @@
 package io.harness.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.CICommonPodConstants.CONTAINER_NAME;
-import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
 import static io.harness.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
+import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.script.ScriptInfo;
 import io.harness.beans.steps.stepinfo.BuildStepInfo;
@@ -43,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Slf4j
+@OwnedBy(CI)
 public class BuildStep implements SyncExecutable<BuildStepInfo> {
   public static final StepType STEP_TYPE = BuildStepInfo.STEP_TYPE;
   public static final String TASK_TYPE = "EXECUTE_COMMAND";
@@ -73,7 +76,7 @@ public class BuildStep implements SyncExecutable<BuildStepInfo> {
       // TODO only k8 cluster is supported
       K8ExecCommandParams k8ExecCommandParams = K8ExecCommandParams.builder()
                                                     .containerName(CONTAINER_NAME)
-                                                    .mountPath(MOUNT_PATH)
+                                                    .mountPath(STEP_MOUNT_PATH)
                                                     .relStdoutFilePath(REL_STDOUT_FILE_PATH)
                                                     .relStderrFilePath(REL_STDERR_FILE_PATH)
                                                     .commandTimeoutSecs(buildStepInfo.getTimeout())

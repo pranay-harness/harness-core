@@ -60,10 +60,14 @@ eventQueue
 **/*.lock.info\
 profile
 profile.result
+bolt.db
 
 bazel-*
 .bazelrc
 bazelrc.cache
+bazelrc.gcp
 platform-bazel-cache-dev.json
 
 **/vendor
+
+test-util.bzl

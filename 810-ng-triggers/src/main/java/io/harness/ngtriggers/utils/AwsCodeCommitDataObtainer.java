@@ -1,9 +1,11 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CommitDetails;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
@@ -44,6 +46,7 @@ import org.assertj.core.util.VisibleForTesting;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(CI)
 public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
   private final TaskExecutionUtils taskExecutionUtils;
   private final ConnectorUtils connectorUtils;
@@ -78,7 +81,7 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
         }
       } catch (Exception e) {
         log.error("Failed while fetching additional information from aws codecommit for branch webhook event"
-                + "Project : " + filterRequestData.getProjectFqn() + ", with Exception" + e.getMessage(),
+                + "Project : " + filterRequestData.getAccountId() + ", with Exception" + e.getMessage(),
             e);
       }
     }

@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
@@ -32,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ConnectorConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLConnectorFilter, QLNoOpSortCriteria, QLConnectorsConnection> {

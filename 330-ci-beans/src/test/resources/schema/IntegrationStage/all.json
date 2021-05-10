@@ -281,6 +281,22 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "IntegrationStageConfig": {
       "type": "object",
       "properties": {
@@ -352,8 +368,14 @@
     "K8sDirectInfraYamlSpec": {
       "type": "object",
       "properties": {
+        "annotations": {
+          "$ref": "#/definitions/ParameterFieldMapStringString"
+        },
         "connectorRef": {
           "type": "string"
+        },
+        "labels": {
+          "$ref": "#/definitions/ParameterFieldMapStringString"
         },
         "namespace": {
           "type": "string"
@@ -563,6 +585,63 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldMapStringString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "RetryFailureActionConfig": {
       "allOf": [
         {
@@ -654,9 +733,6 @@
         "name": {
           "type": "string"
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "spec": {
           "$ref": "#/definitions/StepSpecType"
         },
@@ -665,6 +741,9 @@
         },
         "type": {
           "type": "string"
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -694,14 +773,14 @@
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "steps": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -730,6 +809,26 @@
     },
     "StepSpecType": {
       "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepWhenCondition": {
+      "type": "object",
+      "required": [
+        "stageStatus"
+      ],
+      "properties": {
+        "condition": {
+          "type": "string"
+        },
+        "stageStatus": {
+          "type": "string",
+          "enum": [
+            "Success",
+            "Failure",
+            "All"
+          ]
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "UseFromStageInfraYaml": {

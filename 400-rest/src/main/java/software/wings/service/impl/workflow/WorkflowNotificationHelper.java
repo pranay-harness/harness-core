@@ -351,7 +351,7 @@ public class WorkflowNotificationHelper {
   public Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,
       ExecutionStatus status, @Nullable PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId(), true);
+        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId(), true, false);
     String triggeredBy = workflowExecution.getTriggeredBy().getName();
     if (triggeredBy.equalsIgnoreCase("Deployment trigger")) {
       triggeredBy = triggeredBy.toLowerCase();

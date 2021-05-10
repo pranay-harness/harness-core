@@ -1,10 +1,12 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.FileBucket.ARTIFACTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.HINGER;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.SSH_KEY;
@@ -49,6 +51,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -85,13 +88,11 @@ import software.wings.utils.WingsTestConstants;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Injector;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Before;
@@ -104,6 +105,7 @@ import org.mockito.Mock;
  * Created by anubhaw on 5/31/16.
  */
 @OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   /**
    * The constant EXEC_CMD.
@@ -431,7 +433,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
@@ -457,9 +459,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     String actualLauncherScript =
         new File(System.getProperty("java.io.tmpdir"), "harnesslauncherACTIVITY_ID.sh").getAbsolutePath();
     verify(fileBasedSshScriptExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(actualLauncherScript));
-    assertThat(new File(actualLauncherScript))
-        .hasContent(
-            CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchScript.sh"))));
+    assertThat(new File(actualLauncherScript)).doesNotExist();
 
     String expectedExecCommandUnitScript =
         new File(System.getProperty("java.io.tmpdir"), "harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
@@ -467,7 +467,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     verify(fileBasedSshScriptExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
     verify(scriptSshExecutor).executeCommandString("chmod 0700 /tmp/ACTIVITY_ID/*", false);
 
-    assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
+    assertThat(new File(expectedExecCommandUnitScript)).doesNotExist();
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
         .extracting(ExecCommandUnit::getPreparedCommand)
         .isEqualTo(
@@ -510,7 +510,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * @throws IOException the io exception
    */
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
@@ -549,13 +549,13 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     verify(fileBasedSshScriptExecutor)
         .copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
 
-    assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
+    assertThat(new File(expectedExecCommandUnitScript)).doesNotExist();
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
         .extracting(ExecCommandUnit::getPreparedCommand)
         .isEqualTo(
             "/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/tmp' harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
 
-    assertThat(new File(expectedSubExecCommandUnitScript)).hasContent("start.sh");
+    assertThat(new File(expectedSubExecCommandUnitScript)).doesNotExist();
     assertThat((ExecCommandUnit) ((Command) command.getCommandUnits().get(2)).getCommandUnits().get(0))
         .extracting(ExecCommandUnit::getPreparedCommand)
         .isEqualTo("/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/home/tomcat' harness"

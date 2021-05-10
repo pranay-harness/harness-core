@@ -5,7 +5,7 @@ package io.harness.product.ci.engine.proto;
 option java_multiple_files = true;
 option go_package = "cienginepb";
 
-import "product/ci/engine/proto/artifact.proto";
+import "product/ci/engine/proto/publish_artifact.proto";
 
 message StepContext {
   int32 num_retries = 1;  // Deprecated
@@ -51,12 +51,18 @@ message RunStep {
   repeated string envVarOutputs = 3;  // output variables to export as step outcome
   uint32 container_port = 4;          // Deprecated. Port of the container on which run step needs to be executed
   repeated Report reports = 5;
+  map<string, string> environment = 6;
 }
 
 message PluginStep {
   string image = 1;
   StepContext context = 2;
-  uint32 container_port = 3;  // Deprecated. Port of the container on which plugin step needs to be executed
+  // Deprecated. Port of the container on which plugin step needs to be executed
+  uint32 container_port = 3;
+  // Optional. Entrypoint for plugin step. If empty, it calls docker registry to retrieve the entrypoint
+  repeated string entrypoint = 4;
+  map<string, string> environment = 5;
+  string artifact_file_path = 6;  // file path to store generated artifact file
 }
 
 message SaveCacheStep {
@@ -150,6 +156,7 @@ message ExecuteStepRequest {
   string execution_id = 1;
   UnitStep step = 2;
   string tmp_file_path = 3;
+  string delegate_svc_endpoint = 4;
 }
 
 message ExecuteStepResponse {}

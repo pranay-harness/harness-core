@@ -20,6 +20,8 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.request.HttpRequestInfo;
+import io.harness.request.RequestContext;
+import io.harness.request.RequestContextData;
 import io.harness.request.RequestMetadata;
 import io.harness.serializer.KryoRegistrar;
 
@@ -47,8 +49,10 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(Resource.class, 22009);
     kryo.register(HttpRequestInfo.class, 22010);
     kryo.register(RequestMetadata.class, 22011);
-    kryo.register(io.harness.scope.ResourceScope.class, 22012);
 
     kryo.register(HttpHeaderConfig.class, 19462);
+
+    kryo.register(RequestContextData.class, 970001);
+    kryo.register(RequestContext.class, 970002);
   }
 }

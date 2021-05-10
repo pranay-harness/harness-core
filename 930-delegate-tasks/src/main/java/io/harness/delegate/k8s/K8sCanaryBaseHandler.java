@@ -1,11 +1,11 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanaryAndBG;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
-import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
@@ -13,6 +13,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.k8s.kubectl.Kubectl;
@@ -25,7 +26,6 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
 import software.wings.beans.LogColor;
@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class K8sCanaryBaseHandler {
@@ -160,8 +161,6 @@ public class K8sCanaryBaseHandler {
     logCallback.saveExecutionLog("Wrapping up..\n");
 
     k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, logCallback);
-
-    logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }
 
   public void failAndSaveKubernetesRelease(K8sCanaryHandlerConfig canaryHandlerConfig, String releaseName)

@@ -1,9 +1,11 @@
 package io.harness.ccm.health;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -14,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CE)
 public class CeExceptionRecordDaoTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String clusterId = "CLUSTER_ID";

@@ -26,6 +26,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ConnectionMode;
@@ -96,6 +98,7 @@ import org.mockito.ArgumentCaptor;
 
 @RunWith(Parameterized.class)
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateAgentResourceTest {
   private static final DelegateService delegateService = mock(DelegateService.class);
   private static final ConfigurationController configurationController = mock(ConfigurationController.class);
@@ -385,21 +388,19 @@ public class DelegateAgentResourceTest {
                                           .stopScript("stopScript")
                                           .build();
     when(delegateService.getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl,
-             DelegateSize.EXTRA_SMALL))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, DelegateSize.LAPTOP))
         .thenReturn(delegateScripts);
 
     RestResponse<DelegateScripts> restResponse =
         RESOURCES.client()
             .target("/agent/delegates/delegateScriptsNg?accountId=" + ACCOUNT_ID + "&delegateVersion=" + delegateVersion
-                + "&delegateSize=EXTRA_SMALL")
+                + "&delegateSize=LAPTOP")
             .request()
             .get(new GenericType<RestResponse<DelegateScripts>>() {});
 
     verify(delegateService, atLeastOnce())
         .getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl,
-            DelegateSize.EXTRA_SMALL);
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, DelegateSize.LAPTOP);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull().isEqualTo(delegateScripts);
   }
 

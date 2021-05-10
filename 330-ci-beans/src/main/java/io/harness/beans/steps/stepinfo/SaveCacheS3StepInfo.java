@@ -1,18 +1,23 @@
 package io.harness.beans.steps.stepinfo;
 
-import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
+import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,7 +25,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -34,7 +41,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("SaveCacheS3")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("saveCacheS3StepInfo")
-public class SaveCacheS3StepInfo implements PluginCompatibleStep {
+@OwnedBy(CI)
+public class SaveCacheS3StepInfo implements PluginCompatibleStep, WithConnectorRef {
   public static final int DEFAULT_RETRY = 1;
 
   @JsonIgnore
@@ -48,7 +56,6 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -63,25 +70,20 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> pathStyle;
   @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> override;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
+  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "key", "bucket",
-      "sourcePaths", "region", "endpoint", "pathStyle", "override", "archiveFormat"})
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "key", "bucket", "sourcePaths",
+      "region", "endpoint", "pathStyle", "override", "archiveFormat", "runAsUser"})
   public SaveCacheS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> key,
-      ParameterField<String> bucket, ParameterField<List<String>> sourcePaths, ParameterField<String> region,
-      ParameterField<String> endpoint, ParameterField<Boolean> pathStyle, ParameterField<Boolean> override,
-      ParameterField<ArchiveFormat> archiveFormat) {
+      ContainerResource resources, ParameterField<String> key, ParameterField<String> bucket,
+      ParameterField<List<String>> sourcePaths, ParameterField<String> region, ParameterField<String> endpoint,
+      ParameterField<Boolean> pathStyle, ParameterField<Boolean> override, ParameterField<ArchiveFormat> archiveFormat,
+      ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.containerImage =
-        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/cache:latest"));
-    if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/cache:latest");
-    }
-
     this.resources = resources;
     this.key = key;
     this.bucket = bucket;
@@ -91,16 +93,12 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
     this.pathStyle = pathStyle;
     this.override = override;
     this.archiveFormat = archiveFormat;
+    this.runAsUser = runAsUser;
   }
 
   @Override
   public TypeInfo getNonYamlInfo() {
     return typeInfo;
-  }
-
-  @Override
-  public String getDisplayName() {
-    return name;
   }
 
   @Override
@@ -111,5 +109,12 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.ASYNC;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

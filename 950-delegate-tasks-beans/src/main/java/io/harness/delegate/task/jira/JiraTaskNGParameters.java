@@ -12,8 +12,10 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.jira.JiraActionNG;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -36,8 +38,20 @@ public class JiraTaskNGParameters implements TaskParameters, ExecutionCapability
   String expand;
   // Fetch status along with create metadata.
   boolean fetchStatus;
+
+  // Transition to do while updating (optional).
+  String transitionToStatus; // required in a transition
+  String transitionName; // optional - find a particular transition that goes to desired status
+
   // Fields sent while creating/updating issue.
   Map<String, String> fields;
+
+  public Set<String> getDelegateSelectors() {
+    if (jiraConnectorDTO == null || jiraConnectorDTO.getDelegateSelectors() == null) {
+      return Collections.emptySet();
+    }
+    return jiraConnectorDTO.getDelegateSelectors();
+  }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

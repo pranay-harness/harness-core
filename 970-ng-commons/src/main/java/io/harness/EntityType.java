@@ -1,7 +1,10 @@
 package io.harness;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
+import io.harness.beans.TriggerReference;
 import io.harness.common.EntityReference;
 import io.harness.common.EntityTypeConstants;
 import io.harness.common.EntityYamlRootNames;
@@ -10,9 +13,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@OwnedBy(HarnessTeam.DX)
 // todo(abhinav): refactor/adapt this according to needs later depending on how service registration comes in
 // one more enum might come in here for product types.
 public enum EntityType {
@@ -61,7 +66,9 @@ public enum EntityType {
       ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STAGE, EntityYamlRootNames.DEPLOYMENT_STAGE, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.APPROVAL_STAGE)
   APPROVAL_STAGE(
-      ModuleType.CD, EntityTypeConstants.APPROVAL_STAGE, EntityYamlRootNames.APPROVAL_STAGE, IdentifierRef.class);
+      ModuleType.CD, EntityTypeConstants.APPROVAL_STAGE, EntityYamlRootNames.APPROVAL_STAGE, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.TRIGGERS)
+  TRIGGERS(ModuleType.CD, EntityTypeConstants.TRIGGERS, EntityYamlRootNames.TRIGGERS, TriggerReference.class);
 
   private final ModuleType moduleType;
   String yamlName;
@@ -79,9 +86,11 @@ public enum EntityType {
   }
 
   public static List<EntityType> getEntityTypes(ModuleType moduleType) {
-    return Arrays.stream(EntityType.values())
-        .filter(entityType -> entityType.moduleType.name().equalsIgnoreCase(moduleType.name()))
-        .collect(Collectors.toList());
+    return (moduleType == null)
+        ? Collections.emptyList()
+        : Arrays.stream(EntityType.values())
+              .filter(entityType -> entityType.moduleType.name().equalsIgnoreCase(moduleType.name()))
+              .collect(Collectors.toList());
   }
 
   public static EntityType getEntityFromYamlType(String yamlType) {

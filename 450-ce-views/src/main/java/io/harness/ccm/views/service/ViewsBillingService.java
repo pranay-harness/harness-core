@@ -1,5 +1,8 @@
 package io.harness.ccm.views.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewEntityStatsDataPoint;
 import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
@@ -11,6 +14,7 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.TableResult;
 import java.util.List;
 
+@OwnedBy(CE)
 public interface ViewsBillingService {
   List<String> getFilterValueStats(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       String cloudProviderTableName, Integer limit, Integer offset);
@@ -24,4 +28,6 @@ public interface ViewsBillingService {
 
   QLCEViewTrendInfo getTrendStatsData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName);
+
+  List<String> getColumnsForTable(BigQuery bigQuery, String informationSchemaView, String table);
 }

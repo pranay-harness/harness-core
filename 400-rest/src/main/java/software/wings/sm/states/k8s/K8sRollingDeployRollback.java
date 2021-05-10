@@ -1,10 +1,17 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
+import static java.util.Collections.emptyList;
+
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -45,12 +52,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class K8sRollingDeployRollback extends AbstractK8sState {
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
@@ -78,6 +89,15 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
   }
 
   @Override
+  public List<String> getDelegateSelectors(ExecutionContext context) {
+    K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
+    if (k8sContextElement == null) {
+      return emptyList();
+    }
+    return k8sContextElement.getDelegateSelectors();
+  }
+
+  @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
@@ -102,9 +122,12 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
                                                 .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
                                                 .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
                                                 .timeoutIntervalInMin(stateTimeoutInMinutes)
+                                                .delegateSelectors((k8sContextElement.getDelegateSelectors() == null)
+                                                        ? null
+                                                        : new HashSet<>(k8sContextElement.getDelegateSelectors()))
                                                 .build();
 
-      return queueK8sDelegateTask(context, k8sTaskParameters);
+      return queueK8sDelegateTask(context, k8sTaskParameters, null);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ADMIN;
@@ -8,6 +9,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -56,6 +58,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 @Slf4j
@@ -150,6 +153,7 @@ public class ActivityServiceImpl implements ActivityService {
         case AZURE_APP_SERVICE_SLOT_SWAP:
         case AZURE_ARM_DEPLOYMENT:
         case AZURE_BLUEPRINT_DEPLOYMENT:
+        case TERRAGRUNT_PROVISION:
         case AWS_AMI_SWITCH_ROUTES:
         case SPOTINST_SETUP:
         case SPOTINST_DEPLOY:

@@ -20,6 +20,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -51,6 +52,7 @@ import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParamete
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -63,6 +65,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.joor.Reflect;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -75,11 +78,17 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ExecutionContextImpl executionContext;
+  @Mock private StateExecutionService stateExecutionService;
   @Inject private KryoSerializer kryoSerializer;
 
   @InjectMocks
   private ShellScriptProvisionState state =
       new ShellScriptProvisionState(InfrastructureProvisionerType.SHELL_SCRIPT.name());
+
+  @Before
+  public void setUp() throws Exception {
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+  }
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -246,8 +255,9 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Test
   @Owner(developers = PARDHA)
   @Category(UnitTests.class)
-  public void shouldPopulateDelegateSelectorsFromExecutionContext() {
-    state.setDelegateSelectors(Collections.singletonList("primary"));
+  public void shouldPopulateRenderedDelegateSelectorsFromExecutionContext() {
+    final String runTimeValueAbc = "runTimeValueAbc";
+    state.setDelegateSelectors(Collections.singletonList("${workflow.variables.abc}"));
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
@@ -256,11 +266,12 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     when(executionContext.getEnv()).thenReturn(mock(Environment.class));
     when(infrastructureProvisionerService.getShellScriptProvisioner(anyString(), anyString()))
         .thenReturn(mock(ShellScriptInfrastructureProvisioner.class));
+    when(executionContext.renderExpression(anyString())).thenReturn(runTimeValueAbc);
     state.execute(executionContext);
 
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
     ShellScriptProvisionParameters populatedParameters =
         (ShellScriptProvisionParameters) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
-    assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList("primary"));
+    assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList(runTimeValueAbc));
   }
 }

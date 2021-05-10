@@ -1,11 +1,14 @@
 package io.harness.logstreaming;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static software.wings.beans.LogColor.Red;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogHelper.doneColoring;
 import static software.wings.beans.LogWeight.Bold;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.LogLevel;
 
 import software.wings.beans.LogHelper;
@@ -16,6 +19,7 @@ import javax.annotation.Nonnull;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(PIPELINE)
 public class LogStreamingHelper {
   public void colorLog(LogLine logLine) {
     String message = logLine.getMessage();
@@ -30,7 +34,7 @@ public class LogStreamingHelper {
 
   @Nonnull
   public String generateLogBaseKey(LinkedHashMap<String, String> logStreamingAbstractions) {
-    // Generate base log key that will be used for witing logs to log streaming service
+    // Generate base log key that will be used for writing logs to log streaming service
     StringBuilder logBaseKey = new StringBuilder();
     for (Map.Entry<String, String> entry : logStreamingAbstractions.entrySet()) {
       if (logBaseKey.length() != 0) {

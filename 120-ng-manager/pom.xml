@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>130-resource-group</artifactId>
+            <artifactId>830-resource-group</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -82,7 +82,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>909-access-control-sdk</artifactId>
+            <artifactId>948-access-control-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -97,17 +97,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-events-api</artifactId>
+            <artifactId>953-events-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-events-api-proto</artifactId>
+            <artifactId>920-ng-signup</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-ng-signup</artifactId>
+            <artifactId>950-telemetry</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -122,12 +122,27 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>958-migration-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>958-ng-file-service-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-notification-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>960-yaml-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>970-telemetry-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

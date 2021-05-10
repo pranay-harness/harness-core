@@ -6,12 +6,12 @@
                     debug_port="6013"
                     blaze-command="run"
                     keep-in-sync="true">
-        <blaze-target>//900-access-control-service:module</blaze-target>
+        <blaze-target>//925-access-control-service:module</blaze-target>
         <blaze-user-flag>
             --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"
         </blaze-user-flag>
         <blaze-user-exe-flag>server</blaze-user-exe-flag>
-        <blaze-user-exe-flag>$PROJECT_DIR$/../900-access-control-service/config.yml</blaze-user-exe-flag>
+        <blaze-user-exe-flag>$PROJECT_DIR$/../925-access-control-service/config.yml</blaze-user-exe-flag>
     </blaze-settings>
     <method v="2">
         <option name="Blaze.BeforeRunTask" enabled="true"/>

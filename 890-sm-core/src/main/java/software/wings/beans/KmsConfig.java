@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SecretManagerCapabilities.CAN_BE_DEFAULT_SM;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
@@ -10,6 +11,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -18,7 +20,11 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.delegate.task.utils.KmsUtils;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsManualCredentialConfig;
+import io.harness.secretmanagerclient.dto.awskms.BaseAwsKmsConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
@@ -40,6 +46,7 @@ import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
+@OwnedBy(PL)
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -132,6 +139,26 @@ public class KmsConfig extends SecretManagerConfig {
 
   @Override
   public SecretManagerConfigDTO toDTO(boolean maskSecrets) {
-    throw new UnsupportedOperationException();
+    AwsKmsConfigDTO awsKmsConfigDTO =
+        AwsKmsConfigDTO.builder().name(getName()).isDefault(isDefault()).encryptionType(getEncryptionType()).build();
+
+    BaseAwsKmsConfigDTO baseAwsKmsConfigDTO = populateBaseAwsKmsConfigDTO();
+
+    SecretManagerConfigMapper.updateNGSecretManagerMetadata(getNgMetadata(), awsKmsConfigDTO);
+    if (!maskSecrets) {
+      baseAwsKmsConfigDTO.setKmsArn(getKmsArn());
+      if (isNotEmpty(getAccessKey()) && isNotEmpty(getSecretKey())) {
+        AwsKmsManualCredentialConfig manualCredential =
+            (AwsKmsManualCredentialConfig) baseAwsKmsConfigDTO.getCredential();
+        manualCredential.setAccessKey(getAccessKey());
+        manualCredential.setSecretKey(getSecretKey());
+      }
+    }
+    awsKmsConfigDTO.setBaseAwsKmsConfigDTO(baseAwsKmsConfigDTO);
+    return awsKmsConfigDTO;
+  }
+
+  private BaseAwsKmsConfigDTO populateBaseAwsKmsConfigDTO() {
+    return BaseAwsKmsConfigDTO.builder().region(getRegion()).build();
   }
 }

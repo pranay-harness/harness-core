@@ -1,6 +1,6 @@
 package io.harness.engine.executions.node;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
@@ -11,11 +11,14 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
@@ -32,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -40,11 +44,13 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
+
+  @Getter private final Subject<StepStatusUpdate> stepStatusUpdateSubject = new Subject<>();
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -78,7 +84,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses) {
     Query query = query(where(NodeExecutionKeys.parentId).is(parentId))
-                      .addCriteria(where(NodeExecutionKeys.status).in(flowingStatuses));
+                      .addCriteria(where(NodeExecutionKeys.status).in(flowingStatuses))
+                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
     return mongoTemplate.find(query, NodeExecution.class);
   }
 
@@ -189,9 +196,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
    */
 
   @Override
-  public NodeExecution updateStatusWithOps(
-      @NonNull String nodeExecutionId, @NonNull Status status, Consumer<Update> ops) {
-    EnumSet<Status> allowedStartStatuses = StatusUtils.nodeAllowedStartSet(status);
+  public NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status status,
+      Consumer<Update> ops, EnumSet<Status> overrideStatusSet) {
+    EnumSet<Status> allowedStartStatuses =
+        isEmpty(overrideStatusSet) ? StatusUtils.nodeAllowedStartSet(status) : overrideStatusSet;
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).in(allowedStartStatuses));
     Update updateOps = new Update()
@@ -205,6 +213,12 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
       emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
+      stepStatusUpdateSubject.fireInform(StepStatusUpdate::onStepStatusUpdate,
+          StepStatusUpdateInfo.builder()
+              .nodeExecutionId(updated.getUuid())
+              .planExecutionId(updated.getAmbiance().getPlanExecutionId())
+              .status(updated.getStatus())
+              .build());
     }
     return updated;
   }
@@ -259,6 +273,13 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public List<NodeExecution> fetchNodeExecutionsByParentId(String nodeExecutionId, boolean oldRetry) {
+    Query query = query(where(NodeExecutionKeys.parentId).is(nodeExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
+    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override

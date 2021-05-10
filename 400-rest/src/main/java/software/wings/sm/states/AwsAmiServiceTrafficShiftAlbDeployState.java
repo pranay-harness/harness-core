@@ -23,6 +23,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -35,7 +36,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.AmiServiceTrafficShiftAlbSetupElement;
@@ -212,7 +212,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
       AwsAmiServiceTrafficShiftAlbDeployRequest request =
           createAwsAmiTrafficShiftDeployRequest(serviceSetupElement, awsAmiTrafficShiftAlbData, activity);
       createAndEnqueueDelegateTask(request, awsAmiTrafficShiftAlbData.getInfrastructureMapping().getEnvId(),
-          awsAmiTrafficShiftAlbData.getEnv().getEnvironmentType().name());
+          awsAmiTrafficShiftAlbData.getEnv().getEnvironmentType().name(), context);
     } catch (Exception exception) {
       return taskCreationFailureResponse(exception, activity.getUuid(), executionLogCallback);
     }
@@ -266,7 +266,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   }
 
   protected void createAndEnqueueDelegateTask(
-      AwsAmiServiceTrafficShiftAlbDeployRequest request, String envId, String envType) {
+      AwsAmiServiceTrafficShiftAlbDeployRequest request, String envId, String envType, ExecutionContext context) {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(request.getAccountId())
@@ -281,8 +281,11 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, envType)
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("AWS AMI service traffic shift ALB deploy task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
   }
 
   protected AwsAmiDeployStateExecutionData prepareStateExecutionData(
@@ -430,5 +433,10 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     // Do nothing on abort
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

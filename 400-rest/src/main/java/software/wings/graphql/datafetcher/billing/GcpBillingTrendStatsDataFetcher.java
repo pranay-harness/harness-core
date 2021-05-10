@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
@@ -18,6 +20,7 @@ import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import com.google.inject.Inject;
 import com.hazelcast.util.Preconditions;
+import graphql.schema.DataFetchingEnvironment;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
@@ -26,7 +29,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
     CloudBillingGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;
@@ -43,7 +47,8 @@ public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<Cl
 
   @Override
   protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
-      List<CloudBillingGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+      List<CloudBillingGroupBy> groupBy, List<QLBillingSortCriteria> sort,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     accountChecker.checkIsCeEnabled(accountId);
     Preconditions.checkFalse(isEmpty(filters), "Missing filters.");
     // find the start date from the conditions

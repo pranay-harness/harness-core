@@ -1,11 +1,15 @@
 package io.harness.ccm.commons.entities;
 
 import io.harness.annotation.StoreIn;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +25,11 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "CEMetadataRecordKeys")
 @StoreIn("events")
 public class CEMetadataRecord implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder().name("accountId").field(CEMetadataRecordKeys.accountId).unique(true).build())
+        .build();
+  }
   @Id private String uuid;
   private String accountId;
   private Boolean clusterDataConfigured;
@@ -30,5 +39,6 @@ public class CEMetadataRecord implements PersistentEntity, UuidAware, AccountAcc
   private Boolean gcpConnectorConfigured;
   private Boolean gcpDataPresent;
   private Boolean azureDataPresent;
+  private Boolean applicationDataPresent;
   private long lastUpdatedAt;
 }

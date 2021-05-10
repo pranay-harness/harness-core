@@ -1,18 +1,18 @@
 package io.harness.pms.pipeline.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PipelineServiceTestBase;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
-import io.harness.pms.filter.creation.FilterCreatorMergeService;
-import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
-import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
@@ -21,28 +21,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 @Slf4j
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({CommonStepInfo.class})
-@PowerMockIgnore({"javax.security.*", "org.apache.http.conn.ssl.", "javax.net.ssl.", "javax.crypto.*"})
+@OwnedBy(PIPELINE)
 public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
-  @Mock private PMSPipelineRepository pmsPipelineRepository;
-  @Mock private FilterCreatorMergeService filterCreatorMergeService;
   @Mock private PmsSdkInstanceService pmsSdkInstanceService;
-  @Mock private CommonStepInfo commonStepInfo;
+  @Mock private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
-  private String accountId = "accountId";
+  private final String accountId = "accountId";
+  StepCategory library;
+
+  @Before
+  public void setUp() {
+    StepCategory testStepCD =
+        StepCategory.builder()
+            .name("Single")
+            .stepsData(Collections.singletonList(StepData.builder().name("testStepCD").type("testStepCD").build()))
+            .stepCategories(Collections.emptyList())
+            .build();
+    StepCategory libraryDouble = StepCategory.builder()
+                                     .name("Double")
+                                     .stepsData(Collections.emptyList())
+                                     .stepCategories(Collections.singletonList(testStepCD))
+                                     .build();
+    List<StepCategory> list = new ArrayList<>();
+    list.add(libraryDouble);
+    library = StepCategory.builder().name("Library").stepsData(new ArrayList<>()).stepCategories(list).build();
+  }
+
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
@@ -62,8 +74,10 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                                       .build()));
     Mockito.when(pmsSdkInstanceService.getInstanceNameToSupportedSteps())
         .thenReturn(serviceInstanceNameToSupportedSteps);
-    PowerMockito.mockStatic(CommonStepInfo.class);
-    Mockito.when(commonStepInfo.getCommonSteps(accountId)).thenReturn(new ArrayList<>());
+    Mockito
+        .when(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory(
+            null, serviceInstanceNameToSupportedSteps.get("cd"), accountId))
+        .thenReturn(library);
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", null, accountId);
     String expected =
@@ -92,8 +106,14 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                                       .build()));
     Mockito.when(pmsSdkInstanceService.getInstanceNameToSupportedSteps())
         .thenReturn(serviceInstanceNameToSupportedSteps);
-    PowerMockito.mockStatic(CommonStepInfo.class);
-    Mockito.when(commonStepInfo.getCommonSteps(accountId)).thenReturn(new ArrayList<>());
+    Mockito
+        .when(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory(
+            "Terraform", serviceInstanceNameToSupportedSteps.get("cd"), accountId))
+        .thenReturn(StepCategory.builder()
+                        .name("Library")
+                        .stepsData(new ArrayList<>())
+                        .stepCategories(new ArrayList<>())
+                        .build());
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform", accountId);
     String expected =

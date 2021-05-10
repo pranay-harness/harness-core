@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
+import static io.harness.rule.OwnerRule.SAINATH;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
@@ -19,6 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
@@ -46,6 +49,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsRunTaskDeployCommandHandlerTest extends WingsBaseTest {
   @Mock private EcsDeployCommandTaskHelper mockEcsDeployCommandTaskHelper;
@@ -215,6 +219,51 @@ public class EcsRunTaskDeployCommandHandlerTest extends WingsBaseTest {
     assertThat(response.getErrorMessage()).isEqualTo(null);
     assertThat(ecsRunTaskDeployResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(ecsRunTaskDeployResponse.getOutput()).isEqualTo("");
+
+    // task with container with STOPPED status and exit code as null
+    doReturn(singletonList(taskWithStatusStopped))
+        .doReturn(singletonList(task))
+        .when(mockEcsDeployCommandTaskHelper)
+        .getTasksFromTaskArn(eq(awsConfig), anyString(), anyString(), eq(singletonList("taskArn1")), any(), any());
+
+    Container container = new Container();
+    container.setLastStatus("STOPPED");
+    container.setExitCode(null);
+    task.setContainers(singletonList(container));
+
+    response = ecsRunTaskDeployCommandHandler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+
+    // task with container with STOPPED status and exit code as 0
+    doReturn(singletonList(taskWithStatusStopped))
+        .doReturn(singletonList(task))
+        .when(mockEcsDeployCommandTaskHelper)
+        .getTasksFromTaskArn(eq(awsConfig), anyString(), anyString(), eq(singletonList("taskArn1")), any(), any());
+
+    container = new Container();
+    container.setLastStatus("STOPPED");
+    container.setExitCode(0);
+    task.setContainers(singletonList(container));
+
+    response = ecsRunTaskDeployCommandHandler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    // task with container with STOPPED status and exit code as 1
+    doReturn(singletonList(taskWithStatusStopped))
+        .doReturn(singletonList(task))
+        .when(mockEcsDeployCommandTaskHelper)
+        .getTasksFromTaskArn(eq(awsConfig), anyString(), anyString(), eq(singletonList("taskArn1")), any(), any());
+
+    container = new Container();
+    container.setLastStatus("STOPPED");
+    container.setExitCode(1);
+    task.setContainers(singletonList(container));
+
+    response = ecsRunTaskDeployCommandHandler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
@@ -305,5 +354,36 @@ public class EcsRunTaskDeployCommandHandlerTest extends WingsBaseTest {
     assertThat(ecsRunTaskDeployResponse.getOutput())
         .isEqualTo("Failed to execute command: Containers in some tasks failed and are showing non zero exit code\n"
             + " taskArn1 => containerArn => exit code : 1");
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testIsEcsTaskContainerFailed() {
+    Container container = new Container();
+
+    container.setExitCode(null);
+    container.setLastStatus("RUNNING");
+    assertThat(ecsRunTaskDeployCommandHandler.isEcsTaskContainerFailed(container)).isEqualTo(false);
+
+    container.setExitCode(0);
+    container.setLastStatus("RUNNING");
+    assertThat(ecsRunTaskDeployCommandHandler.isEcsTaskContainerFailed(container)).isEqualTo(false);
+
+    container.setExitCode(1);
+    container.setLastStatus("RUNNING");
+    assertThat(ecsRunTaskDeployCommandHandler.isEcsTaskContainerFailed(container)).isEqualTo(true);
+
+    container.setExitCode(null);
+    container.setLastStatus("STOPPED");
+    assertThat(ecsRunTaskDeployCommandHandler.isEcsTaskContainerFailed(container)).isEqualTo(true);
+
+    container.setExitCode(0);
+    container.setLastStatus("STOPPED");
+    assertThat(ecsRunTaskDeployCommandHandler.isEcsTaskContainerFailed(container)).isEqualTo(false);
+
+    container.setExitCode(1);
+    container.setLastStatus("STOPPED");
+    assertThat(ecsRunTaskDeployCommandHandler.isEcsTaskContainerFailed(container)).isEqualTo(true);
   }
 }

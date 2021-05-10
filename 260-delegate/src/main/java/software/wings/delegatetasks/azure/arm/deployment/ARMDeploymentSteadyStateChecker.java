@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.azure.arm.deployment;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -12,6 +13,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureBlueprintClient;
 import io.harness.azure.client.AzureManagementClient;
@@ -23,6 +25,7 @@ import io.harness.azure.model.blueprint.assignment.operation.AssignmentDeploymen
 import io.harness.azure.model.blueprint.assignment.operation.AssignmentJobCreatedResource;
 import io.harness.azure.model.blueprint.assignment.operation.AssignmentOperation;
 import io.harness.azure.model.blueprint.assignment.operation.AzureResourceManagerError;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 
@@ -35,9 +38,9 @@ import com.google.inject.Singleton;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.resources.DeploymentOperationProperties;
 import com.microsoft.azure.management.resources.implementation.DeploymentOperationInner;
+import java.time.Duration;
 import java.util.StringJoiner;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class ARMDeploymentSteadyStateChecker {
   @Inject protected TimeLimiter timeLimiter;
 
@@ -75,7 +79,8 @@ public class ARMDeploymentSteadyStateChecker {
         }
       };
 
-      timeLimiter.callWithTimeout(objectCallable, context.getSteadyCheckTimeoutInMinutes(), TimeUnit.MINUTES, true);
+      HTimeLimiter.callInterruptible(
+          timeLimiter, Duration.ofMinutes(context.getSteadyCheckTimeoutInMinutes()), objectCallable);
     } catch (UncheckedTimeoutException e) {
       String message = format("Timed out waiting for executing operation deployment - [%s], %n %s",
           context.getDeploymentName(), e.getMessage());
@@ -169,7 +174,8 @@ public class ARMDeploymentSteadyStateChecker {
         }
       };
 
-      timeLimiter.callWithTimeout(objectCallable, context.getSteadyCheckTimeoutInMinutes(), TimeUnit.MINUTES, true);
+      HTimeLimiter.callInterruptible(
+          timeLimiter, Duration.ofMinutes(context.getSteadyCheckTimeoutInMinutes()), objectCallable);
     } catch (UncheckedTimeoutException e) {
       String message = format("Timed out waiting for executing operation deployment - [%s], %n %s",
           context.getAssignmentName(), e.getMessage());

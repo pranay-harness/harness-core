@@ -3,6 +3,8 @@ package io.harness.perpetualtask.k8s.watch;
 import static java.util.Optional.ofNullable;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.perpetualtask.k8s.watch.Quantity.Builder;
 
@@ -16,6 +18,7 @@ import java.util.Objects;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CE)
 @UtilityClass
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)

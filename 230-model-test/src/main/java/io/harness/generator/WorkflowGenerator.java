@@ -44,6 +44,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
+import io.harness.beans.shared.ResourceConstraint;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureDefinitionGenerator.InfrastructureDefinitions;
@@ -55,7 +56,6 @@ import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
-import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;

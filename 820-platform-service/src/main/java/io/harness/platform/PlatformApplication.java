@@ -8,6 +8,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.platform.PlatformConfiguration.getPlatformServiceCombinedResourceClasses;
 import static io.harness.platform.audit.AuditServiceSetup.AUDIT_SERVICE;
 import static io.harness.platform.notification.NotificationServiceSetup.NOTIFICATION_SERVICE;
+import static io.harness.platform.resourcegroup.ResourceGroupServiceSetup.RESOURCE_GROUP_SERVICE;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
@@ -27,7 +28,10 @@ import io.harness.platform.audit.AuditServiceSetup;
 import io.harness.platform.notification.NotificationServiceModule;
 import io.harness.platform.notification.NotificationServiceSetup;
 import io.harness.platform.remote.HealthResource;
+import io.harness.platform.resourcegroup.ResourceGroupServiceModule;
+import io.harness.platform.resourcegroup.ResourceGroupServiceSetup;
 import io.harness.remote.NGObjectMapperHelper;
+import io.harness.request.RequestContextFilter;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
@@ -95,6 +99,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
         return getSwaggerConfiguration();
       }
     });
+    bootstrap.addCommand(new InspectCommand<>(this));
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -114,6 +119,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     GodInjector godInjector = new GodInjector();
     godInjector.put(NOTIFICATION_SERVICE,
         Guice.createInjector(new NotificationServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+    if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+      godInjector.put(RESOURCE_GROUP_SERVICE,
+          Guice.createInjector(new ResourceGroupServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+    }
     if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
       godInjector.put(AUDIT_SERVICE,
           Guice.createInjector(new AuditServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
@@ -124,9 +133,14 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     registerJerseyProviders(environment);
     registerJerseyFeatures(environment);
     registerAuthFilters(appConfig, environment);
+    registerRequestContextFilter(environment);
 
     new NotificationServiceSetup().setup(
         appConfig.getNotificationServiceConfig(), environment, godInjector.get(NOTIFICATION_SERVICE));
+    if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+      new ResourceGroupServiceSetup().setup(
+          appConfig.getResoureGroupServiceConfig(), environment, godInjector.get(RESOURCE_GROUP_SERVICE));
+    }
     if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
       new AuditServiceSetup().setup(appConfig.getAuditServiceConfig(), environment, godInjector.get(AUDIT_SERVICE));
     }
@@ -139,6 +153,9 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     if (Resource.isAcceptable(HealthResource.class)) {
       List<HealthService> healthServices = new ArrayList<>();
       healthServices.add(godInjector.get(NOTIFICATION_SERVICE).getInstance(HealthService.class));
+      if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+        healthServices.add(godInjector.get(RESOURCE_GROUP_SERVICE).getInstance(HealthService.class));
+      }
       if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
         healthServices.add(godInjector.get(AUDIT_SERVICE).getInstance(HealthService.class));
       }
@@ -176,6 +193,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
     defaultSwaggerBundleConfiguration.setTitle("Platform Service API Reference");
     return defaultSwaggerBundleConfiguration;
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void registerAuthFilters(PlatformConfiguration configuration, Environment environment) {

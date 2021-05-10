@@ -5,6 +5,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -18,9 +20,9 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.delegate.exceptionhandler.DelegateExceptionManager;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
-import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.ExceptionLogger;
 
@@ -35,6 +37,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTask {
   private String delegateHostname;
   @Getter private String delegateId;
@@ -46,6 +49,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Getter private ILogStreamingTaskClient logStreamingTaskClient;
   private Consumer<DelegateTaskResponse> consumer;
   private BooleanSupplier preExecute;
+  @Inject DelegateExceptionManager delegateExceptionManager;
 
   @Inject private DataCollectionExecutorService dataCollectionService;
 
@@ -88,6 +92,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
     ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder =
         ErrorNotifyResponseData.builder().delegateMetaInfo(delegateMetaInfo);
+
     try {
       log.info("Started executing task {}", taskId);
 
@@ -122,18 +127,14 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
                                 .errorMessage(ExceptionUtils.getMessage(exception))
                                 .build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
-    } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
-      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
-                                .errorMessage(ExceptionUtils.getMessage(exception))
-                                .build());
-      taskResponse.responseCode(ResponseCode.FAILED);
-    } catch (Throwable exception) {
-      log.error(format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
-          exception);
-      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
-                                .errorMessage(ExceptionUtils.getMessage(exception))
-                                .build());
+    } catch (Throwable throwable) {
+      if (!(throwable instanceof Exception) || !isSupportingErrorFramework()) {
+        log.error(
+            format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
+            throwable);
+      }
+      taskResponse.response(delegateExceptionManager.getResponseData(
+          throwable, errorNotifyResponseDataBuilder, isSupportingErrorFramework()));
       taskResponse.responseCode(ResponseCode.FAILED);
     } finally {
       if (consumer != null) {
@@ -153,6 +154,10 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         .delegateTaskId(getTaskId())
         .stateExecutionId(stateExecutionId)
         .build();
+  }
+
+  public boolean isSupportingErrorFramework() {
+    return false;
   }
 
   @Override

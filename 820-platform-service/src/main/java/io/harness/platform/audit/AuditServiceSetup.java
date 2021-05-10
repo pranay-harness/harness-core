@@ -4,6 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.platform.PlatformConfiguration.getAuditServiceResourceClasses;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.retention.AuditAccountSyncService;
+import io.harness.audit.retention.AuditRetentionIteratorHandler;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.health.HealthService;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.persistence.HPersistence;
@@ -30,6 +33,9 @@ public class AuditServiceSetup {
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
     registerHealthCheck(environment, injector);
+    registerManagedBeans(environment, injector);
+    registerIterators(injector);
+    registerScheduledJobs(injector);
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -52,5 +58,17 @@ public class AuditServiceSetup {
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
+  }
+
+  private void registerManagedBeans(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(AuditAccountSyncService.class));
+  }
+
+  private void registerIterators(Injector injector) {
+    injector.getInstance(AuditRetentionIteratorHandler.class).registerIterators();
+  }
+
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 }

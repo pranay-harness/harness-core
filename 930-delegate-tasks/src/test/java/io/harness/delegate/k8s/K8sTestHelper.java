@@ -19,6 +19,7 @@ public class K8sTestHelper {
   private static final String CONFIG_MAP = "configMap.yaml";
   private static final String DEPLOYMENT_CONFIG = "deployment-config.yaml";
   private static final String DEPLOYMENT = "deployment.yaml";
+  private static final String SERVICE = "service.yaml";
   private static final String CRD_OLD = "crd-old.yaml";
   private static final String CRD_NEW = "crd-new.yaml";
 
@@ -44,6 +45,11 @@ public class K8sTestHelper {
 
   public static KubernetesResource crdNew() throws IOException {
     String yamlFileContent = readResourceFileContent(CRD_NEW);
+    return getKubernetesResourceFromSpec(yamlFileContent);
+  }
+
+  public static KubernetesResource service() throws IOException {
+    String yamlFileContent = readResourceFileContent(SERVICE);
     return getKubernetesResourceFromSpec(yamlFileContent);
   }
 

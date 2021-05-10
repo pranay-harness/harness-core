@@ -1,7 +1,10 @@
 package io.harness.ccm.setup.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
@@ -18,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(CE)
 public class AwsCEInfraSetupHandler extends CEInfraSetupHandler {
   @Inject private AWSAccountService awsAccountService;
   @Inject private AwsEKSHelperService awsEKSHelperService;

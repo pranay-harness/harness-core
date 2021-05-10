@@ -14,6 +14,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.DelegateTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
@@ -63,6 +65,7 @@ import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.CV)
 public class DataCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   private DataCollectionPerpetualTaskExecutor dataCollector = new DataCollectionPerpetualTaskExecutor();
@@ -195,7 +198,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
     assertThat(dslCaptor.getValue()).isEqualTo(dsl);
     RuntimeParameters runtimeParameters = runtimeParams.getValue();
     assertThat(runtimeParameters.getBaseUrl()).isEqualTo(appDynamicsConnectorDTO.getControllerUrl());
-    assertThat(runtimeParameters.getCommonHeaders().size()).isEqualTo(1);
+    assertThat(runtimeParameters.getCommonHeaders().size()).isEqualTo(2);
     assertThat(runtimeParameters.getCommonHeaders().get("Authorization"))
         .isEqualTo("Basic "
             + Base64.encodeBase64String(
@@ -204,7 +207,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
                         new String(appDynamicsConnectorDTO.getPasswordRef().getDecryptedValue()))
                     .getBytes(StandardCharsets.UTF_8)));
     Map<String, Object> otherEnvVariables = runtimeParameters.getOtherEnvVariables();
-    assertThat(otherEnvVariables.size()).isEqualTo(4);
+    assertThat(otherEnvVariables.size()).isEqualTo(5);
     assertThat(otherEnvVariables.get("applicationName")).isEqualTo(dataCollectionInfo.getApplicationName());
     assertThat(otherEnvVariables.get("tierName")).isEqualTo(dataCollectionInfo.getTierName());
     assertThat(otherEnvVariables.get("collectHostData")).isEqualTo("false");

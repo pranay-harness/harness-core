@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.helpers.TriggerFilterStore;
@@ -46,7 +47,8 @@ public class GitWebhookEventToTriggerMapperTest extends CategoryTest {
     StatusRuntimeException statusRuntimeException = new StatusRuntimeException(UNAVAILABLE);
     doThrow(statusRuntimeException).when(webhookEventPayloadParser).parseEvent(event);
 
-    WebhookEventMappingResponse webhookEventMappingResponse = mapper.mapWebhookEventToTriggers(event);
+    WebhookEventMappingResponse webhookEventMappingResponse =
+        mapper.mapWebhookEventToTriggers(TriggerMappingRequestData.builder().triggerWebhookEvent(event).build());
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isTrue();
     assertThat(webhookEventMappingResponse.getWebhookEventResponse().isExceptionOccurred()).isTrue();
     assertThat(webhookEventMappingResponse.getWebhookEventResponse().getFinalStatus())

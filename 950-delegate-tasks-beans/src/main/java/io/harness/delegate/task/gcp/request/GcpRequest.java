@@ -1,10 +1,12 @@
 package io.harness.delegate.task.gcp.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -14,15 +16,13 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
+
 @Data
 @SuperBuilder
-
+@OwnedBy(CDP)
 public abstract class GcpRequest extends ConnectorTaskParams implements ExecutionCapabilityDemander {
-  public enum RequestType { VALIDATE; }
-  @NotNull private RequestType requestType;
   // Below 2 are NG specific.
   private List<EncryptedDataDetail> encryptionDetails;
   private GcpManualDetailsDTO gcpManualDetailsDTO;

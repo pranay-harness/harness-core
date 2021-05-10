@@ -143,4 +143,7 @@ enum DataFetcherEnum {
   pipelineResumeRuntime
   attachTag
   detachTag
+  tag
+  tagConnection
+  tagUsageConnection
 }

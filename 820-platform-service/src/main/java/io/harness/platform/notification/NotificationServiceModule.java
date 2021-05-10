@@ -10,6 +10,7 @@ import static io.harness.notification.constant.NotificationServiceConstants.SLAC
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -22,7 +23,6 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.queue.NGMongoQueueConsumer;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.core.UserClientModule;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.MongoNotificationRequest;
 import io.harness.notification.eventbackbone.MessageConsumer;
@@ -47,15 +47,20 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.platform.PlatformConfiguration;
 import io.harness.queue.QueueConsumer;
-import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NotificationRegistrars;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ExecutorModule;
+import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionModule;
+import io.harness.waiter.AbstractWaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -64,6 +69,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -72,6 +78,7 @@ import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -121,6 +128,7 @@ public class NotificationServiceModule extends AbstractModule {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NotificationRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -132,12 +140,24 @@ public class NotificationServiceModule extends AbstractModule {
 
       @Provides
       @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
+      }
+
+      @Provides
+      @Singleton
       MongoConfig mongoConfig() {
         return appConfig.getNotificationServiceConfig().getMongoConfig();
       }
     });
 
     install(ExecutorModule.getInstance());
+    install(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.MORPHIA).build();
+      }
+    });
     bind(ManagedScheduledExecutorService.class)
         .annotatedWith(Names.named("delegate-response"))
         .toInstance(new ManagedScheduledExecutorService("delegate-response"));
@@ -149,12 +169,13 @@ public class NotificationServiceModule extends AbstractModule {
       }
     });
     bind(HPersistence.class).to(MongoPersistence.class);
-    install(DelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
-        this.appConfig.getNotificationServiceConfig().getGrpcClientConfig().getTarget(),
-        this.appConfig.getNotificationServiceConfig().getGrpcClientConfig().getAuthority()));
+        this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getTarget(),
+        this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getAuthority()));
 
     install(VersionModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
 
     install(new NotificationPersistenceModule());
@@ -175,22 +196,6 @@ public class NotificationServiceModule extends AbstractModule {
     bind(NotificationService.class).to(NotificationServiceImpl.class);
     bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bindMessageConsumer();
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
   }
 
   @Provides

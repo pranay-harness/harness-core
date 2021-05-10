@@ -4,9 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.jira.deserializer.JiraCreateMetadataDeserializer;
+import io.harness.jira.deserializer.JiraIssueCreateMetadataDeserializer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -15,19 +16,18 @@ import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.codehaus.jackson.annotate.JsonTypeName;
 
 @OwnedBy(CDC)
 @Data
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("JiraCreateMeta")
-@JsonDeserialize(using = JiraCreateMetadataDeserializer.class)
+@JsonDeserialize(using = JiraIssueCreateMetadataDeserializer.class)
 public class JiraIssueCreateMetadataNG {
   Map<String, JiraProjectNG> projects = new HashMap<>();
-
-  public JiraIssueCreateMetadataNG() {}
 
   public JiraIssueCreateMetadataNG(JsonNode node) {
     addProjects(node.get("projects"));
@@ -58,7 +58,7 @@ public class JiraIssueCreateMetadataNG {
     }
     this.projects.values()
         .stream()
-        .filter(p -> p.getId().equals(projectKey))
+        .filter(p -> p.getKey().equals(projectKey))
         .forEach(p -> p.updateProjectStatuses(projectStatuses));
   }
 

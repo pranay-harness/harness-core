@@ -1,7 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
+
+Deprecated = True
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -15,14 +16,9 @@ shared_dependencies = [
     "//470-alert:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
-    "//860-orchestration-steps:module",
-    "//860-orchestration-visualization:module",
-    "//870-cg-yaml-beans:module",
-    "//870-orchestration:module",
-    "//876-orchestration-beans:module",
+    "//870-cg-yaml:module",
+    "//870-cg-orchestration:module",
     "//874-orchestration-delay:module",
-    "//878-pipeline-service-utilities:module",
-    "//882-pms-sdk-core:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
     "//920-delegate-agent-beans:module",
@@ -36,9 +32,7 @@ shared_dependencies = [
     "//950-command-library-common:module",
     "//950-common-entities:module",
     "//950-delegate-tasks-beans:module",
-    "//950-events-api:module",
-    "//950-events-api/src/main/proto:950_events_api_java_proto",
-    "//950-events-api/src/main/proto:950_events_api_proto",
+    "//953-events-api:module",
     "//950-events-framework:module",
     "//950-ng-core:module",
     "//950-ng-project-n-orgs:module",
@@ -46,6 +40,7 @@ shared_dependencies = [
     "//950-wait-engine:module",
     "//954-connector-beans:module",
     "//955-alert-beans:module",
+    "//959-file-service-commons:module",
     "//960-api-services:module",
     "//960-continuous-features:module",
     "//960-ng-core-beans:module",
@@ -226,7 +221,6 @@ shared_dependencies = [
     "@maven//:com_microsoft_azure_azure_client_runtime",
     "@maven//:com_microsoft_azure_azure_keyvault",
     "@maven//:com_microsoft_azure_azure_keyvault_core",
-    "@maven//:com_microsoft_azure_azure_keyvault_cryptography",
     "@maven//:com_microsoft_azure_azure_keyvault_webkey",
     "@maven//:com_microsoft_azure_azure_mgmt_appservice",
     "@maven//:com_microsoft_azure_azure_mgmt_batch",
@@ -257,7 +251,7 @@ shared_dependencies = [
     "@maven//:com_nimbusds_lang_tag",
     "@maven//:com_nimbusds_nimbus_jose_jwt",
     "@maven//:com_nimbusds_oauth2_oidc_sdk",
-    "@maven//:com_novemberain_quartz_mongodb",
+    "@maven//:com_novemberain_quartz_mongodb_harness_mongo_ssl",
     "@maven//:com_offbytwo_jenkins_jenkins_client",
     "@maven//:com_palominolabs_metrics_metrics_guice",
     "@maven//:com_segment_analytics_java_analytics",
@@ -367,7 +361,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
-    "@maven//:io_grpc_grpc_testing",
     "@maven//:io_gsonfire_gson_fire",
     "@maven//:io_jsonwebtoken_jjwt",
     "@maven//:io_kubernetes_client_java",
@@ -719,11 +712,11 @@ java_library(
         "@maven//:io_github_benas_random_beans",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:pl_pragmatists_JUnitParams",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     ],
 )
 
@@ -737,11 +730,10 @@ test_dependencies = shared_dependencies + [
     "@maven//:io_github_benas_random_beans",
     "@maven//:junit_junit",
     "@maven//:org_assertj_assertj_core",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     "@maven//:org_mockito_mockito_core",
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
+    "@maven//:io_grpc_grpc_testing",
 ]
 
 run_package_tests(
@@ -768,6 +760,4 @@ java_library(
     deps = test_dependencies,
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

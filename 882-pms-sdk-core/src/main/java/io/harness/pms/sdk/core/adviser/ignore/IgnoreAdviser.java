@@ -12,6 +12,7 @@ import io.harness.pms.contracts.advisers.NextStepAdvise;
 import io.harness.pms.contracts.advisers.NextStepAdvise.Builder;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
@@ -33,6 +34,7 @@ public class IgnoreAdviser implements Adviser {
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     IgnoreAdviserParameters parameters = extractParameters(advisingEvent);
     Builder builder = NextStepAdvise.newBuilder();
+    // Change here
     if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
       builder.setNextNodeId(parameters.getNextNodeId());
     }
@@ -43,11 +45,13 @@ public class IgnoreAdviser implements Adviser {
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
     IgnoreAdviserParameters parameters = extractParameters(advisingEvent);
+    boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
     FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
-      return !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
+      return canAdvise
+          && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
-    return true;
+    return canAdvise;
   }
 
   @NotNull

@@ -1,9 +1,13 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
 
@@ -15,6 +19,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.Set;
 
+@OwnedBy(DEL)
 public class DelegateServiceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -27,6 +32,7 @@ public class DelegateServiceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateInsightsSummary.class);
     set.add(DelegateTaskUsageInsights.class);
     set.add(DelegatePerpetualTaskUsageInsights.class);
+    set.add(PerpetualTaskRecord.class);
   }
 
   @Override

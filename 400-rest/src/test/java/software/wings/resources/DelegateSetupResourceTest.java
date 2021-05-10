@@ -30,6 +30,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -79,6 +81,7 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.ArgumentCaptor;
 
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateSetupResourceTest {
   private static String accountId = "ACCOUNT_ID";
   private static DelegateService delegateService = mock(DelegateService.class);
@@ -196,8 +199,8 @@ public class DelegateSetupResourceTest {
   @Category(UnitTests.class)
   public void shouldFetchDelegateSizes() {
     List<DelegateSizeDetails> delegateSizes = Collections.singletonList(DelegateSizeDetails.builder()
-                                                                            .size(DelegateSize.EXTRA_SMALL)
-                                                                            .label("Extra Small")
+                                                                            .size(DelegateSize.LAPTOP)
+                                                                            .label("Laptop")
                                                                             .replicas(1)
                                                                             .taskLimit(50)
                                                                             .cpu(0.5)

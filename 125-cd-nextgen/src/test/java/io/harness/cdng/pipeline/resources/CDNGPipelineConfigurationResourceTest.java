@@ -45,7 +45,7 @@ public class CDNGPipelineConfigurationResourceTest extends CategoryTest {
     assertThat(executionStrategyResponse.get(ServiceDefinitionType.KUBERNETES))
         .isEqualTo(Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN,
             ExecutionStrategyType.CANARY, ExecutionStrategyType.DEFAULT));
-    assertThat(executionStrategyResponse.get(ServiceDefinitionType.HELM))
+    assertThat(executionStrategyResponse.get(ServiceDefinitionType.NATIVE_HELM))
         .isEqualTo(Lists.newArrayList(ExecutionStrategyType.BASIC));
     assertThat(executionStrategyResponse.get(ServiceDefinitionType.PCF))
         .isEqualTo(Lists.newArrayList(

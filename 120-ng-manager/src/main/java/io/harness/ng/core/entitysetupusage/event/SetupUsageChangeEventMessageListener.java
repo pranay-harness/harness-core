@@ -2,10 +2,14 @@ package io.harness.ng.core.entitysetupusage.event;
 
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
+import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.ENVIRONMENT;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SECRETS;
+import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SERVICE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
@@ -29,12 +33,14 @@ import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.DX)
 @Slf4j
 @Singleton
 public class SetupUsageChangeEventMessageListener implements MessageListener {
   EntitySetupUsageService entitySetupUsageService;
   EntitySetupUsageEventDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
-  final Set<EntityTypeProtoEnum> entityTypesSupportedByNGCore = Sets.newHashSet(SECRETS, CONNECTORS);
+  final Set<EntityTypeProtoEnum> entityTypesSupportedByNGCore =
+      Sets.newHashSet(SECRETS, CONNECTORS, SERVICE, ENVIRONMENT);
 
   @Inject
   public SetupUsageChangeEventMessageListener(EntitySetupUsageService entitySetupUsageService,

@@ -23,6 +23,7 @@ import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.governance.GovernanceConfig.GovernanceConfigKeys;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -38,11 +39,12 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._950_EVENTS_API)
+@TargetModule(HarnessModule._953_EVENTS_API)
 public class DeploymentFreezeActivationHandler implements Handler<GovernanceConfig> {
   private static final int POOL_SIZE = 3;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject DeploymentFreezeUtils deploymentFreezeUtils;
+  @Inject GovernanceConfigService governanceConfigService;
   PersistenceIterator<GovernanceConfig> iterator;
   @Inject private MorphiaPersistenceRequiredProvider<GovernanceConfig> persistenceProvider;
   @Inject private AccountService accountService;
@@ -66,6 +68,7 @@ public class DeploymentFreezeActivationHandler implements Handler<GovernanceConf
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .persistenceProvider(persistenceProvider)
             .schedulingType(IRREGULAR_SKIP_MISSED)
+            .filterExpander(query -> query.field(GovernanceConfigKeys.enableNextIterations).equal(true))
             .throttleInterval(ofSeconds(45)));
 
     executor.submit(() -> iterator.process());
@@ -101,5 +104,7 @@ public class DeploymentFreezeActivationHandler implements Handler<GovernanceConf
         log.error("Failed to handle deployment freeze activation {}", freezeWindow.getName(), e);
       }
     });
+
+    governanceConfigService.resetEnableIterators(entity);
   }
 }

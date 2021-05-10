@@ -8,11 +8,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(PL)
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("org")
+@TypeAlias("OrgScope")
 public class OrgScope extends ResourceScope {
   @NotEmpty String accountIdentifier;
   @NotEmpty String orgIdentifier;

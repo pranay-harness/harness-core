@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
@@ -28,6 +29,7 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -65,10 +67,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(CDP)
 @NoArgsConstructor
 @Slf4j
 public class K8sBGRequestHandler extends K8sRequestHandler {
@@ -107,7 +109,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sBGDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
-            CollectionUtils.isEmpty(k8sBGDeployRequest.getValuesYamlList()), commandUnitsProgress),
+            k8sBGDeployRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         timeoutInMillis, k8sBGDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
@@ -153,30 +155,40 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    k8sBGBaseHandler.wrapUp(k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress), client);
+    LogCallback wrapUpLogCallback =
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress);
+    try {
+      k8sBGBaseHandler.wrapUp(k8sDelegateTaskParams, wrapUpLogCallback, client);
+      final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(
+          timeoutInMillis, kubernetesConfig, managedWorkload, primaryColor, stageColor, releaseName);
 
-    final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(
-        timeoutInMillis, kubernetesConfig, managedWorkload, primaryColor, stageColor, releaseName);
+      currentRelease.setManagedWorkloadRevision(
+          k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
+      releaseHistory.setReleaseStatus(Status.Succeeded);
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+          kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
 
-    currentRelease.setManagedWorkloadRevision(
-        k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
-    releaseHistory.setReleaseStatus(Status.Succeeded);
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
-        kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
+      K8sBGDeployResponse k8sBGDeployResponse = K8sBGDeployResponse.builder()
+                                                    .releaseNumber(currentRelease.getNumber())
+                                                    .k8sPodList(podList)
+                                                    .primaryServiceName(primaryService.getResourceId().getName())
+                                                    .stageServiceName(stageService.getResourceId().getName())
+                                                    .stageColor(stageColor)
+                                                    .primaryColor(primaryColor)
+                                                    .build();
 
-    K8sBGDeployResponse k8sBGDeployResponse = K8sBGDeployResponse.builder()
-                                                  .releaseNumber(currentRelease.getNumber())
-                                                  .k8sPodList(podList)
-                                                  .primaryServiceName(primaryService.getResourceId().getName())
-                                                  .stageServiceName(stageService.getResourceId().getName())
-                                                  .stageColor(stageColor)
-                                                  .primaryColor(primaryColor)
-                                                  .build();
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-        .k8sNGTaskResponse(k8sBGDeployResponse)
-        .build();
+      wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return K8sDeployResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .k8sNGTaskResponse(k8sBGDeployResponse)
+          .build();
+    } catch (Exception e) {
+      wrapUpLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      releaseHistory.setReleaseStatus(Status.Failed);
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+          kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
+      throw e;
+    }
   }
 
   private K8sDeployResponse getFailureResponse() {

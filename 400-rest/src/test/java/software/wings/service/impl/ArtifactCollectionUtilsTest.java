@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -22,6 +23,8 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.service.impl.ArtifactoryBuildServiceImpl.MANUAL_PULL_ARTIFACTORY_LIMIT;
+import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -36,6 +39,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -84,6 +90,8 @@ import org.mockito.Mockito;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   private final SettingsService settingsService = Mockito.mock(SettingsServiceImpl.class);
   @Mock private ArtifactStreamService artifactStreamService;
@@ -520,6 +528,20 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     for (ArtifactStreamType artifactStreamType : unsupported) {
       assertThat(ArtifactCollectionUtils.supportsCleanup(artifactStreamType.name())).isFalse();
     }
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetLimit() {
+    assertThat(ArtifactCollectionUtils.getLimit(ARTIFACTORY.name(), BuildSourceRequestType.GET_BUILDS, true))
+        .isEqualTo(ARTIFACT_RETENTION_SIZE);
+    assertThat(ArtifactCollectionUtils.getLimit(ARTIFACTORY.name(), BuildSourceRequestType.GET_BUILDS, false))
+        .isEqualTo(MANUAL_PULL_ARTIFACTORY_LIMIT);
+    assertThat(ArtifactCollectionUtils.getLimit(NEXUS.name(), BuildSourceRequestType.GET_BUILDS, false)).isEqualTo(-1);
+    assertThat(
+        ArtifactCollectionUtils.getLimit(ARTIFACTORY.name(), BuildSourceRequestType.GET_LAST_SUCCESSFUL_BUILD, false))
+        .isEqualTo(-1);
   }
 
   private DockerArtifactStream constructDockerArtifactStream() {

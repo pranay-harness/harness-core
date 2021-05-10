@@ -4,12 +4,13 @@ package io.harness.gitsync;
 
 option java_multiple_files = true;
 
-import "io/harness/eventsframework/schemas/entity/entity_type.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "io/harness/gitsync/change_type.proto";
 import "google/protobuf/wrappers.proto";
 
 service GitToHarnessService {
   rpc syncRequestFromGit(ChangeSet) returns (ProcessingResponse);
+  rpc process(GitToHarnessProcessRequest) returns (ProcessingResponse);
 }
 
 message ChangeSets {
@@ -25,6 +26,7 @@ message ChangeSet {
   google.protobuf.StringValue commit_id = 5;
   google.protobuf.StringValue object_id = 6;
   io.harness.gitsync.ChangeType change_type = 7;
+  string filePath = 8;
 }
 
 message ProcessingResponse {
@@ -54,4 +56,17 @@ enum ProcessingFailureStage {
   SORT_STAGE = 1;
   PROCESS_STAGE = 2;
   POST_PROCESS_STAGE = 3;
+}
+
+message GitToHarnessInfo {
+  string accountIdentifier = 1;
+  string yamlGitConfigOrgIdentifier = 2;
+  string yamlGitConfigProjectIdentifier = 3;
+  string yamlGitConfigId = 4;
+  string branch = 5;
+}
+
+message GitToHarnessProcessRequest {
+  ChangeSets change_sets = 1;
+  GitToHarnessInfo gitToHarnessBranchInfo = 2;
 }

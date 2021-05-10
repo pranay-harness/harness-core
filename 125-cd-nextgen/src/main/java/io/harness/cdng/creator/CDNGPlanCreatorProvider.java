@@ -3,16 +3,18 @@ package io.harness.cdng.creator;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
-import io.harness.cdng.creator.plan.rollback.RollbackPMSPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
+import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.cdng.creator.variables.ShellScriptStepVariableCreator;
+import io.harness.cdng.provision.terraform.variablecreator.TerraformStepsVariableCreator;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.sdk.core.pipeline.variables.ExecutionVariableCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.variables.VariableCreator;
@@ -32,7 +34,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new DeploymentStagePMSPlanCreator());
-    planCreators.add(new RollbackPMSPlanCreator());
     planCreators.add(new CDPMSStepPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
@@ -42,6 +43,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<FilterJsonCreator> getFilterJsonCreators() {
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
     filterJsonCreators.add(new DeploymentStageFilterJsonCreator());
+    filterJsonCreators.add(new CDPMSStepFilterJsonCreator());
     injectorUtils.injectMembers(filterJsonCreators);
 
     return filterJsonCreators;
@@ -51,7 +53,9 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<VariableCreator> getVariableCreators() {
     List<VariableCreator> variableCreators = new ArrayList<>();
     variableCreators.add(new DeploymentStageVariableCreator());
+    variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new K8sStepVariableCreator());
+    variableCreators.add(new TerraformStepsVariableCreator());
     variableCreators.add(new ShellScriptStepVariableCreator());
     return variableCreators;
   }

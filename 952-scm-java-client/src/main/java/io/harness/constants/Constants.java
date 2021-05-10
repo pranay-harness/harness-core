@@ -1,5 +1,9 @@
 package io.harness.constants;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(DX)
 public interface Constants {
   String X_GIT_HUB_EVENT = "X-GitHub-Event";
   String X_GIT_LAB_EVENT = "X-Gitlab-Event";

@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.StepTypeLookupService;
 import io.harness.logging.AutoLogContext;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEventLog;
@@ -21,7 +22,7 @@ import java.util.Collections;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class OrchestrationEventEmitter {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
@@ -35,13 +36,7 @@ public class OrchestrationEventEmitter {
       Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
       subject.registerAll(handlers);
       subject.handleEventSync(event);
-      orchestrationEventLogRepository.save(
-          OrchestrationEventLog.builder()
-              .createdAt(System.currentTimeMillis())
-              .event(event)
-              .planExecutionId(event.getAmbiance().getPlanExecutionId())
-              .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(10)).toInstant()))
-              .build());
+      populateEventLog(event);
       if (stepTypeLookupService == null || event.getNodeExecutionProto() == null) {
         orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME), event);
       } else {
@@ -59,6 +54,21 @@ public class OrchestrationEventEmitter {
       }
     } catch (Exception ex) {
       log.error("Failed to create orchestration event", ex);
+      throw ex;
+    }
+  }
+
+  private void populateEventLog(OrchestrationEvent event) {
+    if (event.getEventType() == OrchestrationEventType.NODE_EXECUTION_UPDATE
+        || event.getEventType() == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE
+        || event.getEventType() == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
+      orchestrationEventLogRepository.save(
+          OrchestrationEventLog.builder()
+              .createdAt(System.currentTimeMillis())
+              .event(event)
+              .planExecutionId(event.getAmbiance().getPlanExecutionId())
+              .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(14)).toInstant()))
+              .build());
     }
   }
 }

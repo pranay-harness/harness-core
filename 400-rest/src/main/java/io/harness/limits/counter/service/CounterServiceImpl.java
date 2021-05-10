@@ -1,5 +1,8 @@
 package io.harness.limits.counter.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.limits.Action;
 import io.harness.limits.Counter;
 import io.harness.limits.Counter.CounterKeys;
@@ -10,6 +13,7 @@ import com.google.inject.Inject;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(PL)
 public class CounterServiceImpl implements CounterService {
   @Inject private WingsPersistence wingsPersistence;
 

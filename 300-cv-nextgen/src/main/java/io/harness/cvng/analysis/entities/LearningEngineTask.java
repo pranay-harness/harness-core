@@ -1,10 +1,10 @@
 package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -40,13 +40,13 @@ import org.mongodb.morphia.annotations.Id;
 public abstract class LearningEngineTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(SortCompoundMongoIndex.builder()
+        .add(CompoundMongoIndex.builder()
                  .name("query_idx")
                  .unique(false)
                  .field(LearningEngineTaskKeys.taskStatus)
                  .field(LearningEngineTaskKeys.taskPriority)
                  .build())
-        .add(SortCompoundMongoIndex.builder()
+        .add(CompoundMongoIndex.builder()
                  .name("trend_idx")
                  .unique(false)
                  .field(LearningEngineTaskKeys.verificationTaskId)

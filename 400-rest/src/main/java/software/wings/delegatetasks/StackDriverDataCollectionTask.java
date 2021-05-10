@@ -224,7 +224,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
       Monitoring monitoring =
           gcpHelperService.getMonitoringService(dataCollectionInfo.getGcpConfig().getServiceAccountKeyFileContent(),
-              projectId, dataCollectionInfo.getGcpConfig().isUseDelegate());
+              projectId, dataCollectionInfo.getGcpConfig().isUseDelegateSelectors());
       dataFetchParameters.setProjectId(projectId);
       dataFetchParameters.setMonitoring(monitoring);
 

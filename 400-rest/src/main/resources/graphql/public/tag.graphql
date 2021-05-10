@@ -41,3 +41,42 @@ input TagAggregation {
   entityType: EntityType
   tagName: String
 }
+
+input TagEntityFilter {
+  tagId: IdFilter
+  tagName: IdFilter
+}
+
+input TagUsageFilter {
+  entityType: EntityTypeFilter
+  tagName: IdFilter
+  tagValue: IdFilter
+}
+
+extend type Query {
+  # Get tag details using tag uuid
+  tag(tagId: String!): TagEntity @dataFetcher(name: tag)
+  # Get tag details using tag name
+  tagByName(name: String!): TagEntity @dataFetcher(name: tag)
+  # Get the list of tags. This returns paginated data.
+  tags(filters: [TagEntityFilter], limit: Int!, offset: Int): TagConnection @dataFetcher(name: tagConnection)
+}
+
+type TagConnection {
+  pageInfo: PageInfo
+  nodes: [TagEntity]
+}
+
+type TagUsageConnection {
+  pageInfo: PageInfo
+  nodes: [TagLink]
+}
+
+type TagEntity {
+  id: String
+  name: String
+  createdAt: DateTime
+  createdBy: User
+  usages(filters: [TagUsageFilter], limit: Int!, offset: Int): TagUsageConnection
+    @dataFetcher(name: tagUsageConnection, contextFieldArgsMap: "{ \"Tag\": \"name\"}")
+}

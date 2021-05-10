@@ -15,6 +15,7 @@ import static software.wings.beans.TaskType.JIRA;
 import static java.util.stream.Collectors.toMap;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -30,7 +31,6 @@ import io.harness.jira.JiraField;
 import io.harness.jira.JiraIssueType;
 import io.harness.jira.JiraProjectData;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.jira.JiraExecutionData;

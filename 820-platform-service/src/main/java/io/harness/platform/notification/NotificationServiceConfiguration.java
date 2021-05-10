@@ -16,11 +16,11 @@ import lombok.experimental.FieldDefaults;
 
 @OwnedBy(PL)
 @Value
-@Builder
+@Builder(toBuilder = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationServiceConfiguration {
   @JsonProperty("mongo") MongoConfig mongoConfig;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("seedDataConfiguration") private SeedDataConfiguration seedDataConfiguration;
-  @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
+  @JsonProperty("delegateServiceGrpcConfig") private GrpcClientConfig delegateServiceGrpcConfig;
 }

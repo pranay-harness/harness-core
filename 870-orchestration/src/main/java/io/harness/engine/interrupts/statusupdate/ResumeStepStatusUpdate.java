@@ -1,60 +1,34 @@
 package io.harness.engine.interrupts.statusupdate;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.execution.Status.PAUSED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.interrupts.InterruptService;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.PlanExecution;
-import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.execution.Status;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class ResumeStepStatusUpdate implements StepStatusUpdate {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private OrchestrationEventEmitter eventEmitter;
-  @Inject private InterruptService interruptService;
 
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    boolean resumePlan =
-        resumeParents(stepStatusUpdateInfo.getNodeExecutionId(), stepStatusUpdateInfo.getInterruptId());
-    if (resumePlan) {
-      PlanExecution planExecution = planExecutionService.get(stepStatusUpdateInfo.getPlanExecutionId());
-      planExecutionService.updateStatus(planExecution.getUuid(), RUNNING);
-    }
-  }
-
-  private boolean resumeParents(String nodeExecutionId, String interruptId) {
-    // Update Status
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution = nodeExecutionService.get(stepStatusUpdateInfo.getNodeExecutionId());
     if (nodeExecution.getParentId() == null) {
-      return true;
+      planExecutionService.updateCalculatedStatus(stepStatusUpdateInfo.getPlanExecutionId());
+      return;
     }
     NodeExecution parent = nodeExecutionService.get(nodeExecution.getParentId());
     if (parent.getStatus() != PAUSED) {
-      return true;
+      return;
     }
-    Interrupt interrupt = interruptService.get(interruptId);
-    nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), RUNNING,
-        ops
-        -> ops.addToSet(NodeExecutionKeys.interruptHistories,
-            InterruptEffect.builder()
-                .interruptId(interruptId)
-                .tookEffectAt(System.currentTimeMillis())
-                .interruptType(InterruptType.RESUME_ALL)
-                .interruptConfig(interrupt.getInterruptConfig())
-                .build()));
-    return resumeParents(nodeExecution.getParentId(), interruptId);
+    nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), RUNNING, null, EnumSet.noneOf(Status.class));
   }
 }

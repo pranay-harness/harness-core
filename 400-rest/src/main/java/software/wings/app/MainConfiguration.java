@@ -1,11 +1,17 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
 import io.harness.config.DatadogConfig;
 import io.harness.config.GcpMarketplaceConfig;
@@ -76,12 +82,12 @@ import lombok.EqualsAndHashCode;
 
 /**
  * Used to load all the application configuration.
- *
- * @author Rishi
  */
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
+@OwnedBy(PL)
 public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
   @JsonProperty
   private AssetsConfiguration assetsConfiguration =
@@ -96,7 +102,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("elasticsearch")
   private ElasticsearchConfig elasticsearchConfig = ElasticsearchConfig.builder().build();
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
-  @JsonProperty(value = "userChangeStreamEnabled") private boolean isUserChangeStreamEnabled;
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
@@ -127,6 +132,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
+  @JsonProperty("deploymentClusterName") private String deploymentClusterName;
   @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
@@ -171,6 +177,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

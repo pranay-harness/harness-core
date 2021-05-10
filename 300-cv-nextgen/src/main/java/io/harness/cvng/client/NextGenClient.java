@@ -1,9 +1,14 @@
 package io.harness.cvng.client;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.OrganizationResponse;
+import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
@@ -16,7 +21,7 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-
+@OwnedBy(HarnessTeam.CV)
 public interface NextGenClient {
   String CONNECTOR_BASE_PATH = "connectors";
 
@@ -29,9 +34,9 @@ public interface NextGenClient {
       @Query("accountIdentifier") String accountIdentifier, @Query("orgIdentifier") @NotNull String orgIdentifier,
       @Query("projectIdentifier") @NotNull String projectIdentifier);
 
-  @GET("environments/{environmentIdentifier}")
-  Call<ResponseDTO<EnvironmentResponseDTO>> getEnvironment(@Path("environmentIdentifier") String environmentIdentifier,
-      @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
+  @GET("environmentsV2/{environmentIdentifier}")
+  Call<ResponseDTO<EnvironmentResponse>> getEnvironment(@Path("environmentIdentifier") String environmentIdentifier,
+      @Query("accountIdentifier") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
 
   @GET("services/{serviceIdentifier}")
@@ -50,4 +55,12 @@ public interface NextGenClient {
       @Query("size") int size, @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier, @Query("envIdentifiers") Set<String> envIdentifiers,
       @Query("sort") List<String> sort);
+
+  @GET("projects/{projectIdentifier}")
+  Call<ResponseDTO<ProjectResponse>> getProject(@Path("projectIdentifier") String projectIdentifier,
+      @Query("accountIdentifier") String accountId, @Query("orgIdentifier") String orgIdentifier);
+
+  @GET("organizations/{orgIdentifier}")
+  Call<ResponseDTO<OrganizationResponse>> getOrganization(
+      @Path("orgIdentifier") String orgIdentifier, @Query("accountIdentifier") String accountId);
 }

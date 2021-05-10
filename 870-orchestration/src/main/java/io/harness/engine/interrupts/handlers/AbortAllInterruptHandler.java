@@ -20,9 +20,8 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.waiter.WaitNotifyEngine;
@@ -30,6 +29,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -86,8 +86,10 @@ public class AbortAllInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
     Interrupt updatedInterrupt = interruptService.markProcessing(interrupt.getUuid());
+    EnumSet<Status> flowingStatuses = EnumSet.copyOf(StatusUtils.brokeStatuses());
+    flowingStatuses.addAll(StatusUtils.finalizableStatuses());
     List<NodeExecution> allNodeExecutions = nodeExecutionService.findAllChildrenWithStatusIn(
-        interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(), StatusUtils.finalizableStatuses(), true);
+        interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(), flowingStatuses, true);
     List<String> targetIds = allNodeExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.toList());
     if (!abortHelper.markAbortingStateForParent(
             updatedInterrupt, StatusUtils.finalizableStatuses(), allNodeExecutions)) {
@@ -96,16 +98,6 @@ public class AbortAllInterruptHandler implements InterruptHandler {
 
     List<NodeExecution> discontinuingNodeExecutions = nodeExecutionService.fetchNodeExecutionsByStatusAndIdIn(
         updatedInterrupt.getPlanExecutionId(), DISCONTINUING, targetIds);
-
-    nodeExecutionService.update(nodeExecutionId,
-        ops
-        -> ops.addToSet(NodeExecutionKeys.interruptHistories,
-            InterruptEffect.builder()
-                .interruptType(interrupt.getType())
-                .tookEffectAt(System.currentTimeMillis())
-                .interruptId(interrupt.getUuid())
-                .interruptConfig(interrupt.getInterruptConfig())
-                .build()));
 
     if (isEmpty(discontinuingNodeExecutions)) {
       log.warn(

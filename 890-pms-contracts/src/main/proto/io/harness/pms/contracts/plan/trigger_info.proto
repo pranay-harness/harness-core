@@ -20,4 +20,5 @@ enum TriggerType {
   MANUAL = 1;
   WEBHOOK = 2;
   WEBHOOK_CUSTOM = 3;
+  SCHEDULER_CRON = 4;
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -37,7 +38,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -48,6 +51,7 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
 import io.harness.delegate.beans.Delegate;
@@ -208,6 +212,9 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(_955_ACCOUNT_MGMT)
+@BreakDependencyOn("io.harness.delegate.beans.Delegate")
+@BreakDependencyOn("software.wings.service.impl.DelegateConnectionDao")
 public class AccountServiceImpl implements AccountService {
   private static final SecureRandom random = new SecureRandom();
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
@@ -454,6 +461,8 @@ public class AccountServiceImpl implements AccountService {
       featureFlagService.enableAccount(FeatureName.CFNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CING_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CVNG_ENABLED, account.getUuid());
+    } else if (account.isCreatedFromNG()) {
+      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
     }
   }
 
@@ -497,6 +506,24 @@ public class AccountServiceImpl implements AccountService {
     }
     LicenseUtils.decryptLicenseInfo(account, false);
     return account;
+  }
+
+  @Override
+  public AccountDetails getDetails(String accountId) {
+    Account account = wingsPersistence.get(Account.class, accountId);
+    if (account == null) {
+      throw new AccountNotFoundException(
+          "Account is not found for the given id:" + accountId, null, ACCOUNT_DOES_NOT_EXIST, Level.ERROR, USER, null);
+    }
+    LicenseUtils.decryptLicenseInfo(account, false);
+    AccountDetails accountDetails = new AccountDetails();
+    accountDetails.setAccountId(accountId);
+    accountDetails.setAccountName(account.getAccountName());
+    accountDetails.setCompanyName(account.getCompanyName());
+    accountDetails.setCluster(mainConfiguration.getDeploymentClusterName());
+    accountDetails.setLicenseInfo(account.getLicenseInfo());
+    accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
+    return accountDetails;
   }
 
   @Override
@@ -583,14 +610,14 @@ public class AccountServiceImpl implements AccountService {
    */
   @Override
   public String suggestAccountName(@NotNull String accountName) {
-    if (!isDuplicateAccountName(accountName)) {
+    if (!exists(accountName)) {
       return accountName;
     }
     log.debug("Account name '{}' already in use, generating new unique account name", accountName);
     int count = 0;
     while (count < NUM_OF_RETRIES_TO_GENERATE_UNIQUE_ACCOUNT_NAME) {
       String newAccountName = accountName + "-" + (1000 + random.nextInt(9000));
-      if (!isDuplicateAccountName(newAccountName)) {
+      if (!exists(newAccountName)) {
         return newAccountName;
       }
       count++;
@@ -750,7 +777,7 @@ public class AccountServiceImpl implements AccountService {
   public boolean exists(String accountName) {
     return wingsPersistence.createQuery(Account.class, excludeAuthority)
                .field(AccountKeys.accountName)
-               .equal(accountName)
+               .equalIgnoreCase(accountName)
                .getKey()
         != null;
   }
@@ -817,6 +844,10 @@ public class AccountServiceImpl implements AccountService {
 
     if (account.getServiceGuardLimit() != null) {
       updateOperations.set(AccountKeys.serviceGuardLimit, account.getServiceGuardLimit());
+    }
+
+    if (account.getDefaultExperience() != null) {
+      updateOperations.set(AccountKeys.defaultExperience, account.getDefaultExperience());
     }
 
     wingsPersistence.update(account, updateOperations);
@@ -1757,5 +1788,23 @@ public class AccountServiceImpl implements AccountService {
           account.getDataRetentionDurationMs() == 0 ? ofDays(183).toMillis() : account.getDataRetentionDurationMs());
     });
     return accounts;
+  }
+
+  @Override
+  public boolean enableHarnessUserGroupAccess(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    account.setHarnessSupportAccessAllowed(true);
+    wingsPersistence.save(account);
+    return true;
+  }
+
+  @Override
+  public boolean disableHarnessUserGroupAccess(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    account.setHarnessSupportAccessAllowed(false);
+    wingsPersistence.save(account);
+    return true;
   }
 }

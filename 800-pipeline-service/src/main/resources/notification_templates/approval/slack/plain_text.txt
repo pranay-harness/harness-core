@@ -1,0 +1,14 @@
+{
+    "text": "
+*Approval Required for ${pipelineName} in ${projectName}.*
+This is a notification that the pipeline <${pipelineExecutionLink}|${pipelineName}> is waiting for your approval.
+*Approval message:* ${approvalMessage}
+*Pipeline execution summary:*
+*Started At:* ${startedAt}
+*Triggered By:* ${triggeredBy}
+*Finished Stage(s):* ${finishedStages}
+*Running Stage(s):* ${runningStages}
+*Upcoming Stage(s):* ${upcomingStages}
+*Time remaining for approval:* ${timeRemainingForApproval}
+"
+}

@@ -9,11 +9,17 @@ import io.harness.jira.JiraIssueNG;
 @OwnedBy(CDC)
 public class JiraExpressionEvaluator extends EngineExpressionEvaluator {
   public static final String ISSUE_IDENTIFIER = "issue";
-  JiraIssueNG jiraIssueNG;
+
+  private final JiraIssueNG jiraIssueNG;
 
   public JiraExpressionEvaluator(JiraIssueNG jiraIssueNG) {
     super(null);
     this.jiraIssueNG = jiraIssueNG;
+  }
+
+  @Override
+  protected void initialize() {
+    super.initialize();
     addToContext(ISSUE_IDENTIFIER, jiraIssueNG.getFields());
   }
 }

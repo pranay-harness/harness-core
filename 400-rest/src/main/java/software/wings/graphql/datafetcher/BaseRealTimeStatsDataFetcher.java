@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -8,6 +9,7 @@ import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
@@ -36,6 +38,7 @@ import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(DX)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
   default QLData getStackedData(NameService nameService, WingsPersistence wingsPersistence, List<String> groupBy,
@@ -49,7 +52,7 @@ public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
     wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(entityClass)
         .match(query)
-        .group(Group.id(getFirstLevelGrouping(entityIdColumn), grouping(secondLevelEntityIdColumn)),
+        .group(Group.id(getFirstLevelGrouping(entityIdColumn), getFirstLevelGrouping(secondLevelEntityIdColumn)),
             grouping("count", new Accumulator("$sum", 1)),
             grouping("firstLevelInfo",
                 grouping("$first", projection("id", entityIdColumn), projection("name", entityIdColumn))),
@@ -154,10 +157,12 @@ public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
     List<QLStackedDataPoint> stackedDataPointList = new ArrayList<>();
 
     Set<String> firstLevelIds = aggregatedDataList.stream()
+                                    .filter(aggregationData -> aggregationData.getFirstLevelInfo().getId() != null)
                                     .map(aggregationData -> aggregationData.getFirstLevelInfo().getId())
                                     .collect(Collectors.toSet());
 
     Set<String> secondLevelIds = aggregatedDataList.stream()
+                                     .filter(aggregationData -> aggregationData.getSecondLevelInfo().getId() != null)
                                      .map(aggregationData -> aggregationData.getSecondLevelInfo().getId())
                                      .collect(Collectors.toSet());
 
@@ -176,8 +181,8 @@ public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
       QLDataPoint secondLevelDataPoint =
           QLDataPoint.builder().key(secondLevelRef).value(aggregatedData.getCount()).build();
 
-      boolean sameAsPrevious =
-          prevStackedDataPoint != null && prevStackedDataPoint.getKey().getId().equals(firstLevelInfo.getId());
+      boolean sameAsPrevious = prevStackedDataPoint != null && prevStackedDataPoint.getKey().getId() != null
+          && prevStackedDataPoint.getKey().getId().equals(firstLevelInfo.getId());
       if (sameAsPrevious) {
         prevStackedDataPoint.getValues().add(secondLevelDataPoint);
       } else {

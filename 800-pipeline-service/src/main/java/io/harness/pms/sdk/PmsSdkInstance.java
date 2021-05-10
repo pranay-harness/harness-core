@@ -1,8 +1,10 @@
 package io.harness.pms.sdk;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -37,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("pmsSdkInstances")
 @TypeAlias("pmsSdkInstances")
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.PMS)
 public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 

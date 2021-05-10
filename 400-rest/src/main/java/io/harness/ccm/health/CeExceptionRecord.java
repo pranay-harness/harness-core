@@ -1,6 +1,9 @@
 package io.harness.ccm.health;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -25,6 +28,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "ceExceptionRecord", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "CeExceptionRecordKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CE)
 public final class CeExceptionRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

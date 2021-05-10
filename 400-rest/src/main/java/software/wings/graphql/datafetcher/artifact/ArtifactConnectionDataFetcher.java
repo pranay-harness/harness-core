@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.CreatedAtAware;
@@ -26,6 +29,7 @@ import java.util.List;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ArtifactConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLArtifactFilter, QLNoOpSortCriteria, QLArtifactConnection> {

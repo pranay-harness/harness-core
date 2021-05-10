@@ -8,6 +8,7 @@ rules_pmd_dependencies()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
+    sha256 = "58bbb9b06e14d71c620b7e2206a6d83668b602e1d51374b7bd264f9cc462d4de",
     strip_prefix = "buildtools-master",
     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
 )
@@ -951,8 +952,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:nHYK9TSF4kFRQDKeS23Zg+lA3vghXfTo9AxHf9+EE0s=",
-    version = "v1.10.0",
+    sum = "h1:L6g6wUzM6pV90S0VFQL/HjcTmW5JoaSGAX8VDiN76g4=",
+    version = "v1.13.1",
 )
 
 go_repository(
@@ -1271,6 +1272,13 @@ maven_install(
         "com.github.dikhan:pagerduty-client:3.0.3",
         "com.github.dirkraft.dropwizard-file-assets:dropwizard-file-assets:0.0.2",
         "com.github.fge:json-schema-core:1.0.1",
+        "io.netty:netty-transport-native-kqueue:4.1.63_Final",
+        maven.artifact(
+            group = "io.netty",
+            artifact = "netty-transport-native-kqueue",
+            version = "4.1.63.Final",
+            classifier = "osx-x86_64",
+        ),
         "com.github.mifmif:generex:1.0.1",
         maven.artifact(
             group = "com.github.reinert",
@@ -1451,9 +1459,9 @@ maven_install(
         "com.microsoft.rest:client-runtime:1.7.4",
         "com.nimbusds:lang-tag:1.5",
         "com.nimbusds:nimbus-jose-jwt:8.19",
-        "com.nimbusds:oauth2-oidc-sdk:6.5",
+        "com.nimbusds:oauth2-oidc-sdk:7.4",
         "com.ning:async-http-client:1.9.40",
-        "com.novemberain:quartz-mongodb:2.1.1",
+        "com.novemberain:quartz-mongodb-harness-mongo-ssl:2.1.1-harness-mongo-ssl",
         "com.offbytwo.jenkins:jenkins-client:0.3.8",
         "com.openpojo:openpojo:0.8.3",
         "com.palominolabs.metrics:metrics-guice:3.2.0",
@@ -1462,10 +1470,10 @@ maven_install(
         "com.segment.backo:backo:1.0.0",
         "com.smoketurner:dropwizard-swagger:1.3.17-1",
         "com.splunk:splunk:1.6.3.0",
-        "com.squareup.okhttp3:logging-interceptor:3.9.1",
+        "com.squareup.okhttp3:logging-interceptor:3.14.3",
         "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-        "com.squareup.okhttp3:okhttp:3.9.0",
-        "com.squareup.okio:okio:1.13.0",
+        "com.squareup.okhttp3:okhttp:3.6.0",
+        "com.squareup.okio:okio:1.11.0",
         "com.squareup.retrofit2:adapter-rxjava:2.7.2",
         "com.squareup.retrofit2:converter-gson:2.3.0",
         "com.squareup.retrofit2:converter-jackson:2.2.0",
@@ -1583,26 +1591,28 @@ maven_install(
         "io.grpc:grpc-testing:1.33.1",
         "io.gsonfire:gson-fire:1.8.3",
         "io.jsonwebtoken:jjwt:0.9.1",
-        "io.kubernetes:client-java-api:8.0.2",
-        "io.kubernetes:client-java-extended:8.0.2",
-        "io.kubernetes:client-java-proto:8.0.2",
-        "io.kubernetes:client-java:8.0.2",
-        "io.netty:netty-buffer:4.1.51.Final",
-        "io.netty:netty-codec-dns:4.1.51.Final",
-        "io.netty:netty-codec-http2:4.1.51.Final",
-        "io.netty:netty-codec-http:4.1.51.Final",
-        "io.netty:netty-codec-socks:4.1.51.Final",
-        "io.netty:netty-codec:4.1.51.Final",
-        "io.netty:netty-common:4.1.51.Final",
-        "io.netty:netty-handler-proxy:4.1.51.Final",
-        "io.netty:netty-handler:4.1.51.Final",
-        "io.netty:netty-resolver-dns:4.1.51.Final",
-        "io.netty:netty-resolver:4.1.51.Final",
-        "io.netty:netty-transport-native-epoll:linux-x86_64:4.1.51.Final",
-        "io.netty:netty-transport-native-unix-common:4.1.51.Final",
-        "io.netty:netty-transport:4.1.51.Final",
+        "io.kubernetes:client-java-api:9.0.2",
+        "io.kubernetes:client-java-extended:9.0.2",
+        "io.kubernetes:client-java-proto:9.0.2",
+        "io.kubernetes:client-java:9.0.2",
+        "io.netty:netty-buffer:4.1.52.Final",
+        "io.netty:netty-codec-dns:4.1.52.Final",
+        "io.netty:netty-codec-http2:4.1.52.Final",
+        "io.netty:netty-codec-http:4.1.52.Final",
+        "io.netty:netty-codec-socks:4.1.52.Final",
+        "io.netty:netty-codec:4.1.52.Final",
+        "io.netty:netty-common:4.1.52.Final",
+        "io.netty:netty-handler-proxy:4.1.52.Final",
+        "io.netty:netty-handler:4.1.52.Final",
+        "io.netty:netty-resolver-dns:4.1.52.Final",
+        "io.netty:netty-resolver:4.1.52.Final",
+        "io.netty:netty-transport-native-epoll:linux-x86_64:4.1.52.Final",
+        "io.netty:netty-transport-native-unix-common:4.1.52.Final",
+        "io.netty:netty-transport:4.1.52.Final",
         "io.opencensus:opencensus-api:0.24.0",
         "io.opencensus:opencensus-contrib-http-util:0.24.0",
+        "io.opencensus:opencensus-exporter-stats-stackdriver:0.28.0",
+        "io.opencensus:opencensus-impl:0.28.0",
         "io.perfmark:perfmark-api:0.19.0",
         "io.projectreactor.netty:reactor-netty:0.9.10.RELEASE",
         "io.projectreactor:reactor-core:3.3.8.RELEASE",
@@ -1834,8 +1844,18 @@ maven_install(
         "org.glassfish.jersey.ext:jersey-metainf-services:2.25.1",
         "org.glassfish.jersey.media:jersey-media-jaxb:2.25.1",
         "org.glassfish.jersey.media:jersey-media-multipart:2.25.1",
-        "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:2.23.1",
-        "org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory:2.23.1",
+        maven.artifact(
+            "org.glassfish.jersey.test-framework.providers",
+            "jersey-test-framework-provider-grizzly2",
+            "2.23.1",
+            testonly = True,
+        ),
+        maven.artifact(
+            "org.glassfish.jersey.test-framework.providers",
+            "jersey-test-framework-provider-inmemory",
+            "2.23.1",
+            testonly = True,
+        ),
         "org.glassfish:javax.el:3.0.0",
         "org.hamcrest:hamcrest-core:1.3",
         "org.hamcrest:hamcrest-all:1.3",
@@ -1856,6 +1876,7 @@ maven_install(
         "org.joda:joda-convert:1.2",
         "org.jodd:jodd-bean:5.0.13",
         "org.jodd:jodd-core:5.0.13",
+        "org.jooq:jooq:3.14.8",
         "org.jooq:joor:0.9.5",
         "org.apache.maven:maven-plugin-api:3.6.3",
         "org.apache.maven.plugin-tools:maven-plugin-annotations:3.4",
@@ -1961,6 +1982,7 @@ maven_install(
         "io.confluent:kafka-protobuf-serializer:5.5.1",
         "io.confluent:kafka-schema-registry-client:5.5.1",
         "io.confluent:kafka-schema-serializer:5.5.1",
+        "io.leangen.graphql:spqr:0.11.2",
         "org.apache.avro:avro:1.9.2",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.71",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.71",
@@ -1984,7 +2006,12 @@ maven_install(
         "xpp3:xpp3:1.1.3.3",
         "io.netty:netty-all:4.1.51.Final",
         "com.github.spullara.mustache.java:compiler:0.9.5",
-        "io.dropwizard:dropwizard-testing:1.3.24",
+        maven.artifact(
+            "io.dropwizard",
+            "dropwizard-testing",
+            "1.3.24",
+            testonly = True,
+        ),
         "com.spotify:docker-client:8.16.0",
         "io.rest-assured:rest-assured:3.2.0",
         "org.jboss.aerogear:aerogear-otp-java:1.0.0",
@@ -2006,7 +2033,7 @@ maven_install(
         "org.clojure:clojure",
         "io.netty:netty-all",
     ],
-    maven_install_json = "//:maven_install.json",
+    maven_install_json = "//project:main_maven_install.json",
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
     },
@@ -2032,6 +2059,7 @@ pinned_maven_install()
 
 http_jar(
     name = "jira_client",
+    sha256 = "4e733673d5ecfbd0f81f6adef1703a1c3d8975bb091ce6af8dc6ec1604a56112",
     url = "https://harness.jfrog.io/artifactory/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20210122.053103-1.jar",
 )
 
@@ -2040,8 +2068,8 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness:ff-java-server-sdk:0.0.2",
-        "io.harness.cv:data-collection-dsl:0.18-RELEASE",
+        "io.harness:ff-java-server-sdk:0.0.7",
+        "io.harness.cv:data-collection-dsl:0.21-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
@@ -2052,11 +2080,30 @@ maven_install(
 maven_install(
     name = "delegate",
     artifacts = [
-        "com.squareup.okhttp3:logging-interceptor:3.14.3",
-        "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-        "com.squareup.okhttp3:okhttp:3.6.0",
         "org.apache.httpcomponents:httpmime:4.5.1",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+maven_install(
+    name = "ce_nextgen",
+    artifacts = [
+        "com.graphql-java:graphql-java:16.2",
+        "org.antlr:antlr4-runtime:4.8",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
@@ -5315,3 +5362,140 @@ go_repository(
     sum = "h1:oiuVamdP4LloTcrinlnYOxhLwhJCV3hE9D+NSxH0L4I=",
     version = "v0.0.0-20181124163742-ca087b49e1da",
 )
+
+go_repository(
+    name = "com_github_git_chglog_git_chglog",
+    importpath = "github.com/git-chglog/git-chglog",
+    sum = "h1:8l4Aw3Jmx0pLKYMkY+1b6yBPgE+rzRtA5T3vqFyI2Z8=",
+    version = "v0.0.0-20190611050339-63a4e637021f",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_attrs",
+    importpath = "github.com/gobuffalo/attrs",
+    sum = "h1:hSkbZ9XSyjyBirMeqSqUrK+9HboWrweVlzRNqoBi2d4=",
+    version = "v0.0.0-20190224210810-a9411de4debd",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_depgen",
+    importpath = "github.com/gobuffalo/depgen",
+    sum = "h1:31atYa/UW9V5q8vMJ+W6wd64OaaTHUrCUXER358zLM4=",
+    version = "v0.1.0",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_envy",
+    importpath = "github.com/gobuffalo/envy",
+    sum = "h1:GlXgaiBkmrYMHco6t4j7SacKO4XUjvh5pwXh0f4uxXU=",
+    version = "v1.7.0",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_flect",
+    importpath = "github.com/gobuffalo/flect",
+    sum = "h1:3GQ53z7E3o00C/yy7Ko8VXqQXoJGLkrTQCLTF1EjoXU=",
+    version = "v0.1.3",
+)
+
+go_repository(
+    name = "com_github_gobuffalo_genny",
+    importpath = "github.com/gobuffalo/genny",
+    sum = "h1:iQ0D6SpNXIxu52WESsD+KoQ7af2e3nCfnSBoSF/hKe0=",
+    version = "v0.1.1",
+)
+
+go_repository(
+    name = "com_github_hinshun_vt10x",
+    importpath = "github.com/hinshun/vt10x",
+    sum = "h1:WlZsjVhE8Af9IcZDGgJGQpNflI3+MJSBhsgT5PCtzBQ=",
+    version = "v0.0.0-20180616224451-1954e6464174",
+)
+
+go_repository(
+    name = "com_github_kballard_go_shellquote",
+    importpath = "github.com/kballard/go-shellquote",
+    sum = "h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=",
+    version = "v0.0.0-20180428030007-95032a82bc51",
+)
+
+go_repository(
+    name = "com_github_netflix_go_expect",
+    importpath = "github.com/Netflix/go-expect",
+    sum = "h1:xzYJEypr/85nBpB11F9br+3HUrpgb+fcm5iADzXXYEw=",
+    version = "v0.0.0-20180615182759-c93bf25de8e8",
+)
+
+go_repository(
+    name = "com_github_robinjoseph08_redisqueue",
+    importpath = "github.com/robinjoseph08/redisqueue",
+    sum = "h1:8pcVNqJNYuuZkc4z+mKFq06AA1I1xD3mo3x9yKeBuEQ=",
+    version = "v1.1.0",
+)
+
+go_repository(
+    name = "com_github_tsuyoshiwada_go_gitcmd",
+    importpath = "github.com/tsuyoshiwada/go-gitcmd",
+    sum = "h1:Y2l28Jr3vOEeYtxfVbMtVfOdAwuUqWaP9fvNKiBVeXY=",
+    version = "v0.0.0-20180205145712-5f1f5f9475df",
+)
+
+go_repository(
+    name = "in_gopkg_alecaivazis_survey_v1",
+    importpath = "gopkg.in/AlecAivazis/survey.v1",
+    sum = "h1:QoEEmn/d5BbuPIL2qvXwzJdttFFhRQFkaq+tEKb7SMI=",
+    version = "v1.8.5",
+)
+
+go_repository(
+    name = "in_gopkg_kyokomi_emoji_v1",
+    importpath = "gopkg.in/kyokomi/emoji.v1",
+    sum = "h1:beetH5mWDMzFznJ+Qzd5KVHp79YKhVUMcdO8LpRLeGw=",
+    version = "v1.5.1",
+)
+
+go_repository(
+    name = "com_github_blendle_zapdriver",
+    importpath = "github.com/blendle/zapdriver",
+    sum = "h1:C3dydBOWYRiOk+B8X9IVZ5IOe+7cl+tGOexN4QqHfpE=",
+    version = "v1.3.1",
+)
+
+#========== Docker Rules Configuration Begin=========================
+
+http_archive(
+    name = "io_bazel_rules_docker",
+    sha256 = "59d5b42ac315e7eadffa944e86e90c2990110a1c8075f1cd145f487e999d22b3",
+    strip_prefix = "rules_docker-0.17.0",
+    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.17.0/rules_docker-v0.17.0.tar.gz"],
+)
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_pull",
+)
+
+#TO-DO: Build the safe image in bazel only and use it as base.
+container_pull(
+    name = "platform_alpine",
+    digest = "sha256:a568e8f557c055ce59215ccdb864e8a73ac7ff9deed260ae9ced82f0a86e42bb",
+    registry = "us.gcr.io",
+    repository = "platform-205701/alpine",
+    tag = "safe-alpine3.12-sec1096-apm",
+)
+
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+#========== Docker Rules Configuration End=========================

@@ -6,6 +6,7 @@ import io.harness.annotations.dev.TargetModule;
 import software.wings.beans.GitConfig.UrlType;
 import software.wings.graphql.schema.type.QLCustomCommitDetails;
 import software.wings.graphql.schema.type.QLUser;
+import software.wings.graphql.schema.type.secrets.QLUsageScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
@@ -31,6 +32,7 @@ public class QLGitConnector implements QLConnector {
   private String webhookUrl;
   private Boolean generateWebhookUrl;
   private QLCustomCommitDetails customCommitDetails;
+  private QLUsageScope usageScope;
 
   public static class QLGitConnectorBuilder implements QLConnectorBuilder {}
 }

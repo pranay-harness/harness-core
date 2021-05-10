@@ -1,14 +1,14 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
+    "//871-cg-beans:module",
     "//955-delegate-beans:module",
     "//874-orchestration-delay:module",
     "//950-wait-engine:module",
+    "//950-cg-ng-shared-orchestration-beans:module",
     "//950-delegate-tasks-beans:module",
-    "//882-pms-sdk-core:module",
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_google_code_findbugs_annotations",
@@ -53,6 +53,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

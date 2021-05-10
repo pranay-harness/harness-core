@@ -1,9 +1,14 @@
 package io.harness.cdng.manifest.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
-import io.harness.cdng.visitor.helper.GitLabStoreVisitorHelper;
-import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
+import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
@@ -14,7 +19,9 @@ import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,9 +33,11 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.GITLAB)
 @OneOfField(fields = {"paths", "folderPath"})
-@SimpleVisitorHelper(helperClass = GitLabStoreVisitorHelper.class)
+@OneOfField(fields = {"branch", "commitId"})
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("gitLabStore")
-public class GitLabStore implements GitStoreConfig, Visitable {
+@OwnedBy(CDP)
+public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
 
   @Wither private FetchType gitFetchType;
@@ -97,5 +106,25 @@ public class GitLabStore implements GitStoreConfig, Visitable {
   @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName(YAMLFieldNameConstants.SPEC).isPartOfFQN(false).build();
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
+  }
+
+  @Override
+  public GitStoreConfigDTO toGitStoreConfigDTO() {
+    return GitLabStoreDTO.builder()
+        .branch(ParameterFieldHelper.getParameterFieldValue(branch))
+        .commitId(ParameterFieldHelper.getParameterFieldValue(commitId))
+        .connectorRef(ParameterFieldHelper.getParameterFieldValue(connectorRef))
+        .folderPath(ParameterFieldHelper.getParameterFieldValue(folderPath))
+        .gitFetchType(gitFetchType)
+        .paths(ParameterFieldHelper.getParameterFieldValue(paths))
+        .repoName(ParameterFieldHelper.getParameterFieldValue(repoName))
+        .build();
   }
 }

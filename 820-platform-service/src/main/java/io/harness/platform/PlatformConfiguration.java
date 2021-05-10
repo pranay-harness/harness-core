@@ -2,10 +2,12 @@ package io.harness.platform;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.platform.audit.AuditServiceConfiguration;
 import io.harness.platform.notification.NotificationServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.resourcegroup.ResourceGroupServiceConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -22,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.Path;
 import lombok.Getter;
+import lombok.Setter;
 import org.reflections.Reflections;
 
 @Getter
@@ -34,9 +37,11 @@ public class PlatformConfiguration extends Configuration {
   public static final String NOTIFICATION_RESOURCE_PACKAGE = "io.harness.notification.remote.resources";
   public static final String AUDIT_RESOURCE_PACKAGE = "io.harness.audit.remote";
   public static final String FILTER_RESOURCE_PACKAGE = "io.harness.filter";
+  public static final String RESOURCEGROUP_PACKAGE = "io.harness.resourcegroup";
 
-  @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
+  @Setter @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
   @JsonProperty("auditServiceConfig") private AuditServiceConfiguration auditServiceConfig;
+  @JsonProperty("resourceGroupServiceConfig") private ResourceGroupServiceConfig resoureGroupServiceConfig;
 
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
@@ -44,6 +49,7 @@ public class PlatformConfiguration extends Configuration {
   @JsonProperty("secrets") private PlatformSecrets platformSecrets;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
+  @JsonProperty(value = "accessControlClient") private AccessControlClientConfiguration accessControlClientConfig;
 
   public static Collection<Class<?>> getNotificationServiceResourceClasses() {
     Reflections reflections = new Reflections(NOTIFICATION_RESOURCE_PACKAGE);
@@ -55,9 +61,15 @@ public class PlatformConfiguration extends Configuration {
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
+  public static Collection<Class<?>> getResourceGroupServiceResourceClasses() {
+    Reflections reflections = new Reflections(RESOURCEGROUP_PACKAGE);
+    return reflections.getTypesAnnotatedWith(Path.class);
+  }
+
   public static Collection<Class<?>> getPlatformServiceCombinedResourceClasses() {
     Collection<Class<?>> resources = getNotificationServiceResourceClasses();
     resources.addAll(getAuditServiceResourceClasses());
+    resources.addAll(getResourceGroupServiceResourceClasses());
     return resources;
   }
 

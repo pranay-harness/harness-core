@@ -1,5 +1,8 @@
-package io.harness.repositories.ng.core.custom;
+package io.harness.repositories.custom;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 
@@ -20,6 +23,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class TriggerWebhookEventRepositoryCustomImpl implements TriggerWebhookEventRepositoryCustom {
   private final MongoTemplate mongoTemplate;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);

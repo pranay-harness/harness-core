@@ -32,10 +32,10 @@ var (
 )
 
 func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []string, retryCount int32, startTime time.Time,
-	logMetrics bool, log *zap.SugaredLogger, metricLog *zap.SugaredLogger) error {
+	logMetrics bool, addonLogger *zap.SugaredLogger) error {
 	err := cmd.Start()
 	if err != nil {
-		log.Errorw(
+		addonLogger.Errorw(
 			"error encountered while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,
@@ -47,19 +47,19 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 
 	if logMetrics {
 		pid := cmd.Pid()
-		mlog(int32(pid), stepID, metricLog)
+		mlog(int32(pid), stepID, addonLogger)
 	}
 
 	err = cmd.Wait()
 	if rusage, e := cmd.ProcessState().SysUsageUnit(); e == nil {
-		metricLog.Infow(
+		addonLogger.Infow(
 			"max RSS memory used by step",
 			"step_id", stepID,
 			"max_rss_memory_kb", rusage.Maxrss)
 	}
 
 	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
-		log.Errorw(
+		addonLogger.Errorw(
 			"timeout while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,
@@ -70,7 +70,7 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 	}
 
 	if err != nil {
-		log.Errorw(
+		addonLogger.Errorw(
 			"error encountered while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,
@@ -108,6 +108,7 @@ func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger
 		Branch: branch,
 		CgDir:  cgDir,
 	}
+	log.Infow(fmt.Sprintf("sending cgRequest %s to lite engine", req.GetCgDir()))
 	_, err = client.Client().UploadCg(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "failed to upload cg to ti server")
@@ -198,7 +199,11 @@ func selectTests(ctx context.Context, files []types.File, stepID string, log *za
 	if err != nil {
 		return res, err
 	}
-	branch, err := external.GetSourceBranch()
+	source, err := external.GetSourceBranch()
+	if err != nil {
+		return res, err
+	}
+	target, err := external.GetTargetBranch()
 	if err != nil {
 		return res, err
 	}
@@ -218,11 +223,12 @@ func selectTests(ctx context.Context, files []types.File, stepID string, log *za
 		return res, err
 	}
 	req := &pb.SelectTestsRequest{
-		StepId: stepID,
-		Repo:   repo,
-		Sha:    sha,
-		Branch: branch,
-		Body:   string(b),
+		StepId:       stepID,
+		Repo:         repo,
+		Sha:          sha,
+		SourceBranch: source,
+		TargetBranch: target,
+		Body:         string(b),
 	}
 	resp, err := client.Client().SelectTests(ctx, req)
 	if err != nil {

@@ -2,16 +2,23 @@ package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.account.AccountClientModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.client.DelegateSelectionLogHttpClientModule;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
-import io.harness.delegatelog.client.DelegateSelectionLogHttpClientModule;
 import io.harness.engine.StepTypeLookupService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.filter.FilterType;
@@ -22,22 +29,30 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
+import io.harness.logstreaming.LogStreamingModule;
+import io.harness.logstreaming.LogStreamingServiceConfiguration;
+import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.logstreaming.NGLogStreamingClientFactory;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.core.UserClientModule;
-import io.harness.ng.core.account.remote.AccountClientModule;
-import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
+import io.harness.ng.core.event.MessageListener;
+import io.harness.organization.OrganizationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
+import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
+import io.harness.pms.approval.notification.ApprovalNotificationHandlerImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
+import io.harness.pms.event.entitycrud.PipelineEntityCRUDStreamListener;
+import io.harness.pms.event.webhookevent.WebhookEventStreamListener;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
+import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
@@ -45,24 +60,42 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaServiceImpl;
+import io.harness.pms.pipeline.service.PipelineDashboardService;
+import io.harness.pms.pipeline.service.PipelineDashboardServiceImpl;
 import io.harness.pms.plan.creation.NodeTypeLookupService;
 import io.harness.pms.plan.creation.NodeTypeLookupServiceImpl;
 import io.harness.pms.plan.execution.mapper.PipelineExecutionFilterPropertiesMapper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
+import io.harness.pms.preflight.service.PreflightService;
+import io.harness.pms.preflight.service.PreflightServiceImpl;
+import io.harness.pms.rbac.validator.PipelineRbacService;
+import io.harness.pms.rbac.validator.PipelineRbacServiceImpl;
+import io.harness.pms.resourceconstraints.service.PMSResourceConstraintService;
+import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
+import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
-import io.harness.projectmanagerclient.ProjectManagementClientModule;
-import io.harness.queue.QueueController;
+import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImplV2;
+import io.harness.project.ProjectClientModule;
 import io.harness.redis.RedisConfig;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.NGTriggerRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
-import io.harness.service.PmsDelegateServiceDriverModule;
+import io.harness.service.DelegateServiceDriverModule;
+import io.harness.steps.approval.ApprovalNotificationHandler;
+import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
+import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.user.UserClientModule;
+import io.harness.usergroups.UserGroupClientModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
@@ -91,6 +124,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@OwnedBy(PIPELINE)
 @Slf4j
 public class PipelineServiceModule extends AbstractModule {
   private final PipelineServiceConfiguration configuration;
@@ -118,52 +152,41 @@ public class PipelineServiceModule extends AbstractModule {
     });
     install(PipelineServiceGrpcModule.getInstance());
     install(new PipelinePersistenceModule());
-    install(PmsDelegateServiceDriverModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance(true));
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("PIPELINE")
                                                 .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
                                                 .withPMS(false)
                                                 .isPipelineService(true)
                                                 .build()));
-    install(OrchestrationStepsModule.getInstance());
+    install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
+    install(PrimaryVersionManagerModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
-    install(new SecretManagementClientModule(
-        configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(), MANAGER.getServiceId()));
-    install(NGTriggersModule.getInstance());
+    install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(NGTriggersModule.getInstance(configuration.getPmsApiBaseUrl()));
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
     install(YamlSdkModule.getInstance());
+    install(AccessControlClientModule.getInstance(
+        configuration.getAccessControlClientConfiguration(), PIPELINE_SERVICE.getServiceId()));
 
-    install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+    install(new OrganizationClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new ProjectManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+    install(new ProjectClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(
         YamlSchemaClientModule.getInstance(configuration.getYamlSchemaClientConfig(), PIPELINE_SERVICE.getServiceId()));
     install(new UserClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
+    install(new UserGroupClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
@@ -171,12 +194,16 @@ public class PipelineServiceModule extends AbstractModule {
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
+    bind(PreflightService.class).to(PreflightServiceImpl.class);
+    bind(PipelineRbacService.class).to(PipelineRbacServiceImpl.class);
     bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
     bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
+    bind(ApprovalNotificationHandler.class).to(ApprovalNotificationHandlerImpl.class);
 
     bind(StepTypeLookupService.class).to(StepTypeLookupServiceImpl.class);
     bind(NodeTypeLookupService.class).to(NodeTypeLookupServiceImpl.class);
@@ -188,6 +215,8 @@ public class PipelineServiceModule extends AbstractModule {
         .annotatedWith(Names.named("progressUpdateServiceExecutor"))
         .toInstance(new ManagedScheduledExecutorService("ProgressUpdateServiceExecutor-Thread"));
     bind(TriggerWebhookExecutionService.class).to(TriggerWebhookExecutionServiceImpl.class);
+    bind(TriggerWebhookExecutionServiceV2.class).to(TriggerWebhookExecutionServiceImplV2.class);
+
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);
     filterPropertiesMapper.addBinding(FilterType.PIPELINESETUP.toString()).to(PipelineFilterPropertiesMapper.class);
@@ -196,6 +225,42 @@ public class PipelineServiceModule extends AbstractModule {
 
     bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
     bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
+    bind(JiraApprovalHelperService.class).to(JiraApprovalHelperServiceImpl.class);
+    bind(JiraStepHelperService.class).to(JiraStepHelperServiceImpl.class);
+    bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
+    bind(LogStreamingServiceRestClient.class)
+        .toProvider(NGLogStreamingClientFactory.builder()
+                        .logStreamingServiceBaseUrl(configuration.getLogStreamingServiceConfig().getBaseUrl())
+                        .build());
+
+    bind(PipelineDashboardService.class).to(PipelineDashboardServiceImpl.class);
+    try {
+      bind(TimeScaleDBService.class)
+          .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
+    } catch (NoSuchMethodException e) {
+      log.error("TimeScaleDbServiceImpl Initialization Failed in due to missing constructor", e);
+    }
+
+    if (configuration.getEnableDashboardTimescale() != null && configuration.getEnableDashboardTimescale()) {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(configuration.getTimeScaleDBConfig() != null ? configuration.getTimeScaleDBConfig()
+                                                                   : TimeScaleDBConfig.builder().build());
+    } else {
+      bind(TimeScaleDBConfig.class)
+          .annotatedWith(Names.named("TimeScaleDBConfig"))
+          .toInstance(TimeScaleDBConfig.builder().build());
+    }
+
+    registerEventsFrameworkMessageListeners();
+  }
+
+  private void registerEventsFrameworkMessageListeners() {
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PIPELINE_ENTITY + ENTITY_CRUD))
+        .to(PipelineEntityCRUDStreamListener.class);
+
+    bind(MessageListener.class).annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM)).to(WebhookEventStreamListener.class);
   }
 
   @Provides
@@ -235,6 +300,7 @@ public class PipelineServiceModule extends AbstractModule {
   List<YamlSchemaRootClass> yamlSchemaRootClasses() {
     return ImmutableList.<YamlSchemaRootClass>builder()
         .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
+        .addAll(NGTriggerRegistrars.yamlSchemaRegistrars)
         .build();
   }
 
@@ -301,8 +367,19 @@ public class PipelineServiceModule extends AbstractModule {
   @Named("yaml-schema-mapper")
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
-    ObjectMapper objectMapper = Jackson.newObjectMapper();
-    PipelineServiceApplication.configureObjectMapper(objectMapper);
-    return objectMapper;
+    return Jackson.newObjectMapper();
+  }
+
+  @Provides
+  @Singleton
+  public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
+    return configuration.getLogStreamingServiceConfig();
+  }
+
+  @Provides
+  @Singleton
+  public PipelineServiceIteratorsConfig getIteratorsConfig() {
+    return configuration.getIteratorsConfig() == null ? PipelineServiceIteratorsConfig.builder().build()
+                                                      : configuration.getIteratorsConfig();
   }
 }

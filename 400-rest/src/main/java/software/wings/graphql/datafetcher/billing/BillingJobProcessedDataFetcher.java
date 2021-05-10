@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.BatchJobScheduledDataDao;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -15,7 +18,8 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._375_CE_GRAPHQL)
+@OwnedBy(CE)
 public class BillingJobProcessedDataFetcher
     extends AbstractObjectDataFetcher<QLBatchLastProcessedData, QLNoOpQueryParameters> {
   @Inject private BatchJobScheduledDataDao batchJobScheduledDataDao;

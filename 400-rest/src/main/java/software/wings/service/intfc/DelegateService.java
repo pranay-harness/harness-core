@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -28,6 +29,7 @@ import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
@@ -48,6 +50,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
+@BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
@@ -60,8 +63,6 @@ public interface DelegateService extends OwnedByAccount {
   DelegateStatus getDelegateStatus(String accountId);
 
   DelegateStatus getDelegateStatusWithScalingGroups(String accountId);
-
-  DelegateGroup getDelegateGroup(String accountId, String delegateGroupId);
 
   Set<String> retrieveDelegateSelectors(Delegate delegate);
 
@@ -198,9 +199,7 @@ public interface DelegateService extends OwnedByAccount {
 
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
-  String getHostNameForGroupedDelegate(String hostname);
-
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 
-  DelegateGroup upsertDelegateGroup(String name, String accountId);
+  DelegateGroup upsertDelegateGroup(String name, String accountId, K8sConfigDetails k8sConfigDetails);
 }

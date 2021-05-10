@@ -1,5 +1,6 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
@@ -11,6 +12,7 @@ import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -19,6 +21,10 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.ModuleType;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -28,6 +34,7 @@ import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
+import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.rule.Owner;
 
@@ -39,8 +46,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
+@OwnedBy(PL)
 public class ProjectResourceTest extends CategoryTest {
   private ProjectService projectService;
+  private OrganizationService organizationService;
+  private AccessControlClient accessControlClient;
   private ProjectResource projectResource;
 
   String accountIdentifier = randomAlphabetic(10);
@@ -51,7 +61,9 @@ public class ProjectResourceTest extends CategoryTest {
   @Before
   public void setup() {
     projectService = mock(ProjectService.class);
-    projectResource = new ProjectResource(projectService);
+    organizationService = mock(OrganizationService.class);
+    accessControlClient = mock(AccessControlClient.class);
+    projectResource = new ProjectResource(projectService, organizationService, accessControlClient);
   }
 
   private ProjectDTO getProjectDTO(String orgIdentifier, String identifier, String name) {
@@ -119,6 +131,12 @@ public class ProjectResourceTest extends CategoryTest {
     ArgumentCaptor<ProjectFilterDTO> argumentCaptor = ArgumentCaptor.forClass(ProjectFilterDTO.class);
 
     when(projectService.list(eq(accountIdentifier), any(), any())).thenReturn(getPage(singletonList(project), 1));
+
+    when(accessControlClient.checkForAccess(anyList()))
+        .thenReturn(AccessCheckResponseDTO.builder()
+                        .accessControlList(Collections.singletonList(
+                            AccessControlDTO.builder().resourceIdentifier(orgIdentifier).permitted(true).build()))
+                        .build());
 
     ResponseDTO<PageResponse<ProjectResponse>> response = projectResource.list(
         accountIdentifier, orgIdentifier, true, Collections.EMPTY_LIST, ModuleType.CD, searchTerm, pageRequest);

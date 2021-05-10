@@ -1,5 +1,8 @@
 package io.harness.pms.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.Visitable;
@@ -11,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -18,9 +22,10 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 public class YamlNode implements Visitable {
-  public static final String UUID_FIELD_NAME = "uuid";
+  public static final String UUID_FIELD_NAME = "__uuid";
   public static final String IDENTIFIER_FIELD_NAME = "identifier";
   public static final String TYPE_FIELD_NAME = "type";
   public static final String NAME_FIELD_NAME = "name";
@@ -172,10 +177,15 @@ public class YamlNode implements Visitable {
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren visitableChildren = VisitableChildren.builder().build();
     if (isArray()) {
-      asArray().forEach(node -> visitableChildren.add(node.getName(), node));
+      for (YamlNode node : asArray()) {
+        visitableChildren.add(UUIDGenerator.generateUuid(), node);
+      }
     } else if (isObject()) {
-      List<YamlNode> yamlNodeFields = fields().stream().map(YamlField::getNode).collect(Collectors.toList());
-      yamlNodeFields.forEach(field -> visitableChildren.add(field.getName(), field));
+      Map<String, YamlNode> yamlNodeFields =
+          fields().stream().collect(Collectors.toMap(YamlField::getName, YamlField::getNode));
+      for (Map.Entry<String, YamlNode> yamlNodeEntry : yamlNodeFields.entrySet()) {
+        visitableChildren.add(yamlNodeEntry.getKey(), yamlNodeEntry.getValue());
+      }
     }
     return visitableChildren;
   }

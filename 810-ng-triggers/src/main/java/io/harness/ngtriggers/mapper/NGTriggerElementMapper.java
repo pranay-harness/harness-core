@@ -9,6 +9,7 @@ import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
@@ -38,7 +39,6 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventBuilder;
 import io.harness.ngtriggers.beans.entity.metadata.CronMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
-import io.harness.ngtriggers.beans.entity.metadata.CustomWebhookInlineAuthToken;
 import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
@@ -47,13 +47,14 @@ import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
-import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.GitRepoSpec;
 import io.harness.ngtriggers.beans.source.webhook.RepoSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
-import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
+import io.harness.repositories.spring.TriggerEventHistoryRepository;
+import io.harness.webhook.WebhookConfigProvider;
+import io.harness.webhook.WebhookHelper;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -85,6 +86,7 @@ public class NGTriggerElementMapper {
   public static final int DAYS_BEFORE_CURRENT_DATE = 6;
   private TriggerEventHistoryRepository triggerEventHistoryRepository;
   private WebhookEventPayloadParser webhookEventPayloadParser;
+  private WebhookConfigProvider webhookConfigProvider;
 
   public NGTriggerConfig toTriggerConfig(String yaml) {
     try {
@@ -147,7 +149,7 @@ public class NGTriggerElementMapper {
 
         WebhookMetadataBuilder metadata = WebhookMetadata.builder();
         if (webhookTriggerConfig.getSpec().getType() == CUSTOM) {
-          metadata.custom(prepareCustomMetadata(webhookTriggerConfig));
+          metadata.custom(CustomMetadata.builder().build());
         } else if (isGitSpec(webhookTriggerConfig)) {
           metadata.git(prepareGitMetadata(webhookTriggerConfig));
         }
@@ -187,24 +189,6 @@ public class NGTriggerElementMapper {
     return null;
   }
 
-  @VisibleForTesting
-  CustomMetadata prepareCustomMetadata(WebhookTriggerConfig webhookTriggerConfig) {
-    CustomWebhookTriggerSpec customWebhookTriggerSpec = (CustomWebhookTriggerSpec) webhookTriggerConfig.getSpec();
-    CustomWebhookInlineAuthToken customWebhookInlineAuthToken;
-
-    if ("inline".equals(customWebhookTriggerSpec.getAuthToken().getType())) {
-      customWebhookInlineAuthToken = (CustomWebhookInlineAuthToken) customWebhookTriggerSpec.getAuthToken().getSpec();
-
-      String encryptedToken = Base64.encodeBase64String(customWebhookInlineAuthToken.getValue().getBytes());
-
-      return CustomMetadata.builder()
-          .customAuthTokenType(customWebhookTriggerSpec.getAuthToken().getType())
-          .customAuthTokenValue(encryptedToken)
-          .build();
-    }
-    return null;
-  }
-
   public NGTriggerResponseDTO toResponseDTO(NGTriggerEntity ngTriggerEntity) {
     return NGTriggerResponseDTO.builder()
         .name(ngTriggerEntity.getName())
@@ -221,7 +205,7 @@ public class NGTriggerElementMapper {
         .build();
   }
 
-  public TriggerWebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String orgIdentifier,
+  public TriggerWebhookEventBuilder toNGTriggerWebhookEvent(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String payload, List<HeaderConfig> headerConfigs) {
     WebhookSourceRepo webhookSourceRepo;
     Map<String, List<String>> headers =
@@ -263,11 +247,14 @@ public class NGTriggerElementMapper {
       triggerWebhookEventBuilder.triggerIdentifier(customTriggerIdentifier.getValues().get(0));
     }
 
-    return triggerWebhookEventBuilder.build();
+    return triggerWebhookEventBuilder;
   }
 
   public NGTriggerDetailsResponseDTO toNGTriggerDetailsResponseDTO(
       NGTriggerEntity ngTriggerEntity, boolean includeYaml) {
+    String webhookUrl = ngTriggerEntity.getType() == WEBHOOK
+        ? WebhookHelper.generateWebhookUrl(webhookConfigProvider, ngTriggerEntity.getAccountId())
+        : null;
     NGTriggerDetailsResponseDTOBuilder ngTriggerDetailsResponseDTO =
         NGTriggerDetailsResponseDTO.builder()
             .name(ngTriggerEntity.getName())
@@ -276,10 +263,11 @@ public class NGTriggerElementMapper {
             .type(ngTriggerEntity.getType())
             .yaml(includeYaml ? ngTriggerEntity.getYaml() : StringUtils.EMPTY)
             .tags(TagMapper.convertToMap(ngTriggerEntity.getTags()))
-            .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled());
+            .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled())
+            .webhookUrl(webhookUrl);
 
     // Webhook Details
-    if (ngTriggerEntity.getType() == NGTriggerType.WEBHOOK) {
+    if (ngTriggerEntity.getType() == WEBHOOK) {
       WebhookDetailsBuilder webhookDetails = WebhookDetails.builder();
 
       webhookDetails.webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType()).build();

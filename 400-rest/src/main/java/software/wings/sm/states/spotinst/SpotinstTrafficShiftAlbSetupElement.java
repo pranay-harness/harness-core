@@ -3,9 +3,9 @@ package software.wings.sm.states.spotinst;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.spotinst.model.ElastiGroup;
 
 import software.wings.sm.ContextElement;
