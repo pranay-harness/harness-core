@@ -108,7 +108,7 @@ public class K8sWatchServiceDelegate {
                                           .clusterId(params.getClusterId())
                                           .clusterName(params.getClusterName())
                                           .kubeSystemUid(kubeSystemUid)
-                                          .isSeen(K8sClusterHelper.isSeen(params.getClusterId()))
+                                          .isSeen(K8sClusterHelper.isSeen(params.getClusterId(), kubeSystemUid))
                                           .build();
 
       SharedInformerFactory sharedInformerFactory =
@@ -142,7 +142,7 @@ public class K8sWatchServiceDelegate {
       sharedInformerFactory.startAllRegisteredInformers();
 
       // cluster is seen/old now, any new onAdd event older than 2 hours will be ignored.
-      K8sClusterHelper.setAsSeen(params.getClusterId());
+      K8sClusterHelper.setAsSeen(params.getClusterId(), kubeSystemUid);
       return WatcherGroup.builder().watchId(id).sharedInformerFactory(sharedInformerFactory).build();
     });
 
