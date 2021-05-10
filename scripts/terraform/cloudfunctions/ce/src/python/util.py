@@ -4,12 +4,16 @@ from google.cloud.exceptions import NotFound
 from clusterdata_schema import clusterDataTableFields
 from unified_schema import unifiedTableTableSchema
 from preaggregated_schema import preAggreagtedTableSchema
+from aws_ec2_inventory_schema import awsEc2InventorySchema, awsEc2InventoryCPUSchema
 
 ACCOUNTID_LOG = ""
 
 def print_(message, severity="INFO"):
     # Set account id in the beginning of your CF call
-    print(json.dumps({"accountId":ACCOUNTID_LOG, "severity":severity, "message": message}))
+    try:
+        print(json.dumps({"accountId":ACCOUNTID_LOG, "severity":severity, "message": message}))
+    except:
+        print(message)
 
 def create_dataset(client, datasetName):
     dataset_id = "{}.{}".format(client.project, datasetName)
@@ -42,6 +46,10 @@ def createTable(client, tableName):
         fieldset = clusterDataTableFields
     elif tableName.endswith("preAggregated"):
         fieldset = preAggreagtedTableSchema
+    elif tableName.endswith("awsEc2Inventory") or tableName.endswith("awsEc2InventoryTemp"):
+        fieldset = awsEc2InventorySchema
+    elif tableName.endswith("awsEc2InventoryCPU"):
+        fieldset = awsEc2InventoryCPUSchema
     else:
         fieldset = unifiedTableTableSchema
 
@@ -62,6 +70,16 @@ def createTable(client, tableName):
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"  # name of column to use for partitioning
+        )
+    elif tableName.endswith("awsEc2Inventory") or tableName.endswith("awsEc2InventoryTemp"):
+        table.time_partitioning = bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="lastUpdatedAt"
+        )
+    elif tableName.endswith("awsEc2InventoryCPU"):
+        table.time_partitioning = bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="addedAt"
         )
     try:
         table = client.create_table(table)  # Make an API request.
