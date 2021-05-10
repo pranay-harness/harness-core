@@ -23,7 +23,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 @Entity(value = "delegateSequenceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@StoreIn(DbAliases.CG_MANAGER`)
+@StoreIn(DbAliases.CG_MANAGER)
 public class DelegateSequenceConfig extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
