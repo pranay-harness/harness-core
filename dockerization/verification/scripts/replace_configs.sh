@@ -38,17 +38,17 @@ fi
   yq write -i /opt/harness/verification-config.yml server.requestLog.appenders[0].target "STDOUT"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[2]
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i /opt/harness/verification-config.yml logging.appenders[2]
+  yq delete -i /opt/harness/verification-config.yml logging.appenders[0]
+  yq write -i /opt/harness/verification-config.yml logging.appenders[0].stackdriverLogEnabled "true"
 else
   if [[ "$ROLLING_FILE_LOGGING_ENABLED" == "true" ]]; then
-    yq delete -i $CONFIG_FILE logging.appenders[1]
-    yq write -i $CONFIG_FILE logging.appenders[1].currentLogFilename "/opt/harness/logs/verification.log"
-    yq write -i $CONFIG_FILE logging.appenders[1].archivedLogFilenamePattern "/opt/harness/logs/verification.%d.%i.log"
+    yq delete -i /opt/harness/verification-config.yml logging.appenders[1]
+    yq write -i /opt/harness/verification-config.yml logging.appenders[1].currentLogFilename "/opt/harness/logs/verification.log"
+    yq write -i /opt/harness/verification-config.yml logging.appenders[1].archivedLogFilenamePattern "/opt/harness/logs/verification.%d.%i.log"
   else
-    yq delete -i $CONFIG_FILE logging.appenders[2]
-    yq delete -i $CONFIG_FILE logging.appenders[1]
+    yq delete -i /opt/harness/verification-config.yml logging.appenders[2]
+    yq delete -i /opt/harness/verification-config.yml logging.appenders[1]
   fi
 fi
 

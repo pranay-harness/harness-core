@@ -54,12 +54,11 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     final IdentifierRef identifierRef =
         getYamlGitConfigIdentifierRef(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier);
     final GitFilePathDetails gitFilePathDetails = getGitFilePathDetails(filePath, branch, commitId);
-    final FileContent fileContent = scmClient.getFileContent(
-        decryptGitApiAccessHelper.decryptScmApiAccess(
-            getScmConnector(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-                identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()),
-            accountIdentifier, orgIdentifier, projectIdentifier),
-        gitFilePathDetails);
+    final ScmConnector connector = getScmConnector(identifierRef.getAccountIdentifier(),
+        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+    final ScmConnector scmConnector =
+        decryptGitApiAccessHelper.decryptScmApiAccess(connector, accountIdentifier, projectIdentifier, orgIdentifier);
+    final FileContent fileContent = scmClient.getFileContent(scmConnector, gitFilePathDetails);
     return validateAndGetGitFileContent(fileContent);
   }
 }
