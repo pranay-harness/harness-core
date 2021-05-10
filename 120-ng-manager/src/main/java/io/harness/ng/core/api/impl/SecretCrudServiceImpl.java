@@ -9,8 +9,11 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.SecretManagementModule.SECRET_FILE_SERVICE;
+import static io.harness.ng.core.SecretManagementModule.SECRET_FILE_SERVICE_V2;
 import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE;
+import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE_V2;
 import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE;
+import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE_V2;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -83,9 +86,9 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Inject
   public SecretCrudServiceImpl(SecretManagerClient secretManagerClient,
-      @Named(SECRET_TEXT_SERVICE) SecretModifyService secretTextService,
-      @Named(SECRET_FILE_SERVICE) SecretModifyService secretFileService,
-      @Named(SSH_SECRET_SERVICE) SecretModifyService sshSecretService,
+      @Named(SECRET_TEXT_SERVICE_V2) SecretModifyService secretTextService,
+      @Named(SECRET_FILE_SERVICE_V2) SecretModifyService secretFileService,
+      @Named(SSH_SECRET_SERVICE_V2) SecretModifyService sshSecretService,
       SecretEntityReferenceHelper secretEntityReferenceHelper, FileUploadLimit fileUploadLimit,
       NGSecretServiceV2 ngSecretService, @Named(ENTITY_CRUD) Producer eventProducer) {
     this.secretManagerClient = secretManagerClient;

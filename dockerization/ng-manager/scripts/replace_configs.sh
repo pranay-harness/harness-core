@@ -272,3 +272,5 @@ replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GRO
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
 
 replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"
+
+replace_key_value ngSecretMigrationCompleted "$NG_SECRET_MIGRATION_COMPLETED"
