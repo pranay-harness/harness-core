@@ -14,6 +14,7 @@ service EngineExpressionProtoService {
 message ExpressionRenderBlobRequest {
   io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
   string expression = 2;
+  bool skipUnresolvedExpressionsCheck = 3;
 }
 
 message ExpressionRenderBlobResponse {
