@@ -52,10 +52,13 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
+import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPool;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.usermembership.UserMembershipClientModule;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -66,6 +69,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -151,6 +155,9 @@ public class AccessControlModule extends AbstractModule {
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
+        5, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    install(ExecutorModule.getInstance());
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     install(PersistentLockModule.getInstance());
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

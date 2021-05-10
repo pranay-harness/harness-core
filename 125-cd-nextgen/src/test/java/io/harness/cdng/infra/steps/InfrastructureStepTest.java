@@ -13,7 +13,6 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
@@ -127,13 +126,6 @@ public class InfrastructureStepTest extends CategoryTest {
                                   .tags(Collections.emptyList())
                                   .build();
 
-    EnvironmentOutcome environmentOutcome = EnvironmentOutcome.builder()
-                                                .identifier("test-id")
-                                                .name("test-id")
-                                                .description("")
-                                                .environmentType(EnvironmentType.PreProduction)
-                                                .tags(Collections.emptyMap())
-                                                .build();
     doReturn(expectedEnv).when(environmentService).upsert(expectedEnv);
   }
 

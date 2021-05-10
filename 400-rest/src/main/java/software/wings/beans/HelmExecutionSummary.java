@@ -4,8 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.container.ContainerInfo;
-
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
+import io.harness.delegate.task.helm.HelmChartInfo;
 
 import java.util.List;
 import lombok.Builder;

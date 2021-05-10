@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sRollingOutcome.K8sRollingOutcomeBuilder;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -55,9 +56,10 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
     return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
   }
 
+  @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
-      InfrastructureOutcome infrastructure) {
+      InfrastructureOutcome infrastructure, boolean shouldOpenFetchFilesLogStream) {
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     K8sRollingStepParameters k8sRollingStepParameters = (K8sRollingStepParameters) stepElementParameters.getSpec();
     boolean skipDryRun = !ParameterField.isNull(k8sRollingStepParameters.getSkipDryRun())
@@ -81,6 +83,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
             .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
+            .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 
     return k8sStepHelper.queueK8sTask(stepElementParameters, k8sRollingDeployRequest, ambiance, infrastructure);
@@ -98,6 +101,10 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
       PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
+    }
+
+    if (passThroughData instanceof HelmValuesFetchResponsePassThroughData) {
+      return k8sStepHelper.handleHelmValuesFetchFailure((HelmValuesFetchResponsePassThroughData) passThroughData);
     }
 
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();

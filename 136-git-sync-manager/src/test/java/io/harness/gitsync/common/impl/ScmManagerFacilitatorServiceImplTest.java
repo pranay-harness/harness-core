@@ -15,8 +15,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.dtos.GitFileContent;
@@ -29,6 +31,8 @@ import io.harness.service.ScmClient;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -102,5 +106,21 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
     assertThat(gitFileContent)
         .isEqualTo(
             GitFileContent.builder().content(fileContent.getContent()).objectId(fileContent.getBlobId()).build());
+  }
+
+  @Test
+  @Owner(developers = HARI)
+  @Category(UnitTests.class)
+  public void isSaasGitTest() {
+    List<ScmConnector> scmConnectors =
+        new ArrayList<>(Arrays.asList(GithubConnectorDTO.builder().url("www.github.com").build(),
+            GitlabConnectorDTO.builder().url("http://www.gitlab.com").build(),
+            GithubConnectorDTO.builder().url("www.github.harness.com").build(),
+            GithubConnectorDTO.builder().url("harness.github.com").build(),
+            GithubConnectorDTO.builder().url("github.com").build()));
+    List<Boolean> expected = new ArrayList<>(Arrays.asList(true, true, false, false, true));
+    List<Boolean> actual = new ArrayList<>();
+    scmConnectors.forEach(scmConnector -> actual.add(scmManagerFacilitatorService.isSaasGit(scmConnector).isSaasGit()));
+    assertThat(actual).isEqualTo(expected);
   }
 }

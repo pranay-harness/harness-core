@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.file.FileServiceConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -88,6 +89,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
   @JsonProperty("gitSdkConfiguration") private GitSdkConfiguration gitSdkConfiguration;
+  @JsonProperty("fileServiceConfiguration") private FileServiceConfiguration fileServiceConfiguration;
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
   @JsonProperty(value = "enableDefaultResourceGroupCreation", defaultValue = "false")
   private boolean enableDefaultResourceGroupCreation;

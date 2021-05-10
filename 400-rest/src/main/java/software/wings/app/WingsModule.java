@@ -97,6 +97,7 @@ import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagModule;
+import io.harness.file.FileServiceModule;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
 import io.harness.govern.ProviderMethodInterceptor;
@@ -329,7 +330,6 @@ import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.ExternalApiRateLimitingServiceImpl;
-import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
 import software.wings.service.impl.GcsBuildServiceImpl;
@@ -548,7 +548,6 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ErrorReporter;
 import software.wings.service.intfc.ExternalApiRateLimitingService;
-import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.GcsBuildService;
 import software.wings.service.intfc.HarnessApiKeyService;
@@ -1203,7 +1202,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
       configuration.setFileStorageMode(DataStorageMode.MONGO);
     }
 
-    bind(FileService.class).to(FileServiceImpl.class);
+    install(new FileServiceModule(configuration.getFileStorageMode(), configuration.getClusterName()));
     bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
 
     bind(new TypeLiteral<NotificationDispatcher<UserGroup>>() {})

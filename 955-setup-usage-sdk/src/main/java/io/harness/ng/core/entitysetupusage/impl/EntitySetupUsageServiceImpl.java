@@ -117,12 +117,10 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
 
   private Boolean deleteAllReferredByEntity(String accountIdentifier, String referredByEntityFQN,
       EntityType referredByEntityType, EntityType referredEntityType) {
-    // todo @deepak Change this function to take branch into consideration in next pr
     long numberOfRecordsDeleted = 0;
-    numberOfRecordsDeleted =
-        entityReferenceRepository
-            .deleteAllByAccountIdentifierAndReferredByEntityFQNAndReferredByEntityTypeAndReferredEntityType(
-                accountIdentifier, referredByEntityFQN, referredByEntityType.toString(), referredEntityType.toString());
+    Criteria criteria = entitySetupUsageFilterHelper.createCriteriaForDeletingAllReferredByEntries(
+        accountIdentifier, referredByEntityFQN, referredByEntityType, referredEntityType);
+    numberOfRecordsDeleted = entityReferenceRepository.delete(criteria);
     log.info("Deleted {} records for the referredBy entity {}", numberOfRecordsDeleted, referredByEntityFQN);
     return numberOfRecordsDeleted > 0;
   }

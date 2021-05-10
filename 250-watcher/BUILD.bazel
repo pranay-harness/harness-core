@@ -40,7 +40,7 @@ java_binary(
 )
 
 test_dependencies = [
-    "@delegate//:com_squareup_okhttp3_okhttp",
+    "@maven//:com_squareup_okhttp3_okhttp",
 ] + [
     "//990-commons-test:module",
     "@maven//:org_awaitility_awaitility",

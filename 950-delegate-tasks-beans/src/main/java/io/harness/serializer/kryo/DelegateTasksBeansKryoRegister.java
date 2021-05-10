@@ -16,7 +16,6 @@ import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
-import io.harness.delegate.beans.ChecksumType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateStringResponseData;
@@ -260,7 +259,10 @@ import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmValuesFetchRequest;
+import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
@@ -698,7 +700,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmInstallationParameters.class, 10013);
     kryo.register(SmtpParameters.class, 10014);
     kryo.register(UnitProgressData.class, 95001);
-    kryo.register(ChecksumType.class, 5065);
     kryo.register(TerraformCommand.class, 5524);
     kryo.register(TerraformCommandUnit.class, 5525);
     kryo.register(DecryptGitAPiAccessTaskParams.class, 543266);
@@ -738,5 +739,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(TerraformVarFileInfo.class, 543307);
     kryo.register(InlineTerraformVarFileInfo.class, 543308);
     kryo.register(RemoteTerraformVarFileInfo.class, 543309);
+    kryo.register(HelmValuesFetchRequest.class, 543310);
+    kryo.register(HelmValuesFetchResponse.class, 543311);
+    kryo.register(HelmChartInfo.class, 543312);
   }
 }

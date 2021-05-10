@@ -50,7 +50,7 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
   protected <T extends K8sDeployRequest> T executeTask(
       StepElementParameters stepElementParameters, Class<T> requestType) {
     getK8sStepExecutor().executeK8sTask(
-        manifestOutcome, ambiance, stepElementParameters, emptyList(), infrastructureOutcome);
+        manifestOutcome, ambiance, stepElementParameters, emptyList(), infrastructureOutcome, true);
     ArgumentCaptor<T> requestCaptor = ArgumentCaptor.forClass(requestType);
     verify(k8sStepHelper, times(1))
         .queueK8sTask(eq(stepElementParameters), requestCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));

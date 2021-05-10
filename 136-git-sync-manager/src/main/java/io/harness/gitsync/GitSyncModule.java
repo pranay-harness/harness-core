@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
+import io.harness.gitsync.common.impl.GitSyncSettingsServiceImpl;
 import io.harness.gitsync.common.impl.HarnessToGitHelperServiceImpl;
 import io.harness.gitsync.common.impl.ScmDelegateFacilitatorServiceImpl;
 import io.harness.gitsync.common.impl.ScmManagerFacilitatorServiceImpl;
@@ -16,6 +17,7 @@ import io.harness.gitsync.common.impl.YamlGitConfigServiceImpl;
 import io.harness.gitsync.common.impl.gittoharness.GitToHarnessProcessorServiceImpl;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitEntityService;
+import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -83,6 +85,7 @@ public class GitSyncModule extends AbstractModule {
     bind(GitSyncTriggerService.class).to(GitSyncTriggerServiceImpl.class);
     bind(HarnessToGitHelperService.class).to(HarnessToGitHelperServiceImpl.class);
     bind(GitToHarnessProcessorService.class).to(GitToHarnessProcessorServiceImpl.class);
+    bind(GitSyncSettingsService.class).to(GitSyncSettingsServiceImpl.class);
     bind(ScmClientFacilitatorService.class)
         .annotatedWith(Names.named(SCM_ON_MANAGER))
         .to(ScmManagerFacilitatorServiceImpl.class);

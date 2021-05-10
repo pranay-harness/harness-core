@@ -1,6 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ChecksumType;
+import io.harness.file.HarnessFile;
 import io.harness.validation.Create;
 
 import com.google.common.base.MoreObjects;
@@ -15,11 +19,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * Created by anubhaw on 4/13/16.
  */
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class BaseFile extends Base {
+public class BaseFile extends Base implements HarnessFile {
   @FormDataParam("name") private String name;
   private String fileUuid;
   @NotEmpty(groups = Create.class) private String fileName;
