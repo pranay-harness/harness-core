@@ -718,12 +718,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void logCfCliConfiguration() {
     String cfCli6Path = delegateConfiguration.getCfCli6Path();
     if (isNoneBlank(cfCli6Path)) {
-      log.info(format("Found custom CF CLI6 binary path on delegate: %s", cfCli6Path));
+      log.info(format("Found custom CF CLI6 binary path: %s", cfCli6Path));
     }
 
     String cfCli7Path = delegateConfiguration.getCfCli7Path();
     if (isNoneBlank(cfCli7Path)) {
-      log.info(format("Found custom CF CLI7 binary path on delegate: %s", cfCli7Path));
+      log.info(format("Found custom CF CLI7 binary path: %s", cfCli7Path));
     }
 
     validateCfCliExists();
