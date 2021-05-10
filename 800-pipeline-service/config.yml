@@ -49,8 +49,8 @@ grpcClientConfigs:
     target: ${NG_MANAGER_TARGET:-localhost:12101}
     authority: ${NG_MANAGER_AUTHORITY:-localhost}
   cvng:
-    target: ${CV_MANAGER_TARGET:-localhost:12401}
-    authority: ${CV_MANAGER_AUTHORITY:-localhost}
+    target: ${CVNG_MANAGER_TARGET:-localhost:12401}
+    authority: ${CVNG_MANAGER_AUTHORITY:-localhost}
   ci:
     target: ${CI_MANAGER_TARGET:-localhost:12301}
     authority: ${CI_MANAGER_AUTHORITY:-localhost}
@@ -91,9 +91,9 @@ eventsFramework:
     userName: ${EVENTS_FRAMEWORK_REDIS_USERNAME:-""}
     password: ${EVENTS_FRAMEWORK_REDIS_PASSWORD:-""}
     sslConfig:
-      enabled: false
-      CATrustStorePath: "/tmp/ca_trust_store"
-      CATrustStorePassword: ""
+      enabled: ${EVENTS_FRAMEWORK_REDIS_SSL_ENABLED:-false}
+      CATrustStorePath: ${EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH:-false}
+      CATrustStorePassword: ${EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD:-""}
 
 managerClientConfig:
   baseUrl: ${MANAGER_BASE_URL:-http://localhost:3457/api/}

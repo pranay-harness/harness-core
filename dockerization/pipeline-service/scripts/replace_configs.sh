@@ -31,26 +31,6 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
-if [[ "" != "$MONGO_CONNECT_TIMEOUT" ]]; then
-  yq write -i $CONFIG_FILE mongo.connectTimeout $MONGO_CONNECT_TIMEOUT
-fi
-
-if [[ "" != "$MONGO_SERVER_SELECTION_TIMEOUT" ]]; then
-  yq write -i $CONFIG_FILE mongo.serverSelectionTimeout $MONGO_SERVER_SELECTION_TIMEOUT
-fi
-
-if [[ "" != "$MAX_CONNECTION_IDLE_TIME" ]]; then
-  yq write -i $CONFIG_FILE mongo.maxConnectionIdleTime $MAX_CONNECTION_IDLE_TIME
-fi
-
-if [[ "" != "$MONGO_CONNECTIONS_PER_HOST" ]]; then
-  yq write -i $CONFIG_FILE mongo.connectionsPerHost $MONGO_CONNECTIONS_PER_HOST
-fi
-
-if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
-  yq write -i $CONFIG_FILE mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
-fi
-
 if [[ "" != "$MONGO_TRANSACTIONS_ALLOWED" ]]; then
   yq write -i $CONFIG_FILE mongo.transactionsEnabled $MONGO_TRANSACTIONS_ALLOWED
 fi
@@ -75,52 +55,8 @@ if [[ "" != "$MANAGER_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE managerServiceSecret $MANAGER_SERVICE_SECRET
 fi
 
-if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl $NG_MANAGER_BASE_URL
-fi
-
-if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
-  yq write -i $CONFIG_FILE ngManagerServiceSecret $NG_MANAGER_SERVICE_SECRET
-fi
-
-if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.baseUrl $CI_MANAGER_BASE_URL
-fi
-
-if [[ "" != "$CI_MANAGER_SERVICE_SECRET" ]]; then
-  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.secret $CI_MANAGER_SERVICE_SECRET
-fi
-
-if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.serviceHttpClientConfig.baseUrl $NG_MANAGER_BASE_URL
-fi
-
-if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
-  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.secret $NG_MANAGER_SERVICE_SECRET
-fi
-
-if [[ "" != "$NG_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.cd.target $NG_MANAGER_TARGET
-fi
-
 if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.cd.authority $NG_MANAGER_AUTHORITY
-fi
-
-if [[ "" != "$CVNG_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.cvng.target $CVNG_MANAGER_TARGET
-fi
-
-if [[ "" != "$CVNG_MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.cvng.authority $CVNG_MANAGER_AUTHORITY
-fi
-
-if [[ "" != "$CI_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.ci.target $CI_MANAGER_TARGET
-fi
-
-if [[ "" != "$CI_MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.ci.authority $CI_MANAGER_AUTHORITY
 fi
 
 if [[ "" != "$SCM_SERVICE_URI" ]]; then
@@ -190,16 +126,6 @@ fi
 if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
   yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
 fi
-
-replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
-replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
-replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
-replace_key_value eventsFramework.redis.masterName $EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME
-replace_key_value eventsFramework.redis.userName $EVENTS_FRAMEWORK_REDIS_USERNAME
-replace_key_value eventsFramework.redis.password $EVENTS_FRAMEWORK_REDIS_PASSWORD
-replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDIS_SSL_ENABLED
-replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
-replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 
 replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 
