@@ -12,7 +12,6 @@ import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -20,17 +19,24 @@ import static org.mockito.Mockito.when;
 import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidRequestException;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.OrganizationRepository;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.rule.Owner;
+import io.harness.security.SourcePrincipalContextData;
+import io.harness.security.dto.UserPrincipal;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.util.Optional;
@@ -39,6 +45,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -46,17 +54,19 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
 public class OrganizationServiceImplTest extends CategoryTest {
-  private OrganizationRepository organizationRepository;
+  @Mock private OrganizationRepository organizationRepository;
+  @Mock private OutboxService outboxService;
+  @Mock private TransactionTemplate transactionTemplate;
+  @Mock private ResourceGroupClient resourceGroupClient;
+  @Mock private NgUserService ngUserService;
+  @Mock private AccessControlClient accessControlClient;
   private OrganizationServiceImpl organizationService;
-  private OutboxService outboxService;
-  private TransactionTemplate transactionTemplate;
 
   @Before
   public void setup() {
-    organizationRepository = mock(OrganizationRepository.class);
-    outboxService = mock(OutboxService.class);
-    transactionTemplate = mock(TransactionTemplate.class);
-    organizationService = spy(new OrganizationServiceImpl(organizationRepository, outboxService, transactionTemplate));
+    MockitoAnnotations.initMocks(this);
+    organizationService = spy(new OrganizationServiceImpl(organizationRepository, outboxService, transactionTemplate,
+        resourceGroupClient, ngUserService, accessControlClient));
   }
 
   private OrganizationDTO createOrganizationDTO(String identifier) {
@@ -71,6 +81,13 @@ public class OrganizationServiceImplTest extends CategoryTest {
     OrganizationDTO organizationDTO = createOrganizationDTO(randomAlphabetic(10));
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
+    GlobalContext globalContext = new GlobalContext();
+    SourcePrincipalContextData sourcePrincipalContextData =
+        SourcePrincipalContextData.builder()
+            .principal(new UserPrincipal("user", "admin@harness.io", "user", accountIdentifier))
+            .build();
+    globalContext.setGlobalContextRecord(sourcePrincipalContextData);
+    GlobalContextManager.set(globalContext);
 
     when(organizationRepository.save(organization)).thenReturn(organization);
     when(outboxService.save(any())).thenReturn(OutboxEvent.builder().build());
