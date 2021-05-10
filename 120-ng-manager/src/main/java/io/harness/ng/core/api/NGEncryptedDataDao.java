@@ -8,7 +8,7 @@ import io.harness.security.encryption.EncryptedRecord;
 
 @OwnedBy(PL)
 public interface NGEncryptedDataService {
-  NGEncryptedData create(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+  NGEncryptedData save(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
       EncryptedRecord encryptedRecord);
 
   NGEncryptedData get(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);

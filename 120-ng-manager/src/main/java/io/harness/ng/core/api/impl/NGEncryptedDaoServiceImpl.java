@@ -22,7 +22,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private final NGEncryptedDataRepository encryptedDataRepository;
 
   @Override
-  public NGEncryptedData create(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  public NGEncryptedData save(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, EncryptedRecord encryptedRecord) {
     NGEncryptedData ngEncryptedData = NGEncryptedData.builder()
                                           .accountIdentifier(accountIdentifier)
