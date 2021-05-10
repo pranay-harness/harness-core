@@ -24,6 +24,7 @@ import io.harness.ModuleType;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
@@ -134,8 +135,12 @@ public class ProjectResourceTest extends CategoryTest {
 
     when(accessControlClient.checkForAccess(anyList()))
         .thenReturn(AccessCheckResponseDTO.builder()
-                        .accessControlList(Collections.singletonList(
-                            AccessControlDTO.builder().resourceIdentifier(orgIdentifier).permitted(true).build()))
+                        .accessControlList(singletonList(
+                            AccessControlDTO.builder()
+                                .resourceScope(ResourceScope.builder().orgIdentifier(orgIdentifier).build())
+                                .resourceIdentifier(orgIdentifier)
+                                .permitted(true)
+                                .build()))
                         .build());
 
     ResponseDTO<PageResponse<ProjectResponse>> response = projectResource.list(
