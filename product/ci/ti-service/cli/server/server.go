@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/wings-software/portal/product/ci/ti-service/cgservice"
+	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"os"
 	"os/signal"
 
@@ -80,7 +81,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	}
 
 	// Test intelligence DB
-	var tidb *mongodb.MongoDb
+	var tidb tidb.TiDB
 	var cgs cgservice.CgService
 	if config.MongoDb.DbName != "" && (config.MongoDb.Host != "" || config.MongoDb.ConnStr != "") {
 		// Create mongoDB connection
@@ -100,7 +101,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			return errors.New("unable to connect to mongo DB")
 		}
 
-		// Test intelligence DB
+		// Callgraph service
 		cgs = cgservice.CgService{
 			MongoDb: tidb,
 			Log:     log,

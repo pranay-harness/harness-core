@@ -54,8 +54,6 @@ type Node struct {
 	Proj    string  `json:"project" bson:"project"`
 	Org     string  `json:"organization" bson:"organization"`
 	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
-
-	CollName string
 }
 
 const (

@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//commons/go/lib/utils:go_default_library",
         "//product/ci/addon/ti:go_default_library",
+        "//product/ci/ti-service/tidb:go_default_library",
         "//product/ci/ti-service/tidb/mongodb:go_default_library",
         "//product/ci/ti-service/types:go_default_library",
         "@com_github_kamva_mgm_v3//:go_default_library",

@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/addon/ti"
+	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	db "github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,7 +18,7 @@ import (
 )
 
 type CgService struct {
-	MongoDb *db.MongoDb
+	MongoDb tidb.TiDB
 	Log     *zap.SugaredLogger
 }
 
