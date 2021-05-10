@@ -1,7 +1,6 @@
 package io.harness.engine.pms.data;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.expression.EngineExpressionEvaluator;
@@ -12,15 +11,15 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-@OwnedBy(PIPELINE)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
 
   @Override
-  public String renderExpression(Ambiance ambiance, String expression) {
+  public String renderExpression(Ambiance ambiance, String expression, boolean skipUnresolvedExpressionsCheck) {
     EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
-    return evaluator.renderExpression(expression);
+    return evaluator.renderExpression(expression, skipUnresolvedExpressionsCheck);
   }
 
   @Override
@@ -31,11 +30,12 @@ public class PmsEngineExpressionServiceImpl implements PmsEngineExpressionServic
   }
 
   @Override
-  public Object resolve(Ambiance ambiance, Object o) {
+  public Object resolve(Ambiance ambiance, Object o, boolean skipUnresolvedExpressionsCheck) {
     EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
-    return evaluator.resolve(o);
+    return evaluator.resolve(o, skipUnresolvedExpressionsCheck);
   }
 
+  @Override
   public EngineExpressionEvaluator prepareExpressionEvaluator(Ambiance ambiance) {
     EngineExpressionEvaluator engineExpressionEvaluator = expressionEvaluatorProvider.get(null, ambiance, null, false);
     injector.injectMembers(engineExpressionEvaluator);
