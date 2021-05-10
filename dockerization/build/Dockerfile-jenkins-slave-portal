@@ -102,4 +102,6 @@ RUN cd /tmp \
     && cd / \
     && rm -rf /tmp/*
 
+RUN curl -fsSL https://get.docker.com/ | sh
+
 ENTRYPOINT ["jenkins-slave"]
