@@ -137,7 +137,12 @@ func convertGithubEnumToStrings(enums *pb.GithubWebhookEvents) (strings []string
 }
 
 var githubWebhookMap map[string]pb.GithubWebhookEvent = map[string]pb.GithubWebhookEvent{
-	"check_run":   pb.GithubWebhookEvent_CHECK_RUN,
-	"check_suite": pb.GithubWebhookEvent_CHECK_SUITE,
-	"create":      pb.GithubWebhookEvent_CREATE_EVENT,
+	"create":              pb.GithubWebhookEvent_GITHUB_CREATE,
+	"delete":              pb.GithubWebhookEvent_GITHUB_DELETE,
+	"deployment":          pb.GithubWebhookEvent_GITHUB_DEPLOYMENT,
+	"issue":               pb.GithubWebhookEvent_GITHUB_ISSUE,
+	"issue_comment":       pb.GithubWebhookEvent_GITHUB_ISSUE_COMMENT,
+	"pull_request":        pb.GithubWebhookEvent_GITHUB_PULL_REQUEST,
+	"pull_request_review": pb.GithubWebhookEvent_GITHUB_PULL_REQUEST_REVIEW,
+	"push":                pb.GithubWebhookEvent_GITHUB_PUSH,
 }
