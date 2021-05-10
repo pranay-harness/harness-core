@@ -2,7 +2,7 @@ package io.harness.service.stats.statscollector;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dto.Instance;
+import io.harness.dto.instance.Instance;
 import io.harness.helper.SnapshotTimeProvider;
 import io.harness.repository.instance.InstanceRepository;
 import io.harness.service.instancestats.InstanceStatsService;

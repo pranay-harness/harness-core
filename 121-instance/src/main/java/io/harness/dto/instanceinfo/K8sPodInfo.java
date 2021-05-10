@@ -1,8 +1,16 @@
 package io.harness.dto.instanceinfo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.List;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@OwnedBy(HarnessTeam.DX)
 public class K8sPodInfo extends ContainerInfo {
   private String releaseName;
   private String podName;

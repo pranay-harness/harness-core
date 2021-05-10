@@ -2,7 +2,7 @@ package io.harness.service.stats.usagemetrics.eventpublisher;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dto.Instance;
+import io.harness.dto.instance.Instance;
 
 import java.util.List;
 

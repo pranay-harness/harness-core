@@ -1,6 +1,6 @@
 package io.harness.repository.instance;
 
-import io.harness.dto.Instance;
+import io.harness.dto.instance.Instance;
 
 import com.google.inject.Inject;
 import groovy.util.logging.Slf4j;

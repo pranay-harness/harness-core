@@ -2,8 +2,8 @@ package io.harness.service.instance;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.dto.Instance;
 import io.harness.dto.SyncStatus;
+import io.harness.dto.instance.Instance;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
