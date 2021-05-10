@@ -3,6 +3,7 @@ package io.harness.dto;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dto.deploymentinfo.DeploymentInfo;
+import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -52,6 +53,7 @@ public class DeploymentSummary implements PersistentEntity {
   private String deployedById;
   private String deployedByName;
   private String infrastructureMappingId;
+  private InfrastructureMapping infrastructureMapping;
   private long deployedAt;
   private DeploymentInfo deploymentInfo;
   @CreatedDate Long createdAt;

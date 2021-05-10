@@ -8,5 +8,7 @@ import java.util.Set;
 public interface InstanceHandlerFactoryService {
   InstanceHandler getInstanceHandler(InfrastructureMapping infraMapping);
 
+  InstanceHandler getInstanceHandlerByType(String infrastructureMappingType);
+
   Set<InstanceHandler> getAllInstanceHandlers();
 }

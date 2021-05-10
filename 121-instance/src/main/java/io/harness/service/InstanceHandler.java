@@ -1,10 +1,19 @@
 package io.harness.service;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.dto.DeploymentSummary;
 import io.harness.dto.deploymentinfo.RollbackInfo;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.InstanceSyncFlowType;
+import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.repository.infrastructuremapping.InfrastructureMappingRepository;
 
 import software.wings.beans.infrastructure.instance.Instance;
@@ -13,10 +22,14 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@OwnedBy(HarnessTeam.DX)
 public abstract class InstanceHandler<T, O extends InfrastructureMapping>
     implements IInstanceHandler<T, O>, IInstanceSyncByPerpetualTaskhandler {
   @Inject protected InfrastructureMappingRepository infrastructureMappingRepository;
+  @Inject protected OutcomeService outcomeService;
 
   protected abstract void validateDeploymentInfo(DeploymentSummary deploymentSummary);
 
@@ -31,6 +44,31 @@ public abstract class InstanceHandler<T, O extends InfrastructureMapping>
   protected abstract void validatePerpetualTaskDelegateResponse(DelegateResponseData response);
 
   protected abstract String getInstanceUniqueIdentifier(Instance instance);
+
+  // Get concrete infrastructure mapping object based on infrastructure mapping type
+  protected abstract InfrastructureMapping getInfrastructureMappingByType(
+      Ambiance ambiance, ServiceOutcome serviceOutcome, InfrastructureOutcome infrastructureOutcome);
+
+  public final InfrastructureMapping getInfrastructureMapping(Ambiance ambiance) {
+    ServiceOutcome serviceOutcome = getServiceOutcomeFromAmbiance(ambiance);
+    InfrastructureOutcome infrastructureOutcome = getInfrastructureOutcomeFromAmbiance(ambiance);
+
+    // Set connectorRef + specific infrastructure mapping fields
+    InfrastructureMapping infrastructureMapping =
+        getInfrastructureMappingByType(ambiance, serviceOutcome, infrastructureOutcome);
+
+    // Set common parent class fields here
+    infrastructureMapping.setAccountIdentifier(AmbianceHelper.getAccountId(ambiance));
+    infrastructureMapping.setOrgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance));
+    infrastructureMapping.setProjectIdentifier(AmbianceHelper.getProjectIdentifier(ambiance));
+    infrastructureMapping.setServiceId(serviceOutcome.getIdentifier());
+    infrastructureMapping.setInfrastructureMappingType(infrastructureOutcome.getType());
+    infrastructureMapping.setEnvId(infrastructureOutcome.getEnvironment().getIdentifier());
+
+    // TODO set deployment type and id
+
+    return infrastructureMapping;
+  }
 
   public final void handleNewDeployment(DeploymentSummary deploymentSummary, RollbackInfo rollbackInfo) {
     if (deploymentSummary == null) {
@@ -76,7 +114,7 @@ public abstract class InstanceHandler<T, O extends InfrastructureMapping>
     //        loadContainerSvcNameInstanceMap(containerInfraMapping, containerMetadataInstanceMap);
   }
 
-  public final void createOrUpdateInstances(List<Instance> oldInstances, List<Instance> newInstances) {
+  protected final void createOrUpdateInstances(List<Instance> oldInstances, List<Instance> newInstances) {
     //    we delete the instance oldInstances - newInstances
     //    we create the instance newInstances - oldInstances
     // also update common instances with the newInstances details
@@ -84,6 +122,16 @@ public abstract class InstanceHandler<T, O extends InfrastructureMapping>
     // Every instance will have a unique key
     // for k8s pods:  podInfo.getName() + podInfo.getNamespace() + getImageInStringFormat(podInfo)
     // We use this info to compare new and old instances
+  }
+
+  protected ServiceOutcome getServiceOutcomeFromAmbiance(Ambiance ambiance) {
+    return (ServiceOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+  }
+
+  protected InfrastructureOutcome getInfrastructureOutcomeFromAmbiance(Ambiance ambiance) {
+    return (InfrastructureOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
   }
 
   // ---------------------------- PRIVATE METHODS ---------------------------

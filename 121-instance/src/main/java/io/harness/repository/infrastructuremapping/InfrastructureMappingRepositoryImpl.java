@@ -31,4 +31,9 @@ public class InfrastructureMappingRepositoryImpl implements InfrastructureMappin
     Query query = new Query().addCriteria(criteria);
     return mongoTemplate.findOne(query, InfrastructureMapping.class);
   }
+
+  @Override
+  public void save(InfrastructureMapping infrastructureMapping) {
+    mongoTemplate.save(infrastructureMapping);
+  }
 }

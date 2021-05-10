@@ -162,8 +162,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
               deploymentSummary.getOrgIdentifier(), deploymentSummary.getProjectIdentifier(), infrastructureMappingId);
       notNullCheck("Infra mapping is null for the given id: " + infrastructureMappingId, infrastructureMapping);
 
-      InfrastructureMappingType infrastructureMappingType =
-          Utils.getEnumFromString(InfrastructureMappingType.class, infrastructureMapping.getInfraMappingType());
+      InfrastructureMappingType infrastructureMappingType = Utils.getEnumFromString(
+          InfrastructureMappingType.class, infrastructureMapping.getInfrastructureMappingType());
       Preconditions.checkNotNull(infrastructureMappingType, "InfrastructureMappingType should not be null");
       if (isSupported(infrastructureMappingType)) {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMapping);

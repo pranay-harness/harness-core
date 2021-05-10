@@ -3,99 +3,74 @@ package io.harness.service;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.k8s.K8sRollingOutcome;
-import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.dto.DeploymentSummary;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.DeploymentEvent;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.repository.infrastructuremapping.InfrastructureMappingRepository;
+import io.harness.service.instancehandlerfactory.InstanceHandlerFactoryService;
+import io.harness.service.instancesync.InstanceSyncService;
 
 import com.google.inject.Inject;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(HarnessTeam.DX)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
   private OutcomeService outcomeService;
+  private InstanceHandlerFactoryService instanceHandlerFactoryService;
+  private InfrastructureMappingRepository infrastructureMappingRepository;
+  private InstanceSyncService instanceSyncService;
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    Ambiance ambiance = event.getAmbiance();
-    String accountId = AmbianceHelper.getAccountId(ambiance);
-    String orgId = AmbianceHelper.getOrgIdentifier(ambiance);
-    String projectId = AmbianceHelper.getProjectIdentifier(ambiance);
-    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    String planExecutionId = ambiance.getPlanExecutionId();
-    // TODO get deployedAt from ambiance
+    try {
+      // TODO check if event is of deployment step or not, if yes then consume otherwise ignore
 
-    // end time stamp of event
-    //    event.getNodeExecutionProto().getEndTs();
+      InfrastructureMapping infrastructureMapping = createInfrastructureMappingIfNew(event);
+      DeploymentEvent deploymentEvent = prepareDeploymentEvent(event, infrastructureMapping);
 
-    createInfrastructureMappingIfNew(ambiance);
-
-    prepareDeploymentEvent(ambiance);
+      instanceSyncService.processDeploymentEvent(deploymentEvent);
+    } catch (Exception exception) {
+      log.error("Exception occured while handling event for instance sync", exception);
+    }
   }
 
   // --------------------- PRIVATE METHODS ------------------------
 
-  private InfrastructureMapping createInfrastructureMappingIfNew(Ambiance ambiance) {
-    String accountId = AmbianceHelper.getAccountId(ambiance);
-    String orgId = AmbianceHelper.getOrgIdentifier(ambiance);
-    String projectId = AmbianceHelper.getProjectIdentifier(ambiance);
+  private InfrastructureMapping createInfrastructureMappingIfNew(OrchestrationEvent event) {
+    // Fetch handler to extract infrastructure maping
+    // pass on ambiance to handler to return corresponding infrastructure mapping object
+    // check if the infrastructure mapping is already present in DB or not
+    // TODO If already present check if we need to update it or not
+    // If not present, then create new infrastructure mapping in DB and return
 
-    ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+    Ambiance ambiance = event.getAmbiance();
+    InstanceHandler instanceHandler = getInstanceHandler(ambiance);
+    InfrastructureMapping infrastructureMapping = instanceHandler.getInfrastructureMapping(ambiance);
 
-    InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+    // Check if infrastructure mapping already exists in DB or not, if not, then create a new record
+    InfrastructureMapping infrastructureMappingInDB = infrastructureMappingRepository.get(
+        AmbianceHelper.getAccountId(ambiance), AmbianceHelper.getOrgIdentifier(ambiance),
+        AmbianceHelper.getProjectIdentifier(ambiance), infrastructureMapping.getId());
+    if (infrastructureMappingInDB == null) {
+      infrastructureMappingRepository.save(infrastructureMapping);
+    }
 
-    K8sRollingOutcome k8sRollingOutcome = (K8sRollingOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
-
-    /**
-     * private unique id;
-     * private String infraMappingType; // DIRECT_KUBERNETES
-     *   private String connectorType;
-     *   private String connectorId;
-     *   private String deploymentType; //  HELM, KUBERNETES
-     *   clustername
-     *   namespace
-     */
-
-    String envId = infrastructureOutcome.getEnvironment().getIdentifier();
-    String serviceId = serviceOutcome.getIdentifier();
-    String releaseName = k8sRollingOutcome.getReleaseName();
-
-    //    serviceOutcome
-
-    //            infrastructureOutcome.getType();
-
-    // Ask sahil to add field to determine which steps produce pods/deployment
-    // Ask Sahil to maintain common constants file that provides infrastucture outcome type
-    // use it to determine the type of infrastrucure mapping
-
-    //    K8sGcpInfrastructureOutcome,
-    //        K8sDirectInfrastructureOutcome
-
-    return null;
+    return infrastructureMapping;
   }
 
-  private DeploymentEvent prepareDeploymentEvent(Ambiance ambiance) {
-    ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
-
-    InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
-
-    K8sRollingOutcome k8sRollingOutcome = (K8sRollingOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
-
+  private DeploymentEvent prepareDeploymentEvent(
+      OrchestrationEvent event, InfrastructureMapping infrastructureMapping) {
+    Ambiance ambiance = event.getAmbiance();
     /**
      *   private String pipelineExecutionName;
      *   private String artifactId;
@@ -103,19 +78,32 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
      *   private String artifactBuildNum;
      *   private String deployedById;
      *   private String deployedByName;
-     *   private long deployedAt;
-     * private String namespace;
-     *   private Set<String> namespaces = new HashSet<>();
-     *   private String blueGreenStageColor;
-     *
-     *   there's list of artifacts - primary and sidecars, which one to use
      *
      *   // save both primary and sidecard artifacts
      */
 
-    int releaseNumber = k8sRollingOutcome.getReleaseNumber();
-    String pipelineExecutionId = ambiance.getPlanExecutionId();
+    InstanceHandler instanceHandler = getInstanceHandler(ambiance);
 
-    return null;
+    DeploymentSummary deploymentSummary = DeploymentSummary.builder()
+                                              .accountIdentifier(AmbianceHelper.getAccountId(ambiance))
+                                              .orgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance))
+                                              .projectIdentifier(AmbianceHelper.getProjectIdentifier(ambiance))
+                                              .infrastructureMapping(infrastructureMapping)
+                                              .infrastructureMappingId(infrastructureMapping.getId())
+                                              .pipelineExecutionId(ambiance.getPlanExecutionId())
+                                              .deploymentInfo(instanceHandler.getDeploymentInfo(ambiance))
+                                              .deployedAt(event.getNodeExecutionProto().getEndTs().getSeconds())
+                                              .build();
+
+    // TODO fetch rollback info and set into deployment event
+
+    return new DeploymentEvent(deploymentSummary, null);
+  }
+
+  private InstanceHandler getInstanceHandler(Ambiance ambiance) {
+    InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+
+    return instanceHandlerFactoryService.getInstanceHandlerByType(infrastructureOutcome.getType());
   }
 }

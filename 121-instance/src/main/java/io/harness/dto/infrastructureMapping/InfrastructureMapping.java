@@ -41,9 +41,8 @@ public abstract class InfrastructureMapping implements PersistentEntity {
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
-  private String infraMappingType;
-  private String connectorType;
-  private String connectorId;
+  private String infrastructureMappingType;
+  private String connectorRef;
   private String envId;
   private String deploymentType;
   private String serviceId;
