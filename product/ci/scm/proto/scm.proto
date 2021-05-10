@@ -453,23 +453,81 @@ message ListCommitsResponse {
   PageResponse pagination = 2;
 }
 
+enum GithubWebhookEvent {
+  ALL = 0;
+  CHECK_RUN = 1;
+  CHECK_SUITE = 2;
+  CREATE_EVENT = 3;
+  CODE_SCANNING_ALERT = 4;
+  COMMIT_COMMENT = 5;
+  DELETE_EVENT = 6;
+  DEPLOYMENT = 7;
+  DEPLOYMENT_STATUS = 8;
+  DEPLOY_KEY = 9;
+  DISCUSSION = 10;
+  DISCUSSION_COMMENT = 11;
+  FORK = 12;
+  GOLLUM = 13;
+  ISSUES = 14;
+  ISSUE_COMMENT = 15;
+  LABEL_EVENT = 16;
+  MEMBER = 17;
+  META = 18;
+  MILESTONE = 19;
+  PACKAGE = 20;
+  PACKAGE_V2 = 21;
+  PAGE_BUILD = 22;
+  PROJECT = 23;
+  PROJECT_CARD = 24;
+  PROJECT_COLUMN = 25;
+  PUBLIC = 26;
+  PULL_REQUEST = 27;
+  PULL_REQUEST_REVIEW = 28;
+  PULL_REQUEST_REVIEW_COMMENT = 29;
+  PUSH = 30;
+  REGISTRY_PACKAGE = 31;
+  RELEASE = 32;
+  REPOSITORY = 33;
+  REPOSITORY_IMPORT = 34;
+  REPOSITORY_VULNERABILITY_ALERT = 35;
+  SECRET_SCANNING_ALERT = 36;
+  STAR = 37;
+  STATUS = 38;
+  TEAM_ADD = 39;
+  WATCH = 40;
+}
+
+message GithubWebhookEvents {
+  repeated GithubWebhookEvent events = 1;
+}
+
+message BitbucketCloudWebhookEvents {
+  repeated GithubWebhookEvent events = 1;
+}
+
 message CreateWebhookRequest {
   string slug = 1;
   string name = 2;
   string target = 3;
   string secret = 4;
-  repeated string nativeEvents = 5;
-  bool skipVerify = 6;
-  Provider provider = 7;
+  oneof nativeEvents {
+    GithubWebhookEvents github = 5;
+    BitbucketCloudWebhookEvents bitbucket_server = 6;
+  }
+  bool skipVerify = 7;
+  Provider provider = 8;
 }
 
 message WebhookResponse {
   string id = 1;
   string name = 2;
   string target = 3;
-  repeated string nativeEvents = 4;
-  bool active = 5;
-  bool skipVerify = 6;
+  oneof nativeEvents {
+    GithubWebhookEvents github = 4;
+    BitbucketCloudWebhookEvents bitbucket_server = 5;
+  }
+  bool active = 6;
+  bool skipVerify = 7;
 }
 
 message CreateWebhookResponse {

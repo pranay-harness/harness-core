@@ -20,12 +20,12 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 		log.Errorw("CreateWebhook failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
-
+	bla, _ := convertGithubEnumToStrings(request.GetGithub())
 	inputParams := scm.HookInput{
 		Name:         request.GetName(),
 		Target:       request.GetTarget(),
 		Secret:       request.GetSecret(),
-		NativeEvents: request.GetNativeEvents(),
+		NativeEvents: bla,
 		SkipVerify:   request.GetSkipVerify(),
 	}
 
@@ -37,12 +37,13 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 	}
 	log.Infow("CreateWebhook success", "slug", request.GetSlug(), "name", request.GetName(), "target", request.GetTarget(), "elapsed_time_ms", utils.TimeSince(start))
 
+	eventy, _ := convertStringsToGithubEnum(hook.Events)
 	out = &pb.CreateWebhookResponse{
 		Webhook: &pb.WebhookResponse{
 			Id:           hook.ID,
 			Name:         hook.Name,
 			Target:       hook.Target,
-			NativeEvents: hook.Events,
+			NativeEvents: &pb.WebhookResponse_Github{&eventy},
 			Active:       hook.Active,
 			SkipVerify:   hook.SkipVerify,
 		},
@@ -93,11 +94,12 @@ func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap
 	log.Infow("ListWebhooks success", "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start))
 	var hooks []*pb.WebhookResponse
 	for _, h := range scmHooks {
+		eventy, _ := convertStringsToGithubEnum(h.Events)
 		webhookResponse := pb.WebhookResponse{
 			Id:           h.ID,
 			Name:         h.Name,
 			Target:       h.Target,
-			NativeEvents: h.Events,
+			NativeEvents: &pb.WebhookResponse_Github{&eventy},
 			Active:       h.Active,
 			SkipVerify:   h.SkipVerify,
 		}
@@ -112,4 +114,30 @@ func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap
 		},
 	}
 	return out, nil
+}
+
+func convertStringsToGithubEnum(strings []string) (enums pb.GithubWebhookEvents, err error) {
+	var array []pb.GithubWebhookEvent
+	for _, s := range strings {
+		array = append(array, githubWebhookMap[s])
+	}
+	enums.Events = array
+	return enums, nil
+}
+
+func convertGithubEnumToStrings(enums *pb.GithubWebhookEvents) (strings []string, err error) {
+	for _, e := range enums.Events {
+		for key, value := range githubWebhookMap {
+			if e == value {
+				strings = append(strings, key)
+			}
+		}
+	}
+	return strings, nil
+}
+
+var githubWebhookMap map[string]pb.GithubWebhookEvent = map[string]pb.GithubWebhookEvent{
+	"check_run":   pb.GithubWebhookEvent_CHECK_RUN,
+	"check_suite": pb.GithubWebhookEvent_CHECK_SUITE,
+	"create":      pb.GithubWebhookEvent_CREATE_EVENT,
 }

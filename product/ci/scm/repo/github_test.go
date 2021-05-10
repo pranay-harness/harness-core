@@ -2,7 +2,6 @@ package repo
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,21 +11,25 @@ import (
 )
 
 func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
-	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
-		t.Skip("Skipping, Acceptance test")
-	}
+	// if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+	// 	t.Skip("Skipping, Acceptance test")
+	// }
 	in := &pb.CreateWebhookRequest{
-		Slug:         "tphoney/scm-test",
-		Name:         "drone",
-		Target:       "https://example.com",
-		Secret:       "topsecret",
-		NativeEvents: []string{"create", "delete"},
-		SkipVerify:   true,
+		Slug:   "tphoney/scm-test",
+		Name:   "drone",
+		Target: "https://example.com",
+		Secret: "topsecret",
+		NativeEvents: &pb.CreateWebhookRequest_Github{
+			Github: &pb.GithubWebhookEvents{
+				Events: []pb.GithubWebhookEvent{pb.GithubWebhookEvent_CREATE_EVENT, pb.GithubWebhookEvent_DELETE_EVENT},
+			},
+		},
+		SkipVerify: true,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
 					},
 				},
 			},
@@ -38,7 +41,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
-	assert.Equal(t, 2, len(got.Webhook.NativeEvents), "created a webhook with 2 events")
+	assert.Equal(t, 2, len(got.Webhook.GetGithub().GetEvents()), "created a webhook with 2 events")
 
 	list := &pb.ListWebhooksRequest{
 		Slug: "tphoney/scm-test",
@@ -46,7 +49,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
 					},
 				},
 			},
@@ -65,7 +68,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
 					},
 				},
 			},
