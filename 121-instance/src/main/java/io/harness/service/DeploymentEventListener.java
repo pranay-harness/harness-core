@@ -21,9 +21,9 @@ import com.google.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
   private OutcomeService outcomeService;
   private InstanceHandlerFactoryService instanceHandlerFactoryService;
