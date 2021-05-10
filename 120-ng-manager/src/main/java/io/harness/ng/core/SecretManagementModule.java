@@ -1,8 +1,9 @@
 package io.harness.ng.core;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.api.NGSecretFileService;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -10,30 +11,24 @@ import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.api.SecretModifyService;
+import io.harness.ng.core.api.impl.NGEncryptedDataServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretActivityServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretFileServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.SSHSecretServiceImpl;
-import io.harness.ng.core.api.impl.SSHSecretServiceImplV2;
 import io.harness.ng.core.api.impl.SecretCrudServiceImpl;
 import io.harness.ng.core.api.impl.SecretFileServiceImpl;
-import io.harness.ng.core.api.impl.SecretFileServiceImplV2;
 import io.harness.ng.core.api.impl.SecretTextServiceImpl;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
-import io.harness.ng.core.api.impl.SecretTextServiceImplV2;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @OwnedBy(PL)
 public class SecretManagementModule extends AbstractModule {
   public static final String SSH_SECRET_SERVICE = "sshSecretService";
   public static final String SECRET_TEXT_SERVICE = "secretTextService";
   public static final String SECRET_FILE_SERVICE = "secretFileService";
-  public static final String SSH_SECRET_SERVICE_V2 = "sshSecretServiceV2";
-  public static final String SECRET_TEXT_SERVICE_V2 = "secretTextServiceV2";
-  public static final String SECRET_FILE_SERVICE_V2 = "secretFileServiceV2";
 
   @Override
   protected void configure() {
@@ -43,9 +38,7 @@ public class SecretManagementModule extends AbstractModule {
     bind(SecretModifyService.class).annotatedWith(Names.named(SSH_SECRET_SERVICE)).to(SSHSecretServiceImpl.class);
     bind(SecretModifyService.class).annotatedWith(Names.named(SECRET_TEXT_SERVICE)).to(SecretTextServiceImpl.class);
     bind(SecretModifyService.class).annotatedWith(Names.named(SECRET_FILE_SERVICE)).to(SecretFileServiceImpl.class);
-    bind(SecretModifyService.class).annotatedWith(Names.named(SSH_SECRET_SERVICE_V2)).to(SSHSecretServiceImplV2.class);
-    bind(SecretModifyService.class).annotatedWith(Names.named(SECRET_TEXT_SERVICE_V2)).to(SecretTextServiceImplV2.class);
-    bind(SecretModifyService.class).annotatedWith(Names.named(SECRET_FILE_SERVICE_V2)).to(SecretFileServiceImplV2.class);
+    bind(NGEncryptedDataService.class).to(NGEncryptedDataServiceImpl.class);
     bind(SecretCrudService.class).to(SecretCrudServiceImpl.class);
     bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
     bind(NGSecretActivityService.class).to(NGSecretActivityServiceImpl.class);

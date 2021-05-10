@@ -38,6 +38,9 @@ public class VaultConnector extends Connector {
   AccessType accessType;
   int secretEngineVersion;
 
+  String authToken;
+  String secretId;
+
   @Getter(AccessLevel.NONE) Long renewalIntervalMinutes;
 
   @Getter(AccessLevel.NONE) String basePath;

@@ -1,7 +1,5 @@
 package io.harness.ng.core.entities;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
@@ -11,9 +9,6 @@ import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
-
-import java.util.Set;
-import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +18,11 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import javax.validation.constraints.NotNull;
+import java.util.Set;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @OwnedBy(PL)
 @Data
@@ -41,8 +41,6 @@ public class NGEncryptedData implements PersistentEntity, EncryptedRecord {
     String projectIdentifier;
     String identifier;
     String name;
-
-    boolean internal;
 
     String path;
     Set<EncryptedDataParams> parameters;
