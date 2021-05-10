@@ -2,7 +2,6 @@ package repo
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,23 +11,23 @@ import (
 )
 
 func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
-	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
-		t.Skip("Skipping, Acceptance test")
-	}
+	// if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+	// 	t.Skip("Skipping, Acceptance test")
+	// }
 	in := &pb.CreateWebhookRequest{
 		Slug:   "tphoney/scm-test",
 		Name:   "drone",
 		Target: "https://example.com",
 		Secret: "topsecret",
 		Events: &pb.HookEvents{
-			Branch: true,
+			IssueComment: true,
 		},
 		SkipVerify: true,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
 					},
 				},
 			},
@@ -40,6 +39,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
+	assert.Equal(t, in.GetEvents(), got.GetWebhook().GetEvents(), "webhooks match")
 
 	list := &pb.ListWebhooksRequest{
 		Slug: "tphoney/scm-test",
@@ -47,7 +47,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
 					},
 				},
 			},
@@ -57,7 +57,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 	got2, err2 := ListWebhooks(context.Background(), list, log.Sugar())
 
 	assert.Nil(t, err2, "no errors")
-	assert.Equal(t, 1, len(got2.Webhooks), "there is 1 webhook")
+	assert.LessOrEqual(t, 1, len(got2.Webhooks), "there is at least 1 webhook")
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "tphoney/scm-test",
@@ -66,7 +66,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
 					},
 				},
 			},

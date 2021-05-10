@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/drone/go-scm/scm"
@@ -47,12 +48,13 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 	}
 	log.Infow("CreateWebhook success", "slug", request.GetSlug(), "name", request.GetName(), "target", request.GetTarget(), "elapsed_time_ms", utils.TimeSince(start))
 
+	events, _ := convertStringsToEvents(hook.Events, *request.GetProvider())
 	out = &pb.CreateWebhookResponse{
 		Webhook: &pb.WebhookResponse{
 			Id:         hook.ID,
 			Name:       hook.Name,
 			Target:     hook.Target,
-			Events:     hook.Events,
+			Events:     &events,
 			Active:     hook.Active,
 			SkipVerify: hook.SkipVerify,
 		},
@@ -103,11 +105,12 @@ func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap
 	log.Infow("ListWebhooks success", "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start))
 	var hooks []*pb.WebhookResponse
 	for _, h := range scmHooks {
+		events, _ := convertStringsToEvents(h.Events, *request.GetProvider())
 		webhookResponse := pb.WebhookResponse{
 			Id:         h.ID,
 			Name:       h.Name,
 			Target:     h.Target,
-			Events:     h.Events,
+			Events:     &events,
 			Active:     h.Active,
 			SkipVerify: h.SkipVerify,
 		}
@@ -122,4 +125,42 @@ func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap
 		},
 	}
 	return out, nil
+}
+
+func convertStringsToEvents(strings []string, p pb.Provider) (events pb.HookEvents, err error) {
+	set := make(map[string]bool)
+	for _, v := range strings {
+		set[v] = true
+	}
+	switch p.GetHook().(type) {
+	case *pb.Provider_Github:
+		if set["push"] {
+			events.Push = true
+		}
+		if set["pull_request"] {
+			events.PullRequest = true
+		}
+		if set["pull_request_review_comment"] {
+			events.PullRequestComment = true
+		}
+		if set["issue"] {
+			events.Issue = true
+		}
+		if set["issue_comment"] {
+			// because this is a 1 to many abstraction it leaks and will cause issues
+			events.IssueComment = true
+			events.PullRequestComment = true
+		}
+		if set["create"] || set["delete"] {
+			// because this is a 1 to many abstraction it leaks and will cause issues
+			events.Branch = true
+			events.Tag = true
+		}
+		if set["deployment"] {
+			events.Deployment = true
+		}
+		return events, nil
+	default:
+		return events, fmt.Errorf("there is no logic to convertStringsToEvents, for this provider %s", p.GetEndpoint())
+	}
 }

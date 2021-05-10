@@ -479,7 +479,7 @@ message WebhookResponse {
   string id = 1;
   string name = 2;
   string target = 3;
-  repeated string events = 4;
+  HookEvents events = 4;
   bool active = 5;
   bool skipVerify = 6;
 }
