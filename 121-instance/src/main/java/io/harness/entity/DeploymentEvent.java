@@ -6,7 +6,6 @@ import io.harness.dto.DeploymentSummary;
 import io.harness.dto.deploymentinfo.RollbackInfo;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

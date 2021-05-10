@@ -18,8 +18,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
-@Slf4j
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class InstanceServiceImpl implements InstanceService {
   private SyncStatusRepository syncStatusRepository;
 

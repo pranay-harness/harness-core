@@ -26,10 +26,10 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceEventAggregator {
   private static final Integer MAX_RETRY_COUNT = 5;
   private static final String NUM_OF_RECORDS = "NUM_OF_RECORDS";

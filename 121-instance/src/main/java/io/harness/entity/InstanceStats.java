@@ -8,9 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-@AllArgsConstructor
 @Data
 @Builder
+@AllArgsConstructor
 @OwnedBy(HarnessTeam.DX)
 public class InstanceStats {
   private String accountId;

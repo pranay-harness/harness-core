@@ -35,10 +35,10 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceSyncServiceImpl implements InstanceSyncService {
   private PersistentLocker persistentLocker;
   private InstanceHandlerFactoryService instanceHandlerFactory;
@@ -55,7 +55,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
       processDeploymentSummary(deploymentSummary, deploymentEvent.getRollbackInfo());
     } catch (Exception ex) {
-      log.error("Error while processing deployment event {}. Skipping the deployment event", deploymentEvent.getId());
+      log.error("Error while processing deployment event {}. Skipping the deployment event", deploymentEvent);
     }
   }
 

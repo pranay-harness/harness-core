@@ -1,7 +1,5 @@
 package io.harness.service.stats.usagemetrics.eventpublisher;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.annotations.dev.HarnessTeam;

@@ -2,7 +2,6 @@ package io.harness.service.stats.statscollector;
 
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
-import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -31,9 +30,9 @@ import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceStatsIteratorHandler implements Handler<Account> {
   public static final long TWO_MONTH_IN_MILLIS = 5184000000L;
   public static final String LOCK_KEY = "INSTANCE_STATS_ITERATOR:";

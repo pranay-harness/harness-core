@@ -6,9 +6,7 @@ import io.harness.dto.deploymentinfo.DeploymentInfo;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;

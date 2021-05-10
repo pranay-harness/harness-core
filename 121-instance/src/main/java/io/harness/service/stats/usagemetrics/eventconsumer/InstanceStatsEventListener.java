@@ -30,10 +30,10 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.DX)
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceStatsEventListener implements MessageListener {
   private static final String insert_prepared_statement_sql =
       "INSERT INTO INSTANCE_STATS (REPORTEDAT, ACCOUNTID, ORGID, PROJECID, SERVICEID, ENVID, CLOUDPROVIDERID, INSTANCETYPE, INSTANCECOUNT, ARTIFACTID) VALUES (?,?,?,?,?,?,?,?,?,?)";
