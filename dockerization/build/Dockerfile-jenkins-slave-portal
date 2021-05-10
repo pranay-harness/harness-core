@@ -107,4 +107,7 @@ RUN curl -fsSL https://get.docker.com/ | sh \
     && yum -y install python-pip \
     && python --version
 
+ENV python /usr/bin/python
+ENV PATH ${PATH}:/usr/bin/python
+
 ENTRYPOINT ["jenkins-slave"]
