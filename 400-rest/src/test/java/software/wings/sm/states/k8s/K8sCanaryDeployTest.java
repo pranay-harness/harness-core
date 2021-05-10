@@ -35,16 +35,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
@@ -54,7 +55,6 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -81,10 +81,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
-public class K8sCanaryDeployTest extends WingsBaseTest {
+public class K8sCanaryDeployTest extends CategoryTest {
   private static final String RELEASE_NAME = "releaseName";
 
   @Mock private ApplicationManifestUtils applicationManifestUtils;
@@ -100,6 +101,7 @@ public class K8sCanaryDeployTest extends WingsBaseTest {
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     context = new ExecutionContextImpl(stateExecutionInstance);
     k8sCanaryDeploy.setSkipDryRun(true);
     k8sCanaryDeploy.setStateTimeoutInMinutes(10);

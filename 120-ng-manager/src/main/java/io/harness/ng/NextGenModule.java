@@ -43,6 +43,7 @@ import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.executionplan.ExecutionPlanModule;
+import io.harness.file.NGFileServiceModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
 import io.harness.govern.ProviderModule;
@@ -417,6 +418,8 @@ public class NextGenModule extends AbstractModule {
     install(new TransactionOutboxModule());
     install(new ResourceGroupClientModule(appConfig.getResourceGroupClientConfig().getServiceConfig(),
         appConfig.getResourceGroupClientConfig().getSecret(), NG_MANAGER.getServiceId()));
+    install(new NGFileServiceModule(appConfig.getFileServiceConfiguration().getFileStorageMode(),
+        appConfig.getFileServiceConfiguration().getClusterName()));
     if (TRUE.equals(appConfig.getAccessControlAdminClientConfiguration().getMockAccessControlService())) {
       AccessControlAdminClientConfiguration accessControlAdminClientConfiguration =
           AccessControlAdminClientConfiguration.builder()

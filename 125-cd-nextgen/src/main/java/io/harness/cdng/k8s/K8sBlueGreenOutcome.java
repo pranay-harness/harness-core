@@ -23,9 +23,4 @@ public class K8sBlueGreenOutcome implements Outcome, ExecutionSweepingOutput {
   private String stageServiceName;
   private String stageColor;
   private String primaryColor;
-
-  @Override
-  public String getType() {
-    return "k8sBlueGreenOutcome";
-  }
 }

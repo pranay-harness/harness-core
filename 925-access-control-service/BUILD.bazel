@@ -8,6 +8,7 @@ shared_deps = [
 ] + [
     "//930-ng-core-clients:module",
     "//940-feature-flag:module",
+    "//940-primary-version-manager:module",
     "//945-ng-audit-client:module",
     "//946-access-control-aggregator:module",
     "//946-access-control-decision:module",

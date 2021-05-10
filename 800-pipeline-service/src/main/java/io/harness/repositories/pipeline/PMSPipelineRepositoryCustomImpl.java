@@ -2,9 +2,6 @@ package io.harness.repositories.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.query.Query.query;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitAwarePersistence;
@@ -12,11 +9,8 @@ import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
-import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
-import io.harness.springdata.SpringDataMongoUtils;
 
 import com.google.inject.Inject;
-import com.mongodb.client.result.UpdateResult;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -43,57 +37,6 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCustom {
   private final MongoTemplate mongoTemplate;
   private final GitAwarePersistence gitAwarePersistence;
-  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);
-
-  @Override
-  public PipelineEntity update(Criteria criteria, PipelineEntity pipelineEntity) {
-    return update(criteria, PMSPipelineFilterHelper.getUpdateOperations(pipelineEntity));
-  }
-
-  public PipelineEntity update(Criteria criteria, Update update) {
-    Query query = new Query(criteria);
-    RetryPolicy<Object> retryPolicy = getRetryPolicy(
-        "[Retrying]: Failed updating Pipeline; attempt: {}", "[Failed]: Failed updating Pipeline; attempt: {}");
-    return Failsafe.with(retryPolicy)
-        .get(()
-                 -> mongoTemplate.findAndModify(
-                     query, update, new FindAndModifyOptions().returnNew(true), PipelineEntity.class));
-  }
-  private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
-    int MAX_ATTEMPTS = 3;
-    return new RetryPolicy<>()
-        .handle(OptimisticLockingFailureException.class)
-        .handle(DuplicateKeyException.class)
-        .withDelay(RETRY_SLEEP_DURATION)
-        .withMaxAttempts(MAX_ATTEMPTS)
-        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
-        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
-  }
-
-  @Override
-  public UpdateResult delete(Criteria criteria) {
-    Query query = new Query(criteria);
-    Update updateOperationsForDelete = PMSPipelineFilterHelper.getUpdateOperationsForDelete();
-    RetryPolicy<Object> retryPolicy = getRetryPolicy(
-        "[Retrying]: Failed deleting Pipeline; attempt: {}", "[Failed]: Failed deleting Pipeline; attempt: {}");
-    return Failsafe.with(retryPolicy)
-        .get(() -> mongoTemplate.updateFirst(query, updateOperationsForDelete, PipelineEntity.class));
-  }
-
-  @Override
-  public Optional<PipelineEntity> incrementRunSequence(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
-    Query query = query(where(PipelineEntityKeys.accountId).is(accountId))
-                      .addCriteria(where(PipelineEntityKeys.orgIdentifier).is(orgIdentifier))
-                      .addCriteria(where(PipelineEntityKeys.projectIdentifier).is(projectIdentifier))
-                      .addCriteria(where(PipelineEntityKeys.identifier).is(pipelineIdentifier))
-                      .addCriteria(where(PipelineEntityKeys.deleted).is(deleted));
-    Update update = new Update();
-    update.inc(PipelineEntityKeys.runSequence);
-    PipelineEntity pipelineEntity =
-        mongoTemplate.findAndModify(query, update, SpringDataMongoUtils.returnNewOptions, PipelineEntity.class);
-    return Optional.ofNullable(pipelineEntity);
-  }
 
   @Override
   public Page<PipelineEntity> findAll(Criteria criteria, Pageable pageable) {
@@ -122,5 +65,41 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
                                            .and(PipelineEntityKeys.accountId)
                                            .is(accountId),
         projectIdentifier, orgIdentifier, accountId, PipelineEntity.class);
+  }
+
+  @Override
+  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
+    return gitAwarePersistence.save(pipelineToUpdate, yamlDTO, ChangeType.MODIFY, PipelineEntity.class);
+  }
+
+  @Override
+  public PipelineEntity updatePipelineMetadata(Criteria criteria, Update update) {
+    Query query = new Query(criteria);
+    RetryPolicy<Object> retryPolicy = getRetryPolicyForPipelineUpdate();
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), PipelineEntity.class));
+  }
+
+  @Override
+  public PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
+    return gitAwarePersistence.save(pipelineToUpdate, yamlDTO, ChangeType.DELETE, PipelineEntity.class);
+  }
+
+  private RetryPolicy<Object> getRetryPolicyForPipelineUpdate() {
+    int MAX_ATTEMPTS = 3;
+    Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);
+    return new RetryPolicy<>()
+        .handle(OptimisticLockingFailureException.class)
+        .handle(DuplicateKeyException.class)
+        .withDelay(RETRY_SLEEP_DURATION)
+        .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event
+            -> log.info(
+                "[Retrying]: Failed updating Pipeline; attempt: {}", event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event
+            -> log.error(
+                "[Failed]: Failed updating Pipeline; attempt: {}", event.getAttemptCount(), event.getFailure()));
   }
 }

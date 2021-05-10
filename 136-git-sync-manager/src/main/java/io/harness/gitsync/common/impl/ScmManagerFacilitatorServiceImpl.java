@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitatorServiceImpl {
-  private final ScmClient scmClient;
-  private final DecryptGitApiAccessHelper decryptGitApiAccessHelper;
+  private ScmClient scmClient;
+  private DecryptGitApiAccessHelper decryptGitApiAccessHelper;
 
   @Inject
   public ScmManagerFacilitatorServiceImpl(ScmClient scmClient,
@@ -39,11 +39,12 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   public List<String> listBranchesForRepoByConnector(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String connectorIdentifierRef, String repoURL,
       io.harness.ng.beans.PageRequest pageRequest, String searchTerm) {
-    ScmConnector scmConnector = decryptGitApiAccessHelper.decryptScmApiAccess(
-        getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef), accountIdentifier,
-        orgIdentifier, projectIdentifier);
-    scmConnector.setUrl(repoURL);
-    return scmClient.listBranches(scmConnector).getBranchesList();
+    final ScmConnector connector =
+        getScmConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierRef);
+    ScmConnector decryptScmConnector =
+        decryptGitApiAccessHelper.decryptScmApiAccess(connector, accountIdentifier, projectIdentifier, orgIdentifier);
+    decryptScmConnector.setUrl(repoURL);
+    return scmClient.listBranches(decryptScmConnector).getBranchesList();
   }
 
   @Override
@@ -53,12 +54,11 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     final IdentifierRef identifierRef =
         getYamlGitConfigIdentifierRef(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigIdentifier);
     final GitFilePathDetails gitFilePathDetails = getGitFilePathDetails(filePath, branch, commitId);
-    final FileContent fileContent = scmClient.getFileContent(
-        decryptGitApiAccessHelper.decryptScmApiAccess(
-            getScmConnector(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-                identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()),
-            accountIdentifier, orgIdentifier, projectIdentifier),
-        gitFilePathDetails);
+    final ScmConnector connector = getScmConnector(identifierRef.getAccountIdentifier(),
+        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+    final ScmConnector scmConnector =
+        decryptGitApiAccessHelper.decryptScmApiAccess(connector, accountIdentifier, projectIdentifier, orgIdentifier);
+    final FileContent fileContent = scmClient.getFileContent(scmConnector, gitFilePathDetails);
     return validateAndGetGitFileContent(fileContent);
   }
 }

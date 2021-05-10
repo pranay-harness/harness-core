@@ -197,7 +197,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .build();
     }
 
-    String baseDir = terraformBaseHelper.resolveBaseDir(parameters.getAccountId(), parameters.getEntityId());
+    String baseDir = terraformBaseHelper.resolveBaseDir(
+        parameters.getAccountId(), String.valueOf(parameters.getEntityId().hashCode()));
     String tfVarDirectory = Paths.get(baseDir, TF_VAR_FILES_DIR).toString();
     String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
 
@@ -235,9 +236,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           CommandExecutionStatus.RUNNING, INFO, logCallback);
 
       tfVariablesFile =
-          Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
+          Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId().hashCode()))
+              .toFile();
       tfBackendConfigsFile =
-          Paths.get(scriptDirectory, format(TERRAFORM_BACKEND_CONFIGS_FILE_NAME, parameters.getEntityId())).toFile();
+          Paths.get(scriptDirectory, format(TERRAFORM_BACKEND_CONFIGS_FILE_NAME, parameters.getEntityId().hashCode()))
+              .toFile();
 
       downloadTfStateFile(parameters, scriptDirectory);
 
@@ -266,7 +269,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       }
 
       File tfOutputsFile =
-          Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId())).toFile();
+          Paths.get(scriptDirectory, format(TERRAFORM_VARIABLES_FILE_NAME, parameters.getEntityId().hashCode()))
+              .toFile();
       String targetArgs = getTargetArgs(parameters.getTargets());
 
       String tfVarFiles = null == parameters.getTfVarSource()

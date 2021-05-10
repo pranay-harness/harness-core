@@ -35,8 +35,7 @@ import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.remote.client.NGRestUtils;
-import io.harness.remote.client.RestClientUtils;
-import io.harness.secretmanagerclient.remote.SecretManagerClient;
+import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
@@ -70,7 +69,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   private final NgDelegate2TaskExecutor ngDelegate2TaskExecutor;
   private final ConnectorResourceClient connectorResourceClient;
   private final KryoSerializer kryoSerializer;
-  private final SecretManagerClient secretManagerClient;
+  private final SecretNGManagerClient secretManagerClient;
   private final WaitNotifyEngine waitNotifyEngine;
   private final LogStreamingStepClientFactory logStreamingStepClientFactory;
   private final String publisherName;
@@ -78,7 +77,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   @Inject
   public JiraApprovalHelperServiceImpl(NgDelegate2TaskExecutor ngDelegate2TaskExecutor,
       ConnectorResourceClient connectorResourceClient, KryoSerializer kryoSerializer,
-      SecretManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
+      SecretNGManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
       LogStreamingStepClientFactory logStreamingStepClientFactory,
       @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName) {
     this.ngDelegate2TaskExecutor = ngDelegate2TaskExecutor;
@@ -149,7 +148,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
     NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer =
         NGAccessWithEncryptionConsumer.builder().ngAccess(baseNGAccess).decryptableEntity(jiraConnectorDTO).build();
     List<EncryptedDataDetail> encryptionDataDetails =
-        RestClientUtils.getResponse(secretManagerClient.getEncryptionDetails(ngAccessWithEncryptionConsumer));
+        NGRestUtils.getResponse(secretManagerClient.getEncryptionDetails(ngAccessWithEncryptionConsumer));
 
     return JiraTaskNGParameters.builder()
         .action(JiraActionNG.GET_ISSUE)

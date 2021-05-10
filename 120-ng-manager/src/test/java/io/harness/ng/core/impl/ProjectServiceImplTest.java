@@ -23,9 +23,12 @@ import static org.mockito.Mockito.when;
 import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidRequestException;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.beans.ProjectsPerOrganizationCount;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
@@ -33,9 +36,13 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.ProjectRepository;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.rule.Owner;
+import io.harness.security.SourcePrincipalContextData;
+import io.harness.security.dto.UserPrincipal;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.lang.reflect.Field;
@@ -49,6 +56,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -63,20 +72,20 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
 public class ProjectServiceImplTest extends CategoryTest {
-  private ProjectRepository projectRepository;
-  private OrganizationService organizationService;
+  @Mock private ProjectRepository projectRepository;
+  @Mock private OrganizationService organizationService;
+  @Mock private TransactionTemplate transactionTemplate;
+  @Mock private OutboxService outboxService;
+  @Mock private ResourceGroupClient resourceGroupClient;
+  @Mock private NgUserService ngUserService;
+  @Mock private AccessControlClient accessControlClient;
   private ProjectServiceImpl projectService;
-  private TransactionTemplate transactionTemplate;
-  private OutboxService outboxService;
 
   @Before
   public void setup() {
-    projectRepository = mock(ProjectRepository.class);
-    organizationService = mock(OrganizationService.class);
-    transactionTemplate = mock(TransactionTemplate.class);
-    outboxService = mock(OutboxService.class);
-    projectService =
-        spy(new ProjectServiceImpl(projectRepository, organizationService, transactionTemplate, outboxService));
+    MockitoAnnotations.initMocks(this);
+    projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, transactionTemplate,
+        outboxService, ngUserService, resourceGroupClient, accessControlClient));
   }
 
   private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
@@ -98,6 +107,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
+    setContextData(accountIdentifier);
 
     when(projectRepository.save(project)).thenReturn(project);
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
@@ -110,6 +120,16 @@ public class ProjectServiceImplTest extends CategoryTest {
     }
   }
 
+  private void setContextData(String accountIdentifier) {
+    GlobalContext globalContext = new GlobalContext();
+    SourcePrincipalContextData sourcePrincipalContextData =
+        SourcePrincipalContextData.builder()
+            .principal(new UserPrincipal("user", "admin@harness.io", "user", accountIdentifier))
+            .build();
+    globalContext.setGlobalContextRecord(sourcePrincipalContextData);
+    GlobalContextManager.set(globalContext);
+  }
+
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
@@ -120,6 +140,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
+    setContextData(accountIdentifier);
 
     projectService.create(accountIdentifier, orgIdentifier + randomAlphabetic(1), projectDTO);
   }

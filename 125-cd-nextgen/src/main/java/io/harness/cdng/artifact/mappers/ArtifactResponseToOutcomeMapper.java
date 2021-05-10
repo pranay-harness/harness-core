@@ -1,5 +1,8 @@
 package io.harness.cdng.artifact.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
@@ -20,6 +23,7 @@ import io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(CDC)
 public class ArtifactResponseToOutcomeMapper {
   private final String IMAGE_PULL_SECRET = "<+imagePullSecret.";
   public ArtifactOutcome toArtifactOutcome(
@@ -56,7 +60,7 @@ public class ArtifactResponseToOutcomeMapper {
                                  : (dockerConfig.getTag() != null ? dockerConfig.getTag().getValue() : null))
         .tagRegex(dockerConfig.getTagRegex() != null ? dockerConfig.getTagRegex().getValue() : null)
         .identifier(dockerConfig.getIdentifier())
-        .artifactType(ArtifactSourceType.DOCKER_HUB.getDisplayName())
+        .type(ArtifactSourceType.DOCKER_HUB.getDisplayName())
         .primaryArtifact(dockerConfig.isPrimaryArtifact())
         .imagePullSecret(IMAGE_PULL_SECRET + ArtifactUtils.getArtifactKey(dockerConfig) + ">")
         .build();
@@ -73,7 +77,7 @@ public class ArtifactResponseToOutcomeMapper {
                                  : (gcrArtifactConfig.getTag() != null ? gcrArtifactConfig.getTag().getValue() : null))
         .tagRegex(gcrArtifactConfig.getTagRegex() != null ? gcrArtifactConfig.getTagRegex().getValue() : null)
         .identifier(gcrArtifactConfig.getIdentifier())
-        .artifactType(ArtifactSourceType.GCR.getDisplayName())
+        .type(ArtifactSourceType.GCR.getDisplayName())
         .primaryArtifact(gcrArtifactConfig.isPrimaryArtifact())
         .imagePullSecret(IMAGE_PULL_SECRET + ArtifactUtils.getArtifactKey(gcrArtifactConfig) + ">")
         .build();
@@ -90,7 +94,7 @@ public class ArtifactResponseToOutcomeMapper {
                                  : (ecrArtifactConfig.getTag() != null ? ecrArtifactConfig.getTag().getValue() : null))
         .tagRegex(ecrArtifactConfig.getTagRegex() != null ? ecrArtifactConfig.getTagRegex().getValue() : null)
         .identifier(ecrArtifactConfig.getIdentifier())
-        .artifactType(ArtifactSourceType.ECR.getDisplayName())
+        .type(ArtifactSourceType.ECR.getDisplayName())
         .primaryArtifact(ecrArtifactConfig.isPrimaryArtifact())
         .imagePullSecret(IMAGE_PULL_SECRET + ArtifactUtils.getArtifactKey(ecrArtifactConfig) + ">")
         .build();

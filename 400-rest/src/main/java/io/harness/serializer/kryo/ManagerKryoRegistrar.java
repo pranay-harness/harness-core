@@ -468,7 +468,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
@@ -1524,7 +1523,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SpotinstDeployExecutionSummary.class, 7242);
     kryo.register(AppManifestKind.class, 7243);
     kryo.register(SpotinstAllPhaseRollbackData.class, 7245);
-    kryo.register(HelmChartInfo.class, 7246);
     kryo.register(NewRelicDataCollectionInfoV2.class, 7247);
     kryo.register(CCMConfig.class, 7248);
     kryo.register(StackDriverMetricDefinition.class, 7249);

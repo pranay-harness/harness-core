@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -77,7 +76,7 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sApplyRequest.getManifestDelegateConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
-            CollectionUtils.isEmpty(k8sApplyRequest.getValuesYamlList()), commandUnitsProgress),
+            k8sApplyRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         timeoutInMillis, k8sApplyRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(null);

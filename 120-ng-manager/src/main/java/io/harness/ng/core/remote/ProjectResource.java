@@ -206,7 +206,7 @@ public class ProjectResource {
     return accessCheckResponse.getAccessControlList()
         .stream()
         .filter(AccessControlDTO::isPermitted)
-        .map(AccessControlDTO::getResourceIdentifier)
+        .map(x -> x.getResourceScope().getOrgIdentifier())
         .collect(Collectors.toSet());
   }
 }

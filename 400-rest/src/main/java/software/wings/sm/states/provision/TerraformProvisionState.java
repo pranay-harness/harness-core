@@ -134,6 +134,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -272,7 +273,7 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformProvisionInheritPlanElement inheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
-            .entityId(generateEntityId(context, terraformExecutionData.getWorkspace()))
+            .entityId(generateEntityId(context, terraformExecutionData.getWorkspace(), terraformProvisioner, true))
             .provisionerId(provisionerId)
             .targets(terraformExecutionData.getTargets())
             .delegateTag(terraformExecutionData.getDelegateTag())
@@ -467,7 +468,7 @@ public abstract class TerraformProvisionState extends State {
           if (isNotEmpty(getTargets())) {
             saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
           } else {
-            deleteTerraformConfig(context, terraformExecutionData);
+            deleteTerraformConfig(context, terraformExecutionData, terraformProvisioner);
           }
         }
       }
@@ -601,8 +602,14 @@ public abstract class TerraformProvisionState extends State {
     }
 
     String workspace = context.renderExpression(element.getWorkspace());
-    String entityId = generateEntityId(context, workspace);
+    String entityId = generateEntityId(context, workspace, terraformProvisioner, true);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+    if (fileId == null) {
+      log.info("Retrieving fileId with old entityId");
+      fileId = fileService.getLatestFileId(
+          generateEntityId(context, workspace, terraformProvisioner, false), TERRAFORM_STATE);
+      log.info("{} fileId with old entityId", fileId == null ? "Didn't retrieve" : "Retrieved");
+    }
     GitConfig gitConfig = gitUtilsManager.getGitConfig(element.getSourceRepoSettingId());
     if (isNotEmpty(element.getSourceRepoReference())) {
       gitConfig.setReference(element.getSourceRepoReference());
@@ -774,8 +781,15 @@ public abstract class TerraformProvisionState extends State {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String workspace = context.renderExpression(this.workspace);
     workspace = handleDefaultWorkspace(workspace);
-    String entityId = generateEntityId(context, workspace);
+    String entityId = generateEntityId(context, workspace, terraformProvisioner, true);
     String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
+    if (fileId == null) {
+      log.info("Retrieving fileId with old entityId");
+      fileId = fileService.getLatestFileId(
+          generateEntityId(context, workspace, terraformProvisioner, false), TERRAFORM_STATE);
+      log.info("{} fileId with old entityId", fileId == null ? "Didn't retrieve" : "Retrieved");
+    }
+
     Map<String, String> variables = null;
     Map<String, EncryptedDataDetail> encryptedVariables = null;
     Map<String, String> backendConfigs = null;
@@ -810,6 +824,13 @@ public abstract class TerraformProvisionState extends State {
 
     } else if (this instanceof DestroyTerraformProvisionState) {
       fileId = fileService.getLatestFileIdByQualifier(entityId, TERRAFORM_STATE, QUALIFIER_APPLY);
+      if (fileId == null) {
+        log.info("Retrieving fileId with old entityId");
+        fileId = fileService.getLatestFileIdByQualifier(
+            generateEntityId(context, workspace, terraformProvisioner, false), TERRAFORM_STATE, QUALIFIER_APPLY);
+        log.info("{} fileId with old entityId", fileId == null ? "Didn't retrieve" : "Retrieved");
+      }
+
       if (fileId != null) {
         FileMetadata fileMetadata = fileService.getFileMetadata(fileId, FileBucket.TERRAFORM_STATE);
 
@@ -1027,37 +1048,66 @@ public abstract class TerraformProvisionState extends State {
         ? ((TfVarGitSource) tfVarSource).getGitFileConfig()
         : null;
 
-    TerraformConfig terraformConfig = TerraformConfig.builder()
-                                          .entityId(generateEntityId(context, executionData.getWorkspace()))
-                                          .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
-                                          .sourceRepoReference(executionData.getSourceRepoReference())
-                                          .variables(executionData.getVariables())
-                                          .delegateTag(executionData.getDelegateTag())
-                                          .backendConfigs(executionData.getBackendConfigs())
-                                          .environmentVariables(executionData.getEnvironmentVariables())
-                                          .tfVarFiles(executionData.getTfVarFiles())
-                                          .tfVarGitFileConfig(gitFileConfig)
-                                          .workflowExecutionId(context.getWorkflowExecutionId())
-                                          .targets(executionData.getTargets())
-                                          .command(executionData.getCommandExecuted())
-                                          .appId(context.getAppId())
-                                          .accountId(context.getAccountId())
-                                          .build();
+    TerraformConfig terraformConfig =
+        TerraformConfig.builder()
+            .entityId(generateEntityId(context, executionData.getWorkspace(), provisioner, true))
+            .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
+            .sourceRepoReference(executionData.getSourceRepoReference())
+            .variables(executionData.getVariables())
+            .delegateTag(executionData.getDelegateTag())
+            .backendConfigs(executionData.getBackendConfigs())
+            .environmentVariables(executionData.getEnvironmentVariables())
+            .tfVarFiles(executionData.getTfVarFiles())
+            .tfVarGitFileConfig(gitFileConfig)
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .targets(executionData.getTargets())
+            .command(executionData.getCommandExecuted())
+            .appId(context.getAppId())
+            .accountId(context.getAccountId())
+            .build();
     wingsPersistence.save(terraformConfig);
   }
 
-  protected String generateEntityId(ExecutionContext context, String workspace) {
+  @VisibleForTesting
+  protected String generateEntityId(ExecutionContext context, String workspace,
+      TerraformInfrastructureProvisioner infrastructureProvisioner, boolean isNewEntityIdType) {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     String envId = executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : EMPTY;
-    return isEmpty(workspace) ? (provisionerId + "-" + envId) : (provisionerId + "-" + envId + "-" + workspace);
+
+    StringBuilder stringBuilder = new StringBuilder(provisionerId).append('-').append(envId);
+
+    if (isNewEntityIdType) {
+      String normalizedPath = null;
+      if (isNotEmpty(infrastructureProvisioner.getPath())) {
+        normalizedPath =
+            Paths.get("/", context.renderExpression(infrastructureProvisioner.getPath())).normalize().toString();
+      }
+      String branchAndPath = String.format("%s%s",
+          isNotEmpty(infrastructureProvisioner.getSourceRepoBranch())
+              ? context.renderExpression(infrastructureProvisioner.getSourceRepoBranch())
+              : EMPTY,
+          normalizedPath != null ? normalizedPath : EMPTY);
+      stringBuilder.append(isNotEmpty(branchAndPath) ? "-" + branchAndPath.hashCode() : EMPTY);
+    }
+    stringBuilder.append(isEmpty(workspace) ? EMPTY : "-" + workspace);
+
+    return stringBuilder.toString();
   }
 
-  protected void deleteTerraformConfig(ExecutionContext context, TerraformExecutionData terraformExecutionData) {
+  protected void deleteTerraformConfig(ExecutionContext context, TerraformExecutionData terraformExecutionData,
+      TerraformInfrastructureProvisioner infrastructureProvisioner) {
     Query<TerraformConfig> query =
         wingsPersistence.createQuery(TerraformConfig.class)
-            .filter(TerraformConfigKeys.entityId, generateEntityId(context, terraformExecutionData.getWorkspace()));
+            .filter(TerraformConfigKeys.entityId,
+                generateEntityId(context, terraformExecutionData.getWorkspace(), infrastructureProvisioner, true));
 
     wingsPersistence.delete(query);
+
+    boolean deleted = wingsPersistence.delete(
+        wingsPersistence.createQuery(TerraformConfig.class)
+            .filter(TerraformConfigKeys.entityId,
+                generateEntityId(context, terraformExecutionData.getWorkspace(), infrastructureProvisioner, false)));
+    log.info("{} TerraformConfig with old entityId", deleted ? "Deleted" : "Didn't delete");
   }
 
   protected TerraformInfrastructureProvisioner getTerraformInfrastructureProvisioner(ExecutionContext context) {

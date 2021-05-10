@@ -143,6 +143,9 @@ public class RecastOrchestrationUtils {
 
   private static Object handleEncodeValue(Document value1) {
     Object encodedValue = value1.get(Recaster.ENCODED_VALUE);
+    if (encodedValue == null) {
+      return null;
+    }
     if (encodedValue instanceof String) {
       try {
         return check(Document.parse((String) encodedValue));

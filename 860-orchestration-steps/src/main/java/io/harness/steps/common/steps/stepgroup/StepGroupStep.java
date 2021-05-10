@@ -7,14 +7,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.tasks.ResponseData;
 
-import com.google.inject.Inject;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class StepGroupStep implements ChildExecutable<StepGroupStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.STEP_GROUP).build();
-  @Inject private OutcomeService outcomeService;
 
   @Override
   public ChildExecutableResponse obtainChild(

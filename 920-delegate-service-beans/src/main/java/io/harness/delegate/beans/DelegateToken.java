@@ -1,10 +1,12 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateTokens", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "DelegateTokenKeys")
 @OwnedBy(HarnessTeam.DEL)
+@StoreIn(DbAliases.ALL)
 public class DelegateToken implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

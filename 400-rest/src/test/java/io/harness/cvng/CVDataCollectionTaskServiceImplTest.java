@@ -1,5 +1,6 @@
 package io.harness.cvng;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.perpetualtask.PerpetualTaskType.DATA_COLLECTION_TASK;
 import static io.harness.perpetualtask.PerpetualTaskType.K8_ACTIVITY_COLLECTION_TASK;
@@ -8,9 +9,13 @@ import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
@@ -38,6 +43,7 @@ import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTask
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 
 import software.wings.WingsBaseTest;
 
@@ -47,14 +53,18 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
+@OwnedBy(CV)
 public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   @Inject private CVDataCollectionTaskService dataCollectionTaskService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
+  @Mock private SecretManagerClientService ngSecretService;
   private String accountId;
   private String cvConfigId;
   private String connectorIdentifier;
@@ -70,6 +80,8 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
     dataCollectionWorkerId = generateUuid();
+    FieldUtils.writeField(dataCollectionTaskService, "ngSecretService", ngSecretService, true);
+    when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(emptyList());
   }
 
   @Test

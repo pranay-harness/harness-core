@@ -5,6 +5,7 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +27,7 @@ import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Update;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -38,30 +40,23 @@ public class UserMembershipMigrationService implements MongoPersistenceIterator.
 
   @Override
   public void handle(UserMembership userMembership) {
-    /**
-     * Have to get the latest UserMemberhsip from the db other wise optimistic locking fails as mongo iterator framework
-     * has already updated the collection while it was updating nextIteration. Other solution would be to just increment
-     * the version in the UserMembership. But that is hacky
-     */
-    Optional<UserMembership> userMembershipOpt = ngUserService.getUserMembership(userMembership.getUserId());
-    if (!userMembershipOpt.isPresent()) {
+    if (isNotBlank(userMembership.getName())) {
       return;
     }
-    userMembership = userMembershipOpt.get();
     try {
       Optional<UserInfo> userOpt = ngUserService.getUserById(userMembership.getUserId());
       if (!userOpt.isPresent()) {
         return;
       }
       UserInfo user = userOpt.get();
-      userMembership.setName(user.getName());
+      Update update = new Update().set(UserMembershipKeys.name, user.getName());
+      ngUserService.update(userMembership.getUserId(), update);
     } catch (InvalidRequestException | UnexpectedException e) {
       /**
        * Do nothing. This exception will occur for users are present in nextgen but not registered in currentgen. This
        * will happen for stale users. It is to be decided whether to clean them up in nextgen or not
        */
     }
-    ngUserService.update(userMembership);
   }
 
   public void registerIterators() {

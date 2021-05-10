@@ -1,44 +1,42 @@
 package io.harness.pms.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.pms.yaml.validation.InputSetValidatorFactory;
 import io.harness.pms.yaml.validation.RuntimeValidator;
 import io.harness.pms.yaml.validation.RuntimeValidatorResponse;
 
-import com.google.inject.Inject;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ParameterFieldProcessor {
-  private final EngineExpressionService engineExpressionService;
+  private final EngineExpressionEvaluator engineExpressionEvaluator;
+  private final boolean skipUnresolvedExpressionsCheck;
   private final InputSetValidatorFactory inputSetValidatorFactory;
 
-  @Inject
-  public ParameterFieldProcessor(
-      EngineExpressionService engineExpressionService, InputSetValidatorFactory inputSetValidatorFactory) {
-    this.engineExpressionService = engineExpressionService;
+  public ParameterFieldProcessor(EngineExpressionEvaluator engineExpressionEvaluator,
+      boolean skipUnresolvedExpressionsCheck, InputSetValidatorFactory inputSetValidatorFactory) {
+    this.engineExpressionEvaluator = engineExpressionEvaluator;
+    this.skipUnresolvedExpressionsCheck = skipUnresolvedExpressionsCheck;
     this.inputSetValidatorFactory = inputSetValidatorFactory;
   }
 
-  public ProcessorResult process(Ambiance ambiance, ParameterDocumentField field) {
-    if (field == null) {
+  public ProcessorResult process(ParameterDocumentField field) {
+    if (field == null || field.isSkipAutoEvaluation()) {
       return ProcessorResult.builder().build();
     }
 
     Object newValue;
     InputSetValidator inputSetValidator = field.getInputSetValidator();
     if (field.isExpression()) {
-      if (field.isSkipAutoEvaluation()) {
-        return ProcessorResult.builder().build();
-      }
-
       if (field.isTypeString()) {
-        newValue = engineExpressionService.renderExpression(ambiance, field.getExpressionValue());
+        newValue =
+            engineExpressionEvaluator.renderExpression(field.getExpressionValue(), skipUnresolvedExpressionsCheck);
       } else {
-        newValue = engineExpressionService.evaluateExpression(ambiance, field.getExpressionValue());
+        newValue = engineExpressionEvaluator.evaluateExpression(field.getExpressionValue());
       }
 
       if (newValue instanceof String && EngineExpressionEvaluator.hasVariables((String) newValue)) {
@@ -48,7 +46,7 @@ public class ParameterFieldProcessor {
         }
 
         field.updateWithExpression(newExpression);
-        return validateUsingValidator(newValue, inputSetValidator, ambiance);
+        return validateUsingValidator(newValue, inputSetValidator);
       }
 
       field.updateWithValue(newValue);
@@ -61,10 +59,10 @@ public class ParameterFieldProcessor {
     Document doc = field.getValueDoc();
     Object valueField = doc.get(ParameterFieldValueWrapper.VALUE_FIELD);
     if (valueField != null) {
-      Object finalValue = engineExpressionService.resolve(ambiance, valueField);
+      Object finalValue = engineExpressionEvaluator.resolve(valueField, skipUnresolvedExpressionsCheck);
       if (finalValue != null) {
         field.updateWithValue(finalValue);
-        ProcessorResult processorResult = validateUsingValidator(finalValue, inputSetValidator, ambiance);
+        ProcessorResult processorResult = validateUsingValidator(finalValue, inputSetValidator);
         if (processorResult.isError()) {
           return processorResult;
         }
@@ -74,10 +72,10 @@ public class ParameterFieldProcessor {
     return ProcessorResult.builder().build();
   }
 
-  private ProcessorResult validateUsingValidator(Object value, InputSetValidator inputSetValidator, Ambiance ambiance) {
+  private ProcessorResult validateUsingValidator(Object value, InputSetValidator inputSetValidator) {
     if (inputSetValidator != null) {
-      RuntimeValidator runtimeValidator =
-          inputSetValidatorFactory.obtainValidator(inputSetValidator, engineExpressionService, ambiance);
+      RuntimeValidator runtimeValidator = inputSetValidatorFactory.obtainValidator(
+          inputSetValidator, engineExpressionEvaluator, skipUnresolvedExpressionsCheck);
       RuntimeValidatorResponse validatorResponse =
           runtimeValidator.isValidValue(value, inputSetValidator.getParameters());
       if (!validatorResponse.isValid()) {

@@ -11,6 +11,7 @@ import io.harness.cdng.Deployment.DeploymentInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfo;
 import io.harness.cdng.Deployment.DeploymentStatusInfoList;
 import io.harness.cdng.Deployment.ExecutionDeployment;
+import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 import io.harness.cdng.Deployment.HealthDeploymentInfo;
@@ -462,6 +463,90 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       startDateCopy = startDateCopy.plusDays(1);
     }
     return ExecutionDeploymentInfo.builder().executionDeploymentList(executionDeployments).build();
+  }
+
+  @Override
+  public ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String startInterval, String endInterval) {
+    LocalDate startDate = LocalDate.parse(startInterval);
+    LocalDate endDate = LocalDate.parse(endInterval);
+    LocalDate startDateCopy = startDate;
+    LocalDate endDateCopy = endDate;
+    long numberOfDays = endDateCopy.toEpochDay() - startDateCopy.toEpochDay() + 1;
+    startDateCopy = startDate;
+    LocalDate prevStartDate = startDateCopy.minusDays(numberOfDays);
+    LocalDate prevEndDate = startDateCopy.minusDays(1);
+
+    ExecutionDeploymentInfo executionDeploymentInfo = getExecutionDeploymentDashboard(
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval);
+    List<ExecutionDeployment> executionDeploymentList = executionDeploymentInfo.getExecutionDeploymentList();
+
+    ExecutionDeploymentInfo prevExecutionDeploymentInfo = getExecutionDeploymentDashboard(
+        accountIdentifier, orgIdentifier, projectIdentifier, prevStartDate.toString(), prevEndDate.toString());
+    List<ExecutionDeployment> prevExecutionDeploymentList = prevExecutionDeploymentInfo.getExecutionDeploymentList();
+
+    long totalDeployments = getTotalDeployments(executionDeploymentList);
+    long prevTotalDeployments = getTotalDeployments(prevExecutionDeploymentList);
+    double failureRate = getFailureRate(executionDeploymentList);
+    double frequency = totalDeployments / numberOfDays;
+    double prevFrequency = prevTotalDeployments / numberOfDays;
+
+    double totalDeloymentChangeRate = (totalDeployments - prevTotalDeployments) * 100;
+    if (prevTotalDeployments != 0) {
+      totalDeloymentChangeRate = totalDeloymentChangeRate / prevTotalDeployments;
+    }
+    double failureRateChangeRate = getFailureRateChangeRate(executionDeploymentList, prevExecutionDeploymentList);
+    double frequencyChangeRate = calculateChangeRate(prevFrequency, frequency);
+
+    return ExecutionDeploymentDetailInfo.builder()
+        .startTime(startDate.toString())
+        .endTime(endDate.toString())
+        .totalDeployments(totalDeployments)
+        .failureRate(failureRate)
+        .frequency(frequency)
+        .totalDeploymentsChangeRate(totalDeloymentChangeRate)
+        .failureRateChangeRate(failureRateChangeRate)
+        .frequencyChangeRate(frequencyChangeRate)
+        .executionDeploymentList(executionDeploymentList)
+        .build();
+  }
+
+  private double getFailureRateChangeRate(
+      List<ExecutionDeployment> executionDeploymentList, List<ExecutionDeployment> prevExecutionDeploymentList) {
+    double failureRate = getFailureRate(executionDeploymentList);
+    double prevFailureRate = getFailureRate(prevExecutionDeploymentList);
+    return calculateChangeRate(prevFailureRate, failureRate);
+  }
+
+  private double getFailureRate(List<ExecutionDeployment> executionDeploymentList) {
+    long totalDeployments = executionDeploymentList.stream()
+                                .map(ExecutionDeployment::getDeployments)
+                                .mapToLong(DeploymentCount::getTotal)
+                                .sum();
+    long totalFailure = executionDeploymentList.stream()
+                            .map(ExecutionDeployment::getDeployments)
+                            .mapToLong(DeploymentCount::getFailure)
+                            .sum();
+    double failureRate = totalFailure * 100;
+    if (totalDeployments != 0) {
+      failureRate = failureRate / totalDeployments;
+    }
+    return failureRate;
+  }
+  private double calculateChangeRate(double prevValue, double curValue) {
+    double rate = (curValue - prevValue) * 100;
+    if (prevValue != 0) {
+      rate = rate / prevValue;
+    }
+    return rate;
+  }
+
+  private long getTotalDeployments(List<ExecutionDeployment> executionDeploymentList) {
+    long total = 0;
+    for (ExecutionDeployment item : executionDeploymentList) {
+      total += item.getDeployments().getTotal();
+    }
+    return total;
   }
 
   public DeploymentStatusInfoList queryCalculatorDeploymentInfo(String queryStatus) {

@@ -11,6 +11,7 @@ shared_dependencies = [
     "//490-ce-commons:module",
     "//930-ng-core-clients:module",
     "//940-feature-flag:module",
+    "//940-primary-version-manager:module",
     "//953-events-api:module",
     "//960-persistence:module",
     "//970-ng-commons:module",

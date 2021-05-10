@@ -59,6 +59,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
+import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
@@ -129,14 +130,11 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
   }
 
   private ExecutorService executorService = new CurrentThreadExecutor();
-  public static final String alpnJar =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  public static final String alpn = "/home/jenkins/maven-repositories/0/";
   @Getter private GraphQL graphQL;
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
+    ManagerExecutor.ensureManager(AbstractFunctionalTest.class);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
         Setup.portal()
@@ -367,6 +365,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()

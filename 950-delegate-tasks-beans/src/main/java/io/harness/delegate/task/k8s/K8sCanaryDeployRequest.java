@@ -30,4 +30,5 @@ public class K8sCanaryDeployRequest implements K8sDeployRequest {
   Integer timeoutIntervalInMin;
   String accountId;
   boolean skipResourceVersioning;
+  @Builder.Default boolean shouldOpenFetchFilesLogStream = true;
 }

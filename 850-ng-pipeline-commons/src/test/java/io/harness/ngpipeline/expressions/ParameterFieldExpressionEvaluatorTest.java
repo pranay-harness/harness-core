@@ -7,6 +7,8 @@ import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 
 import io.harness.NGPipelineTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
@@ -15,7 +17,7 @@ import io.harness.expression.EngineJexlContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.ParameterFieldProcessor;
+import io.harness.pms.yaml.validation.InputSetValidatorFactory;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,9 +39,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
   @Mock private PlanExecutionService planExecutionService;
-  @Inject private ParameterFieldProcessor parameterFieldProcessor;
+  @Inject private InputSetValidatorFactory inputSetValidatorFactory;
 
   private ObjectMapper objectMapper;
 
@@ -120,7 +123,7 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
   private EngineExpressionEvaluator prepareEngineExpressionEvaluator(Map<String, Object> contextMap) {
     SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator(contextMap);
     on(evaluator).set("planExecutionService", planExecutionService);
-    on(evaluator).set("parameterFieldProcessor", parameterFieldProcessor);
+    on(evaluator).set("inputSetValidatorFactory", inputSetValidatorFactory);
     return evaluator;
   }
 

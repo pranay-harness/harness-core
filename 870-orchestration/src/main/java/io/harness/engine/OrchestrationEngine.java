@@ -1,6 +1,5 @@
 package io.harness.engine;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -10,6 +9,7 @@ import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 import static java.lang.String.format;
 
 import io.harness.OrchestrationPublisherName;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
@@ -88,7 +88,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 @Slf4j
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationEngine {
   @Inject private Injector injector;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -154,12 +154,15 @@ public class OrchestrationEngine {
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
       PlanNodeProto node = nodeExecution.getNode();
       String stepParameters = node.getStepParameters();
+      boolean skipUnresolvedExpressionsCheck = node.getSkipUnresolvedExpressionsCheck();
       Object resolvedStepParameters = stepParameters == null
           ? null
-          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(stepParameters));
+          : pmsEngineExpressionService.resolve(
+              ambiance, NodeExecutionUtils.extractObject(stepParameters), skipUnresolvedExpressionsCheck);
       Object resolvedStepInputs = node.getStepInputs() == null
           ? null
-          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()));
+          : pmsEngineExpressionService.resolve(
+              ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()), skipUnresolvedExpressionsCheck);
 
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {

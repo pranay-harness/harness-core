@@ -1,10 +1,8 @@
 package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
-import static io.harness.security.SourcePrincipalContextData.SOURCE_PRINCIPAL;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,7 +11,6 @@ import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
-import io.harness.beans.Scope;
 import io.harness.context.GlobalContext;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -29,46 +26,29 @@ import io.harness.ng.core.events.ProjectCreateEvent;
 import io.harness.ng.core.events.ProjectDeleteEvent;
 import io.harness.ng.core.events.ProjectRestoreEvent;
 import io.harness.ng.core.events.ProjectUpdateEvent;
-import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
-import io.harness.remote.client.NGRestUtils;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
-import io.harness.resourcegroupclient.ResourceGroupResponse;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
-import io.harness.security.SourcePrincipalContextData;
-import io.harness.utils.ScopeUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.io.IOException;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
 public class ProjectEventHandler implements OutboxEventHandler {
-  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
-  private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
-  private static final String DESCRIPTION_FORMAT = "All the resources in this %s are included in this resource group.";
-  private static final String PROJECT_ADMIN_ROLE = "_project_admin";
   private final ObjectMapper objectMapper;
   private final Producer eventProducer;
   private final AuditClientService auditClientService;
-  private final NgUserService ngUserService;
-  private final ResourceGroupClient resourceGroupClient;
 
   @Inject
-  public ProjectEventHandler(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      AuditClientService auditClientService, NgUserService ngUserService,
-      @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient) {
+  public ProjectEventHandler(
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, AuditClientService auditClientService) {
     this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
-    this.ngUserService = ngUserService;
-    this.resourceGroupClient = resourceGroupClient;
   }
 
   public boolean handle(OutboxEvent outboxEvent) {
@@ -116,59 +96,7 @@ public class ProjectEventHandler implements OutboxEventHandler {
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .insertId(outboxEvent.getId())
             .build();
-    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext)
-        && setupProjectForUserAuthz(
-            accountIdentifier, orgIdentifier, projectCreateEvent.getProject().getIdentifier(), globalContext);
-  }
-
-  private boolean setupProjectForUserAuthz(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, GlobalContext globalContext) {
-    createDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
-    if (!(globalContext.get(SOURCE_PRINCIPAL) instanceof SourcePrincipalContextData)) {
-      return false;
-    }
-    String userId = ((SourcePrincipalContextData) globalContext.get(SOURCE_PRINCIPAL)).getPrincipal().getName();
-    ngUserService.addUserToScope(userId,
-        Scope.builder()
-            .accountIdentifier(accountIdentifier)
-            .orgIdentifier(orgIdentifier)
-            .projectIdentifier(projectIdentifier)
-            .build(),
-        PROJECT_ADMIN_ROLE, SYSTEM);
-    return true;
-  }
-
-  private void createDefaultResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    try {
-      ResourceGroupResponse resourceGroupResponse = NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(
-          DEFAULT_RESOURCE_GROUP_IDENTIFIER, accountIdentifier, orgIdentifier, projectIdentifier));
-      if (resourceGroupResponse != null) {
-        return;
-      }
-      ResourceGroupDTO resourceGroupDTO = getResourceGroupDTO(accountIdentifier, orgIdentifier, projectIdentifier);
-      NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
-          accountIdentifier, orgIdentifier, projectIdentifier, resourceGroupDTO));
-    } catch (Exception e) {
-      log.error("Couldn't create default resource group for {}",
-          ScopeUtils.toString(accountIdentifier, orgIdentifier, projectIdentifier));
-    }
-  }
-
-  private ResourceGroupDTO getResourceGroupDTO(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return ResourceGroupDTO.builder()
-        .accountIdentifier(accountIdentifier)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .name(DEFAULT_RESOURCE_GROUP_NAME)
-        .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-        .description(String.format(DESCRIPTION_FORMAT,
-            ScopeUtils.getMostSignificantScope(accountIdentifier, orgIdentifier, projectIdentifier)
-                .toString()
-                .toLowerCase()))
-        .resourceSelectors(Collections.emptyList())
-        .fullScopeSelected(true)
-        .build();
+    return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 
   private boolean handleProjectUpdateEvent(OutboxEvent outboxEvent) throws IOException {

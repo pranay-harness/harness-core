@@ -180,8 +180,7 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
     assertThat(pageRequest.getFilters().stream().anyMatch(
                    filter -> DelegateProfileKeys.ng.equals(((SearchFilter) filter).getFieldName())))
         .isTrue();
-    assertThat(pageRequest.getFilters().stream().anyMatch(
-                   filter -> DelegateProfileKeys.owner.equals(((SearchFilter) filter).getFieldName())))
+    assertThat(pageRequest.getFilters().stream().anyMatch(filter -> "".equals(((SearchFilter) filter).getFieldName())))
         .isTrue();
   }
 

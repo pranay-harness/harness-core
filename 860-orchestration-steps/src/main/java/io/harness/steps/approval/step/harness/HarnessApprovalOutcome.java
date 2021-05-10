@@ -21,9 +21,4 @@ import org.springframework.data.annotation.TypeAlias;
 public class HarnessApprovalOutcome implements Outcome {
   List<HarnessApprovalActivityDTO> approvalActivities;
   Map<String, String> approverInputs;
-
-  @Override
-  public String getType() {
-    return "harnessApprovalOutcome";
-  }
 }
