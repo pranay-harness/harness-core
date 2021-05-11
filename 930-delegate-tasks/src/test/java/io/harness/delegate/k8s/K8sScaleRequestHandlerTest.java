@@ -3,12 +3,11 @@ package io.harness.delegate.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.NGInstanceUnitType.COUNT;
 import static io.harness.beans.NGInstanceUnitType.PERCENTAGE;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,6 +29,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.k8s.exception.KubernetesExceptionHints;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
@@ -119,7 +120,8 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                           .build();
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
         .thenReturn(1);
-    when(k8sTaskHelperBase.scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback)))
+    when(k8sTaskHelperBase.scale(
+             any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true)))
         .thenReturn(true);
     when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutIntervalInMillis))
         .thenReturn(pods);
@@ -136,7 +138,7 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(1))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(1)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
     verify(k8sTaskHelperBase, times(2))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
@@ -173,12 +175,14 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                           .build();
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
         .thenReturn(1);
-    when(k8sTaskHelperBase.scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback)))
+    when(k8sTaskHelperBase.scale(
+             any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true)))
         .thenReturn(true);
     when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutIntervalInMillis))
         .thenReturn(pods);
     when(k8sTaskHelperBase.tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class))).thenReturn(pods);
-    when(k8sTaskHelperBase.doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback)))
+    when(k8sTaskHelperBase.doStatusCheck(
+             any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback), eq(false)))
         .thenReturn(true);
 
     K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
@@ -192,12 +196,12 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(1))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(2))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(1)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
     verify(k8sTaskHelperBase, times(1))
-        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback));
+        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback), eq(false));
   }
 
   @Test
@@ -260,29 +264,30 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                           .build();
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
         .thenReturn(1);
-    when(k8sTaskHelperBase.scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback)))
+    when(k8sTaskHelperBase.scale(
+             any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true)))
         .thenReturn(true);
     when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutIntervalInMillis))
         .thenReturn(pods);
-    when(k8sTaskHelperBase.doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback)))
+    when(k8sTaskHelperBase.doStatusCheck(
+             any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback), eq(false)))
         .thenReturn(false);
 
-    K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
-        scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isInstanceOf(K8sScaleResponse.class);
-    K8sScaleResponse scaleResponse = (K8sScaleResponse) response.getK8sNGTaskResponse();
-    assertThat(scaleResponse.getK8sPodList()).isNull();
+    assertThatThrownBy(()
+                           -> k8sScaleRequestHandler.executeTaskInternal(
+                               scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessageContaining(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_FAILED)
+        .getCause()
+        .hasMessageContaining(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED);
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(1))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(1))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(0)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
     verify(k8sTaskHelperBase, times(1))
-        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback));
+        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback), eq(false));
   }
 
   @Test
@@ -314,24 +319,24 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                           .namespace(namespace)
                                           .versioned(false)
                                           .build();
+    RuntimeException thrownException = new RuntimeException("Failed to scale workload");
+
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
         .thenReturn(1);
-    when(k8sTaskHelperBase.scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback)))
-        .thenReturn(false);
+    when(k8sTaskHelperBase.scale(
+             any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true)))
+        .thenThrow(thrownException);
     when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutIntervalInMillis))
         .thenReturn(pods);
 
-    K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
-        scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isInstanceOf(K8sScaleResponse.class);
-    K8sScaleResponse scaleResponse = (K8sScaleResponse) response.getK8sNGTaskResponse();
-    assertThat(scaleResponse.getK8sPodList()).isNull();
+    assertThatThrownBy(()
+                           -> k8sScaleRequestHandler.executeTaskInternal(
+                               scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(thrownException);
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(1))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(1))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(0)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
@@ -365,20 +370,18 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                           .namespace(namespace)
                                           .versioned(false)
                                           .build();
+    RuntimeException thrownException = new RuntimeException("Failed to list pods");
 
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
-        .thenThrow(new RuntimeException("Failed to list pods"));
-    K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
-        scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isInstanceOf(K8sScaleResponse.class);
-    K8sScaleResponse scaleResponse = (K8sScaleResponse) response.getK8sNGTaskResponse();
-    assertThat(scaleResponse.getK8sPodList()).isNull();
+        .thenThrow(thrownException);
+    assertThatThrownBy(()
+                           -> k8sScaleRequestHandler.executeTaskInternal(
+                               scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .isSameAs(thrownException);
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(0))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(0))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(0)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
@@ -406,29 +409,21 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                                    .kubeconfigPath(kubeconfigPath)
                                                    .build();
 
-    KubernetesResourceId deployment = KubernetesResourceId.builder()
-                                          .kind("Deployment")
-                                          .name("test-deployment")
-                                          .namespace(namespace)
-                                          .versioned(false)
-                                          .build();
+    assertThatThrownBy(()
+                           -> k8sScaleRequestHandler.executeTaskInternal(
+                               scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessageContaining("Invalid Kubernetes resource name Deployment. Should be in format Kind/Name");
 
-    K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
-        scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isInstanceOf(K8sScaleResponse.class);
-    K8sScaleResponse scaleResponse = (K8sScaleResponse) response.getK8sNGTaskResponse();
-    assertThat(scaleResponse.getK8sPodList()).isNull();
-
-    verify(k8sTaskHelperBase, times(0)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(0))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback));
+        .getCurrentReplicas(any(Kubectl.class), any(KubernetesResourceId.class), eq(delegateTaskParams));
+    verify(k8sTaskHelperBase, times(0))
+        .scale(any(Kubectl.class), eq(delegateTaskParams), any(KubernetesResourceId.class), eq(2), eq(logCallback),
+            eq(true));
     verify(k8sTaskHelperBase, times(0))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(0)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
     verify(k8sTaskHelperBase, times(0))
-        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback));
+        .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), eq(delegateTaskParams), eq(logCallback));
   }
 
   @Test
@@ -460,17 +455,16 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
         .thenReturn(1);
 
-    K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
-        scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isInstanceOf(K8sScaleResponse.class);
-    K8sScaleResponse scaleResponse = (K8sScaleResponse) response.getK8sNGTaskResponse();
-    assertThat(scaleResponse.getK8sPodList()).isNull();
+    assertThatThrownBy(()
+                           -> k8sScaleRequestHandler.executeTaskInternal(
+                               scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessageContaining(KubernetesExceptionHints.SCALE_INSTANCE_UNIT_TYPE_MISSING)
+        .getCause()
+        .hasMessageContaining(KubernetesExceptionExplanation.SCALE_INSTANCE_UNIT_TYPE_MISSING);
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(0))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(0))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(0)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
@@ -510,12 +504,14 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                           .build();
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
         .thenReturn(1);
-    when(k8sTaskHelperBase.scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback)))
+    when(k8sTaskHelperBase.scale(
+             any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true)))
         .thenReturn(true);
     when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutIntervalInMillis))
         .thenReturn(pods);
     when(k8sTaskHelperBase.tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class))).thenReturn(pods);
-    when(k8sTaskHelperBase.doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback)))
+    when(k8sTaskHelperBase.doStatusCheck(
+             any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback), eq(false)))
         .thenReturn(true);
 
     K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
@@ -529,12 +525,12 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(1))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(2), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(2))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(1)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
     verify(k8sTaskHelperBase, times(1))
-        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback));
+        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback), eq(false));
   }
 
   @Test
@@ -569,12 +565,14 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                           .build();
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
         .thenReturn(1);
-    when(k8sTaskHelperBase.scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(10), eq(logCallback)))
+    when(k8sTaskHelperBase.scale(
+             any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(10), eq(logCallback), eq(true)))
         .thenReturn(true);
     when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutIntervalInMillis))
         .thenReturn(pods);
     when(k8sTaskHelperBase.tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class))).thenReturn(pods);
-    when(k8sTaskHelperBase.doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback)))
+    when(k8sTaskHelperBase.doStatusCheck(
+             any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback), eq(false)))
         .thenReturn(true);
 
     K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
@@ -588,12 +586,12 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(1))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(10), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(10), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(2))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(1)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
     verify(k8sTaskHelperBase, times(1))
-        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback));
+        .doStatusCheck(any(Kubectl.class), eq(deployment), eq(delegateTaskParams), eq(logCallback), eq(false));
   }
 
   @Test
@@ -624,19 +622,19 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                                           .versioned(false)
                                           .build();
     when(k8sTaskHelperBase.getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams)))
-        .thenReturn(1);
+        .thenReturn(null);
 
-    K8sDeployResponse response = k8sScaleRequestHandler.executeTaskInternal(
-        scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getK8sNGTaskResponse()).isInstanceOf(K8sScaleResponse.class);
-    K8sScaleResponse scaleResponse = (K8sScaleResponse) response.getK8sNGTaskResponse();
-    assertThat(scaleResponse.getK8sPodList()).isNull();
+    assertThatThrownBy(()
+                           -> k8sScaleRequestHandler.executeTaskInternal(
+                               scaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
+        .hasMessage(KubernetesExceptionHints.PERCENTAGE_CURRENT_REPLICA_NOT_FOUND)
+        .getCause()
+        .hasMessage(format(
+            KubernetesExceptionExplanation.PERCENTAGE_CURRENT_REPLICA_NOT_FOUND, "Deployment", "test-deployment"));
 
     verify(k8sTaskHelperBase, times(1)).getCurrentReplicas(any(Kubectl.class), eq(deployment), eq(delegateTaskParams));
     verify(k8sTaskHelperBase, times(0))
-        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(10), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), eq(deployment), eq(10), eq(logCallback), eq(true));
     verify(k8sTaskHelperBase, times(0))
         .getPodDetails(eq(kubernetesConfig), eq(namespace), eq(releaseName), eq(timeoutIntervalInMillis));
     verify(k8sTaskHelperBase, times(0)).tagNewPods(anyListOf(K8sPod.class), anyListOf(K8sPod.class));
@@ -664,7 +662,6 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
                            -> k8sScaleRequestHandler.executeTaskInternal(
                                k8sScaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
         .isEqualTo(thrownException);
-    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
   }
 
   @Test
@@ -704,15 +701,16 @@ public class K8sScaleRequestHandlerTest extends CategoryTest {
         .getPodDetails(kubernetesConfig, namespace, releaseName, 60000);
     doReturn(true)
         .when(k8sTaskHelperBase)
-        .scale(any(Kubectl.class), eq(delegateTaskParams), any(KubernetesResourceId.class), anyInt(), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), any(KubernetesResourceId.class), anyInt(), eq(logCallback),
+            eq(true));
 
     assertThatThrownBy(()
                            -> k8sScaleRequestHandler.executeTaskInternal(
                                k8sScaleRequest, delegateTaskParams, iLogStreamingTaskClient, commandUnitsProgress))
         .isEqualTo(thrownException);
 
-    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
     verify(k8sTaskHelperBase)
-        .scale(any(Kubectl.class), eq(delegateTaskParams), any(KubernetesResourceId.class), anyInt(), eq(logCallback));
+        .scale(any(Kubectl.class), eq(delegateTaskParams), any(KubernetesResourceId.class), anyInt(), eq(logCallback),
+            eq(true));
   }
 }

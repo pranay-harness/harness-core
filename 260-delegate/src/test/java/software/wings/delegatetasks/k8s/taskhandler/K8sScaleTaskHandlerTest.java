@@ -97,13 +97,13 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(k8sTaskHelperBase.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
-             anyInt(), any(ExecutionLogCallback.class)))
+             anyInt(), any(ExecutionLogCallback.class), eq(false)))
         .thenReturn(false);
 
     k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
     verify(k8sTaskHelperBase, times(1))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
-            any(ExecutionLogCallback.class));
+            any(ExecutionLogCallback.class), eq(false));
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(k8sTaskHelperBase, times(1))
         .getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
@@ -123,13 +123,13 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, LONG_TIMEOUT_INTERVAL))
         .thenReturn(null);
     when(k8sTaskHelperBase.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
-             anyInt(), any(ExecutionLogCallback.class)))
+             anyInt(), any(ExecutionLogCallback.class), eq(false)))
         .thenReturn(false);
 
     k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
     verify(k8sTaskHelperBase, times(1))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
-            any(ExecutionLogCallback.class));
+            any(ExecutionLogCallback.class), eq(false));
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(k8sTaskHelperBase, times(1))
         .getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
@@ -184,7 +184,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     verify(k8sTaskHelperBase, times(1))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
-            any(ExecutionLogCallback.class));
+            any(ExecutionLogCallback.class), eq(false));
     verify(k8sTaskHelperBase, times(1))
         .getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
 
@@ -194,7 +194,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     verify(k8sTaskHelperBase, times(2))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
-            any(ExecutionLogCallback.class));
+            any(ExecutionLogCallback.class), eq(false));
     verify(k8sTaskHelperBase, times(2))
         .getPodDetails(any(KubernetesConfig.class), anyString(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
   }
@@ -206,13 +206,13 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(k8sTaskHelperBase.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
-             anyInt(), any(ExecutionLogCallback.class)))
+             anyInt(), any(ExecutionLogCallback.class), eq(false)))
         .thenReturn(true);
     k8sScaleTaskHandler.executeTaskInternal(k8sScaleTaskParameters, k8sDelegateTaskParams);
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(k8sTaskHelperBase, times(1))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
-            any(ExecutionLogCallback.class));
+            any(ExecutionLogCallback.class), eq(false));
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));
@@ -227,7 +227,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
     when(k8sTaskHelperBase.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
-             anyInt(), any(ExecutionLogCallback.class)))
+             anyInt(), any(ExecutionLogCallback.class), eq(false)))
         .thenReturn(true);
     when(k8sTaskHelperBase.doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class),
              any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class)))
@@ -236,7 +236,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
     verify(k8sTaskHelperBase, times(1))
         .scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class), anyInt(),
-            any(ExecutionLogCallback.class));
+            any(ExecutionLogCallback.class), eq(false));
     verify(k8sTaskHelperBase, times(1))
         .doStatusCheck(any(Kubectl.class), any(KubernetesResourceId.class), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class));

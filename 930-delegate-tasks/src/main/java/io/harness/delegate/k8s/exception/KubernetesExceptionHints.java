@@ -16,4 +16,8 @@ public interface KubernetesExceptionHints {
   String DRY_RUN_MANIFEST_FAILED = "Verify manifest output for invalid fields names and types or manifest is not empty";
   String APPLY_MANIFEST_FAILED = "Verify Kubernetes manifest for invalid values or conflicting resources";
   String WAIT_FOR_STEADY_STATE_FAILED = "Check deployment pods probe checks, nodes availability or image pull secrets";
+
+  String PERCENTAGE_CURRENT_REPLICA_NOT_FOUND = "Check workload name in step";
+  String SCALE_COMMAND_FAILED_MISSING_WORKLOAD = "Check if workload %s exists";
+  String SCALE_INSTANCE_UNIT_TYPE_MISSING = "Select a valid instance unit type in Scale step";
 }

@@ -18,4 +18,7 @@ public interface KubernetesExceptionExplanation {
   String DRY_RUN_MANIFEST_FAILED = "Performed local manifest validation failed";
   String APPLY_MANIFEST_FAILED = "Unable to apply Kubernetes manifest";
   String WAIT_FOR_STEADY_STATE_FAILED = "One of managed workloads failed to rollout";
+
+  String PERCENTAGE_CURRENT_REPLICA_NOT_FOUND = "Unable to find resource of kind %s with name %s";
+  String SCALE_INSTANCE_UNIT_TYPE_MISSING = "Instance unit type is missing";
 }

@@ -756,7 +756,8 @@ public class K8sTaskHelperTest extends CategoryTest {
         .when(spyHelperBase)
         .runK8sExecutable(any(), any(), any());
     final boolean success = spyHelperBase.scale(kubectl, K8sDelegateTaskParams.builder().build(),
-        KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5, logCallback);
+        KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5, logCallback,
+        false);
     assertThat(success).isFalse();
     ArgumentCaptor<ScaleCommand> captor = ArgumentCaptor.forClass(ScaleCommand.class);
     verify(spyHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
@@ -771,7 +772,8 @@ public class K8sTaskHelperTest extends CategoryTest {
     Kubectl kubectl = Kubectl.client("kubectl", "config-path");
     doReturn(new ProcessResult(0, null)).when(spyHelperBase).runK8sExecutable(any(), any(), any());
     final boolean success = spyHelperBase.scale(kubectl, K8sDelegateTaskParams.builder().workingDirectory(".").build(),
-        KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5, logCallback);
+        KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5, logCallback,
+        false);
 
     assertThat(success).isTrue();
     ArgumentCaptor<ScaleCommand> captor = ArgumentCaptor.forClass(ScaleCommand.class);
