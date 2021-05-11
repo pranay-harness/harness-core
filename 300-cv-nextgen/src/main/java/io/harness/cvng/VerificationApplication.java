@@ -109,11 +109,11 @@ import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
-import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -168,6 +168,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
   private HPersistence hPersistence;
 
   public static void main(String[] args) throws Exception {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("Shutdown hook, entering maintenance...");
+      MaintenanceController.forceMaintenance(true);
+    }));
     new VerificationApplication().run(args);
   }
 
@@ -238,12 +242,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .addAll(CvNextGenRegistrars.morphiaConverters)
             .build();
       }
-      @Provides
-      @Singleton
-      List<YamlSchemaRootClass> yamlSchemaRootClasses() {
-        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CvNextGenRegistrars.yamlSchemaRegistrars).build();
-      }
     });
+
     modules.add(new AbstractCfModule() {
       @Override
       public CfClientConfig cfClientConfig() {
@@ -305,7 +305,13 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CvPersistenceModule());
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
     modules.add(new MetricsModule());
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+                                                    .requireSchemaInit(true)
+                                                    .requireSnippetInit(false)
+                                                    .requireValidatorInit(false)
+                                                    .build();
     Injector injector = Guice.createInjector(modules);
+    YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     initMetrics(injector);
