@@ -1335,7 +1335,7 @@ maven_install(
         "com.google.api.grpc:proto-google-cloud-pubsub-v1:1.89.0",
         "com.google.api.grpc:proto-google-common-protos:1.17.0",
         "com.google.api.grpc:proto-google-iam-v1:0.13.0",
-        "com.google.api:api-common:1.8.1",
+        "com.google.api:api-common:1.10.1",
         "com.google.api:gax-grpc:1.57.1",
         "com.google.api:gax-httpjson:0.70.1",
         "com.google.api:gax:1.53.1",

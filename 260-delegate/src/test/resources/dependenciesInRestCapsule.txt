@@ -102,7 +102,7 @@ com.google.api.grpc:proto-google-cloud-secretmanager-v1:jar:1.2.8
 com.google.api.grpc:proto-google-cloud-secretmanager-v1beta1:jar:1.2.8
 com.google.api.grpc:proto-google-common-protos:jar:1.17.0
 com.google.api.grpc:proto-google-iam-v1:jar:0.13.0
-com.google.api:api-common:jar:1.8.1
+com.google.api:api-common:jar:1.10.1
 com.google.api:gax-grpc:jar:1.57.1
 com.google.api:gax-httpjson:jar:0.70.1
 com.google.api:gax:jar:1.53.1
