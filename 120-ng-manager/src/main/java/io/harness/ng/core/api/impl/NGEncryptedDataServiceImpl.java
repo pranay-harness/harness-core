@@ -325,7 +325,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
         .build();
   }
 
-  public void setEncryptedValueToFileContent(NGEncryptedData encryptedData) {
+  private void setEncryptedValueToFileContent(NGEncryptedData encryptedData) {
     char[] fileContent = secretsFileService.getFileContents(String.valueOf(encryptedData.getEncryptedValue()));
     encryptedData.setEncryptedValue(fileContent);
   }
