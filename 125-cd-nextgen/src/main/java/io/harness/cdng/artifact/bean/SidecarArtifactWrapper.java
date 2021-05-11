@@ -1,9 +1,7 @@
 package io.harness.cdng.artifact.bean;
 
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.artifact.SidecarWrapperArtifactVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -23,11 +21,6 @@ public class SidecarArtifactWrapper implements Visitable {
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SIDECARS_ARTIFACT_CONFIG).build();
-  }
 
   @Override
   public VisitableChildren getChildrenToWalk() {

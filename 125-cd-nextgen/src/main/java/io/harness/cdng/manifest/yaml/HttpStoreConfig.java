@@ -9,7 +9,6 @@ import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
@@ -59,10 +58,5 @@ public class HttpStoreConfig implements StoreConfig, Visitable, WithConnectorRef
     Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
     connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
     return connectorRefMap;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName("spec").isPartOfFQN(false).build();
   }
 }
