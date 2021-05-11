@@ -35,6 +35,7 @@ import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
 import io.harness.ng.core.entities.NGEncryptedData;
+import io.harness.ng.core.entities.NGEncryptedData.NGEncryptedDataBuilder;
 import io.harness.secretmanagerclient.dto.LocalConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
@@ -123,7 +124,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
   private NGEncryptedData buildNGEncryptedData(
       String accountIdentifier, SecretDTOV2 dto, SecretManagerConfigDTO secretManager) {
-    NGEncryptedData.NGEncryptedDataBuilder builder = NGEncryptedData.builder();
+    NGEncryptedDataBuilder builder = NGEncryptedData.builder();
     builder.accountIdentifier(accountIdentifier)
         .orgIdentifier(dto.getOrgIdentifier())
         .projectIdentifier(dto.getProjectIdentifier())
