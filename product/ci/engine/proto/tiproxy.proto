@@ -10,8 +10,9 @@ message UploadCgRequest {
   string step_id = 1;
   string repo = 2;
   string sha = 3;
-  string branch = 4;
+  string source = 4;  // source branch
   string cg_dir = 5;
+  string target = 6;  // target branch
 }
 
 message UploadCgResponse {}
@@ -20,6 +21,8 @@ message UploadCgResponse {}
 message WriteTestsRequest {
   string step_id = 1;
   repeated string tests = 2;
+  string repo = 3;
+  string sha = 4;
 }
 
 message WriteTestsResponse {}
