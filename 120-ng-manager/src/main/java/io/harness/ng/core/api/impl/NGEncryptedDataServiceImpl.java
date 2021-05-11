@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
@@ -24,6 +25,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.encryptors.VaultEncryptorsRegistry;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.ng.core.NGAccess;
@@ -346,5 +348,40 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       return parentProjectIdentifier;
     }
     return null;
+  }
+
+  @Override
+  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+
+    if (encryptedData != null) {
+      SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(
+          accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), true);
+
+      if (isReadOnlySecretManager(secretManager)
+          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+        throw new SecretManagementException(
+            SECRET_MANAGEMENT_ERROR, "Cannot delete an Inline secret in read only secret manager", USER);
+      }
+      if (!Optional.ofNullable(encryptedData.getPath()).isPresent()
+          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+        deleteSecretInSecretManager(accountIdentifier, encryptedData, SecretManagerConfigMapper.fromDTO(secretManager));
+      }
+      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
+        secretsFileService.deleteFile(encryptedData.getEncryptedValue());
+      }
+      return encryptedDataDao.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    }
+    throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
+  }
+
+  private void deleteSecretInSecretManager(
+      String accountIdentifier, NGEncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
+    SecretManagerType secretManagerType = secretManagerConfig.getType();
+    if (VAULT.equals(secretManagerType)) {
+      vaultEncryptorsRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType())
+          .deleteSecret(accountIdentifier, encryptedData, secretManagerConfig);
+    }
   }
 }

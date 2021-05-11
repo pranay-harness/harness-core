@@ -15,7 +15,12 @@ import java.util.List;
 @OwnedBy(PL)
 public interface NGEncryptedDataService {
   NGEncryptedData createSecretText(String accountIdentifier, SecretDTOV2 dto);
+
   NGEncryptedData createSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
+
   List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity object);
+
   NGEncryptedData get(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
+  boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }
