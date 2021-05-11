@@ -1,5 +1,6 @@
 package io.harness.ng.core.encryptors;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -7,6 +8,7 @@ import static software.wings.beans.TaskType.FETCH_SECRET;
 import static software.wings.beans.TaskType.VALIDATE_SECRET_MANAGER_CONFIGURATION;
 import static software.wings.beans.TaskType.VALIDATE_SECRET_REFERENCE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -24,7 +26,10 @@ import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Inject;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
+@Slf4j
 public class NGManagerEncryptorHelper {
   private final DelegateGrpcClientWrapper delegateService;
 
