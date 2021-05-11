@@ -23,15 +23,15 @@ type Config struct {
 	}
 
 	TimeScaleDb struct {
-		Username       string `envconfig:"TI_SERVICE_TIMESCALE_USERNAME"`
-		Password       string `envconfig:"TI_SERVICE_TIMESCALE_PASSWORD"`
-		Host           string `envconfig:"TI_SERVICE_TIMESCALE_HOST"`
-		Port           string `envconfig:"TI_SERVICE_TIMESCALE_PORT"`
-		EnableSSL      bool   `envconfig:"TI_SERVICE_TIMESCALE_ENABLE_SSL"`
+		Username  string `envconfig:"TI_SERVICE_TIMESCALE_USERNAME"`
+		Password  string `envconfig:"TI_SERVICE_TIMESCALE_PASSWORD"`
+		Host      string `envconfig:"TI_SERVICE_TIMESCALE_HOST"`
+		Port      string `envconfig:"TI_SERVICE_TIMESCALE_PORT"`
+		EnableSSL bool   `envconfig:"TI_SERVICE_TIMESCALE_ENABLE_SSL"`
 		// Path to root certificate provided by server in plaintext
 		SSLCertPath    string `envconfig:"TI_SERVICE_TIMESCALE_SSL_CERT_PATH"`
 		DbName         string `envconfig:"TI_SERVICE_DB_NAME"`
-		HyperTableName string `envconfig:"TI_SERVICE_HYPER_TABLE"`
+		EvalTable      string `envconfig:"TI_SERVICE_HYPER_TABLE"`
 		SelectionTable string `envconfig:"TI_SERVICE_SELECTION_HYPER_TABLE"`
 		CoverageTable  string `envconfig:"TI_SERVICE_COVERAGE_HYPER_TABLE"`
 	}
