@@ -145,6 +145,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(NewRelicCVConfig.class);
     set.add(CDNGActivitySource.class);
     set.add(CVNGStepTask.class);
+    set.add(Comparable.class);
   }
 
   @Override

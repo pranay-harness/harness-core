@@ -1,5 +1,8 @@
 package io.harness.pms.ngpipeline.inputset.beans.resource;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 
@@ -11,6 +14,7 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(PIPELINE)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)

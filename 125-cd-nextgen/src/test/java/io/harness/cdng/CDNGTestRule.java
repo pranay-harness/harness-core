@@ -1,5 +1,6 @@
 package io.harness.cdng;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
@@ -53,6 +54,8 @@ import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.client.YamlSchemaClientModule;
+import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
@@ -200,9 +203,12 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       }
     });
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
+    modules.add(YamlSchemaClientModule.getInstance(getYamlSchemaClientConfig(), NG_MANAGER.getServiceId()));
     return modules;
   }
-
+  private YamlSchemaClientConfig getYamlSchemaClientConfig() {
+    return YamlSchemaClientConfig.builder().build();
+  }
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
         .deploymentMode(DeployMode.LOCAL)

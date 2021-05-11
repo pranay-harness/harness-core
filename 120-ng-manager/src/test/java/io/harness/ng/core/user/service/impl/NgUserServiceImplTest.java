@@ -87,7 +87,7 @@ public class NgUserServiceImplTest extends CategoryTest {
     Project proj1 = Project.builder().name("P1").build();
     Project proj2 = Project.builder().name("P2").build();
     List<Project> projects = Arrays.asList(proj1, proj2);
-    doReturn(projects).when(userMembershipRepository).findProjectList(eq(user), any());
+    doReturn(projects).when(userMembershipRepository).findProjectList(eq(user), any(), any());
     doReturn(5L).when(userMembershipRepository).getProjectCount(user);
 
     Page<ProjectDTO> projectsResponse =

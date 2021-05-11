@@ -1,5 +1,8 @@
 package io.harness.pms.ngpipeline.inputset.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.mapper.TagMapper;
@@ -23,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class PMSInputSetElementMapper {
   public InputSetEntity toInputSetEntity(
