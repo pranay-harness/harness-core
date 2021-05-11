@@ -1,6 +1,9 @@
 package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.GITHUB_WEBHOOK_AUTHENTICATION;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
@@ -8,6 +11,8 @@ import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
@@ -18,8 +23,11 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.yaml.trigger.WebhookEventTriggerConditionYaml.WebhookEventTriggerConditionYamlBuilder;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +44,10 @@ import lombok.NoArgsConstructor;
 public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<WebhookEventTriggerConditionYaml> {
   private static final String PACKAGE_STRING = "package:";
   private static final String SPLITTER = ":";
+
+  @Inject private SecretManager secretManager;
+  @Inject private AppService appService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public WebhookEventTriggerConditionYaml toYaml(TriggerCondition bean, String appId) {
@@ -58,6 +70,12 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
       webhookEventTriggerConditionYamlBuilder.filePaths(webHookTriggerCondition.getFilePaths());
     }
 
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, accountId)) {
+      webhookEventTriggerConditionYamlBuilder.webHookSecret(
+          secretManager.getEncryptedYamlRef(accountId, webHookTriggerCondition.getWebHookSecret()));
+    }
+
     return webhookEventTriggerConditionYamlBuilder.build();
   }
 
@@ -65,13 +83,14 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   public TriggerCondition upsertFromYaml(
       ChangeContext<WebhookEventTriggerConditionYaml> changeContext, List<ChangeContext> changeSetContext) {
     TriggerConditionYaml yaml = changeContext.getYaml();
+    String accountId = changeContext.getChange().getAccountId();
 
     WebhookEventTriggerConditionYaml webhookConditionYaml = (WebhookEventTriggerConditionYaml) yaml;
 
-    return fromYAML(webhookConditionYaml);
+    return fromYAML(webhookConditionYaml, accountId);
   }
 
-  public WebHookTriggerCondition fromYAML(WebhookEventTriggerConditionYaml webhookConditionYaml) {
+  public WebHookTriggerCondition fromYAML(WebhookEventTriggerConditionYaml webhookConditionYaml, String accountId) {
     WebHookTriggerCondition webHookTriggerCondition =
         WebHookTriggerCondition.builder()
             .branchRegex(webhookConditionYaml.getBranchRegex())
@@ -84,7 +103,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
             .filePaths(webhookConditionYaml.getFilePaths())
             .build();
 
-    if (EmptyPredicate.isNotEmpty(webhookConditionYaml.getRepositoryType())) {
+    if (isNotEmpty(webhookConditionYaml.getRepositoryType())) {
       if (webhookConditionYaml.getRepositoryType().equals(GITHUB.name())) {
         webHookTriggerCondition.setActions(getPRActionTypes(webhookConditionYaml.getAction(),
             webhookConditionYaml.getRepositoryType(), webhookConditionYaml.getEventType()));
@@ -94,6 +113,21 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
         webHookTriggerCondition.setBitBucketEvents(
             getBitBucketEventType(webhookConditionYaml.getAction(), webhookConditionYaml.getRepositoryType()));
       }
+    }
+
+    if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, accountId)) {
+      if (webhookConditionYaml.getWebHookSecret() != null
+          && !webhookConditionYaml.getRepositoryType().equals(GITHUB.name())) {
+        throw new InvalidRequestException("WebHook Secret is only supported with Github repository", USER);
+      }
+      String webHookSecret = webhookConditionYaml.getWebHookSecret();
+      if (isNotEmpty(webHookSecret)) {
+        int pos = webHookSecret.indexOf(':');
+        if (pos == -1) {
+          throw new InvalidRequestException("Please use proper format for webHookSecret: <secretManger>:<refId>", USER);
+        }
+      }
+      webHookTriggerCondition.setWebHookSecret(yamlHelper.extractEncryptedRecordId(webHookSecret, accountId));
     }
 
     return webHookTriggerCondition;
@@ -146,8 +180,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<GithubAction> getPRActionTypes(List<String> actions, String webhookSource, List<String> eventType) {
-    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
-        && webhookSource.equals(GITHUB.name())) {
+    if (isNotEmpty(actions) && isNotEmpty(webhookSource) && webhookSource.equals(GITHUB.name())) {
       if (eventType != null && eventType.contains("package")) {
         return actions.stream().map(action -> GithubAction.find(PACKAGE_STRING + action)).collect(Collectors.toList());
       }
@@ -158,8 +191,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<ReleaseAction> getReleaseActionTypes(List<String> actions, String webhookSource) {
-    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
-        && webhookSource.equals(GITHUB.name())) {
+    if (isNotEmpty(actions) && isNotEmpty(webhookSource) && webhookSource.equals(GITHUB.name())) {
       return actions.stream().map(ReleaseAction::find).collect(Collectors.toList());
     } else {
       return null;
@@ -167,8 +199,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<BitBucketEventType> getBitBucketEventType(List<String> actions, String webhookSource) {
-    if (EmptyPredicate.isNotEmpty(actions) && EmptyPredicate.isNotEmpty(webhookSource)
-        && webhookSource.equals("BITBUCKET")) {
+    if (isNotEmpty(actions) && isNotEmpty(webhookSource) && webhookSource.equals("BITBUCKET")) {
       return actions.stream().map(BitBucketEventType::find).collect(Collectors.toList());
     } else {
       return null;
@@ -176,7 +207,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   }
 
   private List<String> getYAMLEventTypes(List<WebhookEventType> eventTypes) {
-    if (EmptyPredicate.isNotEmpty(eventTypes)) {
+    if (isNotEmpty(eventTypes)) {
       return eventTypes.stream().map(WebhookEventType::getValue).collect(Collectors.toList());
     } else {
       return null;
@@ -186,7 +217,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   private List<String> getYAMLActions(WebHookTriggerCondition webHookTriggerCondition) {
     if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource() == GITHUB) {
-      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getActions())) {
+      if (isNotEmpty(webHookTriggerCondition.getActions())) {
         if (webHookTriggerCondition.getEventTypes() != null
             && webHookTriggerCondition.getEventTypes().contains(WebhookEventType.PACKAGE)) {
           List<String> yamlActions = new ArrayList<>();
@@ -203,7 +234,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
       }
     } else if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource() == WebhookSource.BITBUCKET) {
-      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getBitBucketEvents())) {
+      if (isNotEmpty(webHookTriggerCondition.getBitBucketEvents())) {
         return webHookTriggerCondition.getBitBucketEvents()
             .stream()
             .map(BitBucketEventType::getValue)
@@ -219,7 +250,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   private List<String> getYAMLReleaseActions(WebHookTriggerCondition webHookTriggerCondition) {
     if (webHookTriggerCondition != null && webHookTriggerCondition.getWebhookSource() != null
         && webHookTriggerCondition.getWebhookSource() == GITHUB) {
-      if (EmptyPredicate.isNotEmpty(webHookTriggerCondition.getReleaseActions())) {
+      if (isNotEmpty(webHookTriggerCondition.getReleaseActions())) {
         return webHookTriggerCondition.getReleaseActions()
             .stream()
             .map(ReleaseAction::getValue)

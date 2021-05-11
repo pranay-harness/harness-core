@@ -1,10 +1,12 @@
 package io.harness.cdng.artifact.bean.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.ECR_NAME;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
-import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.pms.yaml.ParameterField;
@@ -28,6 +30,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ECR_NAME)
 @TypeAlias("ecrArtifactConfig")
+@OwnedBy(CDC)
 public class EcrArtifactConfig implements ArtifactConfig {
   /**
    * AWS connector to connect to Google Container Registry.

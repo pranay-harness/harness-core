@@ -33,13 +33,14 @@ public class YamlGitConfigDTO {
   private String gitConnectorRef;
   @NotNull private ConnectorType gitConnectorType;
   private String repo;
-  private String branch;
+  @NotNull private String branch;
   // pair of identifier and folder name
   private List<RootFolder> rootFolders;
   private RootFolder defaultRootFolder;
 
   private String entityFQN;
   private Scope scope;
+  private boolean executeOnDelegate;
 
   @Data
   @FieldDefaults(level = AccessLevel.PRIVATE)

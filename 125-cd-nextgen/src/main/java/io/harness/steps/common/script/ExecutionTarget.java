@@ -1,6 +1,9 @@
 package io.harness.steps.common.script;
 
-import io.harness.common.SwaggerConstants;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -9,6 +12,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(CDC)
 public class ExecutionTarget {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> host;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;

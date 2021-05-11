@@ -12,6 +12,8 @@ import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.cvng.client.CVNGServiceClient;
@@ -42,6 +44,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.version.VersionModule;
 
+import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
@@ -143,7 +146,10 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()
                                            .account("testAccount")
                                            .enabled(false)
@@ -198,6 +204,18 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(ManagerRegistrars.springConverters)
             .build();
+      }
+    });
+
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
       }
     });
 

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class BlueGreenVerificationJobDTO extends VerificationJobDTO {
   private String sensitivity;
-  private Integer trafficSplitPercentage;
+  private String trafficSplitPercentage;
 
   @Override
   public VerificationJobType getType() {

@@ -21,14 +21,13 @@ public class CDNGRbacUtility {
     if (EmptyPredicate.isNotEmpty(orgId)) {
       resourceType = "ORGANIZATION";
       resouceIdentifier = orgId;
-      scope.orgIdentifier(orgId);
+      if (EmptyPredicate.isNotEmpty(projectId)) {
+        resouceIdentifier = projectId;
+        resourceType = "PROJECT";
+        scope.orgIdentifier(orgId);
+      }
     }
 
-    if (EmptyPredicate.isNotEmpty(projectId)) {
-      resouceIdentifier = projectId;
-      resourceType = "PROJECT";
-      scope.projectIdentifier(projectId);
-    }
     return PermissionCheckDTO.builder()
         .resourceType(resourceType)
         .resourceScope(scope.build())

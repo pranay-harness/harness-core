@@ -29,6 +29,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -49,7 +50,6 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
-import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -134,7 +134,7 @@ public class UserResourceTest extends WingsBaseTest {
     PageRequest pageRequest = mock(PageRequest.class);
     when(pageRequest.getOffset()).thenReturn("0");
     when(pageRequest.getPageSize()).thenReturn(30);
-    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean()))
+    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(anUser().build())).build());
     userResource.list(pageRequest, UUIDGenerator.generateUuid(), null, false);
     verify(USER_SERVICE).getTotalUserCount(any(), anyBoolean());

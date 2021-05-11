@@ -4,14 +4,17 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -26,8 +29,6 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +42,7 @@ import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.DEL)
 public class WatcherServiceImplTest extends CategoryTest {
   @Mock private TimeLimiter timeLimiter;
   @InjectMocks @Spy private WatcherServiceImpl watcherService;
@@ -236,8 +238,8 @@ public class WatcherServiceImplTest extends CategoryTest {
 
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
-        .thenReturn(restResponse);
+
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(15)).thenReturn(restResponse);
 
     boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
 
@@ -254,17 +256,14 @@ public class WatcherServiceImplTest extends CategoryTest {
 
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
-        .thenReturn(restResponse);
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(15)).thenReturn(restResponse);
     IOException ioException = new IOException("test");
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(1L), eq(TimeUnit.MINUTES), eq(true)))
-        .thenThrow(ioException);
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofMinutes(1)).thenThrow(ioException);
 
     boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
     assertThat(downloadSuccesful).isFalse();
 
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(1L), eq(TimeUnit.MINUTES), eq(true)))
-        .thenThrow(Exception.class);
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofMinutes(1)).thenThrow(Exception.class);
     downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
     assertThat(downloadSuccesful).isFalse();
   }
@@ -312,9 +311,8 @@ public class WatcherServiceImplTest extends CategoryTest {
 
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
-        .thenReturn(restResponse)
-        .thenReturn(null);
+
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(15)).thenReturn(restResponse).thenReturn(null);
 
     List<String> expectedDelegateVersions = watcherService.findExpectedDelegateVersions();
     assertThat(expectedDelegateVersions).containsExactlyInAnyOrder("1", "2");

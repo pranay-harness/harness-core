@@ -8,7 +8,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,25 +15,26 @@ import org.junit.experimental.categories.Category;
 
 public class K8sClusterHelperTest extends CategoryTest {
   private static final String OLD_CLUSTER = "cluster_1";
-  private static final String NEW_CLUSTER = RandomStringUtils.randomAlphabetic(10);
+  private static final String KUBEUID = "kube_id";
+  private static final String NEW_CLUSTER = "cluster_2";
 
   @Before
   public void setUp() throws Exception {
-    K8sClusterHelper.setAsSeen(OLD_CLUSTER);
+    K8sClusterHelper.setAsSeen(OLD_CLUSTER, KUBEUID);
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testNewCluster() throws Exception {
-    assertThat(K8sClusterHelper.isSeen(NEW_CLUSTER)).isFalse();
+    assertThat(K8sClusterHelper.isSeen(NEW_CLUSTER, KUBEUID)).isFalse();
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testOldCluster() throws Exception {
-    assertThat(K8sClusterHelper.isSeen(OLD_CLUSTER)).isTrue();
+    assertThat(K8sClusterHelper.isSeen(OLD_CLUSTER, KUBEUID)).isTrue();
   }
 
   @AfterClass

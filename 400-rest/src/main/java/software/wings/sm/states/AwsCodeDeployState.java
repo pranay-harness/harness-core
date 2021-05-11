@@ -19,13 +19,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.deployment.InstanceDetails;
-import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
@@ -132,7 +130,6 @@ public class AwsCodeDeployState extends State {
   @Inject protected transient SecretManager secretManager;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private AwsStateHelper awsStateHelper;
-  @Inject protected FeatureFlagService featureFlagService;
 
   public AwsCodeDeployState(String name) {
     super(name, StateType.AWS_CODEDEPLOY_STATE.name());
@@ -211,8 +208,7 @@ public class AwsCodeDeployState extends State {
         context, infrastructureMapping, cloudProviderSetting, encryptedDataDetails, executionDataBuilder);
 
     DeploymentType deploymentType = serviceResourceService.getDeploymentType(infrastructureMapping, service, null);
-    CommandExecutionContext commandExecutionContext = aCommandExecutionContext(
-        featureFlagService.isEnabled(FeatureName.WINRM_CAPABILITY_DEPRECATE_FOR_HTTP, app.getAccountId()))
+    CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
                                                           .accountId(app.getAccountId())
                                                           .appId(app.getUuid())
                                                           .envId(envId)
@@ -224,7 +220,7 @@ public class AwsCodeDeployState extends State {
                                                           .codeDeployParams(codeDeployParams)
                                                           .build();
 
-    String delegateTaskId = delegateService.queueTask(
+    DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getAppId())
@@ -240,7 +236,12 @@ public class AwsCodeDeployState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
-            .build());
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Aws code deploy task execution")
+            .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -534,5 +535,10 @@ public class AwsCodeDeployState extends State {
     stateDefaults.put("key", ARTIFACT_S3_KEY_EXPRESSION);
     stateDefaults.put("bundleType", "zip");
     return stateDefaults;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

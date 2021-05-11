@@ -123,7 +123,11 @@ gitSyncServerConfig:
       certFilePath: cert.pem
     - port: 13002
 
-shouldDeployWithGitSync: false
+shouldDeployWithGitSync: true
+
+fileServiceConfiguration:
+  fileStorageMode: MONGO
+  clusterName: ""
 
 shouldConfigureWithPMS: false
 
@@ -163,6 +167,11 @@ logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
 
+segmentConfiguration:
+  enabled: false
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
+
 accessControlClient:
   enableAccessControl: false
 
@@ -201,3 +210,22 @@ baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
 
 enableDefaultResourceGroupCreation: false
+
+cfClientConfig:
+  apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl : "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000

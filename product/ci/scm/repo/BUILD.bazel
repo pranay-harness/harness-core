@@ -18,12 +18,14 @@ go_test(
     name = "go_default_test",
     srcs = [
         "bitbucket_cloud_test.go",
+        "bitbucket_server_test.go",
         "github_test.go",
         "gitlab_test.go",
         "repo_test.go",
     ],
     data = [
         "testdata/webhook.json",
+        "testdata/webhooks.json",
     ],
     embed = [":go_default_library"],
     deps = [

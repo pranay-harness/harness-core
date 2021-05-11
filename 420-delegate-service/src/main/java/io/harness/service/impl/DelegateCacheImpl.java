@@ -1,7 +1,15 @@
 package io.harness.service.impl;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateGroup;
+import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
+import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 
@@ -16,10 +24,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateCacheImpl implements DelegateCache {
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
 
@@ -34,6 +45,34 @@ public class DelegateCacheImpl implements DelegateCache {
             public Optional<Delegate> load(String delegateId) {
               return Optional.ofNullable(
                   persistence.createQuery(Delegate.class).filter(DelegateKeys.uuid, delegateId).get());
+            }
+          });
+
+  private LoadingCache<ImmutablePair<String, String>, DelegateGroup> delegateGroupCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterAccess(1, TimeUnit.HOURS)
+          .build(new CacheLoader<ImmutablePair<String, String>, DelegateGroup>() {
+            @Override
+            public DelegateGroup load(ImmutablePair<String, String> delegateGroupKey) {
+              return persistence.createQuery(DelegateGroup.class)
+                  .filter(DelegateGroupKeys.accountId, delegateGroupKey.getLeft())
+                  .filter(DelegateGroupKeys.uuid, delegateGroupKey.getRight())
+                  .get();
+            }
+          });
+
+  private LoadingCache<ImmutablePair<String, String>, DelegateProfile> delegateProfilesCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterWrite(5, TimeUnit.SECONDS)
+          .build(new CacheLoader<ImmutablePair<String, String>, DelegateProfile>() {
+            @Override
+            public DelegateProfile load(ImmutablePair<String, String> delegateProfileKey) {
+              return persistence.createQuery(DelegateProfile.class)
+                  .filter(DelegateProfileKeys.accountId, delegateProfileKey.getLeft())
+                  .filter(DelegateProfileKeys.uuid, delegateProfileKey.getRight())
+                  .get();
             }
           });
 
@@ -56,5 +95,36 @@ public class DelegateCacheImpl implements DelegateCache {
       log.error("Delegate not found exception", e);
     }
     return null;
+  }
+
+  @Override
+  public DelegateGroup getDelegateGroup(String accountId, String delegateGroupId) {
+    if (isBlank(accountId) || isBlank(delegateGroupId)) {
+      return null;
+    }
+
+    try {
+      return delegateGroupCache.get(ImmutablePair.of(accountId, delegateGroupId));
+    } catch (ExecutionException | CacheLoader.InvalidCacheLoadException e) {
+      return null;
+    }
+  }
+
+  @Override
+  public DelegateProfile getDelegateProfile(String accountId, String delegateProfileId) {
+    if (StringUtils.isBlank(delegateProfileId)) {
+      return null;
+    }
+
+    try {
+      return delegateProfilesCache.get(ImmutablePair.of(accountId, delegateProfileId));
+    } catch (ExecutionException | CacheLoader.InvalidCacheLoadException e) {
+      return null;
+    }
+  }
+
+  @Override
+  public void invalidateDelegateProfileCache(String accountId, String delegateProfileId) {
+    delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
   }
 }

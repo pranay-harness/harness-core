@@ -1,6 +1,8 @@
 package io.harness.delegate.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateProfiles", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateProfileKeys")
+@OwnedBy(HarnessTeam.DEL)
 public final class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                                               UpdatedAtAware, UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -41,6 +44,12 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
                  .field(DelegateProfileKeys.name)
                  .unique(true)
                  .name("uniqueName")
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .field(DelegateProfileKeys.accountId)
+                 .field(DelegateProfileKeys.ng)
+                 .field(DelegateProfileKeys.owner)
+                 .name("byAcctNgOwner")
                  .build())
         .build();
   }
@@ -69,4 +78,11 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   private String identifier;
+
+  // Will be used for NG to hold information about who owns the record, Org or Project or account, if the field is
+  // empty
+  private DelegateEntityOwner owner;
+
+  // Will be used for segregation of CG vs. NG records.
+  private boolean ng;
 }

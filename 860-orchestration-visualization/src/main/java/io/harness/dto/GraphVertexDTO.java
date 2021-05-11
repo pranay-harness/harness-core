@@ -11,13 +11,11 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
-import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import org.bson.Document;
@@ -51,9 +49,8 @@ public class GraphVertexDTO {
   List<Document> outcomes;
   List<String> retryIds;
 
-  Map<String, List<ProgressData>> progressDataMap;
-
   List<UnitProgress> unitProgresses;
+  Document progressData;
 
   // skip
   SkipType skipType;

@@ -8,6 +8,7 @@ import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
+import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.KubernetesConvention.getKubernetesGitSecretName;
@@ -15,6 +16,8 @@ import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAs
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
@@ -46,6 +49,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
+import io.harness.delegate.task.gitapi.client.impl.GithubApiClient;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
@@ -70,6 +74,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CI)
 public class SecretSpecBuilder {
   private static final String DOCKER_REGISTRY_SECRET_TYPE = "kubernetes.io/dockercfg";
   public static final String GIT_SECRET_USERNAME_KEY = "username";
@@ -89,6 +94,7 @@ public class SecretSpecBuilder {
   @Inject private ConnectorEnvVariablesHelper connectorEnvVariablesHelper;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private ImageSecretBuilder imageSecretBuilder;
+  @Inject private GithubApiClient githubApiClient;
 
   public Secret getRegistrySecretSpec(
       String secretName, ImageDetailsWithConnector imageDetailsWithConnector, String namespace) {
@@ -689,5 +695,21 @@ public class SecretSpecBuilder {
     }
 
     return data;
+  }
+
+  public Map<String, SecretParams> fetchGithubAppToken(Map<String, ConnectorDetails> gitConnectors) {
+    Map<String, SecretParams> secretParamsMap = new HashMap<>();
+    if (isEmpty(gitConnectors)) {
+      return secretParamsMap;
+    }
+    gitConnectors.forEach((key, gitConnector) -> {
+      if (gitConnector.getConnectorType() != GITHUB) {
+        throw new CIStageExecutionException(format(
+            "Github token functor requires git hub connector, but %s was provided.", gitConnector.getConnectorType()));
+      }
+      String authToken = githubApiClient.retrieveAuthToken(gitConnector);
+      secretParamsMap.put(key, SecretParams.builder().secretKey(key).type(TEXT).value(encodeBase64(authToken)).build());
+    });
+    return secretParamsMap;
   }
 }

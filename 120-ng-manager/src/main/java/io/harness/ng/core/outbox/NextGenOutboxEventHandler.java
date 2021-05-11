@@ -37,16 +37,22 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
   @Override
   public boolean handle(OutboxEvent outboxEvent) {
     try {
+      // TODO {karan} remove extra lowercase cases after some days
       switch (outboxEvent.getResource().getType()) {
         case ORGANIZATION:
+        case "organization":
           return organizationEventHandler.handle(outboxEvent);
         case PROJECT:
+        case "project":
           return projectEventHandler.handle(outboxEvent);
         case USER_GROUP:
+        case "usergroup":
           return userGroupEventHandler.handle(outboxEvent);
         case SECRET:
+        case "secret":
           return secretEventHandler.handle(outboxEvent);
         case USER:
+        case "user":
           return userEventHandler.handle(outboxEvent);
         default:
           return false;

@@ -15,6 +15,7 @@ import io.harness.event.handler.impl.segment.SegmentHandler.Keys;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.exception.FailureType;
 import io.harness.exception.GeneralException;
+import io.harness.exception.SignupException;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.marketplace.gcp.signup.GcpMarketplaceSignUpHandler;
 import io.harness.marketplace.gcp.signup.annotations.NewSignUp;
@@ -23,7 +24,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.service.intfc.signup.SignupException;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;

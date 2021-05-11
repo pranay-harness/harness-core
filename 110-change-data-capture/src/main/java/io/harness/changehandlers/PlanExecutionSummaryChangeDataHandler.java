@@ -52,8 +52,17 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     if (dbObject.get("moduleInfo") != null) {
       if (((BasicDBObject) dbObject.get("moduleInfo")).get("ci") != null) {
         columnValueMapping.put("moduleInfo_type", "CI");
-        DBObject ciExecutionInfo = (DBObject) ((BasicDBObject) ((BasicDBObject) dbObject.get("moduleInfo")).get("ci"))
-                                       .get("ciExecutionInfoDTO");
+        DBObject ciObject = (DBObject) (((BasicDBObject) dbObject.get("moduleInfo")).get("ci"));
+        DBObject ciExecutionInfo = (DBObject) ciObject.get("ciExecutionInfoDTO");
+
+        if (ciObject.get("repoName") != null) {
+          columnValueMapping.put("moduleInfo_repository", ciObject.get("repoName").toString());
+        }
+
+        if (ciObject.get("branch") != null) {
+          columnValueMapping.put("moduleinfo_branch_name", ciObject.get("branch").toString());
+        }
+
         if (ciExecutionInfo != null) {
           DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
 
@@ -64,23 +73,37 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
               columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
               columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
             }
-            columnValueMapping.put("moduleInfo_branch_name", branch.get("name").toString());
+          } else if (ciExecutionInfo.get("pullRequest") != null) {
+            DBObject pullRequestObject = (DBObject) ciExecutionInfo.get("pullRequest");
+            if (pullRequestObject.get("commits") != null) {
+              firstCommit = (HashMap) ((List) pullRequestObject.get("commits")).get(0);
+              if (firstCommit != null) {
+                columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+                columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+              }
+            }
           }
           DBObject author = (DBObject) (ciExecutionInfo.get("author"));
-          if (ciExecutionInfo.get("event") != null) {
-            columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
-          }
           if (author != null) {
             columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
           }
+          if (ciExecutionInfo.get("event") != null) {
+            columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
+          }
         }
+      } else {
+        return null;
       }
+    } else {
+      // no information mention related to moduleInfo
+      return null;
     }
     columnValueMapping.put(
         "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
     if (dbObject.get("endTs") != null) {
       columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
     }
+
     return columnValueMapping;
   }
 }

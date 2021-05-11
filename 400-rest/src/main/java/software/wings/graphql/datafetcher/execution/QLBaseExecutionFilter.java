@@ -11,6 +11,7 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,6 +28,7 @@ public class QLBaseExecutionFilter implements EntityFilter {
   private QLIdFilter service;
   private QLIdFilter cloudProvider;
   private QLIdFilter environment;
+  private QLEnvironmentTypeFilter environmentType;
   private QLIdFilter status;
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;

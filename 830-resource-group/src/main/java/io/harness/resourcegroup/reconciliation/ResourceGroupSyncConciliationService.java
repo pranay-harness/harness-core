@@ -12,19 +12,23 @@ import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ResourceGroupSyncConciliationService implements Managed {
-  @Inject SyncConciliationMasterJob syncConciliationMasterJob;
+  @Inject ResourceGroupSyncConciliationMasterJob resourceGroupSyncConciliationMasterJob;
   final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(
       new ThreadFactoryBuilder().setNameFormat("sync-conciliation-main-thread").build());
   Future syncConciliationJobFuture;
 
   @Override
-  public void start() throws Exception {
-    syncConciliationJobFuture = executorService.scheduleAtFixedRate(syncConciliationMasterJob, 5, 5, TimeUnit.SECONDS);
+  public void start() {
+    syncConciliationJobFuture =
+        executorService.scheduleAtFixedRate(resourceGroupSyncConciliationMasterJob, 5, 5, TimeUnit.SECONDS);
   }
 
   @Override
   public void stop() throws Exception {
-    syncConciliationJobFuture.cancel(true);
-    executorService.shutdownNow();
+    if (syncConciliationJobFuture != null) {
+      syncConciliationJobFuture.cancel(true);
+    }
+    executorService.shutdown();
+    executorService.awaitTermination(1, TimeUnit.SECONDS);
   }
 }

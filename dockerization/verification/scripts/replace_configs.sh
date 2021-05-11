@@ -17,6 +17,17 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i /opt/harness/verification-config.yml mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_SSL_CONFIG" ]]; then
+  yq write -i /opt/harness/verification-config.yml mongo.mongoSSLConfig.mongoSSLEnabled "$MONGO_SSL_CONFIG"
+fi
+
+if [[ "" != "$MONGO_SSL_CA_TRUST_STORE_PATH" ]]; then
+  yq write -i /opt/harness/verification-config.yml mongo.mongoSSLConfig.mongoTrustStorePath "$MONGO_SSL_CA_TRUST_STORE_PATH"
+fi
+
+if [[ "" != "$MONGO_SSL_CA_TRUST_STORE_PASSWORD" ]]; then
+  yq write -i /opt/harness/verification-config.yml mongo.mongoSSLConfig.mongoTrustStorePassword "$MONGO_SSL_CA_TRUST_STORE_PASSWORD"
+fi
 
 if [[ "" != "$MANAGER_URL" ]]; then
   yq write -i /opt/harness/verification-config.yml managerUrl "$MANAGER_URL"
@@ -27,17 +38,17 @@ fi
   yq write -i /opt/harness/verification-config.yml server.requestLog.appenders[0].target "STDOUT"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[2]
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i /opt/harness/verification-config.yml logging.appenders[2]
+  yq delete -i /opt/harness/verification-config.yml logging.appenders[0]
+  yq write -i /opt/harness/verification-config.yml logging.appenders[0].stackdriverLogEnabled "true"
 else
   if [[ "$ROLLING_FILE_LOGGING_ENABLED" == "true" ]]; then
-    yq delete -i $CONFIG_FILE logging.appenders[1]
-    yq write -i $CONFIG_FILE logging.appenders[1].currentLogFilename "/opt/harness/logs/verification.log"
-    yq write -i $CONFIG_FILE logging.appenders[1].archivedLogFilenamePattern "/opt/harness/logs/verification.%d.%i.log"
+    yq delete -i /opt/harness/verification-config.yml logging.appenders[1]
+    yq write -i /opt/harness/verification-config.yml logging.appenders[1].currentLogFilename "/opt/harness/logs/verification.log"
+    yq write -i /opt/harness/verification-config.yml logging.appenders[1].archivedLogFilenamePattern "/opt/harness/logs/verification.%d.%i.log"
   else
-    yq delete -i $CONFIG_FILE logging.appenders[2]
-    yq delete -i $CONFIG_FILE logging.appenders[1]
+    yq delete -i /opt/harness/verification-config.yml logging.appenders[2]
+    yq delete -i /opt/harness/verification-config.yml logging.appenders[1]
   fi
 fi
 

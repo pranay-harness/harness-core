@@ -3,8 +3,13 @@ package software.wings.common;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
 import static io.harness.manage.GlobalContextManager.upsertGlobalContextRecord;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.GlobalContext;
 import io.harness.globalcontex.AuditGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
@@ -23,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._940_CG_AUDIT_SERVICE)
 public class AuditHelper {
   private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<>();
 
@@ -64,7 +71,9 @@ public class AuditHelper {
 
   private void setGlobalContext(AuditHeader header) {
     // TODO: move this in a place where we can remove it after we are done
-    initGlobalContextGuard(new GlobalContext());
+    if (!GlobalContextManager.isAvailable()) {
+      initGlobalContextGuard(new GlobalContext());
+    }
     upsertGlobalContextRecord(AuditGlobalContextData.builder().auditId(header.getUuid()).build());
   }
 

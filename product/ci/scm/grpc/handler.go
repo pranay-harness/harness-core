@@ -124,6 +124,11 @@ func (h *handler) CreatePR(ctx context.Context, in *pb.CreatePRRequest) (*pb.Cre
 	return git.CreatePR(ctx, in, h.log)
 }
 
+// FindFilesInPR lists the files in a PR.
+func (h *handler) FindFilesInPR(ctx context.Context, in *pb.FindFilesInPRRequest) (*pb.FindFilesInPRResponse, error) {
+	return git.FindFilesInPR(ctx, in, h.log)
+}
+
 // CreateBranch creates a Branch given a branch name and commit_id.
 func (h *handler) CreateBranch(ctx context.Context, in *pb.CreateBranchRequest) (*pb.CreateBranchResponse, error) {
 	return git.CreateBranch(ctx, in, h.log)
@@ -152,4 +157,9 @@ func (h *handler) CreateWebhook(ctx context.Context, in *pb.CreateWebhookRequest
 // DeleteWebhook is used to add a webhook to a repo.
 func (h *handler) DeleteWebhook(ctx context.Context, in *pb.DeleteWebhookRequest) (*pb.DeleteWebhookResponse, error) {
 	return repo.DeleteWebhook(ctx, in, h.log)
+}
+
+// ListWebhooks is used to list all webhooks associated with a repo.
+func (h *handler) ListWebhooks(ctx context.Context, in *pb.ListWebhooksRequest) (*pb.ListWebhooksResponse, error) {
+	return repo.ListWebhooks(ctx, in, h.log)
 }

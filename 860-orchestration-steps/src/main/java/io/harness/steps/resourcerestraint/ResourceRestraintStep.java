@@ -17,6 +17,7 @@ import io.harness.distribution.constraint.PermanentlyBlockedConsumerException;
 import io.harness.distribution.constraint.UnableToRegisterConsumerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -48,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 @Slf4j
 public class ResourceRestraintStep
-    implements SyncExecutable<ResourceRestraintStepParameters>, AsyncExecutable<ResourceRestraintStepParameters> {
+    implements SyncExecutable<StepElementParameters>, AsyncExecutable<StepElementParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(StepSpecTypeConstants.RESOURCE_CONSTRAINT).build();
 
@@ -58,18 +59,19 @@ public class ResourceRestraintStep
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
 
   @Override
-  public Class<ResourceRestraintStepParameters> getStepParametersClass() {
-    return ResourceRestraintStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, ResourceRestraintStepParameters stepParameters,
+  public StepResponse executeSync(Ambiance ambiance, StepElementParameters stepElementParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
+    ResourceRestraintSpecParameters specParameters = (ResourceRestraintSpecParameters) stepElementParameters.getSpec();
     final ResourceRestraint resourceRestraint =
-        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
-    String releaseEntityId = getReleaseEntityId(stepParameters, ambiance.getPlanExecutionId());
+        restraintService.getByNameAndAccountId(specParameters.getName(), AmbianceUtils.getAccountId(ambiance));
+    String releaseEntityId = getReleaseEntityId(specParameters, ambiance.getPlanExecutionId());
 
-    executeInternal(resourceRestraint, stepParameters, ambiance, releaseEntityId, false);
+    executeInternal(resourceRestraint, specParameters, ambiance, releaseEntityId, false);
 
     return StepResponse.builder()
         .stepOutcome(StepResponse.StepOutcome.builder()
@@ -77,10 +79,10 @@ public class ResourceRestraintStep
                          .outcome(ResourceRestraintOutcome.builder()
                                       .name(resourceRestraint.getName())
                                       .capacity(resourceRestraint.getCapacity())
-                                      .resourceUnit(stepParameters.getResourceUnit())
-                                      .usage(stepParameters.getPermits())
+                                      .resourceUnit(specParameters.getResourceUnit())
+                                      .usage(specParameters.getPermits())
                                       .alreadyAcquiredPermits(getAlreadyAcquiredPermits(
-                                          stepParameters.getHoldingScope().getScope(), releaseEntityId))
+                                          specParameters.getHoldingScope().getScope(), releaseEntityId))
                                       .build())
                          .build())
         .status(Status.SUCCEEDED)
@@ -89,12 +91,14 @@ public class ResourceRestraintStep
 
   @Override
   public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, ResourceRestraintStepParameters stepParameters, StepInputPackage inputPackage) {
-    final ResourceRestraint resourceRestraint =
-        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
-    String releaseEntityId = getReleaseEntityId(stepParameters, ambiance.getPlanExecutionId());
+      Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    ResourceRestraintSpecParameters specParameters = (ResourceRestraintSpecParameters) stepElementParameters.getSpec();
 
-    String consumerId = executeInternal(resourceRestraint, stepParameters, ambiance, releaseEntityId, true);
+    final ResourceRestraint resourceRestraint =
+        restraintService.getByNameAndAccountId(specParameters.getName(), AmbianceUtils.getAccountId(ambiance));
+    String releaseEntityId = getReleaseEntityId(specParameters, ambiance.getPlanExecutionId());
+
+    String consumerId = executeInternal(resourceRestraint, specParameters, ambiance, releaseEntityId, true);
 
     return AsyncExecutableResponse.newBuilder()
         .addCallbackIds(consumerId)
@@ -104,9 +108,11 @@ public class ResourceRestraintStep
 
   @Override
   public StepResponse handleAsyncResponse(
-      Ambiance ambiance, ResourceRestraintStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
+      Ambiance ambiance, StepElementParameters stepElementParameters, Map<String, ResponseData> responseDataMap) {
+    ResourceRestraintSpecParameters specParameters = (ResourceRestraintSpecParameters) stepElementParameters.getSpec();
+
     final ResourceRestraint resourceRestraint =
-        restraintService.getByNameAndAccountId(stepParameters.getName(), AmbianceUtils.getAccountId(ambiance));
+        restraintService.getByNameAndAccountId(specParameters.getName(), AmbianceUtils.getAccountId(ambiance));
 
     resourceRestraintService.updateBlockedConstraints(ImmutableSet.of(resourceRestraint.getUuid()));
 
@@ -116,11 +122,11 @@ public class ResourceRestraintStep
                          .outcome(ResourceRestraintOutcome.builder()
                                       .name(resourceRestraint.getName())
                                       .capacity(resourceRestraint.getCapacity())
-                                      .resourceUnit(stepParameters.getResourceUnit())
-                                      .usage(stepParameters.getPermits())
+                                      .resourceUnit(specParameters.getResourceUnit())
+                                      .usage(specParameters.getPermits())
                                       .alreadyAcquiredPermits(
-                                          getAlreadyAcquiredPermits(stepParameters.getHoldingScope().getScope(),
-                                              getReleaseEntityId(stepParameters, ambiance.getPlanExecutionId())))
+                                          getAlreadyAcquiredPermits(specParameters.getHoldingScope().getScope(),
+                                              getReleaseEntityId(specParameters, ambiance.getPlanExecutionId())))
                                       .build())
                          .build())
         .status(Status.SUCCEEDED)
@@ -129,29 +135,31 @@ public class ResourceRestraintStep
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, ResourceRestraintStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, StepElementParameters stepElementParameters, AsyncExecutableResponse executableResponse) {
+    ResourceRestraintSpecParameters specParameters = (ResourceRestraintSpecParameters) stepElementParameters.getSpec();
+
     resourceRestraintService.finishInstance(
         Preconditions.checkNotNull(executableResponse.getCallbackIdsList().get(0),
             "CallbackId should not be null in handleAbort() for nodeExecution with id %s",
             AmbianceUtils.obtainCurrentRuntimeId(ambiance)),
-        stepParameters.getResourceUnit());
+        specParameters.getResourceUnit());
   }
 
-  private String executeInternal(ResourceRestraint resourceRestraint, ResourceRestraintStepParameters stepParameters,
+  private String executeInternal(ResourceRestraint resourceRestraint, ResourceRestraintSpecParameters specParameters,
       Ambiance ambiance, String releaseEntityId, boolean isAsync) {
     final Constraint constraint = resourceRestraintService.createAbstraction(resourceRestraint);
 
-    int permits = calculatePermits(stepParameters, ambiance);
+    int permits = calculatePermits(specParameters, ambiance);
 
-    if (EngineExpressionEvaluator.hasVariables(stepParameters.getResourceUnit())) {
+    if (EngineExpressionEvaluator.hasVariables(specParameters.getResourceUnit())) {
       throw new InvalidRequestException(
-          "Resource Unit should not contain variables: " + stepParameters.getResourceUnit());
+          "Resource Unit should not contain variables: " + specParameters.getResourceUnit());
     }
 
-    ConstraintUnit constraintUnit = new ConstraintUnit(stepParameters.getResourceUnit());
+    ConstraintUnit constraintUnit = new ConstraintUnit(specParameters.getResourceUnit());
 
     Map<String, Object> constraintContext =
-        populateConstraintContext(resourceRestraint, stepParameters, releaseEntityId);
+        populateConstraintContext(resourceRestraint, specParameters, releaseEntityId);
 
     String consumerId = generateUuid();
     try {
@@ -173,7 +181,7 @@ public class ResourceRestraintStep
     return resourceRestraintService.getAllCurrentlyAcquiredPermits(holdingScope, releaseEntityId);
   }
 
-  private String getReleaseEntityId(ResourceRestraintStepParameters stepParameters, String planExecutionId) {
+  private String getReleaseEntityId(ResourceRestraintSpecParameters stepParameters, String planExecutionId) {
     String releaseEntityId;
     if (PmsConstants.RELEASE_ENTITY_TYPE_PLAN.equals(stepParameters.getHoldingScope().getScope())) {
       releaseEntityId = ResourceRestraintService.getReleaseEntityId(planExecutionId);
@@ -184,7 +192,7 @@ public class ResourceRestraintStep
     return releaseEntityId;
   }
 
-  private int calculatePermits(ResourceRestraintStepParameters stepParameters, Ambiance ambiance) {
+  private int calculatePermits(ResourceRestraintSpecParameters stepParameters, Ambiance ambiance) {
     int permits = stepParameters.getPermits();
     if (AcquireMode.ENSURE == stepParameters.getAcquireMode()) {
       permits -= resourceRestraintService.getAllCurrentlyAcquiredPermits(
@@ -194,7 +202,7 @@ public class ResourceRestraintStep
   }
 
   private Map<String, Object> populateConstraintContext(
-      ResourceRestraint resourceRestraint, ResourceRestraintStepParameters stepParameters, String releaseEntityId) {
+      ResourceRestraint resourceRestraint, ResourceRestraintSpecParameters stepParameters, String releaseEntityId) {
     Map<String, Object> constraintContext = new HashMap<>();
     constraintContext.put(ResourceRestraintInstanceKeys.releaseEntityType, stepParameters.getHoldingScope().getScope());
     constraintContext.put(ResourceRestraintInstanceKeys.releaseEntityId, releaseEntityId);

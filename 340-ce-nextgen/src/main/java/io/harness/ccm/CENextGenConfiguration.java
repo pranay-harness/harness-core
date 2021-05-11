@@ -3,9 +3,13 @@ package io.harness.ccm;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.configuration.DeployMode;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.timescaledb.TimeScaleDBConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
@@ -43,6 +47,12 @@ public class CENextGenConfiguration extends Configuration {
 
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty(value = "featureFlagsEnabled", defaultValue = "") private String featureFlagsEnabled;
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
+
+  @JsonProperty(value = "awsConnectorTemplate", defaultValue = "") private String awsConnectorTemplate;
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(RESOURCE_PACKAGE);

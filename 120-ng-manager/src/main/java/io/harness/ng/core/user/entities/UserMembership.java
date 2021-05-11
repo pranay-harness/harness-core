@@ -1,21 +1,29 @@
 package io.harness.ng.core.user.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static lombok.AccessLevel.NONE;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -34,13 +42,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("userMemberships")
 @StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(PL)
-public class UserMembership implements PersistentEntity {
+public class UserMembership implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("userMembershipUserIdScopes")
-                 .field(UserMembershipKeys.userId)
-                 .field(UserMembershipKeys.scopes)
+                 .name("userMembershipAccountOrgProject")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "accountIdentifier")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "orgIdentifier")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "projectIdentifier")
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("uniqueUserMembershipUserId")
@@ -53,16 +65,29 @@ public class UserMembership implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String userId;
   @NotEmpty String emailId;
-  @Valid List<Scope> scopes;
+  String name;
+  @Getter(NONE) @Valid @Builder.Default List<Scope> scopes = new ArrayList<>();
   @Version Long version;
 
-  @Value
-  @Builder
-  @FieldDefaults(level = AccessLevel.PRIVATE)
-  @FieldNameConstants(innerTypeName = "ScopeKeys")
-  public static class Scope {
-    @NotEmpty String accountIdentifier;
-    String orgIdentifier;
-    String projectIdentifier;
+  @FdIndex private Long nextIteration;
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return this.nextIteration;
+  }
+
+  @JsonIgnore
+  @Override
+  public String getUuid() {
+    return this.userId;
+  }
+
+  public List<Scope> getScopes() {
+    return isEmpty(scopes) ? new ArrayList<>() : scopes;
   }
 }

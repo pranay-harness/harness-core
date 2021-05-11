@@ -1,5 +1,7 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.ARVIND;
@@ -25,20 +27,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.container.ContainerInfo;
 import io.harness.ecs.EcsContainerDetails;
 import io.harness.eraro.ErrorCode;
@@ -108,6 +111,8 @@ import org.mockito.Mock;
 /**
  * Created by anubhaw on 1/3/17.
  */
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
   @Mock private TimeLimiter timeLimiter;
@@ -266,30 +271,23 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testWaitForTasksToBeInRunningStateButDontThrowException() throws Exception {
-    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(null);
     UpdateServiceCountRequestData requestData = mock(UpdateServiceCountRequestData.class);
     ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData);
 
-    doThrow(new TimeoutException(null, "timeout", null))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new TimeoutException(null, "timeout", null));
     assertThatExceptionOfType(TimeoutException.class)
         .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
 
-    doThrow(new InvalidRequestException("timeout"))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new InvalidRequestException("timeout"));
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
 
-    doThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE));
+
     ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData);
 
-    doThrow(new WingsException(ErrorCode.INIT_TIMEOUT))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new WingsException(ErrorCode.INIT_TIMEOUT));
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
   }
@@ -316,14 +314,14 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     doReturn(new UpdateServiceResult().withService(updatedService))
         .when(awsHelperService)
         .updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
-    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(null);
     when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
         .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(
         region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 15, 10 * 1000, logCallback, false);
 
     verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean());
-    doThrow(TimeoutException.class).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(TimeoutException.class);
     assertThatThrownBy(()
                            -> ecsContainerService.provisionTasks(region, connectorConfig, encryptionDetails,
                                CLUSTER_NAME, SERVICE_NAME, 5, 15, 10 * 1000, logCallback, false))
@@ -352,7 +350,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     doReturn(new UpdateServiceResult().withService(updatedService))
         .when(awsHelperService)
         .updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
-    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(null);
     when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
         .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(
@@ -360,7 +358,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
     // logic to check if exception is being thrown
     verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean());
-    doThrow(TimeoutException.class).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(TimeoutException.class);
     assertThatThrownBy(()
                            -> ecsContainerService.provisionTasks(region, connectorConfig, encryptionDetails,
                                CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true))
@@ -369,7 +367,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     verify(awsHelperService, times(2)).updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
 
     // logic to check desired == running == 5 and deployment.size() = 1, shouldn't retry
-    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(null);
     service.withDeployments(new Deployment()).setRunningCount(5);
     ecsContainerService.provisionTasks(
         region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true);

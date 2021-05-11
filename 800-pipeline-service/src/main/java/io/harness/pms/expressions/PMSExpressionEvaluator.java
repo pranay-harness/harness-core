@@ -8,6 +8,7 @@ import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ngpipeline.expressions.functors.EventPayloadFunctor;
+import io.harness.ngpipeline.expressions.functors.TriggerFunctor;
 import io.harness.organization.remote.OrganizationClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expressions.functors.AccountFunctor;
@@ -54,6 +55,7 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
                                                .build())
             .build());
     addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance));
+    addToContext(SetupAbstractionKeys.trigger, new TriggerFunctor(ambiance));
 
     addStaticAlias("artifact", "service.artifacts.primary.output");
     addStaticAlias("serviceVariables", "service.variables.output");

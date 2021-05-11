@@ -16,12 +16,14 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEven
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.AccountCustomTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.AccountTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.EventActionTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GitWebhookTriggerRepoFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GithubIssueCommentTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.HeaderTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.JexlConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.PayloadConditionsTriggerFilter;
-import io.harness.ngtriggers.eventmapper.filters.impl.ProjectTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.SourceRepoTypeTriggerFilter;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.product.ci.scm.proto.Issue;
@@ -44,11 +46,13 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(PIPELINE)
 public class TriggerFilterHelperTest extends CategoryTest {
   @Mock GitWebhookTriggerRepoFilter gitWebhookTriggerRepoFilter;
-  @Mock ProjectTriggerFilter projectTriggerFilter;
+  @Mock AccountCustomTriggerFilter accountCustomTriggerFilter;
+  @Mock AccountTriggerFilter accountTriggerFilter;
   @Mock SourceRepoTypeTriggerFilter sourceRepoTypeTriggerFilter;
   @Mock EventActionTriggerFilter eventActionTriggerFilter;
   @Mock PayloadConditionsTriggerFilter payloadConditionsTriggerFilter;
   @Mock GithubIssueCommentTriggerFilter githubIssueCommentTriggerFilter;
+  @Mock HeaderTriggerFilter headerTriggerFilter;
   @Mock JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
   @Inject @InjectMocks TriggerFilterStore triggerFilterStore;
 
@@ -68,11 +72,12 @@ public class TriggerFilterHelperTest extends CategoryTest {
         webhookPayloadDataBuilder.originalEvent(originalEventBuilder.build()).build());
     assertThat(webhookTriggerFilters).isNotNull();
     assertThat(webhookTriggerFilters)
-        .containsExactlyInAnyOrder(projectTriggerFilter, payloadConditionsTriggerFilter, jexlConditionsTriggerFilter);
+        .containsExactlyInAnyOrder(accountCustomTriggerFilter, payloadConditionsTriggerFilter, headerTriggerFilter,
+            jexlConditionsTriggerFilter);
 
-    TriggerFilter[] triggerFiltersDefaultGit =
-        new TriggerFilter[] {projectTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-            payloadConditionsTriggerFilter, gitWebhookTriggerRepoFilter, jexlConditionsTriggerFilter};
+    TriggerFilter[] triggerFiltersDefaultGit = new TriggerFilter[] {accountTriggerFilter, sourceRepoTypeTriggerFilter,
+        eventActionTriggerFilter, payloadConditionsTriggerFilter, headerTriggerFilter, jexlConditionsTriggerFilter,
+        gitWebhookTriggerRepoFilter};
 
     webhookTriggerFilters = triggerFilterStore.getWebhookTriggerFilters(
         webhookPayloadDataBuilder.parseWebhookResponse(ParseWebhookResponse.newBuilder().build())
@@ -108,8 +113,8 @@ public class TriggerFilterHelperTest extends CategoryTest {
             .build());
     assertThat(webhookTriggerFilters).isNotNull();
     assertThat(webhookTriggerFilters)
-        .containsExactlyInAnyOrder(projectTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-            gitWebhookTriggerRepoFilter, githubIssueCommentTriggerFilter);
+        .containsExactlyInAnyOrder(accountTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
+            gitWebhookTriggerRepoFilter, headerTriggerFilter, githubIssueCommentTriggerFilter);
   }
 
   @Test

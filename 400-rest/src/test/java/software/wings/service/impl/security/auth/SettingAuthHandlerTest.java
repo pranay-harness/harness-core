@@ -1,18 +1,24 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -35,6 +41,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule.UNDEFINED)
 public class SettingAuthHandlerTest extends WingsBaseTest {
   @Mock private AuthHandler authHandler;
   @Mock private SettingsService settingsService;
@@ -142,6 +150,27 @@ public class SettingAuthHandlerTest extends WingsBaseTest {
       setPermissions(MANAGE_CONNECTORS);
 
       settingAttribute.setCategory(CONNECTOR);
+      UserThreadLocal.set(user);
+
+      settingAuthHandler.authorize(settingAttribute);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testAuthorizeSshAndWinRM() {
+    boolean exceptionThrown = false;
+    try {
+      setPermissions(MANAGE_SSH_AND_WINRM);
+
+      settingAttribute.setCategory(SETTING);
       UserThreadLocal.set(user);
 
       settingAuthHandler.authorize(settingAttribute);

@@ -1,16 +1,17 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_deps = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
 ] + [
     "//930-ng-core-clients:module",
-    "//935-access-control-decision:module",
+    "//940-feature-flag:module",
+    "//940-primary-version-manager:module",
     "//945-ng-audit-client:module",
     "//946-access-control-aggregator:module",
+    "//946-access-control-decision:module",
     "//947-access-control-core:module",
     "//947-access-control-decision-commons:module",
     "//953-events-api:module",
@@ -54,6 +55,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

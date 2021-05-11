@@ -1,27 +1,59 @@
 package io.harness.cdng.provision.terraform;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.executions.steps.StepSpecTypeConstants.TERRAFORM_PLAN;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.pipeline.CDStepInfo;
+import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.common.SpecParameters;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.validation.Validator;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
-@JsonTypeName(TERRAFORM_PLAN)
+@EqualsAndHashCode(callSuper = true)
+@OwnedBy(HarnessTeam.CDP)
+@JsonTypeName(StepSpecTypeConstants.TERRAFORM_PLAN)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TerraformPlanStepInfo {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
-
-  String provisionerIdentifier;
+public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements CDStepInfo {
   @JsonProperty("configuration") TerraformPlanExecutionData terraformPlanExecutionData;
+
+  @Builder(builderMethodName = "infoBuilder")
+  public TerraformPlanStepInfo(
+      ParameterField<String> provisionerIdentifier, TerraformPlanExecutionData terraformPlanExecutionData) {
+    super(provisionerIdentifier);
+    this.terraformPlanExecutionData = terraformPlanExecutionData;
+  }
+
+  @Override
+  @JsonIgnore
+  public StepType getStepType() {
+    return TerraformPlanStep.STEP_TYPE;
+  }
+
+  @Override
+  @JsonIgnore
+  public String getFacilitatorType() {
+    return OrchestrationFacilitatorType.TASK;
+  }
+
+  @Override
+  public SpecParameters getSpecParameters() {
+    Validator.notNullCheck("Terraform Plan configuration is NULL", terraformPlanExecutionData);
+    return TerraformPlanStepParameters.infoBuilder()
+        .provisionerIdentifier(provisionerIdentifier)
+        .configuration(terraformPlanExecutionData.toStepParameters())
+        .build();
+  }
 }

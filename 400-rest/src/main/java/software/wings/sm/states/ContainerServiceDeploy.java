@@ -17,7 +17,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
@@ -203,8 +202,7 @@ public abstract class ContainerServiceDeploy extends State {
           K8sStateHelper.fetchDelegateSelectorsFromK8sCloudProvider(contextData.settingAttribute.getValue());
 
       CommandExecutionContext commandExecutionContext =
-          aCommandExecutionContext(featureFlagService.isEnabled(
-                                       FeatureName.WINRM_CAPABILITY_DEPRECATE_FOR_HTTP, contextData.app.getAccountId()))
+          aCommandExecutionContext()
               .accountId(contextData.app.getAccountId())
               .appId(contextData.app.getUuid())
               .envId(contextData.env.getUuid())
@@ -224,7 +222,7 @@ public abstract class ContainerServiceDeploy extends State {
       }
 
       String waitId = UUID.randomUUID().toString();
-      String delegateTaskId = delegateService.queueTask(
+      DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(contextData.app.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, contextData.appId)
@@ -240,8 +238,12 @@ public abstract class ContainerServiceDeploy extends State {
               .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, contextData.env.getEnvironmentType().name())
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, contextData.infrastructureMappingId)
               .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, contextData.service.getUuid())
-              .build());
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("Kubernetes deploy task execution")
+              .build();
+      String delegateTaskId = delegateService.queueTask(delegateTask);
 
+      appendDelegateTaskDetails(context, delegateTask);
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(waitId))
@@ -468,5 +470,10 @@ public abstract class ContainerServiceDeploy extends State {
           ? Integer.valueOf(context.renderExpression(containerServiceDeploy.getDownsizeInstanceCount()))
           : null;
     }
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

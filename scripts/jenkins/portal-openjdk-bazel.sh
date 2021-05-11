@@ -1,5 +1,6 @@
 ### Dockerization of Manager ####### Doc
 set -x
+set -e
 
 mkdir -p dist ;
 cd dist
@@ -165,8 +166,7 @@ fi
 cd ../..
 
 mkdir -p dist/delegate
-cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
-#cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
+cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/delegate/delegate-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
@@ -263,6 +263,7 @@ cp ../../820-platform-service/config.yml .
 cp ../../820-platform-service/keystore.jks .
 cp ../../820-platform-service/key.pem .
 cp ../../820-platform-service/cert.pem .
+cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/platform-service/scripts/ .

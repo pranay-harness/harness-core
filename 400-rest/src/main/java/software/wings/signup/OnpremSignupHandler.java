@@ -10,6 +10,7 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
+import io.harness.exception.SignupException;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -21,7 +22,6 @@ import software.wings.resources.UserResource.UpdatePasswordRequest;
 import software.wings.service.intfc.SignupHandler;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.signup.SignupException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -5,7 +5,6 @@ import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.redis.RedisPersistentLocker;
@@ -62,7 +61,7 @@ public abstract class EventListener implements Runnable {
     SecurityContextBuilder.unsetCompleteContext();
   }
 
-  private void pollAndProcessMessages() throws ConsumerShutdownException {
+  private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;

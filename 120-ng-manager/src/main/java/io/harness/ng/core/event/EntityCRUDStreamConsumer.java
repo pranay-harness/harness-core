@@ -8,10 +8,10 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
@@ -40,13 +40,14 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(ORGANIZATION_ENTITY + ENTITY_CRUD) MessageListener organizationEntityCRUDStreamListener,
       @Named(PROJECT_ENTITY + ENTITY_CRUD) MessageListener projectEntityCRUDStreamListener,
       @Named(CONNECTOR_ENTITY + ENTITY_CRUD) MessageListener connectorEntityCRUDStreamListener,
-      @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor) {
+      @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor,
+      @Named(USER_ENTITY + ENTITY_CRUD) MessageListener userEntityCRUDStreamListener) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationEntityCRUDStreamListener);
     messageListenersList.add(projectEntityCRUDStreamListener);
     messageListenersList.add(connectorEntityCRUDStreamListener);
-
+    messageListenersList.add(userEntityCRUDStreamListener);
     processorMap = new HashMap<>();
     processorMap.put(SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
   }
@@ -65,7 +66,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
     SecurityContextBuilder.unsetCompleteContext();
   }
 
-  private void pollAndProcessMessages() throws ConsumerShutdownException {
+  private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;

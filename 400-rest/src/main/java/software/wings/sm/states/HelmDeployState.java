@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
+import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -29,6 +30,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -43,6 +45,7 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
@@ -108,7 +111,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest.HelmInstallCommandRequestBuilder;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
@@ -180,6 +182,7 @@ import org.apache.commons.lang3.StringUtils;
 @FieldNameConstants(innerTypeName = "HelmDeployStateKeys")
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HelmDeployState extends State {
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -201,7 +204,7 @@ public class HelmDeployState extends State {
   @Inject private K8sStateHelper k8sStateHelper;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private HelmHelper helmHelper;
-  @Inject private FeatureFlagService featureFlagService;
+  @Inject protected FeatureFlagService featureFlagService;
   @Inject private LogService logService;
   @Inject private SweepingOutputService sweepingOutputService;
 
@@ -349,7 +352,9 @@ public class HelmDeployState extends State {
             .helmVersion(helmVersion)
             .helmCommandFlag(helmCommandFlag)
             .mergeCapabilities(
-                featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()));
+                featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
+            .isGitHostConnectivityCheck(
+                featureFlagService.isEnabled(FeatureName.GIT_HOST_CONNECTIVITY, context.getAccountId()));
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -395,6 +400,7 @@ public class HelmDeployState extends State {
             .commandFlags(commandFlags)
             .helmCommandFlag(helmCommandFlag)
             .helmVersion(helmVersion)
+            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, context.getAccountId()))
             .build();
 
     ContainerInfrastructureMapping containerInfraMapping =

@@ -20,12 +20,9 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ExecutionGraph;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
-import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptPackage;
@@ -34,7 +31,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.environment.beans.EnvironmentType;
-import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
@@ -45,7 +41,6 @@ import io.harness.plan.Plan;
 import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.advisers.IssuedBy;
 import io.harness.pms.contracts.advisers.ManualIssuer;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -53,7 +48,6 @@ import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
-import io.harness.service.GraphGenerationService;
 import io.harness.steps.StepOutcomeGroup;
 
 import io.fabric8.utils.Lists;
@@ -71,8 +65,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,7 +73,6 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.CDC)
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ExecutionGraphMapper.class})
 public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   public static final String ACCOUNT_ID = "accountId";
   public static final String ORG_ID = "orgId";
@@ -91,19 +82,11 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private NodeExecutionService nodeExecutionService;
   @Mock private OrchestrationService orchestrationService;
-  @Mock private GraphGenerationService graphGenerationService;
   @Mock private PipelineExecutionRepository pipelineExecutionRepository;
   @Mock private NGPipelineService ngPipelineService;
   @Mock private PipelineExecutionHelper pipelineExecutionHelper;
   @InjectMocks
   private final NgPipelineExecutionServiceImpl ngPipelineExecutionService = spy(new NgPipelineExecutionServiceImpl());
-
-  @Test
-  @Owner(developers = VAIBHAV_SI)
-  @Category(UnitTests.class)
-  public void testGetPipelineExecutionDetail() {
-    shouldReturnStageGraph();
-  }
 
   @Test
   @Owner(developers = SAHIL)
@@ -224,23 +207,6 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.envIdentifiers));
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.serviceIdentifiers));
     assertTrue(criteriaObject.containsKey(PipelineExecutionSummaryKeys.pipelineIdentifier));
-  }
-
-  private void shouldReturnStageGraph() {
-    doReturn(Optional.of(PipelineExecutionSummary.builder().build()))
-        .when(pipelineExecutionRepository)
-        .findByPlanExecutionId(any());
-    OrchestrationGraphDTO orchestrationGraph = OrchestrationGraphDTO.builder().status(Status.SUCCEEDED).build();
-    doReturn(orchestrationGraph)
-        .when(graphGenerationService)
-        .generatePartialOrchestrationGraphFromIdentifier("stageId", "planExecutionId");
-    PowerMockito.mockStatic(ExecutionGraphMapper.class);
-    ExecutionGraph executionGraph = ExecutionGraph.builder().build();
-    when(ExecutionGraphMapper.toExecutionGraph(orchestrationGraph)).thenReturn(executionGraph);
-
-    PipelineExecutionDetail pipelineExecutionDetail =
-        ngPipelineExecutionService.getPipelineExecutionDetail("planExecutionId", "stageId");
-    assertThat(pipelineExecutionDetail.getStageGraph()).isEqualTo(executionGraph);
   }
 
   @Test

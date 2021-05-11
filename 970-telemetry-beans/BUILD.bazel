@@ -1,6 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
+
+HarnessTeam = "GTM"
 
 java_library(
     name = "module",
@@ -11,6 +12,4 @@ java_library(
     ],
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

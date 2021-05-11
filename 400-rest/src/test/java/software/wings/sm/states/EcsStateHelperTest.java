@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -8,6 +9,7 @@ import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -54,6 +56,10 @@ import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
@@ -63,6 +69,7 @@ import io.harness.container.ContainerInfo;
 import io.harness.ecs.EcsContainerDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.git.model.GitFile;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -75,13 +82,18 @@ import software.wings.api.HostElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.ecs.EcsBGRoute53SetupStateExecutionData;
+import software.wings.api.ecs.EcsSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
@@ -91,6 +103,8 @@ import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
+import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsDeployRollbackDataFetchRequest;
@@ -100,12 +114,14 @@ import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry.SweepingOutputInquiryBuilder;
@@ -118,6 +134,8 @@ import software.wings.sm.WorkflowStandardParams;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
@@ -131,14 +149,19 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsStateHelperTest extends CategoryTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private StateExecutionService stateExecutionService;
   @Inject @InjectMocks private EcsStateHelper helper;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -254,7 +277,7 @@ public class EcsStateHelperTest extends CategoryTest {
                                                         .build();
     Environment environment = anEnvironment().environmentType(PROD).build();
     helper.queueDelegateTaskForEcsListenerUpdate(application, awsConfig, mockService, mapping, ACTIVITY_ID, environment,
-        "CommandName", configData, emptyList(), 10);
+        "CommandName", configData, emptyList(), 10, false, null);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
@@ -503,7 +526,7 @@ public class EcsStateHelperTest extends CategoryTest {
                               .build();
     DelegateService mockDelegateService = mock(DelegateService.class);
     helper.createAndQueueDelegateTaskForEcsServiceSetUp(EcsServiceSetupRequest.builder().build(), bag,
-        Activity.builder().uuid(ACTIVITY_ID).build(), mockDelegateService);
+        Activity.builder().uuid(ACTIVITY_ID).build(), mockDelegateService, false);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
@@ -603,7 +626,7 @@ public class EcsStateHelperTest extends CategoryTest {
             .build();
     DelegateService mockDelegateService = mock(DelegateService.class);
     helper.createAndQueueDelegateTaskForEcsServiceDeploy(bag, EcsServiceDeployRequest.builder().build(),
-        Activity.builder().uuid(ACTIVITY_ID).build(), mockDelegateService);
+        Activity.builder().uuid(ACTIVITY_ID).build(), mockDelegateService, false);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(mockDelegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
@@ -839,5 +862,152 @@ public class EcsStateHelperTest extends CategoryTest {
         .isEqualTo(INFRA_MAPPING_ID);
 
     verify(sweepingOutputService).ensure(any());
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testSetUpRemoteContainerTaskAndServiceSpecForEcsRoute53IfRequired() {
+    // case remote service spec path null, remote task def path null
+    GitFileConfig gitFileConfig = GitFileConfig.builder().serviceSpecFilePath(null).taskSpecFilePath(null).build();
+    StoreType storeType = StoreType.CUSTOM;
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().gitFileConfig(gitFileConfig).storeType(storeType).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.ServiceOverride, applicationManifest);
+    EcsBGRoute53SetupStateExecutionData ecsBGRoute53SetupStateExecutionData =
+        EcsBGRoute53SetupStateExecutionData.builder().applicationManifestMap(applicationManifestMap).build();
+    EcsSetUpDataBag ecsSetUpDataBag = EcsSetUpDataBag.builder().build();
+    ExecutionContext executionContext = mock(ExecutionContextImpl.class);
+    doReturn(ecsBGRoute53SetupStateExecutionData).when(executionContext).getStateExecutionData();
+    assertThatThrownBy(()
+                           -> helper.setUpRemoteContainerTaskAndServiceSpecForEcsRoute53IfRequired(
+                               executionContext, ecsSetUpDataBag, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Manifest does not contain the proper git file config");
+
+    // case remote service spec path null, remote task def path not null
+    gitFileConfig.setServiceSpecFilePath(null);
+    gitFileConfig.setUseInlineServiceDefinition(true);
+    gitFileConfig.setTaskSpecFilePath("taskPath");
+    Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
+    List<GitFile> gitFileList = new ArrayList<>();
+    gitFileList.add(GitFile.builder().filePath("taskPath").fileContent("fileContent").build());
+    GitFetchFilesResult gitFetchFilesResult = GitFetchFilesResult.builder().files(gitFileList).build();
+    filesFromMultipleRepo.put("ServiceOverride", gitFetchFilesResult);
+    GitFetchFilesFromMultipleRepoResult gitFetchFilesFromMultipleRepoResult =
+        GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build();
+    ecsBGRoute53SetupStateExecutionData.setFetchFilesResult(gitFetchFilesFromMultipleRepoResult);
+    applicationManifest.setGitFileConfig(gitFileConfig);
+    ecsSetUpDataBag.setService(Service.builder().uuid("uuid").build());
+    ecsSetUpDataBag.setApplication(Application.Builder.anApplication().appId("appId").build());
+
+    Exception exceptionCaught = null;
+    try {
+      helper.setUpRemoteContainerTaskAndServiceSpecForEcsRoute53IfRequired(executionContext, ecsSetUpDataBag, null);
+    } catch (Exception e) {
+      exceptionCaught = e;
+    }
+
+    assertThat(exceptionCaught).isNull();
+
+    // case remote service spec path not null, remote task def path not null
+    gitFileConfig.setServiceSpecFilePath("servicePath");
+    gitFileConfig.setUseInlineServiceDefinition(false);
+    gitFileConfig.setTaskSpecFilePath("taskPath");
+    filesFromMultipleRepo = new HashMap<>();
+    gitFileList = new ArrayList<>();
+    gitFileList.add(GitFile.builder().filePath("taskPath").fileContent("fileContent").build());
+    gitFileList.add(GitFile.builder().filePath("servicePath").fileContent("fileContent").build());
+    gitFetchFilesResult = GitFetchFilesResult.builder().files(gitFileList).build();
+    filesFromMultipleRepo.put("ServiceOverride", gitFetchFilesResult);
+    gitFetchFilesFromMultipleRepoResult =
+        GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build();
+    ecsBGRoute53SetupStateExecutionData.setFetchFilesResult(gitFetchFilesFromMultipleRepoResult);
+    applicationManifest.setGitFileConfig(gitFileConfig);
+    ecsSetUpDataBag.setService(Service.builder().uuid("uuid").build());
+    ecsSetUpDataBag.setApplication(Application.Builder.anApplication().appId("appId").build());
+
+    exceptionCaught = null;
+    try {
+      helper.setUpRemoteContainerTaskAndServiceSpecForEcsRoute53IfRequired(executionContext, ecsSetUpDataBag, null);
+    } catch (Exception e) {
+      exceptionCaught = e;
+    }
+
+    assertThat(exceptionCaught).isNull();
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testSetUpRemoteContainerTaskAndServiceSpecIfRequired() {
+    // case remote service spec path null, remote task def path null
+    GitFileConfig gitFileConfig = GitFileConfig.builder().serviceSpecFilePath(null).taskSpecFilePath(null).build();
+    StoreType storeType = StoreType.CUSTOM;
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().gitFileConfig(gitFileConfig).storeType(storeType).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.ServiceOverride, applicationManifest);
+    EcsSetupStateExecutionData ecsSetupStateExecutionData =
+        EcsSetupStateExecutionData.builder().applicationManifestMap(applicationManifestMap).build();
+    EcsSetUpDataBag ecsSetUpDataBag = EcsSetUpDataBag.builder().build();
+    ExecutionContext executionContext = mock(ExecutionContextImpl.class);
+    doReturn(ecsSetupStateExecutionData).when(executionContext).getStateExecutionData();
+    assertThatThrownBy(
+        () -> helper.setUpRemoteContainerTaskAndServiceSpecIfRequired(executionContext, ecsSetUpDataBag, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Manifest does not contain the proper git file config");
+
+    // case remote service spec path null, remote task def path not null
+    gitFileConfig.setServiceSpecFilePath(null);
+    gitFileConfig.setUseInlineServiceDefinition(true);
+    gitFileConfig.setTaskSpecFilePath("taskPath");
+    Map<String, GitFetchFilesResult> filesFromMultipleRepo = new HashMap<>();
+    List<GitFile> gitFileList = new ArrayList<>();
+    gitFileList.add(GitFile.builder().filePath("taskPath").fileContent("fileContent").build());
+    GitFetchFilesResult gitFetchFilesResult = GitFetchFilesResult.builder().files(gitFileList).build();
+    filesFromMultipleRepo.put("ServiceOverride", gitFetchFilesResult);
+    GitFetchFilesFromMultipleRepoResult gitFetchFilesFromMultipleRepoResult =
+        GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build();
+    ecsSetupStateExecutionData.setFetchFilesResult(gitFetchFilesFromMultipleRepoResult);
+    applicationManifest.setGitFileConfig(gitFileConfig);
+    ecsSetUpDataBag.setService(Service.builder().uuid("uuid").build());
+    ecsSetUpDataBag.setApplication(Application.Builder.anApplication().appId("appId").build());
+
+    Exception exceptionCaught = null;
+    try {
+      helper.setUpRemoteContainerTaskAndServiceSpecIfRequired(executionContext, ecsSetUpDataBag, null);
+    } catch (Exception e) {
+      exceptionCaught = e;
+    }
+
+    assertThat(exceptionCaught).isNull();
+
+    // case remote service spec path not null, remote task def path not null
+    gitFileConfig.setServiceSpecFilePath("servicePath");
+    gitFileConfig.setUseInlineServiceDefinition(false);
+    gitFileConfig.setTaskSpecFilePath("taskPath");
+    filesFromMultipleRepo = new HashMap<>();
+    gitFileList = new ArrayList<>();
+    gitFileList.add(GitFile.builder().filePath("taskPath").fileContent("fileContent").build());
+    gitFileList.add(GitFile.builder().filePath("servicePath").fileContent("fileContent").build());
+    gitFetchFilesResult = GitFetchFilesResult.builder().files(gitFileList).build();
+    filesFromMultipleRepo.put("ServiceOverride", gitFetchFilesResult);
+    gitFetchFilesFromMultipleRepoResult =
+        GitFetchFilesFromMultipleRepoResult.builder().filesFromMultipleRepo(filesFromMultipleRepo).build();
+    ecsSetupStateExecutionData.setFetchFilesResult(gitFetchFilesFromMultipleRepoResult);
+    applicationManifest.setGitFileConfig(gitFileConfig);
+    ecsSetUpDataBag.setService(Service.builder().uuid("uuid").build());
+    ecsSetUpDataBag.setApplication(Application.Builder.anApplication().appId("appId").build());
+
+    exceptionCaught = null;
+    try {
+      helper.setUpRemoteContainerTaskAndServiceSpecIfRequired(executionContext, ecsSetUpDataBag, null);
+    } catch (Exception e) {
+      exceptionCaught = e;
+    }
+
+    assertThat(exceptionCaught).isNull();
   }
 }

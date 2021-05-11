@@ -1,12 +1,27 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.api.DeploymentType.SSH;
+import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.beans.workflow.StepSkipStrategy.Scope.SPECIFIC_STEPS;
+import static software.wings.sm.StateType.HTTP;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.UUID;
+
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -18,16 +33,19 @@ import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.Template;
+import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.service.intfc.template.TemplateService;
+import software.wings.sm.StateType;
 import software.wings.sm.StepType;
 import software.wings.sm.states.HelmDeployState.HelmDeployStateKeys;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,6 +54,8 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
   @Mock private TemplateService templateService;
@@ -248,14 +268,14 @@ public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
                                               .type(StepType.SHELL_SCRIPT.toString())
                                               .templateUuid("uuid")
                                               .templateVersion("latest")
-                                              .templateVariables(Arrays.asList(var1, httpVar1))
+                                              .templateVariables(asList(var1, httpVar1))
                                               .build())
                                  .addStep(GraphNode.builder()
                                               .name("http-template-test")
                                               .type(StepType.HTTP.toString())
                                               .templateUuid("uuid-2")
                                               .templateVersion("latest")
-                                              .templateVariables(Arrays.asList(httpVar1, var1))
+                                              .templateVariables(asList(httpVar1, var1))
                                               .build())
                                  .build();
 
@@ -282,5 +302,78 @@ public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
     assertThat(newPhaseStep.getSteps().get(0).getTemplateVariables().get(0).getValue()).isEqualTo("from-yaml");
     assertThat(newPhaseStep.getSteps().get(1).getTemplateVariables()).isNotNull().hasSize(1);
     assertThat(newPhaseStep.getSteps().get(1).getTemplateVariables().get(0).getValue()).isEqualTo("http-from-yaml");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotChangePhaseStepUuidAndStepIdsOnWorkflowUpdate() {
+    List<WorkflowPhase> oldWorkflowPhases = getWorkflowPhases("oldWorkflowPhase");
+    List<WorkflowPhase> newWorkflowPhases = getWorkflowPhases("newWorkflowPhase");
+
+    workflowServiceTemplateHelper.updateLinkedWorkflowPhases(newWorkflowPhases, oldWorkflowPhases, true);
+    assertThat(newWorkflowPhases).isNotNull().hasSize(1);
+    assertThat(oldWorkflowPhases).isNotNull().hasSize(1);
+    List<PhaseStep> newPhaseSteps = newWorkflowPhases.get(0).getPhaseSteps();
+    List<PhaseStep> oldPhaseSteps = oldWorkflowPhases.get(0).getPhaseSteps();
+    assertThat(newPhaseSteps).isNotNull().hasSize(1);
+    assertThat(oldPhaseSteps).isNotNull().hasSize(1);
+    assertThat(newPhaseSteps.get(0).getUuid()).isEqualTo(oldPhaseSteps.get(0).getUuid());
+    List<GraphNode> newSteps = newPhaseSteps.get(0).getSteps();
+    List<GraphNode> oldSteps = oldPhaseSteps.get(0).getSteps();
+    assertThat(newSteps).isNotNull().hasSize(2);
+    assertThat(oldSteps).isNotNull().hasSize(2);
+    assertThat(newSteps.get(0).getId()).isEqualTo(oldSteps.get(0).getId());
+    assertThat(newSteps.get(1).getId()).isEqualTo(oldSteps.get(1).getId());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotChangeStepSkipAssertionsStepIdsOnWorkflowUpdate() {
+    List<WorkflowPhase> oldWorkflowPhases = getWorkflowPhases("oldWorkflowPhase");
+    List<WorkflowPhase> newWorkflowPhases = getWorkflowPhases("newWorkflowPhase");
+
+    workflowServiceTemplateHelper.updateLinkedWorkflowPhases(newWorkflowPhases, oldWorkflowPhases, true);
+    assertThat(newWorkflowPhases).isNotNull().hasSize(1);
+    assertThat(oldWorkflowPhases).isNotNull().hasSize(1);
+    List<PhaseStep> newPhaseSteps = newWorkflowPhases.get(0).getPhaseSteps();
+    List<PhaseStep> oldPhaseSteps = oldWorkflowPhases.get(0).getPhaseSteps();
+    assertThat(newPhaseSteps).isNotNull().hasSize(1);
+    assertThat(oldPhaseSteps).isNotNull().hasSize(1);
+    assertThat(newPhaseSteps.get(0).getUuid()).isEqualTo(oldPhaseSteps.get(0).getUuid());
+    assertThat(newPhaseSteps.get(0).getStepSkipStrategies()).isNotNull().hasSize(1);
+    assertThat(oldPhaseSteps.get(0).getStepSkipStrategies()).isNotNull().hasSize(1);
+    List<String> newStepIds = newPhaseSteps.get(0).getStepSkipStrategies().get(0).getStepIds();
+    List<String> oldStepIds = oldPhaseSteps.get(0).getStepSkipStrategies().get(0).getStepIds();
+    assertThat(newStepIds).isNotNull().hasSize(2);
+    assertThat(oldStepIds).isNotNull().hasSize(2);
+    assertThat(newStepIds).isEqualTo(oldStepIds);
+  }
+
+  private List<WorkflowPhase> getWorkflowPhases(String baseId) {
+    int i = 0;
+    GraphNode step = GraphNode.builder().id(baseId + i++).name("Ping Response").type(HTTP.name()).build();
+
+    GraphNode step2 =
+        GraphNode.builder().id(baseId + i++).name("Shell script").type(StateType.SHELL_SCRIPT.name()).build();
+
+    PhaseStep phaseStep = PhaseStepBuilder.aPhaseStep(VERIFY_SERVICE, WorkflowServiceHelper.VERIFY_SERVICE, baseId + i)
+                              .addStep(step)
+                              .addStep(step2)
+                              .withStepSkipStrategies(Collections.singletonList(
+                                  new StepSkipStrategy(SPECIFIC_STEPS, asList(baseId + "0", baseId + "1"), "1==1")))
+                              .build();
+
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .uuid(UUID)
+                                      .infraMappingId(INFRA_MAPPING_ID)
+                                      .infraDefinitionId(INFRA_DEFINITION_ID)
+                                      .serviceId(SERVICE_ID)
+                                      .deploymentType(SSH)
+                                      .phaseSteps(Collections.singletonList(phaseStep))
+                                      .build();
+
+    return Collections.singletonList(workflowPhase);
   }
 }

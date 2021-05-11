@@ -2,6 +2,8 @@ package io.harness.delegate.task.executioncapability;
 
 import static io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class BatchCapabilityCheckTask extends AbstractDelegateRunnableTask {
   @Inject ProtoCapabilityCheckFactory capabilityCheckFactory;
 

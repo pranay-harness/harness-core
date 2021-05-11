@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.dto.ProjectAggregateDTO;
 import io.harness.ng.core.entities.Organization;
@@ -75,17 +76,17 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
     IntStream.range(0, 8).forEach(e
         -> userMembershipList.add(UserMembership.builder()
                                       .userId(randomAlphabetic(10))
-                                      .scopes(Collections.singletonList(UserMembership.Scope.builder()
+                                      .scopes(Collections.singletonList(Scope.builder()
                                                                             .accountIdentifier(accountIdentifier)
                                                                             .orgIdentifier(orgIdentifier)
                                                                             .projectIdentifier(projectIdentifier)
                                                                             .build()))
                                       .build()));
     when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
-    when(ngUserService.getUsersByIds(any(), any())).thenReturn(getUsers(userMembershipList));
+    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(getUsers(userMembershipList));
     List<String> adminIds =
         IntStream.range(0, 4).mapToObj(i -> userMembershipList.get(i).getUserId()).collect(toList());
-    when(ngUserService.getUsersHavingRole(any(), any())).thenReturn(adminIds);
+    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(adminIds);
   }
 
   private List<UserInfo> getUsers(List<UserMembership> userMemberships) {
@@ -141,7 +142,7 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
 
     when(ngUserService.listUserMemberships(any())).thenReturn(emptyList());
 
-    when(ngUserService.getUsersByIds(any(), any())).thenReturn(emptyList());
+    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(emptyList());
 
     ProjectAggregateDTO projectAggregateDTO =
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, projectIdentifier);
@@ -183,15 +184,15 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
           -> userMembershipList.add(
               UserMembership.builder()
                   .userId(userIds.get(e))
-                  .scopes(Collections.singletonList(UserMembership.Scope.builder()
+                  .scopes(Collections.singletonList(Scope.builder()
                                                         .accountIdentifier(project.getAccountIdentifier())
                                                         .orgIdentifier(project.getOrgIdentifier())
                                                         .projectIdentifier(project.getIdentifier())
                                                         .build()))
                   .build()));
     }
-    when(ngUserService.getUsersHavingRole(any(), any())).thenReturn(userIds.subList(0, 4));
-    when(ngUserService.getUsersByIds(any(), any())).thenReturn(getUsers(userMembershipList));
+    when(ngUserService.listUsersHavingRole(any(), any())).thenReturn(userIds.subList(0, 4));
+    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(getUsers(userMembershipList));
     when(ngUserService.listUserMemberships(any())).thenReturn(userMembershipList);
     return userMembershipList;
   }
@@ -247,7 +248,7 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
 
     when(ngUserService.listUserMemberships(any())).thenReturn(emptyList());
 
-    when(ngUserService.getUsersByIds(any(), any())).thenReturn(emptyList());
+    when(ngUserService.listCurrentGenUsers(any(), any())).thenReturn(emptyList());
 
     Page<ProjectAggregateDTO> projectAggregateDTOs =
         aggregateProjectService.listProjectAggregateDTO(accountIdentifier, Pageable.unpaged(), null);

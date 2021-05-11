@@ -2,48 +2,57 @@ permissions:
   - identifier: core_project_delete
     name: Delete Project
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - project
   - identifier: core_project_view
     name: View Project
     status: ACTIVE
+    includeInAllRoles: true
     allowedScopeLevels:
       - organization
       - project
   - identifier: core_project_edit
     name: Edit a Project
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - project
   - identifier: core_project_create
     name: Create a Project
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - organization
   - identifier: core_organization_delete
     name: Delete Organization
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - organization
   - identifier: core_organization_view
     name: View Organization
     status: ACTIVE
+    includeInAllRoles: true
     allowedScopeLevels:
       - account
       - organization
   - identifier: core_organization_edit
     name: Edit an Organization
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - organization
   - identifier: core_organization_create
     name: Create an Organization
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
   - identifier: core_secret_delete
     name: Delete Secret
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -51,13 +60,7 @@ permissions:
   - identifier: core_secret_view
     name: View Secret
     status: ACTIVE
-    allowedScopeLevels:
-      - account
-      - organization
-      - project
-  - identifier: core_secret_access
-    name: Access a Secret
-    status: ACTIVE
+    includeInAllRoles: true
     allowedScopeLevels:
       - account
       - organization
@@ -65,6 +68,7 @@ permissions:
   - identifier: core_secret_edit
     name: Create or Edit a Secret
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -72,6 +76,7 @@ permissions:
   - identifier: core_secret_access
     name: Runtime Access on a secret
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -79,6 +84,7 @@ permissions:
   - identifier: core_connector_access
     name: Access a Connector
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -86,6 +92,7 @@ permissions:
   - identifier: core_connector_view
     name: View Connector
     status: ACTIVE
+    includeInAllRoles: true
     allowedScopeLevels:
       - account
       - organization
@@ -93,6 +100,7 @@ permissions:
   - identifier: core_connector_edit
     name: Create or Edit a Connector
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -100,6 +108,7 @@ permissions:
   - identifier: core_connector_delete
     name: Delete Connector
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -107,26 +116,31 @@ permissions:
   - identifier: core_pipeline_view
     name: View Pipeline
     status: ACTIVE
+    includeInAllRoles: true
     allowedScopeLevels:
       - project
   - identifier: core_pipeline_edit
     name: Create or Edit Pipeline
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - project
   - identifier: core_pipeline_delete
     name: Delete Pipeline
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - project
   - identifier: core_pipeline_execute
     name: Run Pipeline
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - project
   - identifier: core_service_view
     name: View Service
     status: ACTIVE
+    includeInAllRoles: true
     allowedScopeLevels:
       - account
       - organization
@@ -134,6 +148,7 @@ permissions:
   - identifier: core_service_edit
     name: Create or Edit Service
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -141,6 +156,7 @@ permissions:
   - identifier: core_service_delete
     name: Delete Service
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -148,6 +164,7 @@ permissions:
   - identifier: core_service_access
     name: Runtime Access to Service
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -155,6 +172,7 @@ permissions:
   - identifier: core_environment_view
     name: View Environment
     status: ACTIVE
+    includeInAllRoles: true
     allowedScopeLevels:
       - account
       - organization
@@ -162,6 +180,7 @@ permissions:
   - identifier: core_environment_edit
     name: Create or Edit Environment
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -169,6 +188,7 @@ permissions:
   - identifier: core_environment_delete
     name: Delete Environment
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -176,6 +196,7 @@ permissions:
   - identifier: core_environment_access
     name: Runtime Access to Environment
     status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization
@@ -183,6 +204,95 @@ permissions:
   - identifier: core_audit_view
     name: View Audits
     status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_usergroup_view
+    name: View User Groups
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_usergroup_manage
+    name: Manage User Groups
+    status: ACTIVE
+    includeInAllRoless: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_user_view
+    name: View Users
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_user_manage
+    name: Manage Users
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_role_view
+    name: View Roles
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_role_edit
+    name: Create or Edit Role
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_role_delete
+    name: Delete Role
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_resourcegroup_view
+    name: View Resource Groups
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_resourcegroup_edit
+    name: Create or Edit Resource Group
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_resourcegroup_delete
+    name: Delete Resource Group
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core_user_invite
+    name: Invite a user
+    status: ACTIVE
+    includeInAllRoles: false
     allowedScopeLevels:
       - account
       - organization

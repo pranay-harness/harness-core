@@ -43,6 +43,7 @@ import software.wings.service.impl.instance.FlatEntitySummaryStats;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -75,7 +76,8 @@ public class InstanceStatsDataFetcher
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLInstanceFilter> filters,
-      List<QLInstanceAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLInstanceAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     validateAggregations(groupByList);
 
     QLTimeSeriesAggregation groupByTime = getGroupByTime(groupByList);

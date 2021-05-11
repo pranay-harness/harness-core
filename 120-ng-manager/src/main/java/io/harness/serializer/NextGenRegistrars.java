@@ -15,6 +15,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import org.mongodb.morphia.converters.TypeConverter;
 
 @OwnedBy(HarnessTeam.PL)
 public class NextGenRegistrars {
@@ -24,6 +25,7 @@ public class NextGenRegistrars {
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .addAll(CDNGRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
+          .addAll(NGFileServiceRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .add(PipelineServiceUtilKryoRegistrar.class)
           .build();
@@ -39,16 +41,18 @@ public class NextGenRegistrars {
           .add(AccessControlMigrationMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(NGFileServiceRegistrars.morphiaRegistrars)
           .addAll(GitSyncRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .add(MockRoleAssignmentMorphiaRegistrar.class)
           .add(InvitesMorphiaRegistrar.class)
+          .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
+          .addAll(LicenseManagerRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
       ImmutableList.<YamlSchemaRootClass>builder()
           .addAll(ConnectorNextGenRegistrars.yamlSchemaRegistrars)
-          .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
           .addAll(CDNGRegistrars.yamlSchemaRegistrars)
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.SECRETS)
@@ -58,4 +62,7 @@ public class NextGenRegistrars {
                    .clazz(SecretRequestWrapper.class)
                    .build())
           .build();
+
+  public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
+      ImmutableSet.<Class<? extends TypeConverter>>builder().build();
 }

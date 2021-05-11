@@ -1,15 +1,19 @@
 package io.harness.cdng.artifact.bean.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.GCR_NAME;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.visitor.YamlTypes;
-import io.harness.cdng.visitor.helpers.artifact.GcrArtifactConfigVisitorHelper;
-import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -17,7 +21,9 @@ import io.harness.walktree.visitor.Visitable;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,13 +34,14 @@ import org.springframework.data.annotation.TypeAlias;
  * This is Yaml POJO class which may contain expressions as well.
  * Used mainly for converter layer to store yaml.
  */
+@OwnedBy(CDC)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(GCR_NAME)
-@SimpleVisitorHelper(helperClass = GcrArtifactConfigVisitorHelper.class)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("gcrArtifactConfig")
-public class GcrArtifactConfig implements ArtifactConfig, Visitable {
+public class GcrArtifactConfig implements ArtifactConfig, Visitable, WithConnectorRef {
   /**
    * GCP connector to connect to Google Container Registry.
    */
@@ -104,5 +111,12 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
   @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName(YamlTypes.SPEC).isPartOfFQN(false).build();
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

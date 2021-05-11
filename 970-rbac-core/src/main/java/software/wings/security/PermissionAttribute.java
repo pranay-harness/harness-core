@@ -314,6 +314,10 @@ public class PermissionAttribute {
      */
     EXECUTE_PIPELINE,
     /**
+     * Execute Workflow Rollback
+     */
+    EXECUTE_WORKFLOW_ROLLBACK,
+    /**
      * default action.
      */
     DEFAULT

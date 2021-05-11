@@ -3,7 +3,9 @@ package io.harness.plancreator.steps.common;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.advisers.rollback.OnFailRollbackParameters;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.StepElementParameters.StepElementParametersBuilder;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -11,6 +13,7 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @OwnedBy(PIPELINE)
+@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public interface WithStepElementParameters {
   default StepParameters getStepParametersInfo(
       StepElementConfig stepElementConfig, OnFailRollbackParameters failRollbackParameters) {

@@ -40,6 +40,7 @@ import io.harness.cdng.k8s.K8sScaleStepInfo;
 import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitLabStore;
@@ -73,6 +74,7 @@ import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.cdng.provision.terraform.TerraformApplyStepInfo;
+import io.harness.cdng.provision.terraform.TerraformPlanStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.NativeHelmServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
@@ -196,5 +198,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(RollbackCustomStepParameters.class, 12540);
     kryo.register(TerraformApplyStepInfo.class, 12541);
     kryo.register(NativeHelmServiceSpec.class, 12542);
+    kryo.register(TerraformPlanStepInfo.class, 12543);
+    kryo.register(HelmValuesFetchResponsePassThroughData.class, 12544);
   }
 }

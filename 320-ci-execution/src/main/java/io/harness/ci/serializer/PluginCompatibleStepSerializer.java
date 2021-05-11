@@ -1,6 +1,7 @@
 package io.harness.ci.serializer;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.common.CIExecutionConstants.PLUGIN_ARTIFACT_FILE_VALUE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
@@ -53,6 +54,7 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
             .addAllEntrypoint(
                 CIStepInfoUtils.getPluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
             .setContext(stepContext)
+            .setArtifactFilePath(PLUGIN_ARTIFACT_FILE_VALUE)
             .build();
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
@@ -91,6 +93,7 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
                 CIStepInfoUtils.getPluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
             .setContext(stepContext)
             .putAllEnvironment(envVarMap)
+            .setArtifactFilePath(PLUGIN_ARTIFACT_FILE_VALUE)
             .build();
 
     return UnitStep.newBuilder()

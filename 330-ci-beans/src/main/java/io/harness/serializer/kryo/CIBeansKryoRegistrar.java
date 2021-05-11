@@ -1,5 +1,7 @@
 package io.harness.serializer.kryo;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.build.CIPipelineDetails;
 import io.harness.beans.build.PublishedArtifact;
@@ -16,6 +18,8 @@ import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
+import io.harness.beans.execution.PublishedFileArtifact;
+import io.harness.beans.execution.PublishedImageArtifact;
 import io.harness.beans.execution.Repository;
 import io.harness.beans.execution.WebhookBaseAttributes;
 import io.harness.beans.execution.WebhookEvent;
@@ -27,7 +31,8 @@ import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
 import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParameters;
-import io.harness.beans.steps.CiStepOutcome;
+import io.harness.beans.steps.outcome.CIStepOutcome;
+import io.harness.beans.steps.outcome.StepArtifacts;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
@@ -72,6 +77,7 @@ import com.esotericsoftware.kryo.Kryo;
  * Class will register all kryo classes
  */
 
+@OwnedBy(HarnessTeam.CI)
 public class CIBeansKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -118,7 +124,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GitVariables.class, 100054);
     kryo.register(WebhookTriggerExecutionInputSet.class, 100055);
     kryo.register(ExecutionSource.Type.class, 100056);
-    kryo.register(CiStepOutcome.class, 100057);
+    kryo.register(CIStepOutcome.class, 100057);
     kryo.register(PluginStepInfo.class, 100058);
     kryo.register(ContainerResource.class, 100059);
     kryo.register(ContainerResource.Limits.class, 100060);
@@ -151,5 +157,8 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomExecutionSource.class, 100088);
     kryo.register(LiteEnginePodDetailsOutcome.class, 100089);
     kryo.register(ContainerPortDetails.class, 100090);
+    kryo.register(StepArtifacts.class, 100091);
+    kryo.register(PublishedFileArtifact.class, 100092);
+    kryo.register(PublishedImageArtifact.class, 100093);
   }
 }

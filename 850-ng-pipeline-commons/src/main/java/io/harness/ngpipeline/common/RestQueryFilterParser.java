@@ -2,6 +2,7 @@ package io.harness.ngpipeline.common;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.mongo.index.Field;
 import io.harness.ng.RsqlQueryable;
@@ -23,6 +24,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
  * Will re-visit it.s
  */
 @Singleton
+@Deprecated
+@ToBeDeleted
 public class RestQueryFilterParser {
   private final QueryConversionPipeline pipeline;
 

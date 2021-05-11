@@ -6,6 +6,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
+import static io.harness.ng.core.user.UserMembershipUpdateMechanism.ACCEPTED_INVITE;
 import static io.harness.ng.core.user.UserMembershipUpdateMechanism.SYSTEM;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 import static io.harness.rule.OwnerRule.KARAN;
@@ -29,10 +30,12 @@ import io.harness.audit.Action;
 import io.harness.audit.ResourceTypeConstants;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.client.api.AuditClientService;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
+import io.harness.ng.core.events.AddCollaboratorEvent;
+import io.harness.ng.core.events.RemoveCollaboratorEvent;
 import io.harness.ng.core.events.UserInviteCreateEvent;
 import io.harness.ng.core.events.UserInviteDeleteEvent;
 import io.harness.ng.core.events.UserInviteUpdateEvent;
@@ -40,7 +43,7 @@ import io.harness.ng.core.events.UserMembershipAddEvent;
 import io.harness.ng.core.events.UserMembershipRemoveEvent;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.remote.RoleBinding;
-import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.outbox.OutboxEvent;
 import io.harness.rule.Owner;
 
@@ -71,7 +74,7 @@ public class UserEventHandlerTest extends CategoryTest {
 
   private InviteDTO getInviteDTO(String email) {
     List<RoleBinding> roleBindings = new ArrayList<>();
-    roleBindings.add(RoleBinding.builder().identifier(randomAlphabetic(10)).build());
+    roleBindings.add(RoleBinding.builder().build());
 
     return InviteDTO.builder()
         .id(randomAlphabetic(10))
@@ -187,13 +190,13 @@ public class UserEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testMembershipAdd() throws JsonProcessingException, ProducerShutdownException {
+  public void testMembershipAdd() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
     UserMembershipAddEvent userMembershipAddEvent = new UserMembershipAddEvent(accountIdentifier,
-        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
-        randomAlphabetic(10), SYSTEM);
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        randomAlphabetic(10), ACCEPTED_INVITE);
     String eventData = objectMapper.writeValueAsString(userMembershipAddEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .id(randomAlphabetic(10))
@@ -224,7 +227,7 @@ public class UserEventHandlerTest extends CategoryTest {
 
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
-    assertEquals(Action.ADD_MEMBERSHIP, auditEntry.getAction());
+    assertEquals(Action.ADD_COLLABORATOR, auditEntry.getAction());
     assertNotNull(auditEntry.getAuditEventData());
     assertNull(auditEntry.getOldYaml());
   }
@@ -232,12 +235,12 @@ public class UserEventHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testMembershipRemove() throws JsonProcessingException, ProducerShutdownException {
+  public void testMembershipRemove() throws JsonProcessingException {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
     UserMembershipRemoveEvent userMembershipRemoveEvent = new UserMembershipRemoveEvent(accountIdentifier,
-        UserMembership.Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
         randomAlphabetic(10), SYSTEM);
     String eventData = objectMapper.writeValueAsString(userMembershipRemoveEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
@@ -269,9 +272,96 @@ public class UserEventHandlerTest extends CategoryTest {
 
     AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
     assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
-    assertEquals(Action.REMOVE_MEMBERSHIP, auditEntry.getAction());
-    assertNotNull(auditEntry.getAuditEventData());
+    assertEquals(Action.REMOVE_COLLABORATOR, auditEntry.getAction());
     assertNull(auditEntry.getNewYaml());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testCollaboratorAdd() throws JsonProcessingException {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String email = randomAlphabetic(10);
+    AddCollaboratorEvent addCollaboratorEvent = new AddCollaboratorEvent(accountIdentifier,
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        randomAlphabetic(10), UserMembershipUpdateSource.ACCEPTED_INVITE);
+    String eventData = objectMapper.writeValueAsString(addCollaboratorEvent);
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .id(randomAlphabetic(10))
+                                  .blocked(false)
+                                  .eventType("CollaboratorAdded")
+                                  .eventData(eventData)
+                                  .resourceScope(addCollaboratorEvent.getResourceScope())
+                                  .resource(addCollaboratorEvent.getResource())
+                                  .createdAt(Long.parseLong(randomNumeric(5)))
+                                  .build();
+
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
+
+    verifyInvocation(messageArgumentCaptor, auditEntryArgumentCaptor, outboxEvent);
+    assertMessage(messageArgumentCaptor, accountIdentifier, USERMEMBERSHIP, CREATE_ACTION);
+
+    AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
+    assertEquals(Action.ADD_COLLABORATOR, auditEntry.getAction());
+    assertNotNull(auditEntry.getAuditEventData());
+    assertNull(auditEntry.getOldYaml());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testCollaboratorRemove() throws JsonProcessingException {
+    String accountIdentifier = randomAlphabetic(10);
+    String orgIdentifier = randomAlphabetic(10);
+    String email = randomAlphabetic(10);
+    RemoveCollaboratorEvent removeCollaboratorEvent = new RemoveCollaboratorEvent(accountIdentifier,
+        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
+        randomAlphabetic(10), UserMembershipUpdateSource.SYSTEM);
+    String eventData = objectMapper.writeValueAsString(removeCollaboratorEvent);
+    OutboxEvent outboxEvent = OutboxEvent.builder()
+                                  .id(randomAlphabetic(10))
+                                  .blocked(false)
+                                  .eventType("CollaboratorRemoved")
+                                  .eventData(eventData)
+                                  .resourceScope(removeCollaboratorEvent.getResourceScope())
+                                  .resource(removeCollaboratorEvent.getResource())
+                                  .createdAt(Long.parseLong(randomNumeric(5)))
+                                  .build();
+
+    final ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
+    final ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor = ArgumentCaptor.forClass(AuditEntry.class);
+
+    verifyInvocation(messageArgumentCaptor, auditEntryArgumentCaptor, outboxEvent);
+    assertMessage(messageArgumentCaptor, accountIdentifier, USERMEMBERSHIP, DELETE_ACTION);
+
+    AuditEntry auditEntry = auditEntryArgumentCaptor.getValue();
+    assertAuditEntry(accountIdentifier, orgIdentifier, email, auditEntry, outboxEvent);
+    assertEquals(Action.REMOVE_COLLABORATOR, auditEntry.getAction());
+    assertNull(auditEntry.getNewYaml());
+  }
+
+  private void verifyInvocation(ArgumentCaptor<Message> messageArgumentCaptor,
+      ArgumentCaptor<AuditEntry> auditEntryArgumentCaptor, OutboxEvent outboxEvent) {
+    when(producer.send(any())).thenReturn("");
+    when(auditClientService.publishAudit(any(), any(), any())).thenReturn(true);
+
+    userEventHandler.handle(outboxEvent);
+
+    verify(producer, times(1)).send(messageArgumentCaptor.capture());
+    verify(auditClientService, times(1)).publishAudit(auditEntryArgumentCaptor.capture(), any(), any());
+  }
+
+  private void assertMessage(
+      ArgumentCaptor<Message> messageArgumentCaptor, String accountIdentifier, String entityType, String action) {
+    Message message = messageArgumentCaptor.getValue();
+    assertNotNull(message.getMetadataMap());
+    Map<String, String> metadataMap = message.getMetadataMap();
+    assertEquals(accountIdentifier, metadataMap.get("accountId"));
+    assertEquals(entityType, metadataMap.get(ENTITY_TYPE));
+    assertEquals(action, metadataMap.get(ACTION));
   }
 
   private void assertAuditEntry(

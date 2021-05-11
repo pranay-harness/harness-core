@@ -46,7 +46,12 @@
                         <database>
                             <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <!-- table names for which we want to gnerate the pojo -->
-                            <includes>kubernetes_utilization_data</includes>
+                            <includes>kubernetes_utilization_data |
+                            node_info |
+                            pod_info |
+                            workload_info |
+                            node_pool |
+                            ce_recommendations</includes>
                             <excludes />
                             <inputSchema>public</inputSchema>
                         </database>
@@ -59,7 +64,7 @@
                         </generate>
                         <target>
                             <packageName>io.harness.timescaledb</packageName>
-                            <directory>${project.basedir}/src/main/java/</directory>
+                            <directory>${project.basedir}/src/generated/java/</directory>
                         </target>
                     </generator>
                 </configuration>

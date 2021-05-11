@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceResourceClasses;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.health.HealthService;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.outbox.OutboxEventPollService;
@@ -34,6 +35,7 @@ public class ResourceGroupServiceSetup {
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
     registerIterators(injector);
+    registerScheduledJobs(injector);
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
   }
@@ -46,6 +48,10 @@ public class ResourceGroupServiceSetup {
 
   private void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
+  }
+
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

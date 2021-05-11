@@ -51,6 +51,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
@@ -85,6 +86,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private ActivitySourceService activitySourceService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private VerificationJobService verificationJobService;
   @Mock private VerificationManagerService verificationManagerService;
   @Mock private CVEventServiceImpl cvEventService;
 
@@ -112,6 +114,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(
         kubernetesActivitySourceService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(activitySourceService, "cvEventService", cvEventService, true);
+    verificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
   }
 
   @Test

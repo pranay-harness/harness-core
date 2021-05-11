@@ -1,8 +1,12 @@
 package io.harness.repositories.executions;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
 import java.time.Duration;
 import java.util.List;
 import lombok.AccessLevel;
@@ -23,6 +27,7 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(PIPELINE)
 public class PmsExecutionSummaryRepositoryCustomImpl implements PmsExecutionSummaryRepositoryCustom {
   private final MongoTemplate mongoTemplate;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(10);
@@ -37,6 +42,15 @@ public class PmsExecutionSummaryRepositoryCustomImpl implements PmsExecutionSumm
         .get(()
                  -> mongoTemplate.findAndModify(
                      query, update, new FindAndModifyOptions().returnNew(true), PipelineExecutionSummaryEntity.class));
+  }
+
+  @Override
+  public UpdateResult deleteAllExecutionsWhenPipelineDeleted(Query query, Update update) {
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy("[Retrying]: Failed deleting PipelineExecutionSummary; attempt: {}",
+            "[Failed]: Failed deleting PipelineExecutionSummary; attempt: {}");
+    return Failsafe.with(retryPolicy)
+        .get(() -> mongoTemplate.updateMulti(query, update, PipelineExecutionSummaryEntity.class));
   }
 
   @Override

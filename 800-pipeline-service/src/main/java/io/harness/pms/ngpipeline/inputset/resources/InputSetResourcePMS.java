@@ -104,8 +104,13 @@ public class InputSetResourcePMS {
     if (inputSetEntity.isPresent()) {
       version = inputSetEntity.get().getVersion().toString();
     }
-    return ResponseDTO.newResponse(
-        version, inputSetEntity.map(PMSInputSetElementMapper::toInputSetResponseDTOPMS).orElse(null));
+
+    InputSetResponseDTOPMS inputSet = PMSInputSetElementMapper.toInputSetResponseDTOPMS(inputSetEntity.orElseThrow(
+        ()
+            -> new InvalidRequestException(String.format(
+                "InputSet with the given ID: %s does not exist or has been deleted", inputSetIdentifier))));
+
+    return ResponseDTO.newResponse(version, inputSet);
   }
 
   @GET
@@ -125,8 +130,14 @@ public class InputSetResourcePMS {
     if (inputSetEntity.isPresent()) {
       version = inputSetEntity.get().getVersion().toString();
     }
-    return ResponseDTO.newResponse(
-        version, inputSetEntity.map(PMSInputSetElementMapper::toOverlayInputSetResponseDTOPMS).orElse(null));
+
+    OverlayInputSetResponseDTOPMS overlayInputSet =
+        PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(inputSetEntity.orElseThrow(
+            ()
+                -> new InvalidRequestException(String.format(
+                    "InputSet with the given ID: %s does not exist or has been deleted", inputSetIdentifier))));
+
+    return ResponseDTO.newResponse(version, overlayInputSet);
   }
 
   @POST

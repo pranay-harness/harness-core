@@ -1,6 +1,10 @@
 package io.harness.accesscontrol.roles.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.AccessControlPermissions.DELETE_ROLE_PERMISSION;
+import static io.harness.accesscontrol.AccessControlPermissions.EDIT_ROLE_PERMISSION;
+import static io.harness.accesscontrol.AccessControlPermissions.VIEW_ROLE_PERMISSION;
+import static io.harness.accesscontrol.AccessControlResourceTypes.ROLE;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -8,10 +12,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.RoleUpdateResult;
 import io.harness.accesscontrol.roles.events.RoleCreateEvent;
+import io.harness.accesscontrol.roles.events.RoleDeleteEvent;
 import io.harness.accesscontrol.roles.events.RoleUpdateEvent;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
@@ -72,18 +80,21 @@ public class RoleResource {
   private final RoleDTOMapper roleDTOMapper;
   private final TransactionTemplate transactionTemplate;
   private final OutboxService outboxService;
+  private final AccessControlClient accessControlClient;
 
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public RoleResource(RoleService roleService, ScopeService scopeService, RoleDTOMapper roleDTOMapper,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService) {
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
+      AccessControlClient accessControlClient) {
     this.roleService = roleService;
     this.scopeService = scopeService;
     this.roleDTOMapper = roleDTOMapper;
     this.transactionTemplate = transactionTemplate;
     this.outboxService = outboxService;
+    this.accessControlClient = accessControlClient;
   }
 
   @GET
@@ -91,6 +102,10 @@ public class RoleResource {
   public ResponseDTO<PageResponse<RoleResponseDTO>> get(@BeanParam PageRequest pageRequest,
       @BeanParam HarnessScopeParams harnessScopeParams,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+            harnessScopeParams.getProjectIdentifier()),
+        Resource.of(ROLE, null), VIEW_ROLE_PERMISSION);
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     RoleFilter roleFilter =
         RoleFilter.builder().searchTerm(searchTerm).scopeIdentifier(scopeIdentifier).managedFilter(NO_FILTER).build();
@@ -103,6 +118,10 @@ public class RoleResource {
   @ApiOperation(value = "Get Role", nickname = "getRole")
   public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+            harnessScopeParams.getProjectIdentifier()),
+        Resource.of(ROLE, identifier), VIEW_ROLE_PERMISSION);
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(
         roleService.get(identifier, scopeIdentifier, NO_FILTER).<InvalidRequestException>orElseThrow(() -> {
@@ -115,6 +134,10 @@ public class RoleResource {
   @ApiOperation(value = "Update Role", nickname = "updateRole")
   public ResponseDTO<RoleResponseDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+            harnessScopeParams.getProjectIdentifier()),
+        Resource.of(ROLE, identifier), EDIT_ROLE_PERMISSION);
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     if (!identifier.equals(roleDTO.getIdentifier())) {
       throw new InvalidRequestException("Role identifier in the request body and the url do not match");
@@ -131,6 +154,10 @@ public class RoleResource {
   @POST
   @ApiOperation(value = "Create Role", nickname = "createRole")
   public ResponseDTO<RoleResponseDTO> create(@BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+            harnessScopeParams.getProjectIdentifier()),
+        Resource.of(ROLE, null), EDIT_ROLE_PERMISSION);
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     if (isEmpty(roleDTO.getAllowedScopeLevels())) {
       roleDTO.setAllowedScopeLevels(Sets.newHashSet(scope.getLevel().toString()));
@@ -148,11 +175,15 @@ public class RoleResource {
   @ApiOperation(value = "Delete Role", nickname = "deleteRole")
   public ResponseDTO<RoleResponseDTO> delete(
       @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+            harnessScopeParams.getProjectIdentifier()),
+        Resource.of(ROLE, identifier), DELETE_ROLE_PERMISSION);
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       RoleResponseDTO response = roleDTOMapper.toResponseDTO(roleService.delete(identifier, scopeIdentifier));
       outboxService.save(
-          new RoleCreateEvent(response.getScope().getAccountIdentifier(), response.getRole(), response.getScope()));
+          new RoleDeleteEvent(response.getScope().getAccountIdentifier(), response.getRole(), response.getScope()));
       return ResponseDTO.newResponse(response);
     }));
   }

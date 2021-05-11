@@ -1,4 +1,4 @@
-set -x
+set -e
 
 if [ -z "${HARNESS_TEAM}" ]
 then
@@ -89,14 +89,17 @@ if [ ! -z "$TRACK_FILES" ]
 then
 	scripts/bazel/aeriform.sh analyze \
     ${TRACK_FILES} \
-    --kind-filter AutoAction \
     --kind-filter Critical \
     --kind-filter ToDo \
-    --kind-filter Warning \
     --exit-code
 
 	scripts/bazel/aeriform.sh analyze \
     ${TRACK_FILES} \
     --team-filter ${HARNESS_TEAM} \
+    --kind-filter AutoAction \
+    --kind-filter Critical \
+    --kind-filter Error \
+    --kind-filter ToDo \
+    --kind-filter Warning \
     --exit-code
 fi

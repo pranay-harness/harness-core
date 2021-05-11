@@ -1,11 +1,11 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
-import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_LIST_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -14,9 +14,11 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,7 +43,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("gcrStepInfo")
 @OwnedBy(CI)
-public class GCRStepInfo implements PluginCompatibleStep {
+public class GCRStepInfo implements PluginCompatibleStep, WithConnectorRef {
   public static final int DEFAULT_RETRY = 1;
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GCR).build();
   @JsonIgnore
@@ -77,16 +80,17 @@ public class GCRStepInfo implements PluginCompatibleStep {
   private ParameterField<Map<String, String>> buildArgs;
   @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
   @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> optimize;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> remoteCacheImage;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "host", "projectID", "imageName",
-      "tags", "context", "dockerfile", "target", "labels", "buildArgs", "runAsUser", "optimize"})
+      "tags", "context", "dockerfile", "target", "labels", "buildArgs", "runAsUser", "optimize", "remoteCacheImage"})
   public GCRStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ContainerResource resources, ParameterField<String> host, ParameterField<String> projectID,
       ParameterField<String> imageName, ParameterField<List<String>> tags, ParameterField<String> context,
       ParameterField<String> dockerfile, ParameterField<String> target, ParameterField<Map<String, String>> labels,
       ParameterField<Map<String, String>> buildArgs, ParameterField<Integer> runAsUser,
-      ParameterField<Boolean> optimize) {
+      ParameterField<Boolean> optimize, ParameterField<String> remoteCacheImage) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -103,6 +107,7 @@ public class GCRStepInfo implements PluginCompatibleStep {
     this.buildArgs = buildArgs;
     this.runAsUser = runAsUser;
     this.optimize = optimize;
+    this.remoteCacheImage = remoteCacheImage;
   }
 
   @Override
@@ -118,5 +123,12 @@ public class GCRStepInfo implements PluginCompatibleStep {
   @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.ASYNC;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

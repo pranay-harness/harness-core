@@ -1,15 +1,20 @@
 package io.harness.k8s.apiclient;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import io.kubernetes.client.extended.generic.KubernetesApiResponse;
-import io.kubernetes.client.extended.generic.options.ListOptions;
+import io.kubernetes.client.common.KubernetesType;
 import io.kubernetes.client.openapi.ApiCallback;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Pair;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.openapi.models.V1Status;
+import io.kubernetes.client.util.generic.KubernetesApiResponse;
+import io.kubernetes.client.util.generic.options.ListOptions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +47,8 @@ import okhttp3.HttpUrl;
 /*
  * This is a modified version of actual Generic Kubernetes api client to support node's kubelet's stats api.
  */
-public class NodeStatsClient<ApiType> {
+@OwnedBy(CE)
+public class NodeStatsClient<ApiType extends KubernetesType> {
   // TODO(yue9944882): supports status operations..
   // TODO(yue9944882): supports generic sub-resource operations..
   // TODO(yue9944882): supports delete-collections..
@@ -165,12 +171,12 @@ public class NodeStatsClient<ApiType> {
         localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
   }
 
-  private static <DataType> KubernetesApiResponse<DataType> getKubernetesApiResponse(
+  private static <DataType extends KubernetesType> KubernetesApiResponse<DataType> getKubernetesApiResponse(
       Class<DataType> dataClass, JsonElement element, Gson gson) {
     return getKubernetesApiResponse(dataClass, element, gson, 200);
   }
 
-  private static <DataType> KubernetesApiResponse<DataType> getKubernetesApiResponse(
+  private static <DataType extends KubernetesType> KubernetesApiResponse<DataType> getKubernetesApiResponse(
       Class<DataType> dataClass, JsonElement element, Gson gson, int httpStatusCode) {
     JsonElement kindElement = element.getAsJsonObject().get("kind");
     boolean isStatus = kindElement != null && "Status".equals(kindElement.getAsString());
@@ -181,7 +187,7 @@ public class NodeStatsClient<ApiType> {
   }
 
   @SneakyThrows
-  private <DataType> KubernetesApiResponse<DataType> executeCall(
+  private <DataType extends KubernetesType> KubernetesApiResponse<DataType> executeCall(
       ApiClient apiClient, Class<DataType> dataClass, CallBuilder callBuilder) {
     try {
       Call call = callBuilder.build();

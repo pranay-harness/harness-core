@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
@@ -108,6 +110,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 /**
  * Created by anubhaw on 8/31/16.
  */
+@OwnedBy(PL)
 public class AuthServiceTest extends WingsBaseTest {
   private final String VALID_TOKEN = "VALID_TOKEN";
   private final String INVALID_TOKEN = "INVALID_TOKEN";
@@ -653,7 +656,8 @@ public class AuthServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    Account mockAccount =
+        Account.Builder.anAccount().withUuid("kmpySmUISimoRrJL6NL73w").withAccountKey("TestAccount").build();
     User mockUser = getMockUser(mockAccount);
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
@@ -684,7 +688,8 @@ public class AuthServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateBearerTokenWithoutJWTToken() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
-    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    Account mockAccount =
+        Account.Builder.anAccount().withUuid("kmpySmUISimoRrJL6NL73w").withAccountKey("TestAccount").build();
     User mockUser = getMockUser(mockAccount);
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");

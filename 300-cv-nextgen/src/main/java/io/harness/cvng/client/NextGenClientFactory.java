@@ -50,12 +50,14 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
   @Override
   public NextGenClient get() {
     String baseUrl = ngManagerServiceConfig.getNgManagerUrl();
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(baseUrl)
-                                  .client(getUnsafeOkHttpClient(baseUrl))
-                                  .addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()))
-                                  .addConverterFactory(JacksonConverterFactory.create(objectMapper))
-                                  .build();
+    // https://resilience4j.readme.io/docs/retrofit
+    final Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(getUnsafeOkHttpClient(baseUrl))
+            .addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker(), response -> response.code() < 500))
+            .addConverterFactory(JacksonConverterFactory.create(objectMapper))
+            .build();
     return retrofit.create(NextGenClient.class);
   }
 

@@ -1,5 +1,8 @@
 package io.harness.app;
 
+import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
+
+import io.harness.AccessControlClientModule;
 import io.harness.CIExecutionServiceModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -28,7 +31,7 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.persistence.HPersistence;
-import io.harness.secretmanagerclient.SecretManagementClientModule;
+import io.harness.remote.client.ClientMode;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ThreadPool;
@@ -111,6 +114,7 @@ public class CIManagerServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(PrimaryVersionManagerModule.getInstance());
     bind(CIManagerConfiguration.class).toInstance(ciManagerConfiguration);
     bind(YAMLToObject.class).toInstance(new YAMLToObjectImpl());
     bind(HPersistence.class).to(MongoPersistence.class).in(Singleton.class);
@@ -172,12 +176,12 @@ public class CIManagerServiceModule extends AbstractModule {
       }
     });
 
-    install(new SecretManagementClientModule(ciManagerConfiguration.getManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), "NextGenManager"));
+    install(AccessControlClientModule.getInstance(
+        ciManagerConfiguration.getAccessControlClientConfiguration(), CI_MANAGER.getServiceId()));
     install(new EntitySetupUsageClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new ConnectorResourceClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
-        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
+        ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager", ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new CILogServiceClientModule(ciManagerConfiguration.getLogServiceConfig()));

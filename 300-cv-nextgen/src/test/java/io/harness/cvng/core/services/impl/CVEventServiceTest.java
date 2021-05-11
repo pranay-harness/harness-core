@@ -31,7 +31,6 @@ import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.eventsframework.api.AbstractProducer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
@@ -64,7 +63,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendConnectorCreateEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendConnectorCreateEvent() throws InvalidProtocolBufferException {
     CVConfig cvConfig = createCVConfig();
 
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(cvConfig.getConnectorIdentifier(),
@@ -104,7 +103,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendConnectorDeleteEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendConnectorDeleteEvent() throws InvalidProtocolBufferException {
     CVConfig cvConfig = createCVConfig();
 
     eventService.sendConnectorDeleteEvent(cvConfig);
@@ -128,7 +127,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendServiceCreateEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendServiceCreateEvent() throws InvalidProtocolBufferException {
     CVConfig cvConfig = createCVConfig();
 
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(cvConfig.getServiceIdentifier(),
@@ -168,7 +167,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendServiceDeleteEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendServiceDeleteEvent() throws InvalidProtocolBufferException {
     CVConfig cvConfig = createCVConfig();
 
     eventService.sendServiceDeleteEvent(cvConfig);
@@ -192,7 +191,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendEnvironmentCreateEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendEnvironmentCreateEvent() throws InvalidProtocolBufferException {
     CVConfig cvConfig = createCVConfig();
 
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(cvConfig.getEnvIdentifier(),
@@ -232,7 +231,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendEnvironmentDeleteEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendEnvironmentDeleteEvent() throws InvalidProtocolBufferException {
     CVConfig cvConfig = createCVConfig();
 
     eventService.sendEnvironmentDeleteEvent(cvConfig);
@@ -256,8 +255,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendVerificationJobEnvironmentCreateEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendVerificationJobEnvironmentCreateEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     String accountIdentifier = generateUuid();
     String orgIdentifier = generateUuid();
@@ -298,8 +296,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendVerificationJobServiceCreateEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendVerificationJobServiceCreateEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     String accountIdentifier = generateUuid();
     String orgIdentifier = generateUuid();
@@ -340,8 +337,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendKubernetesActivitySourceConnectorCreateEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendKubernetesActivitySourceConnectorCreateEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     String identifier = generateUuid();
     String projectIdentifier = generateUuid();
@@ -383,8 +379,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendKubernetesActivitySourceServiceCreateEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendKubernetesActivitySourceServiceCreateEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     String identifier = generateUuid();
     String projectIdentifier = generateUuid();
@@ -431,8 +426,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendKubernetesActivitySourceEnvironmentCreateEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendKubernetesActivitySourceEnvironmentCreateEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     String identifier = generateUuid();
     String projectIdentifier = generateUuid();
@@ -503,8 +497,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendVerificationJobEnvironmentDeleteEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendVerificationJobEnvironmentDeleteEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     VerificationJob verificationJob = verificationJobService.fromDto(createVerificationJobDTOWithoutRuntimeParams());
     verificationJob.setAccountId(accountId);
@@ -531,8 +524,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendVerificationJobServiceDeleteEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendVerificationJobServiceDeleteEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     VerificationJob verificationJob = verificationJobService.fromDto(createVerificationJobDTOWithoutRuntimeParams());
     verificationJob.setAccountId(accountId);
@@ -558,8 +550,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendKubernetesActivitySourceEnvironmentDeleteEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendKubernetesActivitySourceEnvironmentDeleteEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     String identifier = generateUuid();
     String projectIdentifier = generateUuid();
@@ -595,8 +586,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendKubernetesActivitySourceServiceDeleteEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendKubernetesActivitySourceServiceDeleteEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     String identifier = generateUuid();
     String projectIdentifier = generateUuid();
@@ -632,8 +622,7 @@ public class CVEventServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendKubernetesActivitySourceConnectorDeleteEvent()
-      throws ProducerShutdownException, InvalidProtocolBufferException {
+  public void shouldSendKubernetesActivitySourceConnectorDeleteEvent() throws InvalidProtocolBufferException {
     String accountId = generateUuid();
     String identifier = generateUuid();
     String projectIdentifier = generateUuid();

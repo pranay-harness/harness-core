@@ -309,7 +309,7 @@ public class CIExecutionPlanTestHelper {
 
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnFirstPod() {
     return K8BuildJobEnvInfo.builder()
-        .workDir("workspace")
+        .workDir("/harness")
         .podsSetupInfo(getCIPodsSetupInfoOnFirstPod())
         .stepConnectorRefs(emptyMap())
         .build();
@@ -317,7 +317,7 @@ public class CIExecutionPlanTestHelper {
 
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnOtherPods() {
     return K8BuildJobEnvInfo.builder()
-        .workDir("workspace")
+        .workDir("/harness")
         .podsSetupInfo(getCIPodsSetupInfoOnOtherPods())
         .stepConnectorRefs(emptyMap())
         .build();
@@ -345,6 +345,7 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     volumeToMountPath.put("shared-0", "share/");
+    volumeToMountPath.put("addon", "/addon");
     pods.add(PodSetupInfo.builder()
                  .name("")
                  .pvcParamsList(Arrays.asList(PVCParams.builder()
@@ -355,8 +356,15 @@ public class CIExecutionPlanTestHelper {
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                                   .build(),
                      PVCParams.builder()
-                         .volumeName("step-exec")
-                         .claimName("pod-step-exec")
+                         .volumeName("addon")
+                         .claimName("pod-addon")
+                         .isPresent(false)
+                         .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                         .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                         .build(),
+                     PVCParams.builder()
+                         .volumeName("harness")
+                         .claimName("pod-harness")
                          .isPresent(false)
                          .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                          .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
@@ -383,6 +391,7 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     volumeToMountPath.put("shared-0", "share/");
+    volumeToMountPath.put("addon", "/addon");
     Integer index = 1;
     pods.add(PodSetupInfo.builder()
                  .name("")
@@ -394,8 +403,15 @@ public class CIExecutionPlanTestHelper {
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                                   .build(),
                      PVCParams.builder()
-                         .volumeName("step-exec")
-                         .claimName("pod-2-step-exec")
+                         .volumeName("addon")
+                         .claimName("pod-2-addon")
+                         .isPresent(true)
+                         .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                         .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                         .build(),
+                     PVCParams.builder()
+                         .volumeName("harness")
+                         .claimName("pod-2-harness")
                          .isPresent(true)
                          .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                          .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
@@ -977,7 +993,7 @@ public class CIExecutionPlanTestHelper {
   public IntegrationStage getIntegrationStage() {
     return IntegrationStage.builder()
         .identifier("intStageIdentifier")
-        .workingDirectory("workspace")
+        .workingDirectory("/harness")
         .execution(getExecutionElement())
         .infrastructure(getInfrastructure())
         .customVariables(getCustomVariables())

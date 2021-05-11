@@ -1,6 +1,7 @@
 package io.harness.ngpipeline.inputset.beans.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.inputset.beans.yaml.InputSetConfig;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 
@@ -20,6 +21,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("inputSetsNG")
 @TypeAlias("io.harness.ngpipeline.inputset.beans.entities.CDInputSetEntity")
 @HarnessEntity(exportable = true)
+@ToBeDeleted
+@Deprecated
 public class InputSetEntity extends BaseInputSetEntity {
   private InputSetConfig inputSetConfig;
 }

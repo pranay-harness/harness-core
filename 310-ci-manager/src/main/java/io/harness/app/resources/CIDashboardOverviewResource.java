@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildFailureInfo;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
+import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsActiveAndFailedInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
 import io.harness.core.ci.services.CIOverviewDashboardService;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -53,8 +55,10 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") String startInterval,
-      @NotNull @QueryParam("endInterval") String endInterval) {
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
     LocalDate startDate = LocalDate.parse(startInterval);
     LocalDate endDate = LocalDate.parse(endInterval);
     long interval = ChronoUnit.DAYS.between(startDate, endDate);
@@ -76,7 +80,10 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
     return ResponseDTO.newResponse(ciOverviewDashboardService.getBuildExecutionBetweenIntervals(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval));
   }
@@ -84,11 +91,25 @@ public class CIDashboardOverviewResource {
   @GET
   @Path("/repositoryBuild")
   @ApiOperation(value = "Get build getRepositoryBuild", nickname = "getRepositoryBuild")
-  public ResponseDTO getRepositoryBuild(@NotNull @QueryParam("accountId") String accountIdentifier,
+  public ResponseDTO<DashboardBuildRepositoryInfo> getRepositoryBuild(
+      @NotNull @QueryParam("accountId") String accountIdentifier,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("startInterval") String startInterval, @QueryParam("endInterval") String endInterval) {
-    return ResponseDTO.newResponse();
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "startInterval") String startInterval,
+      @NotNull @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Date should be in yyyy-mm-dd format") @QueryParam(
+          "endInterval") String endInterval) {
+    LocalDate startDate = LocalDate.parse(startInterval);
+    LocalDate endDate = LocalDate.parse(endInterval);
+    long interval = ChronoUnit.DAYS.between(startDate, endDate);
+
+    if (interval < 0) {
+      interval = interval * (-1);
+    }
+
+    LocalDate previousStartDate = startDate.minusDays(interval);
+    return ResponseDTO.newResponse(ciOverviewDashboardService.getDashboardBuildRepository(
+        accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartDate.toString()));
   }
 
   @GET

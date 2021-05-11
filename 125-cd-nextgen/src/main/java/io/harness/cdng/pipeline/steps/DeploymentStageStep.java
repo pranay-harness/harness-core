@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.VariablesSweepingOutput;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.plancreator.beans.VariablesSweepingOutput;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
@@ -41,7 +41,7 @@ public class DeploymentStageStep implements ChildExecutable<StageElementParamete
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, StageElementParameters stepParameters, StepInputPackage inputPackage) {
     log.info("Executing deployment stage with params [{}]", stepParameters);
-    DeploymentStageStepParameters stageStepParameters = (DeploymentStageStepParameters) stepParameters.getSpec();
+    DeploymentStageStepParameters stageStepParameters = (DeploymentStageStepParameters) stepParameters.getSpecConfig();
     final String serviceNodeId = stageStepParameters.getChildNodeID();
     VariablesSweepingOutput variablesSweepingOutput = getVariablesSweepingOutput(ambiance, stepParameters);
     executionSweepingOutputResolver.consume(

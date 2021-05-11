@@ -6,6 +6,11 @@ import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.eventframework.CENGEventConsumerService;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -85,8 +90,18 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
         20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting CE NextGen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector =
-        Guice.createInjector(new CENextGenModule(configuration), new MetricRegistryModule(metricRegistry));
+    Injector injector = Guice.createInjector(
+        new CENextGenModule(configuration), new MetricRegistryModule(metricRegistry), new AbstractCfModule() {
+          @Override
+          public CfClientConfig cfClientConfig() {
+            return configuration.getCfClientConfig();
+          }
+
+          @Override
+          public CfMigrationConfig cfMigrationConfig() {
+            return configuration.getCfMigrationConfig();
+          }
+        });
 
     // create collection and indexes
     injector.getInstance(HPersistence.class);
@@ -99,7 +114,9 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerExceptionMappers(environment.jersey());
     registerCorrelationFilter(environment, injector);
+    registerScheduledJobs(injector);
     MaintenanceController.forceMaintenance(false);
+    createConsumerThreadsToListenToEvents(environment, injector);
   }
 
   private void registerExceptionMappers(JerseyEnvironment jersey) {
@@ -116,6 +133,10 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     final HealthService healthService = injector.getInstance(HealthService.class);
     environment.healthChecks().register("application", healthService);
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
+  }
+
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 
   private void registerResources(Environment environment, Injector injector) {
@@ -157,5 +178,9 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
   private void initializeFeatureFlags(CENextGenConfiguration configuration, Injector injector) {
     injector.getInstance(FeatureFlagService.class)
         .initializeFeatureFlags(configuration.getDeployMode(), configuration.getFeatureFlagsEnabled());
+  }
+
+  private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(CENGEventConsumerService.class));
   }
 }

@@ -3,58 +3,67 @@ package io.harness.engine.interrupts.statusupdate;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
-import java.util.Arrays;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class TerminalStepStatusUpdateTest extends OrchestrationTestBase {
-  @Inject @InjectMocks TerminalStepStatusUpdate stepStatusUpdate;
-  @Mock NodeExecutionService nodeExecutionService;
-  @Mock PlanExecutionService planExecutionService;
+  @Inject TerminalStepStatusUpdate stepStatusUpdate;
+  @Inject MongoTemplate mongoTemplate;
+
+  /**
+   * Setup:
+   *
+   * PlanExecution : RUNNING
+   *
+   * pipeline (RUNNING)
+   *  - stage (RUNNING)
+   *    -fork (RUNNING)
+   *      -child1 (SUCCEEDED) ----> transitioning from RUNNING --> SUCCEEDED
+   *      -child2 (SUCCEEDED)
+   *      -child3 (SUCCEEDED)
+   *
+   * TerminalStepStatusUpdate should mark the PlanExecution as Running when child1 Transitions
+   */
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestStatusUpdateIntervention() {
-    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build();
 
     NodeExecution pipelineNode =
-        NodeExecution.builder().uuid("pipelineNode").status(Status.RUNNING).ambiance(ambiance).version(1L).build();
+        NodeExecution.builder().uuid("pipelineNode").status(Status.RUNNING).ambiance(ambiance).build();
     NodeExecution stageNode = NodeExecution.builder()
                                   .uuid("stageNode")
                                   .status(Status.RUNNING)
                                   .parentId(pipelineNode.getUuid())
                                   .ambiance(ambiance)
-                                  .version(1L)
                                   .build();
     NodeExecution forkNode = NodeExecution.builder()
                                  .uuid("forkNode")
                                  .status(Status.RUNNING)
                                  .parentId(stageNode.getUuid())
                                  .ambiance(ambiance)
-                                 .version(1L)
                                  .build();
     // This node is getting transitioned to SUCCEEDED from MANUAL_INTERVENTION
     NodeExecution child1 = NodeExecution.builder()
@@ -62,59 +71,77 @@ public class TerminalStepStatusUpdateTest extends OrchestrationTestBase {
                                .status(Status.SUCCEEDED)
                                .parentId(forkNode.getUuid())
                                .ambiance(ambiance)
-                               .version(1L)
                                .build();
     NodeExecution child2 = NodeExecution.builder()
                                .uuid("child2")
-                               .status(Status.INTERVENTION_WAITING)
+                               .status(Status.SUCCEEDED)
                                .parentId(forkNode.getUuid())
                                .ambiance(ambiance)
-                               .version(1L)
                                .build();
     NodeExecution child3 = NodeExecution.builder()
                                .uuid("child3")
-                               .status(Status.RUNNING)
+                               .status(Status.SUCCEEDED)
                                .parentId(forkNode.getUuid())
                                .ambiance(ambiance)
-                               .version(1L)
                                .build();
 
-    doReturn(Arrays.asList(pipelineNode, stageNode, forkNode, child1, child2, child3))
-        .when(nodeExecutionService)
-        .fetchNodeExecutionsWithoutOldRetriesAndStatusIn(any(), eq(StatusUtils.activeStatuses()));
+    mongoTemplate.save(planExecution);
+    mongoTemplate.save(pipelineNode);
+    mongoTemplate.save(stageNode);
+    mongoTemplate.save(forkNode);
+    mongoTemplate.save(child1);
+    mongoTemplate.save(child2);
+    mongoTemplate.save(child3);
 
     stepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                            .interruptId(generateUuid())
                                             .nodeExecutionId("child1")
                                             .planExecutionId(ambiance.getPlanExecutionId())
                                             .status(Status.SUCCEEDED)
                                             .build());
 
-    verify(planExecutionService, times(1))
-        .updateStatus(eq(ambiance.getPlanExecutionId()), eq(Status.INTERVENTION_WAITING));
+    PlanExecution updated =
+        mongoTemplate.findOne(query(where(PlanExecutionKeys.uuid).is(planExecutionId)), PlanExecution.class);
+    assertThat(updated).isNotNull();
+    assertThat(updated.getStatus()).isEqualTo(Status.RUNNING);
   }
+
+  /**
+   * Setup:
+   *
+   * PlanExecution : INTERVENTION_WAITING
+   *
+   * pipeline (running)
+   *  - stage (running)
+   *    -fork (running)
+   *      -child1 (SUCCEEDED) ----> transitioning from INTERVENTION_WAITING --> SUCCEEDED via MARK_SUCCESS
+   *      -child2 (SUCCEEDED)
+   *      -child3 (RUNNING)
+   *
+   * TerminalStepStatusUpdate should mark the PlanExecution as Running when child1 Transitions
+   */
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestStatusUpdateRunning() {
-    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution =
+        PlanExecution.builder().uuid(planExecutionId).status(Status.INTERVENTION_WAITING).build();
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build();
 
     NodeExecution pipelineNode =
-        NodeExecution.builder().uuid("pipelineNode").status(Status.RUNNING).ambiance(ambiance).version(1L).build();
+        NodeExecution.builder().uuid("pipelineNode").status(Status.RUNNING).ambiance(ambiance).build();
     NodeExecution stageNode = NodeExecution.builder()
                                   .uuid("stageNode")
                                   .status(Status.RUNNING)
                                   .parentId(pipelineNode.getUuid())
                                   .ambiance(ambiance)
-                                  .version(1L)
                                   .build();
     NodeExecution forkNode = NodeExecution.builder()
                                  .uuid("forkNode")
                                  .status(Status.RUNNING)
                                  .parentId(stageNode.getUuid())
                                  .ambiance(ambiance)
-                                 .version(1L)
                                  .build();
     // This node is getting transitioned to SUCCEEDED from MANUAL_INTERVENTION
     NodeExecution child1 = NodeExecution.builder()
@@ -122,93 +149,37 @@ public class TerminalStepStatusUpdateTest extends OrchestrationTestBase {
                                .status(Status.SUCCEEDED)
                                .parentId(forkNode.getUuid())
                                .ambiance(ambiance)
-                               .version(1L)
                                .build();
     NodeExecution child2 = NodeExecution.builder()
                                .uuid("child2")
                                .status(Status.SUCCEEDED)
                                .parentId(forkNode.getUuid())
                                .ambiance(ambiance)
-                               .version(1L)
                                .build();
     NodeExecution child3 = NodeExecution.builder()
                                .uuid("child3")
                                .status(Status.RUNNING)
                                .parentId(forkNode.getUuid())
                                .ambiance(ambiance)
-                               .version(1L)
                                .build();
 
-    doReturn(Arrays.asList(pipelineNode, stageNode, forkNode, child1, child2, child3))
-        .when(nodeExecutionService)
-        .fetchNodeExecutionsWithoutOldRetriesAndStatusIn(any(), eq(StatusUtils.activeStatuses()));
+    mongoTemplate.save(planExecution);
+    mongoTemplate.save(pipelineNode);
+    mongoTemplate.save(stageNode);
+    mongoTemplate.save(forkNode);
+    mongoTemplate.save(child1);
+    mongoTemplate.save(child2);
+    mongoTemplate.save(child3);
 
     stepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                            .interruptId(generateUuid())
                                             .nodeExecutionId("child1")
                                             .planExecutionId(ambiance.getPlanExecutionId())
                                             .status(Status.SUCCEEDED)
                                             .build());
 
-    verify(planExecutionService, times(1)).updateStatus(eq(ambiance.getPlanExecutionId()), eq(Status.RUNNING));
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestStatusUpdateApprovalWaiting() {
-    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
-
-    NodeExecution pipelineNode =
-        NodeExecution.builder().uuid("pipelineNode").status(Status.RUNNING).ambiance(ambiance).version(1L).build();
-    NodeExecution stageNode = NodeExecution.builder()
-                                  .uuid("stageNode")
-                                  .status(Status.RUNNING)
-                                  .parentId(pipelineNode.getUuid())
-                                  .ambiance(ambiance)
-                                  .version(1L)
-                                  .build();
-    NodeExecution forkNode = NodeExecution.builder()
-                                 .uuid("forkNode")
-                                 .status(Status.RUNNING)
-                                 .parentId(stageNode.getUuid())
-                                 .ambiance(ambiance)
-                                 .version(1L)
-                                 .build();
-    // This node is getting transitioned to SUCCEEDED from MANUAL_INTERVENTION
-    NodeExecution child1 = NodeExecution.builder()
-                               .uuid("child1")
-                               .status(Status.FAILED)
-                               .parentId(forkNode.getUuid())
-                               .ambiance(ambiance)
-                               .version(1L)
-                               .build();
-    NodeExecution child2 = NodeExecution.builder()
-                               .uuid("child2")
-                               .status(Status.APPROVAL_WAITING)
-                               .parentId(forkNode.getUuid())
-                               .ambiance(ambiance)
-                               .version(1L)
-                               .build();
-    NodeExecution child3 = NodeExecution.builder()
-                               .uuid("child3")
-                               .status(Status.RUNNING)
-                               .parentId(forkNode.getUuid())
-                               .ambiance(ambiance)
-                               .version(1L)
-                               .build();
-
-    doReturn(Arrays.asList(pipelineNode, stageNode, forkNode, child1, child2, child3))
-        .when(nodeExecutionService)
-        .fetchNodeExecutionsWithoutOldRetriesAndStatusIn(any(), eq(StatusUtils.activeStatuses()));
-
-    stepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()
-                                            .interruptId(generateUuid())
-                                            .nodeExecutionId("child1")
-                                            .planExecutionId(ambiance.getPlanExecutionId())
-                                            .status(Status.SUCCEEDED)
-                                            .build());
-
-    verify(planExecutionService, times(1)).updateStatus(eq(ambiance.getPlanExecutionId()), eq(Status.APPROVAL_WAITING));
+    PlanExecution updated =
+        mongoTemplate.findOne(query(where(PlanExecutionKeys.uuid).is(planExecutionId)), PlanExecution.class);
+    assertThat(updated).isNotNull();
+    assertThat(updated.getStatus()).isEqualTo(Status.RUNNING);
   }
 }

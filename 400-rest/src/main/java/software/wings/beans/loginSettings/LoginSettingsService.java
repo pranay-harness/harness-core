@@ -35,4 +35,6 @@ public interface LoginSettingsService extends OwnedByAccount {
   PasswordStrengthViolations getPasswordStrengthCheckViolations(Account account, char[] password);
 
   LoginSettings updateLoginSettings(String loginSettingsId, String accountId, LoginSettings loginSettings);
+
+  PasswordStrengthPolicy getPasswordStrengthPolicy(String accountId);
 }

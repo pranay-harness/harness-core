@@ -3,7 +3,9 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.IVAN;
+import static io.harness.rule.OwnerRule.SAINATH;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -13,6 +15,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -225,5 +229,77 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isNotNull();
     assertThat(ecsCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(ecsCommandExecutionResponse.getEcsCommandResponse().isTimeoutFailure()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testDelayWaitBeforeOldServiceDownSize() {
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString());
+    doNothing()
+        .when(awsElbHelperServiceDelegate)
+        .swapListenersForEcsBG(any(), anyList(), anyBoolean(), anyString(), anyString(), anyString(), anyString(),
+            anyString(), anyString(), anyString(), any());
+    doNothing()
+        .when(ecsSwapRoutesCommandTaskHelper)
+        .updateServiceTags(any(), anyList(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
+    doNothing()
+        .when(ecsSwapRoutesCommandTaskHelper)
+
+        .downsizeOlderService(any(), anyList(), anyString(), anyString(), anyString(), any(), any());
+
+    // rollback=false
+    EcsBGListenerUpdateRequest ecsBGListenerUpdateRequest = EcsBGListenerUpdateRequest.builder()
+                                                                .rollback(false)
+                                                                .isUseSpecificListenerRuleArn(true)
+                                                                .downsizeOldService(true)
+                                                                .downsizeOldServiceDelayInSecs(100l)
+                                                                .ecsBgDownsizeDelayEnabled(true)
+                                                                .serviceNameDownsized("test1")
+                                                                .build();
+    EcsCommandExecutionResponse ecsCommandExecutionResponse = ecsListenerUpdateBGTaskHandler.executeTaskInternal(
+        ecsBGListenerUpdateRequest, Collections.emptyList(), executionLogCallback);
+
+    verify(executionLogCallback, times(1))
+        .saveExecutionLog(format("Waiting for %d seconds before downsizing service %s", 100l, "test1"));
+    // rollback=true
+    ecsBGListenerUpdateRequest.setRollback(true);
+    ecsBGListenerUpdateRequest.setDownsizeOldService(true);
+    ecsBGListenerUpdateRequest.setEcsBgDownsizeDelayEnabled(true);
+    ecsBGListenerUpdateRequest.setDownsizeOldServiceDelayInSecs(50l);
+    ecsBGListenerUpdateRequest.setServiceNameDownsized("test2");
+
+    verify(executionLogCallback, times(0))
+        .saveExecutionLog(format("Waiting for %d seconds before downsizing service %s", 50l, "test2"));
+
+    // FF disabled
+    ecsBGListenerUpdateRequest.setRollback(false);
+    ecsBGListenerUpdateRequest.setDownsizeOldService(true);
+    ecsBGListenerUpdateRequest.setEcsBgDownsizeDelayEnabled(false);
+    ecsBGListenerUpdateRequest.setDownsizeOldServiceDelayInSecs(30l);
+    ecsBGListenerUpdateRequest.setServiceNameDownsized("test3");
+
+    verify(executionLogCallback, times(0))
+        .saveExecutionLog(format("Waiting for %d seconds before downsizing service %s", 30l, "test3"));
+
+    // delay 0
+    ecsBGListenerUpdateRequest.setRollback(false);
+    ecsBGListenerUpdateRequest.setDownsizeOldService(true);
+    ecsBGListenerUpdateRequest.setEcsBgDownsizeDelayEnabled(true);
+    ecsBGListenerUpdateRequest.setDownsizeOldServiceDelayInSecs(0l);
+    ecsBGListenerUpdateRequest.setServiceNameDownsized("test4");
+
+    verify(executionLogCallback, times(0))
+        .saveExecutionLog(format("Waiting for %d seconds before downsizing service %s", 0l, "test4"));
+
+    //  downSize service name null
+    ecsBGListenerUpdateRequest.setRollback(false);
+    ecsBGListenerUpdateRequest.setDownsizeOldService(true);
+    ecsBGListenerUpdateRequest.setEcsBgDownsizeDelayEnabled(true);
+    ecsBGListenerUpdateRequest.setDownsizeOldServiceDelayInSecs(10l);
+    ecsBGListenerUpdateRequest.setServiceNameDownsized(null);
+
+    verify(executionLogCallback, times(0))
+        .saveExecutionLog(format("Waiting for %d seconds before downsizing service %s", 10l, null));
   }
 }

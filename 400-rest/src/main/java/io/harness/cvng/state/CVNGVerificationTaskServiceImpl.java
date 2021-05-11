@@ -1,5 +1,8 @@
 package io.harness.cvng.state;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.state.CVNGVerificationTask.CVNGVerificationTaskKeys;
 import io.harness.cvng.state.CVNGVerificationTask.Status;
 import io.harness.persistence.HPersistence;
@@ -8,6 +11,7 @@ import com.google.inject.Inject;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(CV)
 public class CVNGVerificationTaskServiceImpl implements CVNGVerificationTaskService {
   @Inject private HPersistence hPersistence;
   @Override
@@ -36,5 +40,12 @@ public class CVNGVerificationTaskServiceImpl implements CVNGVerificationTaskServ
   @Override
   public CVNGVerificationTask get(String cvngVerificationTaskId) {
     return hPersistence.get(CVNGVerificationTask.class, cvngVerificationTaskId);
+  }
+
+  @Override
+  public CVNGVerificationTask getByActivityId(String activityId) {
+    return hPersistence.createQuery(CVNGVerificationTask.class)
+        .filter(CVNGVerificationTaskKeys.activityId, activityId)
+        .get();
   }
 }

@@ -1,15 +1,18 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
+
+HarnessTeam = "CE"
 
 shared_dependencies = [
-    "@ce_nextgen//:com_graphql_java_graphql_java",
-    "@ce_nextgen//:org_antlr_antlr4_runtime",
+    "@maven//:io_netty_netty_all",
 ] + [
+    "//374-ceng-graphql:module",
     "//490-ce-commons:module",
     "//930-ng-core-clients:module",
     "//940-feature-flag:module",
+    "//940-primary-version-manager:module",
+    "//953-events-api:module",
     "//960-persistence:module",
     "//970-ng-commons:module",
     "//980-commons:module",
@@ -17,7 +20,6 @@ shared_dependencies = [
     "@maven//:io_swagger_swagger_annotations",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:io_dropwizard_dropwizard_core",
-    "@maven//:io_leangen_graphql_spqr",
     "@maven//:ru_vyarus_guice_validator",
     "//:lombok",
 ]
@@ -52,6 +54,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

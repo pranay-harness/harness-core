@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.query.FindOptions;
 
 @OwnedBy(CDC)
 @Singleton
@@ -88,7 +89,7 @@ public class ResumeStateUtils {
     try (
         HIterator<SweepingOutputInstance> instancesHIterator = new HIterator<>(
             sweepingOutputService.prepareApprovalStateOutputsQuery(appId, fromPipelineExecutionId, fromStateExecutionId)
-                .fetch())) {
+                .fetch(new FindOptions().modifier("$hint", "pipelineStateExecution")))) {
       for (SweepingOutputInstance instance : instancesHIterator) {
         instances.add(instance);
       }

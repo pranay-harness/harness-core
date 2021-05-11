@@ -1,15 +1,19 @@
 package io.harness.cdng.artifact.bean.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.DOCKER_HUB_NAME;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.visitor.YamlTypes;
-import io.harness.cdng.visitor.helpers.artifact.DockerHubArtifactConfigVisitorHelper;
-import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -18,7 +22,9 @@ import io.harness.walktree.visitor.Visitable;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,15 +36,16 @@ import org.springframework.data.annotation.TypeAlias;
  * This is Yaml POJO class which may contain expressions as well.
  * Used mainly for converter layer to store yaml.
  */
+@OwnedBy(CDC)
 @Data
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(DOCKER_HUB_NAME)
-@SimpleVisitorHelper(helperClass = DockerHubArtifactConfigVisitorHelper.class)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("dockerHubArtifactConfig")
 @OneOfField(fields = {"tag", "tagRegex"})
-public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
+public class DockerHubArtifactConfig implements ArtifactConfig, Visitable, WithConnectorRef {
   /**
    * Docker hub registry connector.
    */
@@ -98,5 +105,12 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName(YamlTypes.SPEC).isPartOfFQN(false).build();
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

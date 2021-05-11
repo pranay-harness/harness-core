@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -49,6 +50,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
+@BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
@@ -61,8 +63,6 @@ public interface DelegateService extends OwnedByAccount {
   DelegateStatus getDelegateStatus(String accountId);
 
   DelegateStatus getDelegateStatusWithScalingGroups(String accountId);
-
-  DelegateGroup getDelegateGroup(String accountId, String delegateGroupId);
 
   Set<String> retrieveDelegateSelectors(Delegate delegate);
 
@@ -198,8 +198,6 @@ public interface DelegateService extends OwnedByAccount {
       List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
 
   void regenerateCapabilityPermissions(String accountId, String delegateId);
-
-  String getHostNameForGroupedDelegate(String hostname);
 
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 

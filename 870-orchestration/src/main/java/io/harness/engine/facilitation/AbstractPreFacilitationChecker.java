@@ -1,0 +1,28 @@
+package io.harness.engine.facilitation;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.ExecutionCheck;
+import io.harness.execution.NodeExecution;
+
+@OwnedBy(HarnessTeam.PIPELINE)
+public abstract class AbstractPreFacilitationChecker {
+  protected AbstractPreFacilitationChecker nextChecker;
+
+  public void setNextChecker(AbstractPreFacilitationChecker nextChecker) {
+    this.nextChecker = nextChecker;
+  }
+
+  public ExecutionCheck check(NodeExecution nodeExecution) {
+    ExecutionCheck preCheck = this.performCheck(nodeExecution);
+    if (!preCheck.isProceed()) {
+      return preCheck;
+    }
+    if (nextChecker != null) {
+      return nextChecker.check(nodeExecution);
+    }
+    return ExecutionCheck.builder().proceed(true).reason(null).build();
+  }
+
+  protected abstract ExecutionCheck performCheck(NodeExecution nodeExecution);
+}

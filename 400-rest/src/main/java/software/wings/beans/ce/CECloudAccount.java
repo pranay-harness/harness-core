@@ -2,6 +2,7 @@ package software.wings.beans.ce;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.ChangeDataCapture;
+import io.harness.annotations.ChangeDataCaptureSink;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -32,6 +33,8 @@ import org.mongodb.morphia.annotations.Id;
 @StoreIn("events")
 @ChangeDataCapture(table = "awsTruthTable", dataStore = "events",
     fields = {"accountId", "infraAccountId", "accountName"}, handler = "TimeScaleDBChangeHandler")
+@ChangeDataCapture(table = "awsTruthTable", dataStore = "events", sink = ChangeDataCaptureSink.BQ,
+    fields = {"accountId", "infraAccountId", "accountName"}, handler = "CECloudAccountBigQueryChangeHandler")
 @OwnedBy(HarnessTeam.CE)
 public class CECloudAccount implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

@@ -33,6 +33,19 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 
 harness-mongo:
   uri: mongodb://localhost:27017/harness
@@ -46,6 +59,8 @@ cimanager-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
+  indexManagerMode: AUTO
+  aliasDBName: ci-manager
 pmsMongo:
   uri: mongodb://localhost:27017/pms-harness
   connectTimeout: 30000
@@ -60,7 +75,7 @@ scmConnectionConfig:
   url: localhost:8091
 
 logServiceConfig:
-  baseUrl: https://qb.harness.io/log-service/
+  baseUrl: https://qa.harness.io/log-service/
   globalToken: "c76e567a-b341-404d-a8dd-d9738714eb82"
 
 tiServiceConfig:
@@ -91,8 +106,8 @@ ciExecutionServiceConfig:
   defaultInternalImageConnector: ''
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
-  addonImage: harness/ci-addon:releaseBuild-30
-  liteEngineImage: harness/ci-lite-engine:releaseBuild-29
+  addonImage: harness/ci-addon:releaseBuild-59
+  liteEngineImage: harness/ci-lite-engine:releaseBuild-44
   isLocal: false
   stepConfig:
     gitCloneConfig:
@@ -100,15 +115,15 @@ ciExecutionServiceConfig:
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:
-      image: plugins/kaniko:1.1.0
+      image: plugins/kaniko:1.1.2
       entrypoint:
         - /kaniko/kaniko-docker
     buildAndPushECRConfig:
-      image: plugins/kaniko-ecr:1.1.0
+      image: plugins/kaniko-ecr:1.1.2
       entrypoint:
         - /kaniko/kaniko-ecr
     buildAndPushGCRConfig:
-      image: plugins/kaniko-gcr:1.1.0
+      image: plugins/kaniko-gcr:1.1.2
       entrypoint:
         - /kaniko/kaniko-gcr
     gcsUploadConfig:

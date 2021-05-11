@@ -89,7 +89,7 @@ public class PipelineRbacServiceImplTest {
 
     when(pipelineRbacHelper.convertToPermissionCheckDTO(any(EntityDetail.class))).thenCallRealMethod();
 
-    pipelineRbacService.validateStaticallyReferredEntitiesInYaml(
+    pipelineRbacService.extractAndValidateStaticallyReferredEntities(
         accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
 
     List<AccessControlDTO> accessControlList = new ArrayList<>();
@@ -115,12 +115,12 @@ public class PipelineRbacServiceImplTest {
     when(accessControlClient.checkForAccess(anyListOf(PermissionCheckDTO.class)))
         .thenReturn(AccessCheckResponseDTO.builder().accessControlList(accessControlList).build());
     assertThatThrownBy(()
-                           -> pipelineRbacService.validateStaticallyReferredEntitiesInYaml(
+                           -> pipelineRbacService.extractAndValidateStaticallyReferredEntities(
                                accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml))
         .isInstanceOf(AccessDeniedException.class);
 
     accessControlList.remove(1);
-    pipelineRbacService.validateStaticallyReferredEntitiesInYaml(
+    pipelineRbacService.extractAndValidateStaticallyReferredEntities(
         accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
   }
 }

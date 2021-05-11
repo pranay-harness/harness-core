@@ -102,7 +102,7 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
         if (outcome instanceof InfrastructureOutcome) {
           InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcome;
           cdPipelineModuleInfoBuilder.envIdentifier(infrastructureOutcome.getEnvironment().getIdentifier())
-              .environmentType(infrastructureOutcome.getEnvironment().getEnvironmentType())
+              .environmentType(infrastructureOutcome.getEnvironment().getType())
               .infrastructureType(infrastructureOutcome.getKind());
         }
       }
@@ -126,8 +126,11 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     if (isInfrastructureNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
       Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionProto);
       environmentOutcome.ifPresent(outcome
-          -> cdStageModuleInfoBuilder.infraExecutionSummary(
-              InfraExecutionSummary.builder().identifier(outcome.getIdentifier()).name(outcome.getName()).build()));
+          -> cdStageModuleInfoBuilder.infraExecutionSummary(InfraExecutionSummary.builder()
+                                                                .identifier(outcome.getIdentifier())
+                                                                .name(outcome.getName())
+                                                                .type(outcome.getType().name())
+                                                                .build()));
     }
     return cdStageModuleInfoBuilder.build();
   }

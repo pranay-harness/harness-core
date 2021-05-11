@@ -2,6 +2,14 @@
 
 CONFIG_FILE=/opt/harness/ci-manager-config.yml
 
+replace_key_value () {
+  CONFIG_KEY="$1";
+  CONFIG_VALUE="$2";
+  if [[ "" != "$CONFIG_VALUE" ]]; then
+    yq write -i $CONFIG_FILE $CONFIG_KEY $CONFIG_VALUE
+  fi
+}
+
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
@@ -190,7 +198,23 @@ if [[ "" != "$TIMESCALEDB_USERNAME" ]]; then
   yq write -i $CONFIG_FILE timescaledb.timescaledbUsername "$TIMESCALEDB_USERNAME"
 fi
 
+if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
+  yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
+fi
+
 if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
   yq write -i $CONFIG_FILE cimanager-mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
 fi
 
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
+fi
+
+replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
+
+replace_key_value accessControlClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
+
+replace_key_value accessControlClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"

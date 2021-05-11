@@ -27,6 +27,7 @@ public class CvNextGenRegistrars {
           .add(PipelineServiceUtilKryoRegistrar.class)
           .add(PmsContractsKryoRegistrar.class)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
+          .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -35,6 +36,7 @@ public class CvNextGenRegistrars {
           .add(CVNextGenMorphiaRegister.class)
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

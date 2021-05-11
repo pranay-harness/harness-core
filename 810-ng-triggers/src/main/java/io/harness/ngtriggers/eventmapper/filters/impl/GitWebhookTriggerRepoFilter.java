@@ -51,7 +51,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -65,7 +64,7 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
-    WebhookEventMappingResponseBuilder mappingResponseBuilder = WebhookEventMappingResponse.builder();
+    WebhookEventMappingResponseBuilder mappingResponseBuilder = initWebhookEventMappingResponse(filterRequestData);
 
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
     TriggerWebhookEvent originalEvent = webhookPayloadData.getOriginalEvent();
@@ -89,8 +88,8 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
     }
 
     if (isEmpty(eligibleTriggers)) {
-      String msg = format("No trigger found for repoUrl: %s for Project %s",
-          webhookPayloadData.getRepository().getLink(), filterRequestData.getProjectFqn());
+      String msg = format("No trigger found for repoUrl: %s for Account %s",
+          webhookPayloadData.getRepository().getLink(), filterRequestData.getAccountId());
       log.info(msg);
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(
@@ -105,7 +104,6 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
     return mappingResponseBuilder.build();
   }
 
-  @NotNull
   private HashSet<String> getUrls(Repository repository, String sourceRepoType) {
     if (AWS_CODECOMMIT.name().equals(sourceRepoType)) {
       String[] arnTokens = repository.getId().split(":");

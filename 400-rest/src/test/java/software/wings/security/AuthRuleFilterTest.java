@@ -29,6 +29,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
@@ -46,7 +47,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
@@ -104,6 +107,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule.UNDEFINED)
 public class AuthRuleFilterTest extends WingsBaseTest {
   private ResourceInfo resourceInfo = mock(ResourceInfo.class);
   @Mock HttpServletRequest httpServletRequest;
@@ -141,7 +145,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
             MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS, MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES,
             MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
             MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
-            MANAGE_PIPELINE_GOVERNANCE_STANDARDS));
+            MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_SSH_AND_WINRM));
   }
 
   @Test

@@ -9,6 +9,9 @@ import static org.mockito.Mockito.mock;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.client.CVNGClientModule;
@@ -170,7 +173,17 @@ public class DataGenApplication extends Application<MainConfiguration> {
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }
     });
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return configuration.getCfClientConfig();
+      }
 
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return configuration.getCfMigrationConfig();
+      }
+    });
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new AlertModule());

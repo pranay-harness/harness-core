@@ -17,7 +17,6 @@ import io.harness.gitsync.common.dtos.GitSyncEntityListDTO;
 import io.harness.gitsync.common.dtos.GitSyncRepoFilesDTO;
 import io.harness.gitsync.common.dtos.GitSyncRepoFilesListDTO;
 import io.harness.gitsync.common.dtos.RepoProviders;
-import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.EntityDetail;
@@ -142,6 +141,7 @@ public class GitEntityServiceImpl implements GitEntityService {
         .gitConnectorId(entity.getGitConnectorId())
         .repo(getDisplayRepositoryUrl(entity.getRepo()))
         .repoProviderType(getGitProvider(entity.getRepo()))
+        .folderPath(entity.getFolderPath())
         .entityGitPath(entity.getEntityGitPath())
         .accountId(entity.getAccountId())
         .build();
@@ -178,12 +178,6 @@ public class GitEntityServiceImpl implements GitEntityService {
     return repositoryUrl;
   }
 
-  @NotNull
-  private String getEntityPath(GitFileLocation entity) {
-    return GitFileLocationHelper.getEntityPath(
-        entity.getEntityRootFolderName(), entity.getEntityType(), entity.getEntityIdentifier());
-  }
-
   private List<GitSyncEntityDTO> buildEntityDtoFromPage(Page<GitFileLocation> gitFileLocationsPage) {
     return gitFileLocationsPage.get().map(this::buildGitSyncEntityDTO).collect(Collectors.toList());
   }
@@ -218,16 +212,16 @@ public class GitEntityServiceImpl implements GitEntityService {
   }
 
   @Override
-  public GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType) {
+  public GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType, String branch) {
     final Optional<GitFileLocation> gitFileLocation =
-        gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountId(
-            entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier());
+        gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountIdAndBranch(
+            entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier(), branch);
     return gitFileLocation.map(this::buildGitSyncEntityDTO).orElse(null);
   }
 
   @Override
-  public boolean save(String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String filePath,
-      String commitId, String branchName) {
+  public boolean save(String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String folderPath,
+      String filePath, String commitId, String branchName) {
     final Optional<GitFileLocation> gitFileLocation =
         gitFileLocationRepository.findByEntityGitPathAndGitSyncConfigIdAndAccountId(
             filePath, yamlGitConfig.getIdentifier(), accountId);
@@ -239,6 +233,7 @@ public class GitEntityServiceImpl implements GitEntityService {
                                              .entityName(entityDetail.getName())
                                              .organizationId(entityDetail.getEntityRef().getOrgIdentifier())
                                              .projectId(entityDetail.getEntityRef().getProjectIdentifier())
+                                             .folderPath(folderPath)
                                              .entityGitPath(filePath)
                                              .branch(branchName)
                                              .repo(yamlGitConfig.getRepo())

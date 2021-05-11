@@ -1,5 +1,7 @@
 package io.harness.ngpipeline.inputset.beans.resource;
 
+import io.harness.annotations.dev.ToBeDeleted;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
@@ -16,6 +18,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("MergeInputSetRequest")
+@ToBeDeleted
+@Deprecated
 public class MergeInputSetRequestDTO {
   @NotEmpty List<String> inputSetReferences;
 }

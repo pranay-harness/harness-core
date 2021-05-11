@@ -1,6 +1,5 @@
 package io.harness.ng.eventsframework;
 
-import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
@@ -67,6 +66,10 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
@@ -88,6 +91,11 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, NG_MANAGER.getServiceId(),
               redisConfig, EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.FEATURE_FLAG_READ_BATCH_SIZE));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.USERMEMBERSHIP, NG_MANAGER.getServiceId(), redisConfig,
+              EventsFrameworkConstants.USERMEMBERSHIP_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.USERMEMBERSHIP_READ_BATCH_SIZE));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,
@@ -119,7 +127,7 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
-              EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
+              EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Producer.class)
           .annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM))
           .toInstance(RedisProducer.of(

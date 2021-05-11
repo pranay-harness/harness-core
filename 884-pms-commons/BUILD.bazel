@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 java_library(
     name = "maven_deps",
@@ -9,6 +8,7 @@ java_library(
     exports = [
         "//890-pms-contracts:module",
         "//920-delegate-service-beans:module",
+        "//950-timeout-engine:module",
         "//950-walktree-visitor:module",
         "//955-delegate-beans:module",
         "//960-persistence:module",
@@ -51,6 +51,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

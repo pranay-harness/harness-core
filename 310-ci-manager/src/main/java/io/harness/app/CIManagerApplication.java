@@ -13,6 +13,7 @@ import io.harness.ci.app.InspectCommand;
 import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -28,6 +29,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.PmsSdkConfiguration;
@@ -35,7 +37,6 @@ import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
-import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.ExecutionAdvisers;
@@ -50,6 +51,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
@@ -64,14 +66,11 @@ import io.harness.yaml.YamlSdkInitHelper;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
-import software.wings.security.ThreadLocalUserProvider;
-
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -176,6 +175,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CiExecutionRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -224,7 +224,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new AbstractMongoModule() {
       @Override
       public UserProvider userProvider() {
-        return new ThreadLocalUserProvider();
+        return new NoopUserProvider();
       }
     });
 
@@ -233,24 +233,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new CIManagerServiceModule(configuration));
     modules.add(YamlSdkModule.getInstance());
     modules.add(ExecutionPlanModule.getInstance());
-
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
-
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
 
     Injector injector = Guice.createInjector(modules);
@@ -331,6 +313,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   }
 
   private void scheduleJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);

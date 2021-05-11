@@ -55,9 +55,9 @@ pipeline:
             service:
               name: service1
               identifier: service1
-            tags:
-              k1: v1
-              k2: v2
+              tags:
+                k1: v1
+                k2: v2
             serviceDefinition:
               type: Kubernetes # Can it be type to make it consistent with other types
               spec:

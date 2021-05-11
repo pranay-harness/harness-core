@@ -5,6 +5,8 @@ import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_B
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 
@@ -53,6 +55,8 @@ public class VerificationServiceConfiguration extends Configuration implements A
   private String managerUrl;
   @JsonProperty("scheduler") private SchedulerConfig schedulerConfig = new SchedulerConfig();
   @JsonProperty("dataStorageMode") private DataStorageMode dataStorageMode;
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
 
   /**
    * Instantiates a new Main configuration.

@@ -1,5 +1,6 @@
 package io.harness.ci.app;
 
+import io.harness.app.CIManagerConfiguration;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -10,11 +11,9 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
-
-import software.wings.app.IndexMigratorModule;
-import software.wings.app.MainConfiguration;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,9 +51,9 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
   }
 
   protected void run(Bootstrap<T> bootstrap, Namespace namespace, T configuration) {
-    MainConfiguration mainConfiguration = (MainConfiguration) configuration;
-    mainConfiguration.setMongoConnectionFactory(
-        mainConfiguration.getMongoConnectionFactory().toBuilder().indexManagerMode(IndexManager.Mode.INSPECT).build());
+    CIManagerConfiguration mainConfiguration = (CIManagerConfiguration) configuration;
+    mainConfiguration.setHarnessCIMongo(
+        mainConfiguration.getHarnessCIMongo().toBuilder().indexManagerMode(IndexManager.Mode.INSPECT).build());
 
     List<Module> modules = new ArrayList<>();
     modules.add(new AbstractModule() {
@@ -72,7 +71,7 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       @Provides
       @Singleton
       MongoConfig mongoConfig() {
-        return mainConfiguration.getMongoConnectionFactory();
+        return mainConfiguration.getHarnessCIMongo();
       }
     });
     modules.add(new AbstractMongoModule() {
@@ -81,19 +80,21 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
         return new NoopUserProvider();
       }
     });
-    modules.add(new IndexMigratorModule());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> registrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(CiExecutionRegistrars.kryoRegistrars)
+            .build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .addAll(CiExecutionRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -101,7 +102,7 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(ManagerRegistrars.morphiaConverters)
+            .addAll(CiExecutionRegistrars.morphiaConverters)
             .build();
       }
     });

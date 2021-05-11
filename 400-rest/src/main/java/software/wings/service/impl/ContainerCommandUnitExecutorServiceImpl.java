@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.ERROR;
@@ -9,6 +10,7 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.command.CommandExecutionContext;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(_930_DELEGATE_TASKS)
 public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   @Inject private DelegateLogService logService;
   @Inject private Injector injector;

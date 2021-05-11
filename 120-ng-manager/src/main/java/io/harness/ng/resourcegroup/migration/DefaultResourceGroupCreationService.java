@@ -89,7 +89,7 @@ public class DefaultResourceGroupCreationService {
     if (Thread.currentThread().isInterrupted()) {
       log.error("Couldn't complete default resource group creation. Thread interrupted");
     } else {
-      log.info("Default resource group creation for alreadly existing NG clients completed");
+      log.info("Default resource group creation for already existing NG clients completed");
     }
   }
 

@@ -34,21 +34,25 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
-    WebhookEventMappingResponseBuilder mappingResponseBuilder = WebhookEventMappingResponse.builder();
+    WebhookEventMappingResponseBuilder mappingResponseBuilder = initWebhookEventMappingResponse(filterRequestData);
     List<TriggerDetails> matchedTriggers = new ArrayList<>();
 
     for (TriggerDetails trigger : filterRequestData.getDetails()) {
-      NGTriggerConfig ngTriggerConfig = trigger.getNgTriggerConfig();
-      if (ngTriggerConfig == null) {
-        ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(trigger.getNgTriggerEntity().getYaml());
-      }
+      try {
+        NGTriggerConfig ngTriggerConfig = trigger.getNgTriggerConfig();
+        if (ngTriggerConfig == null) {
+          ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(trigger.getNgTriggerEntity().getYaml());
+        }
 
-      TriggerDetails triggerDetails = TriggerDetails.builder()
-                                          .ngTriggerConfig(ngTriggerConfig)
-                                          .ngTriggerEntity(trigger.getNgTriggerEntity())
-                                          .build();
-      if (checkTriggerEligibility(filterRequestData, triggerDetails)) {
-        matchedTriggers.add(triggerDetails);
+        TriggerDetails triggerDetails = TriggerDetails.builder()
+                                            .ngTriggerConfig(ngTriggerConfig)
+                                            .ngTriggerEntity(trigger.getNgTriggerEntity())
+                                            .build();
+        if (checkTriggerEligibility(filterRequestData, triggerDetails)) {
+          matchedTriggers.add(triggerDetails);
+        }
+      } catch (Exception e) {
+        log.error(getTriggerSkipMessage(trigger.getNgTriggerEntity()), e);
       }
     }
 
@@ -57,7 +61,7 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS,
               filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null,
-              "No Trigger matched jexl conditions for payload event for Project: " + filterRequestData.getProjectFqn(),
+              "No Trigger matched jexl conditions for payload event for Project: " + filterRequestData.getAccountId(),
               null))
           .build();
     } else {
@@ -75,6 +79,8 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
 
     WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
     return WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
+        filterRequestData.getWebhookPayloadData().getParseWebhookResponse(),
+        filterRequestData.getWebhookPayloadData().getOriginalEvent().getHeaders(),
         filterRequestData.getWebhookPayloadData().getOriginalEvent().getPayload(), triggerSpec.getJexlCondition());
   }
 }

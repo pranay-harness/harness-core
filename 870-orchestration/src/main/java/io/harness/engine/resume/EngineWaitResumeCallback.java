@@ -20,14 +20,12 @@ public class EngineWaitResumeCallback implements OldNotifyCallback {
 
   Ambiance ambiance;
   FacilitatorResponseProto facilitatorResponse;
-  StepInputPackage inputPackage;
 
   @Builder
   EngineWaitResumeCallback(
       Ambiance ambiance, FacilitatorResponseProto facilitatorResponse, StepInputPackage inputPackage) {
     this.ambiance = ambiance;
     this.facilitatorResponse = facilitatorResponse;
-    this.inputPackage = inputPackage;
   }
 
   @Override

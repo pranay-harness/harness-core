@@ -1,6 +1,6 @@
 package io.harness.serializer;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviserParameters;
@@ -11,6 +11,8 @@ import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviserParameter
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
+import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
+import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
 import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -20,7 +22,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 
 import com.esotericsoftware.kryo.Kryo;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class PmsSdkCoreKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -41,5 +43,7 @@ public class PmsSdkCoreKryoRegistrar implements KryoRegistrar {
     // New classes here
     kryo.register(PlanNode.class, 88201);
     kryo.register(ExecutionSweepingOutput.class, 88202);
+    kryo.register(AsyncSdkResumeCallback.class, 88204);
+    kryo.register(AsyncSdkProgressCallback.class, 88205);
   }
 }

@@ -3,7 +3,7 @@ package io.harness.steps.approval.step.jira.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.SwaggerConstants;
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.SkipAutoEvaluation;
 
@@ -21,7 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName("JexlCriteriaSpec")
+@JsonTypeName(CriteriaSpecTypeConstants.JEXL)
 @TypeAlias("jexlCriteriaSpec")
 public class JexlCriteriaSpec implements CriteriaSpec {
   @NotNull

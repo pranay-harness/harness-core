@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.InfrastructureType.AWS_AMI;
 import static software.wings.beans.InfrastructureType.AWS_ECS;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
@@ -14,6 +17,9 @@ import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.InfrastructureType;
 import software.wings.infra.AwsAmiInfrastructure;
@@ -58,6 +64,8 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = AzureWebAppInfra.Yaml.class, name = AZURE_WEBAPP),
       @JsonSubTypes.Type(value = CustomInfrastructure.Yaml.class, name = InfrastructureType.CUSTOM_INFRASTRUCTURE)
 })
+@OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
 public abstract class CloudProviderInfrastructureYaml extends BaseYamlWithType {
   public CloudProviderInfrastructureYaml(String type) {
     super(type);

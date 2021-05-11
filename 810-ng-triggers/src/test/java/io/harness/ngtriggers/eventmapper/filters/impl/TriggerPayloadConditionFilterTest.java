@@ -143,7 +143,7 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
         FilterRequestData.builder()
             .details(Arrays.asList(TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub1).build()))
             .webhookPayloadData(webhookPayloadData)
-            .projectFqn("p")
+            .accountId("p")
             .build());
 
     assertThat(webhookEventMappingResponse.getWebhookEventResponse()).isNotNull();
@@ -157,7 +157,7 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
             .details(Arrays.asList(TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub1).build(),
                 TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub1).build()))
             .webhookPayloadData(webhookPayloadData)
-            .projectFqn("p")
+            .accountId("p")
             .build());
 
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();
@@ -198,7 +198,7 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
                                                                                  .value("main")
                                                                                  .build(),
                                                 WebhookCondition.builder()
-                                                    .key("<+eventPayload.Type>")
+                                                    .key("<+trigger.payload.Type>")
                                                     .operator("equals")
                                                     .value("Notification")
                                                     .build()))
@@ -216,7 +216,7 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
             .details(
                 Collections.singletonList(TriggerDetails.builder().ngTriggerEntity(triggerEntityAwsCodeCommit).build()))
             .webhookPayloadData(webhookPayloadData)
-            .projectFqn("p")
+            .accountId("p")
             .build());
 
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();

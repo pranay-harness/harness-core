@@ -1,27 +1,68 @@
 package io.harness.cdng.provision.terraform;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.executions.steps.StepSpecTypeConstants.TERRAFORM_DESTROY;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.pipeline.CDStepInfo;
+import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.plancreator.steps.common.SpecParameters;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.validation.Validator;
+import io.harness.walktree.beans.LevelNode;
+import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.TypeAlias;
 
-@OwnedBy(CDP)
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@OwnedBy(HarnessTeam.CDP)
+@TypeAlias("terraformDestroyStepInfo")
+@JsonTypeName(StepSpecTypeConstants.TERRAFORM_DESTROY)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@JsonTypeName(TERRAFORM_DESTROY)
-public class TerraformDestroyStepInfo {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
-
-  String provisionerIdentifier;
+public class TerraformDestroyStepInfo extends TerraformDestroyBaseStepInfo implements CDStepInfo, Visitable {
   @JsonProperty("configuration") TerrformStepConfiguration terrformStepConfiguration;
+
+  @Builder(builderMethodName = "infoBuilder")
+  public TerraformDestroyStepInfo(
+      ParameterField<String> provisionerIdentifier, TerrformStepConfiguration terrformStepConfiguration) {
+    super(provisionerIdentifier);
+    this.terrformStepConfiguration = terrformStepConfiguration;
+  }
+
+  @Override
+  @JsonIgnore
+  public StepType getStepType() {
+    return TerraformDestroyStep.STEP_TYPE;
+  }
+
+  @Override
+  @JsonIgnore
+  public String getFacilitatorType() {
+    return OrchestrationFacilitatorType.TASK;
+  }
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(StepSpecTypeConstants.TERRAFORM_DESTROY).isPartOfFQN(false).build();
+  }
+
+  @Override
+  public SpecParameters getSpecParameters() {
+    Validator.notNullCheck("Terraform Step configuration is null", terrformStepConfiguration);
+    return TerraformDestroyStepParameters.infoBuilder()
+        .provisionerIdentifier(provisionerIdentifier)
+        .configuration(terrformStepConfiguration.toStepParameters())
+        .build();
+  }
 }

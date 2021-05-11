@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
@@ -20,6 +22,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
@@ -70,6 +74,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@TargetModule(_960_API_SERVICES)
+@OwnedBy(CDC)
 public class NexusServiceTest extends WingsBaseTest {
   private static final String XML_RESPONSE = "<indexBrowserTreeViewResponse>\n"
       + "  <data>\n"
@@ -980,8 +986,8 @@ public class NexusServiceTest extends WingsBaseTest {
             .willReturn(
                 aResponse().withStatus(200).withBody(XML_RESPONSE).withHeader("Content-Type", "application/xml")));
 
-    List<BuildDetails> buildDetails = nexusService.getVersions(
-        nexusConfig, null, "releases", "software.wings.nexus", "rest-client", null, null, false);
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(nexusConfig, null, "releases", "software.wings.nexus", "rest-client", null, null);
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
@@ -1020,7 +1026,7 @@ public class NexusServiceTest extends WingsBaseTest {
                 aResponse().withStatus(200).withBody(XML_RESPONSE).withHeader("Content-Type", "application/xml")));
 
     List<BuildDetails> buildDetails = nexusService.getVersions(
-        nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "jar", "capsule", false);
+        nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "jar", "capsule");
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
@@ -1049,8 +1055,8 @@ public class NexusServiceTest extends WingsBaseTest {
             .willReturn(
                 aResponse().withStatus(200).withBody(XML_RESPONSE).withHeader("Content-Type", "application/xml")));
 
-    List<BuildDetails> buildDetails = nexusService.getVersions(
-        nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "", "capsule", false);
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "", "capsule");
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
@@ -1329,7 +1335,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForMavenNexus3x() {
     List<BuildDetails> buildDetails =
-        nexusService.getVersions(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, null, false);
+        nexusService.getVersions(nexusThreeConfig, null, "maven-releases", "mygroup", "myartifact", null, null);
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0", "1.8");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1343,8 +1349,8 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldGetVersionsForMavenNexus3xForGroupRepos() {
-    List<BuildDetails> buildDetails = nexusService.getVersions(
-        nexusThreeConfig, null, "maven-internal-group", "mygroup", "myartifact", null, null, true);
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(nexusThreeConfig, null, "maven-internal-group", "mygroup", "myartifact", null, null);
     assertThat(buildDetails).hasSize(1);
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
@@ -1357,8 +1363,8 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForMavenNexus3xForGroupRepos2() {
     // This is to test if group repo name is a substring of member repo name
-    List<BuildDetails> buildDetails = nexusService.getVersions(
-        nexusThreeConfig, null, "maven-internal", "com.mygroup", "myartifact", null, null, true);
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(nexusThreeConfig, null, "maven-internal", "com.mygroup", "myartifact", null, null);
     assertThat(buildDetails).hasSize(1);
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
@@ -1371,7 +1377,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForNPMNexus3x() {
     List<BuildDetails> buildDetails =
-        nexusService.getVersions(RepositoryFormat.npm.name(), nexusThreeConfig, null, "harness-npm", "npm-app1", false);
+        nexusService.getVersions(RepositoryFormat.npm.name(), nexusThreeConfig, null, "harness-npm", "npm-app1");
     assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1385,8 +1391,8 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNPMNexus3xForGroupRepos() {
-    List<BuildDetails> buildDetails = nexusService.getVersions(
-        RepositoryFormat.npm.name(), nexusThreeConfig, null, "harness-npm-group", "npm-app1", true);
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(RepositoryFormat.npm.name(), nexusThreeConfig, null, "harness-npm-group", "npm-app1");
     assertThat(buildDetails).hasSize(1);
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1401,20 +1407,20 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForNugetNexus3x() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
-        RepositoryFormat.nuget.name(), nexusThreeConfig, null, "nuget-group", "NuGet.Sample.Package", false);
+        RepositoryFormat.nuget.name(), nexusThreeConfig, null, "nuget-group", "NuGet.Sample.Package");
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0.0.0", "1.0.0.18279");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("NuGet.Sample.Package-1.0.0.0.nupkg");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo("http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.0");
+        .isEqualTo("http://localhost:8881/nexus/repository/nuget-group/NuGet.Sample.Package/1.0.0.0");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("NuGet.Sample.Package-1.0.0.18279.nupkg");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo("http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.18279");
+        .isEqualTo("http://localhost:8881/nexus/repository/nuget-group/NuGet.Sample.Package/1.0.0.18279");
   }
 
   @Test
@@ -1422,7 +1428,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForNugetNexus3xForGroupRepos() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
-        RepositoryFormat.nuget.name(), nexusThreeConfig, null, "nuget-hosted-group-repo", "NuGet.Sample.Package", true);
+        RepositoryFormat.nuget.name(), nexusThreeConfig, null, "nuget-hosted-group-repo", "NuGet.Sample.Package");
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0.0.0", "1.0.0.18279");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1454,8 +1460,8 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNugetNexus2x() {
-    List<BuildDetails> buildDetails = nexusService.getVersions(
-        RepositoryFormat.nuget.name(), nexusConfig, null, "MyNuGet", "NuGet.Sample.Package", false);
+    List<BuildDetails> buildDetails =
+        nexusService.getVersions(RepositoryFormat.nuget.name(), nexusConfig, null, "MyNuGet", "NuGet.Sample.Package");
     assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0.18279");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1471,7 +1477,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForNPMNexus2x() {
     List<BuildDetails> buildDetails =
-        nexusService.getVersions(RepositoryFormat.npm.name(), nexusConfig, null, "npmjs", "abbrev", false);
+        nexusService.getVersions(RepositoryFormat.npm.name(), nexusConfig, null, "npmjs", "abbrev");
     assertThat(buildDetails).hasSize(3).extracting(BuildDetails::getNumber).contains("1.0.3", "1.0.4", "1.0.5");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1899,66 +1905,6 @@ public class NexusServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldGetGroupIdsForMavenNexus3xUsingPrivateApis() {
-    assertThat(nexusService.getGroupIdPathsUsingPrivateApis(
-                   nexusThreeConfig, null, "maven-releases", RepositoryFormat.maven.name()))
-        .hasSize(1)
-        .contains("mygroup");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldGetArtifactNamesForMavenNexus3xUsingPrivateApis() {
-    assertThat(nexusService.getArtifactNamesUsingPrivateApis(
-                   nexusThreeConfig, null, "maven-releases", "mygroup", RepositoryFormat.maven.name()))
-        .hasSize(1)
-        .contains("myartifact");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldGetPackageNamesForNugetNexus3xUsingPrivateApis() {
-    assertThat(nexusService.getGroupIdPathsUsingPrivateApis(
-                   nexusThreeConfig, null, "nuget-hosted", RepositoryFormat.nuget.name()))
-        .hasSize(3)
-        .contains("AdamsLair.Duality.Samples.BasicMenu", "NuGet.Package.Sample", "NuGet.Sample.Package");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void shouldGetPackageNamesForNPMNexus3xUsingPrivateApis() {
-    assertThat(
-        nexusService.getGroupIdPathsUsingPrivateApis(nexusThreeConfig, null, "npm-hosted", RepositoryFormat.npm.name()))
-        .hasSize(1)
-        .contains("npm-app1");
-  }
-
-  @Test
-  @Owner(developers = DEEPAK_PUTHRAYA)
-  @Category(UnitTests.class)
-  public void shouldHandleExceptionsWhenGettingGroupsIdPathsUsingPrivateApis() throws Exception {
-    wireMockRule.stubFor(
-        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(401)));
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
-        .isInstanceOf(WingsException.class);
-
-    wireMockRule.stubFor(
-        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(405)));
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
-        .isInstanceOf(WingsException.class);
-
-    wireMockRule.stubFor(
-        post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(502)));
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, null, null))
-        .isInstanceOf(WingsException.class);
-  }
-
-  @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldHandleExceptionsWhenGetGroupIdPaths() {
@@ -1976,36 +1922,6 @@ public class NexusServiceTest extends WingsBaseTest {
         post(urlPathMatching("/nexus/service/extdirect")).willReturn(new ResponseDefinitionBuilder().withStatus(502)));
     assertThatThrownBy(() -> nexusService.getGroupIdPaths(nexusConfig, null, null, null))
         .isInstanceOf(WingsException.class);
-  }
-
-  @Test
-  @Owner(developers = DEEPAK_PUTHRAYA)
-  @Category(UnitTests.class)
-  public void shouldReturnCorrectErrorMessagesForGetGroupIdPathsUsingPrivateApis() throws Exception {
-    NexusThreeServiceImpl nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
-    Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
-    TimeLimiter timeLimiter = new FakeTimeLimiter();
-    Reflect.on(nexusService).set("timeLimiter", timeLimiter);
-
-    RuntimeException e = new RuntimeException(new TimeoutException());
-    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo1"), any(), eq(null))).thenThrow(e);
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo1", null))
-        .isInstanceOf(ArtifactServerException.class);
-
-    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo2"), any(), eq(null)))
-        .thenThrow(new RuntimeException());
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo2", null))
-        .isInstanceOf(ArtifactServerException.class);
-
-    e = new RuntimeException(new XMLStreamException());
-    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo3"), any(), eq(null))).thenThrow(e);
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo3", null))
-        .isInstanceOf(InvalidArtifactServerException.class);
-
-    e = new RuntimeException(new SocketTimeoutException());
-    when(nexusThreeService.collectGroupIds(any(), eq(null), eq("repo4"), any(), eq(null))).thenThrow(e);
-    assertThatThrownBy(() -> nexusService.getGroupIdPathsUsingPrivateApis(nexusConfig, null, "repo4", null))
-        .isInstanceOf(ArtifactServerException.class);
   }
 
   @Test

@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 HarnessTeam = "PL"
 
@@ -22,6 +21,7 @@ java_library(
         "//940-resource-group-beans:module",
         "//945-ng-audit-client:module",
         "//948-access-control-admin-client:module",
+        "//948-access-control-sdk:module",
         "//950-ng-audit-commons:module",
         "//953-events-api:module",
         "//955-outbox-sdk:module",
@@ -54,6 +54,4 @@ java_library(
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

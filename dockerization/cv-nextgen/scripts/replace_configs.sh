@@ -11,6 +11,7 @@ replace_key_value () {
 
 yq delete -i /opt/harness/cv-nextgen-config.yml server.adminConnectors
 yq delete -i /opt/harness/cv-nextgen-config.yml server.applicationConnectors[0]
+yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml logging.level "$LOGGING_LEVEL"
@@ -59,6 +60,10 @@ fi
 
 if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
+fi
+
+if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
 fi
 
 if [[ "" != "$NG_MANAGER_URL" ]]; then

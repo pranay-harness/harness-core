@@ -31,6 +31,7 @@ import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import java.io.IOException;
+import java.util.Arrays;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -108,12 +109,10 @@ public class IntegrationStageUtils {
 
     if (image.contains(IMAGE_PATH_SPLIT_REGEX)) {
       String[] subTokens = image.split(IMAGE_PATH_SPLIT_REGEX);
-      if (subTokens.length > 2) {
-        throw new InvalidRequestException(String.format("Image should not contain multiple tags: %s", image));
-      }
-      if (subTokens.length == 2) {
-        name = subTokens[0];
-        tag = subTokens[1];
+      if (subTokens.length > 1) {
+        tag = subTokens[subTokens.length - 1];
+        String[] nameparts = Arrays.copyOf(subTokens, subTokens.length - 1);
+        name = String.join(IMAGE_PATH_SPLIT_REGEX, nameparts);
       }
     }
 

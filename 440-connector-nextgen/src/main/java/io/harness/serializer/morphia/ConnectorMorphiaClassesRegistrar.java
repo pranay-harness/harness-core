@@ -1,5 +1,8 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.ConnectorFilterProperties;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
@@ -11,6 +14,10 @@ import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeComm
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsConnector;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsIamCredential;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsManualCredential;
+import io.harness.connector.entities.embedded.awskmsconnector.AwsKmsStsCredential;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication;
@@ -23,6 +30,8 @@ import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.entities.embedded.cek8s.CEK8sDetails;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
+import io.harness.connector.entities.embedded.gcpccm.GcpBillingExportDetails;
+import io.harness.connector.entities.embedded.gcpccm.GcpCloudCostConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
 import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
@@ -58,6 +67,7 @@ import io.harness.connector.entities.embedded.localconnector.LocalConnector;
 import io.harness.connector.entities.embedded.newrelicconnector.NewRelicConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
+import io.harness.connector.entities.embedded.prometheusconnector.PrometheusConnector;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.morphia.MorphiaRegistrar;
@@ -65,6 +75,7 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
+@OwnedBy(DX)
 public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -72,6 +83,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(KubernetesClusterConfig.class);
     set.add(GitConfig.class);
     set.add(VaultConnector.class);
+    set.add(AwsKmsConnector.class);
     set.add(GcpKmsConnector.class);
     set.add(LocalConnector.class);
     set.add(AppDynamicsConnector.class);
@@ -91,6 +103,8 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(AwsCodeCommitConfig.class);
     set.add(HttpHelmConnector.class);
     set.add(NewRelicConnector.class);
+    set.add(GcpCloudCostConfig.class);
+    set.add(PrometheusConnector.class);
   }
 
   @Override
@@ -108,6 +122,9 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.gcpconnector.GcpServiceAccountKey", GcpServiceAccountKey.class);
     h.put("connector.entities.embedded.awsconnector.AwsIamCredential", AwsIamCredential.class);
     h.put("connector.entities.embedded.awsconnector.AwsAccessKeyCredential", AwsAccessKeyCredential.class);
+    h.put("connector.entities.embedded.awskmsconnector.AwsKmsIamCredential", AwsKmsIamCredential.class);
+    h.put("connector.entities.embedded.awskmsconnector.AwsKmsStsCredential", AwsKmsStsCredential.class);
+    h.put("connector.entities.embedded.awskmsconnector.AwsKmsManualCredential", AwsKmsManualCredential.class);
     h.put("connector.entities.embedded.ceawsconnector.CURAttributes", CURAttributes.class);
     h.put("connector.entities.embedded.ceawsconnector.S3BucketDetails", S3BucketDetails.class);
     h.put("connector.entities.embedded.docker.DockerUserNamePasswordAuthentication",
@@ -142,5 +159,6 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
         AwsCodeCommitSecretKeyAccessKey.class);
     h.put("connector.entities.embedded.helm.HttpHelmUsernamePasswordAuthentication",
         HttpHelmUsernamePasswordAuthentication.class);
+    h.put("connector.entities.embedded.gcpccm.GcpBillingExportDetails", GcpBillingExportDetails.class);
   }
 }

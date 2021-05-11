@@ -34,6 +34,9 @@ import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.ccm.license.CeLicenseExpiryHandler;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceClientModule;
 import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
@@ -75,6 +78,7 @@ import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
@@ -157,6 +161,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.prune.PruneEntityListener;
 import software.wings.resources.AppResource;
+import software.wings.scheduler.AccessRequestHandler;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.DeletedEntityHandler;
 import software.wings.scheduler.InstancesPurgeJob;
@@ -292,8 +297,6 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 /**
  * The main application - entry point for the entire Wings Application.
- *
- * @author Rishi
  */
 @Slf4j
 @OwnedBy(PL)
@@ -454,6 +457,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
+    modules.add(MigrationModule.getInstance());
     modules.add(new WingsModule(configuration));
     modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {
@@ -506,6 +510,17 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
 
     modules.add(new CommandLibraryServiceClientModule(configuration.getCommandLibraryServiceConfig()));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return configuration.getCfClientConfig();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return configuration.getCfMigrationConfig();
+      }
+    });
     Injector injector = Guice.createInjector(modules);
 
     // Access all caches before coming out of maintenance
@@ -990,6 +1005,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(EncryptedDataLocalToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(EncryptedDataAwsKmsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
+    injector.getInstance(AccessRequestHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

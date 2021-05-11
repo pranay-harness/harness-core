@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.cdng.visitor.helpers.manifest.ManifestConfigVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -55,7 +56,7 @@ public class ManifestConfig implements Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add("manifestAttributes", manifestAttributes);
+    children.add(YAMLFieldNameConstants.SPEC, manifestAttributes);
     return children;
   }
 

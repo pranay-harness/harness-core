@@ -122,6 +122,7 @@ import io.harness.delegate.task.git.GitValidationHandler;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.gitapi.DecryptGitAPIAccessTask;
 import io.harness.delegate.task.gitapi.GitApiTask;
+import io.harness.delegate.task.helm.HelmValuesFetchTaskNG;
 import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
@@ -133,6 +134,11 @@ import io.harness.delegate.task.k8s.KubernetesValidationHandler;
 import io.harness.delegate.task.manifests.CustomManifestValuesFetchTask;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.nexus.NexusValidationHandler;
+import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.delegate.task.scm.ScmDelegateClientImpl;
+import io.harness.delegate.task.scm.ScmGitFileTask;
+import io.harness.delegate.task.scm.ScmGitRefTask;
+import io.harness.delegate.task.scm.ScmPushTask;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.delegate.task.terraform.TFTaskType;
@@ -164,8 +170,8 @@ import io.harness.encryptors.clients.GcpKmsEncryptor;
 import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
-import io.harness.exception.exceptionmanager.ExceptionHandler;
 import io.harness.exception.exceptionmanager.ExceptionModule;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.gcp.client.GcpClient;
 import io.harness.gcp.impl.GcpClientImpl;
 import io.harness.git.GitClientV2;
@@ -173,6 +179,7 @@ import io.harness.git.GitClientV2Impl;
 import io.harness.helpers.EncryptDecryptHelperImpl;
 import io.harness.http.HttpService;
 import io.harness.http.HttpServiceImpl;
+import io.harness.impl.scm.ScmServiceClientImpl;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
@@ -192,6 +199,7 @@ import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.security.encryption.DelegateDecryptionService;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.service.ScmServiceClient;
 import io.harness.shell.ShellExecutionService;
 import io.harness.shell.ShellExecutionServiceImpl;
 import io.harness.spotinst.SpotInstHelperServiceDelegate;
@@ -980,6 +988,8 @@ public class DelegateModule extends AbstractModule {
     bind(AzureBlueprintClient.class).to(AzureBlueprintClientImpl.class);
     bind(AzureAuthorizationClient.class).to(AzureAuthorizationClientImpl.class);
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
+    bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
+    bind(ScmServiceClient.class).to(ScmServiceClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -1326,6 +1336,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.SERVICENOW_VALIDATION).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.HELM_REPO_CONFIG_VALIDATION).toInstance(HelmRepoConfigValidationTask.class);
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH).toInstance(HelmValuesFetchTask.class);
+    mapBinder.addBinding(TaskType.HELM_VALUES_FETCH_NG).toInstance(HelmValuesFetchTaskNG.class);
     mapBinder.addBinding(TaskType.SLACK).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.CI_BUILD).toInstance(CIBuildCommandTask.class);
     mapBinder.addBinding(TaskType.CI_EXECUTE_STEP).toInstance(CIExecuteStepTask.class);
@@ -1365,6 +1376,9 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.NG_AWS_CODE_COMMIT_TASK).toInstance(AwsCodeCommitDelegateTask.class);
     mapBinder.addBinding(TaskType.NG_DECRYT_GIT_API_ACCESS_TASK).toInstance(DecryptGitAPIAccessTask.class);
     mapBinder.addBinding(TaskType.TERRAFORM_TASK_NG).toInstance(TerraformTaskNG.class);
+    mapBinder.addBinding(TaskType.SCM_PUSH_TASK).toInstance(ScmPushTask.class);
+    mapBinder.addBinding(TaskType.SCM_GIT_REF_TASK).toInstance(ScmGitRefTask.class);
+    mapBinder.addBinding(TaskType.SCM_GIT_FILE_TASK).toInstance(ScmGitFileTask.class);
   }
 
   private void registerSecretManagementBindings() {

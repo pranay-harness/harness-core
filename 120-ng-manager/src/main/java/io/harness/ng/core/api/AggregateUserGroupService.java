@@ -15,7 +15,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(PL)
 public interface AggregateUserGroupService {
   PageResponse<UserGroupAggregateDTO> listAggregateUserGroups(@NotNull PageRequest pageRequest,
-      @NotEmpty String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm);
+      @NotEmpty String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm,
+      int userSize);
 
   List<UserGroupAggregateDTO> listAggregateUserGroups(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, @NotNull AggregateACLRequest aggregateACLRequest);

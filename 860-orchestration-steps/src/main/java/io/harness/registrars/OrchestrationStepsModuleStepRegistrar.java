@@ -9,6 +9,7 @@ import io.harness.steps.approval.stage.ApprovalStageStep;
 import io.harness.steps.approval.step.harness.HarnessApprovalStep;
 import io.harness.steps.approval.step.jira.JiraApprovalStep;
 import io.harness.steps.barriers.BarrierStep;
+import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.common.pipeline.PipelineSetupStep;
 import io.harness.steps.http.HttpStep;
 import io.harness.steps.jira.create.JiraCreateStep;
@@ -36,6 +37,9 @@ public class OrchestrationStepsModuleStepRegistrar {
     engineSteps.put(JiraUpdateStep.STEP_TYPE, JiraUpdateStep.class);
 
     engineSteps.put(HttpStep.STEP_TYPE, HttpStep.class);
+
+    // Feature Flag
+    engineSteps.put(FlagConfigurationStep.STEP_TYPE, FlagConfigurationStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
 

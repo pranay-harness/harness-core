@@ -1,9 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -65,3 +63,8 @@ java_library(
 )
 
 run_tests()
+
+run_analysis(
+    run_checkstyle = False,
+    run_pmd = False,
+)

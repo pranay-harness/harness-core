@@ -51,8 +51,6 @@ public final class BarrierExecutionInstance implements PersistentEntity, UuidAwa
   @NotNull private BarrierSetupInfo setupInfo;
   private BarrierPositionInfo positionInfo;
 
-  @Builder.Default private long expiredIn = 600_000; // 10 minutes
-
   private Long nextIteration;
 
   // audit fields
@@ -92,7 +90,7 @@ public final class BarrierExecutionInstance implements PersistentEntity, UuidAwa
                  .field(BarrierExecutionInstanceKeys.stagesIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("identifier_planExecutionId_idx")
+                 .name("unique_identifier_planExecutionId_idx")
                  .field(BarrierExecutionInstanceKeys.identifier)
                  .field(BarrierExecutionInstanceKeys.planExecutionId)
                  .unique(true)

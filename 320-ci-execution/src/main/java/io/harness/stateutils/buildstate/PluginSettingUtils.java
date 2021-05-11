@@ -6,6 +6,7 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanPara
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveListParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
+import static io.harness.common.CIExecutionConstants.PLUGIN_ARTIFACT_FILE_VALUE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -43,6 +44,8 @@ public class PluginSettingUtils {
   public static final String PLUGIN_DOCKERFILE = "PLUGIN_DOCKERFILE";
   public static final String PLUGIN_CONTEXT = "PLUGIN_CONTEXT";
   public static final String PLUGIN_TARGET = "PLUGIN_TARGET";
+  public static final String PLUGIN_CACHE_REPO = "PLUGIN_CACHE_REPO";
+  public static final String PLUGIN_ENABLE_CACHE = "PLUGIN_ENABLE_CACHE";
   public static final String PLUGIN_BUILD_ARGS = "PLUGIN_BUILD_ARGS";
   public static final String PLUGIN_CUSTOM_LABELS = "PLUGIN_CUSTOM_LABELS";
   public static final String PLUGIN_MOUNT = "PLUGIN_MOUNT";
@@ -62,7 +65,7 @@ public class PluginSettingUtils {
   public static final String PLUGIN_BACKEND = "PLUGIN_BACKEND";
   public static final String PLUGIN_OVERRIDE = "PLUGIN_OVERRIDE";
   public static final String PLUGIN_ARCHIVE_FORMAT = "PLUGIN_ARCHIVE_FORMAT";
-
+  public static final String PLUGIN_ARTIFACT_FILE = "PLUGIN_ARTIFACT_FILE";
   public static final String ECR_REGISTRY_PATTERN = "%s.dkr.ecr.%s.amazonaws.com";
 
   public static Map<String, String> getPluginCompatibleEnvVariables(
@@ -143,6 +146,16 @@ public class PluginSettingUtils {
     if (optimize) {
       setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
     }
+
+    String remoteCacheImage = resolveStringParameter(
+        "remoteCacheImage", "BuildAndPushGCR", identifier, stepInfo.getRemoteCacheImage(), false);
+    if (remoteCacheImage != null && !remoteCacheImage.equals(UNRESOLVED_PARAMETER)) {
+      setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
+      setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
+    }
+
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+
     return map;
   }
 
@@ -194,39 +207,53 @@ public class PluginSettingUtils {
     if (optimize) {
       setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
     }
+
+    String remoteCacheImage = resolveStringParameter(
+        "remoteCacheImage", "BuildAndPushECR", identifier, stepInfo.getRemoteCacheImage(), false);
+    if (remoteCacheImage != null && !remoteCacheImage.equals(UNRESOLVED_PARAMETER)) {
+      setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
+      setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
+    }
+
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
     return map;
   }
 
   private static Map<String, String> getDockerStepInfoEnvVariables(DockerStepInfo stepInfo, String identifier) {
     Map<String, String> map = new HashMap<>();
 
-    setMandatoryEnvironmentVariable(
-        map, PLUGIN_REPO, resolveStringParameter("repo", "DockerHub", identifier, stepInfo.getRepo(), true));
+    setMandatoryEnvironmentVariable(map, PLUGIN_REPO,
+        resolveStringParameter("repo", "BuildAndPushDockerRegistry", identifier, stepInfo.getRepo(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_TAGS,
-        listToStringSlice(resolveListParameter("tags", "DockerHub", identifier, stepInfo.getTags(), true)));
+        listToStringSlice(
+            resolveListParameter("tags", "BuildAndPushDockerRegistry", identifier, stepInfo.getTags(), true)));
 
-    String dockerFile = resolveStringParameter("dockerfile", "DockerHub", identifier, stepInfo.getDockerfile(), false);
+    String dockerFile =
+        resolveStringParameter("dockerfile", "BuildAndPushDockerRegistry", identifier, stepInfo.getDockerfile(), false);
     if (dockerFile != null && !dockerFile.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_DOCKERFILE, dockerFile);
     }
 
-    String context = resolveStringParameter("context", "DockerHub", identifier, stepInfo.getContext(), false);
+    String context =
+        resolveStringParameter("context", "BuildAndPushDockerRegistry", identifier, stepInfo.getContext(), false);
     if (context != null && !context.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_CONTEXT, context);
     }
 
-    String target = resolveStringParameter("target", "DockerHub", identifier, stepInfo.getTarget(), false);
+    String target =
+        resolveStringParameter("target", "BuildAndPushDockerRegistry", identifier, stepInfo.getTarget(), false);
     if (target != null && !target.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_TARGET, target);
     }
 
     Map<String, String> buildArgs =
-        resolveMapParameter("buildArgs", "DockerHub", identifier, stepInfo.getBuildArgs(), false);
+        resolveMapParameter("buildArgs", "BuildAndPushDockerRegistry", identifier, stepInfo.getBuildArgs(), false);
     if (isNotEmpty(buildArgs)) {
       setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(buildArgs));
     }
 
-    Map<String, String> labels = resolveMapParameter("labels", "DockerHub", identifier, stepInfo.getLabels(), false);
+    Map<String, String> labels =
+        resolveMapParameter("labels", "BuildAndPushDockerRegistry", identifier, stepInfo.getLabels(), false);
     if (isNotEmpty(labels)) {
       setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(labels));
     }
@@ -234,6 +261,14 @@ public class PluginSettingUtils {
     boolean optimize = resolveBooleanParameter(stepInfo.getOptimize(), true);
     if (optimize) {
       setOptionalEnvironmentVariable(map, PLUGIN_SNAPSHOT_MODE, REDO_SNAPSHOT_MODE);
+    }
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+
+    String remoteCacheImage = resolveStringParameter(
+        "remoteCacheImage", "BuildAndPushDockerRegistry", identifier, stepInfo.getRemoteCacheImage(), false);
+    if (remoteCacheImage != null && !remoteCacheImage.equals(UNRESOLVED_PARAMETER)) {
+      setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
+      setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
     }
 
     return map;
@@ -372,6 +407,7 @@ public class PluginSettingUtils {
         resolveStringParameter("sourcePath", "ArtifactoryUpload", identifier, stepInfo.getSourcePath(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_TARGET,
         resolveStringParameter("target", "ArtifactoryUpload", identifier, stepInfo.getTarget(), true));
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
 
     return map;
   }
@@ -392,6 +428,7 @@ public class PluginSettingUtils {
       target = format("%s", trimTrailingCharacter(stepInfoBucket, '/'));
     }
     setMandatoryEnvironmentVariable(map, PLUGIN_TARGET, target);
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
 
     return map;
   }
@@ -419,6 +456,8 @@ public class PluginSettingUtils {
     if (region != null && !region.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_REGION, region);
     }
+    setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
+
     return map;
   }
 
@@ -454,6 +493,7 @@ public class PluginSettingUtils {
     }
     envVarMap.put(var, value);
   }
+
   private static void setMandatoryEnvironmentVariable(Map<String, String> envVarMap, String var, String value) {
     if (isEmpty(value)) {
       throw new InvalidArgumentsException(format("Environment variable %s can't be empty or null", var));

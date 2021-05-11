@@ -1,5 +1,10 @@
 package io.harness.delegate.task.git;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
@@ -14,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class GitValidationHandler implements ConnectorValidationHandler {
   @Inject private GitCommandTaskHandler gitCommandTaskHandler;
   @Inject private SshSessionConfigMapper sshSessionConfigMapper;
@@ -24,6 +30,12 @@ public class GitValidationHandler implements ConnectorValidationHandler {
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
     final ScmValidationParams scmValidationParams = (ScmValidationParams) connectorValidationParams;
     GitConfigDTO gitConfig = ScmConnectorMapper.toGitConfigDTO(scmValidationParams.getGitConfigDTO());
+    if (gitConfig.getGitConnectionType() == ACCOUNT) {
+      return ConnectorValidationResult.builder()
+          .status(ConnectivityStatus.SUCCESS)
+          .testedAt(System.currentTimeMillis())
+          .build();
+    }
     gitDecryptionHelper.decryptGitConfig(gitConfig, scmValidationParams.getEncryptedDataDetails());
     SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
         scmValidationParams.getSshKeySpecDTO(), scmValidationParams.getEncryptedDataDetails());

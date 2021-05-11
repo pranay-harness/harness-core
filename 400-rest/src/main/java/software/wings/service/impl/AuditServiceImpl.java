@@ -18,6 +18,10 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -106,6 +110,8 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._360_CG_MANAGER)
+@OwnedBy(HarnessTeam.PL)
 public class AuditServiceImpl implements AuditService {
   @Inject private FileService fileService;
   @Inject private TimeLimiter timeLimiter;
@@ -497,6 +503,8 @@ public class AuditServiceImpl implements AuditService {
         case UNSUCCESSFUL_LOGIN:
         case LOGIN_2FA:
         case DELEGATE_APPROVAL:
+        case DELEGATE_REJECTION:
+        case DELEGATE_REGISTRATION:
         case NON_WHITELISTED:
         case INVOKED:
         case REMOVE:
@@ -532,6 +540,8 @@ public class AuditServiceImpl implements AuditService {
         case ADD:
         case REMOVE:
         case DELEGATE_APPROVAL:
+        case DELEGATE_REJECTION:
+        case DELEGATE_REGISTRATION:
         case LOGIN:
         case UNSUCCESSFUL_LOGIN:
         case LOGIN_2FA:

@@ -5,22 +5,23 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.http.HttpStepInfo;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
 import io.harness.steps.approval.step.harness.HarnessApprovalResponseData;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
-import io.harness.steps.barriers.BarrierStepParameters;
+import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
+import io.harness.steps.barriers.beans.BarrierResponseData.BarrierError;
+import io.harness.steps.cf.FlagConfigurationStepParameters;
 import io.harness.steps.dummy.DummySectionOutcome;
 import io.harness.steps.dummy.DummySectionStepParameters;
 import io.harness.steps.dummy.DummySectionStepTransput;
 import io.harness.steps.fork.ForkStepParameters;
 import io.harness.steps.http.HttpOutcome;
 import io.harness.steps.jira.JiraIssueOutcome;
-import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
+import io.harness.steps.resourcerestraint.ResourceRestraintSpecParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
@@ -39,9 +40,9 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
     kryo.register(BarrierExecutionInstance.class, 3201);
     kryo.register(BarrierResponseData.class, 3202);
     kryo.register(BarrierOutcome.class, 3203);
-    kryo.register(BarrierStepParameters.class, 3204);
+    kryo.register(BarrierSpecParameters.class, 3204);
     kryo.register(ResourceRestraintInstance.class, 3205);
-    kryo.register(ResourceRestraintStepParameters.class, 3206);
+    kryo.register(ResourceRestraintSpecParameters.class, 3206);
     kryo.register(ResourceRestraintOutcome.class, 3207);
     kryo.register(AcquireMode.class, 3208);
     kryo.register(ResourceRestraintResponseData.class, 3209);
@@ -57,12 +58,13 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(SectionChainPassThroughData.class, 3217);
 
-    kryo.register(ApprovalStageStepParameters.class, 3218);
     kryo.register(HarnessApprovalResponseData.class, 3220);
     kryo.register(HarnessApprovalOutcome.class, 3221);
     kryo.register(JiraApprovalResponseData.class, 3223);
     kryo.register(JiraApprovalOutcome.class, 3224);
     kryo.register(JiraIssueOutcome.class, 3225);
+    kryo.register(FlagConfigurationStepParameters.class, 3226);
+    kryo.register(BarrierError.class, 3227);
 
     // made it same as which was in CD
     kryo.register(HttpStepInfo.class, 8048);

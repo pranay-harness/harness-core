@@ -233,7 +233,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     user.setName(userName);
     user.setAccounts(Arrays.asList(testAccount));
     user.setUserGroups(Arrays.asList(userGroup));
-    userService.save(user, testAccount.getUuid());
+    userService.createUser(user, testAccount.getUuid());
     return userService.get(userId);
   }
 
@@ -273,9 +273,9 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                     .build();
 
     user1.getUserGroups().add(userGroup);
-    userService.save(user1, accountId);
+    userService.createUser(user1, accountId);
     user2.getUserGroups().add(userGroup);
-    userService.save(user2, accountId);
+    userService.createUser(user2, accountId);
 
     createUserAndSave(userId, userName, userGroup, account);
 

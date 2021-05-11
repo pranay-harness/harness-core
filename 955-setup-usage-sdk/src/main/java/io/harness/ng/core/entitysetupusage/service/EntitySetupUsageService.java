@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.entitysetupusage.dto.EntityReferencesDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 
@@ -26,12 +27,12 @@ public interface EntitySetupUsageService {
   Boolean delete(String accountIdentifier, String referredEntityFQN, EntityType referredEntityType,
       String referredByEntityFQN, EntityType referredByEntityType);
 
-  Boolean deleteAllReferredByEntityRecords(
-      String accountIdentifier, String referredByEntityFQN, EntityType referredByEntityType);
-
   Boolean isEntityReferenced(String accountIdentifier, String referredEntityFQN, EntityType referredEntityType);
 
   // todo(abhinav): make delete and create a transactional operation
   Boolean flushSave(List<EntitySetupUsage> entitySetupUsage, EntityType entityTypeFromChannel,
       boolean deleteOldReferredByRecords, String accountId);
+
+  EntityReferencesDTO listAllReferredUsagesBatch(String accountIdentifier, List<String> referredByEntityFQNList,
+      EntityType referredByEntityType, EntityType referredEntityType);
 }

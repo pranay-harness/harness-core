@@ -12,9 +12,10 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.execution.EngineResumeCallback;
-import io.harness.pms.sdk.core.execution.ExecuteStrategy;
+import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
+import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
+import io.harness.pms.sdk.core.execution.ProgressableStrategy;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -22,7 +23,6 @@ import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(PIPELINE)
 @Slf4j
-public class AsyncStrategy implements ExecuteStrategy {
+public class AsyncStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private AsyncWaitEngine asyncWaitEngine;
@@ -40,7 +40,7 @@ public class AsyncStrategy implements ExecuteStrategy {
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
-    AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
+    AsyncExecutable asyncExecutable = extractStep(nodeExecution);
     AsyncExecutableResponse asyncExecutableResponse = asyncExecutable.executeAsync(ambiance,
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(nodeExecution, asyncExecutableResponse);
@@ -50,7 +50,7 @@ public class AsyncStrategy implements ExecuteStrategy {
   public void resume(ResumePackage resumePackage) {
     NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
-    AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
+    AsyncExecutable asyncExecutable = extractStep(nodeExecution);
     StepResponse stepResponse = asyncExecutable.handleAsyncResponse(ambiance,
         sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
     sdkNodeExecutionService.handleStepResponse(
@@ -65,13 +65,16 @@ public class AsyncStrategy implements ExecuteStrategy {
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
 
-    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    asyncWaitEngine.waitForAllOn(callback, response.getCallbackIdsList().toArray(new String[0]));
+    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    AsyncSdkProgressCallback progressCallback =
+        AsyncSdkProgressCallback.builder().nodeExecutionBytes(nodeExecution.toByteArray()).build();
+    asyncWaitEngine.waitForAllOn(callback, progressCallback, response.getCallbackIdsList().toArray(new String[0]));
     sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), extractStatus(response),
         ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());
   }
 
-  private AsyncExecutable extractAsyncExecutable(NodeExecutionProto nodeExecution) {
+  @Override
+  public AsyncExecutable extractStep(NodeExecutionProto nodeExecution) {
     PlanNodeProto node = nodeExecution.getNode();
     return (AsyncExecutable) stepRegistry.obtain(node.getStepType());
   }

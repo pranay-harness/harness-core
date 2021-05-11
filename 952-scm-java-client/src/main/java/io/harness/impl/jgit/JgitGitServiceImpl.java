@@ -52,12 +52,6 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public FileBatchContentResponse getHarnessFilesOfBranch(
-      ScmConnector connectorAssociatedWithGitSyncConfig, String branch) {
-    return null;
-  }
-
-  @Override
   public FileContent getLatestFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
     return null;
   }
@@ -74,7 +68,7 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branch) {
+  public FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branchName) {
     return null;
   }
 
@@ -84,7 +78,7 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch) {
+  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName) {
     return null;
   }
 
@@ -94,12 +88,12 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public ListCommitsResponse listCommits(ScmConnector scmConnector, String branch) {
+  public ListCommitsResponse listCommits(ScmConnector scmConnector, String branchName) {
     return null;
   }
 
   @Override
-  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> filePaths, String branch) {
+  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName) {
     return null;
   }
 

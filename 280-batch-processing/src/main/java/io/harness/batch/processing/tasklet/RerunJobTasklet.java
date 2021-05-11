@@ -1,5 +1,7 @@
 package io.harness.batch.processing.tasklet;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
@@ -19,6 +21,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class RerunJobTasklet implements Tasklet {
   private JobParameters parameters;
@@ -42,8 +45,9 @@ public class RerunJobTasklet implements Tasklet {
       batchJobScheduledDataService.invalidateJobs(accountId, batchJobs, startInstant);
     }
 
-    if (null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
-        && ceMetadataRecord.getAwsDataPresent()) {
+    if (null != ceMetadataRecord
+        && ((null != ceMetadataRecord.getAwsDataPresent() && ceMetadataRecord.getAwsDataPresent())
+            || (null != ceMetadataRecord.getAzureDataPresent() && ceMetadataRecord.getAzureDataPresent()))) {
       log.info("invalidate cluster jobs for {}", accountId);
       ImmutableList<String> batchJobs =
           ImmutableList.of(BatchJobType.INSTANCE_BILLING.toString(), BatchJobType.ACTUAL_IDLE_COST_BILLING.toString(),

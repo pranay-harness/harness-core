@@ -77,6 +77,16 @@ public interface UserService extends OwnedByAccount {
    */
   boolean trialSignup(UserInvite userInvite);
 
+  /**
+   * Used for NG signup to create a new user and login from an NG user object
+   */
+  User createNewUserAndSignIn(User user, String accountId);
+
+  /**
+   * Used for NG signup to create a new oauth user and login from an NG user object
+   */
+  User createNewOAuthUser(User user, String accountId);
+
   UserInvite createUserInviteForMarketPlace();
 
   boolean hasPermission(String accountId, PermissionType permissionType);
@@ -162,6 +172,8 @@ public interface UserService extends OwnedByAccount {
   boolean overrideTwoFactorforAccount(String accountId, boolean adminOverrideTwoFactorEnabled);
 
   boolean isTwoFactorEnabled(String accountId, String usedId);
+
+  User updateUser(User oldUser, UpdateOperations<User> updateOperations);
 
   /**
    * Gets the.
@@ -538,20 +550,18 @@ public interface UserService extends OwnedByAccount {
 
   boolean canEnableOrDisable(User user);
 
-  User save(User user, String accountId);
+  User createUser(User user, String accountId);
 
   String saveUserInvite(UserInvite userInvite);
 
   List<User> listUsers(PageRequest pageRequest, String accountId, String searchTerm, Integer offset, Integer pageSize,
-      boolean loadUserGroups);
+      boolean loadUserGroups, boolean includeUsersPendingInviteAcceptance);
 
-  long getTotalUserCount(String accountId, boolean listPendingUsers);
+  long getTotalUserCount(String accountId, boolean includeUsersPendingInviteAcceptance);
 
   InviteOperationResponse checkInviteStatus(UserInvite userInvite, Generation gen);
 
   void loadUserGroupsForUsers(List<User> users, String accountId);
-
-  void setNewDefaultAccountId(User user);
 
   boolean isUserPresent(String userId);
 

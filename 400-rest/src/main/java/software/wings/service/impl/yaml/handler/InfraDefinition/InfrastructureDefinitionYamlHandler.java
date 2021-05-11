@@ -1,11 +1,15 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.CollectionUtils;
 
 import software.wings.beans.Application;
@@ -16,7 +20,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfraMappingInfrastructureProvider;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.infra.InfrastructureDefinition.Yaml;
+import software.wings.infra.InfrastructureDefinitionYaml;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -35,7 +39,10 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 
 @Singleton
-public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, InfrastructureDefinition> {
+@OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
+public class InfrastructureDefinitionYamlHandler
+    extends BaseYamlHandler<InfrastructureDefinitionYaml, InfrastructureDefinition> {
   @Inject private YamlHelper yamlHelper;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
@@ -44,7 +51,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
 
   @Override
-  public Yaml toYaml(InfrastructureDefinition bean, String appId) {
+  public InfrastructureDefinitionYaml toYaml(InfrastructureDefinition bean, String appId) {
     CloudProviderInfrastructureYamlHandler cloudProviderInfrastructureYamlHandler = yamlHandlerFactory.getYamlHandler(
         YamlType.CLOUD_PROVIDER_INFRASTRUCTURE, bean.getInfrastructure().getInfrastructureType());
     String provisionerName = StringUtils.EMPTY;
@@ -62,7 +69,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
           customDeploymentTypeService.fetchDeploymentTemplateUri(bean.getDeploymentTypeTemplateId());
     }
 
-    return Yaml.builder()
+    return InfrastructureDefinitionYaml.builder()
         .type(YamlType.INFRA_DEFINITION.name())
         .harnessApiVersion(getHarnessApiVersion())
         .scopedServices(scopedToServiceNames)
@@ -76,7 +83,7 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
 
   @Override
   public InfrastructureDefinition upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<InfrastructureDefinitionYaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -91,10 +98,10 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
     return upsertInfraDefinition(current, previous);
   }
 
-  private void toBean(InfrastructureDefinition bean, ChangeContext<Yaml> changeContext,
+  private void toBean(InfrastructureDefinition bean, ChangeContext<InfrastructureDefinitionYaml> changeContext,
       List<ChangeContext> changeSetContext, String appId, String envId) {
     String yamlFilePath = changeContext.getChange().getFilePath();
-    Yaml yaml = changeContext.getYaml();
+    InfrastructureDefinitionYaml yaml = changeContext.getYaml();
     CloudProviderInfrastructureYaml infraYaml = yaml.getInfrastructure().get(0);
     CloudProviderInfrastructureYamlHandler cloudProviderInfrastructureYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.CLOUD_PROVIDER_INFRASTRUCTURE, infraYaml.getType());
@@ -152,11 +159,11 @@ public class InfrastructureDefinitionYamlHandler extends BaseYamlHandler<Yaml, I
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return InfrastructureDefinitionYaml.class;
   }
 
   @Override
-  public void delete(ChangeContext<InfrastructureDefinition.Yaml> changeContext) {
+  public void delete(ChangeContext<InfrastructureDefinitionYaml> changeContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);

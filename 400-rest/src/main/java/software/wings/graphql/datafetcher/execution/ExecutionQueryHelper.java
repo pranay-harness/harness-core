@@ -19,6 +19,7 @@ import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 
 import com.google.inject.Inject;
@@ -174,6 +175,12 @@ public class ExecutionQueryHelper {
         field = query.field(WorkflowExecutionKeys.pipelineExecutionId);
         QLIdFilter idFilter = filter.getPipelineExecutionId();
         utils.setIdFilter(field, idFilter);
+      }
+
+      if (filter.getEnvironmentType() != null) {
+        field = query.field(WorkflowExecutionKeys.envType);
+        QLEnvironmentTypeFilter envTypeFilter = filter.getEnvironmentType();
+        utils.setEnumFilter(field, envTypeFilter);
       }
     });
   }

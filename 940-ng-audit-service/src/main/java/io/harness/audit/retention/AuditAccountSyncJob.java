@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.api.AuditService;
+import io.harness.audit.api.AuditSettingsService;
 import io.harness.audit.entities.AuditSettings;
 
 import com.google.inject.Inject;

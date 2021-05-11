@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//970-ng-commons:module",
@@ -19,6 +18,4 @@ java_library(
     deps = shared_dependencies,
 )
 
-checkstyle()
-
-pmd()
+run_analysis()

@@ -2,10 +2,12 @@ package io.harness.gitsync.common.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
@@ -22,6 +24,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -30,16 +33,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "GitBranchKeys")
-@Document("GitBranches")
+@Document("gitBranches")
 @TypeAlias("io.harness.gitsync.common.beans.GitBranch")
-@Entity(value = "GitBranch", noClassnameStored = true)
+@Entity(value = "gitBranches", noClassnameStored = true)
+@StoreIn(DbAliases.NG_MANAGER)
+@Persistent
 @OwnedBy(DX)
 public class GitBranch {
   @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String uuid;
-  String orgIdentifier;
-  String projectIdentifier;
   @NotNull String accountIdentifier;
-  @NotNull String yamlGitConfigIdentifier;
+  @NotNull String repoURL;
   @NotEmpty String branchName;
   @NotEmpty BranchSyncStatus branchSyncStatus;
   @CreatedBy private EmbeddedUser createdBy;
@@ -51,12 +54,10 @@ public class GitBranch {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_accountId_organizationId_projectId_yamlGitConfigId_branch_idx")
+                 .name("unique_accountIdentifier_repoURL_branchName_idx")
                  .unique(true)
                  .field(GitBranchKeys.accountIdentifier)
-                 .field(GitBranchKeys.orgIdentifier)
-                 .field(GitBranchKeys.projectIdentifier)
-                 .field(GitBranchKeys.yamlGitConfigIdentifier)
+                 .field(GitBranchKeys.repoURL)
                  .field(GitBranchKeys.branchName)
                  .build())
         .build();

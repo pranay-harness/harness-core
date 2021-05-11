@@ -9,6 +9,7 @@ import io.harness.rest.RestResponse;
 import javax.validation.constraints.NotNull;
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 @OwnedBy(CDP)
@@ -18,4 +19,9 @@ public interface FileServiceClient {
   @GET(FILE_SERVICE_API + "/latestFileId")
   Call<RestResponse<String>> getLatestFileId(
       @Query(value = "entityId") @NotNull String entityId, @Query(value = "fileBucket") @NotNull FileBucket fileBucket);
+
+  @POST(FILE_SERVICE_API + "/parentEntityIdAndVersion")
+  Call<RestResponse<Boolean>> updateParentEntityIdAndVersion(@Query(value = "entityId") @NotNull String entityId,
+      @Query(value = "stateFileId") @NotNull String stateFileId,
+      @Query(value = "fileBucket") @NotNull FileBucket fileBucket);
 }

@@ -5,6 +5,7 @@ import static io.harness.audit.ResourceTypeConstants.USER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.event.Event;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
@@ -12,7 +13,6 @@ import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.user.UserMembershipUpdateMechanism;
-import io.harness.ng.core.user.entities.UserMembership;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
@@ -23,13 +23,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserMembershipRemoveEvent implements Event {
   String accountIdentifier;
-  UserMembership.Scope scope;
+  Scope scope;
   String email;
   String userId;
   UserMembershipUpdateMechanism mechanism;
 
-  public UserMembershipRemoveEvent(String accountIdentifier, UserMembership.Scope scope, String email, String userId,
-      UserMembershipUpdateMechanism mechanism) {
+  public UserMembershipRemoveEvent(
+      String accountIdentifier, Scope scope, String email, String userId, UserMembershipUpdateMechanism mechanism) {
     this.scope = scope;
     this.accountIdentifier = accountIdentifier;
     this.email = email;

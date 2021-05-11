@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,4 +21,5 @@ public class CVNGStepParameter implements StepParameters {
   ParameterField<String> serviceIdentifier;
   ParameterField<String> envIdentifier;
   ParameterField<String> deploymentTag;
+  Map<String, String> runtimeValues;
 }

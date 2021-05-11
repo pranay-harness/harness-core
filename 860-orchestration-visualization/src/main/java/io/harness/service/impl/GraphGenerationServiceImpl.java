@@ -3,7 +3,7 @@ package io.harness.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
-import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -19,6 +19,7 @@ import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.event.GraphStatusUpdateHelper;
+import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -29,6 +30,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEventLog;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
@@ -58,6 +60,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
+  @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
 
   public void registerIterators() {
@@ -65,14 +68,14 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("GraphUpdateIterator")
             .poolSize(5)
-            .interval(ofMillis(1500))
+            .interval(ofSeconds(2))
             .build(),
         GraphGenerationServiceImpl.class,
         MongoPersistenceIterator.<PlanExecution, SpringFilterExpander>builder()
             .clazz(PlanExecution.class)
             .fieldName(PlanExecutionKeys.nextIteration)
-            .targetInterval(ofMillis(1500))
-            .acceptableNoAlertDelay(ofMillis(1500))
+            .targetInterval(ofSeconds(2))
+            .acceptableNoAlertDelay(ofSeconds(5))
             .handler(this::updateGraph)
             .filterExpander(query
                 -> query.addCriteria(Criteria.where(PlanExecutionKeys.status).in(StatusUtils.graphUpdateStatuses())))
@@ -90,21 +93,22 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         log.warn("Orchestration Graph not yet generated. Passing on to next iteration");
         return;
       }
-      log.info("Getting Unprocessed orchestrationEventLogs for planExecutionId [{}]", planExecution.getUuid());
 
       long lastUpdatedAt = orchestrationGraph.getLastUpdatedAt();
       List<OrchestrationEventLog> unprocessedEventLogs =
           orchestrationEventLogRepository.findUnprocessedEvents(planExecution.getUuid(), lastUpdatedAt);
-      log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
       if (!unprocessedEventLogs.isEmpty()) {
+        log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
         for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
-          orchestrationGraph =
-              graphStatusUpdateHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+          if (orchestrationEventLog.getEvent().getEventType() == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
+            orchestrationGraph =
+                planExecutionStatusUpdateEventHandler.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+          } else {
+            orchestrationGraph =
+                graphStatusUpdateHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+          }
           lastUpdatedAt = orchestrationEventLog.getCreatedAt();
         }
-      }
-      if (unprocessedEventLogs.size() > 5) {
-        log.warn("More than 5 Events Processed at a time for given planExecutionId:[{}]", planExecution.getUuid());
       }
       orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);

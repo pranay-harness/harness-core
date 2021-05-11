@@ -76,6 +76,18 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_SSL_CONFIG" ]]; then
+  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoSSLEnabled "$MONGO_SSL_CONFIG"
+fi
+
+if [[ "" != "$MONGO_SSL_CA_TRUST_STORE_PATH" ]]; then
+  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoTrustStorePath "$MONGO_SSL_CA_TRUST_STORE_PATH"
+fi
+
+if [[ "" != "$MONGO_SSL_CA_TRUST_STORE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoTrustStorePassword "$MONGO_SSL_CA_TRUST_STORE_PASSWORD"
+fi
+
 if [[ "" != "$MONGO_CONNECT_TIMEOUT" ]]; then
   yq write -i $CONFIG_FILE mongo.connectTimeout $MONGO_CONNECT_TIMEOUT
 fi
@@ -108,6 +120,26 @@ fi
 
 if [[ "" != "$CF_CLIENT_API_KEY" ]]; then
   yq write -i $CONFIG_FILE cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
+fi
+
+if [[ "" != "$CF_CLIENT_CONFIG_URL" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
+fi
+
+if [[ "" != "$CF_CLIENT_EVENT_URL" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
+fi
+
+if [[ "" != "$CF_CLIENT_ANALYTICS_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.analyticsEnabled "$CF_CLIENT_ANALYTICS_ENABLED"
+fi
+
+if [[ "" != "$CF_CLIENT_CONNECTION_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.connectionTimeout "$CF_CLIENT_CONNECTION_TIMEOUT"
+fi
+
+if [[ "" != "$CF_CLIENT_READ_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
 fi
 
 if [[ "" != "$CF_MIGRATION_ENABLED" ]]; then
@@ -405,6 +437,10 @@ fi
 
 if [[ "" != "$CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE clusterName "$CLUSTER_NAME"
+fi
+
+if [[ "" != "$DEPLOYMENT_CLUSTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
 fi
 
 if [[ "" != "$BACKGROUND_SCHEDULER_CLUSTERED" ]]; then

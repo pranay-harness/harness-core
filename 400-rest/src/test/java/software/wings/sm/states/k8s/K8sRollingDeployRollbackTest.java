@@ -1,5 +1,7 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -20,20 +22,22 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
@@ -49,12 +53,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-public class K8sRollingDeployRollbackTest extends WingsBaseTest {
+@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@OwnedBy(CDP)
+public class K8sRollingDeployRollbackTest extends CategoryTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ActivityService activityService;
   @InjectMocks
@@ -67,6 +75,11 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   private final StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance().displayName(STATE_NAME).build();
   private final ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = YOGESH)
@@ -107,12 +120,13 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
         .when(k8sRollingState)
         .createK8sActivity(
             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
-    doReturn(ExecutionResponse.builder().build()).when(k8sRollingState).queueK8sDelegateTask(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sRollingState).queueK8sDelegateTask(any(), any(), any());
     ExecutionResponse response = k8sRollingState.execute(context);
     verify(k8sRollingState, times(1))
         .createK8sActivity(
             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
-    verify(k8sRollingState, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+    verify(k8sRollingState, times(1))
+        .queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class), any());
   }
 
   @Test(expected = InvalidRequestException.class)

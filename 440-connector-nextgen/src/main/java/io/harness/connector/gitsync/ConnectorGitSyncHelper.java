@@ -1,5 +1,7 @@
 package io.harness.connector.gitsync;
 
+import static io.harness.connector.entities.Connector.ConnectorKeys;
+
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -44,8 +46,8 @@ public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Conn
   }
 
   @Override
-  public Supplier<Connector> getEntityFromYaml(ConnectorDTO yaml) {
-    return () -> connectorMapper.toConnector(yaml, "accountIdentifier");
+  public Supplier<Connector> getEntityFromYaml(ConnectorDTO yaml, String accountIdentifier) {
+    return () -> connectorMapper.toConnector(yaml, accountIdentifier);
   }
 
   @Override
@@ -82,5 +84,30 @@ public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Conn
   public boolean delete(EntityReference entityReference) {
     return connectorService.delete(entityReference.getAccountIdentifier(), entityReference.getOrgIdentifier(),
         entityReference.getProjectIdentifier(), entityReference.getIdentifier());
+  }
+
+  @Override
+  public String getObjectIdOfYamlKey() {
+    return ConnectorKeys.objectIdOfYaml;
+  }
+
+  @Override
+  public String getIsFromDefaultBranchKey() {
+    return ConnectorKeys.isFromDefaultBranch;
+  }
+
+  @Override
+  public String getYamlGitConfigRefKey() {
+    return ConnectorKeys.yamlGitConfigRef;
+  }
+
+  @Override
+  public String getUuidKey() {
+    return ConnectorKeys.id;
+  }
+
+  @Override
+  public String getBranchKey() {
+    return ConnectorKeys.branch;
   }
 }

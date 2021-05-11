@@ -310,7 +310,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellCommandExecutionContext amazonS3Context =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForAmazonS3)
                                            .metadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -321,7 +321,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellCommandExecutionContext amazonS3ContextFolder =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForAmazonS3)
                                            .metadata(mockMetadataForS3Folder())
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -332,7 +332,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   private ShellCommandExecutionContext artifactoryContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForArtifactory)
                                            .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -343,7 +343,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext artifactoryContextAnon =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(streamAttributesAnon)
                                            .metadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -354,7 +354,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext azureArtifactsContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(artifactStreamAttributesForAzureArtifacts)
                                            .metadata(mockMetadata(ArtifactStreamType.AZURE_ARTIFACTS))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -365,7 +365,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext nexusContextMaven =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(nexus2MavenStreamAttributes)
                                            .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -376,7 +376,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext nexusContextMavenWithoutArtifactFileMetadata = new ShellCommandExecutionContext(
-      aCommandExecutionContext(true)
+      aCommandExecutionContext()
           .artifactStreamAttributes(nexus2MavenStreamAttributesWithoutArtifactFileMetadata)
           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
           .hostConnectionAttributes(hostConnectionAttributes)
@@ -387,7 +387,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext nexusContextMavenAnon =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(nexus2MavenStreamAttributesAnon)
                                            .metadata(mockMetadata(ArtifactStreamType.NEXUS))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -398,7 +398,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext bambooContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(bambooStreamAttributes)
                                            .metadata(mockMetadata(ArtifactStreamType.BAMBOO))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -409,7 +409,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks
   ShellCommandExecutionContext jenkinsContext =
-      new ShellCommandExecutionContext(aCommandExecutionContext(true)
+      new ShellCommandExecutionContext(aCommandExecutionContext()
                                            .artifactStreamAttributes(jenkinsArtifactStreamAttributes)
                                            .metadata(mockMetadata(ArtifactStreamType.JENKINS))
                                            .hostConnectionAttributes(hostConnectionAttributes)
@@ -462,7 +462,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @TestCaseName("{method}-{0}")
   public void testShouldDownloadThroughBash(ArtifactStreamType artifactStreamType) {
     ShellCommandExecutionContext context =
-        new ShellCommandExecutionContext(CommandExecutionContext.Builder.aCommandExecutionContext(true).build());
+        new ShellCommandExecutionContext(CommandExecutionContext.Builder.aCommandExecutionContext().build());
     switch (artifactStreamType) {
       case AMAZON_S3:
         context = amazonS3Context;
@@ -690,7 +690,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getNexus2MavenData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources\" -o \"DESTINATION_DIR_PATH/todolist-7.0-sources.war\"\n"},
+            "curl --fail -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war&c=sources\" -o \"DESTINATION_DIR_PATH/todolist-7.0-sources.war\"\n"},
         {ScriptType.POWERSHELL,
             "$Headers = @{\n"
                 + "    Authorization = \"Basic YWRtaW46ZHVtbXkxMjMh\"\n"
@@ -703,8 +703,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getNexus2MavenDataAnon() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"
-                + "curl --fail --progress-bar -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -o \"DESTINATION_DIR_PATH/todolist-7.0.tar\"\n"},
+            "curl --fail -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=war\" -o \"DESTINATION_DIR_PATH/todolist-7.0.war\"\n"
+                + "curl --fail -X GET \"https://nexus2-cdteam.harness.io/service/local/artifact/maven/content?r=releases&g=io.harness.test&a=todolist&v=7.0&p=war&e=tar\" -o \"DESTINATION_DIR_PATH/todolist-7.0.tar\"\n"},
         {ScriptType.POWERSHELL,
             "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n"
                 + " $ProgressPreference = 'SilentlyContinue'\n"
@@ -715,10 +715,10 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getJenkinsData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \""
-                + JENKINS_ARTIFACT_URL_1 + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_1 + "\"\n"
-                + "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \""
-                + JENKINS_ARTIFACT_URL_2 + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_2 + "\"\n"},
+            "curl --fail -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"" + JENKINS_ARTIFACT_URL_1
+                + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_1 + "\"\n"
+                + "curl --fail -H \"Authorization: Basic YWRtaW46ZHVtbXkxMjMh\" -X GET \"" + JENKINS_ARTIFACT_URL_2
+                + "\" -o \"DESTINATION_DIR_PATH/" + JENKINS_ARTIFACT_FILENAME_2 + "\"\n"},
         {ScriptType.POWERSHELL,
             "$webClient = New-Object System.Net.WebClient \n"
                 + "$webClient.Headers[[System.Net.HttpRequestHeader]::Authorization] = \"Basic YWRtaW46ZHVtbXkxMjMh\";\n"
@@ -733,8 +733,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   private Object[][] getBambooData() {
     return new Object[][] {
         {ScriptType.BASH,
-            "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -o \"DESTINATION_DIR_PATH/todolist.tar\"\n"
-                + "curl --fail --progress-bar -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -o \"DESTINATION_DIR_PATH/todolist.war\"\n"},
+            "curl --fail -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar\" -o \"DESTINATION_DIR_PATH/todolist.tar\"\n"
+                + "curl --fail -H \"Authorization: Basic YWRtaW46YWRtaW4=\" -X GET \"http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war\" -o \"DESTINATION_DIR_PATH/todolist.war\"\n"},
         {ScriptType.POWERSHELL,
             "$Headers = @{\n"
                 + "    Authorization = \"Basic YWRtaW46YWRtaW4=\"\n"

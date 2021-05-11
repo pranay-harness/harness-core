@@ -150,9 +150,9 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(NGResourceFilterConstants.TYPE_KEY) ConnectorType type,
-      @QueryParam(CATEGORY_KEY) ConnectorCategory category) {
+      @QueryParam(CATEGORY_KEY) ConnectorCategory category, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+        Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(connectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category)));
   }
@@ -171,7 +171,7 @@ public class ConnectorResource {
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
       @Body ConnectorFilterPropertiesDTO connectorListFilter, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+        Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
             projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
@@ -185,7 +185,7 @@ public class ConnectorResource {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier()),
-        Resource.NONE, EDIT_CONNECTOR_PERMISSION);
+        Resource.of(ResourceTypes.CONNECTOR, null), EDIT_CONNECTOR_PERMISSION);
 
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
       throw new InvalidRequestException(
@@ -238,7 +238,8 @@ public class ConnectorResource {
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier)
         .map(connector
             -> connectorRbacHelper.checkSecretRuntimeAccessWithConnectorDTO(
@@ -280,7 +281,7 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.NONE, VIEW_CONNECTOR_PERMISSION);
+        Resource.of(ResourceTypes.CONNECTOR, null), VIEW_CONNECTOR_PERMISSION);
     return ResponseDTO.newResponse(
         connectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier));
   }

@@ -1,6 +1,9 @@
 package software.wings.verification.datadog;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.sm.states.DatadogState;
@@ -20,12 +23,13 @@ import lombok.EqualsAndHashCode;
 /**
  * The type Yaml.
  */
-@TargetModule(HarnessModule._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML)
 @Data
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonPropertyOrder({"type", "harnessApiVersion"})
+@OwnedBy(CV)
 public final class DatadogCVConfigurationYaml extends CVConfigurationYaml {
   private String datadogServiceName;
   private Map<String, String> dockerMetrics;

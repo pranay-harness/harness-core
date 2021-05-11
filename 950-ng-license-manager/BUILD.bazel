@@ -1,0 +1,49 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "test_targets_list")
+load("//:macros.bzl", "run_analysis")
+
+HarnessTeam = "GTM"
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//955-account-mgmt:module",
+        "//960-ng-core-beans:module",
+        "//960-ng-license-beans:module",
+        "//960-persistence:module",
+        "//970-rbac-core:module",
+        "//970-telemetry-beans:module",
+        "//980-commons:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_google_inject_guice",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_modelmapper_modelmapper",
+        "@maven//:org_mongodb_morphia_morphia",
+    ],
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//950-telemetry:module",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+run_tests()
+
+run_analysis()
