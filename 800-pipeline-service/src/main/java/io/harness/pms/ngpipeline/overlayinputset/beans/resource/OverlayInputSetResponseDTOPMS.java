@@ -1,5 +1,8 @@
 package io.harness.pms.ngpipeline.overlayinputset.beans.resource;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.EntityGitDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -14,6 +17,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PIPELINE)
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
