@@ -1,5 +1,6 @@
 package io.harness.pms.ngpipeline.inputset.beans.resource;
 
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,4 +24,5 @@ public class InputSetSummaryResponseDTOPMS {
   InputSetEntityType inputSetType;
   Map<String, String> tags;
   @JsonIgnore Long version;
+  EntityGitDetails gitDetails;
 }

@@ -1,5 +1,7 @@
 package io.harness.pms.ngpipeline.overlayinputset.beans.resource;
 
+import io.harness.gitsync.sdk.EntityGitDetails;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -34,4 +36,6 @@ public class OverlayInputSetResponseDTOPMS {
   Map<String, String> invalidInputSetReferences;
 
   @JsonIgnore Long version;
+
+  EntityGitDetails gitDetails;
 }

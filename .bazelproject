@@ -15,6 +15,7 @@ directories:
   230-model-test
   250-watcher
   260-delegate
+  270-delegate-service-app
   270-verification
   280-batch-processing
   300-cv-nextgen
@@ -154,6 +155,7 @@ import_run_configurations:
   run-configurations/CVNGApp.xml
   run-configurations/DataGenApp.xml
   run-configurations/DelegateApp.xml
+  run-configurations/DelegateServiceApp.xml
   run-configurations/EventsFrameworkTest.xml
   run-configurations/GitSyncTestApp.xml
   run-configurations/NextGenManager.xml
