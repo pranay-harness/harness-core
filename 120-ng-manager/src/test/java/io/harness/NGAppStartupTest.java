@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.VIKAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.NextGenApplication;
 import io.harness.ng.NextGenConfiguration;
@@ -29,6 +31,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+@OwnedBy(HarnessTeam.CDC)
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PmsSdkModule.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*"})
