@@ -1,4 +1,4 @@
-package io.harness.dto.deploymentinfo;
+package io.harness.entity;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

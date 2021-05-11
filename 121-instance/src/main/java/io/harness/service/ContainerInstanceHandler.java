@@ -8,10 +8,10 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.dto.DeploymentSummary;
 import io.harness.dto.deploymentinfo.DeploymentInfo;
-import io.harness.dto.deploymentinfo.RollbackInfo;
 import io.harness.dto.infrastructureMapping.DirectKubernetesInfrastructureMapping;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.InstanceSyncFlowType;
+import io.harness.entity.RollbackInfo;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
 import software.wings.beans.infrastructure.instance.Instance;

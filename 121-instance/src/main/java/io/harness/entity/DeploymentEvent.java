@@ -3,7 +3,6 @@ package io.harness.entity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dto.DeploymentSummary;
-import io.harness.dto.deploymentinfo.RollbackInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
