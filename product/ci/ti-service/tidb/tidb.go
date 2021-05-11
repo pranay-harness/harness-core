@@ -13,7 +13,7 @@ type TiDB interface {
 	GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error)
 
 	// UploadPartialCg uploads a call graph
-	UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info mongodb.VCSInfo, acc, org, proj string) error
+	UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info mongodb.VCSInfo, acc, org, proj, target string) (types.SelectTestsResp, error)
 
 	// MergePartialCg merges a partial cg corresponding to a list of commits and a repo to the
 	// master call graph.

@@ -55,17 +55,20 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		log.Infow("configuring TI service to use Timescale DB",
 			"endpoint", config.TimeScaleDb.Host,
 			"db_name", config.TimeScaleDb.DbName,
-			"test_table_name", config.TimeScaleDb.HyperTableName,
+			"evaluation_table", config.TimeScaleDb.EvalTable,
 			"selection_stats_table", config.TimeScaleDb.SelectionTable,
 			"coverage_table", config.TimeScaleDb.CoverageTable,
 			"ssl_enabled", config.TimeScaleDb.EnableSSL,
-			"ssl_cert_path", config.TimeScaleDb.SSLCertPath,)
+			"ssl_cert_path", config.TimeScaleDb.SSLCertPath)
 		db, err = timescaledb.New(
 			config.TimeScaleDb.Username,
 			config.TimeScaleDb.Password,
 			config.TimeScaleDb.Host,
 			config.TimeScaleDb.Port,
 			config.TimeScaleDb.DbName,
+			config.TimeScaleDb.EvalTable,
+			config.TimeScaleDb.CoverageTable,
+			config.TimeScaleDb.SelectionTable,
 			config.TimeScaleDb.EnableSSL,
 			config.TimeScaleDb.SSLCertPath,
 			log,
@@ -119,7 +122,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			}
 			topic := fmt.Sprintf("%sstreams:webhook_request_payload_data", prefix)
 			log.Infow("registering webhook payload consumer with events framework", "topic", topic)
-			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db, config)
+			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db)
 			rdb.Run()
 			log.Infow("done registering webhook consumer")
 		} else {
