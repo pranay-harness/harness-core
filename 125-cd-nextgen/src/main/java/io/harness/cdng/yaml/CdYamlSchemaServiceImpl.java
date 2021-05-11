@@ -3,22 +3,22 @@ package io.harness.cdng.yaml;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
+import static java.lang.String.format;
+
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
+import io.harness.network.SafeHttpCall;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
-import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
-import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
-import io.harness.yaml.schema.beans.SubtypeClassMap;
-import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
+import io.harness.yaml.schema.client.YamlSchemaClient;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -26,22 +26,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDP)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private static final String DEPLOYMENT_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(DeploymentStageConfig.class);
-  private static final String STEP_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
-  private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
   private static final String CD_NAMESPACE = "cd";
+  private static final String CVNG_INSTANCE_NAME = "cvng";
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
+
+  private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
 
   @Override
   public PartialSchemaDTO getDeploymentStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
@@ -51,15 +50,21 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     JsonNode deploymentStepsSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STEPS, orgIdentifier, projectIdentifier, scope);
 
+    PartialSchemaDTO cvngPartialSchemaDTO =
+        getPartialSchemaDTO(CVNG_INSTANCE_NAME, projectIdentifier, orgIdentifier, scope);
+
     JsonNode definitions = deploymentStageSchema.get(DEFINITIONS_NODE);
     JsonNode deploymentStepDefinitions = deploymentStepsSchema.get(DEFINITIONS_NODE);
 
     JsonNodeUtils.merge(definitions, deploymentStepDefinitions);
 
-    JsonNode jsonNode = definitions.get(StepElementConfig.class.getSimpleName());
-    modifyStepElementSchema((ObjectNode) jsonNode);
+    if (cvngPartialSchemaDTO != null && cvngPartialSchemaDTO.getSchema() != null) {
+      JsonNode cvDefinitions =
+          cvngPartialSchemaDTO.getSchema().get(DEFINITIONS_NODE).get(cvngPartialSchemaDTO.getNamespace());
+      JsonNodeUtils.merge(definitions, cvDefinitions);
+    }
 
-    jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
+    JsonNode jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
     }
@@ -78,19 +83,6 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
         .build();
   }
 
-  private void modifyStepElementSchema(ObjectNode jsonNode) {
-    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
-    Field typedField = YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
-    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
-    Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
-    classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
-    swaggerDefinitionsMetaInfoMap.put(
-        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().subtypeClassMap(classFieldSubtypeData).build());
-    yamlSchemaGenerator.convertSwaggerToJsonSchema(
-        swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
-  }
-
   private void flattenParallelStepElementConfig(ObjectNode objectNode) {
     JsonNode sections = objectNode.get(PROPERTIES_NODE).get("sections");
     if (sections.isObject()) {
@@ -103,5 +95,23 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private String getDeploymentStageTypeName() {
     JsonTypeName annotation = DeploymentStageConfig.class.getAnnotation(JsonTypeName.class);
     return annotation.value();
+  }
+
+  private PartialSchemaDTO getPartialSchemaDTO(
+      String instanceName, String projectIdentifier, String orgIdentifier, Scope scope) {
+    try {
+      return SafeHttpCall.execute(obtainYamlSchemaClient(instanceName).get(projectIdentifier, orgIdentifier, scope))
+          .getData();
+    } catch (Exception e) {
+      log.warn(
+          format("Unable to get %s schema information for projectIdentifier: [%s], orgIdentifier: [%s], scope: [%s]",
+              instanceName, projectIdentifier, orgIdentifier, scope),
+          e);
+      return null;
+    }
+  }
+
+  private YamlSchemaClient obtainYamlSchemaClient(String instanceName) {
+    return yamlSchemaClientMapper.get(instanceName);
   }
 }
