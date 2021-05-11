@@ -11,6 +11,8 @@ import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 
+import software.wings.settings.SettingVariableTypes;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -41,6 +43,8 @@ public class NGEncryptedData implements PersistentEntity, EncryptedRecord {
   String projectIdentifier;
   String identifier;
   String name;
+
+  SettingVariableTypes type;
 
   String path;
   Set<EncryptedDataParams> parameters;

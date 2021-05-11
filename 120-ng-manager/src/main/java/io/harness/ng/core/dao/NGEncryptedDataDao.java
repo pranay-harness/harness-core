@@ -4,12 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.entities.NGEncryptedData;
-import io.harness.security.encryption.EncryptedRecord;
 
 @OwnedBy(PL)
 public interface NGEncryptedDataDao {
-  NGEncryptedData save(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      EncryptedRecord encryptedRecord);
+  NGEncryptedData save(NGEncryptedData encryptedData);
 
   NGEncryptedData get(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 

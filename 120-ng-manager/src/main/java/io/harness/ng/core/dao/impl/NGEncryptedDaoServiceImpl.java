@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dao.NGEncryptedDataDao;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.repositories.NGEncryptedDataRepository;
-import io.harness.security.encryption.EncryptedRecord;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,27 +21,7 @@ public class NGEncryptedDaoServiceImpl implements NGEncryptedDataDao {
   private final NGEncryptedDataRepository encryptedDataRepository;
 
   @Override
-  public NGEncryptedData save(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String identifier, EncryptedRecord encryptedRecord) {
-    NGEncryptedData ngEncryptedData = NGEncryptedData.builder()
-                                          .accountIdentifier(accountIdentifier)
-                                          .orgIdentifier(orgIdentifier)
-                                          .projectIdentifier(projectIdentifier)
-                                          .identifier(identifier)
-                                          .name(encryptedRecord.getName())
-                                          .secretManagerIdentifier(encryptedRecord.getKmsId())
-                                          .parameters(encryptedRecord.getParameters())
-                                          .path(encryptedRecord.getPath())
-                                          .encryptionKey(encryptedRecord.getEncryptionKey())
-                                          .encryptedValue(encryptedRecord.getEncryptedValue())
-                                          .encryptionType(encryptedRecord.getEncryptionType())
-                                          .backupEncryptionType(encryptedRecord.getBackupEncryptionType())
-                                          .backupEncryptionKey(encryptedRecord.getBackupEncryptionKey())
-                                          .backupEncryptedValue(encryptedRecord.getBackupEncryptedValue())
-                                          .backupKmsId(encryptedRecord.getBackupKmsId())
-                                          .base64Encoded(encryptedRecord.isBase64Encoded())
-                                          .additionalMetadata(encryptedRecord.getAdditionalMetadata())
-                                          .build();
+  public NGEncryptedData save(NGEncryptedData ngEncryptedData) {
     return encryptedDataRepository.save(ngEncryptedData);
   }
 
