@@ -24,7 +24,7 @@ public interface UserMembershipRepository
 
   @Aggregation(
       pipeline = {"{ $match : { userId : ?0 } }", "{ $unwind : { path : '$scopes' } }",
-          "{ $match: {'scopes.projectIdentifier' : {$exists: true}}}",
+          "{ $match: {'scopes.projectIdentifier' : {$exists: true}, 'scopes.accountIdentifier': ?1}}",
           "{ $lookup: { "
               + " 'from': 'projects', "
               + " 'let': {  "
@@ -45,5 +45,5 @@ public interface UserMembershipRepository
               + " }}",
           "{$project: {'contents': {$arrayElemAt:[ '$projectDetails',0]}}},", "{$replaceRoot: {newRoot:'$contents'}}"})
   List<Project>
-  findProjectList(String userId, Pageable pageable);
+  findProjectList(String userId, String accountId, Pageable pageable);
 }
