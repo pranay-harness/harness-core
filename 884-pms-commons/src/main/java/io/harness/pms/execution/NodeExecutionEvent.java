@@ -7,10 +7,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
+import io.harness.metrics.MetricContext;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.queue.Queuable;
+import io.harness.queue.QueuableWithMonitoring;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +32,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("nodeExecutionEventQueue")
 @TypeAlias("nodeExecutionEvent")
 @HarnessEntity(exportable = false)
-public class NodeExecutionEvent extends Queuable {
+public class NodeExecutionEvent extends QueuableWithMonitoring {
   NodeExecutionProto nodeExecution;
   NodeExecutionEventType eventType;
   NodeExecutionEventData eventData;
@@ -41,7 +42,16 @@ public class NodeExecutionEvent extends Queuable {
     return new AutoLogContext(logContextMap(), OVERRIDE_NESTS);
   }
 
-  private Map<String, String> logContextMap() {
+  public MetricContext metricContext() {
+    return MetricContext.builder().contextMap(AmbianceUtils.logContextMap(nodeExecution.getAmbiance())).build();
+  }
+
+  @Override
+  public String getMetricPrefix() {
+    return "node_execution_" + eventType.name();
+  }
+
+  public Map<String, String> logContextMap() {
     Map<String, String> logContext = new HashMap<>();
     logContext.put(NodeExecutionEventKeys.eventType, eventType.name());
     logContext.putAll(AmbianceUtils.logContextMap(nodeExecution.getAmbiance()));

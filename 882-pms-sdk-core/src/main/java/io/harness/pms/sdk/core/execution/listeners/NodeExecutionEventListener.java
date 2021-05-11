@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.AutoLogContext;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -40,7 +41,7 @@ import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.queue.QueueConsumer;
-import io.harness.queue.QueueListener;
+import io.harness.queue.QueueListenerWithMonitoring;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ProgressData;
@@ -53,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent> {
+public class NodeExecutionEventListener extends QueueListenerWithMonitoring<NodeExecutionEvent> {
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
@@ -62,12 +63,12 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
   @Inject private KryoSerializer kryoSerializer;
 
   @Inject
-  public NodeExecutionEventListener(QueueConsumer<NodeExecutionEvent> queueConsumer) {
-    super(queueConsumer, false);
+  public NodeExecutionEventListener(QueueConsumer<NodeExecutionEvent> queueConsumer, MetricService metricService) {
+    super(metricService, queueConsumer, false);
   }
 
   @Override
-  public void onMessage(NodeExecutionEvent event) {
+  public void onMessageInternal(NodeExecutionEvent event) {
     try (AutoLogContext autoLogContext = event.autoLogContext()) {
       boolean handled;
       NodeExecutionEventType nodeExecutionEventType = event.getEventType();

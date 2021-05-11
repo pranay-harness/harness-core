@@ -1,0 +1,8 @@
+name: Node Execution Time
+identifier: node_execution_queue_time
+metricGroup: node_execution_configuration_group
+metrics:
+  - metricName: node_execution_queue_time
+    metricDefinition: Time for which given node execution is in the queue.
+    type: LastValue
+    unit: count

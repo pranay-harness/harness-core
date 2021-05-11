@@ -16,6 +16,7 @@ public class NodeExecutionEventQueuePublisher {
   @Inject(optional = true) private StepTypeLookupService stepTypeLookupService;
 
   public void send(NodeExecutionEvent event) {
+    event.setCreatedAt(System.currentTimeMillis());
     nodeExecutionEventQueuePublisher.send(
         Collections.singletonList(findNodeExecutionServiceName(event.getNodeExecution())), event);
   }

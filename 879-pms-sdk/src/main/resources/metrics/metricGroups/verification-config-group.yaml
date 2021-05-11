@@ -1,0 +1,9 @@
+name: Pipeline Service Node Execution Configuration
+identifier: node_execution_configuration_group
+labels:
+  - accountId
+  - orgIdentifier
+  - projectIdentifier
+  - planExecutionId
+  - runtimeId
+  - stepType

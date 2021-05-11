@@ -67,6 +67,8 @@ public class PmsSdkInitHelper {
 
   public static void initializeSDKInstance(Injector injector, PmsSdkConfiguration pmsSdkConfiguration) {
     initialize(injector, pmsSdkConfiguration);
+    injector.getInstance(io.harness.metrics.service.api.MetricService.class).initializeMetrics();
+    injector.getInstance(io.harness.metrics.jobs.RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
   private static void initialize(Injector injector, PmsSdkConfiguration config) {
