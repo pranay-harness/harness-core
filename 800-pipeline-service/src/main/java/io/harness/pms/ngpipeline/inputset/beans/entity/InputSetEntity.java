@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
+import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -27,6 +28,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.Wither;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -45,7 +47,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("inputSetsPMS")
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.PMS)
-public class InputSetEntity implements PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class InputSetEntity
+    implements GitSyncableEntity, PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -61,7 +64,7 @@ public class InputSetEntity implements PersistentEntity, AccountAccess, UuidAwar
   }
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
-  @NotEmpty String yaml;
+  @Wither @NotEmpty String yaml;
 
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;
@@ -69,20 +72,27 @@ public class InputSetEntity implements PersistentEntity, AccountAccess, UuidAwar
   @Trimmed @NotEmpty String pipelineIdentifier;
 
   @NotEmpty String identifier;
-  @EntityName String name;
-  @Size(max = 1024) String description;
-  @Singular @Size(max = 128) List<NGTag> tags;
+  @Wither @EntityName String name;
+  @Wither @Size(max = 1024) String description;
+  @Wither @Singular @Size(max = 128) List<NGTag> tags;
 
   @NotEmpty InputSetEntityType inputSetEntityType;
-  List<String> inputSetReferences;
+  @Wither List<String> inputSetReferences;
 
   @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
-  @Builder.Default Boolean deleted = Boolean.FALSE;
-  @Setter @NonFinal @Version Long version;
+  @Wither @Builder.Default Boolean deleted = Boolean.FALSE;
+  @Wither @Version Long version;
+
+  @Setter @NonFinal String objectIdOfYaml;
+  @Setter @NonFinal Boolean isFromDefaultBranch;
+  @Setter @NonFinal transient String branch;
+  @Setter @NonFinal String yamlGitConfigRef;
+  @Setter @NonFinal String filePath;
+  @Setter @NonFinal String rootFolder;
 
   @Override
-  public String getAccountId() {
+  public String getAccountIdentifier() {
     return accountId;
   }
 }
