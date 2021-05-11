@@ -2346,8 +2346,10 @@ public class UserServiceImpl implements UserService {
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                             .set(UserKeys.roles, updatedRolesForUser)
                                             .set(UserKeys.accounts, updatedActiveAccounts)
-                                            .set(UserKeys.pendingAccounts, updatedPendingAccounts)
-                                            .set(UserKeys.defaultAccountId, defaultAccountId);
+                                            .set(UserKeys.pendingAccounts, updatedPendingAccounts);
+      if (defaultAccountId != null) {
+        updateOp.set(UserKeys.defaultAccountId, defaultAccountId);
+      }
       updateUser(user, updateOp);
     });
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
