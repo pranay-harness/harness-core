@@ -8,6 +8,7 @@ import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.secretmanagerclient.SecretManagementClientModule.SECRET_MANAGER_CLIENT_SERVICE;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static io.harness.secretmanagerclient.SecretType.SecretText;
 import static io.harness.secretmanagerclient.ValueType.Inline;
@@ -36,9 +37,9 @@ import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
 import io.harness.ng.core.entities.NGEncryptedData;
 import io.harness.ng.core.entities.NGEncryptedData.NGEncryptedDataBuilder;
-import io.harness.secretmanagerclient.dto.LocalConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.SecretsFileService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
@@ -51,6 +52,7 @@ import software.wings.settings.SettingVariableTypes;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -62,13 +64,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(PL)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD =
@@ -79,6 +79,18 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private final KmsEncryptorsRegistry kmsEncryptorsRegistry;
   private final VaultEncryptorsRegistry vaultEncryptorsRegistry;
   private final SecretsFileService secretsFileService;
+  private final SecretManagerClientService secretManagerClientService;
+
+  @Inject
+  public NGEncryptedDataServiceImpl(NGEncryptedDataDao encryptedDataDao, KmsEncryptorsRegistry kmsEncryptorsRegistry,
+      VaultEncryptorsRegistry vaultEncryptorsRegistry, SecretsFileService secretsFileService,
+      @Named(SECRET_MANAGER_CLIENT_SERVICE) SecretManagerClientService secretManagerClientService) {
+    this.encryptedDataDao = encryptedDataDao;
+    this.kmsEncryptorsRegistry = kmsEncryptorsRegistry;
+    this.vaultEncryptorsRegistry = vaultEncryptorsRegistry;
+    this.secretsFileService = secretsFileService;
+    this.secretManagerClientService = secretManagerClientService;
+  }
 
   @Override
   public NGEncryptedData createSecretText(String accountIdentifier, SecretDTOV2 dto) {
@@ -115,8 +127,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     NGEncryptedData encryptedData = buildNGEncryptedData(accountIdentifier, dto, secretManager);
 
     if (isReadOnlySecretManager(secretManager)) {
-      throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, "Cannot create an Inline secret in read only secret manager", USER);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, READ_ONLY_SECRET_MANAGER_ERROR, USER);
     }
     encryptSecretFile(inputStream, encryptedData, secretManager);
     return encryptedDataDao.save(encryptedData);
@@ -168,8 +179,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
   private NGEncryptedData getOrThrow(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    NGEncryptedData encryptedData =
-        encryptedDataDao.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (encryptedData != null) {
       return encryptedData;
     }
@@ -423,16 +433,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
   private SecretManagerConfigDTO getSecretManager(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, boolean maskSecrets) {
-    return LocalConfigDTO.builder()
-        .isDefault(true)
-        .encryptionType(EncryptionType.LOCAL)
-        .name("dummy")
-        .accountIdentifier(accountIdentifier)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .identifier(identifier)
-        .harnessManaged(true)
-        .build();
+    return secretManagerClientService.getSecretManager(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, maskSecrets);
   }
 
   private boolean isReadOnlySecretManager(SecretManagerConfigDTO secretManager) {
