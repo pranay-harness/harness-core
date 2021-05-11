@@ -59,24 +59,29 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
   }
 
   @Override
-  public SaasGitDTO isSaasGit(ScmConnector scmConnector) {
+  public SaasGitDTO isSaasGit(String repoURL) {
     try {
-      URL url = new URL(
-          (scmConnector.getUrl().startsWith("http")) ? (scmConnector.getUrl()) : ("http://" + scmConnector.getUrl()));
-      String host = (url.getHost().startsWith("www.")) ? (url.getHost()) : ("www." + url.getHost());
-      if (null != url.getHost()) {
-        for (RepoProviders repoProvider : RepoProviders.values()) {
-          if (StringUtils.containsIgnoreCase(host, repoProvider.name())) {
-            return SaasGitDTO.builder()
-                .isSaasGit(host.contains("www." + repoProvider.name().toLowerCase() + ".com"))
-                .build();
-          }
+      URL url = new URL(getURLWithHttp(repoURL));
+      String host = getHostNameWithWWW(url.getHost());
+      for (RepoProviders repoProvider : RepoProviders.values()) {
+        if (StringUtils.containsIgnoreCase(host, repoProvider.name())) {
+          return SaasGitDTO.builder()
+              .isSaasGit(host.contains("www." + repoProvider.name().toLowerCase() + ".com"))
+              .build();
         }
       }
     } catch (Exception e) {
-      log.error("Failed to generate Git Provider Repository Url {}", scmConnector.getUrl(), e);
+      log.error("Failed to generate Git Provider Repository Url {}", repoURL, e);
     }
     return SaasGitDTO.builder().isSaasGit(false).build();
+  }
+
+  String getURLWithHttp(String url) {
+    return url.startsWith("http") ? url : ("http://" + url);
+  }
+
+  String getHostNameWithWWW(String host) {
+    return (host.startsWith("www.")) ? host : ("www." + host);
   }
 
   ScmConnector getScmConnector(

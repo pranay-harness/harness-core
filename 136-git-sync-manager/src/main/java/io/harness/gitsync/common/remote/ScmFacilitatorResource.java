@@ -5,7 +5,6 @@ import static io.harness.gitsync.GitSyncModule.SCM_ON_MANAGER;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.gitsync.common.YamlConstants;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.dtos.SaasGitDTO;
@@ -35,7 +34,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotBlank;
-import retrofit2.http.Body;
 
 @Api("/scm")
 @Path("/scm")
@@ -106,7 +104,7 @@ public class ScmFacilitatorResource {
   @POST
   @Path("isSaasGit")
   @ApiOperation(value = "Checks if Saas is possible", nickname = "isSaasGit")
-  public ResponseDTO<SaasGitDTO> isSaasGit(@Body @NotNull ScmConnector scmConnector) {
-    return ResponseDTO.newResponse(scmClientFacilitatorService.isSaasGit(scmConnector));
+  public ResponseDTO<SaasGitDTO> isSaasGit(@QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
+    return ResponseDTO.newResponse(scmClientFacilitatorService.isSaasGit(repoURL));
   }
 }

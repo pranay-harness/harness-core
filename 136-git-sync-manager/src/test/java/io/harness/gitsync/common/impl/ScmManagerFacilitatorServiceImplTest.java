@@ -15,10 +15,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.dtos.GitFileContent;
@@ -112,15 +110,11 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
   @Owner(developers = HARI)
   @Category(UnitTests.class)
   public void isSaasGitTest() {
-    List<ScmConnector> scmConnectors =
-        new ArrayList<>(Arrays.asList(GithubConnectorDTO.builder().url("www.github.com").build(),
-            GitlabConnectorDTO.builder().url("http://www.gitlab.com").build(),
-            GithubConnectorDTO.builder().url("www.github.harness.com").build(),
-            GithubConnectorDTO.builder().url("harness.github.com").build(),
-            GithubConnectorDTO.builder().url("github.com").build()));
+    List<String> repoURLs = new ArrayList<>(Arrays.asList(
+        "www.github.com", "http://www.gitlab.com", "www.github.harness.com", "harness.github.com", "github.com"));
     List<Boolean> expected = new ArrayList<>(Arrays.asList(true, true, false, false, true));
     List<Boolean> actual = new ArrayList<>();
-    scmConnectors.forEach(scmConnector -> actual.add(scmManagerFacilitatorService.isSaasGit(scmConnector).isSaasGit()));
+    repoURLs.forEach(repoURL -> actual.add(scmManagerFacilitatorService.isSaasGit(repoURL).isSaasGit()));
     assertThat(actual).isEqualTo(expected);
   }
 }
