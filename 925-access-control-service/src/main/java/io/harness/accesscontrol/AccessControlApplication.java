@@ -25,6 +25,7 @@ import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconci
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.aggregator.AggregatorApplication;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -122,6 +123,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerCorrelationFilter(environment, injector);
     registerRequestContextFilter(environment);
     registerIterators(injector);
+    registerScheduledJobs(injector);
     registerManagedBeans(appConfig, environment, injector);
     registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
@@ -140,6 +142,10 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
     injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
+  }
+
+  public void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 
   private void registerJerseyFeatures(Environment environment) {

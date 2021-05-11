@@ -135,10 +135,10 @@ public class ProjectResourceTest extends CategoryTest {
 
     when(accessControlClient.checkForAccess(anyList()))
         .thenReturn(AccessCheckResponseDTO.builder()
-                        .accessControlList(singletonList(
+                        .accessControlList(Collections.singletonList(
                             AccessControlDTO.builder()
-                                .resourceScope(ResourceScope.builder().orgIdentifier(orgIdentifier).build())
-                                .resourceIdentifier(orgIdentifier)
+                                .resourceIdentifier(null)
+                                .resourceScope(ResourceScope.of(accountIdentifier, orgIdentifier, null))
                                 .permitted(true)
                                 .build()))
                         .build());

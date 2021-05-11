@@ -29,6 +29,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -38,7 +39,6 @@ import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -68,10 +68,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @OwnedBy(CDP)
-public class K8sApplyStateTest extends WingsBaseTest {
+public class K8sApplyStateTest extends CategoryTest {
   private static final String RELEASE_NAME = "releaseName";
   private static final String FILE_PATHS = "abc/xyz";
 
@@ -90,6 +91,7 @@ public class K8sApplyStateTest extends WingsBaseTest {
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     context = new ExecutionContextImpl(stateExecutionInstance);
     k8sApplyState.setStateTimeoutInMinutes("10");
     k8sApplyState.setSkipDryRun(true);
