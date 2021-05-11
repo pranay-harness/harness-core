@@ -149,7 +149,7 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
   @Category(UnitTests.class)
   public void testStartTrial() {
     when(moduleLicenseRepository.save(defaultModuleLicense)).thenReturn(defaultModuleLicense);
-    when(moduleLicenseInterface.createTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(DEFAULT_MODULE_TYPE)))
+    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(DEFAULT_MODULE_TYPE)))
         .thenReturn(defaultModueLicenseDTO);
     ModuleLicenseDTO result = licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
     verify(accountService, times(1)).updateDefaultExperienceIfNull(ACCOUNT_IDENTIFIER, DefaultExperience.NG);

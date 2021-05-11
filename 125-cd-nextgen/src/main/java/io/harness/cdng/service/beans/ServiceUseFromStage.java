@@ -4,11 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromOverridesVisitorHelper;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromStageVisitorHelper;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChild;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -38,11 +36,6 @@ public class ServiceUseFromStage implements Serializable, Visitable {
   String metadata;
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SERVICE_USE_FROM_STAGE).build();
-  }
-
-  @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChild child = VisitableChild.builder().fieldName("overrides").value(overrides).build();
     return VisitableChildren.builder().visitableChildList(Collections.singletonList(child)).build();
@@ -58,10 +51,5 @@ public class ServiceUseFromStage implements Serializable, Visitable {
     @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
 
     @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
-
-    @Override
-    public LevelNode getLevelNode() {
-      return LevelNode.builder().qualifierName(YamlTypes.SERVICE_USE_FROM_STAGE_OVERRIDES).build();
-    }
   }
 }

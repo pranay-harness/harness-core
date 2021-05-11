@@ -55,8 +55,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(HarnessTeam.CDC)
 @Api("/environments")
 @Path("/environments")
-@Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {

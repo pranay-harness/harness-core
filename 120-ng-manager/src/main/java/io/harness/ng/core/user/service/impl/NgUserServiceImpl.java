@@ -3,7 +3,6 @@ package io.harness.ng.core.user.service.impl;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
@@ -135,7 +134,7 @@ public class NgUserServiceImpl implements NgUserService {
         criteria.orOperator(Criteria.where(UserMembershipKeys.name).regex(userFilter.getSearchTerm(), "i"),
             Criteria.where(UserMembershipKeys.emailId).regex(userFilter.getSearchTerm(), "i"));
       }
-      if (isNotEmpty(userFilter.getIdentifiers())) {
+      if (userFilter.getIdentifiers() != null) {
         criteria.and(UserMembershipKeys.userId).in(userFilter.getIdentifiers());
       }
     }

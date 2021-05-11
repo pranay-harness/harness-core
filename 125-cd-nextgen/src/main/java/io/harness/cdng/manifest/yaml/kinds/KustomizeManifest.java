@@ -10,11 +10,9 @@ import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.KustomizeManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.YamlSchemaTypes;
@@ -52,11 +50,6 @@ public class KustomizeManifest implements ManifestAttributes, Visitable {
   @Override
   public StoreConfig getStoreConfig() {
     return this.storeConfigWrapper.getStoreConfig();
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.KUSTOMIZE_MANIFEST).isPartOfFQN(false).build();
   }
 
   @Override

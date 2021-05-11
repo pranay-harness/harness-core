@@ -12,11 +12,21 @@ import io.harness.licensing.mappers.LicenseObjectMapper;
 public class CELicenseObjectMapper implements LicenseObjectMapper {
   @Override
   public ModuleLicenseDTO toDTO(ModuleLicense moduleLicense) {
-    return CEModuleLicenseDTO.builder().build();
+    CEModuleLicense entity = (CEModuleLicense) moduleLicense;
+    return CEModuleLicenseDTO.builder()
+        .numberOfCluster(entity.getNumberOfCluster())
+        .spendLimit(entity.getSpendLimit())
+        .dataRetentionInDays(entity.getDataRetentionInDays())
+        .build();
   }
 
   @Override
   public ModuleLicense toEntity(ModuleLicenseDTO moduleLicenseDTO) {
-    return CEModuleLicense.builder().build();
+    CEModuleLicenseDTO dto = (CEModuleLicenseDTO) moduleLicenseDTO;
+    return CEModuleLicense.builder()
+        .numberOfCluster(dto.getNumberOfCluster())
+        .spendLimit(dto.getSpendLimit())
+        .dataRetentionInDays(dto.getDataRetentionInDays())
+        .build();
   }
 }
