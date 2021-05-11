@@ -5,6 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.provision.terraform.TerraformExecutionDataParameters.TerraformExecutionDataParametersBuilder;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.Validator;
 import io.harness.yaml.core.variables.NGVariable;
@@ -19,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @NoArgsConstructor
@@ -47,6 +50,9 @@ public class TerraformExecutionData {
         if (terraformVarFile != null) {
           TerraformVarFile varFile = terraformVarFile.getVarFile();
           if (varFile != null) {
+            if (StringUtils.isEmpty(varFile.getIdentifier())) {
+              throw new InvalidRequestException("Identifier in Var File can't be empty", WingsException.USER);
+            }
             varFiles.put(varFile.getIdentifier(), varFile);
           }
         }

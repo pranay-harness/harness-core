@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
+import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
@@ -68,6 +69,7 @@ import static software.wings.utils.WingsTestConstants.FREEZE_WINDOW_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -2606,26 +2608,36 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                                   .build();
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
     when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any())).thenReturn(null);
-    WorkflowExecution workflowExecution = WorkflowExecution.builder().accountId(ACCOUNT_ID).build();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .pipelineExecutionId(PIPELINE_EXECUTION_ID)
+                                              .build();
+    WorkflowExecution pipelineExecution = WorkflowExecution.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .uuid(PIPELINE_EXECUTION_ID)
+                                              .status(RUNNING)
+                                              .build();
+    wingsPersistence.save(pipelineExecution);
     Map<String, Object> map1 = new HashMap<>();
     map1.put("artifactId", "myartifact");
     map1.put("buildNo", "1.0");
-    List<Artifact> artifacts =
-        ((WorkflowExecutionServiceImpl) workflowExecutionService)
-            .collectArtifacts(workflowExecution,
-                singletonList(ArtifactVariable.builder()
-                                  .entityType(SERVICE)
-                                  .entityId("SERVICE_ID_1")
-                                  .name("art_parameterized")
-                                  .artifactStreamMetadata(ArtifactStreamMetadata.builder()
-                                                              .artifactStreamId(ARTIFACT_STREAM_ID)
-                                                              .runtimeValues(map1)
-                                                              .build())
-                                  .build()),
-                APP_ID);
+    List<Artifact> artifacts = workflowExecutionService.collectArtifacts(workflowExecution,
+        singletonList(
+            ArtifactVariable.builder()
+                .entityType(SERVICE)
+                .entityId("SERVICE_ID_1")
+                .name("art_parameterized")
+                .artifactStreamMetadata(
+                    ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
+                .build()),
+        APP_ID);
     assertThat(artifacts).isEmpty();
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(workflowExecution.getMessage()).contains("Error collecting build for artifact source art_parameterized");
+    pipelineExecution = workflowExecutionService.getWorkflowExecution(APP_ID, PIPELINE_EXECUTION_ID);
+    assertThat(pipelineExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   @Test
@@ -2958,6 +2970,236 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         workflowExecution, asList(INFRA_MAPPING_ID, INFRA_MAPPING_ID), stdParams);
     assertThat(stdParams.getRollbackArtifactIds()).containsExactly(ARTIFACT_ID);
     assertThat(workflowExecution.getRollbackArtifacts()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnTrueIfParameterizedArtifactPresentInExecution() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   Collections.singletonList(artifact), Collections.singletonList(artifactVariable)))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnTrueIfNoParameterizedArtifactVariablePresent() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    ArtifactVariable artifactVariable = ArtifactVariable.builder().build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   Collections.singletonList(artifact), Collections.singletonList(artifactVariable)))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnFalseIfParameterizedArtifactNotPresentInExecution() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID + 2).build();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   Collections.singletonList(artifact), Collections.singletonList(artifactVariable)))
+        .isFalse();
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnTrueIfMultipleParameterizedArtifactPresentInExecution() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    Artifact artifact2 = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID + 2).build();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
+    ArtifactVariable artifactVariable2 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID + 2).build())
+            .build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   asList(artifact, artifact2), asList(artifactVariable, artifactVariable2)))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void shouldReturnFalseIfMultipleParameterizedArtifactAbsentInExecution() {
+    Artifact artifact = anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).build())
+            .build();
+    ArtifactVariable artifactVariable2 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID + 2).build())
+            .build();
+    ArtifactVariable artifactVariable3 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID + 3).build())
+            .build();
+    assertThat(workflowExecutionService.parameterizedArtifactsCollectedInWorkflowExecution(
+                   Collections.singletonList(artifact), asList(artifactVariable, artifactVariable2, artifactVariable3)))
+        .isFalse();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldUpdatePipelineWithArtifactsCollected() {
+    StateMachine stateMachine = aStateMachine().build();
+    ExecutionEventAdvisor executionEventAdvisor = new CanaryWorkflowExecutionAdvisor();
+    WorkflowExecutionUpdate workflowExecutionUpdate = new WorkflowExecutionUpdate();
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    wingsPersistence.save(WorkflowExecution.builder()
+                              .accountId(ACCOUNT_ID)
+                              .appId(app.getUuid())
+                              .status(PREPARING)
+                              .message("Starting artifact collection")
+                              .uuid(WORKFLOW_EXECUTION_ID)
+                              .pipelineExecutionId(PIPELINE_EXECUTION_ID)
+                              .build());
+    Artifact artifact2 = Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID + 2).build();
+    List<Artifact> artifacts = new ArrayList<>();
+    artifacts.add(artifact2);
+    wingsPersistence.save(WorkflowExecution.builder()
+                              .accountId(ACCOUNT_ID)
+                              .appId(app.getUuid())
+                              .status(PREPARING)
+                              .message("Starting artifact collection")
+                              .uuid(PIPELINE_EXECUTION_ID)
+                              .artifacts(artifacts)
+                              .executionArgs(ExecutionArgs.builder().artifacts(artifacts).build())
+                              .build());
+    Graph graph = constructGraph();
+    Workflow workflow =
+        aWorkflow()
+            .envId(env.getUuid())
+            .appId(app.getUuid())
+            .name("workflow1")
+            .description("Sample Workflow")
+            .orchestrationWorkflow(aCustomOrchestrationWorkflow().withValid(true).withGraph(graph).build())
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .build();
+    workflow = workflowService.createWorkflow(workflow);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("artifactId", "myartifact");
+    map1.put("buildNo", "1.0");
+    executionArgs.setArtifactVariables(asList(
+        ArtifactVariable.builder()
+            .entityType(SERVICE)
+            .entityId("SERVICE_ID_1")
+            .name("art_parameterized")
+            .artifactStreamMetadata(
+                ArtifactStreamMetadata.builder().artifactStreamId(ARTIFACT_STREAM_ID).runtimeValues(map1).build())
+            .build()));
+    NexusArtifactStream nexusArtifactStream = NexusArtifactStream.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .appId(APP_ID)
+                                                  .jobname("releases")
+                                                  .groupId("mygroup")
+                                                  .artifactPaths(asList("${artifactId}"))
+                                                  .autoPopulate(false)
+                                                  .serviceId(SERVICE_ID)
+                                                  .name("testNexus")
+                                                  .build();
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+    when(buildSourceService.getBuild(anyString(), anyString(), anyString(), any()))
+        .thenReturn(BuildDetails.Builder.aBuildDetails().withNumber("1.0").build());
+    Map<String, String> map = new HashMap<>();
+    map.put("buildNo", "1.0");
+    Artifact artifact = Artifact.Builder.anArtifact().withMetadata(map).withUuid(ARTIFACT_ID).build();
+    when(artifactCollectionUtils.getArtifact(any(), any())).thenReturn(artifact);
+    when(artifactService.create(artifact, nexusArtifactStream, false)).thenReturn(artifact);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), WORKFLOW_EXECUTION_ID);
+    try {
+      workflowExecutionService.collectArtifactsAndStartExecution(workflowExecution, stateMachine, executionEventAdvisor,
+          workflowExecutionUpdate, stdParams, app, workflow, null, executionArgs, null);
+    } catch (Exception e) {
+      log.info(e.getMessage());
+    }
+    workflowExecution = wingsPersistence.getWithAppId(WorkflowExecution.class, app.getUuid(), PIPELINE_EXECUTION_ID);
+
+    assertThat(workflowExecution.getArtifacts()).containsExactlyInAnyOrder(artifact, artifact2);
+    assertThat(workflowExecution.getExecutionArgs().getArtifacts()).containsExactlyInAnyOrder(artifact, artifact2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldMergeArtifactVariableList() {
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    ArtifactVariable artifactVariable2 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID + 2)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    ArtifactVariable artifactVariable3 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID + 2)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder()
+            .accountId(ACCOUNT_ID)
+            .appId(app.getUuid())
+            .uuid(PIPELINE_EXECUTION_ID)
+            .executionArgs(
+                ExecutionArgs.builder().artifactVariables(asList(artifactVariable, artifactVariable2)).build())
+            .build();
+    List<ArtifactVariable> artifactVariables = workflowExecutionService.getMergedArtifactVariableList(
+        workflowExecution, asList(artifactVariable, artifactVariable3));
+    assertThat(artifactVariables).contains(artifactVariable, artifactVariable3);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldAddArtifactVariableToWorkflowElement() {
+    ArtifactVariable artifactVariable =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    ArtifactVariable artifactVariable2 =
+        ArtifactVariable.builder()
+            .artifactStreamMetadata(ArtifactStreamMetadata.builder()
+                                        .artifactStreamId(ARTIFACT_STREAM_ID + 2)
+                                        .runtimeValues(Collections.singletonMap("buildNo", "1"))
+                                        .build())
+            .build();
+    ArtifactVariable artifactVariable3 = ArtifactVariable.builder().build();
+    WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+    List<ArtifactVariable> artifactVariables = new ArrayList<>();
+    artifactVariables.add(artifactVariable2);
+    workflowStandardParams.setWorkflowElement(WorkflowElement.builder().artifactVariables(artifactVariables).build());
+    workflowExecutionService.addParameterizedArtifactVariableToContext(
+        asList(artifactVariable, artifactVariable3), workflowStandardParams);
+    assertThat(workflowStandardParams.getWorkflowElement().getArtifactVariables())
+        .containsExactlyInAnyOrder(artifactVariable, artifactVariable2);
   }
 
   @Test

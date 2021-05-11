@@ -74,7 +74,7 @@ public class UserEventHandlerTest extends CategoryTest {
 
   private InviteDTO getInviteDTO(String email) {
     List<RoleBinding> roleBindings = new ArrayList<>();
-    roleBindings.add(RoleBinding.builder().identifier(randomAlphabetic(10)).build());
+    roleBindings.add(RoleBinding.builder().build());
 
     return InviteDTO.builder()
         .id(randomAlphabetic(10))

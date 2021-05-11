@@ -193,6 +193,7 @@ import software.wings.beans.appmanifest.LastDeployedHelmChartInformation;
 import software.wings.beans.appmanifest.LastDeployedHelmChartInformation.LastDeployedHelmChartInformationBuilder;
 import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.artifact.ArtifactStreamSummary.ArtifactStreamSummaryBuilder;
@@ -2757,13 +2758,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         return null;
       }
 
+      List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
       String artifactId = foundArtifactVariable.getValue();
-      if (isBlank(artifactId)) {
+
+      if (isEmpty(artifacts)) {
         return null;
       }
 
-      List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
-      if (isEmpty(artifacts)) {
+      if (isBlank(artifactId) || artifactService.get(artifactId) == null) {
+        if (foundArtifactVariable.getArtifactStreamMetadata() != null
+            && foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues() != null) {
+          String artifactStreamId = foundArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId();
+          return artifacts.stream()
+              .filter(artifact
+                  -> StringUtils.equals(artifactStreamId, artifact.getArtifactStreamId())
+                      && StringUtils.equals(artifact.getBuildNo(),
+                          (String) foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues().get(
+                              ArtifactMetadataKeys.buildNo)))
+              .findFirst()
+              .orElse(null);
+        }
         return null;
       }
 

@@ -29,4 +29,6 @@ java_binary(
     ],
 )
 
-run_analysis()
+run_analysis(
+    run_sonar = False,
+)

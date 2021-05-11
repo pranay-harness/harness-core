@@ -1,5 +1,6 @@
 package io.harness.pms.expressions.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.BRIJESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -40,6 +42,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
+@OwnedBy(PIPELINE)
 @PrepareForTest({SafeHttpCall.class})
 public class ImagePullSecretUtilsTest {
   @Mock private EcrImagePullSecretHelper ecrImagePullSecretHelper;
@@ -62,7 +65,7 @@ public class ImagePullSecretUtilsTest {
         + "\")}";
     PowerMockito.mockStatic(SafeHttpCall.class);
     ArtifactOutcome artifactOutcome =
-        EcrArtifactOutcome.builder().artifactType(ArtifactSourceConstants.ECR_NAME).connectorRef("account").build();
+        EcrArtifactOutcome.builder().type(ArtifactSourceConstants.ECR_NAME).connectorRef("account").build();
     Ambiance ambiance = Ambiance.newBuilder()
                             .putSetupAbstractions("accountId", "accountId")
                             .putSetupAbstractions("projectIdentifier", "projectId")

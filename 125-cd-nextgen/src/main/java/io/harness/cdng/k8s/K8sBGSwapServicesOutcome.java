@@ -15,9 +15,4 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("k8sBGSwapServicesOutcome")
 @JsonTypeName("k8sBGSwapServicesOutcome")
-public class K8sBGSwapServicesOutcome implements Outcome {
-  @Override
-  public String getType() {
-    return "k8sBGSwapServicesOutcome";
-  }
-}
+public class K8sBGSwapServicesOutcome implements Outcome {}

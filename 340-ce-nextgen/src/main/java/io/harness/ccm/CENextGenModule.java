@@ -7,9 +7,14 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNEC
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.retry.MethodExecutionHelper;
+import io.harness.annotations.retry.RetryOnException;
+import io.harness.annotations.retry.RetryOnExceptionInterceptor;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagModule;
+import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.govern.ProviderModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.AbstractMongoModule;
@@ -20,10 +25,10 @@ import io.harness.ng.core.event.MessageListener;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
-import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.CENextGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.timescaledb.DSLContextService;
 import io.harness.version.VersionModule;
@@ -35,6 +40,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.Map;
@@ -70,6 +76,7 @@ public class CENextGenModule extends AbstractModule {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CENextGenRegistrars.morphiaRegistrars)
+            .add(PrimaryVersionManagerMorphiaRegistrar.class)
             .build();
       }
 
@@ -96,6 +103,7 @@ public class CENextGenModule extends AbstractModule {
     install(new ConnectorResourceClientModule(
         configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
     install(VersionModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
     install(FeatureFlagModule.getInstance());
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
@@ -106,22 +114,14 @@ public class CENextGenModule extends AbstractModule {
     bind(DSLContext.class)
         .toInstance(new DSLContextService(configuration.getTimeScaleDBConfig()).getDefaultDSLContext());
 
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
+    bindRetryOnExceptionInterceptor();
+  }
 
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
+  private void bindRetryOnExceptionInterceptor() {
+    bind(MethodExecutionHelper.class).asEagerSingleton();
+    ProviderMethodInterceptor retryOnExceptionInterceptor =
+        new ProviderMethodInterceptor(getProvider(RetryOnExceptionInterceptor.class));
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
   }
 
   @Provides

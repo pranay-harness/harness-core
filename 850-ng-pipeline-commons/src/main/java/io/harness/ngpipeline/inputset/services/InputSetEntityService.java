@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.services;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.ngpipeline.overlayinputset.beans.BaseInputSetEntity;
 
 import java.util.List;
@@ -9,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@ToBeDeleted
+@Deprecated
 public interface InputSetEntityService {
   BaseInputSetEntity create(BaseInputSetEntity baseInputSetEntity);
 

@@ -6,13 +6,15 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
+import io.harness.gitsync.BranchDetails;
+import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.PushInfo;
+import io.harness.gitsync.RepoDetails;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 
 @OwnedBy(DX)
 public interface HarnessToGitHelperService {
-  InfoForGitPush getInfoForPush(String yamlGitConfigId, String branch, String filePath, String accountId,
-      EntityReference entityReference, EntityType entityType);
+  InfoForGitPush getInfoForPush(FileInfo fileInfo, EntityReference entityReference, EntityType entityType);
 
   void postPushOperation(PushInfo pushInfo);
 
@@ -20,4 +22,6 @@ public interface HarnessToGitHelperService {
 
   void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier, String orgIdentifier,
       String branch, String filePathToBeExcluded, String repoURL);
+
+  BranchDetails getBranchDetails(RepoDetails repoDetails);
 }

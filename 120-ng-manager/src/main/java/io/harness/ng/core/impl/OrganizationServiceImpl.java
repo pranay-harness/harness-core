@@ -1,15 +1,25 @@
 package io.harness.ng.core.impl;
 
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_NAME;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
+import static java.lang.Boolean.FALSE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -24,19 +34,32 @@ import io.harness.ng.core.events.OrganizationRestoreEvent;
 import io.harness.ng.core.events.OrganizationUpdateEvent;
 import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.core.spring.OrganizationRepository;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.PrincipalType;
 import io.harness.utils.RetryUtils;
+import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -52,18 +75,29 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Singleton
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
+  private static final String ORG_ADMIN_ROLE = "_organization_admin";
+  private static final String RESOURCE_GROUP_DESCRIPTION =
+      "All the resources in this organization are included in this resource group.";
   private final OrganizationRepository organizationRepository;
   private final OutboxService outboxService;
   private final TransactionTemplate transactionTemplate;
+  private final ResourceGroupClient resourceGroupClient;
+  private final NgUserService ngUserService;
+  private final AccessControlClient accessControlClient;
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
+      @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient, NgUserService ngUserService,
+      AccessControlClient accessControlClient) {
     this.organizationRepository = organizationRepository;
     this.outboxService = outboxService;
     this.transactionTemplate = transactionTemplate;
+    this.resourceGroupClient = resourceGroupClient;
+    this.ngUserService = ngUserService;
+    this.accessControlClient = accessControlClient;
   }
 
   @Override
@@ -73,6 +107,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     try {
       validate(organization);
       Organization savedOrganization = saveOrganization(organization);
+      setupOrganization(Scope.of(accountIdentifier, organizationDTO.getIdentifier(), null));
       log.info(String.format("Organization with identifier %s was successfully created", organization.getIdentifier()));
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
@@ -81,6 +116,92 @@ public class OrganizationServiceImpl implements OrganizationService {
               "An organization with identifier %s is already present or was deleted", organization.getIdentifier()),
           USER_SRE, ex);
     }
+  }
+
+  private void setupOrganization(Scope scope) {
+    if (DEFAULT_ORG_IDENTIFIER.equals(scope.getOrgIdentifier())) {
+      // Default org is a special case. That is handled by default org service
+      return;
+    }
+    String userId = null;
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+    }
+    // in case of default org identifier userprincipal will not be set in security context and that is okay
+    if (Objects.isNull(userId)) {
+      throw new InvalidRequestException("User not found in security context");
+    }
+    try {
+      createDefaultResourceGroup(scope);
+      assignOrgAdmin(scope, userId);
+      busyPollUntilOrgSetupCompletes(scope, userId);
+    } catch (Exception e) {
+      log.error("Failed to complete post organization creation steps for [{}]", ScopeUtils.toString(scope));
+    }
+  }
+
+  private void busyPollUntilOrgSetupCompletes(Scope scope, String userId) {
+    RetryConfig config = RetryConfig.custom()
+                             .maxAttempts(50)
+                             .waitDuration(Duration.ofMillis(200))
+                             .retryOnResult(Boolean.FALSE::equals)
+                             .retryExceptions(Exception.class)
+                             .ignoreExceptions(IOException.class)
+                             .build();
+    Retry retry = Retry.of("check user permissions", config);
+    Retry.EventPublisher publisher = retry.getEventPublisher();
+    publisher.onRetry(event -> log.info("Retrying for organization {} {}", scope.getOrgIdentifier(), event.toString()));
+    publisher.onSuccess(
+        event -> log.info("Retrying for organization {} {}", scope.getOrgIdentifier(), event.toString()));
+    Supplier<Boolean> hasAccess = Retry.decorateSupplier(retry,
+        ()
+            -> accessControlClient.hasAccess(
+                ResourceScope.of(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()),
+                Resource.of("USER", userId), INVITE_PERMISSION_IDENTIFIER));
+    if (FALSE.equals(hasAccess.get())) {
+      log.error(
+          "Finishing organization setup without confirm role assignment creation [{}]", ScopeUtils.toString(scope));
+    }
+  }
+
+  private void assignOrgAdmin(Scope scope, String userId) {
+    ngUserService.addUserToScope(userId,
+        Scope.builder()
+            .accountIdentifier(scope.getAccountIdentifier())
+            .orgIdentifier(scope.getOrgIdentifier())
+            .projectIdentifier(scope.getProjectIdentifier())
+            .build(),
+        ORG_ADMIN_ROLE, SYSTEM);
+  }
+
+  private void createDefaultResourceGroup(Scope scope) {
+    try {
+      ResourceGroupResponse resourceGroupResponse =
+          NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(DEFAULT_RESOURCE_GROUP_IDENTIFIER,
+              scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
+      if (resourceGroupResponse != null) {
+        return;
+      }
+      ResourceGroupDTO resourceGroupDTO = getResourceGroupDTO(scope);
+      NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
+          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), resourceGroupDTO));
+    } catch (Exception e) {
+      log.error("Couldn't create default resource group for [{}]", ScopeUtils.toString(scope));
+    }
+  }
+
+  private ResourceGroupDTO getResourceGroupDTO(Scope scope) {
+    return ResourceGroupDTO.builder()
+        .accountIdentifier(scope.getAccountIdentifier())
+        .orgIdentifier(scope.getOrgIdentifier())
+        .projectIdentifier(scope.getProjectIdentifier())
+        .name(DEFAULT_RESOURCE_GROUP_NAME)
+        .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+        .description(RESOURCE_GROUP_DESCRIPTION)
+        .resourceSelectors(Collections.emptyList())
+        .fullScopeSelected(true)
+        .build();
   }
 
   private Organization saveOrganization(Organization organization) {

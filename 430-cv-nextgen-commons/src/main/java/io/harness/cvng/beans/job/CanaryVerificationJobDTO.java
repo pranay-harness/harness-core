@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class CanaryVerificationJobDTO extends VerificationJobDTO {
   private String sensitivity;
-  private Integer trafficSplitPercentage;
+  private String trafficSplitPercentage;
 
   @Override
   public VerificationJobType getType() {

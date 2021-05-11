@@ -42,9 +42,9 @@ public enum TimeSeriesMetricType {
 
   APDEX("APDEX",
       Lists.newArrayList(
-          TimeSeriesThresholdCriteria.builder().criteria("> 0.2").type(TimeSeriesThresholdComparisonType.RATIO).build(),
+          TimeSeriesThresholdCriteria.builder().criteria("< 0.2").type(TimeSeriesThresholdComparisonType.RATIO).build(),
           TimeSeriesThresholdCriteria.builder()
-              .criteria("> 0.01")
+              .criteria("< 0.01")
               .type(TimeSeriesThresholdComparisonType.DELTA)
               .build())),
 

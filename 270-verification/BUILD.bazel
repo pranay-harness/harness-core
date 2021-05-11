@@ -8,6 +8,7 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
     "//400-rest:module",
+    "//940-primary-version-manager:module",
     "//955-alert-beans:module",
     "//970-rbac-core:module",
     "//:lombok",

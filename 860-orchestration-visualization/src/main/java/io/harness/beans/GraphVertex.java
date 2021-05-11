@@ -63,6 +63,7 @@ public class GraphVertex implements Serializable {
   private SkipType skipType;
 
   private List<UnitProgress> unitProgresses;
+  private Document progressData;
 
   // UI
   @Builder.Default RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;

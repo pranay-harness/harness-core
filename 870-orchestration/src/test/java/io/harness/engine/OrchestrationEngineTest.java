@@ -3,12 +3,19 @@ package io.harness.engine;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.exception.InvalidRequestException;
+import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -17,6 +24,7 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.rule.Owner;
 
@@ -30,10 +38,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Mock @Named("EngineExecutorService") ExecutorService executorService;
-  @Inject @InjectMocks private OrchestrationEngine orchestrationEngine;
+  @Mock private NodeExecutionService nodeExecutionService;
+  @Mock private EndNodeExecutionHelper endNodeExecutionHelper;
+  @Inject @InjectMocks @Spy private OrchestrationEngine orchestrationEngine;
 
   private static final StepType TEST_STEP_TYPE = StepType.newBuilder().setType("TEST_STEP_PLAN").build();
 
@@ -50,6 +61,21 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
 
   @Before
   public void setUp() {}
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void handleStepResponseWithError() {
+    StepResponseProto stepResponseProto = StepResponseProto.newBuilder().build();
+    NodeExecution nodeExecution = NodeExecution.builder().uuid(generateUuid()).build();
+    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    doThrow(new InvalidRequestException("test"))
+        .when(endNodeExecutionHelper)
+        .endNodeExecutionWithNoAdvisers(nodeExecution, stepResponseProto);
+    doNothing().when(orchestrationEngine).handleError(any(), any());
+    orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), stepResponseProto);
+    verify(orchestrationEngine).handleError(any(), any());
+  }
 
   @Test
   @Owner(developers = PRASHANT)

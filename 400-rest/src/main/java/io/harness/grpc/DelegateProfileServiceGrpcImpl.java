@@ -105,7 +105,17 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
 
       if (owner != null) {
-        pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.EQ, owner);
+        pageRequest.addFilter("", SearchFilter.Operator.OR,
+            SearchFilter.builder()
+                .fieldName(DelegateProfileKeys.owner)
+                .op(SearchFilter.Operator.EQ)
+                .fieldValues(new DelegateEntityOwner[] {owner})
+                .build(),
+            SearchFilter.builder()
+                .fieldName(DelegateProfileKeys.primary)
+                .op(SearchFilter.Operator.EQ)
+                .fieldValues(new Boolean[] {true})
+                .build());
       } else {
         // Account level delegates
         pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.NOT_EXISTS);

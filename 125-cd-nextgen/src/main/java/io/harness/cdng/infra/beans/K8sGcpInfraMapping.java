@@ -20,9 +20,4 @@ public class K8sGcpInfraMapping implements InfraMapping {
   private String gcpConnector;
   private String namespace;
   private String cluster;
-
-  @Override
-  public String getType() {
-    return "k8sGcpInfraMapping";
-  }
 }

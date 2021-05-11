@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
@@ -30,14 +31,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
@@ -69,19 +72,27 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 @OwnedBy(CDP)
-public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
+@TargetModule(_930_DELEGATE_TASKS)
+public class AwsAsgHelperServiceDelegateImplTest extends CategoryTest {
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
   @Mock private EncryptionService mockEncryptionService;
   @Mock private TimeLimiter mockTimeLimiter;
   @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsAsgHelperServiceDelegateImpl awsAsgHelperServiceDelegate;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = SATYAM)
@@ -243,7 +254,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
           singletonList(new AutoScalingGroup().withLaunchConfigurationName("launch_config")), mockCallback);
       verify(mockClient).deleteAutoScalingGroup(any());
       verify(mockClient).deleteLaunchConfiguration(any());
-      verify(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+      HTimeLimiterMocker.verifyTimeLimiterCalled(mockTimeLimiter);
     } catch (Exception ex) {
       fail(format("Test threw an exception: [%s]", ex.getMessage()));
     }
@@ -310,7 +321,8 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     LogCallback mockCallback = mock(LogCallback.class);
     doNothing().when(mockTracker).trackASGCall(anyString());
-    doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    //    doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenReturn(true);
 
     return Mocks.builder()
         .amazonAutoScalingClient(mockClient)
@@ -389,7 +401,8 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new SetDesiredCapacityResult()).when(mockClient).setDesiredCapacity(any());
     doNothing().when(mockTracker).trackASGCall(anyString());
     try {
-      doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+      //      doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+      HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenReturn(true);
       awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
           AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10);
       verify(mockClient).setDesiredCapacity(any());

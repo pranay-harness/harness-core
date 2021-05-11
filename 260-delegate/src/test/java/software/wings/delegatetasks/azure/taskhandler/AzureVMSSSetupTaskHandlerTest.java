@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.azure.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.azure.model.AzureConstants.HARNESS_AUTOSCALING_GROUP_TAG_NAME;
 import static io.harness.azure.model.AzureConstants.VMSS_CREATED_TIME_STAMP_TAG_NAME;
 import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType.AZURE_VMSS_SETUP;
@@ -10,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
@@ -33,6 +34,7 @@ import io.harness.azure.model.AzureVMSSAutoScaleSettingsData;
 import io.harness.azure.model.AzureVMSSTagsData;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
@@ -71,6 +73,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureComputeClient mockAzureComputeClient;
@@ -481,7 +484,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
-    doReturn(Boolean.TRUE).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenReturn(Boolean.TRUE);
     doReturn(mockCallback).when(azureVMSSSetupTaskHandler).getLogCallBack(any(), anyString());
     return mockCallback;
   }

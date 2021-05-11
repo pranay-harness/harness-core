@@ -107,6 +107,11 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   }
 
   @Override
+  public boolean skipUnresolvedExpressionsCheck() {
+    return true;
+  }
+
+  @Override
   public Map<String, ParameterField<String>> extractConnectorRefs() {
     Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
     if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT) {

@@ -80,6 +80,8 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = false)
 public class TimeSeriesDataRecord
     implements GoogleDataStoreAware, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  private static final String BUILD_DOT_COM_ACCOUNT_ID = "JWNrP_OyRrSL6qe9pCSI0g";
+  private static final String BUILD_DOT_COM_SERVICE_ID = "ZoYZjErvQGqTKYv9obNy8w";
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
@@ -101,7 +103,7 @@ public class TimeSeriesDataRecord
                 .build())
         .build();
   }
-  public static final String TOP_HATTER_ACCOUNT_ID = "pxxxyjHaRGKcEHGSIoGbAQ";
+
   @Id private String uuid;
 
   private StateType stateType; // could be null for older values
@@ -325,24 +327,13 @@ public class TimeSeriesDataRecord
         metric.getDeeplinkMetadata().forEach(
             (metricName, deepLink) -> deeplinkMetadata.put(metric.getName(), metricName, deepLink));
       }
-      // TODO: remove this once CV-5770 is fixed
-      if (TOP_HATTER_ACCOUNT_ID.equals(metric.getAccountId())) {
-        if (!timeSeriesDataRecords.containsKey(timeSeriesDataRecord)) {
-          timeSeriesDataRecord.setValues(HashBasedTable.create());
-          timeSeriesDataRecord.setDeeplinkMetadata(HashBasedTable.create());
-          timeSeriesDataRecords.put(timeSeriesDataRecord, timeSeriesDataRecord);
-        }
+      if (timeSeriesDataRecords.containsKey(timeSeriesDataRecord)) {
         timeSeriesDataRecords.get(timeSeriesDataRecord).getValues().putAll(values);
         timeSeriesDataRecords.get(timeSeriesDataRecord).getDeeplinkMetadata().putAll(deeplinkMetadata);
       } else {
-        if (timeSeriesDataRecords.containsKey(timeSeriesDataRecord)) {
-          timeSeriesDataRecords.get(timeSeriesDataRecord).getValues().putAll(values);
-          timeSeriesDataRecords.get(timeSeriesDataRecord).getDeeplinkMetadata().putAll(deeplinkMetadata);
-        } else {
-          timeSeriesDataRecord.setValues(values);
-          timeSeriesDataRecord.setDeeplinkMetadata(deeplinkMetadata);
-          timeSeriesDataRecords.put(timeSeriesDataRecord, timeSeriesDataRecord);
-        }
+        timeSeriesDataRecord.setValues(values);
+        timeSeriesDataRecord.setDeeplinkMetadata(deeplinkMetadata);
+        timeSeriesDataRecords.put(timeSeriesDataRecord, timeSeriesDataRecord);
       }
     });
     return new ArrayList<>(timeSeriesDataRecords.values());
@@ -403,5 +394,10 @@ public class TimeSeriesDataRecord
       }
     });
     return newRelicRecords;
+  }
+
+  // TODO: remove once CV-5872 is solved
+  public static boolean shouldLogForBuildDotCom(String accountId, String serviceId) {
+    return BUILD_DOT_COM_ACCOUNT_ID.equals(accountId) && BUILD_DOT_COM_SERVICE_ID.equals(serviceId);
   }
 }

@@ -95,6 +95,10 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 
 watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
 delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
@@ -209,6 +213,9 @@ cdnConfig:
   cdnJreTarPaths:
     oracle8u191: public/shared/jre/oracle-8u191/jre-8u191-${OS}-x64.tar.gz
     openjdk8u242: public/shared/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+
+fileStorageMode: MONGO
+clusterName: ""
 
 ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/

@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.Deployment.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.cdng.Deployment.DashboardWorkloadDeployment;
+import io.harness.cdng.Deployment.ExecutionDeploymentDetailInfo;
 import io.harness.cdng.Deployment.ExecutionDeploymentInfo;
 import io.harness.cdng.Deployment.HealthDeploymentDashboard;
 
@@ -20,4 +21,7 @@ public interface CDOverviewDashboardService {
 
   DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String startInterval, String endInterval, String previousStartInterval);
+
+  ExecutionDeploymentDetailInfo getDeploymentsExecutionInfo(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String startInterval, String endInterval);
 }

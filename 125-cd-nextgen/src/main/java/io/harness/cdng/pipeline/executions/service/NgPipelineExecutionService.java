@@ -2,7 +2,6 @@ package io.harness.cdng.pipeline.executions.service;
 
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
-import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -15,7 +14,6 @@ import io.harness.pms.execution.ExecutionStatus;
 
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,8 +23,6 @@ public interface NgPipelineExecutionService {
 
   PipelineExecutionSummary createPipelineExecutionSummary(String accountId, String orgId, String projectId,
       PlanExecution planExecution, CDPipelineSetupParameters cdPipelineSetupParameters);
-
-  PipelineExecutionDetail getPipelineExecutionDetail(@Nonnull String planExecutionId, String stageId);
 
   PipelineExecutionSummary getByPlanExecutionId(
       String accountId, String orgId, String projectId, String planExecutionId);

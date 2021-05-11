@@ -1,6 +1,9 @@
 package io.harness.ng.core.user.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static lombok.AccessLevel.NONE;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
@@ -14,11 +17,13 @@ import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -61,7 +66,7 @@ public class UserMembership implements PersistentRegularIterable, PersistentEnti
   @NotEmpty String userId;
   @NotEmpty String emailId;
   String name;
-  @Valid List<Scope> scopes;
+  @Getter(NONE) @Valid @Builder.Default List<Scope> scopes = new ArrayList<>();
   @Version Long version;
 
   @FdIndex private Long nextIteration;
@@ -80,5 +85,9 @@ public class UserMembership implements PersistentRegularIterable, PersistentEnti
   @Override
   public String getUuid() {
     return this.userId;
+  }
+
+  public List<Scope> getScopes() {
+    return isEmpty(scopes) ? new ArrayList<>() : scopes;
   }
 }

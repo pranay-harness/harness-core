@@ -9,7 +9,7 @@ use std::path::Path;
 use crate::execute_apply_target::{apply_target, ApplyTarget};
 use crate::execute_class_move::{move_class, MoveClass};
 
-pub const MODULE_IMPORT: &str = "import io.harness.annotations.dev.Module;";
+pub const MODULE_IMPORT: &str = "import io.harness.annotations.dev.HarnessModule;";
 pub const TARGET_MODULE_IMPORT: &str = "import io.harness.annotations.dev.TargetModule;";
 
 lazy_static! {

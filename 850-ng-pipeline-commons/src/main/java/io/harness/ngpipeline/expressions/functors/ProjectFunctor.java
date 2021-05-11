@@ -1,11 +1,14 @@
 package io.harness.ngpipeline.expressions.functors;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.LateBindingValue;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
+@Deprecated
+@ToBeDeleted
 public class ProjectFunctor implements LateBindingValue {
   private final ProjectService projectService;
   private final Ambiance ambiance;

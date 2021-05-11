@@ -14,4 +14,8 @@ public interface EntitySetupUsageCustomRepository {
   Page<EntitySetupUsage> findAll(Criteria criteria, Pageable pageable);
 
   long countAll(Criteria criteria);
+
+  Boolean exists(Criteria criteria);
+
+  long delete(Criteria criteria);
 }

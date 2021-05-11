@@ -1,8 +1,16 @@
 package io.harness.engine.progress;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.engine.NodeExecutionEventQueuePublisher;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.NodeExecutionMapper;
+import io.harness.pms.contracts.plan.NodeExecutionEventType;
+import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.execution.ProgressNodeExecutionEventData;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ProgressData;
@@ -11,12 +19,17 @@ import io.harness.waiter.ProgressCallback;
 import com.google.inject.Inject;
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.annotation.Transient;
 
 @Value
 @Builder
+@Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class EngineProgressCallback implements ProgressCallback {
-  @Inject NodeExecutionService nodeExecutionService;
-  @Inject KryoSerializer kryoSerializer;
+  @Inject @Transient NodeExecutionService nodeExecutionService;
+  @Inject @Transient KryoSerializer kryoSerializer;
+  @Inject @Transient NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
 
   String nodeExecutionId;
 
@@ -25,11 +38,30 @@ public class EngineProgressCallback implements ProgressCallback {
     if (!(progressData instanceof BinaryResponseData)) {
       throw new UnsupportedOperationException("Progress updates are not supported for raw non Binary Response Data");
     }
-    ProgressData data = (ProgressData) kryoSerializer.asInflatedObject(((BinaryResponseData) progressData).getData());
-    if (data instanceof UnitProgressData) {
-      ProgressData finalData = data;
-      nodeExecutionService.update(nodeExecutionId,
-          ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) finalData).getUnitProgresses()));
+
+    // This is the new way of managing progress updates below code is only to maintain backward compatibility
+    sendProgressDataEvent((BinaryResponseData) progressData);
+
+    try {
+      // This code is only to maintain backward compatibility
+      ProgressData data = (ProgressData) kryoSerializer.asInflatedObject(((BinaryResponseData) progressData).getData());
+      if (data instanceof UnitProgressData) {
+        nodeExecutionService.update(nodeExecutionId,
+            ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) data).getUnitProgresses()));
+      }
+    } catch (Exception ex) {
+      log.error("Failed to deserialize progress data via kryo");
     }
+  }
+
+  public void sendProgressDataEvent(BinaryResponseData progressData) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecutionEvent event =
+        NodeExecutionEvent.builder()
+            .eventType(NodeExecutionEventType.PROGRESS)
+            .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+            .eventData(ProgressNodeExecutionEventData.builder().progressBytes(progressData.getData()).build())
+            .build();
+    nodeExecutionEventQueuePublisher.send(event);
   }
 }

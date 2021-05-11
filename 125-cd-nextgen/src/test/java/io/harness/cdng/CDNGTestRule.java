@@ -7,7 +7,6 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
-import io.harness.OrchestrationVisualizationModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
@@ -174,7 +173,6 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
     modules.add(OrchestrationModule.getInstance(getOrchestrationConfig()));
     modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));
-    modules.add(OrchestrationVisualizationModule.getInstance());
     modules.add(new EntitySetupUsageModule());
 
     modules.add(new AbstractModule() {

@@ -1,5 +1,6 @@
 package io.harness.ngpipeline.inputset.helpers;
 
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
@@ -36,6 +37,8 @@ import lombok.AllArgsConstructor;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@ToBeDeleted
+@Deprecated
 public class InputSetMergeHelper {
   private final InputSetEntityService inputSetEntityService;
   private final NGPipelineService ngPipelineService;

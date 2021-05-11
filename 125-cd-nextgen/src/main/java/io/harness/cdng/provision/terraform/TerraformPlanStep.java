@@ -72,8 +72,7 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
         .workspace(ParameterFieldHelper.getParameterFieldValue(configuration.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
             configuration.getConfigFiles().getStore().getStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .inlineVarFiles(helper.getInlineVarFiles(configuration.getVarFiles()))
-        .remoteVarfiles(helper.getOrderedFetchFilesConfigForRemoteFiles(configuration.getVarFiles(), ambiance))
+        .varFileInfos(helper.toTerraformVarFileInfo(configuration.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(configuration.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(configuration.getTargets()))
         .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))

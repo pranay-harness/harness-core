@@ -1,7 +1,6 @@
 package io.harness.rule;
 
 import static io.harness.cache.CacheBackend.NOOP;
-import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 
 import static org.mockito.Mockito.mock;
 
@@ -35,6 +34,7 @@ import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
 import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
@@ -59,6 +59,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
+import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GraphQLModule;
@@ -129,14 +130,11 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
   }
 
   private ExecutorService executorService = new CurrentThreadExecutor();
-  public static final String alpnJar =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  public static final String alpn = "/home/jenkins/maven-repositories/0/";
   @Getter private GraphQL graphQL;
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
+    ManagerExecutor.ensureManager(AbstractFunctionalTest.class);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
         Setup.portal()
@@ -147,7 +145,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     String mongoUri =
         new AsymmetricDecryptor(new ScmSecret()).decryptText(mongoConfigRestResponse.getResource().getEncryptedUri());
 
-    MongoClientURI clientUri = new MongoClientURI(mongoUri, MongoClientOptions.builder(defaultMongoClientOptions));
+    MongoConfig mongoConfig = MongoConfig.builder().build();
+    MongoClientURI clientUri =
+        new MongoClientURI(mongoUri, MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig)));
     String dbName = clientUri.getDatabase();
 
     MongoClient mongoClient = new MongoClient(clientUri);
@@ -365,6 +365,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()

@@ -31,7 +31,8 @@ public class BlueGreenVerificationJob extends CanaryBlueGreenVerificationJob {
     BlueGreenVerificationJobDTO blueGreenVerificationJobDTO = (BlueGreenVerificationJobDTO) verificationJobDTO;
     this.setSensitivity(blueGreenVerificationJobDTO.getSensitivity(),
         VerificationJobDTO.isRuntimeParam(blueGreenVerificationJobDTO.getSensitivity()));
-    this.setTrafficSplitPercentage(blueGreenVerificationJobDTO.getTrafficSplitPercentage());
+    this.setTrafficSplitPercentageV2(blueGreenVerificationJobDTO.getTrafficSplitPercentage(),
+        VerificationJobDTO.isRuntimeParam(blueGreenVerificationJobDTO.getTrafficSplitPercentage()));
     addCommonFileds(verificationJobDTO);
   }
 
@@ -40,7 +41,9 @@ public class BlueGreenVerificationJob extends CanaryBlueGreenVerificationJob {
     BlueGreenVerificationJobDTO blueGreenVerificationJobDTO = new BlueGreenVerificationJobDTO();
     blueGreenVerificationJobDTO.setSensitivity(
         getSensitivity() == null ? CVVerificationJobConstants.RUNTIME_STRING : getSensitivity().name());
-    blueGreenVerificationJobDTO.setTrafficSplitPercentage(this.getTrafficSplitPercentage());
+    blueGreenVerificationJobDTO.setTrafficSplitPercentage(getTrafficSplitPercentage() == null
+            ? CVVerificationJobConstants.RUNTIME_STRING
+            : String.valueOf(getTrafficSplitPercentage()));
     populateCommonFields(blueGreenVerificationJobDTO);
     return blueGreenVerificationJobDTO;
   }

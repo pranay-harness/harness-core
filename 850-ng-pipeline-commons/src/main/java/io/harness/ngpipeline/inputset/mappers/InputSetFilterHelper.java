@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity;
 import io.harness.ngpipeline.inputset.beans.entities.InputSetEntity.CDInputSetEntityKeys;
@@ -20,6 +21,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
 @UtilityClass
+@ToBeDeleted
+@Deprecated
 public class InputSetFilterHelper {
   public Criteria createCriteriaForGetList(String accountId, String orgIdentifier, String projectIdentifier,
       String pipeIdentifier, InputSetListType type, String searchTerm, boolean deleted) {

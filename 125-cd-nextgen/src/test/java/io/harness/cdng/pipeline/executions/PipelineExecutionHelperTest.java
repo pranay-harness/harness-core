@@ -1,11 +1,13 @@
 package io.harness.cdng.pipeline.executions;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.cdng.pipeline.DeploymentStage.DEPLOYMENT_STAGE_TYPE;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.environment.EnvironmentOutcome;
@@ -48,6 +50,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(CDC)
 public class PipelineExecutionHelperTest extends CDNGTestBase {
   @Inject PipelineExecutionHelper pipelineExecutionHelper;
 
@@ -255,7 +258,7 @@ public class PipelineExecutionHelperTest extends CDNGTestBase {
                          .primaryArtifact(true)
                          .imagePath("image")
                          .tag("tag")
-                         .artifactType(ArtifactSourceType.DOCKER_HUB.getDisplayName())
+                         .type(ArtifactSourceType.DOCKER_HUB.getDisplayName())
                          .build())
             .sidecars(Maps.of("sidecar1", DockerArtifactOutcome.builder().imagePath("image1").tag("tag1").build()))
             .build();

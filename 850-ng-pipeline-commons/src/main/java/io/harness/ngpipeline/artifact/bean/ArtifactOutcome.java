@@ -13,6 +13,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
   , @JsonSubTypes.Type(value = GcrArtifactOutcome.class, name = "Gcr"),
       @JsonSubTypes.Type(value = EcrArtifactOutcome.class, name = "Ecr")
 })
+// TODO : Create a shared Module b/w pipline and CD/CI where these entities can go to and eventually We need to
+// deprecate that module 878-pms-coupling
+// @TargetModule(878-pms-coupling)
 public interface ArtifactOutcome extends Outcome, WithIdentifier, WithArtifactSummary {
   boolean isPrimaryArtifact();
   String getArtifactType();

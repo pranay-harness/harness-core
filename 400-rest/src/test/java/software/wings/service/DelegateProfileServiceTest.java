@@ -61,6 +61,8 @@ import org.mockito.Mock;
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("software.wings.WingsBaseTest")
+@BreakDependencyOn("software.wings.beans.LicenseInfo")
+@BreakDependencyOn("software.wings.service.impl.AuditServiceHelper")
 public class DelegateProfileServiceTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = generateUuid();
   public static final String DELEGATE_PROFILE_NAME = "DELEGATE_PROFILE_NAME";
