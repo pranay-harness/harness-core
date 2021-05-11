@@ -117,7 +117,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
 
     if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, accountId)) {
       if (webhookConditionYaml.getWebHookSecret() != null
-          && !webhookConditionYaml.getRepositoryType().equals(GITHUB.name())) {
+          && !GITHUB.name().equals(webhookConditionYaml.getRepositoryType())) {
         throw new InvalidRequestException("WebHook Secret is only supported with Github repository", USER);
       }
       String webHookSecret = webhookConditionYaml.getWebHookSecret();
