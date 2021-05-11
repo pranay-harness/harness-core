@@ -189,9 +189,13 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if repo == "" {
 		return res, fmt.Errorf("repo not present in request")
 	}
-	branch := req.GetBranch()
+	branch := req.GetSourceBranch()
 	if branch == "" {
 		return res, fmt.Errorf("branch not present in request")
+	}
+	target := req.GetTargetBranch()
+	if target == "" {
+		return res, fmt.Errorf("target branch not present in request")
 	}
 	cgDir := req.GetCgDir()
 	if cgDir == "" {
@@ -241,7 +245,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if err != nil {
 		return res, errors.Wrap(err, "stage id not found")
 	}
-	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch, encBytes)
+	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch, target, encBytes)
 	if err != nil {
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}

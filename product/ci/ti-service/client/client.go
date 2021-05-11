@@ -25,5 +25,5 @@ type Client interface {
 	SelectTests(org, project, pipeline, build, stage, step, repo, sha, source, target, req string) (types.SelectTestsResp, error)
 
 	// UploadCg uploads avro encoded callgraph to ti server
-	UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch string, cg []byte) error
+	UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target string, cg []byte) error
 }

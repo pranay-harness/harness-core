@@ -23,7 +23,7 @@ var _ Client = (*HTTPClient)(nil)
 const (
 	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
 	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
-	cgEndpoint   = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s"
+	cgEndpoint   = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -87,8 +87,8 @@ func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, rep
 }
 
 // UploadCg uploads avro encoded callgraph to server
-func (c *HTTPClient) UploadCg(org, project, pipeline, build, stage, step, repo, sha, source string, cg []byte) error {
-	path := fmt.Sprintf(cgEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, source)
+func (c *HTTPClient) UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target string, cg []byte) error {
+	path := fmt.Sprintf(cgEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, source, target)
 	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &cg, nil)
 	return err
 }

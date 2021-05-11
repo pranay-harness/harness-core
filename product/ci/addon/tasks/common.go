@@ -91,7 +91,11 @@ func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger
 	if err != nil {
 		return err
 	}
-	branch, err := external.GetSourceBranch()
+	sBranch, err := external.GetSourceBranch()
+	if err != nil {
+		return err
+	}
+	tBranch, err := external.GetTargetBranch()
 	if err != nil {
 		return err
 	}
@@ -102,11 +106,12 @@ func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger
 	}
 	defer client.CloseConn()
 	req := &pb.UploadCgRequest{
-		StepId: stepID,
-		Repo:   repo,
-		Sha:    sha,
-		Branch: branch,
-		CgDir:  cgDir,
+		StepId:       stepID,
+		Repo:         repo,
+		Sha:          sha,
+		SourceBranch: sBranch,
+		TargetBranch: tBranch,
+		CgDir:        cgDir,
 	}
 	log.Infow(fmt.Sprintf("sending cgRequest %s to lite engine", req.GetCgDir()))
 	_, err = client.Client().UploadCg(ctx, req)
