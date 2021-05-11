@@ -6,7 +6,7 @@ import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
 
 import static com.google.inject.matcher.Matchers.not;
@@ -88,13 +88,10 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.execution.listeners.NgOrchestrationNotifyEventListener;
-import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -343,15 +340,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     log.info("Starting app done");
   }
 
-  private void registerPMSQueueListeners(VerificationConfiguration appConfig, Injector injector) {
+  private void registerQueueListeners(Injector injector) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
-    if (appConfig.getShouldConfigureWithPMS()) {
-      queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
-    }
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -369,7 +361,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
       try {
         PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
         if (configuration.getShouldConfigureWithPMS()) {
-          registerPMSQueueListeners(configuration, injector);
+          registerQueueListeners(injector);
         }
       } catch (Exception e) {
         log.error("Failed To register pipeline sdk", e);
