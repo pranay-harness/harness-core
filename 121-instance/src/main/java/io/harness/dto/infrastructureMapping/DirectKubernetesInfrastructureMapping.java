@@ -8,17 +8,19 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(HarnessTeam.DX)
-public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping {
+public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping {
   private String namespace;
   private String releaseName;
+  private String clusterName;
 
   @Builder
-  public DirectKubernetesInfrastructureMapping(String id, String accountId, String orgId, String projectId,
-      String infraMappingType, String connectorType, String connectorId, String envId, String deploymentType,
-      String serviceId, String clusterName, String namespace, String releaseName) {
-    super(id, accountId, orgId, projectId, infraMappingType, connectorType, connectorId, envId, deploymentType,
-        serviceId, clusterName);
+  public DirectKubernetesInfrastructureMapping(String id, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String infrastructureMappingType, String connectorRef, String envId,
+      String deploymentType, String serviceId, String namespace, String releaseName, String clusterName) {
+    super(id, accountIdentifier, orgIdentifier, projectIdentifier, infrastructureMappingType, connectorRef, envId,
+        deploymentType, serviceId);
     this.namespace = namespace;
     this.releaseName = releaseName;
+    this.clusterName = clusterName;
   }
 }
