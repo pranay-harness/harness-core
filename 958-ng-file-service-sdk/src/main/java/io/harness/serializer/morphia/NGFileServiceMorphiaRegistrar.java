@@ -3,7 +3,6 @@ package io.harness.serializer.morphia;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.file.beans.NGBaseFile;
 import io.harness.file.entities.NgGcsFileMetadata;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -14,7 +13,6 @@ import java.util.Set;
 public class NGFileServiceMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(NGBaseFile.class);
     set.add(NgGcsFileMetadata.class);
   }
 
