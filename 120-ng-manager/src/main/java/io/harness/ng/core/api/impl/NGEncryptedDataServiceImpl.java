@@ -83,15 +83,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private NGEncryptedData createSecretTextInternal(String accountIdentifier, SecretDTOV2 dto) {
     SecretTextSpecDTO secret = (SecretTextSpecDTO) dto.getSpec();
 
-    SecretManagerConfigDTO secretManager = getSecretManager(accountIdentifier, dto.getOrgIdentifier(),
+    SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
         dto.getProjectIdentifier(), secret.getSecretManagerIdentifier(), false);
-
-    if (secretManager == null) {
-      String message =
-          String.format("No such secret manager found with identifier %s ", secret.getSecretManagerIdentifier());
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-          formNotFoundMessage(message, dto.getOrgIdentifier(), dto.getProjectIdentifier()), USER);
-    }
 
     NGEncryptedData encryptedData = buildNGEncryptedData(accountIdentifier, dto, secretManager);
 
@@ -190,6 +183,18 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     return false;
   }
 
+  private SecretManagerConfigDTO getSecretManagerOrThrow(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, boolean maskSecrets) {
+    SecretManagerConfigDTO secretManager =
+        getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier, maskSecrets);
+    if (secretManager == null) {
+      String message = String.format("No such secret manager found with identifier %s ", identifier);
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, formNotFoundMessage(message, orgIdentifier, projectIdentifier), USER);
+    }
+    return secretManager;
+  }
+
   private SecretManagerConfigDTO getSecretManager(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, boolean maskSecrets) {
     return LocalConfigDTO.builder()
@@ -208,7 +213,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   public NGEncryptedData createSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream) {
     SecretFileSpecDTO secret = (SecretFileSpecDTO) dto.getSpec();
 
-    SecretManagerConfigDTO secretManager = getSecretManager(accountIdentifier, dto.getOrgIdentifier(),
+    SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
         dto.getProjectIdentifier(), secret.getSecretManagerIdentifier(), false);
 
     NGEncryptedData encryptedData = buildNGEncryptedData(accountIdentifier, dto, secretManager);
