@@ -77,10 +77,6 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
   @Override
   public NGEncryptedData createSecretText(String accountIdentifier, SecretDTOV2 dto) {
-    return createSecretTextInternal(accountIdentifier, dto);
-  }
-
-  private NGEncryptedData createSecretTextInternal(String accountIdentifier, SecretDTOV2 dto) {
     SecretTextSpecDTO secret = (SecretTextSpecDTO) dto.getSpec();
 
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
