@@ -23,4 +23,8 @@ public interface NGEncryptedDataService {
   NGEncryptedData get(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
+  NGEncryptedData updateSecretText(String accountIdentifier, SecretDTOV2 dto);
+
+  NGEncryptedData updateSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream);
 }

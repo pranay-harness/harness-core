@@ -72,6 +72,8 @@ import org.apache.commons.lang3.StringUtils;
 public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD =
       EnumSet.of(LOCAL, GCP_KMS, EncryptionType.KMS);
+  private static final String READ_ONLY_SECRET_MANAGER_ERROR =
+      "Cannot create an Inline secret in read only secret manager";
   private final NGEncryptedDataDao encryptedDataDao;
   private final KmsEncryptorsRegistry kmsEncryptorsRegistry;
   private final VaultEncryptorsRegistry vaultEncryptorsRegistry;
@@ -88,8 +90,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
     if (Inline.equals(secret.getValueType())) {
       if (isReadOnlySecretManager(secretManager)) {
-        throw new SecretManagementException(
-            SECRET_MANAGEMENT_ERROR, "Cannot create an Inline secret in read only secret manager", USER);
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, READ_ONLY_SECRET_MANAGER_ERROR, USER);
       }
       EncryptedRecord encryptedRecord =
           getEncryptedRecord(encryptedData, secret.getValue(), SecretManagerConfigMapper.fromDTO(secretManager));
@@ -103,18 +104,21 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     return encryptedDataDao.save(encryptedData);
   }
 
-  private String formNotFoundMessage(String baseMessage, String orgIdentifier, String projectIdentifier) {
-    if (!StringUtils.isEmpty(orgIdentifier)) {
-      baseMessage += String.format("in org: %s", orgIdentifier);
-      if (!StringUtils.isEmpty(projectIdentifier)) {
-        baseMessage += String.format(" and project: %s", projectIdentifier);
-      }
-    } else if (!StringUtils.isEmpty(projectIdentifier)) {
-      baseMessage += "in project: %s" + projectIdentifier;
-    } else {
-      baseMessage += "in this scope.";
+  @Override
+  public NGEncryptedData createSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream) {
+    SecretFileSpecDTO secret = (SecretFileSpecDTO) dto.getSpec();
+
+    SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
+        dto.getProjectIdentifier(), secret.getSecretManagerIdentifier(), false);
+
+    NGEncryptedData encryptedData = buildNGEncryptedData(accountIdentifier, dto, secretManager);
+
+    if (isReadOnlySecretManager(secretManager)) {
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Cannot create an Inline secret in read only secret manager", USER);
     }
-    return baseMessage;
+    encryptSecretFile(inputStream, encryptedData, secretManager);
+    return encryptedDataDao.save(encryptedData);
   }
 
   private NGEncryptedData buildNGEncryptedData(
@@ -155,72 +159,119 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     }
   }
 
-  private void validateEncryptedRecord(EncryptedRecord encryptedRecord) {
-    if (encryptedRecord == null || isEmpty(encryptedRecord.getEncryptionKey())
-        || isEmpty(encryptedRecord.getEncryptedValue())) {
-      String message =
-          "Encryption of secret failed unexpectedly. Please check your secret manager configuration and try again.";
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
-    }
+  @Override
+  public NGEncryptedData get(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return encryptedDataDao.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
   }
 
-  private void validatePath(String path, EncryptionType encryptionType) {
-    if (path != null && encryptionType == EncryptionType.VAULT && path.indexOf('#') < 0) {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-          "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.", USER);
+  private NGEncryptedData getOrThrow(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    NGEncryptedData encryptedData =
+        encryptedDataDao.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (encryptedData != null) {
+      return encryptedData;
     }
-  }
-
-  private boolean isReadOnlySecretManager(SecretManagerConfigDTO secretManager) {
-    if (secretManager == null) {
-      return false;
-    }
-    if (EncryptionType.VAULT.equals(secretManager.getEncryptionType())) {
-      return ((VaultConfigDTO) secretManager).isReadOnly();
-    }
-    return false;
-  }
-
-  private SecretManagerConfigDTO getSecretManagerOrThrow(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, boolean maskSecrets) {
-    SecretManagerConfigDTO secretManager =
-        getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier, maskSecrets);
-    if (secretManager == null) {
-      String message = String.format("No such secret manager found with identifier %s ", identifier);
-      throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, formNotFoundMessage(message, orgIdentifier, projectIdentifier), USER);
-    }
-    return secretManager;
-  }
-
-  private SecretManagerConfigDTO getSecretManager(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, boolean maskSecrets) {
-    return LocalConfigDTO.builder()
-        .isDefault(true)
-        .encryptionType(EncryptionType.LOCAL)
-        .name("dummy")
-        .accountIdentifier(accountIdentifier)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .identifier(identifier)
-        .harnessManaged(true)
-        .build();
+    throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
   }
 
   @Override
-  public NGEncryptedData createSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream) {
-    SecretFileSpecDTO secret = (SecretFileSpecDTO) dto.getSpec();
+  public NGEncryptedData updateSecretText(String accountIdentifier, SecretDTOV2 dto) {
+    SecretTextSpecDTO secret = (SecretTextSpecDTO) dto.getSpec();
+
+    NGEncryptedData existingEncryptedData =
+        getOrThrow(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
 
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
         dto.getProjectIdentifier(), secret.getSecretManagerIdentifier(), false);
 
     NGEncryptedData encryptedData = buildNGEncryptedData(accountIdentifier, dto, secretManager);
+    if (Inline.equals(secret.getValueType())) {
+      if (isReadOnlySecretManager(secretManager)) {
+        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, READ_ONLY_SECRET_MANAGER_ERROR, USER);
+      }
+      if (!existingEncryptedData.getName().equals(dto.getName())
+          && !Optional.ofNullable(existingEncryptedData.getPath()).isPresent()
+          && Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()) {
+        deleteSecretInSecretManager(
+            accountIdentifier, existingEncryptedData, SecretManagerConfigMapper.fromDTO(secretManager));
+      }
+      EncryptedRecord encryptedRecord =
+          getEncryptedRecord(encryptedData, secret.getValue(), SecretManagerConfigMapper.fromDTO(secretManager));
 
-    if (isReadOnlySecretManager(secretManager)) {
-      throw new SecretManagementException(
-          SECRET_MANAGEMENT_ERROR, "Cannot create an Inline secret in read only secret manager", USER);
+      validateEncryptedRecord(encryptedRecord);
+      existingEncryptedData.setEncryptionKey(encryptedRecord.getEncryptionKey());
+      existingEncryptedData.setEncryptedValue(encryptedRecord.getEncryptedValue());
+      existingEncryptedData.setPath(null);
+    } else {
+      validatePath(encryptedData.getPath(), encryptedData.getEncryptionType());
+      if (!isReadOnlySecretManager(secretManager) && !existingEncryptedData.getName().equals(dto.getName())
+          && !Optional.ofNullable(existingEncryptedData.getPath()).isPresent()
+          && Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()) {
+        deleteSecretInSecretManager(
+            accountIdentifier, existingEncryptedData, SecretManagerConfigMapper.fromDTO(secretManager));
+      }
+      existingEncryptedData.setEncryptionKey(null);
+      existingEncryptedData.setEncryptedValue(null);
+      existingEncryptedData.setPath(encryptedData.getPath());
     }
+    existingEncryptedData.setName(encryptedData.getName());
+    return encryptedDataDao.save(existingEncryptedData);
+  }
 
+  @Override
+  public NGEncryptedData updateSecretFile(String accountIdentifier, SecretDTOV2 dto, InputStream inputStream) {
+    SecretFileSpecDTO secret = (SecretFileSpecDTO) dto.getSpec();
+
+    NGEncryptedData existingEncryptedData =
+        getOrThrow(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+
+    SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(accountIdentifier, dto.getOrgIdentifier(),
+        dto.getProjectIdentifier(), secret.getSecretManagerIdentifier(), false);
+
+    NGEncryptedData encryptedData = buildNGEncryptedData(accountIdentifier, dto, secretManager);
+    if (isReadOnlySecretManager(secretManager)) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, READ_ONLY_SECRET_MANAGER_ERROR, USER);
+    }
+    if (!existingEncryptedData.getName().equals(dto.getName())
+        && Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()) {
+      deleteSecretInSecretManager(
+          accountIdentifier, existingEncryptedData, SecretManagerConfigMapper.fromDTO(secretManager));
+    }
+    if (Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()
+        && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(existingEncryptedData.getEncryptionType())) {
+      secretsFileService.deleteFile(existingEncryptedData.getEncryptedValue());
+    }
+    encryptSecretFile(inputStream, encryptedData, secretManager);
+    existingEncryptedData.setName(encryptedData.getName());
+    existingEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
+    existingEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
+    existingEncryptedData.setBase64Encoded(encryptedData.isBase64Encoded());
+    return encryptedDataDao.save(existingEncryptedData);
+  }
+
+  private void encryptSecretFile(
+      InputStream inputStream, NGEncryptedData encryptedData, SecretManagerConfigDTO secretManager) {
+    String fileContent = getFileContent(inputStream);
+    EncryptedRecord encryptedRecord =
+        getEncryptedRecord(encryptedData, fileContent, SecretManagerConfigMapper.fromDTO(secretManager));
+    validateEncryptedRecord(encryptedRecord);
+
+    encryptedData.setEncryptionKey(encryptedRecord.getEncryptionKey());
+    if (ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
+      String encryptedFileId = null;
+      if (fileContent != null) {
+        encryptedFileId = secretsFileService.createFile(
+            encryptedData.getName(), encryptedData.getAccountIdentifier(), encryptedRecord.getEncryptedValue());
+      }
+      encryptedData.setEncryptedValue(encryptedFileId == null ? null : encryptedFileId.toCharArray());
+    } else {
+      encryptedData.setEncryptedValue(encryptedRecord.getEncryptedValue());
+    }
+    encryptedData.setBase64Encoded(true);
+  }
+
+  private String getFileContent(InputStream inputStream) {
     byte[] inputBytes;
     String fileContent;
     if (inputStream != null) {
@@ -233,25 +284,39 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     } else {
       fileContent = null;
     }
+    return fileContent;
+  }
 
-    EncryptedRecord encryptedRecord =
-        getEncryptedRecord(encryptedData, fileContent, SecretManagerConfigMapper.fromDTO(secretManager));
-    validateEncryptedRecord(encryptedRecord);
+  @Override
+  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    NGEncryptedData encryptedData = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
 
-    encryptedData.setEncryptionKey(encryptedRecord.getEncryptionKey());
-    if (ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
-      String encryptedFileId = null;
-      if (fileContent != null) {
-        encryptedFileId = secretsFileService.createFile(
-            encryptedData.getName(), accountIdentifier, encryptedRecord.getEncryptedValue());
-      }
-      encryptedData.setEncryptedValue(encryptedFileId == null ? null : encryptedFileId.toCharArray());
-    } else {
-      encryptedData.setEncryptedValue(encryptedRecord.getEncryptedValue());
+    SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(
+        accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), true);
+
+    if (isReadOnlySecretManager(secretManager) && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Cannot delete an Inline secret in read only secret manager", USER);
     }
-    encryptedData.setBase64Encoded(true);
+    if (!Optional.ofNullable(encryptedData.getPath()).isPresent()
+        && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+      deleteSecretInSecretManager(accountIdentifier, encryptedData, SecretManagerConfigMapper.fromDTO(secretManager));
+    }
+    if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+        && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()
+        && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
+      secretsFileService.deleteFile(encryptedData.getEncryptedValue());
+    }
+    return encryptedDataDao.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
 
-    return encryptedDataDao.save(encryptedData);
+  private void deleteSecretInSecretManager(
+      String accountIdentifier, NGEncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
+    SecretManagerType secretManagerType = secretManagerConfig.getType();
+    if (VAULT.equals(secretManagerType)) {
+      vaultEncryptorsRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType())
+          .deleteSecret(accountIdentifier, encryptedData, secretManagerConfig);
+    }
   }
 
   @Override
@@ -288,7 +353,9 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
             // if type is file and file is saved elsewhere, download and save contents in encryptedValue
             if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
                 && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
-              setEncryptedValueToFileContent(encryptedData);
+              char[] fileContent =
+                  secretsFileService.getFileContents(String.valueOf(encryptedData.getEncryptedValue()));
+              encryptedData.setEncryptedValue(fileContent);
             }
 
             // get secret manager with which this was secret was encrypted
@@ -325,15 +392,70 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
         .build();
   }
 
-  private void setEncryptedValueToFileContent(NGEncryptedData encryptedData) {
-    char[] fileContent = secretsFileService.getFileContents(String.valueOf(encryptedData.getEncryptedValue()));
-    encryptedData.setEncryptedValue(fileContent);
+  private void validateEncryptedRecord(EncryptedRecord encryptedRecord) {
+    if (encryptedRecord == null || isEmpty(encryptedRecord.getEncryptionKey())
+        || isEmpty(encryptedRecord.getEncryptedValue())) {
+      String message =
+          "Encryption of secret failed unexpectedly. Please check your secret manager configuration and try again.";
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
+    }
   }
 
-  @Override
-  public NGEncryptedData get(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    return encryptedDataDao.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  private void validatePath(String path, EncryptionType encryptionType) {
+    if (path != null && encryptionType == EncryptionType.VAULT && path.indexOf('#') < 0) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.", USER);
+    }
+  }
+
+  private SecretManagerConfigDTO getSecretManagerOrThrow(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, boolean maskSecrets) {
+    SecretManagerConfigDTO secretManager =
+        getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier, maskSecrets);
+    if (secretManager == null) {
+      String message = String.format("No such secret manager found with identifier %s ", identifier);
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, formNotFoundMessage(message, orgIdentifier, projectIdentifier), USER);
+    }
+    return secretManager;
+  }
+
+  private SecretManagerConfigDTO getSecretManager(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, boolean maskSecrets) {
+    return LocalConfigDTO.builder()
+        .isDefault(true)
+        .encryptionType(EncryptionType.LOCAL)
+        .name("dummy")
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .identifier(identifier)
+        .harnessManaged(true)
+        .build();
+  }
+
+  private boolean isReadOnlySecretManager(SecretManagerConfigDTO secretManager) {
+    if (secretManager == null) {
+      return false;
+    }
+    if (EncryptionType.VAULT.equals(secretManager.getEncryptionType())) {
+      return ((VaultConfigDTO) secretManager).isReadOnly();
+    }
+    return false;
+  }
+
+  private String formNotFoundMessage(String baseMessage, String orgIdentifier, String projectIdentifier) {
+    if (!StringUtils.isEmpty(orgIdentifier)) {
+      baseMessage += String.format("in org: %s", orgIdentifier);
+      if (!StringUtils.isEmpty(projectIdentifier)) {
+        baseMessage += String.format(" and project: %s", projectIdentifier);
+      }
+    } else if (!StringUtils.isEmpty(projectIdentifier)) {
+      baseMessage += "in project: %s" + projectIdentifier;
+    } else {
+      baseMessage += "in this scope.";
+    }
+    return baseMessage;
   }
 
   private String getOrgIdentifier(String parentOrgIdentifier, @NotNull Scope scope) {
@@ -348,40 +470,5 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       return parentProjectIdentifier;
     }
     return null;
-  }
-
-  @Override
-  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-
-    if (encryptedData != null) {
-      SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(
-          accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), true);
-
-      if (isReadOnlySecretManager(secretManager)
-          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-        throw new SecretManagementException(
-            SECRET_MANAGEMENT_ERROR, "Cannot delete an Inline secret in read only secret manager", USER);
-      }
-      if (!Optional.ofNullable(encryptedData.getPath()).isPresent()
-          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-        deleteSecretInSecretManager(accountIdentifier, encryptedData, SecretManagerConfigMapper.fromDTO(secretManager));
-      }
-      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
-          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
-        secretsFileService.deleteFile(encryptedData.getEncryptedValue());
-      }
-      return encryptedDataDao.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    }
-    throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
-  }
-
-  private void deleteSecretInSecretManager(
-      String accountIdentifier, NGEncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
-    SecretManagerType secretManagerType = secretManagerConfig.getType();
-    if (VAULT.equals(secretManagerType)) {
-      vaultEncryptorsRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType())
-          .deleteSecret(accountIdentifier, encryptedData, secretManagerConfig);
-    }
   }
 }
