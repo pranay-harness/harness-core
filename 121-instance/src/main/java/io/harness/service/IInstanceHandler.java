@@ -7,7 +7,7 @@ import io.harness.entity.InstanceSyncFlowType;
 import io.harness.entity.RollbackInfo;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
-public interface IInstanceHandler<T, O extends InfrastructureMapping> {
+public interface IInstanceHandler {
   void handleNewDeployment(DeploymentSummary deploymentSummary, RollbackInfo rollbackInfo);
 
   void syncInstances(String accountId, String orgId, String projectId, String infrastructureMappingId,

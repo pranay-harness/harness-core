@@ -6,13 +6,12 @@ import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 
 import software.wings.service.impl.instance.Status;
 
-public interface IInstanceSyncByPerpetualTaskhandler {
+public interface IInstanceSyncByPerpetualTaskhandler<T extends DelegateResponseData> {
   FeatureName getFeatureFlagToEnablePerpetualTaskForInstanceSync();
 
   IInstanceSyncPerpetualTaskCreator getInstanceSyncPerpetualTaskCreator();
 
-  void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, DelegateResponseData response);
+  void processInstanceSyncResponseFromPerpetualTask(InfrastructureMapping infrastructureMapping, T response);
 
-  Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response);
+  Status getStatus(InfrastructureMapping infrastructureMapping, T response);
 }

@@ -16,8 +16,8 @@ public class InstanceRepositoryImpl implements InstanceRepository {
   private MongoTemplate mongoTemplate;
 
   @Override
-  public List<Instance> getActiveInstancesByAccount(String accountId, long timestamp) {
-    Criteria criteria = Criteria.where(Instance.ACCOUNT_ID_FIELD).is(accountId);
+  public List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp) {
+    Criteria criteria = Criteria.where(Instance.ACCOUNT_ID_FIELD).is(accountIdentifier);
     if (timestamp > 0) {
       criteria = criteria.andOperator(
           Criteria.where(Instance.CREATED_AT_FIELD)
@@ -31,5 +31,12 @@ public class InstanceRepositoryImpl implements InstanceRepository {
 
     Query query = new Query().addCriteria(criteria);
     return mongoTemplate.find(query, Instance.class);
+  }
+
+  @Override
+  public List<Instance> getInstances(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId) {
+    // TODO
+    return null;
   }
 }

@@ -7,43 +7,74 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.dto.DeploymentSummary;
+import io.harness.dto.deploymentinfo.DeploymentInfo;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
+import io.harness.dto.instance.Instance;
+import io.harness.dto.instanceinfo.InstanceInfo;
+import io.harness.entity.InstanceHandlerKey;
 import io.harness.entity.InstanceSyncFlowType;
 import io.harness.entity.RollbackInfo;
+import io.harness.entity.ServerInstance;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.repository.infrastructuremapping.InfrastructureMappingRepository;
-
-import software.wings.beans.infrastructure.instance.Instance;
+import io.harness.repository.instance.InstanceRepository;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
-public abstract class InstanceHandler<T, O extends InfrastructureMapping>
-    implements IInstanceHandler<T, O>, IInstanceSyncByPerpetualTaskhandler {
+public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends InfrastructureMapping, V
+                                          extends DeploymentInfo, X extends DelegateResponseData, Y
+                                          extends InstanceInfo, Z extends ServerInstance>
+    implements IInstanceHandler, IInstanceSyncByPerpetualTaskhandler<X> {
+  public static final String AUTO_SCALE = "AUTO_SCALE";
+
   @Inject protected InfrastructureMappingRepository infrastructureMappingRepository;
   @Inject protected OutcomeService outcomeService;
+  @Inject private InstanceRepository instanceRepository;
 
-  protected abstract void validateDeploymentInfo(DeploymentSummary deploymentSummary);
+  protected abstract V validateAndReturnDeploymentInfo(DeploymentSummary deploymentSummary);
+
+  protected abstract Y validateAndReturnInstanceInfo(InstanceInfo instanceInfo);
 
   protected abstract Multimap<T, Instance> createDeploymentInstanceMap(DeploymentSummary deploymentSummary);
 
-  protected abstract void syncInstancesInternal(O inframapping, Multimap<T, Instance> deploymentInstanceMap,
-      DeploymentSummary newDeploymentSummary, RollbackInfo rollbackInfo, DelegateResponseData responseData,
-      InstanceSyncFlowType instanceSyncFlow);
+  protected abstract U validateAndReturnInfrastructureMapping(InfrastructureMapping infrastructureMapping);
 
-  protected abstract O validateAndReturnInfrastructureMapping(InfrastructureMapping infrastructureMapping);
-
-  protected abstract void validatePerpetualTaskDelegateResponse(DelegateResponseData response);
+  protected abstract void validatePerpetualTaskDelegateResponse(X response);
 
   protected abstract String getInstanceUniqueIdentifier(Instance instance);
+
+  // This key acts as common key for logical handling of instances in the handler
+  // Fetch it using deployment info
+  protected abstract T getInstanceHandlerKey(V deploymentInfo);
+
+  // Fetch instance handler key using instance info
+  protected abstract T getInstanceHandlerKey(Y instanceInfo);
+
+  // Fetch instance handler key from delegate response
+  protected abstract T getInstanceHandlerKey(X delegateResponseData);
+
+  protected abstract Y getInstanceInfo(Z serverInstance);
+
+  protected abstract List<Z> getServerInstancesFromDelegateResponse(X delegateResponseData);
+
+  protected abstract V getEmptyDeploymentInfoObject();
+
+  protected abstract X executeDelegateSyncTaskToFetchServerInstances(U infrastructureMapping, T instanceHandlerKey);
+
+  // Override this method in case of specific custom instance build requirements
+  protected void buildInstanceCustom(Instance.InstanceBuilder instanceBuilder, Z serverInstance) {
+    return;
+  }
 
   // Get concrete infrastructure mapping object based on infrastructure mapping type
   protected abstract InfrastructureMapping getInfrastructureMappingByType(
@@ -75,24 +106,21 @@ public abstract class InstanceHandler<T, O extends InfrastructureMapping>
       return;
     }
 
-    validateDeploymentInfo(deploymentSummary);
+    validateAndReturnDeploymentInfo(deploymentSummary);
 
     // Check use of generics here
     Multimap<T, Instance> deploymentToInstanceMap = createDeploymentInstanceMap(deploymentSummary);
 
-    //
-
-    O infrastructureMapping = getDeploymentInfrastructureMapping(deploymentSummary.getAccountIdentifier(),
-        deploymentSummary.getOrgIdentifier(), deploymentSummary.getProjectIdentifier(),
-        deploymentSummary.getInfrastructureMappingId());
+    // Infrastructure mapping is already present in deployment summary
+    U infrastructureMapping = validateAndReturnInfrastructureMapping(deploymentSummary.getInfrastructureMapping());
 
     syncInstancesInternal(infrastructureMapping, deploymentToInstanceMap, deploymentSummary, rollbackInfo, null,
         InstanceSyncFlowType.NEW_DEPLOYMENT);
   }
 
   public final void processInstanceSyncResponseFromPerpetualTask(
-      InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
-    O infrastructureMappingDetails = validateAndReturnInfrastructureMapping(infrastructureMapping);
+      InfrastructureMapping infrastructureMapping, X response) {
+    U infrastructureMappingDetails = validateAndReturnInfrastructureMapping(infrastructureMapping);
 
     validatePerpetualTaskDelegateResponse(response);
 
@@ -102,26 +130,10 @@ public abstract class InstanceHandler<T, O extends InfrastructureMapping>
 
   public final void syncInstances(String accountId, String orgId, String projectId, String infrastructureMappingId,
       InstanceSyncFlowType instanceSyncFlowType) {
-    O infrastructureMapping = getDeploymentInfrastructureMapping(accountId, orgId, projectId, infrastructureMappingId);
+    U infrastructureMapping = getDeploymentInfrastructureMapping(accountId, orgId, projectId, infrastructureMappingId);
 
     syncInstancesInternal(infrastructureMapping, ArrayListMultimap.create(), null,
         RollbackInfo.builder().isRollback(false).build(), null, instanceSyncFlowType);
-  }
-
-  public void syncInstancesInternal() {
-    // fill in the deployment details VS instance map from DB
-    // fetch instances from DB using inframapping id
-    //        loadContainerSvcNameInstanceMap(containerInfraMapping, containerMetadataInstanceMap);
-  }
-
-  protected final void createOrUpdateInstances(List<Instance> oldInstances, List<Instance> newInstances) {
-    //    we delete the instance oldInstances - newInstances
-    //    we create the instance newInstances - oldInstances
-    // also update common instances with the newInstances details
-
-    // Every instance will have a unique key
-    // for k8s pods:  podInfo.getName() + podInfo.getNamespace() + getImageInStringFormat(podInfo)
-    // We use this info to compare new and old instances
   }
 
   protected ServiceOutcome getServiceOutcomeFromAmbiance(Ambiance ambiance) {
@@ -136,10 +148,129 @@ public abstract class InstanceHandler<T, O extends InfrastructureMapping>
 
   // ---------------------------- PRIVATE METHODS ---------------------------
 
-  private O getDeploymentInfrastructureMapping(
+  private void createOrUpdateInstances(List<Instance> oldInstances, List<Instance> newInstances) {
+    //    we delete the instance oldInstances - newInstances
+    //    we create the instance newInstances - oldInstances
+    // also update common instances with the newInstances details
+
+    // Every instance will have a unique key
+    // for k8s pods:  podInfo.getName() + podInfo.getNamespace() + getImageInStringFormat(podInfo)
+    // We use this info to compare new and old instances
+  }
+
+  private U getDeploymentInfrastructureMapping(
       String accountId, String orgId, String projectId, String infrastructureMappingId) {
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingRepository.get(accountId, orgId, projectId, infrastructureMappingId);
     return validateAndReturnInfrastructureMapping(infrastructureMapping);
+  }
+
+  // TODO need to check how to handle rollback
+  private void syncInstancesInternal(U infrastructureMapping, Multimap<T, Instance> instanceHandlerKeyVsInstanceMap,
+      DeploymentSummary newDeploymentSummary, RollbackInfo rollbackInfo, X delegateResponseData,
+      InstanceSyncFlowType instanceSyncFlow) {
+    loadInstanceHandlerKeyVsInstanceMap(infrastructureMapping, instanceHandlerKeyVsInstanceMap);
+
+    // If its a perpetual task response, then delegate response data contains new instances info
+    // Compare with corresponding instances in DB using instance handler key and process them
+    if (instanceSyncFlow == InstanceSyncFlowType.PERPETUAL_TASK) {
+      processInstanceSync(infrastructureMapping, instanceHandlerKeyVsInstanceMap, delegateResponseData, null);
+      return;
+    }
+
+    if (instanceSyncFlow == InstanceSyncFlowType.NEW_DEPLOYMENT) {
+      // Do instance sync for only for key corresponding to new deployment summary
+      T instanceHandlerKey = getInstanceHandlerKey(validateAndReturnDeploymentInfo(newDeploymentSummary));
+      processInstanceSyncForGivenInstanceHandlerKey(
+          infrastructureMapping, instanceHandlerKey, instanceHandlerKeyVsInstanceMap, newDeploymentSummary);
+      return;
+    }
+
+    for (T instanceHandlerKey : instanceHandlerKeyVsInstanceMap.keySet()) {
+      // In case of Manual Sync, do instance sync for all keys corresponding to instances in DB
+      processInstanceSyncForGivenInstanceHandlerKey(
+          infrastructureMapping, instanceHandlerKey, instanceHandlerKeyVsInstanceMap, null);
+    }
+  }
+
+  private void processInstanceSyncForGivenInstanceHandlerKey(U infrastructureMapping, T instanceHandlerKey,
+      Multimap<T, Instance> instanceHandlerKeyVsInstanceMap, DeploymentSummary deploymentSummary) {
+    X delegateSyncTaskResponse =
+        executeDelegateSyncTaskToFetchServerInstances(infrastructureMapping, instanceHandlerKey);
+    processInstanceSync(
+        infrastructureMapping, instanceHandlerKeyVsInstanceMap, delegateSyncTaskResponse, deploymentSummary);
+  }
+
+  private void processInstanceSync(U infrastructureMapping, Multimap<T, Instance> instanceHandlerKeyVsInstanceMap,
+      X delegateResponseData, DeploymentSummary deploymentSummary) {
+    T instanceHandlerKeyFromDelegateResponse = getInstanceHandlerKey(delegateResponseData);
+    List<Instance> instancesInDB =
+        new ArrayList<>(instanceHandlerKeyVsInstanceMap.get(instanceHandlerKeyFromDelegateResponse));
+    List<Z> serverInstances = getServerInstancesFromDelegateResponse(delegateResponseData);
+    if (deploymentSummary == null) {
+      // In case of perpetual task, deployment summary would be null
+      // required to be constructed from existing instances
+      deploymentSummary = instancesInDB.size() > 0 ? generateDeploymentSummaryFromInstance(instancesInDB.get(0)) : null;
+    }
+    List<Instance> instancesFromServer =
+        getInstancesFromServerInstances(infrastructureMapping, serverInstances, deploymentSummary);
+    createOrUpdateInstances(instancesInDB, instancesFromServer);
+  }
+
+  private Instance buildInstance(U infrastructureMapping, Z serverInstance, DeploymentSummary deploymentSummary) {
+    // TODO build instance base
+    Instance.InstanceBuilder instanceBuilder = Instance.builder();
+    instanceBuilder.instanceInfo(getInstanceInfo(serverInstance));
+    // Why don't we have common field for instane info in mongo
+    // rather having separate field names for different deployment type
+    // TODO set instance info
+
+    buildInstanceCustom(instanceBuilder, serverInstance);
+
+    return instanceBuilder.build();
+  }
+
+  private List<Instance> getInstancesFromServerInstances(
+      U infrastructureMapping, List<Z> serverInstances, DeploymentSummary deploymentSummary) {
+    List<Instance> instances = new ArrayList<>();
+    for (Z serverInstance : serverInstances) {
+      instances.add(buildInstance(infrastructureMapping, serverInstance, deploymentSummary));
+    }
+    return instances;
+  }
+
+  private DeploymentSummary generateDeploymentSummaryFromInstance(Instance instance) {
+    if (instance == null) {
+      return null;
+    }
+    return DeploymentSummary.builder()
+        .accountIdentifier(instance.getAccountIdentifier())
+        .orgIdentifier(instance.getOrgIdentifier())
+        .projectIdentifier(instance.getProjectIdentifier())
+        .infrastructureMappingId(instance.getInfrastructureMappingId())
+        .pipelineExecutionName(instance.getLastPipelineExecutionName())
+        .pipelineExecutionId(instance.getLastPipelineExecutionId())
+        .deployedAt(System.currentTimeMillis())
+        .deployedById(AUTO_SCALE)
+        .deployedByName(AUTO_SCALE)
+        .deploymentInfo(getEmptyDeploymentInfoObject())
+        .build();
+  }
+
+  private void loadInstanceHandlerKeyVsInstanceMap(
+      U infrastrastructureMapping, Multimap<T, Instance> instanceHandlerKeyVsInstanceMap) {
+    List<Instance> instancesInDB = getInstances(infrastrastructureMapping);
+
+    for (Instance instance : instancesInDB) {
+      Y instanceInfo = validateAndReturnInstanceInfo(instance.getInstanceInfo());
+      T instanceHandlerKey = getInstanceHandlerKey(instanceInfo);
+      instanceHandlerKeyVsInstanceMap.put(instanceHandlerKey, instance);
+    }
+  }
+
+  private List<Instance> getInstances(InfrastructureMapping infrastructureMapping) {
+    return instanceRepository.getInstances(infrastructureMapping.getAccountIdentifier(),
+        infrastructureMapping.getOrgIdentifier(), infrastructureMapping.getProjectIdentifier(),
+        infrastructureMapping.getId());
   }
 }
