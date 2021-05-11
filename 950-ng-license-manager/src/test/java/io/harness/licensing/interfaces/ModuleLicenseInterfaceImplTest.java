@@ -10,10 +10,12 @@ import io.harness.licensing.LicenseTestBase;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.ModuleType;
 import io.harness.licensing.UpdateChannel;
+import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
+import io.harness.licensing.interfaces.clients.local.CELocalClient;
 import io.harness.licensing.interfaces.clients.local.CFLocalClient;
 import io.harness.licensing.interfaces.clients.local.CILocalClient;
 import io.harness.rule.Owner;
@@ -55,7 +57,7 @@ public class ModuleLicenseInterfaceImplTest extends LicenseTestBase {
                                        .startTime(Instant.now().getEpochSecond())
                                        .expiryTime(0)
                                        .build();
-    ModuleLicenseDTO dto = moduleLicenseInterface.createTrialLicense(
+    ModuleLicenseDTO dto = moduleLicenseInterface.generateTrialLicense(
         Edition.ENTERPRISE, DEFAULT_ACCOUNT, LicenseType.TRIAL, ModuleType.CI);
     dto.setExpiryTime(0);
     assertThat(dto).isEqualTo(expectedDTO);
@@ -78,8 +80,31 @@ public class ModuleLicenseInterfaceImplTest extends LicenseTestBase {
                                        .startTime(Instant.now().getEpochSecond())
                                        .expiryTime(0)
                                        .build();
-    ModuleLicenseDTO dto = moduleLicenseInterface.createTrialLicense(
+    ModuleLicenseDTO dto = moduleLicenseInterface.generateTrialLicense(
         Edition.ENTERPRISE, DEFAULT_ACCOUNT, LicenseType.TRIAL, ModuleType.CF);
+    dto.setExpiryTime(0);
+    assertThat(dto).isEqualTo(expectedDTO);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ZHUO)
+  @Category(UnitTests.class)
+  public void testStartTrialOnCE() {
+    when(clientMap.get(ModuleType.CE)).thenReturn(new CELocalClient());
+    ModuleLicenseDTO expectedDTO = CEModuleLicenseDTO.builder()
+                                       .numberOfCluster(2)
+                                       .dataRetentionInDays(30)
+                                       .spendLimit(250000)
+                                       .accountIdentifier(DEFAULT_ACCOUNT)
+                                       .moduleType(ModuleType.CE)
+                                       .licenseType(LicenseType.TRIAL)
+                                       .edition(Edition.ENTERPRISE)
+                                       .status(LicenseStatus.ACTIVE)
+                                       .startTime(Instant.now().getEpochSecond())
+                                       .expiryTime(0)
+                                       .build();
+    ModuleLicenseDTO dto = moduleLicenseInterface.generateTrialLicense(
+        Edition.ENTERPRISE, DEFAULT_ACCOUNT, LicenseType.TRIAL, ModuleType.CE);
     dto.setExpiryTime(0);
     assertThat(dto).isEqualTo(expectedDTO);
   }

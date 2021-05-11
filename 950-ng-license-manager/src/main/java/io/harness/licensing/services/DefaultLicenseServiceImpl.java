@@ -125,7 +125,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   public ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialRequestDTO startTrialRequestDTO) {
     Edition edition = Edition.ENTERPRISE;
     LicenseType licenseType = LicenseType.TRIAL;
-    ModuleLicenseDTO trialLicense = licenseInterface.createTrialLicense(
+    ModuleLicenseDTO trialLicense = licenseInterface.generateTrialLicense(
         edition, accountIdentifier, licenseType, startTrialRequestDTO.getModuleType());
     ModuleLicense savedEntity;
     try {
@@ -134,13 +134,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     } catch (DuplicateKeyException ex) {
       String cause = format("Trial license for moduleType [%s] already exists in account [%s]",
           startTrialRequestDTO.getModuleType(), accountIdentifier);
-      HashMap<String, Object> properties = new HashMap<>();
-      properties.put("reason", cause);
-      properties.put("module", startTrialRequestDTO.getModuleType());
-      properties.put("licenseType", licenseType);
-      properties.put("licenseEdition", edition);
-      telemetryReporter.sendTrackEvent(FAILED_OPERATION, properties, null, Category.SIGN_UP);
-
+      sendFailedTelemetryEvents(accountIdentifier, startTrialRequestDTO.getModuleType(), licenseType, edition, cause);
       throw new DuplicateFieldException(cause);
     }
 
@@ -172,5 +166,15 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     groupProperties.put(format("%s%s", moduleType, "LicenseExpiryTinme"), moduleLicense.getExpiryTime());
     groupProperties.put(format("%s%s", moduleType, "LicenseStatus"), moduleLicense.getStatus());
     telemetryReporter.sendGroupEvent(accountIdentifier, groupProperties, null);
+  }
+
+  private void sendFailedTelemetryEvents(
+      String accountIdentifier, ModuleType moduleType, LicenseType licenseType, Edition edition, String cause) {
+    HashMap<String, Object> properties = new HashMap<>();
+    properties.put("reason", cause);
+    properties.put("module", moduleType);
+    properties.put("licenseType", licenseType);
+    properties.put("licenseEdition", edition);
+    telemetryReporter.sendTrackEvent(FAILED_OPERATION, properties, null, Category.SIGN_UP);
   }
 }

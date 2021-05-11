@@ -2,6 +2,7 @@ package io.harness.licensing;
 
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 import io.harness.licensing.interfaces.clients.local.CDLocalClient;
+import io.harness.licensing.interfaces.clients.local.CELocalClient;
 import io.harness.licensing.interfaces.clients.local.CFLocalClient;
 import io.harness.licensing.interfaces.clients.local.CILocalClient;
 import io.harness.licensing.interfaces.clients.local.UnsupportedClient;
@@ -26,7 +27,7 @@ public class ModuleLicenseRegistrarFactory {
     registrar.put(
         ModuleType.CI, new ModuleLicenseRegistrar(ModuleType.CI, CILicenseObjectMapper.class, CILocalClient.class));
     registrar.put(
-        ModuleType.CE, new ModuleLicenseRegistrar(ModuleType.CE, CELicenseObjectMapper.class, UnsupportedClient.class));
+        ModuleType.CE, new ModuleLicenseRegistrar(ModuleType.CE, CELicenseObjectMapper.class, CELocalClient.class));
     registrar.put(
         ModuleType.CV, new ModuleLicenseRegistrar(ModuleType.CV, CVLicenseObjectMapper.class, UnsupportedClient.class));
     registrar.put(

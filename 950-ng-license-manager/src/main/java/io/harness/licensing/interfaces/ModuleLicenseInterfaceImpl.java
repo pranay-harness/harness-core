@@ -23,7 +23,7 @@ public class ModuleLicenseInterfaceImpl implements ModuleLicenseInterface {
   static final long TRIAL_DURATION = 14;
 
   @Override
-  public ModuleLicenseDTO createTrialLicense(
+  public ModuleLicenseDTO generateTrialLicense(
       Edition edition, String accountId, LicenseType licenseType, ModuleType moduleType) {
     ModuleLicenseDTO trialLicense = clientMap.get(moduleType).createTrialLicense(edition, accountId, licenseType);
     trialLicense.setAccountIdentifier(accountId);

@@ -10,7 +10,7 @@ import io.harness.licensing.beans.stats.RuntimeUsageDTO;
 
 @OwnedBy(HarnessTeam.GTM)
 public interface ModuleLicenseInterface {
-  ModuleLicenseDTO createTrialLicense(
+  ModuleLicenseDTO generateTrialLicense(
       Edition edition, String accountId, LicenseType licenseType, ModuleType moduleType);
   RuntimeUsageDTO getRuntimeUsage(String accountId, ModuleType moduleType);
 }
