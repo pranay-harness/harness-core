@@ -13,6 +13,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static java.lang.Boolean.TRUE;
 
 import io.harness.AccessControlClientModule;
+import io.harness.AccessControlMigrationModule;
 import io.harness.Microservice;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -61,7 +62,6 @@ import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;

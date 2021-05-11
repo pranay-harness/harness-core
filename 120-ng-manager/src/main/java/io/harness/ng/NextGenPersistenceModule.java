@@ -1,9 +1,9 @@
 package io.harness.ng;
 
+import io.harness.AccessControlMigrationPersistenceConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.persistance.GitSyncablePersistenceConfig;
-import io.harness.ng.accesscontrol.migrations.AccessControlMigrationPersistenceConfig;
 import io.harness.notification.NotificationChannelPersistenceConfig;
 import io.harness.pms.sdk.PmsSdkPersistenceConfig;
 import io.harness.springdata.SpringPersistenceConfig;

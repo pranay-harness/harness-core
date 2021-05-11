@@ -2,8 +2,9 @@ package io.harness.ng.accesscontrol.migrations.dao;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
-import io.harness.ng.accesscontrol.migrations.repositories.AccessControlMigrationRepository;
+import io.harness.dao.AccessControlMigrationDAO;
+import io.harness.models.AccessControlMigration;
+import io.harness.repositories.AccessControlMigrationRepository;
 
 import com.google.inject.Inject;
 import lombok.AllArgsConstructor;

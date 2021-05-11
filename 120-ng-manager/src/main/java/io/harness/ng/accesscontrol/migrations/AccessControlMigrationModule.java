@@ -3,18 +3,18 @@ package io.harness.ng.accesscontrol.migrations;
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.dao.AccessControlMigrationDAO;
+import io.harness.dao.AccessControlMigrationDAOImpl;
+import io.harness.events.AccessControlMigrationHandler;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAO;
-import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAOImpl;
-import io.harness.ng.accesscontrol.migrations.events.AccessControlMigrationHandler;
-import io.harness.ng.accesscontrol.migrations.repositories.AccessControlMigrationRepository;
-import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationService;
-import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationServiceImpl;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.service.NgUserService;
+import io.harness.repositories.AccessControlMigrationRepository;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.services.AccessControlMigrationService;
+import io.harness.services.AccessControlMigrationServiceImpl;
 import io.harness.user.remote.UserClient;
 
 import com.google.inject.AbstractModule;
@@ -25,11 +25,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @OwnedBy(HarnessTeam.PL)
 public class AccessControlMigrationModule extends AbstractModule {
-  private static AccessControlMigrationModule instance;
+  private static io.harness.AccessControlMigrationModule instance;
 
-  public static synchronized AccessControlMigrationModule getInstance() {
+  public static synchronized io.harness.AccessControlMigrationModule getInstance() {
     if (instance == null) {
-      instance = new AccessControlMigrationModule();
+      instance = new io.harness.AccessControlMigrationModule();
     }
     return instance;
   }

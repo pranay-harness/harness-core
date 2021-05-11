@@ -5,6 +5,7 @@ import static io.harness.ng.DbAliases.NG_MANAGER;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.models.RoleAssignmentMetadata;
 import io.harness.mongo.index.FdIndex;
 
 import java.util.Date;
