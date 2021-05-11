@@ -3,7 +3,6 @@ package io.harness.gitsync.common.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.ng.beans.PageRequest;
@@ -21,5 +20,5 @@ public interface ScmClientFacilitatorService {
   GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId);
 
-  SaasGitDTO isSaasGit(ScmConnector scmConnector);
+  SaasGitDTO isSaasGit(String repoURL);
 }
