@@ -4,14 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sRollingRollbackStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
@@ -48,11 +46,6 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackBaseStepInfo i
   @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.TASK;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_ROLLING_ROLLBACK).build();
   }
 
   @Override

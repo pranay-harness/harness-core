@@ -1,9 +1,7 @@
 package io.harness.cdng.artifact.bean.yaml;
 
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.artifact.ArtifactOverridesVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -34,11 +32,5 @@ public class ArtifactOverrideSets implements Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("artifacts", artifacts);
     return children;
-  }
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder()
-        .qualifierName(YamlTypes.ARTIFACT_OVERRIDE_SETS + YamlTypes.PATH_CONNECTOR + identifier)
-        .build();
   }
 }

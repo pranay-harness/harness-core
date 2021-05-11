@@ -1,9 +1,7 @@
 package io.harness.cdng.variables.beans;
 
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.variables.VariableOverridesVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.variables.NGVariable;
@@ -27,11 +25,4 @@ public class NGVariableOverrideSets implements Visitable {
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder()
-        .qualifierName(YamlTypes.VARIABLE_OVERRIDE_SETS + YamlTypes.PATH_CONNECTOR + identifier)
-        .build();
-  }
 }
