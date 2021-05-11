@@ -164,3 +164,4 @@ import_run_configurations:
   run-configurations/VerificationServiceApp.xml
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
+  run-configurations/PipelineService.xml
