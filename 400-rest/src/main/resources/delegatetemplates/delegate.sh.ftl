@@ -208,6 +208,8 @@ rm -f -- *.bak
 
 export KUBECTL_VERSION=${kubectlVersion}
 
+export SCM_VERSION=${scmVersion}
+
 <#if delegateName??>
 export DELEGATE_NAME=${delegateName}
 </#if>
