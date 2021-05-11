@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validator.NGVariableName;
 import io.harness.visitor.helpers.variables.NumberVariableVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -30,7 +31,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.yaml.core.variables.NumberNGVariable")
 @OwnedBy(CDC)
 public class NumberNGVariable implements NGVariable {
-  String name;
+  @NGVariableName String name;
   @ApiModelProperty(allowableValues = NGVariableConstants.NUMBER_TYPE) NGVariableType type = NGVariableType.NUMBER;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.DOUBLE_CLASSPATH) ParameterField<Double> value;
   String description;
