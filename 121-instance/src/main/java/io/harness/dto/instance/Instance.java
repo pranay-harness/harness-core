@@ -24,7 +24,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Builder
-@FieldNameConstants(innerTypeName = "InstanceNGKeys")
+@FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instances", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("instances")
@@ -36,17 +36,12 @@ public class Instance {
         .add(CompoundMongoIndex.builder()
                  .name("unique_identification")
                  .unique(true)
-                 .field(InstanceNGKeys.accountIdentifier)
-                 .field(InstanceNGKeys.orgIdentifier)
-                 .field(InstanceNGKeys.projectIdentifier)
+                 .field(InstanceKeys.accountIdentifier)
+                 .field(InstanceKeys.orgIdentifier)
+                 .field(InstanceKeys.projectIdentifier)
                  .build())
         .build();
   }
-
-  public static final String ACCOUNT_ID_FIELD = "accountId";
-  public static final String CREATED_AT_FIELD = "createdAt";
-  public static final String IS_DELETED_FIELD = "isDeleted";
-  public static final String DELETED_AT_FIELD = "deletedAt";
 
   private String accountIdentifier;
   private String orgIdentifier;

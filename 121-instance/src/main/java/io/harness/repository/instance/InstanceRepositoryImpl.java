@@ -1,6 +1,7 @@
 package io.harness.repository.instance;
 
 import io.harness.dto.instance.Instance;
+import io.harness.dto.instance.Instance.InstanceKeys;
 
 import com.google.inject.Inject;
 import groovy.util.logging.Slf4j;
@@ -17,16 +18,16 @@ public class InstanceRepositoryImpl implements InstanceRepository {
 
   @Override
   public List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp) {
-    Criteria criteria = Criteria.where(Instance.ACCOUNT_ID_FIELD).is(accountIdentifier);
+    Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier).is(accountIdentifier);
     if (timestamp > 0) {
       criteria = criteria.andOperator(
-          Criteria.where(Instance.CREATED_AT_FIELD)
+          Criteria.where(InstanceKeys.createdAt)
               .lte(timestamp)
-              .andOperator(Criteria.where(Instance.IS_DELETED_FIELD)
+              .andOperator(Criteria.where(InstanceKeys.isDeleted)
                                .is(false)
-                               .orOperator(Criteria.where(Instance.DELETED_AT_FIELD).gte(timestamp))));
+                               .orOperator(Criteria.where(InstanceKeys.deletedAt).gte(timestamp))));
     } else {
-      criteria = criteria.andOperator(Criteria.where(Instance.IS_DELETED_FIELD).is(false));
+      criteria = criteria.andOperator(Criteria.where(InstanceKeys.isDeleted).is(false));
     }
 
     Query query = new Query().addCriteria(criteria);
