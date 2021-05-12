@@ -1,5 +1,8 @@
 package io.harness.ng.core.api;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -13,6 +16,7 @@ import java.util.Optional;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 
+@OwnedBy(PL)
 public interface SecretCrudService {
   default RequestBody getRequestBody(String value) {
     if (!Optional.ofNullable(value).isPresent()) {

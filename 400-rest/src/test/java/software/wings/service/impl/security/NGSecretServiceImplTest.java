@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
@@ -46,6 +48,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 public class NGSecretServiceImplTest extends WingsBaseTest {
   @Mock private NGSecretManagerService ngSecretManagerService;
   @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;

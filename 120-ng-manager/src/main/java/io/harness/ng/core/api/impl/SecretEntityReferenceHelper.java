@@ -1,9 +1,11 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.utils.Utils.emptyIfNull;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -24,6 +26,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class SecretEntityReferenceHelper {

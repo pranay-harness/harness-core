@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.SECRETS;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
@@ -33,6 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(PL)
 @Slf4j
 public class SecretEntityReferenceHelperTest extends CategoryTest {
   @InjectMocks SecretEntityReferenceHelper secretEntityReferenceHelper;
@@ -61,7 +64,6 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     String secretName = "secretName";
     String identifier = "identifier";
     String secretManager = "secretManager";
-    String secretManagerName = "secretManagerName";
     when(entityReferenceHelper.createEntityReference(anyString(), any(), any())).thenCallRealMethod();
     secretEntityReferenceHelper.createSetupUsageForSecretManager(
         account, org, project, identifier, secretName, secretManager);
@@ -77,7 +79,6 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     } catch (Exception ex) {
       log.error("Unexpected error :", ex);
     }
-    assertThat(entityReferenceDTO.getReferredEntity().getName()).isEqualTo(secretManagerName);
     assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(CONNECTORS.name());
     assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(account);
     assertThat(entityReferenceDTO.getReferredByEntity().getName()).isEqualTo(secretName);
@@ -94,7 +95,6 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     String secretName = "secretName";
     String identifier = "identifier";
     String secretManager = "secretManager";
-    String secretManagerName = "secretManagerName";
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
     secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(
         account, org, project, identifier, secretManager);
