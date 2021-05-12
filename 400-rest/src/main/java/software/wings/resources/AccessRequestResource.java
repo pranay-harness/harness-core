@@ -53,6 +53,14 @@ public class AccessRequestResource {
     return new RestResponse<>(accessRequestService.createAccessRequest(accessRequestDTO));
   }
 
+  @POST
+  @Path("{accountId}/createAccessRequest")
+  @Consumes(MediaType.APPLICATION_JSON)
+  public RestResponse<AccessRequest> createAccessRequest(
+      @PathParam("accountId") String accountId, @RequestBody @NotNull AccessRequestDTO accessRequestDTO) {
+    return new RestResponse<>(accessRequestService.createAccessRequest(accessRequestDTO));
+  }
+
   @DELETE
   @Path("{accountId}/{accessRequestId}")
   @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
@@ -61,9 +69,15 @@ public class AccessRequestResource {
     return new RestResponse<>(accessRequestService.delete(accessRequestId));
   }
 
+  @DELETE
+  @Path("{accountId}/{accessRequestId}/deleteAccessRequest")
+  public RestResponse<Boolean> deleteAccessRequest(
+      @PathParam("accountId") String accountId, @PathParam("accessRequestId") String accessRequestId) {
+    return new RestResponse<>(accessRequestService.delete(accessRequestId));
+  }
+
   @GET
   @Path("{accountId}/listAccessRequest")
-  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<AccessRequest> listAccessRequest(
       @PathParam("accountId") String accountId, @QueryParam("accessRequestId") String accessRequestId) {
     return new RestResponse<>(accessRequestService.get(accessRequestId));
@@ -71,7 +85,6 @@ public class AccessRequestResource {
 
   @GET
   @Path("{accountId}/listAccessRequest/harnessUserGroup")
-  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<List<AccessRequest>> listActiveAccessRequest(
       @PathParam("accountId") String accountId, @QueryParam("harnessUserGroupId") String harnessUserGroupId) {
     return new RestResponse<>(accessRequestService.getActiveAccessRequest(harnessUserGroupId));
@@ -79,7 +92,6 @@ public class AccessRequestResource {
 
   @GET
   @Path("{accountId}/listAccessRequest/account")
-  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<List<AccessRequest>> listActiveAccessRequestForAccount(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accessRequestService.getActiveAccessRequestForAccount(accountId));
   }
