@@ -27,7 +27,7 @@ ARTIFACT_TYPE:
       value: WAR
     - name: ZIP File
       value: ZIP
-    - name: Pivotal Cloud Foundry
+    - name: Tanzu Application Services
       value: PCF
     - name: IIS Website
       value: IIS

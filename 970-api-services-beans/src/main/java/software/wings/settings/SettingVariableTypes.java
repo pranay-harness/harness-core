@@ -138,9 +138,9 @@ public enum SettingVariableTypes {
   AZURE("Microsoft Azure"),
 
   /**
-   * Tanzu Application Service
+   * Tanzu Application Services
    */
-  PCF("Tanzu Application Service"),
+  PCF("Tanzu Application Services"),
 
   /**
    * Direct connection setting variable types.
