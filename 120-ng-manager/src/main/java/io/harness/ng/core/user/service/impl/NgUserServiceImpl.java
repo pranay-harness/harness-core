@@ -436,7 +436,7 @@ public class NgUserServiceImpl implements NgUserService {
           listUsersHavingRole(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build(), ACCOUNT_ADMIN);
       accountAdmins.remove(userId);
       if (accountAdmins.isEmpty()) {
-        throw new InvalidRequestException("This user is the only account admin left. Can't Remove it");
+        throw new InvalidRequestException("This user is the only account-admin left. Can't Remove it");
       }
     }
 
