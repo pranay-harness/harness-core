@@ -262,6 +262,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
     for (Instance instance : instancesInDB) {
       Y instanceInfo = validateAndReturnInstanceInfo(instance.getInstanceInfo());
+      // TODO Check with Anshul if this interpretation is correct
       T instanceHandlerKey = getInstanceHandlerKey(instanceInfo);
       instanceHandlerKeyVsInstanceMap.put(instanceHandlerKey, instance);
     }
