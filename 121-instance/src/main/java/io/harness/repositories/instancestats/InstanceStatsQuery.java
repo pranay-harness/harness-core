@@ -1,4 +1,4 @@
-package io.harness.repository.instancestats;
+package io.harness.repositories.instancestats;
 
 public enum InstanceStatsQuery {
   FETCH_LATEST_RECORD("SELECT * FROM INSTANCE_STATS WHERE ACCOUNTID=? ORDER BY DESC LIMIT 1");

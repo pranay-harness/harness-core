@@ -12,12 +12,13 @@ import io.harness.dto.DeploymentSummary;
 import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.entity.DeploymentEvent;
 import io.harness.entity.RollbackInfo;
+import io.harness.exception.GeneralException;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import io.harness.repository.infrastructuremapping.InfrastructureMappingRepository;
+import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
 import io.harness.service.InstanceHandler;
 import io.harness.service.instance.InstanceService;
 import io.harness.service.instancehandlerfactory.InstanceHandlerFactoryService;
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -157,10 +159,14 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
              InfrastructureMapping.class, infrastructureMappingId, Duration.ofSeconds(200), Duration.ofSeconds(220))) {
       log.info("Handling deployment event for infraMappingId [{}]", infrastructureMappingId);
-      InfrastructureMapping infrastructureMapping =
-          infrastructureMappingRepository.get(deploymentSummary.getAccountIdentifier(),
-              deploymentSummary.getOrgIdentifier(), deploymentSummary.getProjectIdentifier(), infrastructureMappingId);
-      notNullCheck("Infra mapping is null for the given id: " + infrastructureMappingId, infrastructureMapping);
+      Optional<InfrastructureMapping> infrastructureMappingOptional =
+          infrastructureMappingRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndId(
+              deploymentSummary.getAccountIdentifier(), deploymentSummary.getOrgIdentifier(),
+              deploymentSummary.getProjectIdentifier(), infrastructureMappingId);
+      if (!infrastructureMappingOptional.isPresent()) {
+        throw new GeneralException("Infra mapping is null for the given id: " + infrastructureMappingId);
+      }
+      InfrastructureMapping infrastructureMapping = infrastructureMappingOptional.get();
 
       InfrastructureMappingType infrastructureMappingType = Utils.getEnumFromString(
           InfrastructureMappingType.class, infrastructureMapping.getInfrastructureMappingType());

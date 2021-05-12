@@ -1,7 +1,7 @@
 package io.harness.service.instancestats;
 
 import io.harness.entity.InstanceStats;
-import io.harness.repository.instancestats.InstanceStatsRepository;
+import io.harness.repositories.instancestats.InstanceStatsRepository;
 
 import com.google.inject.Inject;
 import java.time.Instant;

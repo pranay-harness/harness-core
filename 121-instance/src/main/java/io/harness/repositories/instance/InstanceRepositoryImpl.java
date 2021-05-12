@@ -1,5 +1,7 @@
-package io.harness.repository.instance;
+package io.harness.repositories.instance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.dto.instance.Instance;
 import io.harness.dto.instance.Instance.InstanceKeys;
 
@@ -11,6 +13,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+@OwnedBy(HarnessTeam.DX)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class InstanceRepositoryImpl implements InstanceRepository {

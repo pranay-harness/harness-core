@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import org.springframework.data.annotation.TypeAlias;
 
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(HarnessTeam.DX)

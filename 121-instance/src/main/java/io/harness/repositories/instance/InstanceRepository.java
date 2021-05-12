@@ -1,9 +1,12 @@
-package io.harness.repository.instance;
+package io.harness.repositories.instance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.dto.instance.Instance;
 
 import java.util.List;
 
+@OwnedBy(HarnessTeam.DX)
 public interface InstanceRepository {
   List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 

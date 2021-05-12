@@ -4,7 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.dto.SyncStatus;
 import io.harness.dto.instance.Instance;
-import io.harness.repository.syncstatus.SyncStatusRepository;
+import io.harness.repositories.syncstatus.SyncStatusRepository;
 
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,8 +81,11 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public boolean handleSyncFailure(String orgId, String projectId, String serviceId, String envId,
       String infraMappingId, String infraMappingName, long timestamp, String errorMsg) {
-    SyncStatus syncStatus = syncStatusRepository.getSyncStatus(orgId, projectId, serviceId, envId, infraMappingId);
-    if (syncStatus != null) {
+    Optional<SyncStatus> syncStatusOptional =
+        syncStatusRepository.findByOrgIdentifierAndProjectIdentifierAndServiceIdAndEnvIdAndInfrastructureMappingId(
+            orgId, projectId, serviceId, envId, infraMappingId);
+    if (syncStatusOptional.isPresent()) {
+      SyncStatus syncStatus = syncStatusOptional.get();
       if ((timestamp - syncStatus.getLastSuccessfullySyncedAt()) >= Duration.ofDays(7).toMillis()) {
         log.info("Deleting the instances since sync has been failing for more than a week for infraMappingId: {}",
             infraMappingId);

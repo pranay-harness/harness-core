@@ -19,14 +19,15 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.repository.infrastructuremapping.InfrastructureMappingRepository;
-import io.harness.repository.instance.InstanceRepository;
+import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
+import io.harness.repositories.instance.InstanceRepository;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -157,9 +158,10 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
   private U getDeploymentInfrastructureMapping(
       String accountId, String orgId, String projectId, String infrastructureMappingId) {
-    InfrastructureMapping infrastructureMapping =
-        infrastructureMappingRepository.get(accountId, orgId, projectId, infrastructureMappingId);
-    return validateAndReturnInfrastructureMapping(infrastructureMapping);
+    Optional<InfrastructureMapping> infrastructureMappingOptional =
+        infrastructureMappingRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndId(
+            accountId, orgId, projectId, infrastructureMappingId);
+    return validateAndReturnInfrastructureMapping(infrastructureMappingOptional.get());
   }
 
   // TODO need to check how to handle rollback

@@ -1,4 +1,4 @@
-package io.harness.repository.instancestats;
+package io.harness.repositories.instancestats;
 
 import io.harness.entity.InstanceStats;
 

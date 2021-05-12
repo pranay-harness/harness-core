@@ -1,4 +1,4 @@
-package io.harness.repository.instancestats;
+package io.harness.repositories.instancestats;
 
 public enum InstanceStatsFields {
   ACCOUNTID("ACCOUNTID"),

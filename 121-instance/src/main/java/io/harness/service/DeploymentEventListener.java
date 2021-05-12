@@ -13,11 +13,12 @@ import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.repository.infrastructuremapping.InfrastructureMappingRepository;
+import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
 import io.harness.service.instancehandlerfactory.InstanceHandlerFactoryService;
 import io.harness.service.instancesync.InstanceSyncService;
 
 import com.google.inject.Inject;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,10 +59,11 @@ public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
     InfrastructureMapping infrastructureMapping = instanceHandler.getInfrastructureMapping(ambiance);
 
     // Check if infrastructure mapping already exists in DB or not, if not, then create a new record
-    InfrastructureMapping infrastructureMappingInDB = infrastructureMappingRepository.get(
-        AmbianceHelper.getAccountId(ambiance), AmbianceHelper.getOrgIdentifier(ambiance),
-        AmbianceHelper.getProjectIdentifier(ambiance), infrastructureMapping.getId());
-    if (infrastructureMappingInDB == null) {
+    Optional<InfrastructureMapping> infrastructureMappingInDBOptional =
+        infrastructureMappingRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndId(
+            AmbianceHelper.getAccountId(ambiance), AmbianceHelper.getOrgIdentifier(ambiance),
+            AmbianceHelper.getProjectIdentifier(ambiance), infrastructureMapping.getId());
+    if (!infrastructureMappingInDBOptional.isPresent()) {
       infrastructureMappingRepository.save(infrastructureMapping);
     }
 

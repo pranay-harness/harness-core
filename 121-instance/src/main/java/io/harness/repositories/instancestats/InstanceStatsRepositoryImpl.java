@@ -1,4 +1,4 @@
-package io.harness.repository.instancestats;
+package io.harness.repositories.instancestats;
 
 import io.harness.entity.InstanceStats;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -31,9 +31,9 @@ public class InstanceStatsRepositoryImpl implements InstanceStatsRepository {
 
   private InstanceStats parseInstanceStatsRecord(ResultSet resultSet) throws SQLException {
     return InstanceStats.builder()
-        .accountId(resultSet.getString(InstanceStatsFields.ACCOUNTID.fieldName()))
-        .envId(resultSet.getString(InstanceStatsFields.ENVID.fieldName()))
-        .serviceId(resultSet.getString(InstanceStatsFields.SERVICEID.fieldName()))
+        .accountId(resultSet.getString(io.harness.repositories.instancestats.InstanceStatsFields.ACCOUNTID.fieldName()))
+        .envId(resultSet.getString(io.harness.repositories.instancestats.InstanceStatsFields.ENVID.fieldName()))
+        .serviceId(resultSet.getString(io.harness.repositories.instancestats.InstanceStatsFields.SERVICEID.fieldName()))
         .reportedAt(resultSet.getTimestamp(InstanceStatsFields.REPORTEDAT.fieldName()))
         .build();
   }

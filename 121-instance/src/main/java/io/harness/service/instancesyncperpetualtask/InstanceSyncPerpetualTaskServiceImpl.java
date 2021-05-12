@@ -9,7 +9,7 @@ import io.harness.dto.infrastructureMapping.InfrastructureMapping;
 import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import io.harness.repository.instancesyncperpetualtask.InstanceSyncPerpetualTaskRepository;
+import io.harness.repositories.instancesyncperpetualtask.InstanceSyncPerpetualTaskRepository;
 import io.harness.service.IInstanceSyncByPerpetualTaskhandler;
 import io.harness.service.InstanceHandler;
 import io.harness.service.instance.InstanceService;
@@ -77,7 +77,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
   @Override
   public void deletePerpetualTasks(String accountId, String infrastructureMappingId) {
     Optional<InstanceSyncPerpetualTaskInfo> info =
-        instanceSyncPerpetualTaskRepository.getByAccountIdAndInfrastructureMappingId(
+        instanceSyncPerpetualTaskRepository.findByAccountIdentifierAndInfrastructureMappingId(
             accountId, infrastructureMappingId);
     if (!info.isPresent()) {
       return;
@@ -97,7 +97,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
     perpetualTaskService.deleteTask(accountId, perpetualTaskId);
 
     Optional<InstanceSyncPerpetualTaskInfo> optionalInfo =
-        instanceSyncPerpetualTaskRepository.getByAccountIdAndInfrastructureMappingId(
+        instanceSyncPerpetualTaskRepository.findByAccountIdentifierAndInfrastructureMappingId(
             accountId, infrastructureMappingId);
     if (!optionalInfo.isPresent()) {
       return;
@@ -108,7 +108,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
       return;
     }
     if (info.getPerpetualTaskIds().isEmpty()) {
-      instanceSyncPerpetualTaskRepository.delete(infrastructureMappingId);
+      instanceSyncPerpetualTaskRepository.deleteByInfrastructureMappingId(infrastructureMappingId);
     } else {
       instanceSyncPerpetualTaskRepository.save(info);
     }
@@ -149,14 +149,14 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
   private boolean perpetualTasksAlreadyExists(InfrastructureMapping infrastructureMapping) {
     Optional<InstanceSyncPerpetualTaskInfo> info =
-        instanceSyncPerpetualTaskRepository.getByAccountIdAndInfrastructureMappingId(
+        instanceSyncPerpetualTaskRepository.findByAccountIdentifierAndInfrastructureMappingId(
             infrastructureMapping.getAccountIdentifier(), infrastructureMapping.getId());
     return info.isPresent() && !info.get().getPerpetualTaskIds().isEmpty();
   }
 
   private List<PerpetualTaskRecord> getExistingPerpetualTasks(InfrastructureMapping infrastructureMapping) {
     Optional<InstanceSyncPerpetualTaskInfo> info =
-        instanceSyncPerpetualTaskRepository.getByAccountIdAndInfrastructureMappingId(
+        instanceSyncPerpetualTaskRepository.findByAccountIdentifierAndInfrastructureMappingId(
             infrastructureMapping.getAccountIdentifier(), infrastructureMapping.getId());
     return info
         .map(instanceSyncPerpetualTaskInfo
