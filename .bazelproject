@@ -74,6 +74,7 @@ directories:
   925-access-control-service
   930-delegate-tasks
   930-ng-core-clients
+  930-ng-license-manager
   955-alert-beans
   955-delegate-beans
   940-cg-audit-service
@@ -100,7 +101,6 @@ directories:
   950-ng-audit-commons
   950-ng-authentication-service
   950-ng-core
-  950-ng-license-manager
   950-ng-project-n-orgs
   950-telemetry
   950-timeout-engine
