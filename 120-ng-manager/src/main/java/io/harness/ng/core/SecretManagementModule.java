@@ -24,7 +24,6 @@ import com.google.inject.AbstractModule;
 
 @OwnedBy(PL)
 public class SecretManagementModule extends AbstractModule {
-
   @Override
   protected void configure() {
     registerRequiredBindings();

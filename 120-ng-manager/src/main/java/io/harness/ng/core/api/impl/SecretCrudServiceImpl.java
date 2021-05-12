@@ -289,8 +289,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   @Override
   public SecretResponseWrapper update(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, SecretDTOV2 dto) {
-    SecretDTOV2 existingSecret =
-        validateUpdateRequestAndGetSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto);
+    validateUpdateRequestAndGetSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto);
 
     boolean remoteUpdateSuccess = true;
     if (SecretText.equals(dto.getType())) {
@@ -312,9 +311,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     if (dto.getSpec().getErrorMessageForInvalidYaml().isPresent()) {
       throw new InvalidRequestException(dto.getSpec().getErrorMessageForInvalidYaml().get(), USER);
     }
-
-    SecretDTOV2 existingSecret =
-        validateUpdateRequestAndGetSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto);
+    validateUpdateRequestAndGetSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto);
 
     boolean remoteUpdateSuccess = true;
     if (SecretText.equals(dto.getType())) {
