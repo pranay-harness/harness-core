@@ -217,6 +217,12 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
                  .field(WorkflowExecutionKeys.appId)
                  .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_pipelineExecutionId_appId")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .field(WorkflowExecutionKeys.pipelineExecutionId)
+                 .field(WorkflowExecutionKeys.appId)
+                 .build())
         .build();
   }
 
