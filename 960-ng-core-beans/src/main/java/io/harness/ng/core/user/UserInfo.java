@@ -25,4 +25,5 @@ public class UserInfo {
   String defaultAccountId;
   boolean admin;
   boolean twoFactorAuthenticationEnabled;
+  boolean emailVerified;
 }
