@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.security.encryption.AdditionalMetadata;
@@ -14,6 +16,8 @@ import io.harness.security.encryption.EncryptionType;
 import software.wings.settings.SettingVariableTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -36,6 +40,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("ngEncryptedData")
 @StoreIn(DbAliases.NG_MANAGER)
 public class NGEncryptedData implements PersistentEntity, EncryptedRecord {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueNGEncryptedDataIdx")
+                 .unique(true)
+                 .field(NGEncryptedDataKeys.accountIdentifier)
+                 .field(NGEncryptedDataKeys.orgIdentifier)
+                 .field(NGEncryptedDataKeys.projectIdentifier)
+                 .field(NGEncryptedDataKeys.identifier)
+                 .build())
+        .build();
+  }
+
   @Id @org.mongodb.morphia.annotations.Id String id;
 
   @NotNull String accountIdentifier;

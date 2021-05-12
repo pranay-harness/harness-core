@@ -10,6 +10,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.ng.core.NGAccess;
+import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -31,9 +32,15 @@ public interface NGSecretService {
   Optional<EncryptedData> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
+  Optional<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
   boolean updateSecretText(String account, String org, String project, String identifier, SecretTextUpdateDTO dto);
 
   boolean deleteSecretText(
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier);
+
+  boolean deleteAfterMigration(
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier);
 
   List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity object);

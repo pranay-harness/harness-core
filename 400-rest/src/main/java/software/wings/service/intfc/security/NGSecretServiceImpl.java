@@ -37,6 +37,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
+import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -220,6 +221,37 @@ public class NGSecretServiceImpl implements NGSecretService {
   }
 
   @Override
+  public Optional<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    Optional<EncryptedData> encryptedDataOptional =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (encryptedDataOptional.isPresent()) {
+      EncryptedData encryptedData = encryptedDataOptional.get();
+      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
+          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+        setEncryptedValueToFileContent(encryptedData);
+      }
+      return Optional.of(EncryptedDataMigrationDTO.builder()
+                             .uuid(encryptedData.getUuid())
+                             .name(encryptedData.getName())
+                             .type(encryptedData.getType())
+                             .encryptionType(encryptedData.getEncryptionType())
+                             .encryptionKey(encryptedData.getEncryptionKey())
+                             .encryptedValue(encryptedData.getEncryptedValue())
+                             .path(encryptedData.getPath())
+                             .base64Encoded(encryptedData.isBase64Encoded())
+                             .kmsId(encryptedData.getNgMetadata().getSecretManagerIdentifier())
+                             .accountIdentifier(accountIdentifier)
+                             .orgIdentifier(orgIdentifier)
+                             .projectIdentifier(projectIdentifier)
+                             .identifier(identifier)
+                             .build());
+    }
+    return Optional.empty();
+  }
+
+  @Override
   public boolean updateSecretText(
       @NotNull String account, String org, String project, String identifier, SecretTextUpdateDTO dto) {
     // while updating a secret, only one of value/path can be provided
@@ -322,6 +354,23 @@ public class NGSecretServiceImpl implements NGSecretService {
       }
     }
     throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
+  }
+
+  @Override
+  public boolean deleteAfterMigration(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    Optional<EncryptedData> encryptedDataOptional =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (encryptedDataOptional.isPresent()) {
+      EncryptedData encryptedData = encryptedDataOptional.get();
+      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
+          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+        fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
+      }
+      return wingsPersistence.delete(encryptedData);
+    }
+    return true;
   }
 
   public void deleteSecretInSecretManager(

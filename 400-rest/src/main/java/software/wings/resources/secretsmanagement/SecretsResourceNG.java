@@ -11,6 +11,7 @@ import io.harness.beans.PageResponse;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
 import io.harness.secretmanagerclient.dto.SecretTextDTO;
 import io.harness.secretmanagerclient.dto.SecretTextUpdateDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -102,6 +103,28 @@ public class SecretsResourceNG {
     Optional<EncryptedData> encryptedDataOptional =
         ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return new RestResponse<>(encryptedDataOptional.map(EncryptedDataMapper::toDTO).orElse(null));
+  }
+
+  @GET
+  @Path("{identifier}")
+  public RestResponse<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
+      @PathParam("identifier") String identifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier) {
+    Optional<EncryptedDataMigrationDTO> encryptedDataOptional =
+        ngSecretService.getEncryptedDataMigrationDTO(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return new RestResponse<>(encryptedDataOptional.orElse(null));
+  }
+
+  @DELETE
+  @Path("{identifier}")
+  public RestResponse<Boolean> deleteAfterMigration(@PathParam("identifier") String identifier,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier) {
+    return new RestResponse<>(
+        ngSecretService.deleteAfterMigration(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 
   @PUT

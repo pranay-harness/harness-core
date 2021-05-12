@@ -12,6 +12,7 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
+import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
@@ -64,6 +65,27 @@ public interface SecretManagerClient {
   // get secret
   @GET(SECRETS_API + "/{identifier}")
   Call<RestResponse<EncryptedDataDTO>> getSecret(@Path(value = "identifier") String identifier,
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  /*
+  GET EncryptedData -> this is to be used for migration purpose
+  In case of secret files -> value field will be populated after downloading from file service
+   */
+  @GET(SECRETS_API + "/migration/{identifier}")
+  Call<RestResponse<EncryptedDataMigrationDTO>> getEncryptedDataMigrationDTO(
+      @Path(value = "identifier") String identifier,
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  /*
+  DELETE EncryptedData -> this is to be used for migration purpose
+  In case of secret files -> file entry will also be deleted from file service
+   */
+  @DELETE(SECRETS_API + "/migration/{identifier}")
+  Call<RestResponse<Boolean>> deleteAfterMigration(@Path(value = "identifier") String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
