@@ -85,7 +85,7 @@ public class LicenseResourceTest extends LicenseTestBase {
   @Category(UnitTests.class)
   public void testGet() {
     doReturn(defaultModueLicenseDTO).when(licenseService).getModuleLicenseById(any());
-    ResponseDTO<ModuleLicenseDTO> responseDTO = licenseResource.get("1");
+    ResponseDTO<ModuleLicenseDTO> responseDTO = licenseResource.get("1", ACCOUNT_IDENTIFIER);
     Mockito.verify(licenseService, times(1)).getModuleLicenseById(any());
     assertThat(responseDTO.getData()).isNotNull();
   }
