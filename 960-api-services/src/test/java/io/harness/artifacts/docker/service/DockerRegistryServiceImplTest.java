@@ -159,7 +159,9 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
     wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
                              .willReturn(aResponse().withBody(JsonUtils.asJson(dockerRegistryToken))));
     assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
-        .isInstanceOf(InvalidArtifactServerException.class);
+        .isInstanceOf(InvalidArtifactServerException.class)
+        .extracting("params.message")
+        .isEqualTo("Invalid Docker Registry credentials");
   }
 
   @Test
