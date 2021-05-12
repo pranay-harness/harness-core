@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.AMAN;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
@@ -24,7 +25,14 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.PcfInfrastructureMapping;
+import software.wings.beans.Service;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceResourceService;
 
 import com.google.protobuf.util.Durations;
 import java.util.Collections;
@@ -37,6 +45,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDP)
 public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
@@ -44,15 +53,35 @@ public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   private static final String TASK_ID = "taskId";
   private static final String APPLICATION_NAME = "applicationName";
   private static final String INFRA_ID = "infraId";
+  private static final String APP_ID = "appId";
   @Mock PerpetualTaskService perpetualTaskService;
   @InjectMocks PCFInstanceSyncPerpetualTaskCreator pcfInstanceSyncPerpetualTaskCreator;
   @Captor ArgumentCaptor<PerpetualTaskSchedule> scheduleArgumentCaptor;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private AppService appService;
+  @Mock private EnvironmentService environmentService;
+  @Mock private ServiceResourceService serviceResourceService;
+  private PcfInfrastructureMapping pcfInfrastructureMapping;
 
   @Before
   public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
     when(perpetualTaskService.createTask(
              any(), anyString(), any(), scheduleArgumentCaptor.capture(), eq(false), anyString()))
         .thenReturn(TASK_ID);
+    pcfInfrastructureMapping = PcfInfrastructureMapping.builder()
+                                   .uuid(INFRASTRUCTURE_MAPPING_ID)
+                                   .accountId(ACCOUNT_ID)
+                                   .name(INFRASTRUCTURE_MAPPING_ID)
+                                   .build();
+    pcfInfrastructureMapping.setDisplayName("infraName");
+    when(infrastructureMappingService.get(any(), any())).thenReturn(pcfInfrastructureMapping);
+    when(environmentService.get(any(), any()))
+        .thenReturn(Environment.Builder.anEnvironment().accountId(ACCOUNT_ID).appId(APP_ID).build());
+    when(serviceResourceService.get(any(), any()))
+        .thenReturn(Service.builder().accountId(ACCOUNT_ID).appId(APP_ID).build());
+    when(appService.get(any()))
+        .thenReturn(Application.Builder.anApplication().appId(APP_ID).accountId(ACCOUNT_ID).build());
   }
 
   @Test
@@ -61,7 +90,7 @@ public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   public void testCreate() {
     PcfInstanceSyncPerpetualTaskClientParams pcfInstanceSyncParams = getPcfInstanceSyncPerpTaskClientParams();
 
-    String taskId = pcfInstanceSyncPerpetualTaskCreator.create(ACCOUNT_ID, pcfInstanceSyncParams);
+    String taskId = pcfInstanceSyncPerpetualTaskCreator.create(pcfInstanceSyncParams, pcfInfrastructureMapping);
     PerpetualTaskSchedule taskSchedule = scheduleArgumentCaptor.getValue();
 
     assertThat(taskId).isEqualTo(TASK_ID);

@@ -84,27 +84,28 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
     return (host.startsWith("www.")) ? host : ("www." + host);
   }
 
-  ScmConnector getScmConnector(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifierRef) {
-    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-        connectorIdentifierRef, accountIdentifier, orgIdentifier, projectIdentifier);
+  ScmConnector getScmConnector(IdentifierRef connectorIdentifierRef) {
     final ConnectorResponseDTO connectorResponseDTO =
         connectorService
-            .get(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-                identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())
-            .orElseThrow(()
-                             -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-                                 identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
-                                 identifierRef.getProjectIdentifier(), identifierRef.getIdentifier())));
+            .get(connectorIdentifierRef.getAccountIdentifier(), connectorIdentifierRef.getOrgIdentifier(),
+                connectorIdentifierRef.getProjectIdentifier(), connectorIdentifierRef.getIdentifier())
+            .orElseThrow(
+                ()
+                    -> new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+                        connectorIdentifierRef.getAccountIdentifier(), connectorIdentifierRef.getOrgIdentifier(),
+                        connectorIdentifierRef.getProjectIdentifier(), connectorIdentifierRef.getIdentifier())));
     return (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
   }
 
-  IdentifierRef getYamlGitConfigIdentifierRef(
+  YamlGitConfigDTO getYamlGitConfigDTO(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String yamlGitConfigIdentifier) {
-    YamlGitConfigDTO yamlGitConfig =
-        yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
-    return IdentifierRefHelper.getIdentifierRef(yamlGitConfig.getGitConnectorRef(), accountIdentifier,
-        yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier());
+    return yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
+  }
+
+  IdentifierRef getConnectorIdentifierRef(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifierRef) {
+    return IdentifierRefHelper.getIdentifierRef(
+        connectorIdentifierRef, accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   void validateFileContentParams(String branch, String commitId) {

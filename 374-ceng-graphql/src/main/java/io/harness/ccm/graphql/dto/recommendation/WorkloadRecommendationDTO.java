@@ -1,6 +1,7 @@
 package io.harness.ccm.graphql.dto.recommendation;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 
 import io.leangen.graphql.annotations.GraphQLQuery;
 import java.util.List;
@@ -14,4 +15,5 @@ public class WorkloadRecommendationDTO implements RecommendationDetailsDTO {
   @GraphQLQuery(description = "use items.containerRecommendation", deprecationReason = "")
   Map<String, ContainerRecommendation> containerRecommendations;
   List<ContainerHistogramDTO> items;
+  Cost lastDayCost;
 }
