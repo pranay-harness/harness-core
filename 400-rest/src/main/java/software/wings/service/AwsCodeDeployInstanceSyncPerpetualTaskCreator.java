@@ -1,34 +1,36 @@
 package software.wings.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.perpetualtask.PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClientParams;
+import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
 
-import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(CDP)
-public class AwsCodeDeployInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
-  @Inject AwsCodeDeployInstanceSyncPerpetualTaskClient perpetualTaskClient;
-
+public class AwsCodeDeployInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
-    return singletonList(createPerpetualTask(
-        infrastructureMapping.getAccountId(), infrastructureMapping.getAppId(), infrastructureMapping.getUuid()));
+    return singletonList(createPerpetualTask(infrastructureMapping));
   }
 
   @Override
@@ -44,13 +46,30 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskCreator implements InstanceSy
     return taskAlreadyExists ? emptyList() : createPerpetualTasks(infrastructureMapping);
   }
 
-  private String createPerpetualTask(String accountId, String appId, String infraMappingId) {
+  private String createPerpetualTask(InfrastructureMapping infrastructureMapping) {
     AwsCodeDeployInstanceSyncPerpetualTaskClientParams clientParams =
         AwsCodeDeployInstanceSyncPerpetualTaskClientParams.builder()
-            .appId(appId)
-            .inframmapingId(infraMappingId)
+            .appId(infrastructureMapping.getAppId())
+            .inframmapingId(infrastructureMapping.getUuid())
             .build();
 
-    return perpetualTaskClient.create(accountId, clientParams);
+    return create(clientParams, infrastructureMapping);
+  }
+
+  private String create(
+      AwsCodeDeployInstanceSyncPerpetualTaskClientParams clientParams, InfrastructureMapping infraMapping) {
+    Map<String, String> paramsMap = new HashMap<>();
+    paramsMap.put(INFRASTRUCTURE_MAPPING_ID, clientParams.getInframmapingId());
+    paramsMap.put(HARNESS_APPLICATION_ID, clientParams.getAppId());
+
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder().clientParams(paramsMap).build();
+
+    PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
+                                         .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
+                                         .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
+                                         .build();
+
+    return perpetualTaskService.createTask(AWS_CODE_DEPLOY_INSTANCE_SYNC, infraMapping.getAccountId(), clientContext,
+        schedule, false, getTaskDescription(infraMapping));
   }
 }
