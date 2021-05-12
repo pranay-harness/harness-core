@@ -425,11 +425,6 @@ public class NGSecretServiceImpl implements NGSecretService {
                                            .encryptionConfig(encryptionConfig)
                                            .fieldName(field.getName())
                                            .build());
-              encryptedDataDetails.add(EncryptedDataDetail.builder()
-                                           .encryptedData(encryptedRecordData)
-                                           .encryptionConfig(encryptionConfig)
-                                           .fieldName(field.getName())
-                                           .build());
             }
           }
         }
