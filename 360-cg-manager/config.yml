@@ -588,3 +588,5 @@ delegateGrpcServicePort: 8080
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+exportAccountDataBatchSize: 1000

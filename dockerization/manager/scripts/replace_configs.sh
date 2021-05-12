@@ -794,6 +794,10 @@ if [[ "" != "$REMINDERS_BEFORE_ACCOUNT_DELETION" ]]; then
   yq write -i $CONFIG_FILE numberOfRemindersBeforeAccountDeletion "$REMINDERS_BEFORE_ACCOUNT_DELETION"
 fi
 
+if [[ "" != "$EXPORT_DATA_BATCH_SIZE" ]]; then
+  yq write -i $CONFIG_FILE exportAccountDataBatchSize "$EXPORT_DATA_BATCH_SIZE"
+fi
+
 if [[ "" != "$COMMAND_LIBRARY_PUBLISHING_ALLOWED" ]]; then
   yq write -i $CONFIG_FILE commandLibraryServiceConfig.publishingAllowed "$COMMAND_LIBRARY_PUBLISHING_ALLOWED"
 fi
